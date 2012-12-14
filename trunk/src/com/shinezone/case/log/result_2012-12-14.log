@@ -1,0 +1,30 @@
+14:59:28 start open gold coin chest
+14:59:28 	Check item effect range
+14:59:39 		610018 Passed
+15:00:47 start open gold coin chest
+15:00:47 	Check item effect range
+15:00:59 		610018 Passed
+15:00:59 	Check item effect rate
+15:01:10 		610018 range 1: 93, range 2: 7
+15:04:03 start open silver coin chest
+15:04:03 	Check item effect, count:2
+15:04:03 		610009 Init error
+15:04:03 		610010 Init error
+15:04:04 		610011 Init error
+15:04:04 		610012 Init error
+15:04:04 		610013 Init error
+15:04:05 		610014 Init error
+15:04:05 		610015 Init error
+15:04:05 		610016 Init error
+15:04:05 		610017 Init error
+15:04:45 start open silver coin chest
+15:04:45 	Check item effect, count:2
+15:04:45 		610009 Passed
+15:04:45 		610010 Passed
+15:04:45 		610011 Passed
+15:04:45 		610012 Passed
+15:04:46 		610013 Passed
+15:04:46 		610014 Passed
+15:04:46 		610015 Passed
+15:04:46 		610016 Passed
+15:04:46 		610017 Passed
