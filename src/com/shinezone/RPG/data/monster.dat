@@ -1,0 +1,6 @@
+id	name	level	attack	defense	maxHP	maxMP	exp	gold
+0	Slime	1	11	12	13	14	15	1~2
+1	Goblin	2	21	22	23	24	25	5~10
+2	Gnome	3	31	32	33	34	35	10~50
+3	Death Knight	4	55	55	111	111	111	50~100
+4	Dragon	10	100	200	300	400	500	100~500
