@@ -21,4 +21,4 @@ def getCount(path):
         if len(os.listdir(imagePath)) != int(line[2]):
             print line[1]
     
-print getCount("BK_idlist.txt")
+print getCount("2013-04-24_23_14_24_idlist.txt")
