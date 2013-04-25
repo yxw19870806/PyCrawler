@@ -179,3 +179,13 @@ Watanabe_Miyuki
 Yamamoto_Sayaka
 37: https://plus.google.com/photos/101423472932208115437/albums/5866304560189270209
 38: https://plus.google.com/photos/101423472932208115437/albums/5866315472041804449
+
+Yoshida_Akari
+17: https://plus.google.com/photos/108862052279750773861/albums/5863313367230340913
+
+Yamaguchi_Yuuki
+6: https://plus.google.com/photos/103663030781390958288/albums/5867420019100398769
+7: https://plus.google.com/photos/103663030781390958288/albums/5868170066360079057
+
+Tanigawa_Airi
+50: https://plus.google.com/photos/100515188323145163173/albums/5844722077421434545
