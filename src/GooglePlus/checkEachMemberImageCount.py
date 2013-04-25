@@ -1,10 +1,10 @@
-#-*- coding:utf-8  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-4-14
 
 @author: rena
 
-输出目录和txt文件中图片数量不一致的成员名字，None则没有
+输出目录和txt文件中图片数量不一致的成员名字，则没有
 '''
 
 import os
@@ -18,7 +18,10 @@ def getCount(path):
     for line in lines:
         line = line.split("\t")
         imagePath = imageRootPath + line[4].replace("\n", "") + "\\" + line[1]
-        if len(os.listdir(imagePath)) != int(line[2]):
-            print line[1]
-    
-print getCount("2013-04-24_23_14_24_idlist.txt")
+        count1 = len(os.listdir(imagePath))
+        count2 = int(line[2])
+        if count1 != count2:
+            print line[1] + ": " + str(count1) + ", " + str(count2)
+    print "check over!"
+
+getCount("bk_idlist.txt")
