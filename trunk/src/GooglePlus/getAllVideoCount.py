@@ -4,7 +4,7 @@ Created on 2013-4-17
 @author: rena
 '''
 
-tempFile = open("allVideo.txt", 'r')
+tempFile = open("info\\allVideo.txt", 'r')
 lines = tempFile.readlines()
 tempFile.close()
 count = 0

@@ -3,7 +3,7 @@ Created on 2013-4-17
 
 @author: rena
 '''
-tempFile = open("newVideo.txt", 'r')
+tempFile = open("info\\newVideo.txt", 'r')
 lines = tempFile.readlines()
 tempFile.close()
 count = 0

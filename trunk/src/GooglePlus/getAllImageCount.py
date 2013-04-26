@@ -14,7 +14,7 @@ def getCount(path):
         count += int(line[2])
     return count
     
-a = getCount("bk_idlist.txt")
+a = getCount("info\\bk_idlist.txt")
 b = getCount("2013-04-24_23_14_24_idlist.txt")
 print a
 print b
