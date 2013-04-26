@@ -10,7 +10,7 @@ import traceback
 import urllib2
 
 sourceFilePath = os.getcwd() + "\\get_source.txt"
-resultFilePath = os.getcwd() + "\\get_result.txt"
+resultFilePath = os.getcwd() + "\\get_result.html"
 
 if socket.gethostbyname(socket.gethostname()).find("192.168.") != -1:
     proxyIp = "127.0.0.1"
@@ -65,7 +65,7 @@ for line in lines:
                 videoUrlList.append(videoUrl)
                 print str(videoCount) + ": " + videoUrl
                 videoUrlFile = open(resultFilePath, 'a')
-                videoUrlFile.writelines(str(videoCount) + ": " + videoUrl + "\n")
+                videoUrlFile.writelines("<a href=" + videoUrl + ">" + str("%03d" % videoCount) + "</a><br>\n")
                 videoUrlFile.close()
                 videoCount += 1
         videoIndex = messagePage.find("video.googleusercontent.com", videoIndex + 1)
