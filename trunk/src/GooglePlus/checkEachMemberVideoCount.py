@@ -9,7 +9,7 @@ Created on 2013-4-21
 import os
 
 videoRootPath = "Z:\\G+\\video\\"
-allVideoUrlFilePath = os.getcwd() + "\\allVideo.txt"
+allVideoUrlFilePath = os.getcwd() + "\\info\\allVideo.txt"
 unableDownloadFilePath = "queshao.txt"
 
 # 视频路径中各成员视频数量

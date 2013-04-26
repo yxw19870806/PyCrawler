@@ -9,8 +9,8 @@ import sys
 import traceback
 import urllib2
 
-sourceFilePath = os.getcwd() + "\\get_source.txt"
-resultFilePath = os.getcwd() + "\\get_result.html"
+sourceFilePath = os.getcwd() + "\\info\\get_source.txt"
+resultFilePath = os.getcwd() + "\\info\\get_result.html"
 
 if socket.gethostbyname(socket.gethostname()).find("192.168.") != -1:
     proxyIp = "127.0.0.1"
@@ -54,7 +54,7 @@ for line in lines:
         continue
     videoIndex = messagePage.find("video.googleusercontent.com")
     while videoIndex != -1:
-        if messagePage.find("token", videoIndex, videoIndex + 50) != -2321:
+        if messagePage.find("token", videoIndex, videoIndex + 50) != -1:
             videStart = messagePage.find("http", videoIndex - 10)
             videStop = messagePage.find('"', videStart)
             videoUrl = messagePage[videStart:videStop]

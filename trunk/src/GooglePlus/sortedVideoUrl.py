@@ -4,13 +4,13 @@ Created on 2013-4-14
 
 @author: rena
 
-µ¹ÐðÅÅÁÐurlË³Ðò
+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½urlË³ï¿½ï¿½
 '''
 
 import os
 
-soreceFilePath = os.getcwd() + "\\sorted_source.txt"
-resultFilePath = os.getcwd() + "\\sorted_result.txt"
+soreceFilePath = os.getcwd() + "\\info\\sorted_source.txt"
+resultFilePath = os.getcwd() + "\\info\\sorted_result.txt"
 
 sourceFile = open(soreceFilePath, 'r')
 lines = sourceFile.readlines()
