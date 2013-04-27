@@ -1,4 +1,4 @@
-#-*- coding:utf-8  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-4-21
 
@@ -10,7 +10,7 @@ import os
 
 videoRootPath = "Z:\\G+\\video\\"
 allVideoUrlFilePath = os.getcwd() + "\\info\\allVideo.txt"
-unableDownloadFilePath = "\\info\\queshao.txt"
+unableDownloadFilePath = os.getcwd() + "\\info\\queshao.txt"
 
 # 视频路径中各成员视频数量
 memberList1 = {}
