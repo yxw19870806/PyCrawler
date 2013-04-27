@@ -1958,6 +1958,8 @@
 446: https://plus.google.com/photos/102663035987142737445/albums/5869676693213430481
 447: https://plus.google.com/photos/102663035987142737445/albums/5870054812967161729
 448: https://plus.google.com/photos/102663035987142737445/albums/5870422128263051409
+449: https://plus.google.com/photos/102663035987142737445/albums/5870791543789671537
+450: https://plus.google.com/photos/102663035987142737445/albums/5871134146166103377
 ****************************************************************************************************
 107061289389523750061 Nakanishi_Yuka
 1: https://plus.google.com/photos/107061289389523750061/albums/5805120121152375377
@@ -2269,6 +2271,7 @@
 27: https://plus.google.com/photos/114117235562724035328/albums/5842931155362455441
 28: https://plus.google.com/photos/114117235562724035328/albums/5855582894072922113
 29: https://plus.google.com/photos/114117235562724035328/albums/5867106146605908673
+30: https://plus.google.com/photos/114117235562724035328/albums/5871014678762763537
 ****************************************************************************************************
 106926723626971174827 Takayanagi_Akane
 1: https://plus.google.com/photos/106926723626971174827/albums/5684167919475951921
@@ -3338,6 +3341,8 @@
 393: https://plus.google.com/photos/108705263081706477178/albums/5867461751608783025
 394: https://plus.google.com/photos/108705263081706477178/albums/5867868903254053809
 395: https://plus.google.com/photos/108705263081706477178/albums/5868946648997855473
+396: https://plus.google.com/photos/108705263081706477178/albums/5871087545623269473
+397: https://plus.google.com/photos/108705263081706477178/albums/5871204937424383553
 ****************************************************************************************************
 105245746127706408230 Suga_Nanako
 1: https://plus.google.com/photos/105245746127706408230/albums/5749679564237041329
@@ -3711,6 +3716,7 @@
 41: https://plus.google.com/photos/108121336346623963998/albums/5862981268466503041
 42: https://plus.google.com/photos/108121336346623963998/albums/5863330081902366289
 43: https://plus.google.com/photos/108121336346623963998/albums/5866220159869648305
+44: https://plus.google.com/photos/108121336346623963998/albums/5870665289733737153
 ****************************************************************************************************
 108862052279750773861 Yoshida_Akari
 1: https://plus.google.com/photos/108862052279750773861/albums/5715208908200603905
@@ -4298,4 +4304,28 @@
 64: https://plus.google.com/photos/113548903943701827498/albums/5863658801128022129
 65: https://plus.google.com/photos/113548903943701827498/albums/5864017006197844385
 66: https://plus.google.com/photos/113548903943701827498/albums/5866193823402817041
+****************************************************************************************************
+117555569787343101894 Ishizuka_Akari
+1: https://plus.google.com/photos/117555569787343101894/albums/5752302755452184417
+2: https://plus.google.com/photos/117555569787343101894/albums/5755388810875495057
+3: https://plus.google.com/photos/117555569787343101894/albums/5758357594923361297
+4: https://plus.google.com/photos/117555569787343101894/albums/5758730066846953153
+5: https://plus.google.com/photos/117555569787343101894/albums/5760481382619326337
+6: https://plus.google.com/photos/117555569787343101894/albums/5765259280131610353
+7: https://plus.google.com/photos/117555569787343101894/albums/5765284457143017297
+8: https://plus.google.com/photos/117555569787343101894/albums/5765568156644336273
+9: https://plus.google.com/photos/117555569787343101894/albums/5765768272548389873
+10: https://plus.google.com/photos/117555569787343101894/albums/5768244290865411233
+11: https://plus.google.com/photos/117555569787343101894/albums/5769829694589434017
+12: https://plus.google.com/photos/117555569787343101894/albums/5770565930607506001
+13: https://plus.google.com/photos/117555569787343101894/albums/5786920582654496897
+14: https://plus.google.com/photos/117555569787343101894/albums/5798676358061811617
+15: https://plus.google.com/photos/117555569787343101894/albums/5823565435820610593
+16: https://plus.google.com/photos/117555569787343101894/albums/5824633563560258673
+17: https://plus.google.com/photos/117555569787343101894/albums/5824683762413586049
+18: https://plus.google.com/photos/117555569787343101894/albums/5829084899923142257
+19: https://plus.google.com/photos/117555569787343101894/albums/5832484074493395409
+20: https://plus.google.com/photos/117555569787343101894/albums/5832528130387723041
+21: https://plus.google.com/photos/117555569787343101894/albums/5835839491997551953
+22: https://plus.google.com/photos/117555569787343101894/albums/5870386524643476449
 ****************************************************************************************************
