@@ -1,4 +1,4 @@
-#-*- coding:utf-8  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-4-8
 
@@ -248,7 +248,7 @@ def removeDirFiles(dirPath):
         if os.path.isfile(targetFile): 
             os.remove(targetFile)
 
-#判断各种目录是否存在
+# 判断各种目录是否存在
 if isLog == 1:
     stepLogDir = os.path.dirname(stepLogPath)
     if not os.path.exists(stepLogDir):
@@ -280,9 +280,20 @@ if isSaveVideoUrl == 1:
 if isDownloadImage == 1:
     if os.path.exists(imageDownloadPath):
         if os.path.isdir(imageDownloadPath):
+            isDelete = False
+            while not isDelete:
+                input = raw_input(imageDownloadPath + "is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                try:
+                    input = input.lower() 
+                    if input in ["y", "yes"]:
+                        isDelete = True
+                    elif input in ["n", "no"]:
+                        processExit()
+                except:
+                    pass            
             printStepMsg("image download path: " + imageDownloadPath + " is exist, remove it")
             shutil.rmtree(imageDownloadPath, True)
-            #保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+            # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
             while os.path.exists(imageDownloadPath):
                 time.sleep(5)
         else:
@@ -293,7 +304,7 @@ if isDownloadImage == 1:
 
 printStepMsg("config init succeed")
 
-#设置代理
+# 设置代理
 if config.has_key("IS_PROXY"):
     try:
         isProxy = int(config["IS_PROXY"])
@@ -318,7 +329,7 @@ if isProxy == 1:
     urllib2.install_opener(opener)
     printStepMsg("proxy set succeed")
 
-#寻找id.txt，如果没有结束进程
+# 寻找id.txt，如果没有结束进程
 if version == isNewFunc:
     userIdList = {}
     if os.path.exists(memberUIdListFilePath):
@@ -346,7 +357,7 @@ else:
     else:
         printErrorMsg("Not exists id.txt, process stop!")
         processExit()
-    #根据user Id查找成员名字
+    # 根据user Id查找成员名字
     allUserIdList = {}
     if os.path.exists(memberUIdListFilePath):
         userListFile = open(memberUIdListFilePath, 'r')
@@ -395,7 +406,7 @@ for userId in userIdList:
         shutil.rmtree(imagePath, True)
     os.makedirs(imagePath)
     
-    #日志文件插入信息
+    # 日志文件插入信息
     if isSaveMessageUrl == 1:
         writeLog(userId + " " + userName, messageUrlLogFilePath, isTime=False)
     if isSaveImageUrl == 1:
@@ -403,7 +414,7 @@ for userId in userIdList:
     if isSaveVideoUrl == 1:
         writeLog(userId + " " + userName, videoFilePath, isTime=False)
 
-    #初始化数据
+    # 初始化数据
     pageCount = 0
     imageCount = 1
     videoCount = 1
@@ -413,7 +424,7 @@ for userId in userIdList:
     while 1:
         if isPass:
                 break
-        #获取信息总页,offset=N表示返回最新的N到N+100条信息所在的url
+        # 获取信息总页,offset=N表示返回最新的N到N+100条信息所在的url
         photoAlbumUrl = "https://plus.google.com/_/photos/posts/%s?offset=%s" % (userId, pageCount)
         trace("photo Album URL:" + photoAlbumUrl)
         photoAlbumPage = doGet(photoAlbumUrl)
@@ -422,7 +433,7 @@ for userId in userIdList:
             pageCount += 100
             continue
          
-        #判断信息总页字节数大小，是否小于300
+        # 判断信息总页字节数大小，是否小于300
         if len(photoAlbumPage) < 300:
             printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
             if version == isNewFunc:
@@ -537,10 +548,10 @@ for userId in userIdList:
     if isSaveVideoUrl == 1:
         writeLog("****************************************************************************************************", videoFilePath, isTime=False)
     
-    #排序
+    # 排序
     if isDownloadImage == 1 and isSort == 1:
         imageList = sorted(os.listdir(imagePath), reverse=True)
-        #判断排序目标文件夹是否存在
+        # 判断排序目标文件夹是否存在
         if len(imageList) >= 1:
             if version == isNewFunc:
                 destPath = imageDownloadPath + "\\" + newMemberUIdList[userId][4] + "\\" + userName
@@ -558,7 +569,7 @@ for userId in userIdList:
                 printStepMsg("create image download path: " + destPath)
                 os.makedirs(destPath)
 
-            #倒叙排列
+            # 倒叙排列
             if version == isNewFunc:
                 if len(userIdList[userId]) >= 3:
                     count = int(userIdList[userId][2]) + 1
@@ -571,7 +582,7 @@ for userId in userIdList:
                 shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                 count += 1
             printStepMsg("sorted over, continue next member")
-        #删除临时文件夹
+        # 删除临时文件夹
         shutil.rmtree(imagePath, True)
 
         # 保存最后的信息
