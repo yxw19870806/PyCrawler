@@ -4,7 +4,7 @@ Created on 2013-4-14
 
 @author: rena
 
-��������url˳��
+将downloadImage.py获取的url地址倒序排列
 '''
 
 import os
