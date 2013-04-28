@@ -6,6 +6,7 @@ Created on 2013-4-21
 
 输出目录和txt文件中视频数量不一致的成员列表
 '''
+
 import os
 
 videoRootPath = "Z:\\G+\\video\\"
@@ -86,3 +87,4 @@ for member in memberList2:
         count3 = 0
     if count2 != count1 + count3:
         print member + ": " + str(count2) + " / " + str(count1 + count3)
+print "check over!"
