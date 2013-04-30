@@ -1,11 +1,26 @@
-115765743928146295934	Ishida_Yuumi
-111167834152662625124	Uno_Mizuki
-108341666924993077629	Koga_Narumi
-103544506591915651413	Takayama_Riko
-102839473765308016371	Nakagawa_Hiromi
-107951103633724735018	Nishizawa_Rurina
-105975378768005691666	Hayashi_Momoka
-104043575017059824277	Miura_Arisa
+109229124597499008502	Abe_Kyoka
+102371022284084186803	Ito_Raira
+106166082359574012420	Inoue_Yuriya
+102120909316124491120	Imada_Mina
+112196801092533679445	Iwahana_Shino
+118142366345814312525	Ui_Mashiro
+112054336332152179826	Ueno_Haruka
+109108277996964299292	Umemoto_Izumi
+108451047076965417533	Okada_Kanna
+103621242289574282721	Okamoto_Naoko
+115494145161242070054	Kusaba_Manami
+108854773205091274205	Kojina_Yui
+117398060713772891752	Goto_Izumi
+113849034080168289470	Komada_Hiroka
+102129137981135233143	Sakaguchi_Riko
+101107068827865810697	Tashima_Meru
+109503962668698372253	Tani_Marika
+108233787438424471919	Tomiyoshi_Asuka
+110723563001146503636	Fukagawa_Maiko
+102642528528615796356	Fuchigami_Mai
+
+
+
 
 
 
@@ -30,16 +45,30 @@ SKE 6
 竹内彩姫	Takeuchi_Saki
 野口由芽	Noguchi_Yume
 
-NMB 4
-西村爱华	Nishimura_Aika	N
-
 NMB 3
 山内つばさ	Yamauchi_Tsubasa	(13以下）	M
 
+NMB 4
+西村爱华	Nishimura_Aika	N
+明石奈津子	Akashi_Natsuko
+石原雅子	Ishihara_Masako
+大段舞依	Odan_Mai
+小川乃愛	Ogawa_Noa
+川上千尋	Kawakami_Chihiro
+渋谷凪咲	Shibuya_Nagisa
+嶋崎百萌香	Shimazaki_Momoka
+照井穂乃佳	Terui_Honoka
+中野麗来	Nakano_Reina
+松岡知穂	Matsuoka_Chiho
+松村芽久未	Matsumura_Megumi
+森田彩花	Morita_Ayaka
+山尾梨奈	Yamao_Rina
 
+HKT	1
+田中菜津美	Tanaka_Natsumi（13以下 00/08/10）	H
 
-
-
-
+HKT 2
+秋吉優花	Akiyoshi_Yuka（13以下 00/10/24）
+田中優香	Tanaka_Yuka（13以下 00/06/07）
 
 
