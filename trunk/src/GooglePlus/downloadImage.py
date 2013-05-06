@@ -329,79 +329,115 @@ if isProxy == 1:
     urllib2.install_opener(opener)
     printStepMsg("proxy set succeed")
 
+# 寻找idlist，如果没有结束进程
+userIdList = {}
+if os.path.exists(memberUIdListFilePath):
+    userListFile = open(memberUIdListFilePath, 'r')
+    allUserList = userListFile.readlines()
+    userListFile.close()
+    for userInfo in allUserList:
+        userInfo = userInfo.replace(" ", "")
+        userInfo = userInfo.replace("\n", "")
+        userInfoList = userInfo.split("\t")
+        userIdList[userInfoList[0]] = userInfoList
+else:
+    printErrorMsg("Not exists member id list file: " + memberUIdListFilePath + ", process stop!")
+    processExit()
+newMemberUIdListFilePath = processPath + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(memberUIdListFilePath)[-1]
+newMemberUIdListFile = open(newMemberUIdListFilePath, 'w')
+newMemberUIdListFile.close()
 # 寻找id.txt，如果没有结束进程
-if version == isNewFunc:
-    userIdList = {}
-    if os.path.exists(memberUIdListFilePath):
-        userListFile = open(memberUIdListFilePath, 'r')
-        allUserList = userListFile.readlines()
-        userListFile.close()
-        for userInfo in allUserList:
-            userInfo = userInfo.replace(" ", "")
-            userInfo = userInfo.replace("\n", "")
-            userInfoList = userInfo.split("\t")
-            userIdList[userInfoList[0]] = userInfoList
-    else:
-        printErrorMsg("Not exists member id list file: " + memberUIdListFilePath + ", process stop!")
-        processExit()
-    newMemberUIdListFilePath = processPath + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(memberUIdListFilePath)[-1]
-    newMemberUIdListFile = open(newMemberUIdListFilePath, 'w')
-    newMemberUIdListFile.close()
-else:    
-    if os.path.exists("id.txt"):
-        userIdFile = open("id.txt", 'r')
-        userIdList = userIdFile.readlines()
-        userIdFile.close()
-        for index in range(len(userIdList)):
-            userIdList[index] = filter(str.isdigit, userIdList[index])
-    else:
-        printErrorMsg("Not exists id.txt, process stop!")
-        processExit()
-    # 根据user Id查找成员名字
-    allUserIdList = {}
-    if os.path.exists(memberUIdListFilePath):
-        userListFile = open(memberUIdListFilePath, 'r')
-        allUserList = userListFile.readlines()
-        userListFile.close()
-        for userInfo in allUserList:
-            userInfo = userInfo.split("\t")
-            allUserIdList[userInfo[0]] = userInfo[1].replace("\n", "")
+# if version == isNewFunc:
+#     userIdList = {}
+#     if os.path.exists(memberUIdListFilePath):
+#         userListFile = open(memberUIdListFilePath, 'r')
+#         allUserList = userListFile.readlines()
+#         userListFile.close()
+#         for userInfo in allUserList:
+#             userInfo = userInfo.replace(" ", "")
+#             userInfo = userInfo.replace("\n", "")
+#             userInfoList = userInfo.split("\t")
+#             userIdList[userInfoList[0]] = userInfoList
+#     else:
+#         printErrorMsg("Not exists member id list file: " + memberUIdListFilePath + ", process stop!")
+#         processExit()
+#     newMemberUIdListFilePath = processPath + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(memberUIdListFilePath)[-1]
+#     newMemberUIdListFile = open(newMemberUIdListFilePath, 'w')
+#     newMemberUIdListFile.close()
+# else:    
+#     if os.path.exists("id.txt"):
+#         userIdFile = open("id.txt", 'r')
+#         userIdList = userIdFile.readlines()
+#         userIdFile.close()
+#         for index in range(len(userIdList)):
+#             userIdList[index] = filter(str.isdigit, userIdList[index])
+#     else:
+#         printErrorMsg("Not exists id.txt, process stop!")
+#         processExit()
+#     # 根据user Id查找成员名字
+#     allUserIdList = {}
+#     if os.path.exists(memberUIdListFilePath):
+#         userListFile = open(memberUIdListFilePath, 'r')
+#         allUserList = userListFile.readlines()
+#         userListFile.close()
+#         for userInfo in allUserList:
+#             userInfo = userInfo.split("\t")
+#             allUserIdList[userInfo[0]] = userInfo[1].replace("\n", "")
 
-if version == isNewFunc:
-    newMemberUIdList = copy.deepcopy(userIdList)
-    for newUserId in newMemberUIdList:
-        if len(newMemberUIdList[newUserId]) < 2:
-            newMemberUIdList[newUserId].append(newMemberUIdList[newUserId][0])
-        if len(newMemberUIdList[newUserId]) < 3:
-            newMemberUIdList[newUserId].append("0")
-        if len(newMemberUIdList[newUserId]) < 4:
-            newMemberUIdList[newUserId].append("")
-        else:
-            newMemberUIdList[newUserId][3] = ""
-        if len(newMemberUIdList[newUserId]) < 5:
-            newMemberUIdList[newUserId].append("")
+newMemberUIdList = copy.deepcopy(userIdList)
+for newUserId in newMemberUIdList:
+    # 如果没有名字，则名字用uid代替
+    if len(newMemberUIdList[newUserId]) < 2:
+        newMemberUIdList[newUserId].append(newMemberUIdList[newUserId][0])
+    # 如果没有出事image count，则为0
+    if len(newMemberUIdList[newUserId]) < 3:
+        newMemberUIdList[newUserId].append("0")
+    # 处理上一次image URL
+    # 需置空存放本次第一张获取的image URL
+    if len(newMemberUIdList[newUserId]) < 4:
+        newMemberUIdList[newUserId].append("")
+    else:
+        newMemberUIdList[newUserId][3] = ""
+    # 处理member 队伍信息
+    if len(newMemberUIdList[newUserId]) < 5:
+        newMemberUIdList[newUserId].append("")
+# if version == isNewFunc:
+#     newMemberUIdList = copy.deepcopy(userIdList)
+#     for newUserId in newMemberUIdList:
+#         if len(newMemberUIdList[newUserId]) < 2:
+#             newMemberUIdList[newUserId].append(newMemberUIdList[newUserId][0])
+#         if len(newMemberUIdList[newUserId]) < 3:
+#             newMemberUIdList[newUserId].append("0")
+#         if len(newMemberUIdList[newUserId]) < 4:
+#             newMemberUIdList[newUserId].append("")
+#         else:
+#             newMemberUIdList[newUserId][3] = ""
+#         if len(newMemberUIdList[newUserId]) < 5:
+#             newMemberUIdList[newUserId].append("")
 
 allImageCount = 0
 allVideoCount = 0
 for userId in userIdList:
-    time.sleep(5)
+    errCount = 0
     isPass = False
-    if version == isNewFunc:
-        userName = userIdList[userId][1]
-    else:
-        if allUserIdList.has_key(userId):
-            userName = allUserIdList[userId]
-        else:
-            userName = str(userId)
+    userName = newMemberUIdList[userId][1]
+#     if version == isNewFunc:
+#         userName = userIdList[userId][1]
+#     else:
+#         if allUserIdList.has_key(userId):
+#             userName = allUserIdList[userId]
+#         else:
+#             userName = str(userId)
     printStepMsg("UID: " + str(userId) + ", Member: " + userName)
     
-    if version == isNewFunc:
-        imagePath = imageDownloadPath + "\\" + imageTmpDirName
-    else:
-        if isSort == 1:
-            imagePath = imageDownloadPath + "\\" + imageTmpDirName
-        else:
-            imagePath = imageDownloadPath + "\\" + userName
+    imagePath = imageDownloadPath + "\\" + imageTmpDirName
+#     if version == isNewFunc:
+#         imagePath = imageDownloadPath + "\\" + imageTmpDirName
+#     else:
+#         if isSort == 1:
+#             imagePath = imageDownloadPath + "\\" + imageTmpDirName
+#         else:
+#             imagePath = imageDownloadPath + "\\" + userName
     if os.path.exists(imagePath):
         shutil.rmtree(imagePath, True)
     os.makedirs(imagePath)
@@ -431,13 +467,22 @@ for userId in userIdList:
         if not photoAlbumPage:
             printErrorMsg("can not get photoAlbumPage: " + photoAlbumUrl)
             pageCount += 100
+            if errCount >=5:
+                printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
+                newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+#                 if version == isNewFunc:
+#                     newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                allImageCount += imageCount - 1
+                allVideoCount += videoCount - 1
+            errCount += 1
             continue
          
         # 判断信息总页字节数大小，是否小于300
         if len(photoAlbumPage) < 300:
             printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
-            if version == isNewFunc:
-                newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+            newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+#             if version == isNewFunc:
+#                 newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
             allVideoCount += videoCount - 1
             break
@@ -453,17 +498,28 @@ for userId in userIdList:
             messageStart = photoAlbumPage.find("http", messageIndex - 10)
             messageStop = photoAlbumPage.find('"', messageStart)
             messageUrl = photoAlbumPage[messageStart:messageStop]
-            if version == isNewFunc:
-                if newMemberUIdList[userId][3] == "":
-                    newMemberUIdList[userId][3] = messageUrl
-                if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("plus.google.com/photos/" + str(userId) + "/albums/"):
-                    if messageUrl == userIdList[userId][3]:
-                        printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
-                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
-                        allImageCount += imageCount - 1
-                        allVideoCount += videoCount - 1
-                        isPass = True
-                        break
+            # 将第一张image的URL保存到新id list中
+            if newMemberUIdList[userId][3] == "":
+                newMemberUIdList[userId][3] = messageUrl
+            if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("plus.google.com/photos/" + str(userId) + "/albums/"):
+                if messageUrl == userIdList[userId][3]:
+                    printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
+                    newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                    allImageCount += imageCount - 1
+                    allVideoCount += videoCount - 1
+                    isPass = True
+                    break
+#             if version == isNewFunc:
+#                 if newMemberUIdList[userId][3] == "":
+#                     newMemberUIdList[userId][3] = messageUrl
+#                 if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("plus.google.com/photos/" + str(userId) + "/albums/"):
+#                     if messageUrl == userIdList[userId][3]:
+#                         printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
+#                         newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+#                         allImageCount += imageCount - 1
+#                         allVideoCount += videoCount - 1
+#                         isPass = True
+#                         break
             trace("message URL:" + messageUrl)
             if not (messageUrl in messageUrlList):
                 messageUrlList.append(messageUrl)
@@ -553,10 +609,11 @@ for userId in userIdList:
         imageList = sorted(os.listdir(imagePath), reverse=True)
         # 判断排序目标文件夹是否存在
         if len(imageList) >= 1:
-            if version == isNewFunc:
-                destPath = imageDownloadPath + "\\" + newMemberUIdList[userId][4] + "\\" + userName
-            else:
-                destPath = imageDownloadPath + "\\" + userName
+            destPath = imageDownloadPath + "\\" + newMemberUIdList[userId][4] + "\\" + userName
+#             if version == isNewFunc:
+#                 destPath = imageDownloadPath + "\\" + newMemberUIdList[userId][4] + "\\" + userName
+#             else:
+#                 destPath = imageDownloadPath + "\\" + userName
             if os.path.exists(destPath):
                 if os.path.isdir(destPath):
                     printStepMsg("image download path: " + destPath + " is exist, remove all files in it")
@@ -570,13 +627,17 @@ for userId in userIdList:
                 os.makedirs(destPath)
 
             # 倒叙排列
-            if version == isNewFunc:
-                if len(userIdList[userId]) >= 3:
-                    count = int(userIdList[userId][2]) + 1
-                else:
-                    count = 1
+            if len(userIdList[userId]) >= 3:
+                count = int(userIdList[userId][2]) + 1
             else:
                 count = 1
+#             if version == isNewFunc:
+#                 if len(userIdList[userId]) >= 3:
+#                     count = int(userIdList[userId][2]) + 1
+#                 else:
+#                     count = 1
+#             else:
+#                 count = 1
             for fileName in imageList:
                 fileType = fileName.split(".")[1]
                 shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
@@ -586,23 +647,38 @@ for userId in userIdList:
         shutil.rmtree(imagePath, True)
 
         # 保存最后的信息
-        if version == isNewFunc:
-            newMemberUIdListFile = open(newMemberUIdListFilePath, 'a')
-            newMemberUIdListFile.write("\t".join(newMemberUIdList[userId]) + "\n")
-            newMemberUIdListFile.close()
+        newMemberUIdListFile = open(newMemberUIdListFilePath, 'a')
+        newMemberUIdListFile.write("\t".join(newMemberUIdList[userId]) + "\n")
+        newMemberUIdListFile.close()        
+#         if version == isNewFunc:
+#             newMemberUIdListFile = open(newMemberUIdListFilePath, 'a')
+#             newMemberUIdListFile.write("\t".join(newMemberUIdList[userId]) + "\n")
+#             newMemberUIdListFile.close()
 
-if version == isNewFunc:
 # 保存新的idList.txt
-    tmpList = []
-    tmpUserIdList = sorted(newMemberUIdList.keys())
-    for index in tmpUserIdList:
-        tmpList.append("\t".join(newMemberUIdList[index]))
-    newMemberUIdListString = "\n".join(tmpList)
-    newMemberUIdListFilePath = processPath + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(memberUIdListFilePath)[-1]
-    printStepMsg("save new id list file: " + newMemberUIdListFilePath)
-    newMemberUIdListFile = open(newMemberUIdListFilePath, 'w')
-    newMemberUIdListFile.write(newMemberUIdListString)
-    newMemberUIdListFile.close()
+tmpList = []
+tmpUserIdList = sorted(newMemberUIdList.keys())
+for index in tmpUserIdList:
+    tmpList.append("\t".join(newMemberUIdList[index]))
+newMemberUIdListString = "\n".join(tmpList)
+newMemberUIdListFilePath = processPath + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(memberUIdListFilePath)[-1]
+printStepMsg("save new id list file: " + newMemberUIdListFilePath)
+newMemberUIdListFile = open(newMemberUIdListFilePath, 'w')
+newMemberUIdListFile.write(newMemberUIdListString)
+newMemberUIdListFile.close()
+
+# if version == isNewFunc:
+# # 保存新的idList.txt
+#     tmpList = []
+#     tmpUserIdList = sorted(newMemberUIdList.keys())
+#     for index in tmpUserIdList:
+#         tmpList.append("\t".join(newMemberUIdList[index]))
+#     newMemberUIdListString = "\n".join(tmpList)
+#     newMemberUIdListFilePath = processPath + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(memberUIdListFilePath)[-1]
+#     printStepMsg("save new id list file: " + newMemberUIdListFilePath)
+#     newMemberUIdListFile = open(newMemberUIdListFilePath, 'w')
+#     newMemberUIdListFile.write(newMemberUIdListString)
+#     newMemberUIdListFile.close()
 
 stopTime = time.time()
 printStepMsg("all members' image download succeed, use " + str(int(stopTime - startTime)) + " seconds, sum download image count: " + str(allImageCount) + ", video count: " + str(allVideoCount))
