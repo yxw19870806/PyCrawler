@@ -222,6 +222,8 @@ def printErrorMsg(msg):
         msg = getTime() + " [Error] " + msg
         print msg
         if isLog == 1:
+            if msg.find("HTTP Error 500") != -1:
+                return
             logFile = open(errorLogPath, 'a')
             logFile.write(msg + "\n")
             logFile.close()
@@ -474,6 +476,8 @@ for userId in userIdList:
 #                     newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
                 allImageCount += imageCount - 1
                 allVideoCount += videoCount - 1
+                isPass = True
+                break
             errCount += 1
             continue
          

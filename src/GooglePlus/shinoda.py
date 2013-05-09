@@ -106,7 +106,6 @@ while True:
     indexCount += 1
 
 # 排序
-rootPath = os.getcwd() + "\\shinoda"
 destPath = rootPath + "\\all"
 allImageCount = 1
 if not os.path.exists(destPath):
@@ -116,7 +115,6 @@ for index1 in sorted(os.listdir(rootPath), reverse=True):
         imagePath = rootPath + "\\" + index1 + "\\" + fileName
         fileType = fileName.split(".")[-1]
         shutil.copyfile(imagePath, destPath + "\\" + str("%05d" % allImageCount) + "." + fileType)
-        print imagePath
         allImageCount += 1
 print "sorted over!, count: " + str(allImageCount)
 
