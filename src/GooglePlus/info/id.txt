@@ -45,20 +45,9 @@ NMB 3
 山内つばさ	Yamauchi_Tsubasa	(13以下）	BII
 
 NMB 4
-西村爱华	Nishimura_Aika	N
-明石奈津子	Akashi_Natsuko
-石原雅子	Ishihara_Masako
-大段舞依	Odan_Mai
-小川乃愛	Ogawa_Noa
-川上千尋	Kawakami_Chihiro
-渋谷凪咲	Shibuya_Nagisa
-嶋崎百萌香	Shimazaki_Momoka
-照井穂乃佳	Terui_Honoka
-中野麗来	Nakano_Reina
-松岡知穂	Matsuoka_Chiho
-松村芽久未	Matsumura_Megumi
-森田彩花	Morita_Ayaka
-山尾梨奈	Yamao_Rina
+嶋崎百萌香	Shimazaki_Momoka	(13以下 2001年2月8日）	BII
+松岡知穂	Matsuoka_Chiho	BII	106910542102403476007
+
 
 HKT	1
 田中菜津美	Tanaka_Natsumi（13以下 00/08/10）	H
