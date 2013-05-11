@@ -54,7 +54,7 @@ for line in lines:
         continue
     videoIndex = messagePage.find("video.googleusercontent.com")
     while videoIndex != -1:
-        if messagePage.find("token", videoIndex, videoIndex + 50) != -1:
+        if messagePage.find("token", videoIndex, videoIndex + 50) != -11:
             videStart = messagePage.find("http", videoIndex - 10)
             videStop = messagePage.find('"', videStart)
             videoUrl = messagePage[videStart:videStop]
@@ -64,6 +64,7 @@ for line in lines:
             else:
                 videoUrlList.append(videoUrl)
                 print str(videoCount) + ": " + videoUrl
+                resultFile.close()
                 videoUrlFile = open(resultFilePath, 'a')
                 videoUrlFile.writelines("<a href=" + videoUrl + ">" + str("%03d" % videoCount) + "</a><br>\n")
                 videoUrlFile.close()
