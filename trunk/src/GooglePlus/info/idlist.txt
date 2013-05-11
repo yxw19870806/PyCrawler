@@ -236,3 +236,15 @@
 118142366345814312525	Ui_Mashiro	160	https://plus.google.com/photos/118142366345814312525/albums/5875333484102549457	HKT48\Kenkyuusei
 118292013193988155683	Kimoto_Kanon	411	https://plus.google.com/photos/118292013193988155683/albums/5875990793103474529	SKE48\TEAM_E
 118425778047788093453	Umemoto_Madoka	1618	https://plus.google.com/photos/118425778047788093453/albums/5875957918331619105	SKE48\TEAM_E
+105836811721606089709	Nishimura_Aika	0	https://plus.google.com/photos/105836811721606089709/albums/1	NMB48\N
+111203448838287391228	Akashi_Natsuko	0	https://plus.google.com/photos/111203448838287391228/albums/1	NMB48\Kenkyuusei
+117943213181224077636	Ishihara_Masako	0	https://plus.google.com/photos/117943213181224077636/albums/1	NMB48\Kenkyuusei
+108252790369525260137	Odan_Mai	0	https://plus.google.com/photos/108252790369525260137/albums/1	NMB48\Kenkyuusei
+102085128875433184423	Ogawa_Noa	0	https://plus.google.com/photos/102085128875433184423/albums/1	NMB48\Kenkyuusei
+111353003766284590010	Kawakami_Chihiro	0	https://plus.google.com/photos/111353003766284590010/albums/1	NMB48\Kenkyuusei
+105610508746152409503	Shibuya_Nagisa	0	https://plus.google.com/photos/105610508746152409503/albums/1	NMB48\Kenkyuusei
+115510244530055938999	Terui_Honoka	0	https://plus.google.com/photos/115510244530055938999/albums/1	NMB48\Kenkyuusei
+117112934097805993302	Nakano_Reina	0	https://plus.google.com/photos/117112934097805993302/albums/1	NMB48\Kenkyuusei
+100468498997752620562	Matsumura_Megumi	0	https://plus.google.com/photos/100468498997752620562/albums/1	NMB48\Kenkyuusei
+105194101177612637043	Morita_Ayaka	0	https://plus.google.com/photos/105194101177612637043/albums/1	NMB48\Kenkyuusei
+101744276038072683080	Yamao_Rina	0	https://plus.google.com/photos/101744276038072683080/albums/1	NMB48\Kenkyuusei
