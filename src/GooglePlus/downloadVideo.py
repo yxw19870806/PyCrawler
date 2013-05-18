@@ -95,6 +95,7 @@ resultFile = open(newResultFilePath, 'w')
 resultFile.close()
 videoUrlList = []
 videoCount = 0
+ 
 for member in newVideoList:
     videoIdList = []
     memberPostPage = None
@@ -124,14 +125,14 @@ for member in newVideoList:
         if not isFind:
             videoIdIndex = messagePage.find("redirector.googlevideo.com")
             while videoIdIndex != -1:
-                videoIdStart = messagePage.find("id\u003d", videoIdIndex)
-                videoIdStop = messagePage.find("\u0026", videoIdStart)
+                videoIdStart = messagePage.find("?id=", videoIdIndex)
+                videoIdStop = messagePage.find("&", videoIdStart)
                 videoId = messagePage[videoIdStart + 8:videoIdStop]
                 if not (videoId in videoIdList):
                     videoIdList.append(videoId)
                     if memberPostPage == None:
                         memberPostPage = doGet("https://plus.google.com/photos/" + member.split(" ")[0] + "/albums/posts")
-                    videStart = memberPostPage.find("video.googleusercontent.com", memberPostPage.find(videoId))
+                    videStart = memberPostPage.find("http", (memberPostPage.find("video.googleusercontent.com", memberPostPage.find(videoId))) - 10)
                     videStop = memberPostPage.find('"' , videStart)
                     videoUrl = memberPostPage[videStart:videStop]
                     videoUrl = videoUrl.replace("\u003d", '=')
