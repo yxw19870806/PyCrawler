@@ -25,7 +25,6 @@ for line in lines:
         if isContinue:
             line = line[line.find(":") + 2:]
             line = line.split(" ")
-            print line
             user.append(line[1])
     elif line.find("****************************************************************************************************") != -1:
         if isContinue:

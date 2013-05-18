@@ -43,6 +43,7 @@ class downloadImage():
         return time.strftime('%H:%M:%S', time.localtime(time.time()))
 
     def printMsg(self, msg):
+        msg = self.getTime() + " " + msg
         print msg
         
     def trace(self, msg):
@@ -88,7 +89,20 @@ class downloadImage():
             targetFile = os.path.join(dirPath, fileName) 
             if os.path.isfile(targetFile): 
                 os.remove(targetFile)
-                        
+
+    def createDir(self, path):
+        count = 0
+        while 1:
+            try:
+                if count >= 5:
+                    return False
+                os.makedirs(path)
+                if os.path.isdir(path):
+                    return True
+                count += 1
+            except:
+                pass
+                
     def __init__(self):
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
@@ -156,15 +170,15 @@ class downloadImage():
             self.printMsg("Not found 'MEMBER_UID_LIST_FILE_NAME' in config.ini, default value")
             self.memberUIdListFilePath = processPath + "\\idlist.txt"
         # 配置文件获取程序配置
-#         if config.has_key("self.version"):
-#             try:
-#                 self.version = int(config["self.version"])
-#             except:
-#                 self.printMsg("'self.version' must is a number in config.ini, default value")
-#                 self.version = 1
-#         else:
-#             self.printMsg("Not found 'self.version' in config.ini, default value")
-#             self.version = 1
+        if config.has_key("VERSION"):
+            try:
+                self.version = int(config["VERSION"])
+            except:
+                self.printMsg("'VERSION' must is a number in config.ini, default value")
+                self.version = 1
+        else:
+            self.printMsg("Not found 'VERSION' in config.ini, default value")
+            self.version = 1
         if config.has_key("IS_LOG"):
             try:
                 self.isLog = int(config["IS_LOG"])
@@ -297,31 +311,43 @@ class downloadImage():
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
-                os.makedirs(stepLogDir)
+                if not self.createDir(stepLogDir):
+                    self.printErrorMsg("create " + stepLogDir + " error")
+                    self.processExit()
                 self.printStepMsg("step log file path is not exist, create it: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
-                os.makedirs(errorLogDir)
+                if not self.createDir(errorLogDir):
+                    self.printErrorMsg("create " + errorLogDir + " error")
+                    self.processExit()
                 self.printStepMsg("error log file path is not exist, create it: " + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
-                os.makedirs(traceLogDir)
+                if not self.createDir(traceLogDir):
+                    self.printErrorMsg("create " + traceLogDir + " error")
+                    self.processExit()
                 self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
         if self.isSaveMessageUrl == 1:
             messageUrlLogFileDir = os.path.dirname(self.messageUrlLogFilePath)
             if not os.path.exists(messageUrlLogFileDir):
-                os.makedirs(messageUrlLogFileDir)
+                if not self.createDir(messageUrlLogFileDir):
+                    self.printErrorMsg("create " + messageUrlLogFileDir + " error")
+                    self.processExit()
                 self.printStepMsg("message URL log file path is not exist, create it: " + messageUrlLogFileDir)
         if self.isSaveVideoUrl == 1:
             imageUrlLogFileDir = os.path.dirname(self.imageUrlLogFilePath)
             if not os.path.exists(imageUrlLogFileDir):
+                if not self.createDir(imageUrlLogFileDir):
+                    self.printErrorMsg("create " + imageUrlLogFileDir + " error")
+                    self.processExit()
                 self.printStepMsg("image URL log file path is not exist, create it: " + imageUrlLogFileDir)
-                os.makedirs(imageUrlLogFileDir)
         if self.isSaveVideoUrl == 1:
             videoFileDir = os.path.dirname(self.videoFilePath)
             if not os.path.exists(videoFileDir):
+                if not self.createDir(videoFileDir):
+                    self.printErrorMsg("create " + videoFileDir + " error")
+                    self.processExit()
                 self.printStepMsg("video URL file path is not exist, create it: " + videoFileDir)
-                os.makedirs(videoFileDir)
         if self.isDownloadImage == 1:
             if os.path.exists(self.imageDownloadPath):
                 if os.path.isdir(self.imageDownloadPath):
@@ -345,7 +371,9 @@ class downloadImage():
                     self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
                     os.remove(self.imageDownloadPath)
             self.printStepMsg("created  image download path: " + self.imageDownloadPath)
-            os.makedirs(self.imageDownloadPath)
+            if not self.createDir(self.imageDownloadPath):
+                self.printErrorMsg("create " + self.imageDownloadPath + " error")
+                self.processExit()
         # 设置代理
         if self.isProxy == 1:
             self.proxy()
@@ -390,23 +418,23 @@ class downloadImage():
         for userId in userIdList:
             errCount = 0
             isPass = False
+            isFirstVideoId = True
+            isFirstVideoUrl = True
             userName = newMemberUIdList[userId][1]
             self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
             
-            imagePath = self.imageDownloadPath + "\\" + self.imageTmpDirName
-            if os.path.exists(imagePath):
-                shutil.rmtree(imagePath, True)
-            os.makedirs(imagePath)
-            
+            if self.isSort == 1:
+                imagePath = self.imageDownloadPath + "\\" + self.imageTmpDirName
+            else:
+                imagePath = self.imageDownloadPath + "\\" + userName
+            if not self.createDir(imagePath):
+                self.printErrorMsg("create " + imagePath + " error")
+                self.processExit()
             # 日志文件插入信息
             if self.isSaveMessageUrl == 1:
                 self.writeFile(userId + " " + userName, self.messageUrlLogFilePath, isTime=False)
             if self.isSaveImageUrl == 1:
                 self.writeFile(userId + " " + userName, self.imageUrlLogFilePath, isTime=False)
-            if self.isSaveVideoUrl == 1:
-                self.writeFile(userId + " " + userName, self.videoFilePath, isTime=False)
-            if self.isSaveVideoDownloadUrl == 1:
-                self.writeFile(userId + " " + userName, self.videoUrlFilePath, isTime=False)
                 
             # 初始化数据
             pageCount = 0
@@ -440,7 +468,10 @@ class downloadImage():
                 # 判断信息总页字节数大小，是否小于300
                 if len(photoAlbumPage) < 300:
                     self.printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
-                    newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                    if self.version == 1:
+                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                    else:
+                        newMemberUIdList[userId][2] = newMemberUIdList[userId][2]
                     allImageCount += imageCount - 1
                     allVideoCount += videoCount - 1
                     break
@@ -448,20 +479,30 @@ class downloadImage():
                 messageIndex = 1
                 while messageIndex != 0:
                     if isPass:
-                        break            
-                    messageIndex = photoAlbumPage.find("plus.google.com/photos/" + userId + "/albums/", messageIndex)
+                        break
+                    if self.version == 1:
+                        messageIndex = photoAlbumPage.find("plus.google.com/photos/" + userId + "/albums/", messageIndex)
+                        messageStart = photoAlbumPage.find("http", messageIndex - 10)
+                        messageStop = photoAlbumPage.find('"', messageStart)
+                        messageUrl = photoAlbumPage[messageStart:messageStop]
+                    else:
+                        messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex)
+                        messageStart = photoAlbumPage.find("http", messageIndex)
+                        messageStop = photoAlbumPage.find('"', messageStart)
+                        messageUrl = photoAlbumPage[messageStart:messageStop]
                     if messageIndex == -1:
                         break
-                    messageStart = photoAlbumPage.find("http", messageIndex - 10)
-                    messageStop = photoAlbumPage.find('"', messageStart)
-                    messageUrl = photoAlbumPage[messageStart:messageStop]
+                    
                     # 将第一张image的URL保存到新id list中
                     if newMemberUIdList[userId][3] == "":
                         newMemberUIdList[userId][3] = messageUrl
-                    if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("plus.google.com/photos/" + str(userId) + "/albums/"):
+                    if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/"):
                         if messageUrl == userIdList[userId][3]:
                             self.printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
-                            newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                            if self.version == 1:
+                                newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                            else:
+                                newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
                             allImageCount += imageCount - 1
                             allVideoCount += videoCount - 1
                             isPass = True
@@ -480,97 +521,128 @@ class downloadImage():
                         if self.isSaveVideoUrl == 1:
                             videoIdIndex = messagePage.find("redirector.googlevideo.com")
                             while videoIdIndex != -1:
-                                videoIdStart = messagePage.find("id\u003d", videoIdIndex)
-                                videoIdStop = messagePage.find("\u0026", videoIdStart)
+                                if self.version == 1:
+                                    videoIdStart = messagePage.find("id\u003d", videoIdIndex)
+                                    videoIdStop = messagePage.find("\u0026", videoIdStart)
+                                else:
+                                    videoIdStart = messagePage.find("?id=", videoIdIndex)
+                                    videoIdStop = messagePage.find("&", videoIdStart)
                                 videoId = messagePage[videoIdStart + 8:videoIdStop]
                                 if not (videoId in videoIdList):
                                     videoIdList.append(videoId)
+                                    if isFirstVideoId:
+                                        self.writeFile(userId + " " + userName, self.videoFilePath, isTime=False)
+                                        isFirstVideoId = False
                                     self.writeFile(str(videoCount) + ": " + videoId + " " + messageUrl, self.videoFilePath, isTime=False)
                                     self.printStepMsg("video " + str(videoCount) + ": " + videoId)
                                     if self.isSaveVideoDownloadUrl == 1:
                                         if postMessage == None:
                                             postMessage = self.doGet("https://plus.google.com/photos/" + str(userId) + "/albums/posts")
                                         if postMessage:
-                                            videoUrlStart = postMessage.find("video.googleusercontent.com", postMessage.find(videoId))
+                                            videoUrlIndex = postMessage.find("video.googleusercontent.com", postMessage.find(videoId))
+                                            videoUrlStart = postMessage.find("http", videoUrlIndex - 10)
                                             videoUrlStop = postMessage.find('"' , videoUrlStart)
                                             videoUrl = postMessage[videoUrlStart:videoUrlStop]
                                             videoUrl = videoUrl.replace("\u003d", '=')
                                             if not videoUrl in videoUrlList:
                                                 videoUrlList.append(videoUrl)
                                                 self.printStepMsg("video download url: " + videoUrl)
+                                                if isFirstVideoUrl:
+                                                    self.writeFile(userId + " " + userName, self.videoUrlFilePath, isTime=False)
+                                                    isFirstVideoUrl = False
                                                 self.writeFile(str(videoCount) + ": " + videoUrl, self.videoUrlFilePath, isTime=False)
-                                        videoCount += 1
+                                    videoCount += 1
                                 videoIdIndex = messagePage.find("redirector.googlevideo.com", videoIdIndex + 1)
-        # #                         http://redirector.googlevideo.com/videoplayback?id\u003de3d428eb43ded4ec\u0026itag\u003d36\u0026source\u003dp
-        #                         messageId = messageUrl.split("/albums/")[-1]
-        #                         
-        #                         videoPageUrl = "https://plus.google.com/photos/" + userId + "/albums/posts/" + messageId + "?pid=" + messageId + "&oid=" + userId
-        #                         videoPage = doGet(videoPageUrl)
-        #                         print videoPageUrl
-        # #                         https://plus.google.com/photos/104832409151547328144/albums/5878936582792776369/5878936581433789618?pid=5878936581433789618&oid=104832409151547328144
-        #                         videoIndex = videoPage.find("video.googleusercontent.com")
-        #                         while videoIndex != -1:
-        #                             if messagePage.find("token", videoIndex, videoIndex + 50) != -1:
-        #                                 videStart = messagePage.find("http", videoIndex - 10)
-        #                                 videStop = messagePage.find('"', videStart)
-        #                                 videoUrl = messagePage[videStart:videStop]
-        #                                 trace("video URL:" + videoUrl)
-        #                                 if not(videoUrl in videoUrlList):
-        #                                     videoUrlList.append(videoUrl)
-        #                                     videoUrl = videoUrl.replace("\u003d", '=')
-        #                                     writeFile(str(videoCount) + ": " + videoUrl + "  " + messageUrl + "  " + photoAlbumUrl, self.videoFilePath, isTime=False)
-        #                                     self.printStepMsg("video " + str(videoCount) + ": " + videoUrl)
-        #                                     videoCount += 1
-        #                                     isFindVideo = True
-        #                             videoIndex = messagePage.find("video.googleusercontent.com", videoIndex + 1)
                         # picture
                         if self.isDownloadImage == 1:
-                            picasawebIndex = messagePage.find("picasaweb.google.com/" + userId)
-                            if picasawebIndex != -1:
-                                picasawebStart = messagePage.find("http", picasawebIndex - 10)
-                                picasawebStop = messagePage.find('"', picasawebStart)
-                                picasawebUrl = messagePage[picasawebStart:picasawebStop]
-                                self.trace("picasaweb URL:" + picasawebUrl)
-                                picasawebPage = self.doGet(picasawebUrl)
-                                if not picasawebPage:
-                                    self.printErrorMsg("can not get picasawebPage: " + picasawebUrl)
-                                    messageIndex += 1
-                                    continue
-                                imageIndex = picasawebPage.find('"media":')
-                                while imageIndex != -1:
-                                    imageStart = picasawebPage.find("http", imageIndex)
-                                    imageStop = picasawebPage.find('"', imageStart)
-                                    imageUrl = picasawebPage[imageStart:imageStop]
-                                    self.trace("image URL:" + imageUrl)                       
-                                    if not (imageUrl in imageUrlList):
-                                        imageUrlList.append(imageUrl)
-                                        if self.isSaveVideoUrl == 1:
-                                            self.writeFile(str(imageCount) + ": " + imageUrl + "  " + messageUrl + "  " + photoAlbumUrl, self.imageUrlLogFilePath, isTime=False)
-                                        imageResizeIndex = 0
-                                        for index in range(imageUrl.count("/")):
-                                            imageResizeIndex = imageUrl.find("/", imageResizeIndex) + 1
-                                        imageUrl = imageUrl[:imageResizeIndex] + "s0/" + imageUrl[imageResizeIndex:]
-                                        fileType = imageUrl.split(".")[-1]
-                                        imgByte = self.doGet(imageUrl)
-                                        if imgByte:
-                                            filename = str("%04d" % imageCount)                                
-                                            imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
-                                            self.printStepMsg("start download " + str(imageCount) + ": " + imageUrl)
-                                            imageFile.write(imgByte)
-                                            imageFile.close()
-                                            self.printStepMsg("download succeed")
-                                            imageCount += 1
-                                            if self.getImageCount > 0 and imageCount > self.getImageCount:
-                                                self.printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
-                                                allImageCount += imageCount - 1
-                                                allVideoCount += videoCount - 1
-                                                isPass = True
-                                                break
-                                        else:
-                                            self.printErrorMsg("image path not found: " + imageUrl)
-                                    imageIndex = picasawebPage.find('"media":', imageIndex + 1)
+                            if self.version == 1:
+                                picasawebIndex = messagePage.find("picasaweb.google.com/" + userId)
+                                if picasawebIndex != -1:
+                                    picasawebStart = messagePage.find("http", picasawebIndex - 10)
+                                    picasawebStop = messagePage.find('"', picasawebStart)
+                                    picasawebUrl = messagePage[picasawebStart:picasawebStop]
+                                    self.trace("picasaweb URL:" + picasawebUrl)
+                                    picasawebPage = self.doGet(picasawebUrl)
+                                    if not picasawebPage:
+                                        self.printErrorMsg("can not get picasawebPage: " + picasawebUrl)
+                                        messageIndex += 1
+                                        continue
+                                    imageIndex = picasawebPage.find('"media":')
+                                    while imageIndex != -1:
+                                        imageStart = picasawebPage.find("http", imageIndex)
+                                        imageStop = picasawebPage.find('"', imageStart)
+                                        imageUrl = picasawebPage[imageStart:imageStop]
+                                        self.trace("image URL:" + imageUrl)                       
+                                        if not (imageUrl in imageUrlList):
+                                            imageUrlList.append(imageUrl)
+                                            if self.isSaveVideoUrl == 1:
+                                                self.writeFile(str(imageCount) + ": " + imageUrl + "  " + messageUrl + "  " + photoAlbumUrl, self.imageUrlLogFilePath, isTime=False)
+                                            imageResizeIndex = 0
+                                            for index in range(imageUrl.count("/")):
+                                                imageResizeIndex = imageUrl.find("/", imageResizeIndex) + 1
+                                            imageUrl = imageUrl[:imageResizeIndex] + "s0/" + imageUrl[imageResizeIndex:]
+                                            fileType = imageUrl.split(".")[-1]
+                                            imgByte = self.doGet(imageUrl)
+                                            if imgByte:
+                                                filename = str("%04d" % imageCount)
+                                                imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
+                                                self.printStepMsg("start download " + str(imageCount) + ": " + imageUrl)
+                                                imageFile.write(imgByte)
+                                                imageFile.close()
+                                                self.printStepMsg("download succeed")
+                                                imageCount += 1
+                                                if self.getImageCount > 0 and imageCount > self.getImageCount:
+                                                    self.printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
+                                                    if self.version == 1:
+                                                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                                                    else:
+                                                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                                                    allImageCount += imageCount - 1
+                                                    allVideoCount += videoCount - 1
+                                                    isPass = True
+                                                    break
+                                            else:
+                                                self.printErrorMsg("image path not found: " + imageUrl)
+                                        imageIndex = picasawebPage.find('"media":', imageIndex + 1)
+                                else:
+                                    self.printErrorMsg("picasaweb.google.com not found in " + messageUrl)
                             else:
-                                self.printErrorMsg("picasaweb.google.com not found in " + messageUrl)
+                                flag = messagePage.find("<div><a href=")
+                                while flag != -1:
+                                    imageIndex = messagePage.find("<img src=", flag, flag + 200)
+                                    if imageIndex != -1:
+                                        imageStart = messagePage.find("http", imageIndex)
+                                        imageStop = messagePage.find('"', imageStart)
+                                        imageUrl = messagePage[imageStart:imageStop]
+                                        self.trace("image URL:" + imageUrl)                       
+                                        if not (imageUrl in imageUrlList):
+                                            tempList = imageUrl.split("/")
+                                            tempList[-2] = "s0"
+                                            imageUrl = "/".join(tempList)
+                                            fileType = imageUrl.split(".")[-1]
+                                            imgByte = self.doGet(imageUrl)
+                                            if imgByte:
+                                                filename = str("%04d" % imageCount)
+                                                imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
+                                                self.printStepMsg("start download " + str(imageCount) + ": " + imageUrl)
+                                                imageFile.write(imgByte)
+                                                imageFile.close()
+                                                self.printStepMsg("download succeed")
+                                                imageCount += 1
+                                                if self.getImageCount > 0 and imageCount > self.getImageCount:
+                                                    self.printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
+                                                    if self.version == 1:
+                                                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                                                    else:
+                                                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
+                                                    allImageCount += imageCount - 1
+                                                    allVideoCount += videoCount - 1
+                                                    isPass = True
+                                                    break
+                                    else:
+                                        self.printErrorMsg("'<img src=' not found  in " + messageUrl)
+                                        continue
+                                    flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
                 pageCount += 100
                 
@@ -578,9 +650,9 @@ class downloadImage():
                 self.writeFile("****************************************************************************************************", self.messageUrlLogFilePath, isTime=False)
             if self.isSaveImageUrl == 1:
                 self.writeFile("****************************************************************************************************", self.imageUrlLogFilePath, isTime=False)
-            if self.isSaveVideoUrl == 1:
+            if self.isSaveVideoUrl == 1 and not isFirstVideoId:
                 self.writeFile("****************************************************************************************************", self.videoFilePath, isTime=False)
-            if self.isSaveVideoDownloadUrl == 1:
+            if self.isSaveVideoDownloadUrl == 1 and not isFirstVideoUrl:
                 self.writeFile("****************************************************************************************************", self.videoUrlFilePath, isTime=False)
             
             # 排序
@@ -596,10 +668,14 @@ class downloadImage():
                         else:
                             self.printStepMsg("image download path: " + destPath + " is a file, delete it")
                             os.remove(destPath)
-                            os.makedirs(destPath)
+                            if not self.createDir(destPath):
+                                self.printErrorMsg("create " + destPath + " error")
+                                self.processExit()
                     else:
                         self.printStepMsg("create image download path: " + destPath)
-                        os.makedirs(destPath)
+                        if not self.createDir(destPath):
+                            self.printErrorMsg("create " + destPath + " error")
+                            self.processExit()
         
                     # 倒叙排列
                     if len(userIdList[userId]) >= 3:
