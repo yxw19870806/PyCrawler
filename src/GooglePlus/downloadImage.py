@@ -224,6 +224,8 @@ def printErrorMsg(msg):
         if isLog == 1:
             if msg.find("HTTP Error 500") != -1:
                 return
+            if msg.find("urlopen error The read operation timed out") != -1:
+                return
             logFile = open(errorLogPath, 'a')
             logFile.write(msg + "\n")
             logFile.close()
@@ -458,7 +460,7 @@ for userId in userIdList:
     videoCount = 1
     messageUrlList = []
     imageUrlList = []
-    videoUrlList = []
+    videoIdList = []
     while 1:
         if isPass:
                 break
@@ -469,7 +471,7 @@ for userId in userIdList:
         if not photoAlbumPage:
             printErrorMsg("can not get photoAlbumPage: " + photoAlbumUrl)
             pageCount += 100
-            if errCount >=5:
+            if errCount >= 5:
                 printStepMsg(userName + " download over, download image count: " + str(imageCount - 1) + ", video count: " + str(videoCount - 1))
                 newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
 #                 if version == isNewFunc:
@@ -534,22 +536,42 @@ for userId in userIdList:
                     printErrorMsg("can not get messagePage: " + messageUrl)
                     messageIndex += 1
                     continue
+                # video
                 if isSaveVideoUrl == 1:
-                    videoIndex = messagePage.find("video.googleusercontent.com")
-                    while videoIndex != -1:
-                        if messagePage.find("token", videoIndex, videoIndex + 50) != -1:
-                            videStart = messagePage.find("http", videoIndex - 10)
-                            videStop = messagePage.find('"', videStart)
-                            videoUrl = messagePage[videStart:videStop]
-                            trace("video URL:" + videoUrl)
-                            if not(videoUrl in videoUrlList):
-                                videoUrlList.append(videoUrl)
-                                videoUrl = videoUrl.replace("\u003d", '=')
-                                writeLog(str(videoCount) + ": " + videoUrl + "  " + messageUrl + "  " + photoAlbumUrl, videoFilePath, isTime=False)
-                                printStepMsg("video " + str(videoCount) + ": " + videoUrl)
-                                videoCount += 1
-                                isFindVideo = True
-                        videoIndex = messagePage.find("video.googleusercontent.com", videoIndex + 1)
+                    videoIdIndex = messagePage.find("redirector.googlevideo.com")
+                    while videoIdIndex != -1:
+                        videoIdStart = messagePage.find("id\u003d", videoIdIndex)
+                        videoIdStop = messagePage.find("\u0026", videoIdStart)
+                        videoId = messagePage[videoIdStart + 8:videoIdStop]
+                        if not (videoId in videoIdList):
+                            videoIdList.append(videoId)
+                            writeLog(str(videoCount) + ": " + videoId + " " + messageUrl, videoFilePath, isTime=False)
+                            printStepMsg("video " + str(videoCount) + ": " + videoId)
+                            videoCount += 1
+                            isFindVideo = True
+                        videoIdIndex = messagePage.find("redirector.googlevideo.com", videoIdIndex + 1)
+# #                         http://redirector.googlevideo.com/videoplayback?id\u003de3d428eb43ded4ec\u0026itag\u003d36\u0026source\u003dp
+#                         messageId = messageUrl.split("/albums/")[-1]
+#                         
+#                         videoPageUrl = "https://plus.google.com/photos/" + userId + "/albums/posts/" + messageId + "?pid=" + messageId + "&oid=" + userId
+#                         videoPage = doGet(videoPageUrl)
+#                         print videoPageUrl
+# #                         https://plus.google.com/photos/104832409151547328144/albums/5878936582792776369/5878936581433789618?pid=5878936581433789618&oid=104832409151547328144
+#                         videoIndex = videoPage.find("video.googleusercontent.com")
+#                         while videoIndex != -1:
+#                             if messagePage.find("token", videoIndex, videoIndex + 50) != -1:
+#                                 videStart = messagePage.find("http", videoIndex - 10)
+#                                 videStop = messagePage.find('"', videStart)
+#                                 videoUrl = messagePage[videStart:videStop]
+#                                 trace("video URL:" + videoUrl)
+#                                 if not(videoUrl in videoUrlList):
+#                                     videoUrlList.append(videoUrl)
+#                                     videoUrl = videoUrl.replace("\u003d", '=')
+#                                     writeLog(str(videoCount) + ": " + videoUrl + "  " + messageUrl + "  " + photoAlbumUrl, videoFilePath, isTime=False)
+#                                     printStepMsg("video " + str(videoCount) + ": " + videoUrl)
+#                                     videoCount += 1
+#                                     isFindVideo = True
+#                             videoIndex = messagePage.find("video.googleusercontent.com", videoIndex + 1)
                 # picture
                 if isDownloadImage == 1:
                     picasawebIndex = messagePage.find("picasaweb.google.com/" + userId)
