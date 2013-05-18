@@ -1,4 +1,4 @@
-#-*- coding:utf-8  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-4-14
 
@@ -25,7 +25,8 @@ for line in lines:
         if isContinue:
             line = line[line.find(":") + 2:]
             line = line.split(" ")
-            user.append(line[2] + "\n")
+            print line
+            user.append(line[1])
     elif line.find("****************************************************************************************************") != -1:
         if isContinue:
             videoCount = len(user) - 1
