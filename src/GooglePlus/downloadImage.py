@@ -276,14 +276,14 @@ class downloadImage():
             if config.has_key("PROXY_IP"):
                 self.proxyIp = config["PROXY_IP"]
             else:
-                self.printErrorMsg("Not found proxy IP in config.ini! process stop!")
+                self.printMsg("Not found proxy IP in config.ini! process stop!")
                 self.processExit()
             if config.has_key("PROXY_PORT"):
                 self.proxyPort = config["PROXY_PORT"]
             else:
-                self.printErrorMsg("Not found proxy port in config.ini! process stop!")
+                self.printMsg("Not found proxy port in config.ini! process stop!")
                 self.processExit()
-        self.printStepMsg("config init succeed")
+        self.printMsg("config init succeed")
 
     def proxy(self):
             proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
