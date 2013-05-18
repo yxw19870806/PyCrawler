@@ -63,7 +63,7 @@ for line in lines:
             pass
         else:
             allVideoList[username] = []
-            
+
 # 解析需要下载的url地址的文件
 newFile = open(newFilePath, 'r')
 lines = newFile.readlines()
@@ -72,7 +72,7 @@ for line in lines:
     line = line.replace("\n", "")
     if line.find("https:") != -1:
         url = line[line.find("https:"):]
-        newVideoList[username.split(" ")[1]][len(allVideoList[username]) + 1] = url
+        newVideoList[username][len(allVideoList[username]) + 1] = url
         allVideoList[username].append(url)
     elif line.find("****************************************************************************************************") != -1:
         username = ""
@@ -85,17 +85,19 @@ for line in lines:
         else:
             print "new member: " + username
             allVideoList[username] = []
-        if username.split(" ")[1] in newVideoList:
+        if username in newVideoList:
             pass
         else:
-            newVideoList[username.split(" ")[1]] = {}
-            
+            newVideoList[username] = {}
+
 # 获取需要下载视频的真实url地址
 resultFile = open(newResultFilePath, 'w')
 resultFile.close()
 videoUrlList = []
 videoCount = 0
 for member in newVideoList:
+    videoIdList = []
+    memberPostPage = None
     for index in newVideoList[member]:
         url = newVideoList[member][index]
         messagePage = doGet(url)
@@ -103,6 +105,7 @@ for member in newVideoList:
             print "can not get this page: " + url
             continue
         videoIndex = messagePage.find("video.googleusercontent.com")
+        isFind = False
         while videoIndex != -1:
             if messagePage.find("token", videoIndex, videoIndex + 50) != -11:
                 videStart = messagePage.find("http", videoIndex - 10)
@@ -111,12 +114,35 @@ for member in newVideoList:
                 videoUrl = videoUrl.replace("\u003d", '=')
                 if not videoUrl in videoUrlList:
                     videoUrlList.append(videoUrl)
-                    print member + " " + str(index) + ": " + videoUrl
+                    print member.split(" ")[1] + " " + str(index) + ": " + videoUrl
                     resultFile = open(newResultFilePath, 'a')
                     resultFile.writelines("<a href=" + videoUrl + ">" + str(member + "_" + "%03d" % index) + "</a><br>\n")
                     resultFile.close()
                     videoCount += 1
+                    isFind = True
             videoIndex = messagePage.find("video.googleusercontent.com", videoIndex + 1)
+        if not isFind:
+            videoIdIndex = messagePage.find("redirector.googlevideo.com")
+            while videoIdIndex != -1:
+                videoIdStart = messagePage.find("id\u003d", videoIdIndex)
+                videoIdStop = messagePage.find("\u0026", videoIdStart)
+                videoId = messagePage[videoIdStart + 8:videoIdStop]
+                if not (videoId in videoIdList):
+                    videoIdList.append(videoId)
+                    if memberPostPage == None:
+                        memberPostPage = doGet("https://plus.google.com/photos/" + member.split(" ")[0] + "/albums/posts")
+                    videStart = memberPostPage.find("video.googleusercontent.com", memberPostPage.find(videoId))
+                    videStop = memberPostPage.find('"' , videStart)
+                    videoUrl = memberPostPage[videStart:videStop]
+                    videoUrl = videoUrl.replace("\u003d", '=')
+                    if not videoUrl in videoUrlList:
+                        videoUrlList.append(videoUrl)
+                        print member.split(" ")[1] + " " + str(index) + ": " + videoUrl
+                        resultFile = open(newResultFilePath, 'a')
+                        resultFile.writelines("<a href=" + videoUrl + ">" + str(member + "_" + "%03d" % index) + "</a><br>\n")
+                        resultFile.close()
+                        videoCount += 1
+                videoIdIndex = messagePage.find("redirector.googlevideo.com", videoIdIndex + 1)
 print str(videoCount) + " videos"
 
 # 保存所有url地址到新文件
