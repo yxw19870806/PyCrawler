@@ -102,7 +102,35 @@ class downloadImage():
                 count += 1
             except:
                 pass
-                
+
+    def proxy(self):
+            proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
+            opener = urllib2.build_opener(proxyHandler)
+            urllib2.install_opener(opener)
+            self.printStepMsg("proxy set succeed")
+    
+    # mode 0 : 直接赋值
+    # mode 1 : 字符串拼接
+    # mode 2 : 取整
+    def getConfig(self, config, key, defaultValue, mode, addValue=None):
+        value = None
+        if config.has_key(key):
+            if mode == 0:
+                value = config[key]
+            elif mode == 1:
+                value = addValue + config[key]
+            elif mode == 2:
+                try:
+                    value = int(config[key])
+                except:
+                    self.printMsg("'" + key + "' must is a number in config.ini, default value")
+                    value = 1
+        else:
+            self.printMsg("Not found '" + key + "' in config.ini, default value")
+            value = defaultValue
+        return value
+        
+    
     def __init__(self):
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
@@ -119,192 +147,34 @@ class downloadImage():
                     self.printMsg(str(e))
                     pass
         # 配置文件获取日志文件路径
-        if config.has_key("MESSAGE_URL_LOG_FILE_NAME"):
-            self.messageUrlLogFilePath = processPath + "\\" + config["MESSAGE_URL_LOG_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'MESSAGE_URL_LOG_FILE_NAME' in config.ini, default value")
-            self.messageUrlLogFilePath = processPath + "\\log\\messageLog.txt"
-        if config.has_key("IMAGE_URL_LOG_FILE_NAME"):
-            self.imageUrlLogFilePath = processPath + "\\" + config["IMAGE_URL_LOG_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'IMAGE_URL_LOG_FILE_NAME' in config.ini, default value")
-            self.imageUrlLogFilePath = processPath + "\\log\\messageLog.txt"
-        if config.has_key("VIDEO_FILE_NAME"):
-            self.videoFilePath = processPath + "\\" + config["VIDEO_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'VIDEO_FILE_NAME' in config.ini, default value")
-            self.videoFilePath = processPath + "\\video.txt"
-        if config.has_key("VIDEO_DOWNLOAD_URL_FILE_NAME"):
-            self.videoUrlFilePath = processPath + "\\" + config["VIDEO_DOWNLOAD_URL_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'VIDEO_DOWNLOAD_URL_FILE_NAME' in config.ini, default value")
-            self.videoUrlFilePath = processPath + "\\videoDownloadUrl.txt"
-        if config.has_key("ERROR_LOG_FILE_NAME"):
-            self.errorLogPath = processPath + "\\" + config["ERROR_LOG_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'ERROR_LOG_FILE_NAME' in config.ini, default value")
-            self.errorLogPath = processPath + "\\log\\errorLog.txt"
-        if config.has_key("TRACE_LOG_FILE_NAME"):
-            self.traceLogPath = processPath + "\\" + config["TRACE_LOG_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'TRACE_LOG_FILE_NAME' in config.ini, default value")
-            self.traceLogPath = processPath + "\\log\\traceLog.txt"
-        if config.has_key("STEP_LOG_FILE_NAME"):
-            self.stepLogPath = processPath + "\\" + config["STEP_LOG_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'STEP_LOG_FILE_NAME' in config.ini, default value")
-            self.stepLogPath = processPath + "\\log\\stepLog.txt"
-        if config.has_key("IMAGE_DOWNLOAD_DIR_NAME"):
-            self.imageDownloadPath = processPath + "\\" + config["IMAGE_DOWNLOAD_DIR_NAME"]
-        else:
-            self.printMsg("Not found 'IMAGE_DOWNLOAD_DIR_NAME' in config.ini, default value")
-            self.imageDownloadPath = processPath + "\\download"
-        if config.has_key("IMAGE_TEMP_DIR_NAME"):
-            self.imageTmpDirName = config["IMAGE_TEMP_DIR_NAME"]
-        else:
-            self.printMsg("Not found 'IMAGE_TEMP_DIR_NAME' in config.ini, default value")
-            self.imageTmpDirName = "temp"
-        if config.has_key("MEMBER_UID_LIST_FILE_NAME"):
-            self.memberUIdListFilePath = processPath + "\\" + config["MEMBER_UID_LIST_FILE_NAME"]
-        else:
-            self.printMsg("Not found 'MEMBER_UID_LIST_FILE_NAME' in config.ini, default value")
-            self.memberUIdListFilePath = processPath + "\\idlist.txt"
+        self.messageUrlLogFilePath = self.getConfig(config, "MESSAGE_URL_LOG_FILE_NAME", processPath + "\\log\\messageLog.txt", 1, processPath + "\\")
+        self.imageUrlLogFilePath = self.getConfig(config, "IMAGE_URL_LOG_FILE_NAME", processPath + "\\log\\messageLog.txt", 1, processPath + "\\")
+        self.videoFilePath = self.getConfig(config, "VIDEO_FILE_NAME", processPath + "\\video.txt", 1, processPath + "\\")
+        self.videoUrlFilePath = self.getConfig(config, "VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\videoDownloadUrl.txt", 1, processPath + "\\")
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, processPath + "\\")
+        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, processPath + "\\")
+        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, processPath + "\\")
+        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", processPath + "\\download", 1, processPath + "\\")
+        self.imageTmpDirName = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "tmpImage", 0)
+        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
         # 配置文件获取程序配置
-        if config.has_key("VERSION"):
-            try:
-                self.version = int(config["VERSION"])
-            except:
-                self.printMsg("'VERSION' must is a number in config.ini, default value")
-                self.version = 1
-        else:
-            self.printMsg("Not found 'VERSION' in config.ini, default value")
-            self.version = 1
-        if config.has_key("IS_LOG"):
-            try:
-                self.isLog = int(config["IS_LOG"])
-            except:
-                self.printMsg("'IS_LOG' must is a number in config.ini, default value")
-                self.isLog = 1
-        else:
-            self.printMsg("Not found 'IS_LOG' in config.ini, default value")
-            self.isLog = 1
-        if config.has_key("IS_SHOW_ERROR"):
-            try:
-                self.isShowError = int(config["IS_SHOW_ERROR"])
-            except:
-                self.printMsg("'IS_SHOW_ERROR' must is a number in config.ini, default value")
-                self.isShowError = 1
-        else:
-            self.printMsg("Not found 'IS_SHOW_ERROR' in config.ini, default value")
-            self.isShowError = 1
-        if config.has_key("IS_DEBUG"):
-            try:
-                self.isDebug = int(config["IS_DEBUG"])
-            except:
-                self.printMsg("'IS_DEBUG' must is a number in config.ini, default value")
-                self.isDebug = 1
-        else:
-            self.printMsg("Not found 'IS_DEBUG' in config.ini, default value")
-            self.isDebug = 1
-        if config.has_key("IS_SHOW_STEP"):
-            try:
-                self.isShowStep = int(config["IS_SHOW_STEP"])
-            except:
-                self.printMsg("'IS_SHOW_STEP' must is a number in config.ini, default value")
-                self.isShowStep = 1
-        else:
-            self.printMsg("Not found 'IS_SHOW_STEP' in config.ini, default value")
-            self.isShowStep = 1
-        if config.has_key("IS_SAVE_MESSAGE_URL"):
-            try:
-                self.isSaveMessageUrl = int(config["IS_SAVE_MESSAGE_URL"])
-            except:
-                self.printMsg("'IS_SAVE_MESSAGE_URL' must is a number in config.ini, default value")
-                self.isSaveMessageUrl = 1
-        else:
-            self.printMsg("Not found 'IS_SAVE_MESSAGE_URL' in config.ini, default value")
-            self.isSaveMessageUrl = 1
-        if config.has_key("IS_SAVE_IMAGE_URL"):
-            try:
-                self.isSaveImageUrl = int(config["IS_SAVE_IMAGE_URL"])
-            except:
-                self.printMsg("'IS_SAVE_IMAGE_URL' must is a number in config.ini, default value")
-                self.isSaveImageUrl = 1
-        else:
-            self.printMsg("Not found 'IS_SAVE_IMAGE_URL' in config.ini, default value")
-            self.isSaveImageUrl = 1
-        if config.has_key("iS_SAVE_VIDEO_URL"):
-            try:
-                self.isSaveVideoUrl = int(config["iS_SAVE_VIDEO_URL"])
-            except:
-                self.printMsg("'iS_SAVE_VIDEO_URL' must is a number in config.ini, default value")
-                self.isSaveVideoUrl = 1
-        else:
-            self.printMsg("Not found 'iS_SAVE_VIDEO_URL' in config.ini, default value")
-            self.isSaveVideoUrl = 1
-        if config.has_key("iS_SAVE_VIDEO_DOWNLOAD_URL"):
-            try:
-                self.isSaveVideoDownloadUrl = int(config["iS_SAVE_VIDEO_DOWNLOAD_URL"])
-            except:
-                self.printMsg("'iS_SAVE_VIDEO_DOWNLOAD_URL' must is a number in config.ini, default value")
-                self.isSaveVideoDownloadUrl = 1
-        else:
-            self.printMsg("Not found 'iS_SAVE_VIDEO_DOWNLOAD_URL' in config.ini, default value")
-            self.isSaveVideoDownloadUrl = 1
-        if config.has_key("IS_DOWNLOAD_IMAGE"):
-            try:
-                self.isDownloadImage = int(config["IS_DOWNLOAD_IMAGE"])
-            except:
-                self.printMsg("'IS_DOWNLOAD_IMAGE' must is a number in config.ini, default value")
-                self.isDownloadImage = 1
-        else:
-            self.printMsg("Not found 'IS_DOWNLOAD_IMAGE' in config.ini, default value")
-            self.isDownloadImage = 1
-        if config.has_key("IS_SORT"):
-            try:
-                self.isSort = int(config["IS_SORT"])
-            except:
-                self.printMsg("'IS_SORT' must is a number in config.ini, default value")
-                self.isSort = 1
-        else:
-            self.printMsg("Not found 'IS_SORT' in config.ini, default value")
-            self.isSort = 1
-        if config.has_key("GET_IMAGE_COUNT"):
-            try:
-                self.getImageCount = int(config["GET_IMAGE_COUNT"])
-            except:
-                self.printMsg("'GET_IMAGE_COUNT' must is a number in config.ini, default value")
-                self.getImageCount = 0
-        else:
-            self.printMsg("Not found 'GET_IMAGE_COUNT' in config.ini, default value")
-            self.getImageCount = 0
-        if config.has_key("IS_PROXY"):
-            try:
-                self.isProxy = int(config["IS_PROXY"])
-            except:
-                self.printMsg("'IS_PROXY' must is a number in config.ini, default value")
-                self.isProxy = 0
-        else:
-            self.isProxy = 0
-        if self.isProxy == 1:
-            if config.has_key("PROXY_IP"):
-                self.proxyIp = config["PROXY_IP"]
-            else:
-                self.printMsg("Not found proxy IP in config.ini! process stop!")
-                self.processExit()
-            if config.has_key("PROXY_PORT"):
-                self.proxyPort = config["PROXY_PORT"]
-            else:
-                self.printMsg("Not found proxy port in config.ini! process stop!")
-                self.processExit()
+        self.version = self.getConfig(config, "VERSION", 1, 2)
+        self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
+        self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
+        self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
+        self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
+        self.isSaveMessageUrl = self.getConfig(config, "IS_SAVE_MESSAGE_URL", 1, 2)
+        self.isSaveImageUrl = self.getConfig(config, "IS_SAVE_IMAGE_URL", 1, 2)
+        self.isSaveVideoUrl = self.getConfig(config, "iS_SAVE_VIDEO_URL", 1, 2)
+        self.isSaveVideoDownloadUrl = self.getConfig(config, "iS_SAVE_VIDEO_DOWNLOAD_URL", 1, 2)
+        self.isDownloadImage = self.getConfig(config, "IS_DOWNLOAD_IMAGE", 1, 2)
+        self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
+        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 1, 2)
+        self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
+        self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
+        self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
         self.printMsg("config init succeed")
 
-    def proxy(self):
-            proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
-            opener = urllib2.build_opener(proxyHandler)
-            urllib2.install_opener(opener)
-            self.printStepMsg("proxy set succeed")
-        
     def main(self):
         startTime = time.time()
         # 判断各种目录是否存在
