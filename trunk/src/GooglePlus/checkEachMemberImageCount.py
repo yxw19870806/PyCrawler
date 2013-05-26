@@ -24,4 +24,4 @@ def getCount(path):
             print line[1] + ": " + str(count1) + ", " + str(count2)
     print "check over!"
 
-getCount("info\\idlist.txt")
+getCount("info\\BK_idlist.txt")
