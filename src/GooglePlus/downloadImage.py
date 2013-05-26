@@ -341,7 +341,7 @@ class downloadImage():
                     if self.version == 1:
                         newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
                     else:
-                        newMemberUIdList[userId][2] = newMemberUIdList[userId][2]
+                        newMemberUIdList[userId][2] = str(int(newMemberUIdList[userId][2]) + imageCount - 1)
                     allImageCount += imageCount - 1
                     allVideoCount += videoCount - 1
                     break
