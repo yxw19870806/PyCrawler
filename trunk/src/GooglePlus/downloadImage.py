@@ -31,6 +31,12 @@ class downloadImage():
                     response = urllib2.urlopen(request, timeout=20)
                 return response.read()
             except Exception, e:
+                if str(e).find("[Errno 10061] ") !=-1:
+                    input = raw_input("please check your proxy setting! Type in (Y)es to continue or (N)o to exit process!: ").lower()
+                    if input in ["y", "yes"]:
+                        pass
+                    elif input in ["n", "no"]:
+                        self.processExit()
                 self.trace("url: " + url)
                 self.printErrorMsg(str(e) + ": " + url)
                 traceback.print_exc()
@@ -231,7 +237,7 @@ class downloadImage():
                             elif input in ["n", "no"]:
                                 self.processExit()
                         except:
-                            pass            
+                            pass
                     self.printStepMsg("image download path: " + self.imageDownloadPath + " is exist, remove it")
                     shutil.rmtree(self.imageDownloadPath, True)
                     # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
