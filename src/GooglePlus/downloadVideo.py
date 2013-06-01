@@ -83,7 +83,7 @@ class downloadVideo():
                     self.printMsg(str(e))
                     pass
         self.allVideoFilePath = self.getConfig(config, "ALL_VIDEO_FILE_NAME", processPath + "\\info\\allVideo.txt", 1, processPath + "\\")
-        self.newVideoFilePath = self.getConfig(config, "NEW_VIDEO_FILE_NAME", processPath + "\\info\\allVideo.txt", 1, processPath + "\\")
+        self.newVideoFilePath = self.getConfig(config, "NEW_VIDEO_FILE_NAME", processPath + "\\info\\video_download.txt", 1, processPath + "\\")
         self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\info\\get_result.html", 1, processPath + "\\")
         self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
