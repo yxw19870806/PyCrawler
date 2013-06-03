@@ -85,6 +85,7 @@ class downloadVideo():
         self.allVideoFilePath = self.getConfig(config, "ALL_VIDEO_FILE_NAME", processPath + "\\info\\allVideo.txt", 1, processPath + "\\")
         self.newVideoFilePath = self.getConfig(config, "NEW_VIDEO_FILE_NAME", processPath + "\\info\\video_download.txt", 1, processPath + "\\")
         self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\info\\get_result.html", 1, processPath + "\\")
+        self.idListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\info\\idlist.txt", 1, processPath + "\\")
         self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
@@ -195,6 +196,8 @@ class downloadVideo():
                                 videoCount += 1
                         videoIdIndex = messagePage.find("redirector.googlevideo.com", videoIdIndex + 1)
         self.printMsg("get " + str(videoCount) + " videos")
+        
+        #获取member保存路径
         
         # 保存所有url地址到新文件
         newAllVideoFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + "allVideo.txt"
