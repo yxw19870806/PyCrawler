@@ -1,10 +1,11 @@
 # -*- coding:utf-8  -*-
 '''
-Created on 2013-4-14
+Created on 2013-6-15
 
 @author: rena
 '''
 
+import copy
 import os
 import sys
 import time
@@ -13,18 +14,8 @@ import urllib2
 
 class downloadVideo():
     
-    def getTime(self):
-        return time.strftime('%H:%M:%S', time.localtime(time.time()))
-    
-    def printMsg(self, msg):
-        msg = self.getTime() + " " + msg
-        print msg
-        
-    def proxy(self):
-        proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
-        opener = urllib2.build_opener(proxyHandler)
-        urllib2.install_opener(opener)
-        self.printMsg("proxy set succeed")
+    def processExit(self):
+        sys.exit()
         
     def doGet(self, url):
         if url.find("http") == -1:
@@ -45,7 +36,71 @@ class downloadVideo():
             if count > 10:
                 self.printMsg("can not connection " + url)
                 return False
-
+            
+    def getTime(self):
+        return time.strftime('%H:%M:%S', time.localtime(time.time()))
+     
+    def printMsg(self, msg):
+        msg = self.getTime() + " " + msg
+        print msg
+    
+    def trace(self, msg):
+        if self.isDebug == 1:
+            msg = self.getTime() + " " + msg
+    #        print msg
+            if self.isLog == 1:
+                logFile = open(self.traceLogPath, 'a')
+                logFile.write(msg + "\n")
+                logFile.close()
+    
+    def printErrorMsg(self, msg):
+        if self.isShowError == 1:
+            msg = self.getTime() + " [Error] " + msg
+            print msg
+            if self.isLog == 1:
+                if msg.find("HTTP Error 500") != -1:
+                    return
+                if msg.find("urlopen error The read operation timed out") != -1:
+                    return
+                logFile = open(self.errorLogPath, 'a')
+                logFile.write(msg + "\n")
+                logFile.close()
+    
+    def printStepMsg(self, msg):
+        if self.isShowStep == 1:
+            msg = self.getTime() + " " + msg
+            print msg
+            if self.isLog == 1:
+                logFile = open(self.stepLogPath, 'a')
+                logFile.write(msg + "\n")
+                logFile.close()
+    
+    def writeFile(self, msg, filePath, isTime=True):
+        if isTime:
+            msg = self.getTime() + " " + msg
+        logFile = open(filePath, 'a')
+        logFile.write(msg + "\n")
+        logFile.close()
+        
+    def createDir(self, path):
+        count = 0
+        while 1:
+            try:
+                if count >= 5:
+                    return False
+                os.makedirs(path)
+                if os.path.isdir(path):
+                    return True
+                count += 1
+            except:
+                pass
+            
+    def proxy(self):
+        proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
+        opener = urllib2.build_opener(proxyHandler)
+        urllib2.install_opener(opener)
+        self.printMsg("proxy set succeed")
+        
     # mode 0 : 直接赋值
     # mode 1 : 字符串拼接
     # mode 2 : 取整
@@ -82,132 +137,176 @@ class downloadVideo():
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        self.allVideoFilePath = self.getConfig(config, "ALL_VIDEO_FILE_NAME", processPath + "\\info\\allVideo.txt", 1, processPath + "\\")
-        self.newVideoFilePath = self.getConfig(config, "NEW_VIDEO_FILE_NAME", processPath + "\\info\\video_download.txt", 1, processPath + "\\")
+        # 配置文件获取日志文件路径
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, processPath + "\\")
+        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, processPath + "\\")
+        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, processPath + "\\")
+        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
         self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\info\\get_result.html", 1, processPath + "\\")
-        self.idListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\info\\idlist.txt", 1, processPath + "\\")
+        # 配置文件获取程序配置
+        self.version = self.getConfig(config, "VERSION", 1, 2)
+        self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
+        self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
+        self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
+        self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
+        self.isGetVideoUrl = self.getConfig(config, "iS_GET_VIDEO_URL", 1, 2)
         self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
         self.printMsg("config init succeed")
         
     def main(self):
+        # video
+        if self.isGetVideoUrl != 1:
+            self.processExit()
+        startTime = time.time()
+        # 判断各种目录是否存在
+        if self.isLog == 1:
+            stepLogDir = os.path.dirname(self.stepLogPath)
+            if not os.path.exists(stepLogDir):
+                if not self.createDir(stepLogDir):
+                    self.printErrorMsg("create " + stepLogDir + " error")
+                    self.processExit()
+                self.printStepMsg("step log file path is not exist, create it: " + stepLogDir)
+            errorLogDir = os.path.dirname(self.errorLogPath)
+            if not os.path.exists(errorLogDir):
+                if not self.createDir(errorLogDir):
+                    self.printErrorMsg("create " + errorLogDir + " error")
+                    self.processExit()
+                self.printStepMsg("error log file path is not exist, create it: " + errorLogDir)
+            traceLogDir = os.path.dirname(self.traceLogPath)
+            if not os.path.exists(traceLogDir):
+                if not self.createDir(traceLogDir):
+                    self.printErrorMsg("create " + traceLogDir + " error")
+                    self.processExit()
+                self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
+        videoUrlFileDir = os.path.dirname(self.resultFilePath)
+        if not os.path.exists(videoUrlFileDir):
+            if not self.createDir(videoUrlFileDir):
+                self.printErrorMsg("create " + videoUrlFileDir + " error")
+                self.processExit()
+            self.printStepMsg("video URL file path is not exist, create it: " + videoUrlFileDir)
+        if os.path.exists(self.resultFilePath):
+            isDelete = False
+            while not isDelete:
+                input = raw_input(self.resultFilePath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                try:
+                    input = input.lower()
+                    if input in ["y", "yes"]:
+                        isDelete = True
+                    elif input in ["n", "no"]:
+                        self.processExit()
+                except:
+                    pass
+                resultFile = open(self.resultFilePath, 'w')
+                resultFile.close()
         # 设置代理
         if self.isProxy == 1:
             self.proxy()
-        allVideoList = {}
-        newVideoList = {}
-        username = ""
-        # 解析保存已经获得的url地址的文件
-        allFile = open(self.allVideoFilePath, 'r')
-        lines = allFile.readlines()
-        allFile.close()
-        for line in lines:
-            line = line.replace("\n", "")
-            if line.find("https:") != -1:
-                url = line[line.find("https:"):]
-                allVideoList[username].append(url)
-            elif line.find("****************************************************************************************************") != -1:
-                username = ""
+        # 寻找idlist，如果没有结束进程
+        userIdList = {}
+        if os.path.exists(self.memberUIdListFilePath):
+            userListFile = open(self.memberUIdListFilePath, 'r')
+            allUserList = userListFile.readlines()
+            userListFile.close()
+            for userInfo in allUserList:
+                userInfo = userInfo.replace(" ", "")
+                userInfo = userInfo.replace("\n", "")
+                userInfoList = userInfo.split("\t")
+                userIdList[userInfoList[0]] = userInfoList
+        else:
+            self.printErrorMsg("Not exists member id list file: " + self.memberUIdListFilePath + ", process stop!")
+            self.processExit()
+        newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
+        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
+        newMemberUidListFile.close()
+
+        newMemberUidList = copy.deepcopy(userIdList)
+        for newUserId in newMemberUidList:
+            # 如果没有名字，则名字用uid代替
+            if len(newMemberUidList[newUserId]) < 2:
+                newMemberUidList[newUserId].append(newMemberUidList[newUserId][0])
+            # image count
+            if len(newMemberUidList[newUserId]) < 3:
+                newMemberUidList[newUserId].append("0")
+            # image URL
+            if len(newMemberUidList[newUserId]) < 4:
+                newMemberUidList[newUserId].append("")
+            # video count
+            if len(newMemberUidList[newUserId]) < 5:
+                newMemberUidList[newUserId].append("0")
+            # video token
+            if len(newMemberUidList[newUserId]) < 6:
+                newMemberUidList[newUserId].append("")
             else:
-                username = line
-                if username in allVideoList:
-                    pass
-                else:
-                    allVideoList[username] = []
-        
-        # 解析需要下载的url地址的文件
-        newFile = open(self.newVideoFilePath, 'r')
-        lines = newFile.readlines()
-        newFile.close()
-        for line in lines:
-            line = line.replace("\n", "")
-            if line.find("https:") != -1:
-                url = line[line.find("https:"):]
-                newVideoList[username][len(allVideoList[username]) + 1] = url
-                allVideoList[username].append(url)
-            elif line.find("****************************************************************************************************") != -1:
-                username = ""
-            elif line.replace(" ", "") == "":
-                pass
+                newMemberUidList[newUserId][5] = ""
+            # 处理member 队伍信息
+            if len(newMemberUidList[newUserId]) < 7:
+                newMemberUidList[newUserId].append("")
+                
+        allVideoCount = 0
+        for userId in userIdList:
+            userName = newMemberUidList[userId][1]
+            self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
+            # 初始化数据
+            videoCount = 0
+            videoUrlList = []
+            videoAlbumUrl = 'https://plus.google.com/' + userId + '/videos'
+            self.trace("photo Album URL:" + videoAlbumUrl)
+            videoAlbumPage = self.doGet(videoAlbumUrl)
+            if videoAlbumPage:
+                videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token')
+                while videoUrlIndex != -1:
+                    videoUrlStart = videoAlbumPage.find("http", videoUrlIndex)
+                    videoUrlStop = videoAlbumPage.find('&quot;', videoUrlStart)
+                    videoUrl = videoAlbumPage[videoUrlStart:videoUrlStop].replace("\u003d", "=")
+                    # video token 取前20位
+                    tokenStart = videoUrl.find("?token=") + 7
+                    videoToken = videoUrl[tokenStart:tokenStart + 20]
+                    # 将第一张image的URL保存到新id list中
+                    if newMemberUidList[userId][5] == "":
+                        newMemberUidList[userId][5] = videoToken
+                    if len(userIdList[userId]) >= 6:
+                        if videoToken == userIdList[userId][5]:
+                            break
+                    if videoUrl in videoUrlList:
+                        videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
+                        continue
+                    videoUrlList.append(videoUrl)
+                    videoCount += 1
+                    videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
             else:
-                username = line
-                if username in allVideoList:
-                    pass
-                else:
-                    self.printMsg("new member: " + username)
-                    allVideoList[username] = []
-                if username in newVideoList:
-                    pass
-                else:
-                    newVideoList[username] = {}
+                self.printErrorMsg("can not get videoAlbumPage: " + videoAlbumUrl)
+            # 生成下载视频url的文件
+            if videoCount > 0:
+                allVideoCount += videoCount
+                index = int(userIdList[userId][4])
+                newMemberUidList[userId][4] = str(int(newMemberUidList[userId][4]) + videoCount)
+                resultFile = open(self.resultFilePath, 'a')
+                while videoUrlList != []:
+                    videoUrl = videoUrlList.pop()
+                    index += 1
+                    resultFile.writelines("<a href=" + videoUrl + ">" + str(userName + "_" + "%03d" % index) + "</a><br>\n")
+                resultFile.close()
+            # 保存最后的信息
+            newMemberUidListFile = open(newMemberUidListFilePath, 'a')
+            newMemberUidListFile.write("\t".join(newMemberUidList[userId]) + "\n")
+            newMemberUidListFile.close()
+
+        # 排序并保存新的idList.txt
+        tmpList = []
+        tmpUserIdList = sorted(newMemberUidList.keys())
+        for index in tmpUserIdList:
+            tmpList.append("\t".join(newMemberUidList[index]))
+        newMemberUidListString = "\n".join(tmpList)
+        newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
+        self.printStepMsg("save new id list file: " + newMemberUidListFilePath)
+        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
+        newMemberUidListFile.write(newMemberUidListString)
+        newMemberUidListFile.close()
         
-        # 获取需要下载视频的真实url地址
-        resultFile = open(self.resultFilePath, 'w')
-        resultFile.close()
-        videoUrlList = []
-        videoCount = 0
-        for member in newVideoList:
-            videoIdList = []
-            memberPostPage = None
-            for index in newVideoList[member]:
-                url = newVideoList[member][index]
-                messagePage = self.doGet(url)
-                if not messagePage:
-                    self.printMsg("can not get this page: " + url)
-                    continue
-                videoIndex = messagePage.find("video.googleusercontent.com")
-                isFind = False
-                while videoIndex != -1:
-                    if messagePage.find("token", videoIndex, videoIndex + 50) != -11:
-                        videStart = messagePage.find("http", videoIndex - 10)
-                        videStop = messagePage.find('"', videStart)
-                        videoUrl = messagePage[videStart:videStop]
-                        videoUrl = videoUrl.replace("\u003d", '=')
-                        if not videoUrl in videoUrlList:
-                            videoUrlList.append(videoUrl)
-                            self.printMsg(member.split(" ")[1] + " " + str(index) + ": " + videoUrl)
-                            resultFile = open(self.resultFilePath, 'a')
-                            resultFile.writelines("<a href=" + videoUrl + ">" + str(member + "_" + "%03d" % index) + "</a><br>\n")
-                            resultFile.close()
-                            videoCount += 1
-                            isFind = True
-                    videoIndex = messagePage.find("video.googleusercontent.com", videoIndex + 1)
-                if not isFind:
-                    videoIdIndex = messagePage.find("redirector.googlevideo.com")
-                    while videoIdIndex != -1:
-                        videoIdStart = messagePage.find("?id=", videoIdIndex)
-                        videoIdStop = messagePage.find("&", videoIdStart)
-                        videoId = messagePage[videoIdStart + 8:videoIdStop]
-                        if not (videoId in videoIdList):
-                            videoIdList.append(videoId)
-                            if memberPostPage == None:
-                                memberPostPage = self.doGet("https://plus.google.com/photos/" + member.split(" ")[0] + "/albums/posts")
-                            videStart = memberPostPage.find("http", (memberPostPage.find("video.googleusercontent.com", memberPostPage.find(videoId))) - 10)
-                            videStop = memberPostPage.find('"' , videStart)
-                            videoUrl = memberPostPage[videStart:videStop]
-                            videoUrl = videoUrl.replace("\u003d", '=')
-                            if not videoUrl in videoUrlList:
-                                videoUrlList.append(videoUrl)
-                                self.printMsg(member.split(" ")[1] + " " + str(index) + ": " + videoUrl)
-                                resultFile = open(self.resultFilePath, 'a')
-                                resultFile.writelines("<a href=" + videoUrl + ">" + str(member + "_" + "%03d" % index) + "</a><br>\n")
-                                resultFile.close()
-                                videoCount += 1
-                        videoIdIndex = messagePage.find("redirector.googlevideo.com", videoIdIndex + 1)
-        self.printMsg("get " + str(videoCount) + " videos")
-        
-        #获取member保存路径
-        
-        # 保存所有url地址到新文件
-        newAllVideoFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + "allVideo.txt"
-        testFile = open(newAllVideoFilePath, 'w')
-        for member in allVideoList:
-            testFile.writelines(member + "\n")
-            for videoIndex in range(len(allVideoList[member])):
-                testFile.writelines(str(videoIndex + 1) + ": " + allVideoList[member][videoIndex] + "\n")
-            testFile.writelines("****************************************************************************************************\n")
-        testFile.close()
+        stopTime = time.time()
+        self.printStepMsg("all members' video url get succeed, use " + str(int(stopTime - startTime)) + " seconds, sum get video count: " + str(allVideoCount))
 
 if __name__ == '__main__':
     downloadVideo().main()
