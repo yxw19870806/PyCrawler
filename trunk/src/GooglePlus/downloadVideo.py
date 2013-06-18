@@ -149,7 +149,7 @@ class downloadVideo():
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isGetVideoUrl = self.getConfig(config, "iS_GET_VIDEO_URL", 1, 2)
+        self.isGetVideoUrl = self.getConfig(config, "IS_GET_VIDEO_URL", 1, 2)
         self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
