@@ -389,7 +389,7 @@ class downloadImage():
                 imageList = sorted(os.listdir(imagePath), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
-                    destPath = self.imageDownloadPath + "\\" + newMemberUidList[userId][4] + "\\" + userName
+                    destPath = self.imageDownloadPath + "\\" + newMemberUidList[userId][6] + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
                             self.printStepMsg("image download path: " + destPath + " is exist, remove all files in it")
