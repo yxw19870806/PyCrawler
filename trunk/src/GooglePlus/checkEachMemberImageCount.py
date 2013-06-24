@@ -9,7 +9,7 @@ Created on 2013-4-14
 
 import os
 
-imageRootPath = "Z:\\G+\\image\\"
+imageRootPath = "Z:\\G+\\photo\\"
 
 def getCount(path):
     tempFile = open(path, 'r')
@@ -17,7 +17,7 @@ def getCount(path):
     tempFile.close()
     for line in lines:
         line = line.split("\t")
-        imagePath = imageRootPath + line[4].replace("\n", "") + "\\" + line[1]
+        imagePath = imageRootPath + line[6].replace("\n", "") + "\\" + line[1]
         count1 = len(os.listdir(imagePath))
         count2 = int(line[2])
         if count1 != count2:
