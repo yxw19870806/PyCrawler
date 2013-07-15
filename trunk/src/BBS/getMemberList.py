@@ -4,11 +4,13 @@ Created on 2013-6-23
 
 @author: rena
 '''
+import Cookie
+import codecs
+import requests
 import sys
 import time
 import traceback
 import urllib2
-import codecs
 
 class getMemberList():
     
@@ -25,7 +27,7 @@ class getMemberList():
                     response = urllib2.urlopen(request, timeout=20)
                 return response.read()
             except Exception, e:
-                self.printMsg(str(e))
+                print e
                 traceback.print_exc()
             count += 1
             if count > 10:
@@ -33,16 +35,28 @@ class getMemberList():
                 return False
     
     def main(self):
-        tid = 14739
-#         tid = 14273
-        url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"
+        # need
+        tid = 15775
+        endPageCount = 4
         
-        resultFile = codecs.open("result", 'w', 'utf8')
-        resultFile.write("楼层\tuid\t用户名\t是否实名\t其他备注\n")
+        fid = 61
         floor = 1
         pageCount = 1
-        endPageCount = 8
         uidList = []
+        ipList = []
+        url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"
+        ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s"  # % (fid, tid, pid)
+        cookies = {}
+        cookies["GkKI_2132_saltkey"] = "t9NwZ1Fc" 
+        cookies["GkKI_2132_sid"] = "HGU220" 
+        cookies["GkKI_2132_auth"] = "303cwGrBlpwGlNyC0Q5Eb1w9X0ONcGKtaL5c7%2B9Mh3vK4vbN99W2ZLzndojlQGgj7rlw3E6uIHdiA9Fi64kt4Dke" 
+        #
+#         cookies = Cookie.SimpleCookie()  
+#         urllib2.build_opener(urllib2.HTTPCookieProcessor(ckjar) )
+        
+        resultFile = codecs.open(str(tid) + ".txt", 'w', 'utf8')
+        resultFile.write("楼层\tuid\t用户名\tip\t是否实名\t其他备注\n")
+        
         page = self.doGet(url % (tid, pageCount)).decode('utf-8')
         while page:
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
@@ -67,23 +81,33 @@ class getMemberList():
                 
                 # 检查实名认证
                 isReallyName = ""
-                if page.find("实名认证", index,page.find('</div>',index)) ==-1:
-                    isReallyName= "未实名认证"               
+                if page.find("实名认证", index, page.find('</div>', index)) == -1:
+                    isReallyName = "未实名认证"               
+                
+                # ip
+                if floor == 1:
+                    ip = ""
+                else:
+                    pidStart = page.find('<div id="userinfo', index) 
+                    pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
+                    ipPage = requests.get(ipUrl % (fid, tid, pid), cookies=cookies).text
+                    ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
                 
                 # 检查是否二次回答
                 remarks = ""
                 if uid in uidList:
                     remarks = "二次回答,第一次回答楼层" + str(uidList.index(uid) + 1)
                 uidList.append(uid)
-
-                try:
-                    resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + isReallyName + "\t" + remarks + "\n")
-                except:
-                    print floorName, uid, name
-                    resultFile.write(floorName + "\t" + uid + "\t" + "" + "\t" + "\n")
+                # 检查ip是否有重复
+                if ip in ipList:
+                    if remarks == "":
+                        remarks = "ip与" + str(ipList.index(ip) + 1) + "楼相同"
+                ipList.append(ip)
+                    
+                resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + ip + "\t" + isReallyName + "\t" + remarks + "\n")
                 index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=', index + 1)
                 floor += 1
-            
+                
             pageCount += 1
             if pageCount > endPageCount:
                 break
