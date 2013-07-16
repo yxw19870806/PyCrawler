@@ -4,14 +4,21 @@ Created on 2013-6-23
 
 @author: rena
 '''
+
 from common import common
 import codecs
 import os
 
 class getMemberList():
     
-    def main(self):
-        # 获取配置信息
+    def printMsg(self, msg):
+        msg = common.getTime() + " " + msg
+        print msg
+        
+    def __init__(self):
+        # 设置系统cookies (fire fox)
+        common.cookie("C:\\Users\\Administrator\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\xozaopr2.default\\cookies.sqlite")
+        # 获取配置文件
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
         lines = configFile.readlines()
@@ -26,28 +33,24 @@ class getMemberList():
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # 帖子id
-        tid = common.getConfig(config, "TID", 1, 2)
-        # 帖子页数
-        endPageCount = common.getConfig(config, "PAGE_COUNT", 1, 2)
-        # 版块id
-        fid = 61
-        # 帖子地址
-        url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"
-        # ip查询地址
-        ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s"  # % (fid, tid, pid)
+        # 配置文件获取配置信息
+        self.tid = common.getConfig(config, "TID", 1, 2)    # 帖子id
+        self.endPageCount = common.getConfig(config, "PAGE_COUNT", 1, 2)    # 帖子总页数
+        self.browserPath = common.getConfig(config, "BROWSER_PATH", 1, 2)   # fire fox 安装目录
         # 其他初始化数据
+        self.fid = 61   # 版块id
+        self.url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"   # 帖子地址
+        self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s" # ip查询地址
+        self.printMsg("config init succeed")
+        
+    def main(self):
         floor = 1
         pageCount = 1
         uidList = []
         ipList = []
-
-        # 设置系统cookies (fire fox)
-        common.cookie("C:\\Users\\Administrator\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\xozaopr2.default\\cookies.sqlite")
-        
-        resultFile = codecs.open(str(tid) + ".txt", 'w', 'utf8')
+        resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf8')
         resultFile.write("楼层\tuid\t用户名\tip\t是否实名\t其他备注\n")
-        page = common.doGet(url % (tid, pageCount)).decode('utf-8')
+        page = common.doGet(self.url % (self.tid, pageCount)).decode('utf-8')
         while page:
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
             while index != -1:
@@ -80,7 +83,7 @@ class getMemberList():
                 else:
                     pidStart = page.find('<div id="userinfo', index) 
                     pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
-                    ipPage = common.doGet(ipUrl % (fid, tid, pid)).decode('utf-8')
+                    ipPage = common.doGet(self.ipUrl % (self.fid, self.tid, pid)).decode('utf-8')
                     ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
                 
                 # 检查是否二次回答
@@ -101,9 +104,9 @@ class getMemberList():
                 
             pageCount += 1
             # 帖子结束，退出
-            if pageCount > endPageCount:
+            if pageCount > self.endPageCount:
                 break
-            page = common.doGet(url % (tid, pageCount)).decode('utf-8')
+            page = common.doGet(self.url % (self.tid, pageCount)).decode('utf-8')
         
 if __name__ == '__main__':
     getMemberList().main()

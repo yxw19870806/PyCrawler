@@ -16,6 +16,7 @@ class RenameVideo():
         print msg
     
     def __init__(self):
+        # 获取配置文件
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
         lines = configFile.readlines()
@@ -30,9 +31,9 @@ class RenameVideo():
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # 配置文件获取日志文件路径
-        self.videoFilePath = "Z:\\G2\\"
-        self.destRootPath = "Z:\\G+\\video\\"
+        # 配置文件获取配置
+        self.videoFilePath = "Z:\\G2\\" # 视频源目录，保存刚下载来的视频
+        self.destRootPath = "Z:\\G+\\video\\"   # 视频目标目录，保存已重命名的视频
         self.memberUIdListFilePath = common.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
         self.printMsg("config init succeed")
         
