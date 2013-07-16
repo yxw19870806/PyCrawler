@@ -4,60 +4,50 @@ Created on 2013-6-23
 
 @author: rena
 '''
-import Cookie
+from common import common
 import codecs
-import requests
-import sys
-import time
-import traceback
-import urllib2
+import os
 
 class getMemberList():
     
-    def doGet(self, url):
-        if url.find("http") == -1:
-            return None
-        count = 0
-        while 1:
-            try:
-                request = urllib2.Request(url)
-                if sys.version_info < (2, 7):
-                    response = urllib2.urlopen(request)
-                else:
-                    response = urllib2.urlopen(request, timeout=20)
-                return response.read()
-            except Exception, e:
-                print e
-                traceback.print_exc()
-            count += 1
-            if count > 10:
-                self.printMsg("can not connection " + url)
-                return False
-    
     def main(self):
-        # need
-        tid = 15775
-        endPageCount = 4
-        
+        # 获取配置信息
+        processPath = os.getcwd()
+        configFile = open(processPath + "\\config.ini", 'r')
+        lines = configFile.readlines()
+        configFile.close()
+        config = {}
+        for line in lines:
+            line = line.lstrip().rstrip().replace(" ", "")
+            if len(line) > 1 and line[0] != "#":
+                try:
+                    line = line.split("=")
+                    config[line[0]] = line[1]
+                except Exception, e:
+                    self.printMsg(str(e))
+                    pass
+        # 帖子id
+        tid = common.getConfig(config, "TID", 1, 2)
+        # 帖子页数
+        endPageCount = common.getConfig(config, "PAGE_COUNT", 1, 2)
+        # 版块id
         fid = 61
+        # 帖子地址
+        url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"
+        # ip查询地址
+        ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s"  # % (fid, tid, pid)
+        # 其他初始化数据
         floor = 1
         pageCount = 1
         uidList = []
         ipList = []
-        url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"
-        ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s"  # % (fid, tid, pid)
-        cookies = {}
-        cookies["GkKI_2132_saltkey"] = "t9NwZ1Fc" 
-        cookies["GkKI_2132_sid"] = "HGU220" 
-        cookies["GkKI_2132_auth"] = "303cwGrBlpwGlNyC0Q5Eb1w9X0ONcGKtaL5c7%2B9Mh3vK4vbN99W2ZLzndojlQGgj7rlw3E6uIHdiA9Fi64kt4Dke" 
-        #
-#         cookies = Cookie.SimpleCookie()  
-#         urllib2.build_opener(urllib2.HTTPCookieProcessor(ckjar) )
+
+        # 设置系统cookies (fire fox)
+        common.cookie("C:\\Users\\Administrator\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\xozaopr2.default\\cookies.sqlite")
         
         resultFile = codecs.open(str(tid) + ".txt", 'w', 'utf8')
         resultFile.write("楼层\tuid\t用户名\tip\t是否实名\t其他备注\n")
-        
-        page = self.doGet(url % (tid, pageCount)).decode('utf-8')
+        page = common.doGet(url % (tid, pageCount)).decode('utf-8')
         while page:
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
             while index != -1:
@@ -90,7 +80,7 @@ class getMemberList():
                 else:
                     pidStart = page.find('<div id="userinfo', index) 
                     pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
-                    ipPage = requests.get(ipUrl % (fid, tid, pid), cookies=cookies).text
+                    ipPage = common.doGet(ipUrl % (fid, tid, pid)).decode('utf-8')
                     ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
                 
                 # 检查是否二次回答
@@ -98,20 +88,22 @@ class getMemberList():
                 if uid in uidList:
                     remarks = "二次回答,第一次回答楼层" + str(uidList.index(uid) + 1)
                 uidList.append(uid)
+                
                 # 检查ip是否有重复
                 if ip in ipList:
                     if remarks == "":
                         remarks = "ip与" + str(ipList.index(ip) + 1) + "楼相同"
                 ipList.append(ip)
-                    
+                
                 resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + ip + "\t" + isReallyName + "\t" + remarks + "\n")
                 index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=', index + 1)
                 floor += 1
                 
             pageCount += 1
+            # 帖子结束，退出
             if pageCount > endPageCount:
                 break
-            page = self.doGet(url % (tid, pageCount)).decode('utf-8')
+            page = common.doGet(url % (tid, pageCount)).decode('utf-8')
         
 if __name__ == '__main__':
     getMemberList().main()
