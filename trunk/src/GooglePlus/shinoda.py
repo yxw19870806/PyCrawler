@@ -1,39 +1,17 @@
-#-*- coding:utf-8  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-5-6
 
 @author: haruka
 '''
-
+from common import common
 import os
 import shutil
 import socket
 import sys
-import traceback
-import urllib2
-
-def doGet(url):
-    if url.find("http") == -1:
-        return None
-    count = 0
-    while 1:
-        try:
-            request = urllib2.Request(url)
-            if sys.version_info < (2, 7):
-                response = urllib2.urlopen(request)
-            else:
-                response = urllib2.urlopen(request, timeout=20)
-            return response.read()
-        except Exception, e:
-            print "url: " + url
-            traceback.print_exc()
-        count += 1
-        if count > 10:
-            print "can not connection " + url
-            return False
 
 def download(imageUrl, imagePath, imageCount):
-    imgByte = doGet(imageUrl)
+    imgByte = common.doGet(imageUrl)
     if imgByte:
         fileType = imageUrl.split(".")[-1]
         imageFile = open(imagePath + "\\" + str("%03d" % imageCount) + "." + fileType, "wb")
@@ -43,13 +21,9 @@ def download(imageUrl, imagePath, imageCount):
         print "download succeed"
     else:
         print "down load image error: " + imageUrl
-                    
+
 if socket.gethostbyname(socket.gethostname()).find("192.168.") != -1:
-    proxyIp = "127.0.0.1"
-    proxyPort = "8087"
-    proxyHandler = urllib2.ProxyHandler({'https':"http://" + proxyIp + ":" + proxyPort})
-    opener = urllib2.build_opener(proxyHandler)
-    urllib2.install_opener(opener)
+    common.proxy("127.0.0.1", "8087")
 
 rootPath = os.getcwd() + "\\shinoda"
 
@@ -62,13 +36,9 @@ while True:
     imagePath = rootPath + "\\" + str("%03d" % indexCount)
     
     if indexCount > 1:
-        indexPage = doGet(url % ("_" + str(indexCount)))
+        indexPage = common.doGet(url % ("_" + str(indexCount)))
     else:
-        indexPage = doGet(url % (""))
-#    f = open("test.txt", 'w')
-#    f.write(indexPage)
-#    f.close()
-#    sys.exit()
+        indexPage = common.doGet(url % (""))
     if indexPage:
         if not os.path.exists(imagePath):
             os.makedirs(imagePath)
