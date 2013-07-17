@@ -7,7 +7,9 @@ Created on 2013-6-23
 
 from common import common
 import codecs
+import getpass
 import os
+import sys
 
 class getMemberList():
     
@@ -16,8 +18,7 @@ class getMemberList():
         print msg
         
     def __init__(self):
-        # 设置系统cookies (fire fox)
-        common.cookie("C:\\Users\\Administrator\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\xozaopr2.default\\cookies.sqlite")
+           
         # 获取配置文件
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
@@ -36,22 +37,42 @@ class getMemberList():
         # 配置文件获取配置信息
         self.tid = common.getConfig(config, "TID", 1, 2)    # 帖子id
         self.endPageCount = common.getConfig(config, "PAGE_COUNT", 1, 2)    # 帖子总页数
-        self.browserPath = common.getConfig(config, "BROWSER_PATH", 1, 2)   # fire fox 安装目录
+        defaultFFPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
+        defaultCookiePath = ""
+        for dirName in os.listdir(defaultFFPath):
+            if os.path.isdir(defaultFFPath + dirName):
+                if os.path.exists(defaultFFPath + dirName + "\\cookies.sqlite"):
+                    defaultFFPath = defaultFFPath + dirName
+                    defaultCookiePath = defaultFFPath + "\\cookies.sqlite"
+                    break
+        browserPath = common.getConfig(config, "BROWSER_PATH", defaultCookiePath, 1, postfix="\cookies.sqlite")   # fire fox 安装目录
         # 其他初始化数据
         self.fid = 61   # 版块id
         self.url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"   # 帖子地址
         self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s" # ip查询地址
         self.printMsg("config init succeed")
+        # 设置系统cookies (fire fox)
+        if not common.cookie(browserPath):
+            print "try default fire fox path: " + defaultFFPath
+            if not common.cookie(defaultCookiePath):
+                print "use system cookie error!"
+                sys.exit()
         
     def main(self):
         floor = 1
         pageCount = 1
         uidList = []
         ipList = []
+        ipList2 = []
         resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf8')
         resultFile.write("楼层\tuid\t用户名\tip\t是否实名\t其他备注\n")
-        page = common.doGet(self.url % (self.tid, pageCount)).decode('utf-8')
+        page = common.doGet(self.url % (self.tid, pageCount))
+        # test！！！！
+        f = open("a.txt", 'w')
+        f.write(page)
+        f.close()
         while page:
+            page = page.decode('utf-8')
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
             while index != -1:
                 # 楼层
@@ -80,11 +101,13 @@ class getMemberList():
                 # ip
                 if floor == 1:
                     ip = ""
+                    ip2 = ""
                 else:
                     pidStart = page.find('<div id="userinfo', index) 
                     pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
                     ipPage = common.doGet(self.ipUrl % (self.fid, self.tid, pid)).decode('utf-8')
                     ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
+                    ip2 = ".".join(ip.split(".")[:2])
                 
                 # 检查是否二次回答
                 remarks = ""
@@ -96,7 +119,10 @@ class getMemberList():
                 if ip in ipList:
                     if remarks == "":
                         remarks = "ip与" + str(ipList.index(ip) + 1) + "楼相同"
+                elif ip2 in ipList2:
+                    remarks = "ip与" + str(ipList.index(ip) + 1) + "楼相似"
                 ipList.append(ip)
+                ipList2.append(ip)
                 
                 resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + ip + "\t" + isReallyName + "\t" + remarks + "\n")
                 index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=', index + 1)
@@ -106,7 +132,7 @@ class getMemberList():
             # 帖子结束，退出
             if pageCount > self.endPageCount:
                 break
-            page = common.doGet(self.url % (self.tid, pageCount)).decode('utf-8')
+            page = common.doGet(self.url % (self.tid, pageCount))
         
 if __name__ == '__main__':
     getMemberList().main()

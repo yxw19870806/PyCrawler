@@ -62,7 +62,7 @@ while True:
             imageIndex = indexPage.find('<img src="http://blog.mariko-shinoda.net', imageIndex)
             if imageIndex == -1:
                 break
-            imageStart = indexPage.find("http", imageIndex) 
+            imageStart = indexPage.find("http", imageIndex)
             imageStop = indexPage.find('"', imageStart)
             imageUrl = indexPage[imageStart:imageStop]
             if imageUrl.find("data") == -1:
@@ -87,4 +87,3 @@ for index1 in sorted(os.listdir(rootPath), reverse=True):
         shutil.copyfile(imagePath, destPath + "\\" + str("%05d" % allImageCount) + "." + fileType)
         allImageCount += 1
 print "sorted over!, count: " + str(allImageCount)
-
