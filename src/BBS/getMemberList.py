@@ -64,13 +64,10 @@ class getMemberList():
         uidList = []
         ipList = []
         ipList2 = []
+        isCorrectFlag = "很给力"
         resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf8')
-        resultFile.write("楼层\tuid\t用户名\tip\t是否实名\t其他备注\n")
+        resultFile.write("楼层\tuid\t用户名\tip\t是否正确\t是否实名\t其他备注\n")
         page = common.doGet(self.url % (self.tid, pageCount))
-        # test！！！！
-        f = open("a.txt", 'w')
-        f.write(page)
-        f.close()
         while page:
             page = page.decode('utf-8')
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
@@ -92,6 +89,21 @@ class getMemberList():
                 
                 # 会员名
                 name = page[page.find('>', index + 55) + 1:page.find('</a>', index)].encode('utf-8')
+                
+                # 检查答案是否正确
+                scoreIndex = page.find('<tbody class="ratl_l">', index, page.find('">点评</a>', index))
+                score = ""
+                if scoreIndex != -1:
+                    scoreStart = page.find('<td class="xg1">', scoreIndex)
+                    scoreStop = page.find('</tbody>', scoreIndex)
+                    while scoreStart != -1:
+                        score += page[scoreStart + 16:page.find('</td>', scoreStart)]
+                        scoreStart = page.find('<td class="xg1">', scoreStart + 1, scoreStop)
+                result = ""
+                if score.find(isCorrectFlag) != -1:
+                    result = "Y"
+                elif score != "":
+                    result = "N"
                 
                 # 检查实名认证
                 isReallyName = ""
@@ -124,7 +136,7 @@ class getMemberList():
                 ipList.append(ip)
                 ipList2.append(ip)
                 
-                resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + ip + "\t" + isReallyName + "\t" + remarks + "\n")
+                resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + ip + "\t" + result + "\t" + isReallyName + "\t" + remarks + "\n")
                 index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=', index + 1)
                 floor += 1
                 
@@ -133,6 +145,8 @@ class getMemberList():
             if pageCount > self.endPageCount:
                 break
             page = common.doGet(self.url % (self.tid, pageCount))
+        print "statistics succeed"
+        
         
 if __name__ == '__main__':
     getMemberList().main()
