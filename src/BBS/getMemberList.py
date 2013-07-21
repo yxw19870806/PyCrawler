@@ -57,7 +57,7 @@ class getMemberList():
             if not common.cookie(defaultCookiePath):
                 print "use system cookie error!"
                 sys.exit()
-        
+        common.cookie(browserPath)
     def main(self):
         floor = 1
         pageCount = 1
@@ -65,8 +65,9 @@ class getMemberList():
         ipList = []
         ipList2 = []
         isCorrectFlag = "很给力"
+        isIncorrectFlag = "浮云"
         resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf8')
-        resultFile.write("楼层\tuid\t用户名\tip\t是否正确\t是否实名\t其他备注\n")
+        resultFile.write("楼层\tuid\t用户名\t是否正确\tip\t是否实名\t其他备注\n")
         page = common.doGet(self.url % (self.tid, pageCount))
         while page:
             page = page.decode('utf-8')
@@ -102,13 +103,22 @@ class getMemberList():
                 result = ""
                 if score.find(isCorrectFlag) != -1:
                     result = "Y"
-                elif score != "":
+                elif  score.find(isIncorrectFlag) != -1:
+                    result = "N"
+                else:
+                    result = score
+        
+                # 检查是否有二次编辑
+                remarks = ""
+                if page.find('<i class="pstatus">', index, page.find('<input type="checkbox" id="', index)) != -1:
+                    remarks = "二次编辑"
                     result = "N"
                 
                 # 检查实名认证
                 isReallyName = ""
                 if page.find("实名认证", index, page.find('</div>', index)) == -1:
-                    isReallyName = "未实名认证"               
+                    isReallyName = "未实名认证"
+                    result = ""
                 
                 # ip
                 if floor == 1:
@@ -122,21 +132,20 @@ class getMemberList():
                     ip2 = ".".join(ip.split(".")[:2])
                 
                 # 检查是否二次回答
-                remarks = ""
                 if uid in uidList:
-                    remarks = "二次回答,第一次回答楼层" + str(uidList.index(uid) + 1)
+                    remarks += " 二次回答,第一次回答楼层" + str(uidList.index(uid) + 1)
                 uidList.append(uid)
                 
                 # 检查ip是否有重复
                 if ip in ipList:
                     if remarks == "":
-                        remarks = "ip与" + str(ipList.index(ip) + 1) + "楼相同"
+                        remarks += " ip与" + str(ipList.index(ip) + 1) + "楼相同"
                 elif ip2 in ipList2:
-                    remarks = "ip与" + str(ipList.index(ip) + 1) + "楼相似"
+                    remarks = " ip与" + str(ipList.index(ip) + 1) + "楼相似"
                 ipList.append(ip)
                 ipList2.append(ip)
                 
-                resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + ip + "\t" + result + "\t" + isReallyName + "\t" + remarks + "\n")
+                resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + result + "\t" + ip + "\t" + isReallyName + "\t" + remarks + "\n")
                 index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=', index + 1)
                 floor += 1
                 
