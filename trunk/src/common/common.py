@@ -56,7 +56,7 @@ def cookie(filePath):
     from pysqlite2 import dbapi2 as sqlite
     if not os.path.exists(filePath):
         print filePath + " not exist"
-        sys.exit()
+        return False
     con = sqlite.connect(filePath)
     cur = con.cursor()
     cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
@@ -71,6 +71,7 @@ def cookie(filePath):
     cookieJar._really_load(s, '', True, True)
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
     urllib2.install_opener(opener)
+    return True
 
 def proxy(ip, port):
     import urllib2
