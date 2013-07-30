@@ -243,6 +243,8 @@ class downloadImage():
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
+                if len(userInfo) < 10:
+                    continue
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
                 userInfoList = userInfo.split("\t")
