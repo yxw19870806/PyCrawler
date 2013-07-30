@@ -209,6 +209,8 @@ class downloadVideo():
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
+                if len(userInfo) < 10:
+                    continue
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
                 userInfoList = userInfo.split("\t")
@@ -279,7 +281,11 @@ class downloadVideo():
             # 生成下载视频url的文件
             if videoCount > 0:
                 allVideoCount += videoCount
-                index = int(userIdList[userId][4])
+                index = 0
+                try:
+                    index = int(userIdList[userId][4])
+                except:
+                    pass
                 newMemberUidList[userId][4] = str(int(newMemberUidList[userId][4]) + videoCount)
                 resultFile = open(self.resultFilePath, 'a')
                 while videoUrlList != []:
