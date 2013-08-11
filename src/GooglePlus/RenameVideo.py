@@ -32,7 +32,7 @@ class RenameVideo():
                     self.printMsg(str(e))
                     pass
         # 配置文件获取配置
-        self.videoFilePath = "Z:\\G2\\" # 视频源目录，保存刚下载来的视频
+        self.videoFilePath = "Z:\\G\\" # 视频源目录，保存刚下载来的视频
         self.destRootPath = "Z:\\G+\\video\\"   # 视频目标目录，保存已重命名的视频
         self.memberUIdListFilePath = common.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
         self.printMsg("config init succeed")
