@@ -104,13 +104,17 @@ class downloadVideo():
     # mode 0 : 直接赋值
     # mode 1 : 字符串拼接
     # mode 2 : 取整
-    def getConfig(self, config, key, defaultValue, mode, addValue=None):
+    def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
         value = None
         if config.has_key(key):
             if mode == 0:
                 value = config[key]
             elif mode == 1:
-                value = addValue + config[key]
+                value = config[key]
+                if prefix != None:
+                    value = prefix + value
+                if postfix != None:
+                    value = value + postfix
             elif mode == 2:
                 try:
                     value = int(config[key])
@@ -138,11 +142,11 @@ class downloadVideo():
                     self.printMsg(str(e))
                     pass
         # 配置文件获取日志文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, processPath + "\\")
-        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, processPath + "\\")
-        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, processPath + "\\")
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
-        self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\info\\get_result.html", 1, processPath + "\\")
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, prefix=processPath + "\\")
+        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, prefix=processPath + "\\")
+        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, prefix=processPath + "\\")
+        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, prefix=processPath + "\\")
+        self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\info\\get_result.html", 1, prefix=processPath + "\\")
         # 配置文件获取程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
