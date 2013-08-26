@@ -11,11 +11,7 @@ import getpass
 import os
 import sys
 
-class getMemberList():
-    
-    def printMsg(self, msg):
-        msg = common.getTime() + " " + msg
-        print msg
+class getMemberList(common.Tool):
         
     def __init__(self):
            
@@ -35,8 +31,8 @@ class getMemberList():
                     self.printMsg(str(e))
                     pass
         # 配置文件获取配置信息
-        self.tid = common.getConfig(config, "TID", 1, 2)    # 帖子id
-        self.endPageCount = common.getConfig(config, "PAGE_COUNT", 1, 2)    # 帖子总页数
+        self.tid = self.getConfig(config, "TID", 1, 2)    # 帖子id
+        self.endPageCount = self.getConfig(config, "PAGE_COUNT", 1, 2)    # 帖子总页数
         defaultFFPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
         defaultCookiePath = ""
         for dirName in os.listdir(defaultFFPath):
@@ -45,19 +41,19 @@ class getMemberList():
                     defaultFFPath = defaultFFPath + dirName
                     defaultCookiePath = defaultFFPath + "\\cookies.sqlite"
                     break
-        browserPath = common.getConfig(config, "BROWSER_PATH", defaultCookiePath, 1, postfix="\cookies.sqlite")   # fire fox 安装目录
+        browserPath = self.getConfig(config, "BROWSER_PATH", defaultCookiePath, 1, postfix="\cookies.sqlite")   # fire fox 安装目录
         # 其他初始化数据
         self.fid = 61   # 版块id
         self.url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"   # 帖子地址
         self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s" # ip查询地址
         self.printMsg("config init succeed")
         # 设置系统cookies (fire fox)
-        if not common.cookie(browserPath):
+        if not self.cookie(browserPath):
             print "try default fire fox path: " + defaultFFPath
-            if not common.cookie(defaultCookiePath):
+            if not self.cookie(defaultCookiePath):
                 print "use system cookie error!"
                 sys.exit()
-        common.cookie(browserPath)
+        self.cookie(browserPath)
     def main(self):
         floor = 1
         pageCount = 1
@@ -68,7 +64,7 @@ class getMemberList():
         isIncorrectFlag = "浮云"
         resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf8')
         resultFile.write("楼层\tuid\t用户名\t是否正确\tip\t是否实名\t其他备注\n")
-        page = common.doGet(self.url % (self.tid, pageCount))
+        page = self.doGet(self.url % (self.tid, pageCount))
         while page:
             page = page.decode('utf-8')
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
@@ -127,7 +123,7 @@ class getMemberList():
                 else:
                     pidStart = page.find('<div id="userinfo', index) 
                     pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
-                    ipPage = common.doGet(self.ipUrl % (self.fid, self.tid, pid)).decode('utf-8')
+                    ipPage = self.doGet(self.ipUrl % (self.fid, self.tid, pid)).decode('utf-8')
                     ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
                     ip2 = ".".join(ip.split(".")[:2])
                 
@@ -153,7 +149,7 @@ class getMemberList():
             # 帖子结束，退出
             if pageCount > self.endPageCount:
                 break
-            page = common.doGet(self.url % (self.tid, pageCount))
+            page = self.doGet(self.url % (self.tid, pageCount))
         print "statistics succeed"
         
         
