@@ -113,7 +113,7 @@ def getTime():
     import time
     return time.strftime('%H:%M:%S', time.localtime(time.time()))
 
-def createDir(self, path):
+def createDir(path):
     import os
     count = 0
     while 1:
