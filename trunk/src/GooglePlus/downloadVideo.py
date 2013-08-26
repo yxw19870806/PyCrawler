@@ -55,7 +55,7 @@ class downloadVideo(common.Tool):
     
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\config.ini", 'r')
+        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
         lines = configFile.readlines()
         configFile.close()
         config = {}
