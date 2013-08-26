@@ -5,14 +5,53 @@ Created on 2013-4-8
 @author: haruka
 '''
 
-from common import common
-import copy
 import os
 import shutil
+import sys
 import time
+import traceback
+import urllib2
+import copy
 
-class downloadImage(common.Tool):
+class downloadImage():
     
+    def processExit(self):
+        sys.exit()
+    
+    def doGet(self, url):
+        if url.find("http") == -1:
+            return None
+        count = 0
+        while 1:
+            try:
+                request = urllib2.Request(url)
+                if sys.version_info < (2, 7):
+                    response = urllib2.urlopen(request)
+                else:
+                    response = urllib2.urlopen(request, timeout=20)
+                return response.read()
+            except Exception, e:
+                if str(e).find("[Errno 10061] ") != -1:
+                    input = raw_input("please check your proxy setting! Type in (Y)es to continue or (N)o to exit process!: ").lower()
+                    if input in ["y", "yes"]:
+                        pass
+                    elif input in ["n", "no"]:
+                        self.processExit()
+                self.trace("url: " + url)
+                self.printErrorMsg(str(e) + ": " + url)
+                traceback.print_exc()
+            count += 1
+            if count > 10:
+                self.printErrorMsg("can not connection " + url)
+                return False
+    
+    def getTime(self):
+        return time.strftime('%H:%M:%S', time.localtime(time.time()))
+
+    def printMsg(self, msg):
+        msg = self.getTime() + " " + msg
+        print msg
+        
     def trace(self, msg):
         if self.isDebug == 1:
             msg = self.getTime() + " " + msg
@@ -56,7 +95,51 @@ class downloadImage(common.Tool):
             targetFile = os.path.join(dirPath, fileName) 
             if os.path.isfile(targetFile): 
                 os.remove(targetFile)
+
+    def createDir(self, path):
+        count = 0
+        while 1:
+            try:
+                if count >= 5:
+                    return False
+                os.makedirs(path)
+                if os.path.isdir(path):
+                    return True
+                count += 1
+            except:
+                pass
+
+    def proxy(self):
+            proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
+            opener = urllib2.build_opener(proxyHandler)
+            urllib2.install_opener(opener)
+            self.printStepMsg("proxy set succeed")
     
+    # mode 0 : 直接赋值
+    # mode 1 : 字符串拼接
+    # mode 2 : 取整
+    def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
+        value = None
+        if config.has_key(key):
+            if mode == 0:
+                value = config[key]
+            elif mode == 1:
+                value = config[key]
+                if prefix != None:
+                    value = prefix + value
+                if postfix != None:
+                    value = value + postfix
+            elif mode == 2:
+                try:
+                    value = int(config[key])
+                except:
+                    self.printMsg("'" + key + "' must is a number in config.ini, default value")
+                    value = 1
+        else:
+            self.printMsg("Not found '" + key + "' in config.ini, default value")
+            value = defaultValue
+        return value
+        
     def __init__(self):
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
@@ -155,7 +238,7 @@ class downloadImage(common.Tool):
             self.processExit()
         # 设置代理
         if self.isProxy == 1:
-            self.proxy(self.proxyIp, self.proxyPort)
+            self.proxy()
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.memberUIdListFilePath):
