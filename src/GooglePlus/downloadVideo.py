@@ -18,40 +18,27 @@ class downloadVideo(common.Tool):
     def trace(self, msg):
         if self.isDebug == 1:
             msg = self.getTime() + " " + msg
-    #        print msg
+    #        self.printMsg(msg, False)
             if self.isLog == 1:
-                logFile = open(self.traceLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
+                self.writeFile(msg, self.traceLogPath)
     
     def printErrorMsg(self, msg):
         if self.isShowError == 1:
             msg = self.getTime() + " [Error] " + msg
-            print msg
+            self.printMsg(msg, False)
             if self.isLog == 1:
                 if msg.find("HTTP Error 500") != -1:
                     return
                 if msg.find("urlopen error The read operation timed out") != -1:
                     return
-                logFile = open(self.errorLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
+                self.writeFile(msg, self.errorLogPath)
     
     def printStepMsg(self, msg):
         if self.isShowStep == 1:
             msg = self.getTime() + " " + msg
-            print msg
+            self.printMsg(msg, False)
             if self.isLog == 1:
-                logFile = open(self.stepLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
-    
-    def writeFile(self, msg, filePath, isTime=True):
-        if isTime:
-            msg = self.getTime() + " " + msg
-        logFile = open(filePath, 'a')
-        logFile.write(msg + "\n")
-        logFile.close()
+                self.writeFile(msg, self.stepLogPath)
     
     def __init__(self):
         processPath = os.getcwd()

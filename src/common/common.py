@@ -21,6 +21,8 @@ class Tool():
         while 1:
             try:
                 request = urllib2.Request(url)
+                # 设置头信息
+                request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
                 if sys.version_info < (2, 7):
                     if not IS_SET_TIMEOUT:
                         urllib2.socket.setdefaulttimeout(20)
@@ -111,13 +113,19 @@ class Tool():
             value = defaultValue
         return value
     
-    def printMsg(self, msg):
-        msg = self.getTime() + " " + msg
+    def printMsg(self, msg, isTime=True):
+        if isTime:
+            msg = self.getTime() + " " + msg
         print msg
-        
+    
     def getTime(self):
         import time
         return time.strftime('%H:%M:%S', time.localtime(time.time()))
+    
+    def writeFile(self, msg, filePath):
+        logFile = open(filePath, 'a')
+        logFile.write(msg + "\n")
+        logFile.close()
     
     def createDir(self, path):
         import os
@@ -132,7 +140,14 @@ class Tool():
                 count += 1
             except:
                 pass
-    
+        
+    def removeDirFiles(self, dirPath): 
+        import os
+        for fileName in os.listdir(dirPath): 
+            targetFile = os.path.join(dirPath, fileName) 
+            if os.path.isfile(targetFile): 
+                os.remove(targetFile)
+                
     def processExit(self):
         import sys
         sys.exit()

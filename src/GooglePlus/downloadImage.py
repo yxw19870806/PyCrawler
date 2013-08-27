@@ -16,46 +16,27 @@ class downloadImage(common.Tool):
     def trace(self, msg):
         if self.isDebug == 1:
             msg = self.getTime() + " " + msg
-    #        print msg
+    #        self.printMsg(msg, False)
             if self.isLog == 1:
-                logFile = open(self.traceLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
+                self.writeFile(msg, self.traceLogPath)
     
     def printErrorMsg(self, msg):
         if self.isShowError == 1:
             msg = self.getTime() + " [Error] " + msg
-            print msg
+            self.printMsg(msg, False)
             if self.isLog == 1:
                 if msg.find("HTTP Error 500") != -1:
                     return
                 if msg.find("urlopen error The read operation timed out") != -1:
                     return
-                logFile = open(self.errorLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
+                self.writeFile(msg, self.errorLogPath)
     
     def printStepMsg(self, msg):
         if self.isShowStep == 1:
             msg = self.getTime() + " " + msg
-            print msg
+            self.printMsg(msg, False)
             if self.isLog == 1:
-                logFile = open(self.stepLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
-    
-    def writeFile(self, msg, filePath, isTime=True):
-        if isTime:
-            msg = self.getTime() + " " + msg
-        logFile = open(filePath, 'a')
-        logFile.write(msg + "\n")
-        logFile.close()
-    
-    def removeDirFiles(self, dirPath): 
-        for fileName in os.listdir(dirPath): 
-            targetFile = os.path.join(dirPath, fileName) 
-            if os.path.isfile(targetFile): 
-                os.remove(targetFile)
+                self.writeFile(msg, self.stepLogPath)
     
     def __init__(self):
         processPath = os.getcwd()
@@ -341,9 +322,9 @@ class downloadImage(common.Tool):
                 shutil.rmtree(imagePath, True)
             
             if self.isSaveMessageUrl == 1:
-                self.writeFile("****************************************************************************************************", self.messageUrlLogFilePath, isTime=False)
+                self.writeFile("****************************************************************************************************", self.messageUrlLogFilePath)
             if self.isSaveImageUrl == 1:
-                self.writeFile("****************************************************************************************************", self.imageUrlLogFilePath, isTime=False)
+                self.writeFile("****************************************************************************************************", self.imageUrlLogFilePath)
             if isError:
                 self.printErrorMsg(userName + " 's image count more than wanted, check it again.")
 
