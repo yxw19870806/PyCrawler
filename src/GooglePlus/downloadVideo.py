@@ -8,10 +8,7 @@ Created on 2013-6-15
 from common import common
 import copy
 import os
-import sys
 import time
-import traceback
-import urllib2
 
 class downloadVideo(common.Tool):
     

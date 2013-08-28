@@ -65,21 +65,17 @@ class shinoda(common.Tool):
                     self.printMsg(str(e))
                     pass
         # 配置文件获取日志文件路径
-        self.messageUrlLogFilePath = self.getConfig(config, "MESSAGE_URL_LOG_FILE_NAME", processPath + "\\log\\messageLog.txt", 1, prefix=processPath + "\\")
-        self.imageUrlLogFilePath = self.getConfig(config, "IMAGE_URL_LOG_FILE_NAME", processPath + "\\log\\messageLog.txt", 1, prefix=processPath + "\\")
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, prefix=processPath + "\\")
         self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, prefix=processPath + "\\")
         self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, prefix=processPath + "\\")
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", processPath + "\\photo", 1, prefix=processPath + "\\")
-        self.imageTempDirName = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "tmpImage", 0)
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, prefix=processPath + "\\")
+        imageTempDirName = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "tmpImage", 0)
+        self.imageTempPath = os.getcwd() + "\\" + imageTempDirName
         # 配置文件获取程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isSaveMessageUrl = self.getConfig(config, "IS_SAVE_MESSAGE_URL", 1, 2)
-        self.isSaveImageUrl = self.getConfig(config, "IS_SAVE_IMAGE_URL", 1, 2)
         self.isDownloadImage = self.getConfig(config, "IS_DOWNLOAD_IMAGE", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImagePageCount = self.getConfig(config, "GET_IMAGE_PAGE_COUNT", 1, 2)
@@ -113,13 +109,6 @@ class shinoda(common.Tool):
                     self.printErrorMsg("create " + traceLogDir + " error")
                     self.processExit()
                 self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
-        if self.isSaveMessageUrl == 1:
-            messageUrlLogFileDir = os.path.dirname(self.messageUrlLogFilePath)
-            if not os.path.exists(messageUrlLogFileDir):
-                if not self.createDir(messageUrlLogFileDir):
-                    self.printErrorMsg("create " + messageUrlLogFileDir + " error")
-                    self.processExit()
-                self.printStepMsg("message URL log file path is not exist, create it: " + messageUrlLogFileDir)
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
@@ -141,28 +130,64 @@ class shinoda(common.Tool):
             else:
                 self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
                 os.remove(self.imageDownloadPath)
+        if os.path.exists(self.imageTempPath):
+            if os.path.isdir(self.imageTempPath):
+                isDelete = False
+                while not isDelete:
+                    input = raw_input(self.imageTempPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                    try:
+                        input = input.lower()
+                        if input in ["y", "yes"]:
+                            isDelete = True
+                        elif input in ["n", "no"]:
+                            self.processExit()
+                    except:
+                        pass
+                self.printStepMsg("image download path: " + self.imageTempPath + " is exist, remove it")
+                shutil.rmtree(self.imageTempPath, True)
+                # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+                while os.path.exists(self.imageTempPath):
+                    time.sleep(5)
+            else:
+                self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
+                os.remove(self.imageDownloadPath)
         self.printStepMsg("created image download path: " + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
             self.printErrorMsg("create " + self.imageDownloadPath + " error")
             self.processExit()
         # 设置代理
-#        if self.isProxy == 1:
-#            self.proxy(self.proxyIp, self.proxyPort)
+        if self.isProxy == 1:
+            self.proxy(self.proxyIp, self.proxyPort)
         # 下载
-        imageTempPath = os.getcwd() + "\\" + self.imageTempDirName + "\\"
         url = "http://blog.mariko-shinoda.net/index%s.html"
         indexCount = 1
-        allImageCount = 1
+        allImageCount = 0
+        # 读取保存的图片地址
+        saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".dat"
+        if os.path.exists(saveFilePath):
+            saveFile = open(saveFilePath, 'r')
+            saveInfo = saveFile.read()
+            saveFile.close()
+            saveList = saveInfo.split("\t")
+            lastImageUrl = saveList[0]
+            imageStartIndex = saveList[1]
+        else:
+            lastImageUrl = ""
+            imageStartIndex = 0
+        isOver = False
+        newLastImageUrl = ""
         while True:
+            if self.getImagePageCount != 0 and indexCount > self.getImagePageCount:
+                break
             imageCount = 1
-            imagePath = imageTempPath + str("%03d" % indexCount)
+            imagePath = self.imageTempPath + "\\" + str("%03d" % indexCount)
             if indexCount > 1:
-                imageUrl = url % ("_" + str(indexCount))
-                indexPage = self.doGet(imageUrl)
+                indexUrl = url % ("_" + str(indexCount))
+                indexPage = self.doGet(indexUrl)
             else:
-                imageUrl = url % ("")
-                indexPage = self.doGet(imageUrl)
-            self.trace("index URL:" + imageUrl)
+                indexUrl = url % ("")
+                indexPage = self.doGet(indexUrl)
+            self.trace("index URL:" + indexUrl)
             if indexPage:
                 if not os.path.exists(imagePath):
                     os.makedirs(imagePath)
@@ -177,11 +202,18 @@ class shinoda(common.Tool):
                     imageUrl = indexPage[imageStart:imageStop]
                     self.trace("image URL:" + imageUrl)
                     if imageUrl.find("data") == -1:
+                        if newLastImageUrl == "":
+                            newLastImageUrl = imageUrl
+                        if lastImageUrl == imageUrl:
+                            isOver = True
+                            break
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
                     imageIndex += 1
                 # new image:
+                if isOver:
+                    break
                 imageIndex = 0
                 while True:
                     imageIndex = indexPage.find('<img src="http://blog.mariko-shinoda.net', imageIndex)
@@ -192,30 +224,38 @@ class shinoda(common.Tool):
                     imageUrl = indexPage[imageStart:imageStop]
                     self.trace("image URL:" + imageUrl)
                     if imageUrl.find("data") == -1:
+                        if lastImageUrl == imageUrl:
+                            isOver = True
+                            break
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
-                    imageIndex += 1          
+                    imageIndex += 1   
+                if isOver:
+                    break       
             else:
-                self.printStepMsg("down load over!, count: " + str(allImageCount))
+                break
             indexCount += 1
-            
-        if self.isSaveMessageUrl == 1:
-            self.writeFile("****************************************************************************************************", self.messageUrlLogFilePath, isTime=False)
-        if self.isSaveImageUrl == 1:
-            self.writeFile("****************************************************************************************************", self.imageUrlLogFilePath, isTime=False)
+        
+        self.printStepMsg("download over!, count: " + str(allImageCount))
+        newSaveFilePath = os.getcwd() + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
+        newSaveFile = open(newSaveFilePath, 'w')
+        newSaveFile.write(lastImageUrl)
+        saveFile.close()
         
         # 排序
         if self.isSort == 1:
-            allImageCount = 1
-            for index1 in sorted(os.listdir(imageTempPath), reverse=True):
-                for fileName in sorted(os.listdir(imageTempPath + index1), reverse=True):
-                    imagePath = imageTempPath + index1 + "\\" + fileName
+            allImageCount = 0
+            for index1 in sorted(os.listdir(self.imageTempPath), reverse=True):
+                for fileName in sorted(os.listdir(self.imageTempPath + "\\" + index1), reverse=True):
+                    imageStartIndex += 1
+                    imagePath = self.imageTempPath + "\\" + index1 + "\\" + fileName
                     fileType = fileName.split(".")[-1]
-                    shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % allImageCount) + "." + fileType)
+                    shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
                     allImageCount += 1
+            shutil.rmtree(self.imageTempPath, True)
             self.printStepMsg("sorted over!, count: " + str(allImageCount))
-
+            
         stopTime = time.time()
         self.printStepMsg("all members' image download succeed, use " + str(int(stopTime - startTime)) + " seconds, sum download image count: " + str(allImageCount))
 
