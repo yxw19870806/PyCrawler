@@ -54,8 +54,6 @@ class downloadImage(common.Tool):
                     self.printMsg(str(e))
                     pass
         # 配置文件获取日志文件路径
-        self.messageUrlLogFilePath = self.getConfig(config, "MESSAGE_URL_LOG_FILE_NAME", processPath + "\\log\\messageLog.txt", 1, prefix=processPath + "\\")
-        self.imageUrlLogFilePath = self.getConfig(config, "IMAGE_URL_LOG_FILE_NAME", processPath + "\\log\\messageLog.txt", 1, prefix=processPath + "\\")
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, prefix=processPath + "\\")
         self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, prefix=processPath + "\\")
         self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, prefix=processPath + "\\")
@@ -67,8 +65,6 @@ class downloadImage(common.Tool):
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isSaveMessageUrl = self.getConfig(config, "IS_SAVE_MESSAGE_URL", 1, 2)
-        self.isSaveImageUrl = self.getConfig(config, "IS_SAVE_IMAGE_URL", 1, 2)
         self.isDownloadImage = self.getConfig(config, "IS_DOWNLOAD_IMAGE", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 1, 2)
@@ -102,13 +98,6 @@ class downloadImage(common.Tool):
                     self.printErrorMsg("create " + traceLogDir + " error")
                     self.processExit()
                 self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
-        if self.isSaveMessageUrl == 1:
-            messageUrlLogFileDir = os.path.dirname(self.messageUrlLogFilePath)
-            if not os.path.exists(messageUrlLogFileDir):
-                if not self.createDir(messageUrlLogFileDir):
-                    self.printErrorMsg("create " + messageUrlLogFileDir + " error")
-                    self.processExit()
-                self.printStepMsg("message URL log file path is not exist, create it: " + messageUrlLogFileDir)
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
@@ -198,11 +187,6 @@ class downloadImage(common.Tool):
             if not self.createDir(imagePath):
                 self.printErrorMsg("create " + imagePath + " error")
                 self.processExit()
-            # 日志文件插入信息
-            if self.isSaveMessageUrl == 1:
-                self.writeFile(userId + " " + userName, self.messageUrlLogFilePath, isTime=False)
-            if self.isSaveImageUrl == 1:
-                self.writeFile(userId + " " + userName, self.imageUrlLogFilePath, isTime=False)
             while 1:
                 if isPass:
                     break
@@ -241,8 +225,6 @@ class downloadImage(common.Tool):
                         messageIndex += 1
                         continue
                     messageUrlList.append(messageUrl)
-                    if self.isSaveMessageUrl == 1:
-                        self.writeFile(messageUrl, self.messageUrlLogFilePath)
                     messagePage = self.doGet(messageUrl)
                     if not messagePage:
                         self.printErrorMsg("can not get messagePage: " + messageUrl)
@@ -320,11 +302,7 @@ class downloadImage(common.Tool):
                     self.printStepMsg("sorted over, continue next member")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
-            
-            if self.isSaveMessageUrl == 1:
-                self.writeFile("****************************************************************************************************", self.messageUrlLogFilePath)
-            if self.isSaveImageUrl == 1:
-                self.writeFile("****************************************************************************************************", self.imageUrlLogFilePath)
+
             if isError:
                 self.printErrorMsg(userName + " 's image count more than wanted, check it again.")
 
