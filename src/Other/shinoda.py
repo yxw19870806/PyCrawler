@@ -2,7 +2,10 @@
 '''
 Created on 2013-5-6
 
-@author: haruka
+@author: hikaru
+QQ: 286484545
+email: hikaru870806@hotmail.com
+如有问题或建议请联系
 '''
 from common import common
 import os
@@ -211,6 +214,7 @@ class shinoda(common.Tool):
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
+                        # 检查是否已下载到前一次的图片
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
@@ -232,6 +236,7 @@ class shinoda(common.Tool):
                     imageUrl = indexPage[imageStart:imageStop]
                     self.trace("image URL:" + imageUrl)
                     if imageUrl.find("data") == -1:
+                        # 检查是否已下载到前一次的图片
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
