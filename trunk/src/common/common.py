@@ -128,6 +128,7 @@ class Tool():
         logFile.close()
     
     def createDir(self, path):
+        import traceback
         import os
         count = 0
         while 1:
@@ -138,8 +139,9 @@ class Tool():
                 if os.path.isdir(path):
                     return True
                 count += 1
-            except:
-                pass
+            except Exception, e:
+                self.printMsg(str(e))
+                traceback.print_exc()
         
     def removeDirFiles(self, dirPath): 
         import os
