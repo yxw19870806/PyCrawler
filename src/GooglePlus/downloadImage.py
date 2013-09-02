@@ -3,6 +3,7 @@
 Created on 2013-4-8
 
 @author: haruka
+QQ: 286484545
 '''
 
 from common import common
@@ -79,6 +80,7 @@ class downloadImage(common.Tool):
             self.processExit()
         startTime = time.time()
         # 判断各种目录是否存在
+        # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
@@ -98,10 +100,12 @@ class downloadImage(common.Tool):
                     self.printErrorMsg("create " + traceLogDir + " error")
                     self.processExit()
                 self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
+        # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
+                    # 手动输入是否删除旧文件夹中的目录
                     input = raw_input(self.imageDownloadPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
@@ -112,6 +116,7 @@ class downloadImage(common.Tool):
                     except:
                         pass
                 self.printStepMsg("image download path: " + self.imageDownloadPath + " is exist, remove it")
+                # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
@@ -142,10 +147,11 @@ class downloadImage(common.Tool):
         else:
             self.printErrorMsg("Not exists member id list file: " + self.memberUIdListFilePath + ", process stop!")
             self.processExit()
+        # 创建临时存档文件
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.close()
-
+        # 复制处理存档文件
         newMemberUidList = copy.deepcopy(userIdList)
         for newUserId in newMemberUidList:
             # 如果没有名字，则名字用uid代替
@@ -169,7 +175,9 @@ class downloadImage(common.Tool):
             # 处理member 队伍信息
             if len(newMemberUidList[newUserId]) < 7:
                 newMemberUidList[newUserId].append("")
+        
         allImageCount = 0
+        # 循环下载每个id
         for userId in userIdList:
             userName = newMemberUidList[userId][1]
             self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
@@ -180,6 +188,7 @@ class downloadImage(common.Tool):
             imageUrlList = []
             isPass = False
             isError = False
+            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if self.isSort == 1:
                 imagePath = self.imageDownloadPath + "\\" + self.imageTmpDirName
             else:
@@ -187,6 +196,7 @@ class downloadImage(common.Tool):
             if not self.createDir(imagePath):
                 self.printErrorMsg("create " + imagePath + " error")
                 self.processExit()
+            # 图片下载  
             while 1:
                 if isPass:
                     break
@@ -199,7 +209,7 @@ class downloadImage(common.Tool):
                     isPass = True
                     break
             
-                # 判断信息总页字节数大小，是否小于300
+                # 判断信息总页字节数大小，是否小于300（下载到最后一页），结束
                 if len(photoAlbumPage) < 300:
                     break
 
@@ -216,11 +226,13 @@ class downloadImage(common.Tool):
                     # 将第一张image的URL保存到新id list中
                     if newMemberUidList[userId][3] == "":
                         newMemberUidList[userId][3] = messageUrl
+                    # 检查是否已下载到前一次的图片
                     if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/"):
                         if messageUrl == userIdList[userId][3]:
                             isPass = True
                             break
                     self.trace("message URL:" + messageUrl)
+                    # 判断是否重复
                     if messageUrl in messageUrlList:
                         messageIndex += 1
                         continue
@@ -244,11 +256,14 @@ class downloadImage(common.Tool):
                             flag = messagePage.find("<div><a href=", flag + 1)
                             continue
                         tempList = imageUrl.split("/")
+                        # 使用最大分辨率
                         tempList[-2] = "s0"
                         imageUrl = "/".join(tempList)
+                        # 文件类型
                         fileType = imageUrl.split(".")[-1]
                         imgByte = self.doGet(imageUrl)
                         if imgByte:
+                            # 保存图片
                             filename = str("%04d" % imageCount)
                             imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
                             self.printStepMsg("start download " + str(imageCount) + ": " + imageUrl)
@@ -256,6 +271,7 @@ class downloadImage(common.Tool):
                             imageFile.close()
                             self.printStepMsg("download succeed")
                             imageCount += 1
+                            # 达到配置文件中的下载数量，结束
                             if self.getImageCount > 0 and imageCount > self.getImageCount:
                                 isPass = True
                                 break
@@ -266,6 +282,7 @@ class downloadImage(common.Tool):
                 pageCount += 100
                 
             self.printStepMsg(userName + " download over, download image count: " + str(imageCount - 1))
+            # 检查下载图片是否大于总数量的一半，对上一次记录的图片正好被删除或其他原因导致下载了全部图片做一个保护
             if (imageCount * 2) > int(newMemberUidList[userId][2]):
                 isError = True
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)

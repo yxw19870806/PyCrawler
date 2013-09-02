@@ -2,7 +2,8 @@
 '''
 Created on 2013-6-15
 
-@author: rena
+@author: haruka
+QQ: 286484545
 '''
 
 from common import common
@@ -75,6 +76,7 @@ class downloadVideo(common.Tool):
             self.processExit()
         startTime = time.time()
         # 判断各种目录是否存在
+        # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
@@ -100,9 +102,11 @@ class downloadVideo(common.Tool):
                 self.printErrorMsg("create " + videoUrlFileDir + " error")
                 self.processExit()
             self.printStepMsg("video URL file path is not exist, create it: " + videoUrlFileDir)
+        # 视频url保存的html文件
         if os.path.exists(self.resultFilePath):
             isDelete = False
             while not isDelete:
+                # 手动输入是否删除旧存档文件
                 input = raw_input(self.resultFilePath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
                 try:
                     input = input.lower()
@@ -136,7 +140,7 @@ class downloadVideo(common.Tool):
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.close()
-
+        # 复制处理存档文件
         newMemberUidList = copy.deepcopy(userIdList)
         for newUserId in newMemberUidList:
             # 如果没有名字，则名字用uid代替
@@ -161,6 +165,7 @@ class downloadVideo(common.Tool):
                 newMemberUidList[newUserId].append("")
                 
         allVideoCount = 0
+        # 循环获取每个id
         for userId in userIdList:
             userName = newMemberUidList[userId][1]
             self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
@@ -179,12 +184,13 @@ class downloadVideo(common.Tool):
                     # video token 取前20位
                     tokenStart = videoUrl.find("?token=") + 7
                     videoToken = videoUrl[tokenStart:tokenStart + 20]
-                    # 将第一张image的URL保存到新id list中
+                    # 将第一个视频的token保存到新id list中
                     if newMemberUidList[userId][5] == "":
                         newMemberUidList[userId][5] = videoToken
                     if len(userIdList[userId]) >= 6:
                         if videoToken == userIdList[userId][5]:
                             break
+                    # 判断是否重复
                     if videoUrl in videoUrlList:
                         videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
                         continue
