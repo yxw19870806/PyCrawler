@@ -259,6 +259,8 @@ class downloadImage(common.Tool):
                             if self.getImageCount > 0 and imageCount > self.getImageCount:
                                 isPass = True
                                 break
+                        else:
+                            self.printErrorMsg("download image failed, " + str(userId) + ": " + imageUrl)
                         flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
                 pageCount += 100
