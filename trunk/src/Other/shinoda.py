@@ -47,7 +47,7 @@ class shinoda(common.Tool):
             imageFile.close()
             self.printMsg("download succeed")
         else:
-            self.printErrorMsg("download image error: " + imageUrl)
+            self.printErrorMsg("download image failed: " + imageUrl)
                            
     def __init__(self):
         processPath = os.getcwd()
@@ -90,6 +90,7 @@ class shinoda(common.Tool):
             self.processExit()
         startTime = time.time()
         # 判断各种目录是否存在
+        # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
@@ -109,10 +110,12 @@ class shinoda(common.Tool):
                     self.printErrorMsg("create " + traceLogDir + " error")
                     self.processExit()
                 self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
+        # 图片排序后的保存目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
+                    # 手动输入是否删除旧文件夹中的目录
                     input = raw_input(self.imageDownloadPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
@@ -123,6 +126,7 @@ class shinoda(common.Tool):
                     except:
                         pass
                 self.printStepMsg("image download path: " + self.imageDownloadPath + " is exist, remove it")
+                # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
@@ -130,10 +134,12 @@ class shinoda(common.Tool):
             else:
                 self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
                 os.remove(self.imageDownloadPath)
+        # 图片下载目录
         if os.path.exists(self.imageTempPath):
             if os.path.isdir(self.imageTempPath):
                 isDelete = False
                 while not isDelete:
+                    # 手动输入是否删除旧文件夹中的目录
                     input = raw_input(self.imageTempPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
@@ -162,8 +168,8 @@ class shinoda(common.Tool):
         url = "http://blog.mariko-shinoda.net/index%s.html"
         indexCount = 1
         allImageCount = 0
-        # 读取保存的图片地址
-        saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".dat"
+        # 读取存档文件
+        saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
         if os.path.exists(saveFilePath):
             saveFile = open(saveFilePath, 'r')
             saveInfo = saveFile.read()
@@ -177,6 +183,7 @@ class shinoda(common.Tool):
         isOver = False
         newLastImageUrl = ""
         while True:
+            # 达到配置文件中的下载数量，结束
             if self.getImagePageCount != 0 and indexCount > self.getImagePageCount:
                 break
             imageCount = 1
@@ -207,6 +214,7 @@ class shinoda(common.Tool):
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
+                        # 下载图片
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
@@ -227,6 +235,7 @@ class shinoda(common.Tool):
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
+                        # 下载图片
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
@@ -238,12 +247,13 @@ class shinoda(common.Tool):
             indexCount += 1
         
         self.printStepMsg("download over!, count: " + str(allImageCount))
+        # 保存新的存档文件
         newSaveFilePath = os.getcwd() + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
         newSaveFile = open(newSaveFilePath, 'w')
         newSaveFile.write(lastImageUrl)
         saveFile.close()
         
-        # 排序
+        # 排序复制到保存目录
         if self.isSort == 1:
             allImageCount = 0
             for index1 in sorted(os.listdir(self.imageTempPath), reverse=True):
@@ -253,6 +263,7 @@ class shinoda(common.Tool):
                     fileType = fileName.split(".")[-1]
                     shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
                     allImageCount += 1
+            # 删除下载目录中的图片
             shutil.rmtree(self.imageTempPath, True)
             self.printStepMsg("sorted over!, count: " + str(allImageCount))
             
