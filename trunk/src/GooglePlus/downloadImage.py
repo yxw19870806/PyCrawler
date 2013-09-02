@@ -2,8 +2,10 @@
 '''
 Created on 2013-4-8
 
-@author: haruka
+@author: hikaru
 QQ: 286484545
+email: hikaru870806@hotmail.com
+如有问题或建议请联系
 '''
 
 from common import common
