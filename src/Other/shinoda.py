@@ -1,11 +1,11 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-5-6
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
+ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
 '''
 from common import common
 import os
@@ -67,14 +67,14 @@ class shinoda(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # é…ç½®æ–‡ä»¶è·å–æ—¥å¿—æ–‡ä»¶è·¯å¾„
+        # ÅäÖÃÎÄ¼ş»ñÈ¡ÈÕÖ¾ÎÄ¼şÂ·¾¶
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, prefix=processPath + "\\")
         self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, prefix=processPath + "\\")
         self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, prefix=processPath + "\\")
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", processPath + "\\photo", 1, prefix=processPath + "\\")
         imageTempDirName = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "tmpImage", 0)
         self.imageTempPath = os.getcwd() + "\\" + imageTempDirName
-        # é…ç½®æ–‡ä»¶è·å–ç¨‹åºé…ç½®
+        # ÅäÖÃÎÄ¼ş»ñÈ¡³ÌĞòÅäÖÃ
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
@@ -92,34 +92,41 @@ class shinoda(common.Tool):
         if self.isDownloadImage != 1:
             self.processExit()
         startTime = time.time()
-        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
-        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
+        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
+        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
                 if not self.createDir(stepLogDir):
-                    self.printErrorMsg("create " + stepLogDir + " error")
+                    #self.printErrorMsg("create " + stepLogDir + " error, process stop!")
+                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                     self.processExit()
-                self.printStepMsg("step log file path is not exist, create it: " + stepLogDir)
+                #self.printStepMsg("step log file path is not exist, create it: " + stepLogDir)
+                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ, ´´½¨ÎÄ¼ş¼Ğ: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
-                    self.printErrorMsg("create " + errorLogDir + " error")
+                    #self.printErrorMsg("create " + errorLogDir + " error, process stop!")
+                    self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                     self.processExit()
-                self.printStepMsg("error log file path is not exist, create it: " + errorLogDir)
+                #self.printStepMsg("error log file path is not exist, create it: " + errorLogDir)
+                self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ, ´´½¨ÎÄ¼ş¼Ğ: " + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
-                    self.printErrorMsg("create " + traceLogDir + " error")
+                    #self.printErrorMsg("create " + traceLogDir + " error, process stop!")
+                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                     self.processExit()
-                self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
-        # å›¾ç‰‡æ’åºåçš„ä¿å­˜ç›®å½•
+                #self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
+                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ, ´´½¨ÎÄ¼ş¼Ğ: " + traceLogDir)
+        # Í¼Æ¬ÅÅĞòºóµÄ±£´æÄ¿Â¼
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
-                    input = raw_input(self.imageDownloadPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                    # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
+                    #input = raw_input(self.imageDownloadPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                    input = raw_input("Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ¾­´æÔÚ, ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -128,22 +135,31 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("image download path: " + self.imageDownloadPath + " is exist, remove it")
-                # åˆ é™¤ç›®å½•
+                #self.printStepMsg("image download path: " + self.imageDownloadPath + " is exist, remove it")
+                self.printStepMsg("ÕıÔÚÉ¾³ıÍ¼Æ¬±£´æÄ¿Â¼: " + self.imageDownloadPath)
+                # É¾³ıÄ¿Â¼
                 shutil.rmtree(self.imageDownloadPath, True)
-                # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
+                # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
+                #self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
+                self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼: " + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş, ×Ô¶¯É¾³ıÖĞ")
                 os.remove(self.imageDownloadPath)
-        # å›¾ç‰‡ä¸‹è½½ç›®å½•
+        #self.printStepMsg("created image download path: " + self.imageDownloadPath)
+        self.printStepMsg("ÕıÔÚ´´½¨Í¼Æ¬±£´æÄ¿Â¼: " + self.imageDownloadPath)
+        if not self.createDir(self.imageDownloadPath):
+            #self.printErrorMsg("create " + self.imageDownloadPath + " error, process stop!")
+            self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.processExit()
+        # Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼
         if os.path.exists(self.imageTempPath):
             if os.path.isdir(self.imageTempPath):
                 isDelete = False
                 while not isDelete:
-                    # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
-                    input = raw_input(self.imageTempPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                    # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
+                    #input = raw_input(self.imageTempPath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                    input = raw_input("Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + " ÒÑ¾­´æÔÚ, ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -152,26 +168,30 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("image download path: " + self.imageTempPath + " is exist, remove it")
+                #self.printStepMsg("image temp path: " + self.imageTempPath + " is exist, remove it")
+                self.printStepMsg("ÕıÔÚÉ¾³ıÍ¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼: " + self.imageTempPath)
                 shutil.rmtree(self.imageTempPath, True)
-                # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
+                # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
                 while os.path.exists(self.imageTempPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("image download path: " + self.imageDownloadPath + " is a file, delete it")
-                os.remove(self.imageDownloadPath)
-        self.printStepMsg("created image download path: " + self.imageDownloadPath)
-        if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("create " + self.imageDownloadPath + " error")
+                #self.printStepMsg("image temp path: " + self.imageTempPath + " is a file, delete it")
+                self.printStepMsg("Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼: " + self.imageTempPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş, ×Ô¶¯É¾³ıÖĞ")
+                os.remove(self.imageTempPath)
+        #self.printStepMsg("created image temp path: " + self.imageTempPath)
+        self.printStepMsg("ÕıÔÚ´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼: " + self.imageTempPath)
+        if not self.createDir(self.imageTempPath):
+            #self.printErrorMsg("create " + self.imageTempPath + " error, process stop!")
+            self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
             self.processExit()
-        # è®¾ç½®ä»£ç†
+        # ÉèÖÃ´úÀí
         if self.isProxy == 1:
             self.proxy(self.proxyIp, self.proxyPort)
-        # ä¸‹è½½
+        # ÏÂÔØ
         url = "http://blog.mariko-shinoda.net/index%s.html"
         indexCount = 1
         allImageCount = 0
-        # è¯»å–å­˜æ¡£æ–‡ä»¶
+        # ¶ÁÈ¡´æµµÎÄ¼ş
         saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
         if os.path.exists(saveFilePath):
             saveFile = open(saveFilePath, 'r')
@@ -186,7 +206,7 @@ class shinoda(common.Tool):
         isOver = False
         newLastImageUrl = ""
         while True:
-            # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
+            # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
             if self.getImagePageCount != 0 and indexCount > self.getImagePageCount:
                 break
             imageCount = 1
@@ -197,7 +217,8 @@ class shinoda(common.Tool):
             else:
                 indexUrl = url % ("")
                 indexPage = self.doGet(indexUrl)
-            self.trace("index URL:" + indexUrl)
+            #self.trace("index URL:" + indexUrl)
+            self.trace("²©¿ÍÒ³ÃæµØÖ·:" + indexUrl)
             if indexPage:
                 if not os.path.exists(imagePath):
                     os.makedirs(imagePath)
@@ -210,15 +231,16 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex) 
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace("image URL:" + imageUrl)
+                    #self.trace("image URL:" + imageUrl)
+                    self.trace("Í¼Æ¬µØÖ·:" + imageUrl)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
-                        # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
+                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
-                        # ä¸‹è½½å›¾ç‰‡
+                        # ÏÂÔØÍ¼Æ¬
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
@@ -234,13 +256,14 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex)
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace("image URL:" + imageUrl)
+                    #self.trace("image URL:" + imageUrl)
+                    self.trace("Í¼Æ¬µØÖ·:" + imageUrl)
                     if imageUrl.find("data") == -1:
-                        # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
+                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
-                        # ä¸‹è½½å›¾ç‰‡
+                        # ÏÂÔØÍ¼Æ¬
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
@@ -251,14 +274,17 @@ class shinoda(common.Tool):
                 break
             indexCount += 1
         
-        self.printStepMsg("download over!, count: " + str(allImageCount))
-        # ä¿å­˜æ–°çš„å­˜æ¡£æ–‡ä»¶
+        #self.printStepMsg("download over!, count: " + str(allImageCount))
+        self.printStepMsg("ÏÂÔØÍê±Ï,×Ü¹ı»ñµÃ" + str(allImageCount) + "ÕÅÍ¼Æ¬")
+        # ±£´æĞÂµÄ´æµµÎÄ¼ş
         newSaveFilePath = os.getcwd() + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
+        #self.printStepMsg("save new save file: " + newSaveFilePath)
+        self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, 'w')
         newSaveFile.write(lastImageUrl)
         saveFile.close()
         
-        # æ’åºå¤åˆ¶åˆ°ä¿å­˜ç›®å½•
+        # ÅÅĞò¸´ÖÆµ½±£´æÄ¿Â¼
         if self.isSort == 1:
             allImageCount = 0
             for index1 in sorted(os.listdir(self.imageTempPath), reverse=True):
@@ -268,12 +294,15 @@ class shinoda(common.Tool):
                     fileType = fileName.split(".")[-1]
                     shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
                     allImageCount += 1
-            # åˆ é™¤ä¸‹è½½ç›®å½•ä¸­çš„å›¾ç‰‡
+            #self.printStepMsg("sorted over!¡°)
+            self.printStepMsg("¸´ÖÆÒÆ¶¯µ½Í¼Æ¬±£´æÄ¿Â¼³É¹¦")
+            # É¾³ıÏÂÔØÁÙÊ±Ä¿Â¼ÖĞµÄÍ¼Æ¬
             shutil.rmtree(self.imageTempPath, True)
-            self.printStepMsg("sorted over!, count: " + str(allImageCount))
+            
             
         stopTime = time.time()
-        self.printStepMsg("all members' image download succeed, use " + str(int(stopTime - startTime)) + " seconds, sum download image count: " + str(allImageCount))
+        #self.printStepMsg("all members' image download succeed, use " + str(int(stopTime - startTime)) + " seconds, sum download image count: " + str(allImageCount))
+        self.printStepMsg("³É¹¦ÏÂÔØ×îĞÂÍ¼Æ¬, ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë, ¹²¼ÆÍ¼Æ¬" + str(allImageCount) + "ÕÅ")
 
 if __name__ == '__main__':
     shinoda().main()
