@@ -1,4 +1,4 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-7-16
 
@@ -9,7 +9,7 @@ IS_SET_TIMEOUT = False
 
 class Tool():
     
-    # httpè¯·æ±‚
+    # httpÇëÇó
     def doGet(self, url):
         import sys
         import traceback
@@ -21,8 +21,9 @@ class Tool():
         while 1:
             try:
                 request = urllib2.Request(url)
-                # è®¾ç½®å¤´ä¿¡æ¯
+                # ÉèÖÃÍ·ĞÅÏ¢
                 request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
+                # ÉèÖÃ·ÃÎÊ³¬Ê±
                 if sys.version_info < (2, 7):
                     if not IS_SET_TIMEOUT:
                         urllib2.socket.setdefaulttimeout(20)
@@ -32,25 +33,25 @@ class Tool():
                     response = urllib2.urlopen(request, timeout=20)
                 return response.read()
             except Exception, e:
-                # ä»£ç†æ— æ³•è®¿é—®
+                # ´úÀíÎŞ·¨·ÃÎÊ
                 if str(e).find("[Errno 10061] ") != -1:
-                    input = raw_input("please check your proxy setting! Type in (Y)es to continue or (N)o to exit process!: ").lower()
+                    input = raw_input("ÎŞ·¨·ÃÎÊ´úÀí·şÎñÆ÷£¬Çë¼ì²é´úÀíÉèÖÃ¡£ÊÇ·ñĞèÒª¼ÌĞø³ÌĞò£¿(Y)es or (N)o: ").lower()
                     if input in ["y", "yes"]:
                         pass
                     elif input in ["n", "no"]:
                         sys.exit()
-                # è¶…æ—¶
+                # ³¬Ê±
                 elif str(e).find("timed out") != -1:
-                    self.printMsg("time out, try again")
+                    self.printMsg("·ÃÎÊÒ³Ãæ³¬Ê±£¬ÖØĞÂÁ¬½ÓÇëÉÔºó")
                 else:
                     self.printMsg(str(e))
                     traceback.print_exc()
             count += 1
             if count > 10:
-                self.printMsg("can not connection " + url)
+                self.printMsg("ÎŞ·¨·ÃÎÊÒ³Ãæ£º" + url)
                 return False
     
-    # ä½¿ç”¨ç³»ç»Ÿcookies
+    # Ê¹ÓÃÏµÍ³cookies
     def cookie(self, filePath):
         import cookielib
         import cStringIO
@@ -58,7 +59,7 @@ class Tool():
         import urllib2
         from pysqlite2 import dbapi2 as sqlite
         if not os.path.exists(filePath):
-            self.printMsg(filePath + " not exist")
+            self.printMsg("cookieÄ¿Â¼£º"+filePath + " ²»´æÔÚ")
             return False
         con = sqlite.connect(filePath)
         cur = con.cursor()
@@ -76,21 +77,21 @@ class Tool():
         urllib2.install_opener(opener)
         return True
     
-    # è®¾ç½®ä»£ç†
+    # ÉèÖÃ´úÀí
     def proxy(self, ip, port):
         import urllib2
         proxyHandler = urllib2.ProxyHandler({'https':"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
-        self.printMsg("proxy set succeed")
+        self.printMsg("ÉèÖÃ´úÀí³É¹¦")
                 
-    # è·å–é…ç½®æ–‡ä»¶
-    # config : å­—å…¸æ ¼å¼ï¼Œå¦‚ï¼š{key1:value1, key2:value2}
-    # mode 0 : ç›´æ¥èµ‹å€¼
-    # mode 1 : å­—ç¬¦ä¸²æ‹¼æ¥
-    # mode 2 : å–æ•´
-    # prefix: å‰ç¼€ï¼Œåªæœ‰åœ¨mode=1æ—¶æœ‰æ•ˆ
-    # postfix: åç¼€ï¼Œåªæœ‰åœ¨mode=1æ—¶æœ‰æ•ˆ
+    # »ñÈ¡ÅäÖÃÎÄ¼ş
+    # config : ×Öµä¸ñÊ½£¬Èç£º{key1:value1, key2:value2}
+    # mode 0 : Ö±½Ó¸³Öµ
+    # mode 1 : ×Ö·û´®Æ´½Ó
+    # mode 2 : È¡Õû
+    # prefix: Ç°×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
+    # postfix: ºó×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
     def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
         value = None
         if config.has_key(key):
@@ -106,10 +107,10 @@ class Tool():
                 try:
                     value = int(config[key])
                 except:
-                    self.printMsg("'" + key + "' must is a number in config.ini, default value")
+                    self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞkeyÎª'" + key + "'µÄÖµ±ØĞëÊÇÒ»¸öÕûÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
                     value = defaultValue
         else:
-            self.printMsg("Not found '" + key + "' in config.ini, default value")
+            self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞÃ»ÓĞÕÒµ½keyÎª'" + key + "'µÄ²ÎÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
             value = defaultValue
         return value
     
@@ -153,3 +154,4 @@ class Tool():
     def processExit(self):
         import sys
         sys.exit()
+    
