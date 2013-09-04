@@ -95,7 +95,7 @@ class weibo(common.Tool):
                     self.defaultCookiePath = defaultFFPath + "\\cookies.sqlite"
                     break
         # 每次请求获取的图片数量
-        self.IMAGE_COUNT_PER_PAGE = 100
+        self.IMAGE_COUNT_PER_PAGE = 20
         # 配置文件获取程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
@@ -219,63 +219,78 @@ class weibo(common.Tool):
                 self.processExit()
             # 日志文件插入信息
             while 1:
-                if isPass:
-                    break
                 photoAlbumUrl = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (userId, self.IMAGE_COUNT_PER_PAGE, pageCount)
                 self.trace("相册专辑地址：" + photoAlbumUrl)
                 photoPageData = self.visit(photoAlbumUrl)
                 self.trace("返回JSON数据：" + photoPageData)
-                page = json.read(photoPageData)
-                if page.has_key("data"):
-                    if totalImageCount == 0:
-                        if page["data"].has_key("total"):
-                            totalImageCount = page["data"]["total"]
-                        else:
-                            self.printErrorMsg("在JSON数据：" + page + " 中没有找到'total'字段")
-                            isPass = True
-                            break
-                    if page["data"].has_key("photo_list"):
-                        for imageInfo in page["data"]["photo_list"]:
-                            if imageInfo.has_key("pic_host"):
-                                imageUrl = imageInfo["pic_host"]
-                            else:
-                                imageUrl = "http://ww%s.sinaimg.cn" % str(random.randint(1, 3))
-                            if imageInfo.has_key("pic_name"):
-                                imageUrl += "/large/" + imageInfo["pic_name"]
-                            else:
-                                self.printErrorMsg("在JSON数据：" + imageInfo + " 中没有找到'pic_name'字段")
-                            # 将第一张image的URL保存到新id list中
-                            if newMemberUidList[userId][3] == "":
-                                newMemberUidList[userId][3] = imageUrl
-                            # 检查是否已下载到前一次的图片
-                            if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/"):
-                                if imageUrl == userIdList[userId][3]:
-                                    isPass = True
-                                    break
-                            self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                            imgByte = self.doGet(imageUrl)
-                            if imgByte:
-                                fileType = imageUrl.split(".")[-1]
-                                filename = str("%04d" % imageCount)
-                                imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
-                                imageFile.write(imgByte)
-                                imageFile.close()
-                                self.printStepMsg("下载成功")
-                                imageCount += 1
-                            else:
-                                self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址: " + imageUrl)
+                try:
+                    page = json.read(photoPageData)
+                except:
+                    self.printErrorMsg("返回信息：" + str(page) + " 不是一个JSON数据")
+                    break
+                if not isinstance(page, dict):
+                    self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典")
+                    break
+                if not page.has_key("data"):
+                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'data'字段")
+                    break
+                if totalImageCount == 0:
+                    if page["data"].has_key("total"):
+                        totalImageCount = page["data"]["total"]
                     else:
-                        self.printErrorMsg("在JSON数据：" + page + " 中没有找到'photo_list'字段")
-                else:
-                    self.printErrorMsg("在JSON数据：" + page + " 中没有找到'data'字段")
+                        self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'total'字段")
+                        isPass = True
+                        break
+                if not isinstance(page["data"], dict):
+                    self.printErrorMsg("JSON数据['data']：" + str(page["data"]) + " 不是一个字典")
+                    break
+                if not page["data"].has_key("photo_list"):
+                    self.printErrorMsg("在JSON数据：" + str(page["data"]) + " 中没有找到'photo_list'字段")
+                    break
+                for imageInfo in page["data"]["photo_list"]:
+                    if not isinstance(imageInfo, dict):
+                        self.printErrorMsg("JSON数据['photo_list']：" + str(imageInfo) + " 不是一个字典")
+                        continue
+                    if imageInfo.has_key("pic_host"):
+                        imageUrl = imageInfo["pic_host"]
+                    else:
+                        imageUrl = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
+                    if imageInfo.has_key("pic_name"):
+                        # 将第一张image的URL保存到新id list中
+                        if newMemberUidList[userId][3] == "":
+                            newMemberUidList[userId][3] = imageInfo["pic_name"]
+                        # 检查是否已下载到前一次的图片
+                        if len(userIdList[userId]) >= 4:
+                            if imageInfo["pic_name"] == userIdList[userId][3]:
+                                isPass = True
+                                break
+                        imageUrl += "/large/" + imageInfo["pic_name"]
+                    else:
+                        self.printErrorMsg("在JSON数据：" + str(imageInfo) + " 中没有找到'pic_name'字段")
+                    self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                    imgByte = self.doGet(imageUrl)
+                    if imgByte:
+                        fileType = imageUrl.split(".")[-1]
+                        filename = str("%04d" % imageCount)
+                        imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
+                        imageFile.write(imgByte)
+                        imageFile.close()
+                        self.printStepMsg("下载成功")
+                        imageCount += 1
+                    else:
+                        self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址: " + imageUrl)
+                if isPass:
+                    break
                 if totalImageCount / self.IMAGE_COUNT_PER_PAGE > pageCount - 1:
                     pageCount += 1
                 else:
                     # 全部图片下载完毕
                     break
             
-            if newMemberUidList[userId][2]!=0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
-                isError = True
+            if int(newMemberUidList[userId][2]) != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
+                isError = 1
+            if int(newMemberUidList[userId][2]) == 0 and imageCount != totalImageCount:
+                isError = 2
             
             self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
@@ -312,8 +327,10 @@ class weibo(common.Tool):
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
-            if isError:
+            if isError == 1:
                 self.printErrorMsg(userName + "图片数量异常，请手动检查")
+            elif isError == 2:
+                self.printErrorMsg(userName + "图片数量" + str(imageCount) + "张，小于相册图片数量" + str(totalImageCount) + "张，请手动检查")
 
             # 保存最后的信息
             newMemberUidListFile = open(newMemberUidListFilePath, 'a')
