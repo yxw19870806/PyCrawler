@@ -66,16 +66,12 @@ class downloadVideo(common.Tool):
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isGetVideoUrl = self.getConfig(config, "IS_GET_VIDEO_URL", 1, 2)
-        self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
+        self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
         self.printMsg("config init succeed")
         
     def main(self):
-        # video
-        if self.isGetVideoUrl != 1:
-            self.processExit()
         startTime = time.time()
         # 判断各种目录是否存在
         # 日志文件保存目录
@@ -83,42 +79,33 @@ class downloadVideo(common.Tool):
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
                 if not self.createDir(stepLogDir):
-                    #self.printErrorMsg("create " + stepLogDir + " error, process stop!")
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                #self.printStepMsg("step log file path is not exist, create it: " + stepLogDir)
                 self.printStepMsg("步骤日志目录不存在, 创建文件夹: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
-                    #self.printErrorMsg("create " + errorLogDir + " error, process stop!")
                     self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                     self.processExit()
-                #self.printStepMsg("error log file path is not exist, create it: " + errorLogDir)
-                self.printStepMsg("错误日志目录不存在, 创建文件夹: " + errorLogDir)
+                self.printStepMsg("错误日志目录不存在, 创建文件夹：" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
-                    #self.printErrorMsg("create " + traceLogDir + " error, process stop!")
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                #self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
-                self.printStepMsg("调试日志目录不存在, 创建文件夹: " + traceLogDir)
+                self.printStepMsg("调试日志目录不存在, 创建文件夹：" + traceLogDir)
         videoUrlFileDir = os.path.dirname(self.resultFilePath)
         if not os.path.exists(videoUrlFileDir):
             if not self.createDir(videoUrlFileDir):
-                #self.printErrorMsg("create " + videoUrlFileDir + " error")
-                self.printStepMsg("视频下载地址页面目录, 创建文件夹: " + traceLogDir)
+                self.printStepMsg("视频下载地址页面目录, 创建文件夹：" + traceLogDir)
                 self.processExit()
-            #self.printStepMsg("video URL file path is not exist, create it: " + videoUrlFileDir)
-            self.printStepMsg("视频下载地址页面目录不存在, 创建文件夹: " + videoUrlFileDir)
+            self.printStepMsg("视频下载地址页面目录不存在, 创建文件夹：" + videoUrlFileDir)
         # 视频url保存的html文件
         if os.path.exists(self.resultFilePath):
             isDelete = False
             while not isDelete:
                 # 手动输入是否删除旧存档文件
-                #input = raw_input(self.resultFilePath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
-                input = raw_input("视频下载地址页面：" + self.resultFilePath + " 已经存在, 是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                input = raw_input("视频下载地址页面：" + self.resultFilePath + " 已经存在, 是否需要删除该文件夹并继续程序? (Y)es or (N)o：")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
@@ -130,7 +117,7 @@ class downloadVideo(common.Tool):
                 resultFile = open(self.resultFilePath, 'w')
                 resultFile.close()
         # 设置代理
-        if self.isProxy == 1:
+        if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort)
         # 寻找idlist，如果没有结束进程
         userIdList = {}
@@ -146,7 +133,6 @@ class downloadVideo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            #self.printErrorMsg("Not exists member id list file: " + self.memberUIdListFilePath + ", process stop!")
             self.printErrorMsg("用户ID存档文件: " + self.memberUIdListFilePath + "不存在，程序结束！")
             self.processExit()
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
@@ -180,13 +166,11 @@ class downloadVideo(common.Tool):
         # 循环获取每个id
         for userId in userIdList:
             userName = newMemberUidList[userId][1]
-            #self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
             self.printStepMsg("UID: " + str(userId) + ", 名字: " + userName)
             # 初始化数据
             videoCount = 0
             videoUrlList = []
             videoAlbumUrl = 'https://plus.google.com/' + userId + '/videos'
-            #self.trace("photo Album URL:" + videoAlbumUrl)
             self.trace("视频专辑地址：" + videoAlbumUrl)
             videoAlbumPage = self.doGet(videoAlbumUrl)
             if videoAlbumPage:
@@ -212,7 +196,6 @@ class downloadVideo(common.Tool):
                     videoCount += 1
                     videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
             else:
-                #self.printErrorMsg("can not get videoAlbumPage: " + videoAlbumUrl)
                 self.printErrorMsg("无法获取视频首页: " + videoAlbumUrl)
             # 生成下载视频url的文件
             if videoCount > 0:
@@ -241,14 +224,12 @@ class downloadVideo(common.Tool):
             tmpList.append("\t".join(newMemberUidList[index]))
         newMemberUidListString = "\n".join(tmpList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        #self.printStepMsg("save new id list file: " + newMemberUidListFilePath)
         self.printStepMsg("保存新存档文件: " + newMemberUidListFilePath)
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.write(newMemberUidListString)
         newMemberUidListFile.close()
         
         stopTime = time.time()
-        #self.printStepMsg("all members' video url get succeed, use " + str(int(stopTime - startTime)) + " seconds, sum get video count: " + str(allVideoCount))
         self.printStepMsg("存档文件中所有用户视频地址已成功获取, 耗时" + str(int(stopTime - startTime)) + "秒, 共计视频地址" + str(allVideoCount) + "个")
         
 if __name__ == '__main__':

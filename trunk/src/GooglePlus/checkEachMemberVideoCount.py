@@ -60,7 +60,7 @@ for line in lines:
     elif line.find("****************************************************************************************************") != -1:
         if isContinue:
             name = ""
-            isContinue = False             
+            isContinue = False
     else:
             isContinue = True
             name = line[:-1]
