@@ -85,26 +85,26 @@ class downloadImage(common.Tool):
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在, 创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
                     self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("错误日志目录不存在, 创建文件夹: " + errorLogDir)
+                self.printStepMsg("错误日志目录不存在，创建文件夹: " + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在, 创建文件夹: " + traceLogDir)
+                self.printStepMsg("调试日志目录不存在，创建文件夹: " + traceLogDir)
         # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
                     # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input("图片下载目录：" + self.imageDownloadPath + " 已经存在, 是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
+                    input = raw_input("图片下载目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -120,7 +120,7 @@ class downloadImage(common.Tool):
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件, 自动删除中")
+                self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
         self.printStepMsg("正在创建图片下载目录: " + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
@@ -237,7 +237,7 @@ class downloadImage(common.Tool):
                     messageUrlList.append(messageUrl)
                     messagePage = self.doGet(messageUrl)
                     if not messagePage:
-                        #self.printErrorMsg("can not get messagePage: " + messageUrl)
+                        # self.printErrorMsg("can not get messagePage: " + messageUrl)
                         self.printErrorMsg("无法获取信息页: " + messageUrl)
                         messageIndex += 1
                         continue
@@ -280,9 +280,9 @@ class downloadImage(common.Tool):
                     messageIndex += 1
                 pageCount += 100
                 
-            self.printStepMsg(userName + "下载完毕,总过获得" + str(imageCount - 1) + "张图片")
+            self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             # 检查下载图片是否大于总数量的一半，对上一次记录的图片正好被删除或其他原因导致下载了全部图片做一个保护
-            if (imageCount * 2) > int(newMemberUidList[userId][2]):
+            if newMemberUidList[userId][2] != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
                 isError = True
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
@@ -298,7 +298,7 @@ class downloadImage(common.Tool):
                             self.printStepMsg("图片保存目录: " + destPath + " 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg("图片保存目录: " + destPath + "已存在相同名字的文件, 自动删除中")
+                            self.printStepMsg("图片保存目录: " + destPath + "已存在相同名字的文件，自动删除中")
                             os.remove(destPath)
                     self.printStepMsg("创建图片保存目录: " + destPath)
                     if not self.createDir(destPath):
@@ -338,7 +338,7 @@ class downloadImage(common.Tool):
         newMemberUidListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载, 耗时" + str(int(stopTime - startTime)) + "秒, 共计图片" + str(allImageCount) + "张")
+        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == '__main__':
     downloadImage().main()

@@ -81,31 +81,31 @@ class downloadVideo(common.Tool):
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在, 创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
                     self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("错误日志目录不存在, 创建文件夹：" + errorLogDir)
+                self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在, 创建文件夹：" + traceLogDir)
+                self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
         videoUrlFileDir = os.path.dirname(self.resultFilePath)
         if not os.path.exists(videoUrlFileDir):
             if not self.createDir(videoUrlFileDir):
-                self.printStepMsg("视频下载地址页面目录, 创建文件夹：" + traceLogDir)
+                self.printStepMsg("视频下载地址页面目录，创建文件夹：" + traceLogDir)
                 self.processExit()
-            self.printStepMsg("视频下载地址页面目录不存在, 创建文件夹：" + videoUrlFileDir)
+            self.printStepMsg("视频下载地址页面目录不存在，创建文件夹：" + videoUrlFileDir)
         # 视频url保存的html文件
         if os.path.exists(self.resultFilePath):
             isDelete = False
             while not isDelete:
                 # 手动输入是否删除旧存档文件
-                input = raw_input("视频下载地址页面：" + self.resultFilePath + " 已经存在, 是否需要删除该文件夹并继续程序? (Y)es or (N)o：")
+                input = raw_input("视频下载地址页面：" + self.resultFilePath + " 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o：")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
@@ -230,7 +230,7 @@ class downloadVideo(common.Tool):
         newMemberUidListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户视频地址已成功获取, 耗时" + str(int(stopTime - startTime)) + "秒, 共计视频地址" + str(allVideoCount) + "个")
+        self.printStepMsg("存档文件中所有用户视频地址已成功获取，耗时" + str(int(stopTime - startTime)) + "秒，共计视频地址" + str(allVideoCount) + "个")
         
 if __name__ == '__main__':
     downloadVideo().main()

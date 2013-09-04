@@ -97,26 +97,26 @@ class shinoda(common.Tool):
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在, 创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
                     self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("错误日志目录不存在, 创建文件夹：" + errorLogDir)
+                self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在, 创建文件夹: " + traceLogDir)
+                self.printStepMsg("调试日志目录不存在，创建文件夹: " + traceLogDir)
         # 图片排序后的保存目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
                     # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input("图片保存目录：" + self.imageDownloadPath + " 已经存在, 是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input("图片保存目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -132,7 +132,7 @@ class shinoda(common.Tool):
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片保存目录：" + self.imageDownloadPath + "已存在相同名字的文件, 自动删除中")
+                self.printStepMsg("图片保存目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
         self.printStepMsg("正在创建图片保存目录：" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
@@ -144,7 +144,7 @@ class shinoda(common.Tool):
                 isDelete = False
                 while not isDelete:
                     # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input("图片下载临时目录：" + self.imageTempPath + " 已经存在, 是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input("图片下载临时目录：" + self.imageTempPath + " 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -159,7 +159,7 @@ class shinoda(common.Tool):
                 while os.path.exists(self.imageTempPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片下载临时目录：" + self.imageTempPath + "已存在相同名字的文件, 自动删除中")
+                self.printStepMsg("图片下载临时目录：" + self.imageTempPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageTempPath)
         self.printStepMsg("正在创建图片下载临时目录：" + self.imageTempPath)
         if not self.createDir(self.imageTempPath):
@@ -252,7 +252,7 @@ class shinoda(common.Tool):
                 break
             indexCount += 1
         
-        self.printStepMsg("下载完毕,总过获得" + str(allImageCount) + "张图片")
+        self.printStepMsg("下载完毕，总共获得" + str(allImageCount) + "张图片")
         # 保存新的存档文件
         newSaveFilePath = os.getcwd() + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
         self.printStepMsg("保存新存档文件: " + newSaveFilePath)
@@ -275,7 +275,7 @@ class shinoda(common.Tool):
             shutil.rmtree(self.imageTempPath, True)
             
         stopTime = time.time()
-        self.printStepMsg("成功下载最新图片, 耗时" + str(int(stopTime - startTime)) + "秒, 共计图片" + str(allImageCount) + "张")
+        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == '__main__':
     shinoda().main()
