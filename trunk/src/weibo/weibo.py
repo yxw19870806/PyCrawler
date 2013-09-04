@@ -117,24 +117,24 @@ class weibo(common.Tool):
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在, 创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
                     self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("错误日志目录不存在, 创建文件夹: " + errorLogDir)
+                self.printStepMsg("错误日志目录不存在，创建文件夹: " + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在, 创建文件夹: " + traceLogDir)
+                self.printStepMsg("调试日志目录不存在，创建文件夹: " + traceLogDir)
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    input = raw_input("图片下载目录：" + self.imageDownloadPath + " 已存在, 是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input("图片下载目录：" + self.imageDownloadPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -149,7 +149,7 @@ class weibo(common.Tool):
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件, 自动删除中")
+                self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
         self.printStepMsg("创建图片下载目录: " + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
@@ -202,12 +202,13 @@ class weibo(common.Tool):
         allImageCount = 0
         for userId in userIdList:
             userName = newMemberUidList[userId][1]
-            self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
+            self.printStepMsg("UID: " + str(userId) + "，Member: " + userName)
             # 初始化数据
             pageCount = 1
             imageCount = 1
             totalImageCount = 0
             isPass = False
+            isError = False
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if self.isSort == 1:
                 imagePath = self.imageDownloadPath + "\\" + self.imageTmpDirName
@@ -221,7 +222,6 @@ class weibo(common.Tool):
                 if isPass:
                     break
                 photoAlbumUrl = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (userId, self.IMAGE_COUNT_PER_PAGE, pageCount)
-                print photoAlbumUrl
                 self.trace("相册专辑地址：" + photoAlbumUrl)
                 photoPageData = self.visit(photoAlbumUrl)
                 self.trace("返回JSON数据：" + photoPageData)
@@ -263,7 +263,7 @@ class weibo(common.Tool):
                                 self.printStepMsg("下载成功")
                                 imageCount += 1
                             else:
-                                self.printErrorMsg("下载图片失败,用户ID：" + str(userId) + "，图片地址: " + imageUrl)
+                                self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址: " + imageUrl)
                     else:
                         self.printErrorMsg("在JSON数据：" + page + " 中没有找到'photo_list'字段")
                 else:
@@ -274,7 +274,10 @@ class weibo(common.Tool):
                     # 全部图片下载完毕
                     break
             
-            self.printStepMsg(userName + "下载完毕，总过获得" + str(imageCount - 1) + "张图片")
+            if newMemberUidList[userId][2]!=0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
+                isError = True
+            
+            self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
             
@@ -289,9 +292,9 @@ class weibo(common.Tool):
                             self.printStepMsg("图片保存目录: " + destPath + " 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg("图片保存目录: " + destPath + "已存在相同名字的文件, 自动删除中")
+                            self.printStepMsg("图片保存目录: " + destPath + "已存在相同名字的文件，自动删除")
                             os.remove(destPath)
-                    #self.printStepMsg("create image download path: " + destPath)
+                    # self.printStepMsg("create image download path: " + destPath)
                     self.printStepMsg("创建图片保存目录: " + destPath)
                     if not self.createDir(destPath):
                         self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
@@ -309,7 +312,7 @@ class weibo(common.Tool):
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
-            if userIdList[userId][2] != 0 and imageCount > totalImageCount / 2:
+            if isError:
                 self.printErrorMsg(userName + "图片数量异常，请手动检查")
 
             # 保存最后的信息
@@ -330,7 +333,7 @@ class weibo(common.Tool):
         newMemberUidListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载, 耗时" + str(int(stopTime - startTime)) + "秒, 共计图片" + str(allImageCount) + "张")
+        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == '__main__':
     weibo().main()
