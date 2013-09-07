@@ -225,7 +225,7 @@ class downloadImage(common.Tool):
                     if newMemberUidList[userId][3] == "":
                         newMemberUidList[userId][3] = messageUrl
                     # 检查是否已下载到前一次的图片
-                    if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/"):
+                    if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/") != -1:
                         if messageUrl == userIdList[userId][3]:
                             isPass = True
                             break
