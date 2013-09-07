@@ -113,7 +113,7 @@ class downloadImage(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("正在删除图片下载目录: " + self.imageDownloadPath)
+                self.printStepMsg("删除图片下载目录: " + self.imageDownloadPath)
                 # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
@@ -122,7 +122,7 @@ class downloadImage(common.Tool):
             else:
                 self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("正在创建图片下载目录: " + self.imageDownloadPath)
+        self.printStepMsg("创建图片下载目录: " + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
             self.printErrorMsg("创建图片下载目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
@@ -245,7 +245,7 @@ class downloadImage(common.Tool):
                     while flag != -1:
                         imageIndex = messagePage.find("<img src=", flag, flag + 200)
                         if imageIndex == -1:
-                            self.printErrorMsg("'<img src=' not found  in " + messageUrl)
+                            self.printErrorMsg("信息页：" + messageUrl + " 中没有找到标签'<img src='")
                             break
                         imageStart = messagePage.find("http", imageIndex)
                         imageStop = messagePage.find('"', imageStart)

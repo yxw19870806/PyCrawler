@@ -46,12 +46,12 @@ class shinoda(common.Tool):
         if imgByte:
             fileType = imageUrl.split(".")[-1]
             imageFile = open(imagePath + "\\" + str("%03d" % imageCount) + "." + fileType, "wb")
-            self.printMsg("start download " + str(imageCount) + ": " + imageUrl)
+            self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
             imageFile.write(imgByte)
             imageFile.close()
-            self.printMsg("download succeed")
+            self.printMsg("下载成功")
         else:
-            self.printErrorMsg("download image failed: " + imageUrl)
+            self.printErrorMsg("获取图片信息失败：" + imageUrl)
                            
     def __init__(self):
         processPath = os.getcwd()
@@ -186,12 +186,12 @@ class shinoda(common.Tool):
             imageStartIndex = 0
         isOver = False
         newLastImageUrl = ""
+        imageCount = 1
         while True:
             # 达到配置文件中的下载数量，结束
             if self.getImagePageCount != 0 and indexCount > self.getImagePageCount:
                 break
-            imageCount = 1
-            imagePath = self.imageTempPath + "\\" + str("%03d" % indexCount)
+            imagePath = self.imageTempPath + "\\" + str("%05d" % indexCount)
             if indexCount > 1:
                 indexUrl = url % ("_" + str(indexCount))
                 indexPage = self.doGet(indexUrl)
@@ -227,16 +227,23 @@ class shinoda(common.Tool):
                 # new image:
                 if isOver:
                     break
-                imageIndex = 0
+                imgTagStart = 0
                 while True:
-                    imageIndex = indexPage.find('<img src="http://blog.mariko-shinoda.net', imageIndex)
-                    if imageIndex == -1:
+                    imgTagStart = indexPage.find('<img ', imgTagStart)
+                    if imgTagStart == -1:
                         break
+                    imgTagStop = indexPage.find('/>', imgTagStart)
+                    imageIndex = indexPage.find('src="http://blog.mariko-shinoda.net', imgTagStart, imgTagStop)
+                    if imageIndex == -1:
+                        imgTagStart += 1  
+                        continue
                     imageStart = indexPage.find("http", imageIndex)
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
                     self.trace("图片地址:" + imageUrl)
                     if imageUrl.find("data") == -1:
+                        if newLastImageUrl == "":
+                            newLastImageUrl = imageUrl
                         # 检查是否已下载到前一次的图片
                         if lastImageUrl == imageUrl:
                             isOver = True
@@ -245,7 +252,7 @@ class shinoda(common.Tool):
                         self.download(imageUrl, imagePath, imageCount)
                         imageCount += 1
                         allImageCount += 1
-                    imageIndex += 1   
+                    imgTagStart += 1
                 if isOver:
                     break       
             else:
@@ -254,11 +261,11 @@ class shinoda(common.Tool):
         
         self.printStepMsg("下载完毕，总共获得" + str(allImageCount) + "张图片")
         # 保存新的存档文件
-        newSaveFilePath = os.getcwd() + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self.printStepMsg("保存新存档文件: " + newSaveFilePath)
+        newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
+        self.printStepMsg("保存新y存档文件: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, 'w')
         newSaveFile.write(lastImageUrl)
-        saveFile.close()
+        newSaveFile.close()
         
         # 排序复制到保存目录
         if self.isSort == 1:
