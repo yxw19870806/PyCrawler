@@ -35,7 +35,7 @@ class Tool():
             except Exception, e:
                 # 代理无法访问
                 if str(e).find("[Errno 10061] ") != -1:
-                    input = raw_input("无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o: ").lower()
+                    input = raw_input("无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
                     if input in ["y", "yes"]:
                         pass
                     elif input in ["n", "no"]:
@@ -51,25 +51,80 @@ class Tool():
                 self.printMsg("无法访问页面：" + url)
                 return False
     
+    # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
+    # OSVersion=1: win7
+    # OSVersion=2: xp
+    # browserType=1: IE
+    # browserType=2: firefox
+    # browserType=3: chrome
+    def getDefaultBrowserCookiePath(self, OSVersion, browserType):
+        import getpass
+        import os
+        if browserType == 1:
+            if OSVersion == 1:
+                return "C:\\Users\\%s\\AppData\\Roaming\\Microsoft\\Windows\\Cookies\\" % (getpass.getuser())
+            elif OSVersion == 2:
+                pass
+        elif browserType == 2:
+            if OSVersion == 1:
+                defaultBrowserPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
+                for dirName in os.listdir(defaultBrowserPath):
+                    if os.path.isdir(defaultBrowserPath + "\\" + dirName):
+                        if os.path.exists(defaultBrowserPath + "\\" + dirName + "\\cookies.sqlite"):
+                            return defaultBrowserPath + "\\" + dirName + "\\"
+            elif OSVersion == 2:
+                pass
+        elif browserType == 3:
+            pass
+        return None
+        
     # 使用系统cookies
-    def cookie(self, filePath):
+    # browserType=1: IE
+    # browserType=2: firefox
+    # browserType=3: chrome
+    def cookie(self, filePath, browserType=1):
         import cookielib
         import cStringIO
         import os
         import urllib2
         from pysqlite2 import dbapi2 as sqlite
         if not os.path.exists(filePath):
-            self.printMsg("cookie目录："+filePath + " 不存在")
+            self.printMsg("cookie目录：" + filePath + " 不存在")
             return False
-        con = sqlite.connect(filePath)
-        cur = con.cursor()
-        cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         ftstr = ["FALSE", "TRUE"]
         s = cStringIO.StringIO()
         s.write("# Netscape HTTP Cookie File\n")
-        for item in cur.fetchall():
-            a = "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (item[0], ftstr[item[0].startswith('.')], item[1], ftstr[item[2]], item[3], item[4], item[5])
-            s.write(a)
+        if browserType == 1:
+            for cookieName in os.listdir(filePath):
+                if cookieName.find(".txt") == -1:
+                    continue
+                cookieFile = open(filePath + "\\" + cookieName, 'r')
+                cookieInfo = cookieFile.read()
+                cookieFile.close()
+                for cookies in cookieInfo.split("*"):
+                    cookieList = cookies.strip("\n").split("\n")
+                    if len(cookieList) >= 8:
+                        domain = cookieList[2].split("/")[0]
+                        domainSpecified = ftstr[cookieList[2].startswith('.')]
+                        path = cookieList[2].replace(domain, "")
+                        secure = ftstr[0]
+                        expires = cookieList[4]
+                        name = cookieList[0]
+                        value = cookieList[1]
+                        s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+        elif browserType == 2:
+            con = sqlite.connect(filePath + "\\cookies.sqlite")
+            cur = con.cursor()
+            cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
+            for cookieInfo in cur.fetchall():
+                domain = cookieInfo[0]
+                domainSpecified = ftstr[cookieInfo[0].startswith('.')]
+                path = cookieInfo[1]
+                secure = ftstr[cookieInfo[2]]
+                expires = cookieInfo[3]
+                name = cookieInfo[4]
+                value = cookieInfo[5]
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
         s.seek(0)
         cookieJar = cookielib.MozillaCookieJar()
         cookieJar._really_load(s, '', True, True)
