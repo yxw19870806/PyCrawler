@@ -85,15 +85,6 @@ class weibo(common.Tool):
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", processPath + "\\photo", 1, prefix=processPath + "\\")
         self.imageTmpDirName = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "tmpImage", 0)
         self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, prefix=processPath + "\\")
-        self.defaultFFPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-        self.browserPath = self.getConfig(config, "FIREFOX_BROWSER_PATH", self.defaultFFPath, 1, postfix="\cookies.sqlite")
-        self.defaultCookiePath = ""
-        for dirName in os.listdir(self.defaultFFPath):
-            if os.path.isdir(self.defaultFFPath + dirName):
-                if os.path.exists(self.defaultFFPath + dirName + "\\cookies.sqlite"):
-                    defaultFFPath = self.defaultFFPath + dirName
-                    self.defaultCookiePath = defaultFFPath + "\\cookies.sqlite"
-                    break
         # 每次请求获取的图片数量
         self.IMAGE_COUNT_PER_PAGE = 20
         # 配置文件获取程序配置
@@ -107,6 +98,11 @@ class weibo(common.Tool):
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
         self.printMsg("config init succeed")
+        # 操作系统&浏览器
+        self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
+        self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
+        # cookie
+        self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
 
     def main(self):
         startTime = time.time()
@@ -159,11 +155,9 @@ class weibo(common.Tool):
         if self.isProxy == 1:
             self.proxy()
         # 设置系统cookies (fire fox)
-        if not self.cookie(self.browserPath):
-            self.printMsg("使用默认Fire Fox cookies目录: " + self.defaultFFPath)
-            if not self.cookie(self.defaultCookiePath):
-                self.printErrorMsg("导入系统Fire Fox cookies失败，程序结束！")
-                self.processExit()
+        if not self.cookie(self.cookiePath, self.browerVersion):
+            self.printErrorMsg("导入浏览器cookies失败，程序结束！")
+            self.processExit()
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.memberUIdListFilePath):
@@ -226,7 +220,7 @@ class weibo(common.Tool):
                 try:
                     page = json.read(photoPageData)
                 except:
-                    self.printErrorMsg("返回信息：" + str(page) + " 不是一个JSON数据")
+                    self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据")
                     break
                 if not isinstance(page, dict):
                     self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典")
