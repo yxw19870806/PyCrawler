@@ -105,7 +105,7 @@ class downloadVideo(common.Tool):
             isDelete = False
             while not isDelete:
                 # 手动输入是否删除旧存档文件
-                input = raw_input("视频下载地址页面：" + self.resultFilePath + " 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o：")
+                input = raw_input("视频下载地址页面：" + self.resultFilePath + " 已经存在，是否需要删除该文件并继续程序? (Y)es or (N)o：")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
