@@ -168,30 +168,28 @@ class shinoda(common.Tool):
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort)
-        # 下载
-        url = "http://blog.mariko-shinoda.net/index%s.html"
-        indexCount = 1
-        allImageCount = 0
         # 读取存档文件
         saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
+        lastImageUrl = ""
+        imageStartIndex = 0
         if os.path.exists(saveFilePath):
             saveFile = open(saveFilePath, 'r')
             saveInfo = saveFile.read()
             saveFile.close()
             saveList = saveInfo.split("\t")
-            lastImageUrl = saveList[0]
-            imageStartIndex = saveList[1]
-        else:
-            lastImageUrl = ""
-            imageStartIndex = 0
+            if len(saveList) >= 2:
+                imageStartIndex = saveList[0]
+                lastImageUrl = saveList[1]
+        # 下载
+        url = "http://blog.mariko-shinoda.net/index%s.html"
+        indexCount = 1
+        imageCount = 0
         isOver = False
         newLastImageUrl = ""
-        imageCount = 1
         while True:
             # 达到配置文件中的下载数量，结束
             if self.getImagePageCount != 0 and indexCount > self.getImagePageCount:
                 break
-            imagePath = self.imageTempPath + "\\" + str("%05d" % indexCount)
             if indexCount > 1:
                 indexUrl = url % ("_" + str(indexCount))
                 indexPage = self.doGet(indexUrl)
@@ -200,8 +198,8 @@ class shinoda(common.Tool):
                 indexPage = self.doGet(indexUrl)
             self.trace("博客页面地址:" + indexUrl)
             if indexPage:
-                if not os.path.exists(imagePath):
-                    os.makedirs(imagePath)
+                if not os.path.exists(self.imageTempPath):
+                    os.makedirs(self.imageTempPath)
                 # old image:
                 imageIndex = 0
                 while True:
@@ -220,9 +218,8 @@ class shinoda(common.Tool):
                             isOver = True
                             break
                         # 下载图片
-                        self.download(imageUrl, imagePath, imageCount)
+                        self.download(imageUrl, self.imageTempPath, imageCount)
                         imageCount += 1
-                        allImageCount += 1
                     imageIndex += 1
                 # new image:
                 if isOver:
@@ -249,9 +246,8 @@ class shinoda(common.Tool):
                             isOver = True
                             break
                         # 下载图片
-                        self.download(imageUrl, imagePath, imageCount)
+                        self.download(imageUrl, self.imageTempPath, imageCount)
                         imageCount += 1
-                        allImageCount += 1
                     imgTagStart += 1
                 if isOver:
                     break       
@@ -259,30 +255,30 @@ class shinoda(common.Tool):
                 break
             indexCount += 1
         
-        self.printStepMsg("下载完毕，总共获得" + str(allImageCount) + "张图片")
-        # 保存新的存档文件
-        newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self.printStepMsg("保存新y存档文件: " + newSaveFilePath)
-        newSaveFile = open(newSaveFilePath, 'w')
-        newSaveFile.write(lastImageUrl)
-        newSaveFile.close()
+        self.printStepMsg("下载完毕，总共获得" + str(imageCount) + "张图片")
         
         # 排序复制到保存目录
         if self.isSort == 1:
             allImageCount = 0
-            for index1 in sorted(os.listdir(self.imageTempPath), reverse=True):
-                for fileName in sorted(os.listdir(self.imageTempPath + "\\" + index1), reverse=True):
-                    imageStartIndex += 1
-                    imagePath = self.imageTempPath + "\\" + index1 + "\\" + fileName
-                    fileType = fileName.split(".")[-1]
-                    shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
-                    allImageCount += 1
+            for fileName in sorted(os.listdir(self.imageTempPath), reverse=True):
+                imageStartIndex += 1
+                imagePath = self.imageTempPath + "\\" + fileName
+                fileType = fileName.split(".")[-1]
+                shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
+                allImageCount += 1
             self.printStepMsg("图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.imageTempPath, True)
             
+        # 保存新的存档文件
+        newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
+        self.printStepMsg("保存新y存档文件: " + newSaveFilePath)
+        newSaveFile = open(newSaveFilePath, 'w')
+        newSaveFile.write(str(imageStartIndex) + "\t" + lastImageUrl)
+        newSaveFile.close()
+            
         stopTime = time.time()
-        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
+        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(imageCount) + "张")
 
 if __name__ == '__main__':
     shinoda().main()
