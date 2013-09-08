@@ -287,7 +287,7 @@ class weibo(common.Tool):
             
             if int(newMemberUidList[userId][2]) != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
                 isError = 1
-            if int(newMemberUidList[userId][2]) == 0 and imageCount != totalImageCount:
+            if int(newMemberUidList[userId][2]) == 0 and imageCount - 1 != totalImageCount:
                 isError = 2
             
             self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
