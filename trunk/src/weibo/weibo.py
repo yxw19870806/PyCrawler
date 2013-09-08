@@ -102,8 +102,12 @@ class weibo(common.Tool):
         self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
         # cookie
-        self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
-
+        self.isAutoGetCookie = self.getConfig(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        if self.isAutoGetCookie == 0:
+            self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
+        else:
+            self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
+            
     def main(self):
         startTime = time.time()
         # 判断各种目录是否存在
