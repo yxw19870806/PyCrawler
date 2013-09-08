@@ -45,7 +45,7 @@ class shinoda(common.Tool):
         imgByte = self.doGet(imageUrl)
         if imgByte:
             fileType = imageUrl.split(".")[-1]
-            imageFile = open(imagePath + "\\" + str("%03d" % imageCount) + "." + fileType, "wb")
+            imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "." + fileType, "wb")
             self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
             imageFile.write(imgByte)
             imageFile.close()
@@ -125,7 +125,7 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("正在删除图片保存目录：" + self.imageDownloadPath)
+                self.printStepMsg("删除图片保存目录：" + self.imageDownloadPath)
                 # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
@@ -134,7 +134,7 @@ class shinoda(common.Tool):
             else:
                 self.printStepMsg("图片保存目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("正在创建图片保存目录：" + self.imageDownloadPath)
+        self.printStepMsg("创建图片保存目录：" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
             self.printErrorMsg("创建图片保存目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
@@ -153,7 +153,7 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("正在删除图片下载临时目录：" + self.imageTempPath)
+                self.printStepMsg("删除图片下载临时目录：" + self.imageTempPath)
                 shutil.rmtree(self.imageTempPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageTempPath):
@@ -161,7 +161,7 @@ class shinoda(common.Tool):
             else:
                 self.printStepMsg("图片下载临时目录：" + self.imageTempPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageTempPath)
-        self.printStepMsg("正在创建图片下载临时目录：" + self.imageTempPath)
+        self.printStepMsg("创建图片下载临时目录：" + self.imageTempPath)
         if not self.createDir(self.imageTempPath):
             self.printErrorMsg("创建图片下载临时目录：" + self.imageTempPath + " 失败，程序结束！")
             self.processExit()
@@ -182,24 +182,24 @@ class shinoda(common.Tool):
                 lastImageUrl = saveList[1]
         # 下载
         url = "http://blog.mariko-shinoda.net/index%s.html"
-        indexCount = 1
-        imageCount = 0
+        pageIndex = 1
+        imageCount = 1
         isOver = False
         newLastImageUrl = ""
         while True:
-            # 达到配置文件中的下载数量，结束
-            if self.getImagePageCount != 0 and indexCount > self.getImagePageCount:
+            if isOver:
                 break
-            if indexCount > 1:
-                indexUrl = url % ("_" + str(indexCount))
+            # 达到配置文件中的下载数量，结束
+            if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
+                break
+            if pageIndex > 1:
+                indexUrl = url % ("_" + str(pageIndex))
                 indexPage = self.doGet(indexUrl)
             else:
                 indexUrl = url % ("")
                 indexPage = self.doGet(indexUrl)
             self.trace("博客页面地址:" + indexUrl)
             if indexPage:
-                if not os.path.exists(self.imageTempPath):
-                    os.makedirs(self.imageTempPath)
                 # old image:
                 imageIndex = 0
                 while True:
@@ -221,9 +221,9 @@ class shinoda(common.Tool):
                         self.download(imageUrl, self.imageTempPath, imageCount)
                         imageCount += 1
                     imageIndex += 1
-                # new image:
                 if isOver:
                     break
+                # new image:
                 imgTagStart = 0
                 while True:
                     imgTagStart = indexPage.find('<img ', imgTagStart)
@@ -250,12 +250,12 @@ class shinoda(common.Tool):
                         imageCount += 1
                     imgTagStart += 1
                 if isOver:
-                    break       
+                    break
             else:
                 break
-            indexCount += 1
+            pageIndex += 1
         
-        self.printStepMsg("下载完毕，总共获得" + str(imageCount) + "张图片")
+        self.printStepMsg("下载完毕")
         
         # 排序复制到保存目录
         if self.isSort == 1:
@@ -274,11 +274,11 @@ class shinoda(common.Tool):
         newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
         self.printStepMsg("保存新y存档文件: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, 'w')
-        newSaveFile.write(str(imageStartIndex) + "\t" + lastImageUrl)
+        newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl)
         newSaveFile.close()
             
         stopTime = time.time()
-        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(imageCount) + "张")
+        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(imageCount - 1) + "张")
 
 if __name__ == '__main__':
     shinoda().main()
