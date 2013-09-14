@@ -57,12 +57,12 @@ class downloadImage(common.Tool):
                     self.printMsg(str(e))
                     pass
         # 配置文件获取日志文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, prefix=processPath + "\\")
-        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, prefix=processPath + "\\")
-        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, prefix=processPath + "\\")
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", processPath + "\\photo", 1, prefix=processPath + "\\")
-        self.imageTmpDirName = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "tmpImage", 0)
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, prefix=processPath + "\\")
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
         # 配置文件获取程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
@@ -188,7 +188,7 @@ class downloadImage(common.Tool):
             isError = False
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if self.isSort == 1:
-                imagePath = self.imageDownloadPath + "\\" + self.imageTmpDirName
+                imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userName
             if not self.createDir(imagePath):
@@ -326,11 +326,11 @@ class downloadImage(common.Tool):
             newMemberUidListFile.close()
 
         # 排序并保存新的idList.txt
-        tmpList = []
-        tmpUserIdList = sorted(newMemberUidList.keys())
-        for index in tmpUserIdList:
-            tmpList.append("\t".join(newMemberUidList[index]))
-        newMemberUidListString = "\n".join(tmpList)
+        tempList = []
+        tempUserIdList = sorted(newMemberUidList.keys())
+        for index in tempUserIdList:
+            tempList.append("\t".join(newMemberUidList[index]))
+        newMemberUidListString = "\n".join(tempList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
         self.printStepMsg("保存新存档文件: " + newMemberUidListFilePath)
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
