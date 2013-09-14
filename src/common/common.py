@@ -64,7 +64,7 @@ class Tool():
             if OSVersion == 1:
                 return "C:\\Users\\%s\\AppData\\Roaming\\Microsoft\\Windows\\Cookies\\" % (getpass.getuser())
             elif OSVersion == 2:
-                pass
+                return "C:\\Documents and Settings\\%s\\Cookies\\" % (getpass.getuser())
         elif browserType == 2:
             if OSVersion == 1:
                 defaultBrowserPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
@@ -73,9 +73,22 @@ class Tool():
                         if os.path.exists(defaultBrowserPath + "\\" + dirName + "\\cookies.sqlite"):
                             return defaultBrowserPath + "\\" + dirName + "\\"
             elif OSVersion == 2:
-                pass
+                defaultBrowserPath = "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
+                for dirName in os.listdir(defaultBrowserPath):
+                    if os.path.isdir(defaultBrowserPath + "\\" + dirName):
+                        if os.path.exists(defaultBrowserPath + "\\" + dirName + "\\cookies.sqlite"):
+                            return defaultBrowserPath + "\\" + dirName + "\\"                
         elif browserType == 3:
-            pass
+            if OSVersion == 1:
+                return "C:\\Users\%s\\AppData\\Local\\Google\\Chrome\\User Data\\Default" % (getpass.getuser())
+            elif OSVersion == 2:
+                return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Google\\Chrome\\User Data\Default\\" % (getpass.getuser())
+        elif browserType == 4:
+            if OSVersion == 1:
+                return "C:\\Users\\%s\\AppData\\Local\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
+            elif OSVersion == 2:
+                return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
+        self.printMsg("浏览器类型：" + browserType + "不存在")
         return None
         
     # 使用系统cookies
@@ -125,6 +138,20 @@ class Tool():
                 name = cookieInfo[4]
                 value = cookieInfo[5]
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+        elif browserType in [3, 4]:
+            con = sqlite.connect(filePath + "\\Cookies")
+            cur = con.cursor()
+            cur.execute("select host_key, path, secure, expires_utc, name, value from cookies")
+            for cookieInfo in cur.fetchall():
+                domain = cookieInfo[0]
+                domainSpecified = ftstr[cookieInfo[0].startswith('.')]
+                path = cookieInfo[1]
+                secure = ftstr[cookieInfo[2]]
+                expires = cookieInfo[3]
+                name = cookieInfo[4]
+                value = cookieInfo[5]
+                print "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value)
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
         s.seek(0)
         cookieJar = cookielib.MozillaCookieJar()
         cookieJar._really_load(s, '', True, True)
@@ -145,9 +172,12 @@ class Tool():
     # mode 0 : 直接赋值
     # mode 1 : 字符串拼接
     # mode 2 : 取整
+    # mode 3 : 文件路径，以'\'开头的为当前目录下创建
     # prefix: 前缀，只有在mode=1时有效
     # postfix: 后缀，只有在mode=1时有效
     def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
+        import os
+        import traceback
         value = None
         if config.has_key(key):
             if mode == 0:
@@ -163,7 +193,13 @@ class Tool():
                     value = int(config[key])
                 except:
                     self.printMsg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+                    traceback.print_exc()
                     value = defaultValue
+            elif mode == 3:
+                value = config[key]
+                if value[0] == "\\":
+                    value = os.getcwd() + value
+                return value
         else:
             self.printMsg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
             value = defaultValue
