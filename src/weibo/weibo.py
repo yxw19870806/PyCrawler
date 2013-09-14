@@ -10,7 +10,6 @@ email: hikaru870806@hotmail.com
 
 from common import common, json
 import copy
-import getpass
 import os
 import random
 import shutil
@@ -20,10 +19,6 @@ class weibo(common.Tool):
     
     def visit(self, url):
         tempPage = self.doGet(url)
-#         try:
-#             tempPage = tempPage.decode("utf-8")
-#         except:
-#             pass
         if tempPage:
             redirectUrlIndex = tempPage.find("location.replace")
             if redirectUrlIndex != -1:
@@ -32,9 +27,17 @@ class weibo(common.Tool):
                 redirectUrl = tempPage[redirectUrlStart:redirectUrlStop]
                 return self.doGet(redirectUrl)
             elif tempPage.find("用户名或密码错误") != -1:
-                self.printErrorMsg("登陆状态异常，请在火狐浏览器中重新登陆微博账号")
+                self.printErrorMsg("登陆状态异常，请在浏览器中重新登陆微博账号")
                 self.processExit()
             else:
+                try:
+                    tempPage = tempPage.decode("utf-8")
+                    if tempPage.find("用户名或密码错误") != -1:
+                        self.printErrorMsg("登陆状态异常，请在浏览器中重新登陆微博账号")
+                        self.processExit()
+                except Exception, e:
+#                    print e
+                    pass
                 return tempPage
         return False
     
