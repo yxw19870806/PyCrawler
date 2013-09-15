@@ -7,14 +7,11 @@ Created on 2013-6-23
 
 from common import common
 import codecs
-import getpass
 import os
-import sys
 
 class getMemberList(common.Tool):
         
     def __init__(self):
-           
         # 获取配置文件
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
@@ -33,28 +30,25 @@ class getMemberList(common.Tool):
         # 配置文件获取配置信息
         self.tid = self.getConfig(config, "TID", 1, 2)    # 帖子id
         self.endPageCount = self.getConfig(config, "PAGE_COUNT", 1, 2)    # 帖子总页数
-        defaultFFPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-        defaultCookiePath = ""
-        for dirName in os.listdir(defaultFFPath):
-            if os.path.isdir(defaultFFPath + dirName):
-                if os.path.exists(defaultFFPath + dirName + "\\cookies.sqlite"):
-                    defaultFFPath = defaultFFPath + dirName
-                    defaultCookiePath = defaultFFPath + "\\cookies.sqlite"
-                    break
-        browserPath = self.getConfig(config, "BROWSER_PATH", defaultCookiePath, 1, postfix="\cookies.sqlite")   # fire fox 安装目录
-        # 其他初始化数据
+        # 操作系统&浏览器
+        self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
+        self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
+        # cookie
+        self.isAutoGetCookie = self.getConfig(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        if self.isAutoGetCookie == 0:
+            self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
+        else:
+            self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
+        self.printMsg("config init succeed")
+        
+    def main(self):
+        # 设置系统cookies
+        if not self.cookie(self.cookiePath, self.browerVersion):
+            self.printMsg("导入浏览器cookies失败，程序结束！")
+            self.processExit()
         self.fid = 61   # 版块id
         self.url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"   # 帖子地址
         self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s" # ip查询地址
-        self.printMsg("config init succeed")
-        # 设置系统cookies (fire fox)
-        if not self.cookie(browserPath):
-            print "try default fire fox path: " + defaultFFPath
-            if not self.cookie(defaultCookiePath):
-                print "use system cookie error!"
-                sys.exit()
-        self.cookie(browserPath)
-    def main(self):
         floor = 1
         pageCount = 1
         uidList = []
@@ -151,7 +145,6 @@ class getMemberList(common.Tool):
                 break
             page = self.doGet(self.url % (self.tid, pageCount))
         print "statistics succeed"
-        
-        
+          
 if __name__ == '__main__':
     getMemberList().main()
