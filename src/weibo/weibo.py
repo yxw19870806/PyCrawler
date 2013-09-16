@@ -25,7 +25,7 @@ class weibo(common.Tool):
                 redirectUrlStart = tempPage.find('"', redirectUrlIndex) + 1
                 redirectUrlStop = tempPage.find('"', redirectUrlStart)
                 redirectUrl = tempPage[redirectUrlStart:redirectUrlStop]
-                return self.doGet(redirectUrl)
+                return str(self.doGet(redirectUrl))
             elif tempPage.find("用户名或密码错误") != -1:
                 self.printErrorMsg("登陆状态异常，请在浏览器中重新登陆微博账号")
                 self.processExit()
@@ -36,9 +36,8 @@ class weibo(common.Tool):
                         self.printErrorMsg("登陆状态异常，请在浏览器中重新登陆微博账号")
                         self.processExit()
                 except Exception, e:
-#                    print e
-                    pass
-                return tempPage
+                    self.printErrorMsg(str(e))
+                return str(tempPage)
         return False
     
     def trace(self, msg):
@@ -137,7 +136,7 @@ class weibo(common.Tool):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    input = raw_input("图片下载目录：" + self.imageDownloadPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input("图片保存目录：" + self.imageDownloadPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -146,18 +145,18 @@ class weibo(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("删除图片下载目录: " + self.imageDownloadPath)
+                self.printStepMsg("删除图片保存目录: " + self.imageDownloadPath)
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
+                self.printStepMsg("图片保存目录: " + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("创建图片下载目录: " + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
             self.printErrorMsg("创建图片下载目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
+        self.printStepMsg("创建图片保存目录: " + self.imageDownloadPath)
         # 设置代理
         if self.isProxy == 1:
             self.proxy()
@@ -215,6 +214,8 @@ class weibo(common.Tool):
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userName
+            if os.path.exists(imagePath):
+                shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
                 self.printErrorMsg("创建图片下载目录：" + imagePath + " 失败，程序结束！")
                 self.processExit()
@@ -229,6 +230,7 @@ class weibo(common.Tool):
                 except:
                     self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据")
                     break
+#                 self.processExit()
                 if not isinstance(page, dict):
                     self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典")
                     break
