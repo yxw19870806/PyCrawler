@@ -150,7 +150,6 @@ class Tool():
                 expires = cookieInfo[3]
                 name = cookieInfo[4]
                 value = cookieInfo[5]
-                print "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value)
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
         s.seek(0)
         cookieJar = cookielib.MozillaCookieJar()
@@ -230,10 +229,10 @@ class Tool():
                 os.makedirs(path)
                 if os.path.isdir(path):
                     return True
-                count += 1
             except Exception, e:
                 self.printMsg(str(e))
                 traceback.print_exc()
+            count +=1
         
     def removeDirFiles(self, dirPath): 
         import os
