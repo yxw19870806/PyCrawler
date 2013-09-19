@@ -200,7 +200,7 @@ class weibo(common.Tool):
             if len(newMemberUidList[newUserId]) < 5:
                 newMemberUidList[newUserId].append("")
         allImageCount = 0
-        for userId in userIdList:
+        for userId in sorted(userIdList.keys()):
             userName = newMemberUidList[userId][1]
             self.printStepMsg("UID: " + str(userId) + "，Member: " + userName)
             # 初始化数据
