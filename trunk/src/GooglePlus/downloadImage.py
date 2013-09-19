@@ -282,7 +282,7 @@ class downloadImage(common.Tool):
                 
             self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             # 检查下载图片是否大于总数量的一半，对上一次记录的图片正好被删除或其他原因导致下载了全部图片做一个保护
-            if newMemberUidList[userId][2] != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
+            if int(newMemberUidList[userId][2]) != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
                 isError = True
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
