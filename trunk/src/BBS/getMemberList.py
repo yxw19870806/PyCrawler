@@ -1,4 +1,4 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-6-23
 
@@ -12,7 +12,7 @@ import os
 class getMemberList(common.Tool):
         
     def __init__(self):
-        # è·å–é…ç½®æ–‡ä»¶
+        # »ñÈ¡ÅäÖÃÎÄ¼ş
         processPath = os.getcwd()
         configFile = open(processPath + "\\config.ini", 'r')
         lines = configFile.readlines()
@@ -27,10 +27,13 @@ class getMemberList(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # é…ç½®æ–‡ä»¶è·å–é…ç½®ä¿¡æ¯
-        self.tid = self.getConfig(config, "TID", 1, 2)    # å¸–å­id
-        self.endPageCount = self.getConfig(config, "PAGE_COUNT", 1, 2)    # å¸–å­æ€»é¡µæ•°
-        # æ“ä½œç³»ç»Ÿ&æµè§ˆå™¨
+        # ÅäÖÃÎÄ¼ş»ñÈ¡ÅäÖÃĞÅÏ¢
+        # ÂÛÌ³Ïà¹Ø
+        self.fid = self.getConfig(config, "FID", 1, 2)
+        self.tid = self.getConfig(config, "TID", 1, 2)
+        self.endPageCount = self.getConfig(config, "END_PAGE_COUNT", 1, 2)
+        self.startPageCount = self.getConfig(config, "START_PAGE_COUNT", 1, 2)
+        # ²Ù×÷ÏµÍ³&ä¯ÀÀÆ÷
         self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
         # cookie
@@ -42,47 +45,46 @@ class getMemberList(common.Tool):
         self.printMsg("config init succeed")
         
     def main(self):
-        # è®¾ç½®ç³»ç»Ÿcookies
+        # ÉèÖÃÏµÍ³cookies
         if not self.cookie(self.cookiePath, self.browerVersion):
-            self.printMsg("å¯¼å…¥æµè§ˆå™¨cookieså¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
-            self.processExit()
-        self.fid = 61   # ç‰ˆå—id
-        self.url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"   # å¸–å­åœ°å€
-        self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s" # ipæŸ¥è¯¢åœ°å€
+            self.printMsg("µ¼Èëä¯ÀÀÆ÷cookiesÊ§°Ü£¬³ÌĞò½áÊø£¡")
+            self.processExit() 
+        url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"  # Ìû×ÓµØÖ·
+        self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s"  # ip²éÑ¯µØÖ·
         floor = 1
-        pageCount = 1
+        pageCount = self.startPageCount
         uidList = []
         ipList = []
         ipList2 = []
-        isCorrectFlag = "å¾ˆç»™åŠ›"
-        isIncorrectFlag = "æµ®äº‘"
-        resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf8')
-        resultFile.write("æ¥¼å±‚\tuid\tç”¨æˆ·å\tæ˜¯å¦æ­£ç¡®\tip\tæ˜¯å¦å®å\tå…¶ä»–å¤‡æ³¨\n")
-        page = self.doGet(self.url % (self.tid, pageCount))
+        isCorrectFlag = "ºÜ¸øÁ¦"
+        isIncorrectFlag = "¸¡ÔÆ"
+        resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf-8')
+        resultFile.write("Â¥²ã\tuid\tÓÃ»§Ãû\tÊÇ·ñÕıÈ·\tip\tÊÇ·ñÊµÃû\tÆäËû±¸×¢\n")
+        page = self.doGet(url % (self.tid, self.startPageCount))
         while page:
-            page = page.decode('utf-8')
+            page= page.decode('utf-8')
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
             while index != -1:
-                # æ¥¼å±‚
+                # Â¥²ã
                 if floor == 1:
-                    floorName = "æ¥¼ä¸»"
+                    floorName = "Â¥Ö÷"
                 elif floor == 2:
-                    floorName = "æ²™å‘"
+                    floorName = "É³·¢"
                 elif floor == 3:
-                    floorName = "æ¿å‡³"
+                    floorName = "°åµÊ"
                 elif floor == 4:
-                    floorName = "åœ°æ¿"
+                    floorName = "µØ°å"
                 else:
                     floorName = str(floor)
                     
                 # uid
                 uid = page[index + 55:page.find('"', index + 55)]
                 
-                # ä¼šå‘˜å
-                name = page[page.find('>', index + 55) + 1:page.find('</a>', index)].encode('utf-8')
-                
-                # æ£€æŸ¥ç­”æ¡ˆæ˜¯å¦æ­£ç¡®
-                scoreIndex = page.find('<tbody class="ratl_l">', index, page.find('">ç‚¹è¯„</a>', index))
+                # »áÔ±Ãû
+                name = page[page.find('>', index + 55) + 1:page.find('</a>', index)]
+                print name
+                # ¼ì²é´ğ°¸ÊÇ·ñÕıÈ·
+                scoreIndex = page.find('<tbody class="ratl_l">', index, page.find('">µãÆÀ</a>', index))
                 score = ""
                 if scoreIndex != -1:
                     scoreStart = page.find('<td class="xg1">', scoreIndex)
@@ -98,16 +100,16 @@ class getMemberList(common.Tool):
                 else:
                     result = score
         
-                # æ£€æŸ¥æ˜¯å¦æœ‰äºŒæ¬¡ç¼–è¾‘
+                # ¼ì²éÊÇ·ñÓĞ¶ş´Î±à¼­
                 remarks = ""
                 if page.find('<i class="pstatus">', index, page.find('<input type="checkbox" id="', index)) != -1:
-                    remarks = "äºŒæ¬¡ç¼–è¾‘"
+                    remarks = "¶ş´Î±à¼­"
                     result = "N"
                 
-                # æ£€æŸ¥å®åè®¤è¯
+                # ¼ì²éÊµÃûÈÏÖ¤
                 isReallyName = ""
-                if page.find("å®åè®¤è¯", index, page.find('</div>', index)) == -1:
-                    isReallyName = "æœªå®åè®¤è¯"
+                if page.find("ÊµÃûÈÏÖ¤", index, page.find('</div>', index)) == -1:
+                    isReallyName = "Î´ÊµÃûÈÏÖ¤"
                     result = ""
                 
                 # ip
@@ -117,34 +119,36 @@ class getMemberList(common.Tool):
                 else:
                     pidStart = page.find('<div id="userinfo', index) 
                     pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
-                    ipPage = self.doGet(self.ipUrl % (self.fid, self.tid, pid)).decode('utf-8')
+                    ipPage = self.doGet(self.ipUrl % (self.fid, self.tid, pid))
                     ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
                     ip2 = ".".join(ip.split(".")[:2])
-                
-                # æ£€æŸ¥æ˜¯å¦äºŒæ¬¡å›ç­”
+                # ¼ì²éÊÇ·ñ¶ş´Î»Ø´ğ
                 if uid in uidList:
-                    remarks += " äºŒæ¬¡å›ç­”,ç¬¬ä¸€æ¬¡å›ç­”æ¥¼å±‚" + str(uidList.index(uid) + 1)
+                    answerCount = uidList.count(uid)
+                    lastFloor = 0
+                    for i in range(answerCount):
+                        lastFloor = uidList.index(uid, lastFloor + 1)
+                    remarks += "¶à´Î»Ø´ğ£¬ÉÏÒ»´Î»Ø´ğÂ¥²ã" + str(lastFloor + 1)                       
                 uidList.append(uid)
                 
-                # æ£€æŸ¥ipæ˜¯å¦æœ‰é‡å¤
+                # ¼ì²éipÊÇ·ñÓĞÖØ¸´
                 if ip in ipList:
                     if remarks == "":
-                        remarks += " ipä¸" + str(ipList.index(ip) + 1) + "æ¥¼ç›¸åŒ"
+                        remarks += " ipÓë" + str(ipList.index(ip) + 1) + "Â¥ÏàÍ¬"
                 elif ip2 in ipList2:
-                    remarks = " ipä¸" + str(ipList.index(ip) + 1) + "æ¥¼ç›¸ä¼¼"
+                    remarks = " ipÓë" + str(ipList.index(ip) + 1) + "Â¥ÏàËÆ"
                 ipList.append(ip)
                 ipList2.append(ip)
-                
                 resultFile.write(floorName + "\t" + uid + "\t" + name + "\t" + result + "\t" + ip + "\t" + isReallyName + "\t" + remarks + "\n")
                 index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=', index + 1)
                 floor += 1
-                
             pageCount += 1
-            # å¸–å­ç»“æŸï¼Œé€€å‡º
+            # Ìû×Ó½áÊø£¬ÍË³ö
             if pageCount > self.endPageCount:
                 break
-            page = self.doGet(self.url % (self.tid, pageCount))
-        print "statistics succeed"
+            page = self.doGet(url % (self.tid, pageCount))
+            
+        print "Í³¼Æ½áÊø"
           
 if __name__ == '__main__':
     getMemberList().main()

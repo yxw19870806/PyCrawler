@@ -14,7 +14,7 @@ class RenameVideo(common.Tool):
     def __init__(self):
         # 获取配置文件
         processPath = os.getcwd()
-        configFile = open(processPath + "\\config.ini", 'r')
+        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -79,7 +79,10 @@ class RenameVideo(common.Tool):
                 if not self.createDir(destDir):
                     self.printMsg("create " + destDir + " error")
                     sys.exit()
-            os.rename(sourcePath, destPath)
+            try:
+                os.rename(sourcePath, destPath)
+            except:
+                pass
             count += 1
         
         stopTime = time.time()
