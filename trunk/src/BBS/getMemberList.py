@@ -82,7 +82,6 @@ class getMemberList(common.Tool):
                 
                 # 会员名
                 name = page[page.find('>', index + 55) + 1:page.find('</a>', index)]
-                print name
                 # 检查答案是否正确
                 scoreIndex = page.find('<tbody class="ratl_l">', index, page.find('">点评</a>', index))
                 score = ""
@@ -148,7 +147,7 @@ class getMemberList(common.Tool):
                 break
             page = self.doGet(url % (self.tid, pageCount))
             
-        print "统计结束"
+        self.printMsg("统计结束")
           
 if __name__ == '__main__':
     getMemberList().main()
