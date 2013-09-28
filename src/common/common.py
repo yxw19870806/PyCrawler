@@ -8,9 +8,9 @@ Created on 2013-7-16
 IS_SET_TIMEOUT = False
 
 class Tool():
-    
-    # http请求
+
     def doGet(self, url):
+    # http请求
         import sys
         import traceback
         import urllib2
@@ -50,14 +50,14 @@ class Tool():
             if count > 10:
                 self.printMsg("无法访问页面：" + url)
                 return False
-    
+
+    def getDefaultBrowserCookiePath(self, OSVersion, browserType):     
     # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
     # OSVersion=1: win7
     # OSVersion=2: xp
     # browserType=1: IE
     # browserType=2: firefox
     # browserType=3: chrome
-    def getDefaultBrowserCookiePath(self, OSVersion, browserType):
         import getpass
         import os
         if browserType == 1:
@@ -90,12 +90,12 @@ class Tool():
                 return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
         self.printMsg("浏览器类型：" + browserType + "不存在")
         return None
-        
+
+    def cookie(self, filePath, browserType=1):
     # 使用系统cookies
     # browserType=1: IE
     # browserType=2: firefox
     # browserType=3: chrome
-    def cookie(self, filePath, browserType=1):
         import cookielib
         import cStringIO
         import os
@@ -158,14 +158,15 @@ class Tool():
         urllib2.install_opener(opener)
         return True
     
-    # 设置代理
     def proxy(self, ip, port):
+    # 设置代理
         import urllib2
         proxyHandler = urllib2.ProxyHandler({'https':"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
         self.printMsg("设置代理成功")
                 
+    def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
     # 获取配置文件
     # config : 字典格式，如：{key1:value1, key2:value2}
     # mode 0 : 直接赋值
@@ -174,7 +175,6 @@ class Tool():
     # mode 3 : 文件路径，以'\'开头的为当前目录下创建
     # prefix: 前缀，只有在mode=1时有效
     # postfix: 后缀，只有在mode=1时有效
-    def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
         import os
         import traceback
         value = None

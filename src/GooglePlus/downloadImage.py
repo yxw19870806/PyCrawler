@@ -73,7 +73,7 @@ class downloadImage(common.Tool):
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printStepMsg("配置文件读取完成")
+        self.printMsg("配置文件读取完成")
 
     def main(self):
         startTime = time.time()
