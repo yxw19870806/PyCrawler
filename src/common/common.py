@@ -211,7 +211,7 @@ class Tool():
     
     def getTime(self):
         import time
-        return time.strftime('%H:%M:%S', time.localtime(time.time()))
+        return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
     
     def writeFile(self, msg, filePath):
         logFile = open(filePath, 'a')
