@@ -33,6 +33,8 @@ class getMemberList(common.Tool):
         self.tid = self.getConfig(config, "TID", 1, 2)
         self.endPageCount = self.getConfig(config, "END_PAGE_COUNT", 1, 2)
         self.startPageCount = self.getConfig(config, "START_PAGE_COUNT", 1, 2)
+        self.isCorrectFlag = self.getConfig(config, "CORRECT_FLAG", 1, 0)
+        self.isIncorrectFlag = self.getConfig(config, "INCORRECT_FLAG", 1, 0)
         # 操作系统&浏览器
         self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
@@ -42,7 +44,7 @@ class getMemberList(common.Tool):
             self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
         else:
             self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
-        self.printMsg("config init succeed")
+        self.printMsg("配置文件读取完成")
         
     def main(self):
         # 设置系统cookies
@@ -56,13 +58,11 @@ class getMemberList(common.Tool):
         uidList = []
         ipList = []
         ipList2 = []
-        isCorrectFlag = "很给力"
-        isIncorrectFlag = "浮云"
-        resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'utf-8')
+        resultFile = codecs.open(str(self.tid) + ".txt", 'w', 'GBK')
         resultFile.write("楼层\tuid\t用户名\t是否正确\tip\t是否实名\t其他备注\n")
-        page = self.doGet(url % (self.tid, self.startPageCount))
+        page = True
         while page:
-            page= page.decode('utf-8')
+            page = self.doGet(url % (self.tid, pageCount)).decode('utf-8')
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
             while index != -1:
                 # 楼层
@@ -92,9 +92,9 @@ class getMemberList(common.Tool):
                         score += page[scoreStart + 16:page.find('</td>', scoreStart)]
                         scoreStart = page.find('<td class="xg1">', scoreStart + 1, scoreStop)
                 result = ""
-                if score.find(isCorrectFlag) != -1:
+                if score.find(self.isCorrectFlag) != -1:
                     result = "Y"
-                elif  score.find(isIncorrectFlag) != -1:
+                elif  score.find(self.isIncorrectFlag) != -1:
                     result = "N"
                 else:
                     result = score
@@ -145,8 +145,7 @@ class getMemberList(common.Tool):
             # 帖子结束，退出
             if pageCount > self.endPageCount:
                 break
-            page = self.doGet(url % (self.tid, pageCount))
-            
+                    
         self.printMsg("统计结束")
           
 if __name__ == '__main__':
