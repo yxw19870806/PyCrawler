@@ -219,6 +219,7 @@ class Tool():
         logFile.close()
     
     def createDir(self, path):
+        import time
         import traceback
         import os
         count = 0
@@ -231,6 +232,7 @@ class Tool():
                     return True
             except Exception, e:
                 self.printMsg(str(e))
+                time.sleep(5)
                 traceback.print_exc()
             count +=1
         
