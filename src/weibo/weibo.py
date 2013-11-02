@@ -290,7 +290,7 @@ class weibo(common.Tool):
                     # 全部图片下载完毕
                     break
             
-            if userIdList[userId][3] != "" and int(newMemberUidList[userId][2]) != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
+            if len(userIdList[userId]) >= 4 and userIdList[userId][3] != "" and int(newMemberUidList[userId][2]) != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
                 isError = 1
             if int(newMemberUidList[userId][2]) == 0 and imageCount - 1 != totalImageCount:
                 isError = 2
