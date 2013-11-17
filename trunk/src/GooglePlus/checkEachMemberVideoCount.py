@@ -17,7 +17,7 @@ unableDownloadFilePath = os.getcwd() + "\\info\\queshao.txt"
 memberList1 = {}
 list1 = os.listdir(videoRootPath)
 for path1 in list1:
-    if path1 == "OTHER":
+    if path1 == "other":
         continue
     list2 = os.listdir(videoRootPath + path1)
     for path2 in list2:
