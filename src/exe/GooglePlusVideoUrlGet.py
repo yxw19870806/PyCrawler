@@ -1,110 +1,77 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-6-15
 
-@author: rena
+@author: hikaru
+QQ: 286484545
+email: hikaru870806@hotmail.com
+ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
 '''
 
 import copy
 import os
-import sys
 import time
+import sys
 import traceback
 import urllib2
 
 class downloadVideo():
     
-    def processExit(self):
-        sys.exit()
-        
     def doGet(self, url):
+    # httpÇëÇó
+        global IS_SET_TIMEOUT
         if url.find("http") == -1:
             return None
         count = 0
         while 1:
             try:
                 request = urllib2.Request(url)
+                # ÉèÖÃÍ·ĞÅÏ¢
+                request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
+                # ÉèÖÃ·ÃÎÊ³¬Ê±
                 if sys.version_info < (2, 7):
+                    if not IS_SET_TIMEOUT:
+                        urllib2.socket.setdefaulttimeout(20)
+                        IS_SET_TIMEOUT = True
                     response = urllib2.urlopen(request)
                 else:
                     response = urllib2.urlopen(request, timeout=20)
                 return response.read()
             except Exception, e:
-                self.printMsg(str(e))
-                traceback.print_exc()
+                # ´úÀíÎŞ·¨·ÃÎÊ
+                if str(e).find("[Errno 10061] ") != -1:
+                    input = raw_input("ÎŞ·¨·ÃÎÊ´úÀí·şÎñÆ÷£¬Çë¼ì²é´úÀíÉèÖÃ¡£ÊÇ·ñĞèÒª¼ÌĞø³ÌĞò£¿(Y)es or (N)o£º").lower()
+                    if input in ["y", "yes"]:
+                        pass
+                    elif input in ["n", "no"]:
+                        sys.exit()
+                # ³¬Ê±
+                elif str(e).find("timed out") != -1:
+                    self.printMsg("·ÃÎÊÒ³Ãæ³¬Ê±£¬ÖØĞÂÁ¬½ÓÇëÉÔºó")
+                else:
+                    self.printMsg(str(e))
+                    traceback.print_exc()
             count += 1
             if count > 10:
-                self.printMsg("can not connection " + url)
+                self.printMsg("ÎŞ·¨·ÃÎÊÒ³Ãæ£º" + url)
                 return False
-            
-    def getTime(self):
-        return time.strftime('%H:%M:%S', time.localtime(time.time()))
-     
-    def printMsg(self, msg):
-        msg = self.getTime() + " " + msg
-        print msg
     
-    def trace(self, msg):
-        if self.isDebug == 1:
-            msg = self.getTime() + " " + msg
-    #        print msg
-            if self.isLog == 1:
-                logFile = open(self.traceLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
-    
-    def printErrorMsg(self, msg):
-        if self.isShowError == 1:
-            msg = self.getTime() + " [Error] " + msg
-            print msg
-            if self.isLog == 1:
-                if msg.find("HTTP Error 500") != -1:
-                    return
-                if msg.find("urlopen error The read operation timed out") != -1:
-                    return
-                logFile = open(self.errorLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
-    
-    def printStepMsg(self, msg):
-        if self.isShowStep == 1:
-            msg = self.getTime() + " " + msg
-            print msg
-            if self.isLog == 1:
-                logFile = open(self.stepLogPath, 'a')
-                logFile.write(msg + "\n")
-                logFile.close()
-    
-    def writeFile(self, msg, filePath, isTime=True):
-        if isTime:
-            msg = self.getTime() + " " + msg
-        logFile = open(filePath, 'a')
-        logFile.write(msg + "\n")
-        logFile.close()
-        
-    def createDir(self, path):
-        count = 0
-        while 1:
-            try:
-                if count >= 5:
-                    return False
-                os.makedirs(path)
-                if os.path.isdir(path):
-                    return True
-                count += 1
-            except:
-                pass
-            
-    def proxy(self):
-        proxyHandler = urllib2.ProxyHandler({'https':"http://" + self.proxyIp + ":" + self.proxyPort})
+    def proxy(self, ip, port):
+    # ÉèÖÃ´úÀí
+        proxyHandler = urllib2.ProxyHandler({'https':"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
-        self.printMsg("proxy set succeed")
-        
-    # mode 0 : ç›´æ¥èµ‹å€¼
-    # mode 1 : å­—ç¬¦ä¸²æ‹¼æ¥
-    # mode 2 : å–æ•´
+        self.printMsg("ÉèÖÃ´úÀí³É¹¦")
+                
     def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
+    # »ñÈ¡ÅäÖÃÎÄ¼ş
+    # config : ×Öµä¸ñÊ½£¬Èç£º{key1:value1, key2:value2}
+    # mode 0 : Ö±½Ó¸³Öµ
+    # mode 1 : ×Ö·û´®Æ´½Ó
+    # mode 2 : È¡Õû
+    # mode 3 : ÎÄ¼şÂ·¾¶£¬ÒÔ'\'¿ªÍ·µÄÎªµ±Ç°Ä¿Â¼ÏÂ´´½¨
+    # prefix: Ç°×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
+    # postfix: ºó×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
         value = None
         if config.has_key(key):
             if mode == 0:
@@ -119,12 +86,80 @@ class downloadVideo():
                 try:
                     value = int(config[key])
                 except:
-                    self.printMsg("'" + key + "' must is a number in config.ini, default value")
-                    value = 1
+                    self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞkeyÎª'" + key + "'µÄÖµ±ØĞëÊÇÒ»¸öÕûÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
+                    traceback.print_exc()
+                    value = defaultValue
+            elif mode == 3:
+                value = config[key]
+                if value[0] == "\\":
+                    value = os.getcwd() + value
+                return value
         else:
-            self.printMsg("Not found '" + key + "' in config.ini, default value")
+            self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞÃ»ÓĞÕÒµ½keyÎª'" + key + "'µÄ²ÎÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
             value = defaultValue
         return value
+    
+    def printMsg(self, msg, isTime=True):
+        if isTime:
+            msg = self.getTime() + " " + msg
+        print msg
+    
+    def getTime(self):
+        return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
+    
+    def writeFile(self, msg, filePath):
+        logFile = open(filePath, 'a')
+        logFile.write(msg + "\n")
+        logFile.close()
+    
+    def createDir(self, path):
+        count = 0
+        while 1:
+            try:
+                if count >= 5:
+                    return False
+                os.makedirs(path)
+                if os.path.isdir(path):
+                    return True
+            except Exception, e:
+                self.printMsg(str(e))
+                time.sleep(5)
+                traceback.print_exc()
+            count +=1
+        
+    def removeDirFiles(self, dirPath): 
+        for fileName in os.listdir(dirPath): 
+            targetFile = os.path.join(dirPath, fileName) 
+            if os.path.isfile(targetFile): 
+                os.remove(targetFile)
+                
+    def processExit(self):
+        sys.exit()
+    
+    def trace(self, msg):
+        if self.isDebug == 1:
+            msg = self.getTime() + " " + msg
+    #        self.printMsg(msg, False)
+            if self.isLog == 1:
+                self.writeFile(msg, self.traceLogPath)
+    
+    def printErrorMsg(self, msg):
+        if self.isShowError == 1:
+            msg = self.getTime() + " [Error] " + msg
+            self.printMsg(msg, False)
+            if self.isLog == 1:
+                if msg.find("HTTP Error 500") != -1:
+                    return
+                if msg.find("urlopen error The read operation timed out") != -1:
+                    return
+                self.writeFile(msg, self.errorLogPath)
+    
+    def printStepMsg(self, msg):
+        if self.isShowStep == 1:
+            msg = self.getTime() + " " + msg
+            self.printMsg(msg, False)
+            if self.isLog == 1:
+                self.writeFile(msg, self.stepLogPath)
     
     def __init__(self):
         processPath = os.getcwd()
@@ -141,58 +176,57 @@ class downloadVideo():
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # é…ç½®æ–‡ä»¶è·å–æ—¥å¿—æ–‡ä»¶è·¯å¾„
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", processPath + "\\log\\errorLog.txt", 1, prefix=processPath + "\\")
-        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", processPath + "\\log\\traceLog.txt", 1, prefix=processPath + "\\")
-        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", processPath + "\\log\\stepLog.txt", 1, prefix=processPath + "\\")
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, prefix=processPath + "\\")
-        self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", processPath + "\\info\\get_result.html", 1, prefix=processPath + "\\")
-        # é…ç½®æ–‡ä»¶è·å–ç¨‹åºé…ç½®
+        # ÅäÖÃÎÄ¼ş»ñÈ¡ÈÕÖ¾ÎÄ¼şÂ·¾¶
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", "\\info\\get_result.html", 3)
+        # ÅäÖÃÎÄ¼ş»ñÈ¡³ÌĞòÅäÖÃ
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isGetVideoUrl = self.getConfig(config, "IS_GET_VIDEO_URL", 1, 2)
-        self.isProxy = self.getConfig(config, "IS_PROXY", 1, 2)
+        self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printMsg("config init succeed")
+        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
         
     def main(self):
-        # video
-        if self.isGetVideoUrl != 1:
-            self.processExit()
         startTime = time.time()
-        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
+        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
+        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
                 if not self.createDir(stepLogDir):
-                    self.printErrorMsg("create " + stepLogDir + " error")
+                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                     self.processExit()
-                self.printStepMsg("step log file path is not exist, create it: " + stepLogDir)
+                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
-                    self.printErrorMsg("create " + errorLogDir + " error")
+                    self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                     self.processExit()
-                self.printStepMsg("error log file path is not exist, create it: " + errorLogDir)
+                self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
-                    self.printErrorMsg("create " + traceLogDir + " error")
+                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                     self.processExit()
-                self.printStepMsg("trace log file path is not exist, create it: " + traceLogDir)
+                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
         videoUrlFileDir = os.path.dirname(self.resultFilePath)
         if not os.path.exists(videoUrlFileDir):
             if not self.createDir(videoUrlFileDir):
-                self.printErrorMsg("create " + videoUrlFileDir + " error")
+                self.printStepMsg("ÊÓÆµÏÂÔØµØÖ·Ò³ÃæÄ¿Â¼£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
                 self.processExit()
-            self.printStepMsg("video URL file path is not exist, create it: " + videoUrlFileDir)
+            self.printStepMsg("ÊÓÆµÏÂÔØµØÖ·Ò³ÃæÄ¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + videoUrlFileDir)
+        # ÊÓÆµurl±£´æµÄhtmlÎÄ¼ş
         if os.path.exists(self.resultFilePath):
             isDelete = False
             while not isDelete:
-                input = raw_input(self.resultFilePath + " is exist, do you want to remove it and continue? (Y)es or (N)o: ")
+                # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾É´æµµÎÄ¼ş
+                input = raw_input("ÊÓÆµÏÂÔØµØÖ·Ò³Ãæ£º" + self.resultFilePath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş²¢¼ÌĞø³ÌĞò? (Y)es or (N)o£º")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
@@ -203,10 +237,10 @@ class downloadVideo():
                     pass
                 resultFile = open(self.resultFilePath, 'w')
                 resultFile.close()
-        # è®¾ç½®ä»£ç†
-        if self.isProxy == 1:
-            self.proxy()
-        # å¯»æ‰¾idlistï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
+        # ÉèÖÃ´úÀí
+        if self.isProxy == 1 or self.isProxy == 2:
+            self.proxy(self.proxyIp, self.proxyPort)
+        # Ñ°ÕÒidlist£¬Èç¹ûÃ»ÓĞ½áÊø½ø³Ì
         userIdList = {}
         if os.path.exists(self.memberUIdListFilePath):
             userListFile = open(self.memberUIdListFilePath, 'r')
@@ -220,15 +254,15 @@ class downloadVideo():
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("Not exists member id list file: " + self.memberUIdListFilePath + ", process stop!")
+            self.printErrorMsg("ÓÃ»§ID´æµµÎÄ¼ş: " + self.memberUIdListFilePath + "²»´æÔÚ£¬³ÌĞò½áÊø£¡")
             self.processExit()
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.close()
-
+        # ¸´ÖÆ´¦Àí´æµµÎÄ¼ş
         newMemberUidList = copy.deepcopy(userIdList)
         for newUserId in newMemberUidList:
-            # å¦‚æœæ²¡æœ‰åå­—ï¼Œåˆ™åå­—ç”¨uidä»£æ›¿
+            # Èç¹ûÃ»ÓĞÃû×Ö£¬ÔòÃû×ÖÓÃuid´úÌæ
             if len(newMemberUidList[newUserId]) < 2:
                 newMemberUidList[newUserId].append(newMemberUidList[newUserId][0])
             # image count
@@ -245,19 +279,20 @@ class downloadVideo():
                 newMemberUidList[newUserId].append("")
             else:
                 newMemberUidList[newUserId][5] = ""
-            # å¤„ç†member é˜Ÿä¼ä¿¡æ¯
+            # ´¦Àímember ¶ÓÎéĞÅÏ¢
             if len(newMemberUidList[newUserId]) < 7:
                 newMemberUidList[newUserId].append("")
                 
         allVideoCount = 0
+        # Ñ­»·»ñÈ¡Ã¿¸öid
         for userId in userIdList:
             userName = newMemberUidList[userId][1]
-            self.printStepMsg("UID: " + str(userId) + ", Member: " + userName)
-            # åˆå§‹åŒ–æ•°æ®
+            self.printStepMsg("UID: " + str(userId) + ", Ãû×Ö: " + userName)
+            # ³õÊ¼»¯Êı¾İ
             videoCount = 0
             videoUrlList = []
             videoAlbumUrl = 'https://plus.google.com/' + userId + '/videos'
-            self.trace("photo Album URL:" + videoAlbumUrl)
+            self.trace("ÊÓÆµ×¨¼­µØÖ·£º" + videoAlbumUrl)
             videoAlbumPage = self.doGet(videoAlbumUrl)
             if videoAlbumPage:
                 videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token')
@@ -265,15 +300,16 @@ class downloadVideo():
                     videoUrlStart = videoAlbumPage.find("http", videoUrlIndex)
                     videoUrlStop = videoAlbumPage.find('&quot;', videoUrlStart)
                     videoUrl = videoAlbumPage[videoUrlStart:videoUrlStop].replace("\u003d", "=")
-                    # video token å–å‰20ä½
+                    # video token È¡Ç°20Î»
                     tokenStart = videoUrl.find("?token=") + 7
                     videoToken = videoUrl[tokenStart:tokenStart + 20]
-                    # å°†ç¬¬ä¸€å¼ imageçš„URLä¿å­˜åˆ°æ–°id listä¸­
+                    # ½«µÚÒ»¸öÊÓÆµµÄtoken±£´æµ½ĞÂid listÖĞ
                     if newMemberUidList[userId][5] == "":
                         newMemberUidList[userId][5] = videoToken
                     if len(userIdList[userId]) >= 6:
                         if videoToken == userIdList[userId][5]:
                             break
+                    # ÅĞ¶ÏÊÇ·ñÖØ¸´
                     if videoUrl in videoUrlList:
                         videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
                         continue
@@ -281,8 +317,8 @@ class downloadVideo():
                     videoCount += 1
                     videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
             else:
-                self.printErrorMsg("can not get videoAlbumPage: " + videoAlbumUrl)
-            # ç”Ÿæˆä¸‹è½½è§†é¢‘urlçš„æ–‡ä»¶
+                self.printErrorMsg("ÎŞ·¨»ñÈ¡ÊÓÆµÊ×Ò³: " + videoAlbumUrl)
+            # Éú³ÉÏÂÔØÊÓÆµurlµÄÎÄ¼ş
             if videoCount > 0:
                 allVideoCount += videoCount
                 index = 0
@@ -297,25 +333,25 @@ class downloadVideo():
                     index += 1
                     resultFile.writelines("<a href=" + videoUrl + ">" + str(userName + "_" + "%03d" % index) + "</a><br>\n")
                 resultFile.close()
-            # ä¿å­˜æœ€åçš„ä¿¡æ¯
+            # ±£´æ×îºóµÄĞÅÏ¢
             newMemberUidListFile = open(newMemberUidListFilePath, 'a')
             newMemberUidListFile.write("\t".join(newMemberUidList[userId]) + "\n")
             newMemberUidListFile.close()
 
-        # æ’åºå¹¶ä¿å­˜æ–°çš„idList.txt
+        # ÅÅĞò²¢±£´æĞÂµÄidList.txt
         tmpList = []
         tmpUserIdList = sorted(newMemberUidList.keys())
         for index in tmpUserIdList:
             tmpList.append("\t".join(newMemberUidList[index]))
         newMemberUidListString = "\n".join(tmpList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        self.printStepMsg("save new id list file: " + newMemberUidListFilePath)
+        self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş: " + newMemberUidListFilePath)
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.write(newMemberUidListString)
         newMemberUidListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("all members' video url get succeed, use " + str(int(stopTime - startTime)) + " seconds, sum get video count: " + str(allVideoCount))
-
+        self.printStepMsg("´æµµÎÄ¼şÖĞËùÓĞÓÃ»§ÊÓÆµµØÖ·ÒÑ³É¹¦»ñÈ¡£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÊÓÆµµØÖ·" + str(allVideoCount) + "¸ö")
+        
 if __name__ == '__main__':
     downloadVideo().main()
