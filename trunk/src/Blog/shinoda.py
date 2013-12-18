@@ -1,11 +1,11 @@
-# -*- coding:GBK  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-5-6
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 
 from common import common
@@ -46,12 +46,12 @@ class shinoda(common.Tool):
         if imgByte:
             fileType = imageUrl.split(".")[-1]
             imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "." + fileType, "wb")
-            self.printMsg("¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl)
+            self.printMsg("å¼€å§‹ä¸‹è½½ç¬¬" + str(imageCount) + "å¼ å›¾ç‰‡ï¼š" + imageUrl)
             imageFile.write(imgByte)
             imageFile.close()
-            self.printMsg("ÏÂÔØ³É¹¦")
+            self.printMsg("ä¸‹è½½æˆåŠŸ")
         else:
-            self.printErrorMsg("»ñÈ¡Í¼Æ¬ĞÅÏ¢Ê§°Ü£º" + imageUrl)
+            self.printErrorMsg("è·å–å›¾ç‰‡ä¿¡æ¯å¤±è´¥ï¼š" + imageUrl)
                            
     def __init__(self):
         processPath = os.getcwd()
@@ -68,13 +68,13 @@ class shinoda(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # ÅäÖÃÎÄ¼ş»ñÈ¡ÈÕÖ¾ÎÄ¼şÂ·¾¶
+        # é…ç½®æ–‡ä»¶è·å–æ—¥å¿—æ–‡ä»¶è·¯å¾„
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
         self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        # ÅäÖÃÎÄ¼ş»ñÈ¡³ÌĞòÅäÖÃ
+        # é…ç½®æ–‡ä»¶è·å–ç¨‹åºé…ç½®
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
@@ -84,38 +84,38 @@ class shinoda(common.Tool):
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
+        self.printMsg("é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
     
     def main(self):
         startTime = time.time()
-        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
-        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
+        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
+        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
                 if not self.createDir(stepLogDir):
-                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    self.printErrorMsg("åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                     self.processExit()
-                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ: " + stepLogDir)
+                self.printStepMsg("æ­¥éª¤æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹: " + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
-                    self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    self.printErrorMsg("åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                     self.processExit()
-                self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
+                self.printStepMsg("é”™è¯¯æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
-                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    self.printErrorMsg("åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                     self.processExit()
-                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ: " + traceLogDir)
-        # Í¼Æ¬ÅÅĞòºóµÄ±£´æÄ¿Â¼
+                self.printStepMsg("è°ƒè¯•æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹: " + traceLogDir)
+        # å›¾ç‰‡æ’åºåçš„ä¿å­˜ç›®å½•
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                    input = raw_input("Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
+                    # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
+                    input = raw_input("å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + " å·²ç»å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¤¹å¹¶ç»§ç»­ç¨‹åº? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -124,26 +124,26 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("É¾³ıÍ¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-                # É¾³ıÄ¿Â¼
+                self.printStepMsg("åˆ é™¤å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath)
+                # åˆ é™¤ç›®å½•
                 shutil.rmtree(self.imageDownloadPath, True)
-                # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
+                # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
+                self.printStepMsg("å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + "å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
+        self.printStepMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼
+        # å›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•
         if os.path.exists(self.imageTempPath):
             if os.path.isdir(self.imageTempPath):
                 isDelete = False
                 while not isDelete:
-                    # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                    input = raw_input("Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
+                    # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
+                    input = raw_input("å›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•ï¼š" + self.imageTempPath + " å·²ç»å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¤¹å¹¶ç»§ç»­ç¨‹åº? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -152,22 +152,22 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("É¾³ıÍ¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath)
+                self.printStepMsg("åˆ é™¤å›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•ï¼š" + self.imageTempPath)
                 shutil.rmtree(self.imageTempPath, True)
-                # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
+                # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
                 while os.path.exists(self.imageTempPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
+                self.printStepMsg("å›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•ï¼š" + self.imageTempPath + "å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
                 os.remove(self.imageTempPath)
-        self.printStepMsg("´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath)
+        self.printStepMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•ï¼š" + self.imageTempPath)
         if not self.createDir(self.imageTempPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•ï¼š" + self.imageTempPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # ÉèÖÃ´úÀí
+        # è®¾ç½®ä»£ç†
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort)
-        # ¶ÁÈ¡´æµµÎÄ¼ş
+            self.proxy(self.proxyIp, self.proxyPort, "http")
+        # è¯»å–å­˜æ¡£æ–‡ä»¶
         saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
         lastImageUrl = ""
         imageStartIndex = 0
@@ -179,7 +179,7 @@ class shinoda(common.Tool):
             if len(saveList) >= 2:
                 imageStartIndex = saveList[0]
                 lastImageUrl = saveList[1]
-        # ÏÂÔØ
+        # ä¸‹è½½
         url = "http://blog.mariko-shinoda.net/index%s.html"
         pageIndex = 1
         imageCount = 1
@@ -188,7 +188,7 @@ class shinoda(common.Tool):
         while True:
             if isOver:
                 break
-            # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
+            # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
             if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
                 break
             if pageIndex > 1:
@@ -197,7 +197,7 @@ class shinoda(common.Tool):
             else:
                 indexUrl = url % ("")
                 indexPage = self.doGet(indexUrl)
-            self.trace("²©¿ÍÒ³ÃæµØÖ·:" + indexUrl)
+            self.trace("åšå®¢é¡µé¢åœ°å€:" + indexUrl)
             if indexPage:
                 # old image:
                 imageIndex = 0
@@ -208,15 +208,15 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex) 
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace("Í¼Æ¬µØÖ·:" + imageUrl)
+                    self.trace("å›¾ç‰‡åœ°å€:" + imageUrl)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
-                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
+                        # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
-                        # ÏÂÔØÍ¼Æ¬
+                        # ä¸‹è½½å›¾ç‰‡
                         self.download(imageUrl, self.imageTempPath, imageCount)
                         imageCount += 1
                     imageIndex += 1
@@ -236,15 +236,15 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex)
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace("Í¼Æ¬µØÖ·:" + imageUrl)
+                    self.trace("å›¾ç‰‡åœ°å€:" + imageUrl)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
-                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
+                        # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
                         if lastImageUrl == imageUrl:
                             isOver = True
                             break
-                        # ÏÂÔØÍ¼Æ¬
+                        # ä¸‹è½½å›¾ç‰‡
                         self.download(imageUrl, self.imageTempPath, imageCount)
                         imageCount += 1
                     imgTagStart += 1
@@ -254,9 +254,9 @@ class shinoda(common.Tool):
                 break
             pageIndex += 1
         
-        self.printStepMsg("ÏÂÔØÍê±Ï")
+        self.printStepMsg("ä¸‹è½½å®Œæ¯•")
         
-        # ÅÅĞò¸´ÖÆµ½±£´æÄ¿Â¼
+        # æ’åºå¤åˆ¶åˆ°ä¿å­˜ç›®å½•
         if self.isSort == 1:
             allImageCount = 0
             for fileName in sorted(os.listdir(self.imageTempPath), reverse=True):
@@ -265,19 +265,19 @@ class shinoda(common.Tool):
                 fileType = fileName.split(".")[-1]
                 shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
                 allImageCount += 1
-            self.printStepMsg("Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
-            # É¾³ıÏÂÔØÁÙÊ±Ä¿Â¼ÖĞµÄÍ¼Æ¬
+            self.printStepMsg("å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
+            # åˆ é™¤ä¸‹è½½ä¸´æ—¶ç›®å½•ä¸­çš„å›¾ç‰‡
             shutil.rmtree(self.imageTempPath, True)
             
-        # ±£´æĞÂµÄ´æµµÎÄ¼ş
+        # ä¿å­˜æ–°çš„å­˜æ¡£æ–‡ä»¶
         newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self.printStepMsg("±£´æĞÂy´æµµÎÄ¼ş: " + newSaveFilePath)
+        self.printStepMsg("ä¿å­˜æ–°yå­˜æ¡£æ–‡ä»¶: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, 'w')
         newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl)
         newSaveFile.close()
             
         stopTime = time.time()
-        self.printStepMsg("³É¹¦ÏÂÔØ×îĞÂÍ¼Æ¬£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÍ¼Æ¬" + str(imageCount - 1) + "ÕÅ")
+        self.printStepMsg("æˆåŠŸä¸‹è½½æœ€æ–°å›¾ç‰‡ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + "ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(imageCount - 1) + "å¼ ")
 
 if __name__ == '__main__':
     shinoda().main()
