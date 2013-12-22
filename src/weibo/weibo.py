@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 '''
 
 from common import common, json
+import codecs
 import copy
 import os
 import random
@@ -67,7 +68,7 @@ class weibo(common.Tool):
 
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
+        configFile = codecs.open(processPath + "\\..\\common\\config.ini", 'r', 'GBK')
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -168,7 +169,7 @@ class weibo(common.Tool):
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.memberUIdListFilePath):
-            userListFile = open(self.memberUIdListFilePath, 'r')
+            userListFile = codecs.open(self.memberUIdListFilePath, 'r', 'GBK')
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
@@ -180,7 +181,7 @@ class weibo(common.Tool):
             self.printErrorMsg("用户ID存档文件: " + self.memberUIdListFilePath + "不存在，程序结束！")
             self.processExit()
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
+        newMemberUidListFile = codecs.open(newMemberUidListFilePath, 'w', 'GBK')
         newMemberUidListFile.close()
 
         newMemberUidList = copy.deepcopy(userIdList)
@@ -337,7 +338,7 @@ class weibo(common.Tool):
                 self.printErrorMsg(userName + "图片数量" + str(imageCount) + "张，小于相册图片数量" + str(totalImageCount) + "张，请手动检查")
 
             # 保存最后的信息
-            newMemberUidListFile = open(newMemberUidListFilePath, 'a')
+            newMemberUidListFile = codecs.open(newMemberUidListFilePath, 'a', 'GBK')
             newMemberUidListFile.write("\t".join(newMemberUidList[userId]) + "\n")
             newMemberUidListFile.close()
 
@@ -349,7 +350,7 @@ class weibo(common.Tool):
         newMemberUidListString = "\n".join(tempList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
         self.printStepMsg("save new id list file: " + newMemberUidListFilePath)
-        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
+        newMemberUidListFile = codecs.open(newMemberUidListFilePath, 'w', 'GBK')
         newMemberUidListFile.write(newMemberUidListString)
         newMemberUidListFile.close()
         
