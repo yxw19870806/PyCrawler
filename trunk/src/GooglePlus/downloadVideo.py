@@ -44,7 +44,7 @@ class downloadVideo(common.Tool):
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printMsg("配置文件读取完成")
+        self.printMsg(u"配置文件读取完成")
         
     def main(self):
         startTime = time.time()
@@ -200,7 +200,7 @@ class downloadVideo(common.Tool):
             tmpList.append("\t".join(newMemberUidList[index]))
         newMemberUidListString = "\n".join(tmpList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        self.printStepMsg(u"保存新存档文件: " + newMemberUidListFilePath, self.isShowError, self.isLog)
+        self.printStepMsg(u"保存新存档文件：" + newMemberUidListFilePath, self.isShowError, self.isLog)
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.write(newMemberUidListString)
         newMemberUidListFile.close()

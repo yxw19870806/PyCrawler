@@ -35,20 +35,20 @@ class Tool():
             except Exception, e:
                 # 代理无法访问
                 if str(e).find("[Errno 10061] ") != -1:
-                    input = raw_input("无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
+                    input = raw_input(u"无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
                     if input in ["y", "yes"]:
                         pass
                     elif input in ["n", "no"]:
                         sys.exit()
                 # 超时
                 elif str(e).find("timed out") != -1:
-                    self.printMsg("访问页面超时，重新连接请稍后")
+                    self.printMsg(u"访问页面超时，重新连接请稍后")
                 else:
                     self.printMsg(str(e))
                     traceback.print_exc()
             count += 1
             if count > 10:
-                self.printErrorMsg("无法访问页面：" + url)
+                self.printErrorMsg(u"无法访问页面：" + url)
                 return False
 
     def getDefaultBrowserCookiePath(self, OSVersion, browserType):     
@@ -88,7 +88,7 @@ class Tool():
                 return "C:\\Users\\%s\\AppData\\Local\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
             elif OSVersion == 2:
                 return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
-        self.printMsg("浏览器类型：" + browserType + "不存在")
+        self.printMsg(u"浏览器类型：" + browserType + u"不存在")
         return None
 
     def cookie(self, filePath, browserType=1):
@@ -102,7 +102,7 @@ class Tool():
         import urllib2
         from pysqlite2 import dbapi2 as sqlite
         if not os.path.exists(filePath):
-            self.printMsg("cookie目录：" + filePath + " 不存在")
+            self.printMsg(u"cookie目录：" + filePath + u" 不存在")
             return False
         ftstr = ["FALSE", "TRUE"]
         s = cStringIO.StringIO()
@@ -164,7 +164,7 @@ class Tool():
         proxyHandler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
-        self.printMsg("设置代理成功")
+        self.printMsg(u"设置代理成功")
                 
     def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
     # 获取配置文件
@@ -191,7 +191,7 @@ class Tool():
                 try:
                     value = int(config[key])
                 except:
-                    self.printMsg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+                    self.printMsg(u"配置文件config.ini中key为'" + key + u"'的值必须是一个整数，使用程序默认设置")
                     traceback.print_exc()
                     value = defaultValue
             elif mode == 3:
@@ -200,7 +200,7 @@ class Tool():
                     value = os.getcwd() + value
                 return value
         else:
-            self.printMsg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+            self.printMsg(u"配置文件config.ini中没有找到key为'" + key + u"'的参数，使用程序默认设置")
             value = defaultValue
         return value
     
@@ -209,6 +209,31 @@ class Tool():
             msg = self.getTime() + " " + msg
         print msg
     
+    def trace(self, msg, isShow=1, isLog=1):
+        if isShow == 1:
+            msg = self.getTime() + " " + msg
+#             self.printMsg(msg, False)
+        if self.isLog == 1:
+            self.writeFile(msg, self.traceLogPath)
+    
+    def printErrorMsg(self, msg, isShow=1, isLog=1):
+        if isShow == 1:
+            msg = self.getTime() + " [Error] " + msg
+            self.printMsg(msg, False)
+        if isLog == 1:
+            if msg.find("HTTP Error 500") != -1:
+                return
+            if msg.find("urlopen error The read operation timed out") != -1:
+                return
+            self.writeFile(msg, self.errorLogPath)
+    
+    def printStepMsg(self, msg, isShow=1, isLog=1):
+        if self.isShowStep == 1:
+            msg = self.getTime() + " " + msg
+            self.printMsg(msg, False)
+        if self.isLog == 1:
+            self.writeFile(msg, self.stepLogPath)
+                
     def getTime(self):
         import time
         return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
