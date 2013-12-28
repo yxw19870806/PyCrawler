@@ -15,43 +15,18 @@ import sys
 import time
 
 class shinoda(common.Tool):
-    
-    def trace(self, msg):
-        if self.isDebug == 1:
-            msg = self.getTime() + " " + msg
-    #        self.printMsg(msg, False)
-            if self.isLog == 1:
-                self.writeFile(msg, self.traceLogPath)
-    
-    def printErrorMsg(self, msg):
-        if self.isShowError == 1:
-            msg = self.getTime() + " [Error] " + msg
-            self.printMsg(msg, False)
-            if self.isLog == 1:
-                if msg.find("HTTP Error 500") != -1:
-                    return
-                if msg.find("urlopen error The read operation timed out") != -1:
-                    return
-                self.writeFile(msg, self.errorLogPath)
-    
-    def printStepMsg(self, msg):
-        if self.isShowStep == 1:
-            msg = self.getTime() + " " + msg
-            self.printMsg(msg, False)
-            if self.isLog == 1:
-                self.writeFile(msg, self.stepLogPath)
 
     def download(self, imageUrl, imagePath, imageCount):
         imgByte = self.doGet(imageUrl)
         if imgByte:
             fileType = imageUrl.split(".")[-1]
             imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "." + fileType, "wb")
-            self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+            self.printMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
             imageFile.write(imgByte)
             imageFile.close()
-            self.printMsg("下载成功")
+            self.printMsg(u"下载成功")
         else:
-            self.printErrorMsg("获取图片信息失败：" + imageUrl)
+            self.printErrorMsg(u"获取图片信息失败：" + imageUrl, self.isShowError, self.isLog)
                            
     def __init__(self):
         processPath = os.getcwd()
@@ -84,7 +59,7 @@ class shinoda(common.Tool):
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printMsg("配置文件读取完成")
+        self.printMsg(u"配置文件读取完成")
     
     def main(self):
         startTime = time.time()
@@ -94,28 +69,28 @@ class shinoda(common.Tool):
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
                 if not self.createDir(stepLogDir):
-                    self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                    self.printErrorMsg(u"创建步骤日志目录：" + stepLogDir + u" 失败，程序结束！", self.isShowError, self.isLog)
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
+                self.printStepMsg(u"步骤日志目录不存在，创建文件夹: " + stepLogDir, self.isShowError, self.isLog)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
-                    self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+                    self.printErrorMsg(u"创建错误日志目录：" + errorLogDir + u" 失败，程序结束！", self.isShowError, self.isLog)
                     self.processExit()
-                self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
+                self.printStepMsg(u"错误日志目录不存在，创建文件夹：" + errorLogDir, self.isShowError, self.isLog)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
-                    self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                    self.printErrorMsg(u"创建调试日志目录：" + traceLogDir + u" 失败，程序结束！", self.isShowError, self.isLog)
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在，创建文件夹: " + traceLogDir)
+                self.printStepMsg(u"调试日志目录不存在，创建文件夹: " + traceLogDir, self.isShowError, self.isLog)
         # 图片排序后的保存目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
                     # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input("图片保存目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input(u"图片保存目录：" + self.imageDownloadPath + u" 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -124,18 +99,18 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("删除图片保存目录：" + self.imageDownloadPath)
+                self.printStepMsg(u"删除图片保存目录：" + self.imageDownloadPath, self.isShowError, self.isLog)
                 # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片保存目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
+                self.printStepMsg(u"图片保存目录：" + self.imageDownloadPath + u"已存在相同名字的文件，自动删除", self.isShowError, self.isLog)
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("创建图片保存目录：" + self.imageDownloadPath)
+        self.printStepMsg(u"创建图片保存目录：" + self.imageDownloadPath, self.isShowError, self.isLog)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("创建图片保存目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self.printErrorMsg(u"创建图片保存目录：" + self.imageDownloadPath + u" 失败，程序结束！", self.isShowError, self.isLog)
             self.processExit()
         # 图片下载临时目录
         if os.path.exists(self.imageTempPath):
@@ -143,7 +118,7 @@ class shinoda(common.Tool):
                 isDelete = False
                 while not isDelete:
                     # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input("图片下载临时目录：" + self.imageTempPath + " 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input(u"图片下载临时目录：" + self.imageTempPath + u" 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -152,17 +127,17 @@ class shinoda(common.Tool):
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("删除图片下载临时目录：" + self.imageTempPath)
+                self.printStepMsg(u"删除图片下载临时目录：" + self.imageTempPath, self.isShowError, self.isLog)
                 shutil.rmtree(self.imageTempPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageTempPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片下载临时目录：" + self.imageTempPath + "已存在相同名字的文件，自动删除")
+                self.printStepMsg(u"图片下载临时目录：" + self.imageTempPath + u"已存在相同名字的文件，自动删除", self.isShowError, self.isLog)
                 os.remove(self.imageTempPath)
-        self.printStepMsg("创建图片下载临时目录：" + self.imageTempPath)
+        self.printStepMsg(u"创建图片下载临时目录：" + self.imageTempPath, self.isShowError, self.isLog)
         if not self.createDir(self.imageTempPath):
-            self.printErrorMsg("创建图片下载临时目录：" + self.imageTempPath + " 失败，程序结束！")
+            self.printErrorMsg(u"创建图片下载临时目录：" + self.imageTempPath + u" 失败，程序结束！", self.isShowError, self.isLog)
             self.processExit()
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
@@ -177,7 +152,7 @@ class shinoda(common.Tool):
             saveFile.close()
             saveList = saveInfo.split("\t")
             if len(saveList) >= 2:
-                imageStartIndex = saveList[0]
+                imageStartIndex = int(saveList[0])
                 lastImageUrl = saveList[1]
         # 下载
         url = "http://blog.mariko-shinoda.net/index%s.html"
@@ -197,7 +172,7 @@ class shinoda(common.Tool):
             else:
                 indexUrl = url % ("")
                 indexPage = self.doGet(indexUrl)
-            self.trace("博客页面地址:" + indexUrl)
+            self.trace(u"博客页面地址:" + indexUrl, self.isShowError, self.isLog)
             if indexPage:
                 # old image:
                 imageIndex = 0
@@ -208,7 +183,7 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex) 
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace("图片地址:" + imageUrl)
+                    self.trace(u"图片地址:" + imageUrl, self.isShowError, self.isLog)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
@@ -236,7 +211,7 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex)
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace("图片地址:" + imageUrl)
+                    self.trace(u"图片地址:" + imageUrl, self.isShowError, self.isLog)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
@@ -254,7 +229,7 @@ class shinoda(common.Tool):
                 break
             pageIndex += 1
         
-        self.printStepMsg("下载完毕")
+        self.printStepMsg(u"下载完毕", self.isShowError, self.isLog)
         
         # 排序复制到保存目录
         if self.isSort == 1:
@@ -265,19 +240,19 @@ class shinoda(common.Tool):
                 fileType = fileName.split(".")[-1]
                 shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
                 allImageCount += 1
-            self.printStepMsg("图片从下载目录移动到保存目录成功")
+            self.printStepMsg(u"图片从下载目录移动到保存目录成功", self.isShowError, self.isLog)
             # 删除下载临时目录中的图片
             shutil.rmtree(self.imageTempPath, True)
             
         # 保存新的存档文件
         newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self.printStepMsg("保存新y存档文件: " + newSaveFilePath)
+        self.printStepMsg(u"保存新存档文件: " + newSaveFilePath, self.isShowError, self.isLog)
         newSaveFile = open(newSaveFilePath, 'w')
         newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl)
         newSaveFile.close()
             
         stopTime = time.time()
-        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(imageCount - 1) + "张")
+        self.printStepMsg(u"成功下载最新图片，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(imageCount - 1) + u"张", self.isShowError, self.isLog)
 
 if __name__ == '__main__':
     shinoda().main()
