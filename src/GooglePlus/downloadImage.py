@@ -48,7 +48,7 @@ class downloadImage(common.Tool):
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printMsg("配置文件读取完成")
+        self.printMsg(u"配置文件读取完成")
 
     def main(self):
         startTime = time.time()
@@ -311,7 +311,7 @@ class downloadImage(common.Tool):
             tempList.append("\t".join(newMemberUidList[index]))
         newMemberUidListString = "\n".join(tempList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        self.printStepMsg("保存新存档文件: " + newMemberUidListFilePath, self.isShowError, self.isLog)
+        self.printStepMsg("保存新存档文件：" + newMemberUidListFilePath, self.isShowError, self.isLog)
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.write(newMemberUidListString)
         newMemberUidListFile.close()
