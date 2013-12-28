@@ -91,6 +91,7 @@ Watanabe_Miyuki_078
 Watanabe_Miyuki_097
 Watanabe_Miyuki_098
 Yagura_Fuuko_031
+Yagura_Fuuko_042
 Shinozaki_Ayana_005
 Shinozaki_Ayana_006
 Shinozaki_Ayana_007
@@ -114,6 +115,7 @@ Shimono_Yuki_010
 Shimono_Yuki_011
 Shimono_Yuki_012
 Shimono_Yuki_013
+Shimono_Yuki_018
 Kobayashi_Marina_063
 Kobayashi_Marina_078
 Kobayashi_Marina_084
@@ -178,6 +180,7 @@ Umeta_Ayano_016
 Umeta_Ayano_019
 Suda_Akari_045
 Suda_Akari_046
+Suda_Akari_047
 Anai_Chihiro_021
 Anai_Chihiro_022
 Anai_Chihiro_023
@@ -199,3 +202,6 @@ Murayama_Yuiri_006
 Cindy_Gulla_033
 Cindy_Gulla_034
 Fujie_Reina_017
+œ«Ç³Ñó_042
+Chikano_Rina_001
+Tomiyoshi_Asuka_021
