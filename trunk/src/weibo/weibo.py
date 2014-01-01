@@ -179,7 +179,7 @@ class weibo(common.Tool):
         allImageCount = 0
         for userId in sorted(userIdList.keys()):
             userName = newMemberUidList[userId][1]
-            self.printStepMsg("UID: " + str(userId) + "，Member: " + userName.decode("GBK"), self.isShowError, self.isLog)
+            self.printStepMsg("UID: " + str(userId) + "，Member: " + userName, self.isShowError, self.isLog)
             # 初始化数据
             pageCount = 1
             imageCount = 1
@@ -272,7 +272,7 @@ class weibo(common.Tool):
             if int(newMemberUidList[userId][2]) == 0 and imageCount - 1 != totalImageCount:
                 isError = 2
             
-            self.printStepMsg(userName.decode("GBK") + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片", self.isShowError, self.isLog)
+            self.printStepMsg(userName + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片", self.isShowError, self.isLog)
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
             
@@ -307,9 +307,9 @@ class weibo(common.Tool):
                 shutil.rmtree(imagePath, True)
 
             if isError == 1:
-                self.printErrorMsg(userName.decode("GBK") + u"图片数量异常，请手动检查", self.isShowError, self.isLog)
+                self.printErrorMsg(userName + u"图片数量异常，请手动检查", self.isShowError, self.isLog)
             elif isError == 2:
-                self.printErrorMsg(userName.decode("GBK") + u"图片数量" + str(imageCount) + u"张，小于相册图片数量" + str(totalImageCount) + u"张，请手动检查", self.isShowError, self.isLog)
+                self.printErrorMsg(userName + u"图片数量" + str(imageCount) + u"张，小于相册图片数量" + str(totalImageCount) + u"张，请手动检查", self.isShowError, self.isLog)
 
             # 保存最后的信息
             newMemberUidListFile = codecs.open(newMemberUidListFilePath, 'a', 'GBK')
