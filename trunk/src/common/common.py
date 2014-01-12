@@ -7,7 +7,7 @@ Created on 2013-7-16
 
 IS_SET_TIMEOUT = False
 
-class Tool():
+class Tool(object):
 
     def doGet(self, url):
     # http请求
@@ -209,30 +209,30 @@ class Tool():
             msg = self.getTime() + " " + msg
         print msg
     
-    def trace(self, msg, isShow=1, isLog=1):
-        if isShow == 1:
+    def trace(self, msg, isPrint=1, logPath=''):
+        if isPrint == 1:
             msg = self.getTime() + " " + msg
 #             self.printMsg(msg, False)
-        if self.isLog == 1:
-            self.writeFile(msg, self.traceLogPath)
+        if logPath != '':
+            self.writeFile(msg, logPath)
     
-    def printErrorMsg(self, msg, isShow=1, isLog=1):
-        if isShow == 1:
+    def printErrorMsg(self, msg, isPrint=1, logPath=''):
+        if isPrint == 1:
             msg = self.getTime() + " [Error] " + msg
             self.printMsg(msg, False)
-        if isLog == 1:
+        if logPath != '':
             if msg.find("HTTP Error 500") != -1:
                 return
             if msg.find("urlopen error The read operation timed out") != -1:
                 return
-            self.writeFile(msg, self.errorLogPath)
+            self.writeFile(msg, logPath)
     
-    def printStepMsg(self, msg, isShow=1, isLog=1):
-        if self.isShowStep == 1:
+    def printStepMsg(self, msg, isPrint=1, logPath=''):
+        if isPrint == 1:
             msg = self.getTime() + " " + msg
             self.printMsg(msg, False)
-        if self.isLog == 1:
-            self.writeFile(msg, self.stepLogPath)
+        if logPath != '':
+            self.writeFile(msg, logPath)
                 
     def getTime(self):
         import time
@@ -247,20 +247,22 @@ class Tool():
         import time
         import traceback
         import os
-        count = 0
-        while 1:
-            try:
-                if count >= 5:
-                    return False
-                os.makedirs(path)
-                if os.path.isdir(path):
-                    return True
-            except Exception, e:
-                self.printMsg(str(e))
-                time.sleep(5)
-                traceback.print_exc()
-            count += 1
-        
+        if not os.path.exists(path):
+            count = 0
+            while 1:
+                try:
+                    if count >= 5:
+                        return False
+                    os.makedirs(path)
+                    if os.path.isdir(path):
+                        return True
+                except Exception, e:
+                    self.printMsg(str(e))
+                    time.sleep(5)
+                    traceback.print_exc()
+                count += 1
+        return True
+    
     def removeDirFiles(self, dirPath): 
         import os
         for fileName in os.listdir(dirPath): 

@@ -16,6 +16,15 @@ import time
 
 class downloadImage(common.Tool):
     
+    def trace(self, msg):
+        super(downloadImage, self).trace(msg, self.isShowError, self.traceLogPath, self.isShowError, self.isLog)
+    
+    def printErrorMsg(self, msg):
+        super(downloadImage, self).printErrorMsg(msg, self.isShowError, self.errorLogPath, self.isShowError, self.isLog)
+        
+    def printStepMsg(self, msg):
+        super(downloadImage, self).printStepMsg(msg, self.isShowError, self.stepLogPath, self.isShowError, self.isLog)
+         
     def __init__(self):
         processPath = os.getcwd()
         configFile = open(processPath + "\\..\\common\\config.ini", 'r')
@@ -31,23 +40,28 @@ class downloadImage(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # 配置文件获取日志文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        # 配置文件获取程序配置
+        # 程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 1, 2)
+        # 代理
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
+        # 文件路径
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        if self.isLog == 0:
+            self.traceLogPath = ''
+            self.stepLogPath = ''
+        else:
+            self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+            self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
         self.printMsg(u"配置文件读取完成")
 
     def main(self):
@@ -56,23 +70,20 @@ class downloadImage(common.Tool):
         # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not os.path.exists(stepLogDir):
-                if not self.createDir(stepLogDir):
-                    self.printErrorMsg(u"创建步骤日志目录：" + stepLogDir + u" 失败，程序结束！", self.isShowError, self.isLog)
-                    self.processExit()
-                self.printStepMsg(u"步骤日志目录不存在，创建文件夹: " + stepLogDir, self.isShowError, self.isLog)
-            errorLogDir = os.path.dirname(self.errorLogPath)
-            if not os.path.exists(errorLogDir):
-                if not self.createDir(errorLogDir):
-                    self.printErrorMsg(u"创建错误日志目录：" + errorLogDir + u" 失败，程序结束！", self.isShowError, self.isLog)
-                    self.processExit()
-                self.printStepMsg(u"错误日志目录不存在，创建文件夹: " + errorLogDir, self.isShowError, self.isLog)
+            if not self.createDir(stepLogDir):
+                self.printErrorMsg(u"创建步骤日志目录：" + stepLogDir + u" 失败，程序结束！")
+                self.processExit()
+            self.printStepMsg(u"步骤日志目录不存在，创建文件夹: " + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not os.path.exists(traceLogDir):
-                if not self.createDir(traceLogDir):
-                    self.printErrorMsg(u"创建调试日志目录：" + traceLogDir + u" 失败，程序结束！", self.isShowError, self.isLog)
-                    self.processExit()
-                self.printStepMsg(u"调试日志目录不存在，创建文件夹: " + traceLogDir, self.isShowError, self.isLog)
+            if not self.createDir(traceLogDir):
+                self.printErrorMsg(u"创建调试日志目录：" + traceLogDir + u" 失败，程序结束！")
+                self.processExit()
+            self.printStepMsg(u"调试日志目录不存在，创建文件夹: " + traceLogDir)
+        errorLogDir = os.path.dirname(self.errorLogPath)
+        if not self.createDir(errorLogDir):
+            self.printErrorMsg(u"创建错误日志目录：" + errorLogDir + u" 失败，程序结束！")
+            self.processExit()
+        self.printStepMsg(u"错误日志目录不存在，创建文件夹：" + errorLogDir)
         # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
@@ -87,20 +98,20 @@ class downloadImage(common.Tool):
                         elif input in ["n", "no"]:
                             self.processExit()
                     except Exception, e:
-                        self.printErrorMsg(str(e), self.isShowError, self.isLog) 
+                        self.printErrorMsg(str(e)) 
                         pass
-                self.printStepMsg(u"删除图片下载目录: " + self.imageDownloadPath, self.isShowError, self.isLog)
+                self.printStepMsg(u"删除图片下载目录: " + self.imageDownloadPath)
                 # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg(u"图片下载目录: " + self.imageDownloadPath + u"已存在相同名字的文件，自动删除", self.isShowError, self.isLog)
+                self.printStepMsg(u"图片下载目录: " + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg(u"创建图片下载目录: " + self.imageDownloadPath, self.isShowError, self.isLog)
+        self.printStepMsg(u"创建图片下载目录: " + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg(u"创建图片下载目录：" + self.imageDownloadPath + u" 失败，程序结束！", self.isShowError, self.isLog)
+            self.printErrorMsg(u"创建图片下载目录：" + self.imageDownloadPath + u" 失败，程序结束！")
             self.processExit()
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
@@ -119,7 +130,7 @@ class downloadImage(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg(u"用户ID存档文件: " + self.memberUIdListFilePath + u"不存在，程序结束！", self.isShowError, self.isLog)
+            self.printErrorMsg(u"用户ID存档文件: " + self.memberUIdListFilePath + u"不存在，程序结束！")
             self.processExit()
         # 创建临时存档文件
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
@@ -154,7 +165,7 @@ class downloadImage(common.Tool):
         # 循环下载每个id
         for userId in sorted(userIdList.keys()):
             userName = newMemberUidList[userId][1]
-            self.printStepMsg(u"UID: " + str(userId) + u", 名字: " + userName.decode("GBK"), self.isShowError, self.isLog)
+            self.printStepMsg(u"UID: " + str(userId) + u", 名字: " + userName.decode("GBK"))
             # 初始化数据
             pageCount = 0
             imageCount = 1
@@ -172,7 +183,7 @@ class downloadImage(common.Tool):
             else:
                 imagePath = self.imageDownloadPath + "\\" + userName
             if not self.createDir(imagePath):
-                self.printErrorMsg(u"创建图片下载目录： " + imagePath + u" 失败，程序结束！", self.isShowError, self.isLog)
+                self.printErrorMsg(u"创建图片下载目录： " + imagePath + u" 失败，程序结束！")
                 self.processExit()
             # 图片下载  
             while 1:
@@ -180,10 +191,10 @@ class downloadImage(common.Tool):
                     break
                 # 获取信息总页,offset=N表示返回最新的N到N+100条信息所在的url
                 photoAlbumUrl = "https://plus.google.com/_/photos/posts/%s?offset=%s" % (userId, pageCount)
-                self.trace(u"相册专辑地址：" + photoAlbumUrl, self.isShowError, self.isLog)
+                self.trace(u"相册专辑地址：" + photoAlbumUrl)
                 photoAlbumPage = self.doGet(photoAlbumUrl)
                 if not photoAlbumPage:
-                    self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl, self.isShowError, self.isLog)
+                    self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl)
                     isPass = True
                     break
             
@@ -210,7 +221,7 @@ class downloadImage(common.Tool):
                             isPass = True
                             isError = False
                             break
-                    self.trace(u"message URL:" + messageUrl, self.isShowError, self.isLog)
+                    self.trace(u"message URL:" + messageUrl)
                     # 判断是否重复
                     if messageUrl in messageUrlList:
                         messageIndex += 1
@@ -218,20 +229,20 @@ class downloadImage(common.Tool):
                     messageUrlList.append(messageUrl)
                     messagePage = self.doGet(messageUrl)
                     if not messagePage:
-                        # self.printErrorMsg("can not get messagePage: " + messageUrl, self.isShowError, self.isLog)
-                        self.printErrorMsg(u"无法获取信息页: " + messageUrl, self.isShowError, self.isLog)
+                        # self.printErrorMsg("can not get messagePage: " + messageUrl)
+                        self.printErrorMsg(u"无法获取信息页: " + messageUrl)
                         messageIndex += 1
                         continue
                     flag = messagePage.find("<div><a href=")
                     while flag != -1:
                         imageIndex = messagePage.find("<img src=", flag, flag + 200)
                         if imageIndex == -1:
-                            self.printErrorMsg(u"信息页：" + messageUrl + u" 中没有找到标签'<img src='", self.isShowError, self.isLog)
+                            self.printErrorMsg(u"信息页：" + messageUrl + u" 中没有找到标签'<img src='")
                             break
                         imageStart = messagePage.find("http", imageIndex)
                         imageStop = messagePage.find('"', imageStart)
                         imageUrl = messagePage[imageStart:imageStop]
-                        self.trace(u"image URL:" + imageUrl, self.isShowError, self.isLog)
+                        self.trace(u"image URL:" + imageUrl)
                         if imageUrl in imageUrlList:
                             flag = messagePage.find("<div><a href=", flag + 1)
                             continue
@@ -246,22 +257,22 @@ class downloadImage(common.Tool):
                             # 保存图片
                             filename = str("%04d" % imageCount)
                             imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
-                            self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl, self.isShowError, self.isLog)
+                            self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
                             imageFile.write(imgByte)
                             imageFile.close()
-                            self.printStepMsg(u"下载成功", self.isShowError, self.isLog)
+                            self.printStepMsg(u"下载成功")
                             imageCount += 1
                             # 达到配置文件中的下载数量，结束
                             if self.getImageCount > 0 and imageCount > self.getImageCount:
                                 isPass = True
                                 break
                         else:
-                            self.printErrorMsg(u"获取图片信息失败：" + str(userId) + ": " + imageUrl, self.isShowError, self.isLog)
+                            self.printErrorMsg(u"获取图片信息失败：" + str(userId) + ": " + imageUrl)
                         flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
                 pageCount += 100
                 
-            self.printStepMsg(userName.decode("GBK") + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片", self.isShowError, self.isLog)
+            self.printStepMsg(userName.decode("GBK") + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片")
             # 检查下载图片是否大于总数量的一半，对上一次记录的图片正好被删除或其他原因导致下载了全部图片做一个保护
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
@@ -274,14 +285,14 @@ class downloadImage(common.Tool):
                     destPath = self.imageDownloadPath + "\\" + newMemberUidList[userId][6] + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg("图片保存目录: " + destPath + " 已存在，删除中", self.isShowError, self.isLog)
+                            self.printStepMsg(u"图片保存目录: " + destPath + u" 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg("图片保存目录: " + destPath + "已存在相同名字的文件，自动删除中", self.isShowError, self.isLog)
+                            self.printStepMsg(u"图片保存目录: " + destPath + u"已存在相同名字的文件，自动删除中")
                             os.remove(destPath)
-                    self.printStepMsg("创建图片保存目录: " + destPath, self.isShowError, self.isLog)
+                    self.printStepMsg(u"创建图片保存目录: " + destPath)
                     if not self.createDir(destPath):
-                        self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！", self.isShowError, self.isLog)
+                        self.printErrorMsg(u"创建图片保存目录： " + destPath + u" 失败，程序结束！")
                         self.processExit()
                     # 倒叙排列
                     if len(userIdList[userId]) >= 3:
@@ -292,12 +303,12 @@ class downloadImage(common.Tool):
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg("图片从下载目录移动到保存目录成功", self.isShowError, self.isLog)
+                    self.printStepMsg(u"图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userName.decode("GBK") + "图片数量异常，请手动检查", self.isShowError, self.isLog)
+                self.printErrorMsg(userName.decode("GBK") + u"图片数量异常，请手动检查")
 
             # 保存最后的信息
             newMemberUidListFile = open(newMemberUidListFilePath, 'a')
@@ -311,13 +322,13 @@ class downloadImage(common.Tool):
             tempList.append("\t".join(newMemberUidList[index]))
         newMemberUidListString = "\n".join(tempList)
         newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        self.printStepMsg("保存新存档文件：" + newMemberUidListFilePath, self.isShowError, self.isLog)
+        self.printStepMsg(u"保存新存档文件：" + newMemberUidListFilePath)
         newMemberUidListFile = open(newMemberUidListFilePath, 'w')
         newMemberUidListFile.write(newMemberUidListString)
         newMemberUidListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张", self.isShowError, self.isLog)
+        self.printStepMsg(u"存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(allImageCount) + u"张")
 
 if __name__ == '__main__':
     downloadImage().main()
