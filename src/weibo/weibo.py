@@ -19,13 +19,13 @@ import time
 class weibo(common.Tool):
     
     def trace(self, msg):
-        super(weibo, self).trace(msg, self.isShowError, self.traceLogPath, self.isShowError, self.isLog)
+        super(weibo, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(weibo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath, self.isShowError, self.isLog)
+        super(weibo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(weibo, self).printStepMsg(msg, self.isShowError, self.stepLogPath, self.isShowError, self.isLog)
+        super(weibo, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
         
     def visit(self, url):
         tempPage = self.doGet(url)
