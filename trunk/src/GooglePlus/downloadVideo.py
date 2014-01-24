@@ -16,13 +16,13 @@ import time
 class downloadVideo(common.Tool):
 
     def trace(self, msg):
-        super(downloadVideo, self).trace(msg, self.isShowError, self.traceLogPath, self.isShowError, self.isLog)
+        super(downloadVideo, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(downloadVideo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath, self.isShowError, self.isLog)
+        super(downloadVideo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(downloadVideo, self).printStepMsg(msg, self.isShowError, self.stepLogPath, self.isShowError, self.isLog)
+        super(downloadVideo, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
         
     def __init__(self):
         processPath = os.getcwd()
