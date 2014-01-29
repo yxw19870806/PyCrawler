@@ -30,15 +30,15 @@ class RenameVideo(common.Tool):
         # 配置文件获取配置
         self.videoFilePath = "Z:\\G\\" # 视频源目录，保存刚下载来的视频
         self.destRootPath = "Z:\\G+\\video\\"   # 视频目标目录，保存已重命名的视频
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
+        self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", processPath + "\\idlist.txt", 1, processPath + "\\")
         self.printMsg("config init succeed")
         
     def main(self):
         startTime = time.time()
         # 寻找idlist，如果没有结束进程
         userIdList = {}
-        if os.path.exists(self.memberUIdListFilePath):
-            userListFile = open(self.memberUIdListFilePath, 'r')
+        if os.path.exists(self.userIdListFilePath):
+            userListFile = open(self.userIdListFilePath, 'r')
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
@@ -47,7 +47,7 @@ class RenameVideo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("Not exists member id list file: " + self.memberUIdListFilePath + ", process stop!")
+            self.printErrorMsg("Not exists user id list file: " + self.userIdListFilePath + ", process stop!")
             sys.exit()
         
         userList = {}
