@@ -164,8 +164,8 @@ class downloadImage(common.Tool):
         allImageCount = 0
         # 循环下载每个id
         for userId in sorted(userIdList.keys()):
-            userName = newMemberUidList[userId][1]
-            self.printStepMsg(u"UID: " + str(userId) + u", 名字: " + userName.decode("GBK"))
+            userName = newMemberUidList[userId][1].decode("GBK")
+            self.printStepMsg(u"UID: " + str(userId) + u", 名字: " + userName)
             # 初始化数据
             pageCount = 0
             imageCount = 1
@@ -272,7 +272,7 @@ class downloadImage(common.Tool):
                     messageIndex += 1
                 pageCount += 100
                 
-            self.printStepMsg(userName.decode("GBK") + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片")
+            self.printStepMsg(userName + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片")
             # 检查下载图片是否大于总数量的一半，对上一次记录的图片正好被删除或其他原因导致下载了全部图片做一个保护
             newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
@@ -308,7 +308,7 @@ class downloadImage(common.Tool):
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userName.decode("GBK") + u"图片数量异常，请手动检查")
+                self.printErrorMsg(userName + u"图片数量异常，请手动检查")
 
             # 保存最后的信息
             newMemberUidListFile = open(newMemberUidListFilePath, 'a')
