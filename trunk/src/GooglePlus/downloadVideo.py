@@ -56,7 +56,7 @@ class downloadVideo(common.Tool):
         else:
             self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.memberUIdListFilePath = self.getConfig(config, "MEMBER_UID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
         self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", "\\info\\get_result.html", 3)
         self.printMsg(u"配置文件读取完成")
         
@@ -108,8 +108,8 @@ class downloadVideo(common.Tool):
             self.proxy(self.proxyIp, self.proxyPort, 'https')
         # 寻找idlist，如果没有结束进程
         userIdList = {}
-        if os.path.exists(self.memberUIdListFilePath):
-            userListFile = open(self.memberUIdListFilePath, 'r')
+        if os.path.exists(self.userIdListFilePath):
+            userListFile = open(self.userIdListFilePath, 'r')
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
@@ -120,40 +120,40 @@ class downloadVideo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg(u"用户ID存档文件: " + self.memberUIdListFilePath + u"不存在，程序结束！")
+            self.printErrorMsg(u"用户ID存档文件: " + self.userIdListFilePath + u"不存在，程序结束！")
             self.processExit()
-        newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
-        newMemberUidListFile.close()
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFile = open(newUserIdListFilePath, 'w')
+        newUserIdListFile.close()
         # 复制处理存档文件
-        newMemberUidList = copy.deepcopy(userIdList)
-        for newUserId in newMemberUidList:
+        newUserIdList = copy.deepcopy(userIdList)
+        for newUserId in newUserIdList:
             # 如果没有名字，则名字用uid代替
-            if len(newMemberUidList[newUserId]) < 2:
-                newMemberUidList[newUserId].append(newMemberUidList[newUserId][0])
+            if len(newUserIdList[newUserId]) < 2:
+                newUserIdList[newUserId].append(newUserIdList[newUserId][0])
             # image count
-            if len(newMemberUidList[newUserId]) < 3:
-                newMemberUidList[newUserId].append("0")
+            if len(newUserIdList[newUserId]) < 3:
+                newUserIdList[newUserId].append("0")
             # image URL
-            if len(newMemberUidList[newUserId]) < 4:
-                newMemberUidList[newUserId].append("")
+            if len(newUserIdList[newUserId]) < 4:
+                newUserIdList[newUserId].append("")
             # video count
-            if len(newMemberUidList[newUserId]) < 5:
-                newMemberUidList[newUserId].append("0")
+            if len(newUserIdList[newUserId]) < 5:
+                newUserIdList[newUserId].append("0")
             # video token
-            if len(newMemberUidList[newUserId]) < 6:
-                newMemberUidList[newUserId].append("")
+            if len(newUserIdList[newUserId]) < 6:
+                newUserIdList[newUserId].append("")
             else:
-                newMemberUidList[newUserId][5] = ""
-            # 处理member 队伍信息
-            if len(newMemberUidList[newUserId]) < 7:
-                newMemberUidList[newUserId].append("")
+                newUserIdList[newUserId][5] = ""
+            # 处理成员队伍信息
+            if len(newUserIdList[newUserId]) < 7:
+                newUserIdList[newUserId].append("")
                 
         allVideoCount = 0
         # 循环获取每个id
         for userId in userIdList:
-            userName = newMemberUidList[userId][1]
-            self.printStepMsg(u"UID: " + str(userId) + u", 名字: " + userName.decode("GBK"))
+            userName = newUserIdList[userId][1]
+            self.printStepMsg("ID: " + str(userId) + u", 名字: " + userName.decode("GBK"))
             # 初始化数据
             videoCount = 0
             videoUrlList = []
@@ -170,8 +170,8 @@ class downloadVideo(common.Tool):
                     tokenStart = videoUrl.find("?token=") + 7
                     videoToken = videoUrl[tokenStart:tokenStart + 20]
                     # 将第一个视频的token保存到新id list中
-                    if newMemberUidList[userId][5] == "":
-                        newMemberUidList[userId][5] = videoToken
+                    if newUserIdList[userId][5] == "":
+                        newUserIdList[userId][5] = videoToken
                     if len(userIdList[userId]) >= 6:
                         if videoToken == userIdList[userId][5]:
                             break
@@ -192,7 +192,7 @@ class downloadVideo(common.Tool):
                     index = int(userIdList[userId][4])
                 except:
                     pass
-                newMemberUidList[userId][4] = str(int(newMemberUidList[userId][4]) + videoCount)
+                newUserIdList[userId][4] = str(int(newUserIdList[userId][4]) + videoCount)
                 resultFile = open(self.resultFilePath, 'a')
                 while videoUrlList != []:
                     videoUrl = videoUrlList.pop()
@@ -200,21 +200,21 @@ class downloadVideo(common.Tool):
                     resultFile.writelines("<a href=" + videoUrl + ">" + str(userName + "_" + "%03d" % index) + "</a><br>\n")
                 resultFile.close()
             # 保存最后的信息
-            newMemberUidListFile = open(newMemberUidListFilePath, 'a')
-            newMemberUidListFile.write("\t".join(newMemberUidList[userId]) + "\n")
-            newMemberUidListFile.close()
+            newUserIdListFile = open(newUserIdListFilePath, 'a')
+            newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
+            newUserIdListFile.close()
 
         # 排序并保存新的idList.txt
         tmpList = []
-        tmpUserIdList = sorted(newMemberUidList.keys())
+        tmpUserIdList = sorted(newUserIdList.keys())
         for index in tmpUserIdList:
-            tmpList.append("\t".join(newMemberUidList[index]))
-        newMemberUidListString = "\n".join(tmpList)
-        newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        self.printStepMsg(u"保存新存档文件：" + newMemberUidListFilePath)
-        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
-        newMemberUidListFile.write(newMemberUidListString)
-        newMemberUidListFile.close()
+            tmpList.append("\t".join(newUserIdList[index]))
+        newUserIdListString = "\n".join(tmpList)
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        self.printStepMsg(u"保存新存档文件：" + newUserIdListFilePath)
+        newUserIdListFile = open(newUserIdListFilePath, 'w')
+        newUserIdListFile.write(newUserIdListString)
+        newUserIdListFile.close()
         
         stopTime = time.time()
         self.printStepMsg(u"存档文件中所有用户视频地址已成功获取，耗时" + str(int(stopTime - startTime)) + u"秒，共计视频地址" + str(allVideoCount) + "个")
