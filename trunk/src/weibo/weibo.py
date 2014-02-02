@@ -322,7 +322,7 @@ class weibo(common.Tool):
                 self.printErrorMsg(userName + u"图片数量" + str(imageCount) + u"张，小于相册图片数量" + str(totalImageCount) + u"张，请手动检查")
 
             # 保存最后的信息
-            newUserIdListFile = codecs.open(newUserIdList, 'a', 'GBK')
+            newUserIdListFile = codecs.open(newUserIdListFilePath, 'a', 'GBK')
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
             newUserIdListFile.close()
 
