@@ -31,7 +31,7 @@ class weibo(common.Tool):
         
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
+        configFile = open(processPath + "\\..\\common\\config.ini", "r")
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -114,8 +114,8 @@ class weibo(common.Tool):
         allImageCount = 0
         for pageNumber in range(1, 60):
             page = self.doGet(url % pageNumber)
-            nameStart = page.find('名前 /')
-            nameStop = page.find('(', nameStart)
+            nameStart = page.find("名前 /")
+            nameStop = page.find("(", nameStart)
             name = page[nameStart + 11:nameStop].replace(" ", "").replace("\n", "")
             self.trace(u"页面地址:" + url % pageNumber)
             self.printMsg(u"名字：" + name)
@@ -130,7 +130,7 @@ class weibo(common.Tool):
                 break
             imageStart = page.find("<span>")
             while imageStart != -1:
-                imageStop = page.find('</span>', imageStart)
+                imageStop = page.find("</span>", imageStart)
                 imageUrlPath = page[imageStart + 6:imageStop]
                 imgByte = self.doGet(imageUrl % imageUrlPath)
                 if imgByte:
@@ -144,5 +144,5 @@ class weibo(common.Tool):
                 imageStart = page.find("<span>", imageStart + 1)
             allImageCount += imageCount
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     weibo().main()
