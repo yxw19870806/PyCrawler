@@ -26,7 +26,7 @@ class downloadVideo(common.Tool):
         
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
+        configFile = open(processPath + "\\..\\common\\config.ini", "r")
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -51,8 +51,8 @@ class downloadVideo(common.Tool):
         # 文件路径
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
-            self.traceLogPath = ''
-            self.stepLogPath = ''
+            self.traceLogPath = ""
+            self.stepLogPath = ""
         else:
             self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
@@ -101,15 +101,15 @@ class downloadVideo(common.Tool):
                 except Exception, e:
                     self.printErrorMsg(str(e))
                     pass
-                resultFile = open(self.resultFilePath, 'w')
+                resultFile = open(self.resultFilePath, "w")
                 resultFile.close()
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort, 'https')
+            self.proxy(self.proxyIp, self.proxyPort, "https")
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
-            userListFile = open(self.userIdListFilePath, 'r')
+            userListFile = open(self.userIdListFilePath, "r")
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
@@ -122,8 +122,8 @@ class downloadVideo(common.Tool):
         else:
             self.printErrorMsg(u"用户ID存档文件: " + self.userIdListFilePath + u"不存在，程序结束！")
             self.processExit()
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        newUserIdListFile = open(newUserIdListFilePath, 'w')
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.close()
         # 复制处理存档文件
         newUserIdList = copy.deepcopy(userIdList)
@@ -157,14 +157,14 @@ class downloadVideo(common.Tool):
             # 初始化数据
             videoCount = 0
             videoUrlList = []
-            videoAlbumUrl = 'https://plus.google.com/' + userId + '/videos'
+            videoAlbumUrl = "https://plus.google.com/" + userId + "/videos"
             self.trace(u"视频专辑地址：" + videoAlbumUrl)
             videoAlbumPage = self.doGet(videoAlbumUrl)
             if videoAlbumPage:
-                videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token')
+                videoUrlIndex = videoAlbumPage.find("&quot;https://video.googleusercontent.com/?token")
                 while videoUrlIndex != -1:
                     videoUrlStart = videoAlbumPage.find("http", videoUrlIndex)
-                    videoUrlStop = videoAlbumPage.find('&quot;', videoUrlStart)
+                    videoUrlStop = videoAlbumPage.find("&quot;", videoUrlStart)
                     videoUrl = videoAlbumPage[videoUrlStart:videoUrlStop].replace("\u003d", "=")
                     # video token 取前20位
                     tokenStart = videoUrl.find("?token=") + 7
@@ -177,11 +177,11 @@ class downloadVideo(common.Tool):
                             break
                     # 判断是否重复
                     if videoUrl in videoUrlList:
-                        videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
+                        videoUrlIndex = videoAlbumPage.find("&quot;https://video.googleusercontent.com/?token", videoUrlIndex + 1)
                         continue
                     videoUrlList.append(videoUrl)
                     videoCount += 1
-                    videoUrlIndex = videoAlbumPage.find('&quot;https://video.googleusercontent.com/?token', videoUrlIndex + 1)
+                    videoUrlIndex = videoAlbumPage.find("&quot;https://video.googleusercontent.com/?token", videoUrlIndex + 1)
             else:
                 self.printErrorMsg(u"无法获取视频首页: " + videoAlbumUrl)
             # 生成下载视频url的文件
@@ -193,14 +193,14 @@ class downloadVideo(common.Tool):
                 except:
                     pass
                 newUserIdList[userId][4] = str(int(newUserIdList[userId][4]) + videoCount)
-                resultFile = open(self.resultFilePath, 'a')
+                resultFile = open(self.resultFilePath, "a")
                 while videoUrlList != []:
                     videoUrl = videoUrlList.pop()
                     index += 1
                     resultFile.writelines("<a href=" + videoUrl + ">" + str(userName + "_" + "%03d" % index) + "</a><br>\n")
                 resultFile.close()
             # 保存最后的信息
-            newUserIdListFile = open(newUserIdListFilePath, 'a')
+            newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
             newUserIdListFile.close()
 
@@ -210,14 +210,14 @@ class downloadVideo(common.Tool):
         for index in tmpUserIdList:
             tmpList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tmpList)
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         self.printStepMsg(u"保存新存档文件：" + newUserIdListFilePath)
-        newUserIdListFile = open(newUserIdListFilePath, 'w')
+        newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
         self.printStepMsg(u"存档文件中所有用户视频地址已成功获取，耗时" + str(int(stopTime - startTime)) + u"秒，共计视频地址" + str(allVideoCount) + "个")
         
-if __name__ == '__main__':
+if __name__ == "__main__":
     downloadVideo().main()
