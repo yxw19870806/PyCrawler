@@ -39,7 +39,7 @@ class shinoda(common.Tool):
                            
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
+        configFile = open(processPath + "\\..\\common\\config.ini", "r")
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -66,8 +66,8 @@ class shinoda(common.Tool):
         # 文件路径
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
-            self.traceLogPath = ''
-            self.stepLogPath = ''
+            self.traceLogPath = ""
+            self.stepLogPath = ""
         else:
             self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
@@ -158,7 +158,7 @@ class shinoda(common.Tool):
         lastImageUrl = ""
         imageStartIndex = 0
         if os.path.exists(saveFilePath):
-            saveFile = open(saveFilePath, 'r')
+            saveFile = open(saveFilePath, "r")
             saveInfo = saveFile.read()
             saveFile.close()
             saveList = saveInfo.split("\t")
@@ -183,7 +183,7 @@ class shinoda(common.Tool):
             else:
                 indexUrl = url % ("")
                 indexPage = self.doGet(indexUrl)
-            self.trace(u"博客页面地址:" + indexUrl, self.isShowError, self.traceLogPath)
+            self.trace(u"博客页面地址：" + indexUrl)
             if indexPage:
                 # old image:
                 imageIndex = 0
@@ -194,7 +194,7 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex) 
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace(u"图片地址:" + imageUrl, self.isShowError, self.traceLogPath)
+                    self.trace(u"图片地址：" + imageUrl)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
@@ -211,10 +211,10 @@ class shinoda(common.Tool):
                 # new image:
                 imgTagStart = 0
                 while True:
-                    imgTagStart = indexPage.find('<img ', imgTagStart)
+                    imgTagStart = indexPage.find("<img ", imgTagStart)
                     if imgTagStart == -1:
                         break
-                    imgTagStop = indexPage.find('/>', imgTagStart)
+                    imgTagStop = indexPage.find("/>", imgTagStart)
                     imageIndex = indexPage.find('src="http://blog.mariko-shinoda.net', imgTagStart, imgTagStop)
                     if imageIndex == -1:
                         imgTagStart += 1  
@@ -222,7 +222,7 @@ class shinoda(common.Tool):
                     imageStart = indexPage.find("http", imageIndex)
                     imageStop = indexPage.find('"', imageStart)
                     imageUrl = indexPage[imageStart:imageStop]
-                    self.trace(u"图片地址:" + imageUrl, self.isShowError, self.traceLogPath)
+                    self.trace(u"图片地址：" + imageUrl)
                     if imageUrl.find("data") == -1:
                         if newLastImageUrl == "":
                             newLastImageUrl = imageUrl
@@ -256,14 +256,14 @@ class shinoda(common.Tool):
             shutil.rmtree(self.imageTempPath, True)
             
         # 保存新的存档文件
-        newSaveFilePath = os.getcwd() + "\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
+        newSaveFilePath = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
         self.printStepMsg(u"保存新存档文件: " + newSaveFilePath)
-        newSaveFile = open(newSaveFilePath, 'w')
+        newSaveFile = open(newSaveFilePath, "w")
         newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl)
         newSaveFile.close()
             
         stopTime = time.time()
         self.printStepMsg(u"成功下载最新图片，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(imageCount - 1) + u"张")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     shinoda().main()
