@@ -14,20 +14,20 @@ import os
 import shutil
 import time
 
-class downloadImage(common.Tool):
+class instagram(common.Tool):
     
     def trace(self, msg):
-        super(downloadImage, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(instagram, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(downloadImage, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(instagram, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(downloadImage, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+        super(instagram, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
          
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
+        configFile = open(processPath + "\\..\\common\\config.ini", "r")
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -54,8 +54,8 @@ class downloadImage(common.Tool):
         # 文件路径
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
-            self.traceLogPath = ''
-            self.stepLogPath = ''
+            self.traceLogPath = ""
+            self.stepLogPath = ""
         else:
             self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
@@ -119,7 +119,7 @@ class downloadImage(common.Tool):
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
-            userListFile = open(self.userIdListFilePath, 'r')
+            userListFile = open(self.userIdListFilePath, "r")
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
@@ -133,8 +133,8 @@ class downloadImage(common.Tool):
             self.printErrorMsg(u"用户ID存档文件: " + self.userIdListFilePath + u"不存在，程序结束！")
             self.processExit()
         # 创建临时存档文件
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        newUserIdListFile = open(newUserIdListFilePath, 'w')
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.close()
         # 复制处理存档文件
         newUserIdList = copy.deepcopy(userIdList)
@@ -274,7 +274,7 @@ class downloadImage(common.Tool):
                 self.printErrorMsg(userAccount + u"图片数量异常，请手动检查")
 
             # 保存最后的信息
-            newUserIdListFile = open(newUserIdListFilePath, 'a')
+            newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userAccount]) + "\n")
             newUserIdListFile.close()
 
@@ -284,14 +284,14 @@ class downloadImage(common.Tool):
         for index in tempUserIdList:
             tempList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tempList)
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         self.printStepMsg(u"保存新存档文件：" + newUserIdListFilePath)
-        newUserIdListFile = open(newUserIdListFilePath, 'w')
+        newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
         self.printStepMsg(u"存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(allImageCount) + u"张")
 
-if __name__ == '__main__':
-    downloadImage().main()
+if __name__ == "__main__":
+    instagram().main()
