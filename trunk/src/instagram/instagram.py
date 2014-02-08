@@ -259,7 +259,7 @@ class downloadImage(common.Tool):
                         self.processExit()
                     # 倒叙排列
                     if len(userIdList[userAccount]) >= 3:
-                        count = int(userIdList[userAccount][2]) + 1
+                        count = int(userIdList[userAccount][1]) + 1
                     else:
                         count = 1
                     for fileName in imageList:
