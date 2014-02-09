@@ -84,12 +84,12 @@ class shinoda(common.Tool):
             if not self.createDir(stepLogDir):
                 self.printErrorMsg(u"创建步骤日志目录：" + stepLogDir + u" 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"步骤日志目录不存在，创建文件夹: " + stepLogDir)
+            self.printStepMsg(u"步骤日志目录不存在，创建文件夹：" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
                 self.printErrorMsg(u"创建调试日志目录：" + traceLogDir + u" 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"调试日志目录不存在，创建文件夹: " + traceLogDir)
+            self.printStepMsg(u"调试日志目录不存在，创建文件夹：" + traceLogDir)
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.createDir(errorLogDir):
             self.printErrorMsg(u"创建错误日志目录：" + errorLogDir + u" 失败，程序结束！")
