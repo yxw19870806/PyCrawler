@@ -260,16 +260,19 @@ class weibo(common.Tool):
                         self.printErrorMsg(u"在JSON数据：" + str(imageInfo) + u" 中没有找到'pic_name'字段, user id: " + str(userId))
                     self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
                     imgByte = self.doGet(imageUrl)
+                    fileType = imageUrl.split(".")[-1]
+                    imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                     if imgByte:
-                        fileType = imageUrl.split(".")[-1]
-                        filename = str("%04d" % imageCount)
-                        imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
                         imageFile.write(imgByte)
-                        imageFile.close()
                         self.printStepMsg(u"下载成功")
-                        imageCount += 1
                     else:
                         self.printErrorMsg(u"下载图片失败，用户ID：" + str(userId) + u"，图片地址: " + imageUrl)
+                    imageFile.close()
+                    imageCount += 1
+                    # 达到配置文件中的下载数量，结束
+                    if self.getImageCount > 0 and imageCount > self.getImageCount:
+                        isPass = True
+                        break
                 if isPass:
                     break
                 if totalImageCount / self.IMAGE_COUNT_PER_PAGE > pageCount - 1:
