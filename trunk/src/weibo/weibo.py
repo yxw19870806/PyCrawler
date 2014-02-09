@@ -123,7 +123,7 @@ class weibo(common.Tool):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    input = raw_input(u"图片保存目录：" + self.imageDownloadPath + u" 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input(self.getTime() + u" 图片保存目录：" + self.imageDownloadPath + u" 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -137,6 +137,7 @@ class weibo(common.Tool):
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
+                    shutil.rmtree(self.imageDownloadPath, True)
                     time.sleep(5)
             else:
                 self.printStepMsg(u"图片保存目录: " + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
