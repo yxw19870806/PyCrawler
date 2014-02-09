@@ -252,23 +252,22 @@ class downloadImage(common.Tool):
                         tempList[-2] = "s0"
                         imageUrl = "/".join(tempList)
                         # 文件类型
-                        fileType = imageUrl.split(".")[-1]
                         imgByte = self.doGet(imageUrl)
+                        
+                        fileType = imageUrl.split(".")[-1]
                         if imgByte:
-                            # 保存图片
-                            filename = str("%04d" % imageCount)
-                            imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
+                            imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                             self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
                             imageFile.write(imgByte)
-                            imageFile.close()
                             self.printStepMsg(u"下载成功")
-                            imageCount += 1
-                            # 达到配置文件中的下载数量，结束
-                            if self.getImageCount > 0 and imageCount > self.getImageCount:
-                                isPass = True
-                                break
                         else:
                             self.printErrorMsg(u"获取图片信息失败：" + str(userId) + ": " + imageUrl)
+                        imageFile.close()
+                        imageCount += 1
+                        # 达到配置文件中的下载数量，结束
+                        if self.getImageCount > 0 and imageCount > self.getImageCount:
+                            isPass = True
+                            break
                         flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
                 pageCount += 100
