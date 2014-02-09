@@ -108,17 +108,17 @@ class weibo(common.Tool):
             if not self.createDir(stepLogDir):
                 self.printErrorMsg(u"创建步骤日志目录：" + stepLogDir + u" 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"步骤日志目录不存在，创建文件夹: " + stepLogDir)
+            self.printStepMsg(u"步骤日志目录不存在，创建文件夹：" + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not self.createDir(errorLogDir):
                 self.printErrorMsg(u"创建错误日志目录：" + errorLogDir + u" 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"错误日志目录不存在，创建文件夹: " + errorLogDir)
+            self.printStepMsg(u"错误日志目录不存在，创建文件夹：" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
                 self.printErrorMsg(u"创建调试日志目录：" + traceLogDir + u" 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"调试日志目录不存在，创建文件夹: " + traceLogDir)
+            self.printStepMsg(u"调试日志目录不存在，创建文件夹：" + traceLogDir)
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
@@ -133,19 +133,19 @@ class weibo(common.Tool):
                     except Exception, e:
                         self.printErrorMsg(str(e))
                         pass
-                self.printStepMsg(u"删除图片保存目录: " + self.imageDownloadPath)
+                self.printStepMsg(u"删除图片保存目录：" + self.imageDownloadPath)
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
                     shutil.rmtree(self.imageDownloadPath, True)
                     time.sleep(5)
             else:
-                self.printStepMsg(u"图片保存目录: " + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
+                self.printStepMsg(u"图片保存目录：" + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
             self.printErrorMsg(u"创建图片下载目录：" + self.imageDownloadPath + u" 失败，程序结束！")
             self.processExit()
-        self.printStepMsg(u"创建图片保存目录: " + self.imageDownloadPath)
+        self.printStepMsg(u"创建图片保存目录：" + self.imageDownloadPath)
         # 设置代理
         if self.isProxy == 1:
             self.proxy(self.proxyIp, self.proxyPort, "http")
@@ -165,7 +165,7 @@ class weibo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg(u"用户ID存档文件: " + self.userIdListFilePath + u"不存在，程序结束！")
+            self.printErrorMsg(u"用户ID存档文件：" + self.userIdListFilePath + u"不存在，程序结束！")
             self.processExit()
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = codecs.open(newUserIdListFilePath, 'w', 'GBK')
@@ -266,7 +266,7 @@ class weibo(common.Tool):
                         imageFile.write(imgByte)
                         self.printStepMsg(u"下载成功")
                     else:
-                        self.printErrorMsg(u"下载图片失败，用户ID：" + str(userId) + u"，图片地址: " + imageUrl)
+                        self.printErrorMsg(u"下载图片失败，用户ID：" + str(userId) + u"，图片地址：" + imageUrl)
                     imageFile.close()
                     imageCount += 1
                     # 达到配置文件中的下载数量，结束
@@ -298,12 +298,12 @@ class weibo(common.Tool):
                     destPath = self.imageDownloadPath + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg(u"图片保存目录: " + destPath + u" 已存在，删除中")
+                            self.printStepMsg(u"图片保存目录：" + destPath + u" 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg(u"图片保存目录: " + destPath + u"已存在相同名字的文件，自动删除")
+                            self.printStepMsg(u"图片保存目录：" + destPath + u"已存在相同名字的文件，自动删除")
                             os.remove(destPath)
-                    self.printStepMsg(u"创建图片保存目录: " + destPath)
+                    self.printStepMsg(u"创建图片保存目录：" + destPath)
                     if not self.createDir(destPath):
                         self.printErrorMsg(u"创建图片保存目录： " + destPath + u" 失败，程序结束！")
                         self.processExit()
