@@ -218,7 +218,7 @@ class shinoda():
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
@@ -230,7 +230,7 @@ class shinoda():
                 if not self.createDir(traceLogDir):
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在，创建文件夹: " + traceLogDir)
+                self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
         # 图片排序后的保存目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
