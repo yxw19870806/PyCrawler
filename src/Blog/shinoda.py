@@ -115,6 +115,7 @@ class shinoda(common.Tool):
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
+                    shutil.rmtree(self.imageDownloadPath, True)
                     time.sleep(5)
             else:
                 self.printStepMsg(u"图片保存目录：" + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
@@ -142,6 +143,7 @@ class shinoda(common.Tool):
                 shutil.rmtree(self.imageTempPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageTempPath):
+                    shutil.rmtree(self.imageTempPath, True)
                     time.sleep(5)
             else:
                 self.printStepMsg(u"图片下载临时目录：" + self.imageTempPath + u"已存在相同名字的文件，自动删除")
