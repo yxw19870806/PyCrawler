@@ -202,7 +202,7 @@ class downloadVideo():
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):

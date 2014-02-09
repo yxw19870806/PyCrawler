@@ -206,19 +206,19 @@ class downloadImage():
                 if not self.createDir(stepLogDir):
                     self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("步骤日志目录不存在，创建文件夹: " + stepLogDir)
+                self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not os.path.exists(errorLogDir):
                 if not self.createDir(errorLogDir):
                     self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("错误日志目录不存在，创建文件夹: " + errorLogDir)
+                self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
                 if not self.createDir(traceLogDir):
                     self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                     self.processExit()
-                self.printStepMsg("调试日志目录不存在，创建文件夹: " + traceLogDir)
+                self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
         # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
@@ -234,16 +234,16 @@ class downloadImage():
                             self.processExit()
                     except:
                         pass
-                self.printStepMsg("删除图片下载目录: " + self.imageDownloadPath)
+                self.printStepMsg("删除图片下载目录：" + self.imageDownloadPath)
                 # 删除目录
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
                     time.sleep(5)
             else:
-                self.printStepMsg("图片下载目录: " + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
+                self.printStepMsg("图片下载目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("创建图片下载目录: " + self.imageDownloadPath)
+        self.printStepMsg("创建图片下载目录：" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
             self.printErrorMsg("创建图片下载目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
@@ -416,12 +416,12 @@ class downloadImage():
                     destPath = self.imageDownloadPath + "\\" + newMemberUidList[userId][6] + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg("图片保存目录: " + destPath + " 已存在，删除中")
+                            self.printStepMsg("图片保存目录：" + destPath + " 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg("图片保存目录: " + destPath + "已存在相同名字的文件，自动删除中")
+                            self.printStepMsg("图片保存目录：" + destPath + "已存在相同名字的文件，自动删除中")
                             os.remove(destPath)
-                    self.printStepMsg("创建图片保存目录: " + destPath)
+                    self.printStepMsg("创建图片保存目录：" + destPath)
                     if not self.createDir(destPath):
                         self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
                         self.processExit()
