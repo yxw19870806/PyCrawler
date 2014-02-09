@@ -258,8 +258,8 @@ class Tool(object):
                         return True
                 except Exception, e:
                     self.printMsg(str(e))
-                    time.sleep(5)
                     traceback.print_exc()
+                    time.sleep(5)
                 count += 1
         return True
     
