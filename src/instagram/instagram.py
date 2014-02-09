@@ -224,19 +224,24 @@ class instagram(common.Tool):
                     imageUrl = photoInfo["images"]["standard_resolution"]["url"]
                     self.trace(u"image URL:" + imageUrl)
                     imgByte = self.doGet(imageUrl)
+                    # 文件类型
+                    fileType = imageUrl.split(".")[-1]
+                    # 保存图片
+                    filename = str("%04d" % imageCount)
+                    imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
                     if imgByte:
-                        # 文件类型
-                        fileType = imageUrl.split(".")[-1]
-                        # 保存图片
-                        filename = str("%04d" % imageCount)
-                        imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
                         self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
                         imageFile.write(imgByte)
-                        imageFile.close()
                         self.printStepMsg(u"下载成功")
-                        imageCount += 1
                     else:
-                        self.printErrorMsg(u"获取图片信息失败：" + str(userAccount) + ": " + imageUrl)
+                        self.printErrorMsg(u"获取图片" + str(imageCount) + "信息失败：" + str(userAccount) + "，" + imageUrl)
+                    imageFile.close()
+                    imageCount += 1
+                    # 达到配置文件中的下载数量，结束
+                    if self.getImageCount > 0 and imageCount > self.getImageCount:
+                        isPass = True
+                        isError = False
+                        break
             self.printStepMsg(userAccount + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             allImageCount += imageCount - 1
@@ -246,7 +251,7 @@ class instagram(common.Tool):
                 imageList = sorted(os.listdir(imagePath), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
-                    destPath = self.imageDownloadPath + "\\"  + userAccount
+                    destPath = self.imageDownloadPath + "\\" + userAccount
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
                             self.printStepMsg(u"图片保存目录: " + destPath + u" 已存在，删除中")

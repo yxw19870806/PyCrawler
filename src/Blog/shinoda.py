@@ -27,15 +27,15 @@ class shinoda(common.Tool):
 
     def download(self, imageUrl, imagePath, imageCount):
         imgByte = self.doGet(imageUrl)
+        fileType = imageUrl.split(".")[-1]
+        imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "." + fileType, "wb")
         if imgByte:
-            fileType = imageUrl.split(".")[-1]
-            imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "." + fileType, "wb")
             self.printMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
             imageFile.write(imgByte)
-            imageFile.close()
             self.printMsg(u"下载成功")
         else:
             self.printErrorMsg(u"获取图片信息失败：" + imageUrl)
+        imageFile.close()
                            
     def __init__(self):
         processPath = os.getcwd()
@@ -176,9 +176,6 @@ class shinoda(common.Tool):
         while True:
             if isOver:
                 break
-            # 达到配置文件中的下载数量，结束
-            if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
-                break
             if pageIndex > 1:
                 indexUrl = url % ("_" + str(pageIndex))
                 indexPage = self.doGet(indexUrl)
@@ -241,6 +238,9 @@ class shinoda(common.Tool):
             else:
                 break
             pageIndex += 1
+            # 达到配置文件中的下载数量，结束
+            if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
+                break
         
         self.printStepMsg(u"下载完毕")
         
