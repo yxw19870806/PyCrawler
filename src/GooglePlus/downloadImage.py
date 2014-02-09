@@ -90,7 +90,7 @@ class downloadImage(common.Tool):
                 isDelete = False
                 while not isDelete:
                     # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input(u"图片下载目录：" + self.imageDownloadPath + u" 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
+                    input = raw_input(self.getTime() + u" 图片下载目录：" + self.imageDownloadPath + u" 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
