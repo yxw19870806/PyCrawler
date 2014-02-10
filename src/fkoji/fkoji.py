@@ -147,15 +147,21 @@ class fkoji(common.Tool):
         saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
         lastImageUrl = ""
         imageStartIndex = 0
+        userIdList = {}
         if os.path.exists(saveFilePath):
             saveFile = open(saveFilePath, "r")
-            saveInfo = saveFile.read()
+            lines = saveFile.readlines()
             saveFile.close()
-            saveList = saveInfo.split("\t")
-            if len(saveList) >= 2:
-                imageStartIndex = int(saveList[0])
-                lastImageUrl = saveList[1]
-        
+            if len(lines) >= 1:
+                info = lines[0].split("\t")
+                if len(info) >= 2:
+                    imageStartIndex = int(info[0])
+                    lastImageUrl = info[1].replace("\n", "")
+                for line in lines[1:]:
+                    line = line.lstrip().rstrip().replace(" ", "")
+                    info = line.split("\t")
+                    if len(info) >= 2:
+                        userIdList[info[0]] = info[1]
         # 下载
         url = "http://jigadori.fkoji.com/?p=%s"
         pageIndex = 1
@@ -168,6 +174,8 @@ class fkoji(common.Tool):
         else:
             imagePath = self.imageDownloadPath
         while True:
+            if isOver:
+                break
             # 达到配置文件中的下载数量，结束
             if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
                 break
@@ -196,7 +204,8 @@ class fkoji(common.Tool):
                     elif isinstance(subTag, BeautifulSoup.Tag):
                         subTagAttrs = dict(subTag.attrs)
                         if subTagAttrs.has_key("src") and subTagAttrs.has_key("alt"):
-                            imageUrl = subTagAttrs["src"]
+                            imageUrl = str(subTagAttrs["src"]).replace(" ", "")
+                            lastImageUrl = lastImageUrl.replace(" ", "")
                             if newLastImageUrl == "":
                                 newLastImageUrl = imageUrl
                             # 检查是否已下载到前一次的图片
@@ -219,18 +228,29 @@ class fkoji(common.Tool):
                     imageFile.write(imgByte)
                     self.printMsg(u"下载成功")
                 else:
-                    self.printErrorMsg(u"获取图片" + str(imageCount) + "信息失败："  + imageUrl)
+                    self.printErrorMsg(u"获取图片" + str(imageCount) + "信息失败：" + imageUrl)
                 imageFile.close()
                 imageCount += 1
             pageIndex += 1   
         self.printStepMsg(u"下载完毕")
-        
+
         # 排序复制到保存目录
         if self.isSort == 1:
+            isCheckOk = False
+            while not isCheckOk:
+                # 等待手动检测所有图片结束
+                input = raw_input(self.getTime() + u" 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
+                try:
+                    input = input.lower()
+                    if input in ["y", "yes"]:
+                        isDelete = True
+                    elif input in ["n", "no"]:
+                        self.processExit()
+                except:
+                    pass
             if not self.createDir(self.imageDownloadPath + "\\all"):
                 self.printErrorMsg(u"创建图片保存目录：" + self.imageDownloadPath + "\\all" + u" 失败，程序结束！")
                 self.processExit()
-            allImageCount = 0
             for fileName in sorted(os.listdir(self.imageTempPath), reverse=True):
                 imageStartIndex += 1
                 imagePath = self.imageTempPath + "\\" + fileName
@@ -241,15 +261,18 @@ class fkoji(common.Tool):
                 shutil.copyfile(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
                 # 单个
                 eachUserPath = self.imageDownloadPath + "\\" + userId
-                if not os.path.exists(eachUserPath):
-                    if not self.createDir(eachUserPath):
-                        self.printErrorMsg(u"创建单个图片保存目录：" + stepLogDir + u" 失败，程序结束！")
-                        self.processExit()
-                    eachUserImageCount = 1
+                if userIdList.has_key(userId):
+                    userIdList[userId] += 1
                 else:
-                    eachUserImageCount = len(os.listdir(eachUserPath)) + 1
-                shutil.copyfile(imagePath, eachUserPath + "\\" + str("%05d" % eachUserImageCount) + "." + fileType)
-                allImageCount += 1
+                    userIdList[userId] = 1
+#                 if not os.path.exists(eachUserPath):
+#                     if not self.createDir(eachUserPath):
+#                         self.printErrorMsg(u"创建单个图片保存目录：" + stepLogDir + u" 失败，程序结束！")
+#                         self.processExit()
+#                     eachUserImageCount = 1
+#                 else:
+#                     eachUserImageCount = len(os.listdir(eachUserPath)) + 1
+                shutil.copyfile(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
             self.printStepMsg(u"图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.imageTempPath, True)
@@ -258,9 +281,14 @@ class fkoji(common.Tool):
         newSaveFilePath = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
         self.printStepMsg(u"保存新存档文件: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, "w")
-        newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl)
+        newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl + "\n")
+        tempList = []
+        tempUserIdList = sorted(userIdList.keys())
+        for userId in tempUserIdList:
+            tempList.append(userId + "\t" + userIdList[userId])
+        newUserIdListString = "\n".join(tempList)
+        newSaveFile.write(newUserIdListString)
         newSaveFile.close()
-            
         stopTime = time.time()
         self.printStepMsg(u"成功下载最新图片，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(imageCount - 1) + u"张")
 
