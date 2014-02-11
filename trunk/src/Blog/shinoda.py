@@ -168,7 +168,7 @@ class shinoda(common.Tool):
                 imageStartIndex = int(saveList[0])
                 lastImageUrl = saveList[1]
         # 下载
-        url = "http://blog.mariko-shinoda.net/index%s.html"
+        
         pageIndex = 1
         imageCount = 1
         isOver = False
@@ -176,12 +176,8 @@ class shinoda(common.Tool):
         while True:
             if isOver:
                 break
-            if pageIndex > 1:
-                indexUrl = url % ("_" + str(pageIndex))
-                indexPage = self.doGet(indexUrl)
-            else:
-                indexUrl = url % ("")
-                indexPage = self.doGet(indexUrl)
+            indexUrl = "http://blog.mariko-shinoda.net/page%s.html" % (pageIndex - 1)
+            indexPage = self.doGet(indexUrl)
             self.trace(u"博客页面地址：" + indexUrl)
             if indexPage:
                 # old image:
