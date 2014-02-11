@@ -12,6 +12,7 @@ class Tool(object):
     def doGet(self, url):
     # http请求
         import sys
+        import time
         import traceback
         import urllib2
         global IS_SET_TIMEOUT
@@ -34,12 +35,16 @@ class Tool(object):
                 return response.read()
             except Exception, e:
                 # 代理无法访问
-                if str(e).find("[Errno 10061] ") != -1:
+                if str(e).find("[Errno 10061]") != -1:
                     input = raw_input(u"无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
                     if input in ["y", "yes"]:
                         pass
                     elif input in ["n", "no"]:
                         sys.exit()
+                # 连接被关闭，等待1分钟后再尝试
+                elif str(e).find("[Errno 10053] ") != -1:
+                    self.printMsg(u"访问页面超时，重新连接请稍后")
+                    time.sleep(60)
                 # 超时
                 elif str(e).find("timed out") != -1:
                     self.printMsg(u"访问页面超时，重新连接请稍后")
