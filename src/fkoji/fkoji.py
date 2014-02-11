@@ -183,7 +183,7 @@ class fkoji(common.Tool):
             self.trace(u"网页地址：" + indexUrl)
             indexPage = self.doGet(indexUrl)
             indexPage = BeautifulSoup.BeautifulSoup(indexPage)
-    
+     
             photoList = indexPage.body.findAll("div", "photo")
             # 已经下载到最后一页
             if not photoList:
@@ -243,7 +243,7 @@ class fkoji(common.Tool):
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
-                        isDelete = True
+                        isCheckOk = True
                     elif input in ["n", "no"]:
                         self.processExit()
                 except:
@@ -261,17 +261,14 @@ class fkoji(common.Tool):
                 shutil.copyfile(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
                 # 单个
                 eachUserPath = self.imageDownloadPath + "\\" + userId
+                if not os.path.exists(eachUserPath):
+                    if not self.createDir(eachUserPath):
+                        self.printErrorMsg(u"创建单个图片保存目录：" + eachUserPath + u" 失败，程序结束！")
+                        self.processExit()
                 if userIdList.has_key(userId):
-                    userIdList[userId] += 1
+                    userIdList[userId] = int(userIdList[userId]) + 1
                 else:
                     userIdList[userId] = 1
-#                 if not os.path.exists(eachUserPath):
-#                     if not self.createDir(eachUserPath):
-#                         self.printErrorMsg(u"创建单个图片保存目录：" + stepLogDir + u" 失败，程序结束！")
-#                         self.processExit()
-#                     eachUserImageCount = 1
-#                 else:
-#                     eachUserImageCount = len(os.listdir(eachUserPath)) + 1
                 shutil.copyfile(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
             self.printStepMsg(u"图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
@@ -285,7 +282,7 @@ class fkoji(common.Tool):
         tempList = []
         tempUserIdList = sorted(userIdList.keys())
         for userId in tempUserIdList:
-            tempList.append(userId + "\t" + userIdList[userId])
+            tempList.append(userId + "\t" + str(userIdList[userId]))
         newUserIdListString = "\n".join(tempList)
         newSaveFile.write(newUserIdListString)
         newSaveFile.close()
