@@ -261,6 +261,8 @@ class weibo(common.Tool):
                     self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
                     imgByte = self.doGet(imageUrl)
                     fileType = imageUrl.split(".")[-1]
+                    if fileType.find('/') != -1:
+                        fileType = 'jpg'
                     imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                     if imgByte:
                         imageFile.write(imgByte)
