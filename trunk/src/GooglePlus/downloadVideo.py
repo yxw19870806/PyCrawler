@@ -157,6 +157,11 @@ class downloadVideo(common.Tool):
             # 初始化数据
             videoCount = 0
             videoUrlList = []
+            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
+            if len(userIdList[userId]) >= 6 and userIdList[userId][2] != '':
+                isError = True
+            else:
+                isError = False
             videoAlbumUrl = "https://plus.google.com/" + userId + "/videos"
             self.trace(u"视频专辑地址：" + videoAlbumUrl)
             videoAlbumPage = self.doGet(videoAlbumUrl)
@@ -172,8 +177,10 @@ class downloadVideo(common.Tool):
                     # 将第一个视频的token保存到新id list中
                     if newUserIdList[userId][5] == "":
                         newUserIdList[userId][5] = videoToken
+                    # 找到上次保存的视频
                     if len(userIdList[userId]) >= 6:
                         if videoToken == userIdList[userId][5]:
+                            isError = False
                             break
                     # 判断是否重复
                     if videoUrl in videoUrlList:
@@ -203,7 +210,9 @@ class downloadVideo(common.Tool):
             newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
             newUserIdListFile.close()
-
+            if isError:
+                self.printErrorMsg(userName + u"视频数量异常，请手动检查")
+        
         # 排序并保存新的idList.txt
         tmpList = []
         tmpUserIdList = sorted(newUserIdList.keys())
