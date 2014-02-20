@@ -113,14 +113,17 @@ class weibo(common.Tool):
         url = "http://twintail-japan.com/campus/contents/%s.html"
         imageUrl = "http://twintail-japan.com/campus/contents/%s"
         allImageCount = 0
-        for pageNumber in range(1, 60):
+        for pageNumber in range(56, 80):
             page = self.doGet(url % pageNumber)
+            if not page:
+                self.printMsg(u"下载结束")
+                self.processExit()
             nameStart = page.find("名前 /")
             nameStop = page.find("(", nameStart)
-            name = page[nameStart + 11:nameStop].replace(" ", "").replace("\n", "")
+            name = page[nameStart + 9:nameStop].replace(" ", "").replace("\n", "").decode("utf-8")
             self.trace(u"页面地址:" + url % pageNumber)
             self.printMsg(u"名字：" + name)
-            imagePath = self.imageDownloadPath + "\\" + ("%02d" % pageNumber) + " " + name.decode("utf-8")
+            imagePath = self.imageDownloadPath + "\\" + ("%02d" % pageNumber) + " " + name
             if os.path.exists(imagePath):
                 shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
