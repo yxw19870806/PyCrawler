@@ -162,6 +162,7 @@ class weibo(common.Tool):
             for userInfo in allUserList:
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
+                userInfo = userInfo.replace("\r", "")
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
