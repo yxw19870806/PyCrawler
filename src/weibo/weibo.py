@@ -30,10 +30,12 @@ class weibo(common.Tool):
     def visit(self, url):
         tempPage = self.doGet(url)
         if tempPage:
-            redirectUrlIndex = tempPage.find("location.replace")
+            redirectUrlIndex = tempPage.find("location.replace")           
             if redirectUrlIndex != -1:
-                redirectUrlStart = tempPage.find('"', redirectUrlIndex) + 1
-                redirectUrlStop = tempPage.find('"', redirectUrlStart)
+                redirectUrlStart = tempPage.find("'", redirectUrlIndex) + 1
+                redirectUrlStop = tempPage.find("'", redirectUrlStart)
+#                 redirectUrlStart = tempPage.find('"', redirectUrlIndex) + 1
+#                 redirectUrlStop = tempPage.find('"', redirectUrlStart)
                 redirectUrl = tempPage[redirectUrlStart:redirectUrlStop]
                 return str(self.doGet(redirectUrl))
             elif tempPage.find(u"用户名或密码错误") != -1:
