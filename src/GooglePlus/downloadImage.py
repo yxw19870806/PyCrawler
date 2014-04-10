@@ -24,7 +24,7 @@ class downloadImage(common.Tool):
         
     def printStepMsg(self, msg):
         super(downloadImage, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
-         
+    
     def __init__(self):
         processPath = os.getcwd()
         configFile = open(processPath + "\\..\\common\\config.ini", "r")
@@ -168,11 +168,9 @@ class downloadImage(common.Tool):
             userName = newUserIdList[userId][1].decode("GBK")
             self.printStepMsg("ID: " + str(userId) + u", 名字: " + userName)
             # 初始化数据
-            pageCount = 0
             imageCount = 1
             messageUrlList = []
             imageUrlList = []
-            isPass = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
             if len(userIdList[userId]) > 3 and userIdList[userId][3].find("picasaweb.google.com/") != -1 and int(userIdList[userId][2]) != 0:
                 isError = True
@@ -187,28 +185,14 @@ class downloadImage(common.Tool):
                 self.printErrorMsg(u"创建图片下载目录： " + imagePath + u" 失败，程序结束！")
                 self.processExit()
             # 图片下载  
-            while 1:
-                if isPass:
-                    break
-                # 获取信息总页,offset=N表示返回最新的N到N+100条信息所在的url
-                photoAlbumUrl = "https://plus.google.com/_/photos/posts/%s?offset=%s" % (userId, pageCount)
-                self.trace(u"相册专辑地址：" + photoAlbumUrl)
-                photoAlbumPage = self.doGet(photoAlbumUrl)
-                if not photoAlbumPage:
-                    self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl)
-                    isPass = True
-                    break
-            
-                # 判断信息总页字节数大小，是否小于300（下载到最后一页），结束
-                if len(photoAlbumPage) < 300:
-                    break
-
+            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
+            self.trace(u"信息首页地址：" + photoAlbumUrl)
+            photoAlbumPage = self.doGet(photoAlbumUrl)
+            if photoAlbumPage:
                 messageIndex = 1
                 while messageIndex != 0:
-                    if isPass:
-                        break
                     messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex)
-                    messageStart = photoAlbumPage.find("http", messageIndex)
+                    messageStart = photoAlbumPage.find("http", messageIndex)                   
                     messageStop = photoAlbumPage.find('"', messageStart)
                     messageUrl = photoAlbumPage[messageStart:messageStop]
                     if messageIndex == -1:
@@ -219,7 +203,6 @@ class downloadImage(common.Tool):
                     # 检查是否已下载到前一次的图片
                     if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/") != -1:
                         if messageUrl == userIdList[userId][3]:
-                            isPass = True
                             isError = False
                             break
                     self.trace(u"message URL:" + messageUrl)
@@ -230,7 +213,6 @@ class downloadImage(common.Tool):
                     messageUrlList.append(messageUrl)
                     messagePage = self.doGet(messageUrl)
                     if not messagePage:
-                        # self.printErrorMsg("can not get messagePage: " + messageUrl)
                         self.printErrorMsg(u"无法获取信息页: " + messageUrl)
                         messageIndex += 1
                         continue
@@ -247,13 +229,13 @@ class downloadImage(common.Tool):
                         if imageUrl in imageUrlList:
                             flag = messagePage.find("<div><a href=", flag + 1)
                             continue
+                        imageUrlList.append(imageUrl)
                         tempList = imageUrl.split("/")
                         # 使用最大分辨率
                         tempList[-2] = "s0"
                         imageUrl = "/".join(tempList)
                         # 文件类型
                         imgByte = self.doGet(imageUrl)
-                        
                         fileType = imageUrl.split(".")[-1]
                         if imgByte:
                             imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
@@ -266,12 +248,101 @@ class downloadImage(common.Tool):
                         imageCount += 1
                         # 达到配置文件中的下载数量，结束
                         if self.getImageCount > 0 and imageCount > self.getImageCount:
-                            isPass = True
+                            self.printErrorMsg(u"达到下载限制数量")
                             break
                         flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
-                pageCount += 100
-                
+            else:
+                self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl)
+            
+            # 信息首页下载完毕，如果没有获取到最后一张，再从相册首页找
+#             if isError:
+#                 photoAlbumUrl = "https://plus.google.com/%s/photos" % (userId)
+#                 self.trace(u"超过信息首页显示的最大数，获取相册专辑地址：" + photoAlbumUrl)
+#                 photoAlbumPage = self.doGet(photoAlbumUrl)
+#                 
+#                 if photoAlbumPage:
+#                     if len(messageUrlList) > 0:
+#                         lastMessageUrl = messageUrlList[-1]                      
+#                         messageIndex = photoAlbumPage.find(lastMessageUrl) + 1
+#                     else:
+#                         messageIndex = 1
+#                     lastMessageUrl = 'https://picasaweb.google.com/100515188323145163173/20140315#5990973623539663810'
+#                     messageIndex = photoAlbumPage.find(lastMessageUrl) + 1
+#                     print messageIndex
+#                     ff = open('b.txt', 'w')
+#                     ff.write(photoAlbumPage[messageIndex:])
+#                     ff.close()
+#                     while messageIndex != 0:
+#                         messageIndex = photoAlbumPage.find('https://picasaweb.google.com/' + userId, messageIndex)
+#                         messageStart = photoAlbumPage.find("http", messageIndex)                   
+#                         messageStop = photoAlbumPage.find('&quot', messageStart)
+#                         messageUrl = photoAlbumPage[messageStart:messageStop]
+#                         if messageUrl.find('ProfilePhotos') != -1:
+#                             print 'pass ' + messageUrl
+#                             messageIndex += 1
+#                             continue
+#                         print messageUrl
+#                         if messageIndex == -1:
+#                             break
+#                         # 将第一张image的URL保存到新id list中
+#                         if newUserIdList[userId][3] == "":
+#                             newUserIdList[userId][3] = messageUrl
+#                         # 检查是否已下载到前一次的图片
+#                         if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/") != -1:
+#                             if messageUrl == userIdList[userId][3]:
+#                                 isError = False
+#                                 break
+#                         self.trace(u"message URL:" + messageUrl)
+#                         # 判断是否重复
+#                         if messageUrl in messageUrlList:
+#                             messageIndex += 1
+#                             continue
+#                         messageUrlList.append(messageUrl)
+#                         messagePage = self.doGet(messageUrl)
+#                         if not messagePage:
+#                             self.printErrorMsg(u"无法获取信息页: " + messageUrl)
+#                             messageIndex += 1
+#                             continue
+#                         flag = messagePage.find("<div><a href=")
+#                         while flag != -1:
+#                             imageIndex = messagePage.find("<img src=", flag, flag + 200)
+#                             if imageIndex == -1:
+#                                 self.printErrorMsg(u"信息页：" + messageUrl + u" 中没有找到标签'<img src='")
+#                                 break
+#                             imageStart = messagePage.find("http", imageIndex)
+#                             imageStop = messagePage.find('"', imageStart)
+#                             imageUrl = messagePage[imageStart:imageStop]
+#                             self.trace(u"image URL:" + imageUrl)
+#                             if imageUrl in imageUrlList:
+#                                 flag = messagePage.find("<div><a href=", flag + 1)
+#                                 continue
+#                             tempList = imageUrl.split("/")
+#                             # 使用最大分辨率
+#                             tempList[-2] = "s0"
+#                             imageUrl = "/".join(tempList)
+#                             # 文件类型
+#                             imgByte = self.doGet(imageUrl)
+#                             
+#                             fileType = imageUrl.split(".")[-1]
+#                             if imgByte:
+#                                 imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
+#                                 self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
+#                                 imageFile.write(imgByte)
+#                                 self.printStepMsg(u"下载成功")
+#                             else:
+#                                 self.printErrorMsg(u"获取图片信息失败：" + str(userId) + ": " + imageUrl)
+#                             imageFile.close()
+#                             imageCount += 1
+#                             # 达到配置文件中的下载数量，结束
+#                             if self.getImageCount > 0 and imageCount > self.getImageCount:
+#                                 self.printErrorMsg(u"达到下载限制数量")
+#                                 break
+#                             flag = messagePage.find("<div><a href=", flag + 1)
+#                         messageIndex += 1
+#                 else:
+#                     self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl)
+            
             self.printStepMsg(userName + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
