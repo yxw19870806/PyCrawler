@@ -30,11 +30,11 @@ class Tool(object):
                 # 设置访问超时
                 if sys.version_info < (2, 7):
                     if not IS_SET_TIMEOUT:
-                        urllib2.socket.setdefaulttimeout(20)
+                        urllib2.socket.setdefaulttimeout(10)
                         IS_SET_TIMEOUT = True
                     response = urllib2.urlopen(request)
                 else:
-                    response = urllib2.urlopen(request, timeout=20)
+                    response = urllib2.urlopen(request, timeout=10)
                 return response.read()
             except Exception, e:
                 # 代理无法访问
