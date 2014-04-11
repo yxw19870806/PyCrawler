@@ -9,7 +9,7 @@ IS_SET_TIMEOUT = False
 
 class Tool(object):
 
-    def doGet(self, url):
+    def doGet(self, url, postData=None):
     # http请求
         import sys
         import time
@@ -21,7 +21,10 @@ class Tool(object):
         count = 0
         while 1:
             try:
-                request = urllib2.Request(url)
+                if postData:
+                    request = urllib2.Request(url, postData)
+                else:
+                    request = urllib2.Request(url)
                 # 设置头信息
                 request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
                 # 设置访问超时
