@@ -164,6 +164,7 @@ class downloadImage(common.Tool):
         
         allImageCount = 0
         # 循环下载每个id
+        getImageCount = 500
         for userId in sorted(userIdList.keys()):
             userName = newUserIdList[userId][1].decode("GBK")
             self.printStepMsg("ID: " + str(userId) + u", 名字: " + userName)
@@ -185,9 +186,13 @@ class downloadImage(common.Tool):
                 self.printErrorMsg(u"创建图片下载目录： " + imagePath + u" 失败，程序结束！")
                 self.processExit()
             # 图片下载  
-            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
+#            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
+            photoAlbumUrl = 'https://plus.google.com/_/photos/pc/read/'
+            now = time.time() * 100
+            key = ''
+            postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, getImageCount, key, now)
             self.trace(u"信息首页地址：" + photoAlbumUrl)
-            photoAlbumPage = self.doGet(photoAlbumUrl)
+            photoAlbumPage = self.doGet(photoAlbumUrl, postData)
             if photoAlbumPage:
                 messageIndex = 1
                 while messageIndex != 0:
@@ -253,7 +258,7 @@ class downloadImage(common.Tool):
                         flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
             else:
-                self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl)
+                self.printErrorMsg(u"无法获取相册首页: " + photoAlbumUrl + ' ' + userName)
             
             # 信息首页下载完毕，如果没有获取到最后一张，再从相册首页找
 #             if isError:
