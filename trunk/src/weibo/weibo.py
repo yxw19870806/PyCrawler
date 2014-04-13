@@ -75,7 +75,7 @@ class weibo(common.Tool):
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 1, 2)
+        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
         # ¥˙¿Ì…Ë÷√
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
