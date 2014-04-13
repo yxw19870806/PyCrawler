@@ -166,7 +166,7 @@ class downloadImage(common.Tool):
         allImageCount = 0
         # 循环下载每个id
         for userId in sorted(userIdList.keys()):
-            userName = newUserIdList[userId][1].decode("GBK")
+            userName = newUserIdList[userId][1]
             self.printStepMsg("ID: " + str(userId) + ", 名字: " + userName)
             # 初始化数据
             imageCount = 1

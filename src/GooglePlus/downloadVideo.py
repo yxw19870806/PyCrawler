@@ -153,7 +153,7 @@ class downloadVideo(common.Tool):
         # 循环获取每个id
         for userId in userIdList:
             userName = newUserIdList[userId][1]
-            self.printStepMsg("ID: " + str(userId) + ", 名字: " + userName.decode("GBK"))
+            self.printStepMsg("ID: " + str(userId) + ", 名字: " + userName)
             # 初始化数据
             videoCount = 0
             videoUrlList = []
