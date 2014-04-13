@@ -1,78 +1,87 @@
-# -*- coding:GBK  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-4-8
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 
 import copy
 import os
 import shutil
 import time
-import sys
-import traceback
-import urllib2
 
 class downloadImage():
-
-    def doGet(self, url):
-    # httpÇëÇó
+    
+    def doGet(self, url, postData=None):
+    # httpè¯·æ±‚
+        import sys
+        import traceback
+        import urllib2
         global IS_SET_TIMEOUT
         if url.find("http") == -1:
             return None
         count = 0
         while 1:
             try:
-                request = urllib2.Request(url)
-                # ÉèÖÃÍ·ĞÅÏ¢
+                if postData:
+                    request = urllib2.Request(url, postData)
+                else:
+                    request = urllib2.Request(url)
+                # è®¾ç½®å¤´ä¿¡æ¯
                 request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
-                # ÉèÖÃ·ÃÎÊ³¬Ê±
+                # è®¾ç½®è®¿é—®è¶…æ—¶
                 if sys.version_info < (2, 7):
                     if not IS_SET_TIMEOUT:
-                        urllib2.socket.setdefaulttimeout(20)
+                        urllib2.socket.setdefaulttimeout(10)
                         IS_SET_TIMEOUT = True
                     response = urllib2.urlopen(request)
                 else:
-                    response = urllib2.urlopen(request, timeout=20)
+                    response = urllib2.urlopen(request, timeout=10)
                 return response.read()
             except Exception, e:
-                # ´úÀíÎŞ·¨·ÃÎÊ
-                if str(e).find("[Errno 10061] ") != -1:
-                    input = raw_input("ÎŞ·¨·ÃÎÊ´úÀí·şÎñÆ÷£¬Çë¼ì²é´úÀíÉèÖÃ¡£ÊÇ·ñĞèÒª¼ÌĞø³ÌĞò£¿(Y)es or (N)o£º").lower()
+                # ä»£ç†æ— æ³•è®¿é—®
+                if str(e).find("[Errno 10061]") != -1:
+                    input = raw_input(u"æ— æ³•è®¿é—®ä»£ç†æœåŠ¡å™¨ï¼Œè¯·æ£€æŸ¥ä»£ç†è®¾ç½®ã€‚æ˜¯å¦éœ€è¦ç»§ç»­ç¨‹åºï¼Ÿ(Y)es or (N)oï¼š").lower()
                     if input in ["y", "yes"]:
                         pass
                     elif input in ["n", "no"]:
                         sys.exit()
-                # ³¬Ê±
+                # è¿æ¥è¢«å…³é—­ï¼Œç­‰å¾…1åˆ†é’Ÿåå†å°è¯•
+                elif str(e).find("[Errno 10053] ") != -1:
+                    self.printMsg(u"è®¿é—®é¡µé¢è¶…æ—¶ï¼Œé‡æ–°è¿æ¥è¯·ç¨å")
+                    time.sleep(60)
+                # è¶…æ—¶
                 elif str(e).find("timed out") != -1:
-                    self.printMsg("·ÃÎÊÒ³Ãæ³¬Ê±£¬ÖØĞÂÁ¬½ÓÇëÉÔºó")
+                    self.printMsg(u"è®¿é—®é¡µé¢è¶…æ—¶ï¼Œé‡æ–°è¿æ¥è¯·ç¨å")
                 else:
                     self.printMsg(str(e))
                     traceback.print_exc()
             count += 1
             if count > 10:
-                self.printMsg("ÎŞ·¨·ÃÎÊÒ³Ãæ£º" + url)
+                self.printErrorMsg(u"æ— æ³•è®¿é—®é¡µé¢ï¼š" + url)
                 return False
-    
-    def proxy(self, ip, port):
-    # ÉèÖÃ´úÀí
-        proxyHandler = urllib2.ProxyHandler({'https':"http://" + ip + ":" + port})
+
+    def proxy(self, ip, port, protocol):
+    # è®¾ç½®ä»£ç†
+        import urllib2
+        proxyHandler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
-        self.printMsg("ÉèÖÃ´úÀí³É¹¦")
+        self.printMsg(u"è®¾ç½®ä»£ç†æˆåŠŸ")
                 
     def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
-    # »ñÈ¡ÅäÖÃÎÄ¼ş
-    # config : ×Öµä¸ñÊ½£¬Èç£º{key1:value1, key2:value2}
-    # mode 0 : Ö±½Ó¸³Öµ
-    # mode 1 : ×Ö·û´®Æ´½Ó
-    # mode 2 : È¡Õû
-    # mode 3 : ÎÄ¼şÂ·¾¶£¬ÒÔ'\'¿ªÍ·µÄÎªµ±Ç°Ä¿Â¼ÏÂ´´½¨
-    # prefix: Ç°×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
-    # postfix: ºó×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
+    # è·å–é…ç½®æ–‡ä»¶
+    # config : å­—å…¸æ ¼å¼ï¼Œå¦‚ï¼š{key1:value1, key2:value2}
+    # mode 0 : ç›´æ¥èµ‹å€¼
+    # mode 1 : å­—ç¬¦ä¸²æ‹¼æ¥
+    # mode 2 : å–æ•´
+    # mode 3 : æ–‡ä»¶è·¯å¾„ï¼Œä»¥'\'å¼€å¤´çš„ä¸ºå½“å‰ç›®å½•ä¸‹åˆ›å»º
+    # prefix: å‰ç¼€ï¼Œåªæœ‰åœ¨mode=1æ—¶æœ‰æ•ˆ
+    # postfix: åç¼€ï¼Œåªæœ‰åœ¨mode=1æ—¶æœ‰æ•ˆ
+        import traceback
         value = None
         if config.has_key(key):
             if mode == 0:
@@ -87,7 +96,7 @@ class downloadImage():
                 try:
                     value = int(config[key])
                 except:
-                    self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞkeyÎª'" + key + "'µÄÖµ±ØĞëÊÇÒ»¸öÕûÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
+                    self.printMsg(u"é…ç½®æ–‡ä»¶config.iniä¸­keyä¸º'" + key + u"'çš„å€¼å¿…é¡»æ˜¯ä¸€ä¸ªæ•´æ•°ï¼Œä½¿ç”¨ç¨‹åºé»˜è®¤è®¾ç½®")
                     traceback.print_exc()
                     value = defaultValue
             elif mode == 3:
@@ -96,7 +105,7 @@ class downloadImage():
                     value = os.getcwd() + value
                 return value
         else:
-            self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞÃ»ÓĞÕÒµ½keyÎª'" + key + "'µÄ²ÎÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
+            self.printMsg(u"é…ç½®æ–‡ä»¶config.iniä¸­æ²¡æœ‰æ‰¾åˆ°keyä¸º'" + key + u"'çš„å‚æ•°ï¼Œä½¿ç”¨ç¨‹åºé»˜è®¤è®¾ç½®")
             value = defaultValue
         return value
     
@@ -104,7 +113,7 @@ class downloadImage():
         if isTime:
             msg = self.getTime() + " " + msg
         print msg
-    
+                
     def getTime(self):
         return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
     
@@ -114,20 +123,23 @@ class downloadImage():
         logFile.close()
     
     def createDir(self, path):
-        count = 0
-        while 1:
-            try:
-                if count >= 5:
-                    return False
-                os.makedirs(path)
-                if os.path.isdir(path):
-                    return True
-            except Exception, e:
-                self.printMsg(str(e))
-                time.sleep(5)
-                traceback.print_exc()
-            count +=1
-        
+        import traceback
+        if not os.path.exists(path):
+            count = 0
+            while 1:
+                try:
+                    if count >= 5:
+                        return False
+                    os.makedirs(path)
+                    if os.path.isdir(path):
+                        return True
+                except Exception, e:
+                    self.printMsg(str(e))
+                    traceback.print_exc()
+                    time.sleep(5)
+                count += 1
+        return True
+    
     def removeDirFiles(self, dirPath): 
         for fileName in os.listdir(dirPath): 
             targetFile = os.path.join(dirPath, fileName) 
@@ -135,36 +147,37 @@ class downloadImage():
                 os.remove(targetFile)
                 
     def processExit(self):
+        import sys
         sys.exit()
     
     def trace(self, msg):
-        if self.isDebug == 1:
+        if self.isShowError == 1:
             msg = self.getTime() + " " + msg
-    #        self.printMsg(msg, False)
-            if self.isLog == 1:
-                self.writeFile(msg, self.traceLogPath)
+#             self.printMsg(msg, False)
+        if self.traceLogPath != '':
+            self.writeFile(msg, self.traceLogPath)
     
     def printErrorMsg(self, msg):
         if self.isShowError == 1:
             msg = self.getTime() + " [Error] " + msg
             self.printMsg(msg, False)
-            if self.isLog == 1:
-                if msg.find("HTTP Error 500") != -1:
-                    return
-                if msg.find("urlopen error The read operation timed out") != -1:
-                    return
-                self.writeFile(msg, self.errorLogPath)
+        if self.errorLogPath != '':
+            if msg.find("HTTP Error 500") != -1:
+                return
+            if msg.find("urlopen error The read operation timed out") != -1:
+                return
+            self.writeFile(msg, self.errorLogPath)
     
     def printStepMsg(self, msg):
-        if self.isShowStep == 1:
+        if self.isShowError == 1:
             msg = self.getTime() + " " + msg
             self.printMsg(msg, False)
-            if self.isLog == 1:
-                self.writeFile(msg, self.stepLogPath)
+        if self.stepLogPath != '':
+            self.writeFile(msg, self.stepLogPath)
     
     def __init__(self):
         processPath = os.getcwd()
-        configFile = open(processPath + "\\config.ini", 'r')
+        configFile = open(processPath + "\\config.ini", "r")
         lines = configFile.readlines()
         configFile.close()
         config = {}
@@ -177,83 +190,88 @@ class downloadImage():
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # ÅäÖÃÎÄ¼ş»ñÈ¡ÈÕÖ¾ÎÄ¼şÂ·¾¶
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.memberUIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        # ÅäÖÃÎÄ¼ş»ñÈ¡³ÌĞòÅäÖÃ
+        # ç¨‹åºé…ç½®
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 1, 2)
+        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
+        self.getImageUrlCount = self.getConfig(config, "GET_IMAGE_URL_COUNT", 1, 2)
+        # ä»£ç†
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
+        # æ–‡ä»¶è·¯å¾„
+        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        if self.isLog == 0:
+            self.traceLogPath = ""
+            self.stepLogPath = ""
+        else:
+            self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+            self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+        self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.printMsg(u"é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
 
     def main(self):
         startTime = time.time()
-        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
-        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
+        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
+        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not os.path.exists(stepLogDir):
-                if not self.createDir(stepLogDir):
-                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
-                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
-            errorLogDir = os.path.dirname(self.errorLogPath)
-            if not os.path.exists(errorLogDir):
-                if not self.createDir(errorLogDir):
-                    self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
-                self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
+            if not self.createDir(stepLogDir):
+                self.printErrorMsg(u"åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.processExit()
+            self.printStepMsg(u"æ­¥éª¤æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not os.path.exists(traceLogDir):
-                if not self.createDir(traceLogDir):
-                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
-                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
-        # Í¼Æ¬ÏÂÔØÄ¿Â¼
+            if not self.createDir(traceLogDir):
+                self.printErrorMsg(u"åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.processExit()
+            self.printStepMsg(u"è°ƒè¯•æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + traceLogDir)
+        errorLogDir = os.path.dirname(self.errorLogPath)
+        if not self.createDir(errorLogDir):
+            self.printErrorMsg(u"åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            self.processExit()
+        self.printStepMsg(u"é”™è¯¯æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + errorLogDir)
+        # å›¾ç‰‡ä¸‹è½½ç›®å½•
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                    input = raw_input("Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò£¿(Y)es or (N)o: ")
+                    # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
+                    input = raw_input(self.getTime() + u" å›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + u" å·²ç»å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¤¹å¹¶ç»§ç»­ç¨‹åºï¼Ÿ(Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
                             isDelete = True
                         elif input in ["n", "no"]:
                             self.processExit()
-                    except:
+                    except Exception, e:
+                        self.printErrorMsg(str(e)) 
                         pass
-                self.printStepMsg("É¾³ıÍ¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath)
-                # É¾³ıÄ¿Â¼
+                self.printStepMsg(u"åˆ é™¤å›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath)
+                # åˆ é™¤ç›®å½•
                 shutil.rmtree(self.imageDownloadPath, True)
-                # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
+                # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
                 while os.path.exists(self.imageDownloadPath):
+                    shutil.rmtree(self.imageDownloadPath, True)
                     time.sleep(5)
             else:
-                self.printStepMsg("Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
+                self.printStepMsg(u"å›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + u"å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath)
+        self.printStepMsg(u"åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg(u"åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # ÉèÖÃ´úÀí
+        # è®¾ç½®ä»£ç†
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort)
-        # Ñ°ÕÒidlist£¬Èç¹ûÃ»ÓĞ½áÊø½ø³Ì
+            self.proxy(self.proxyIp, self.proxyPort, "https")
+        # å¯»æ‰¾idlistï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
         userIdList = {}
-        if os.path.exists(self.memberUIdListFilePath):
-            userListFile = open(self.memberUIdListFilePath, 'r')
+        if os.path.exists(self.userIdListFilePath):
+            userListFile = open(self.userIdListFilePath, "r")
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
@@ -264,168 +282,156 @@ class downloadImage():
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("ÓÃ»§ID´æµµÎÄ¼ş: " + self.memberUIdListFilePath + "²»´æÔÚ£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg(u"ç”¨æˆ·IDå­˜æ¡£æ–‡ä»¶: " + self.userIdListFilePath + u"ä¸å­˜åœ¨ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # ´´½¨ÁÙÊ±´æµµÎÄ¼ş
-        newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
-        newMemberUidListFile.close()
-        # ¸´ÖÆ´¦Àí´æµµÎÄ¼ş
-        newMemberUidList = copy.deepcopy(userIdList)
-        for newUserId in newMemberUidList:
-            # Èç¹ûÃ»ÓĞÃû×Ö£¬ÔòÃû×ÖÓÃuid´úÌæ
-            if len(newMemberUidList[newUserId]) < 2:
-                newMemberUidList[newUserId].append(newMemberUidList[newUserId][0])
-            # Èç¹ûÃ»ÓĞ³öÊÂimage count£¬ÔòÎª0
-            if len(newMemberUidList[newUserId]) < 3:
-                newMemberUidList[newUserId].append("0")
-            # ´¦ÀíÉÏÒ»´Îimage URL
-            # ĞèÖÃ¿Õ´æ·Å±¾´ÎµÚÒ»ÕÅ»ñÈ¡µÄimage URL
-            if len(newMemberUidList[newUserId]) < 4:
-                newMemberUidList[newUserId].append("")
+        # åˆ›å»ºä¸´æ—¶å­˜æ¡£æ–‡ä»¶
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFile = open(newUserIdListFilePath, "w")
+        newUserIdListFile.close()
+        # å¤åˆ¶å¤„ç†å­˜æ¡£æ–‡ä»¶
+        newUserIdList = copy.deepcopy(userIdList)
+        for newUserId in newUserIdList:
+            # å¦‚æœæ²¡æœ‰åå­—ï¼Œåˆ™åå­—ç”¨uidä»£æ›¿
+            if len(newUserIdList[newUserId]) < 2:
+                newUserIdList[newUserId].append(newUserIdList[newUserId][0])
+            # å¦‚æœæ²¡æœ‰åˆè¯•image countï¼Œåˆ™ä¸º0
+            if len(newUserIdList[newUserId]) < 3:
+                newUserIdList[newUserId].append("0")
+            # å¤„ç†ä¸Šä¸€æ¬¡image URL
+            # éœ€ç½®ç©ºå­˜æ”¾æœ¬æ¬¡ç¬¬ä¸€å¼ è·å–çš„image URL
+            if len(newUserIdList[newUserId]) < 4:
+                newUserIdList[newUserId].append("")
             else:
-                newMemberUidList[newUserId][3] = ""
+                newUserIdList[newUserId][3] = ""
             # video count
-            if len(newMemberUidList[newUserId]) < 5:
-                newMemberUidList[newUserId].append("0")
+            if len(newUserIdList[newUserId]) < 5:
+                newUserIdList[newUserId].append("0")
             # video token
-            if len(newMemberUidList[newUserId]) < 6:
-                newMemberUidList[newUserId].append("")
-            # ´¦Àímember ¶ÓÎéĞÅÏ¢
-            if len(newMemberUidList[newUserId]) < 7:
-                newMemberUidList[newUserId].append("")
+            if len(newUserIdList[newUserId]) < 6:
+                newUserIdList[newUserId].append("")
+            # å¤„ç†æˆå‘˜é˜Ÿä¼ä¿¡æ¯
+            if len(newUserIdList[newUserId]) < 7:
+                newUserIdList[newUserId].append("")
         
         allImageCount = 0
-        # Ñ­»·ÏÂÔØÃ¿¸öid
+        # å¾ªç¯ä¸‹è½½æ¯ä¸ªid
         for userId in sorted(userIdList.keys()):
-            userName = newMemberUidList[userId][1]
-            self.printStepMsg("UID: " + str(userId) + ", Ãû×Ö: " + userName)
-            # ³õÊ¼»¯Êı¾İ
-            pageCount = 0
+            userName = newUserIdList[userId][1].decode("GBK")
+            self.printStepMsg("ID: " + str(userId) + u", åå­—: " + userName)
+            # åˆå§‹åŒ–æ•°æ®
             imageCount = 1
             messageUrlList = []
             imageUrlList = []
-            isPass = False
-            isError = False
-            # Èç¹ûĞèÒªÖØĞÂÅÅĞòÔòÊ¹ÓÃÁÙÊ±ÎÄ¼ş¼Ğ£¬·ñÔòÖ±½ÓÏÂÔØµ½Ä¿±êÄ¿Â¼
+            # å¦‚æœæœ‰å­˜æ¡£è®°å½•ï¼Œåˆ™ç›´åˆ°æ‰¾åˆ°ä¸å‰ä¸€æ¬¡ä¸€è‡´çš„åœ°å€ï¼Œå¦åˆ™éƒ½ç®—æœ‰å¼‚å¸¸
+            if len(userIdList[userId]) > 3 and userIdList[userId][3].find("picasaweb.google.com/") != -1 and int(userIdList[userId][2]) != 0:
+                isError = True
+            else:
+                isError = False
+            # å¦‚æœéœ€è¦é‡æ–°æ’åºåˆ™ä½¿ç”¨ä¸´æ—¶æ–‡ä»¶å¤¹ï¼Œå¦åˆ™ç›´æ¥ä¸‹è½½åˆ°ç›®æ ‡ç›®å½•
             if self.isSort == 1:
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userName
             if not self.createDir(imagePath):
-                self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º " + imagePath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                self.printErrorMsg(u"åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š " + imagePath + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-            # Í¼Æ¬ÏÂÔØ  
-            while 1:
-                if isPass:
-                    break
-                # »ñÈ¡ĞÅÏ¢×ÜÒ³,offset=N±íÊ¾·µ»Ø×îĞÂµÄNµ½N+100ÌõĞÅÏ¢ËùÔÚµÄurl
-                photoAlbumUrl = "https://plus.google.com/_/photos/posts/%s?offset=%s" % (userId, pageCount)
-                self.trace("Ïà²á×¨¼­µØÖ·£º" + photoAlbumUrl)
-                photoAlbumPage = self.doGet(photoAlbumUrl)
-                if not photoAlbumPage:
-                    self.printErrorMsg("ÎŞ·¨»ñÈ¡Ïà²áÊ×Ò³: " + photoAlbumUrl)
-                    isPass = True
-                    break
-            
-                # ÅĞ¶ÏĞÅÏ¢×ÜÒ³×Ö½ÚÊı´óĞ¡£¬ÊÇ·ñĞ¡ÓÚ300£¨ÏÂÔØµ½×îºóÒ»Ò³£©£¬½áÊø
-                if len(photoAlbumPage) < 300:
-                    break
-
+            # å›¾ç‰‡ä¸‹è½½  
+#            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
+            photoAlbumUrl = 'https://plus.google.com/_/photos/pc/read/'
+            now = time.time() * 100
+            key = ''
+            postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, self.getImageUrlCount * 100, key, now)
+            self.trace(u"ä¿¡æ¯é¦–é¡µåœ°å€ï¼š" + photoAlbumUrl)
+            photoAlbumPage = self.doGet(photoAlbumUrl, postData)
+            if photoAlbumPage:
                 messageIndex = 1
                 while messageIndex != 0:
-                    if isPass:
-                        break
                     messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex)
-                    messageStart = photoAlbumPage.find("http", messageIndex)
+                    messageStart = photoAlbumPage.find("http", messageIndex)                   
                     messageStop = photoAlbumPage.find('"', messageStart)
                     messageUrl = photoAlbumPage[messageStart:messageStop]
                     if messageIndex == -1:
                         break
-                    # ½«µÚÒ»ÕÅimageµÄURL±£´æµ½ĞÂid listÖĞ
-                    if newMemberUidList[userId][3] == "":
-                        newMemberUidList[userId][3] = messageUrl
-                    # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
+                    # å°†ç¬¬ä¸€å¼ imageçš„URLä¿å­˜åˆ°æ–°id listä¸­
+                    if newUserIdList[userId][3] == "":
+                        newUserIdList[userId][3] = messageUrl
+                    # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
                     if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/") != -1:
                         if messageUrl == userIdList[userId][3]:
-                            isPass = True
+                            isError = False
                             break
-                    self.trace("message URL:" + messageUrl)
-                    # ÅĞ¶ÏÊÇ·ñÖØ¸´
+                    self.trace(u"message URL:" + messageUrl)
+                    # åˆ¤æ–­æ˜¯å¦é‡å¤
                     if messageUrl in messageUrlList:
                         messageIndex += 1
                         continue
                     messageUrlList.append(messageUrl)
                     messagePage = self.doGet(messageUrl)
                     if not messagePage:
-                        # self.printErrorMsg("can not get messagePage: " + messageUrl)
-                        self.printErrorMsg("ÎŞ·¨»ñÈ¡ĞÅÏ¢Ò³: " + messageUrl)
+                        self.printErrorMsg(u"æ— æ³•è·å–ä¿¡æ¯é¡µ: " + messageUrl)
                         messageIndex += 1
                         continue
                     flag = messagePage.find("<div><a href=")
                     while flag != -1:
                         imageIndex = messagePage.find("<img src=", flag, flag + 200)
                         if imageIndex == -1:
-                            self.printErrorMsg("ĞÅÏ¢Ò³£º" + messageUrl + " ÖĞÃ»ÓĞÕÒµ½±êÇ©'<img src='")
+                            self.printErrorMsg(u"ä¿¡æ¯é¡µï¼š" + messageUrl + u" ä¸­æ²¡æœ‰æ‰¾åˆ°æ ‡ç­¾'<img src='")
                             break
                         imageStart = messagePage.find("http", imageIndex)
                         imageStop = messagePage.find('"', imageStart)
                         imageUrl = messagePage[imageStart:imageStop]
-                        self.trace("image URL:" + imageUrl)
+                        self.trace(u"image URL:" + imageUrl)
                         if imageUrl in imageUrlList:
                             flag = messagePage.find("<div><a href=", flag + 1)
                             continue
+                        imageUrlList.append(imageUrl)
                         tempList = imageUrl.split("/")
-                        # Ê¹ÓÃ×î´ó·Ö±æÂÊ
+                        # ä½¿ç”¨æœ€å¤§åˆ†è¾¨ç‡
                         tempList[-2] = "s0"
                         imageUrl = "/".join(tempList)
-                        # ÎÄ¼şÀàĞÍ
-                        fileType = imageUrl.split(".")[-1]
+                        # æ–‡ä»¶ç±»å‹
                         imgByte = self.doGet(imageUrl)
+                        fileType = imageUrl.split(".")[-1]
                         if imgByte:
-                            # ±£´æÍ¼Æ¬
-                            filename = str("%04d" % imageCount)
-                            imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
-                            self.printStepMsg("¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl)
+                            imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
+                            self.printStepMsg(u"å¼€å§‹ä¸‹è½½ç¬¬" + str(imageCount) + u"å¼ å›¾ç‰‡ï¼š" + imageUrl)
                             imageFile.write(imgByte)
-                            imageFile.close()
-                            self.printStepMsg("ÏÂÔØ³É¹¦")
-                            imageCount += 1
-                            # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
-                            if self.getImageCount > 0 and imageCount > self.getImageCount:
-                                isPass = True
-                                break
+                            self.printStepMsg(u"ä¸‹è½½æˆåŠŸ")
                         else:
-                            self.printErrorMsg("»ñÈ¡Í¼Æ¬ĞÅÏ¢Ê§°Ü£º" + str(userId) + ": " + imageUrl)
+                            self.printErrorMsg(u"è·å–å›¾ç‰‡ä¿¡æ¯å¤±è´¥ï¼š" + str(userId) + ": " + imageUrl)
+                        imageFile.close()
+                        imageCount += 1
+                        # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
+                        if self.getImageCount > 0 and imageCount > self.getImageCount:
+                            self.printErrorMsg(u"è¾¾åˆ°ä¸‹è½½é™åˆ¶æ•°é‡")
+                            break
                         flag = messagePage.find("<div><a href=", flag + 1)
                     messageIndex += 1
-                pageCount += 100
-                
-            self.printStepMsg(userName + "ÏÂÔØÍê±Ï£¬×Ü¹²»ñµÃ" + str(imageCount - 1) + "ÕÅÍ¼Æ¬")
-            # ¼ì²éÏÂÔØÍ¼Æ¬ÊÇ·ñ´óÓÚ×ÜÊıÁ¿µÄÒ»°ë£¬¶ÔÉÏÒ»´Î¼ÇÂ¼µÄÍ¼Æ¬ÕıºÃ±»É¾³ı»òÆäËûÔ­Òòµ¼ÖÂÏÂÔØÁËÈ«²¿Í¼Æ¬×öÒ»¸ö±£»¤
-            if len(userIdList[userId]) >= 4 and userIdList[userId][3] != "" and int(newMemberUidList[userId][2]) != 0 and (imageCount * 2) > int(newMemberUidList[userId][2]):
-                isError = True
-            newMemberUidList[userId][2] = str(int(newMemberUidList[userId][2]) + imageCount - 1)
+            else:
+                self.printErrorMsg(u"æ— æ³•è·å–ç›¸å†Œé¦–é¡µ: " + photoAlbumUrl + ' ' + userName)
+            
+            self.printStepMsg(userName + u"ä¸‹è½½å®Œæ¯•ï¼Œæ€»å…±è·å¾—" + str(imageCount - 1) + u"å¼ å›¾ç‰‡")
+            newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
             
-            # ÅÅĞò
+            # æ’åº
             if self.isSort == 1:
                 imageList = sorted(os.listdir(imagePath), reverse=True)
-                # ÅĞ¶ÏÅÅĞòÄ¿±êÎÄ¼ş¼ĞÊÇ·ñ´æÔÚ
+                # åˆ¤æ–­æ’åºç›®æ ‡æ–‡ä»¶å¤¹æ˜¯å¦å­˜åœ¨
                 if len(imageList) >= 1:
-                    destPath = self.imageDownloadPath + "\\" + newMemberUidList[userId][6] + "\\" + userName
+                    destPath = self.imageDownloadPath + "\\" + newUserIdList[userId][6] + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + " ÒÑ´æÔÚ£¬É¾³ıÖĞ")
+                            self.printStepMsg(u"å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath + u" å·²å­˜åœ¨ï¼Œåˆ é™¤ä¸­")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ıÖĞ")
+                            self.printStepMsg(u"å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath + u"å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤ä¸­")
                             os.remove(destPath)
-                    self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + destPath)
+                    self.printStepMsg(u"åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath)
                     if not self.createDir(destPath):
-                        self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º " + destPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                        self.printErrorMsg(u"åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š " + destPath + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                         self.processExit()
-                    # µ¹ĞğÅÅÁĞ
+                    # å€’å™æ’åˆ—
                     if len(userIdList[userId]) >= 3:
                         count = int(userIdList[userId][2]) + 1
                     else:
@@ -434,32 +440,32 @@ class downloadImage():
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg("Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
-                # É¾³ıÁÙÊ±ÎÄ¼ş¼Ğ
+                    self.printStepMsg(u"å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
+                # åˆ é™¤ä¸´æ—¶æ–‡ä»¶å¤¹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userName + "Í¼Æ¬ÊıÁ¿Òì³££¬ÇëÊÖ¶¯¼ì²é")
+                self.printErrorMsg(userName + u"å›¾ç‰‡æ•°é‡å¼‚å¸¸ï¼Œè¯·æ‰‹åŠ¨æ£€æŸ¥")
 
-            # ±£´æ×îºóµÄĞÅÏ¢
-            newMemberUidListFile = open(newMemberUidListFilePath, 'a')
-            newMemberUidListFile.write("\t".join(newMemberUidList[userId]) + "\n")
-            newMemberUidListFile.close()
+            # ä¿å­˜æœ€åçš„ä¿¡æ¯
+            newUserIdListFile = open(newUserIdListFilePath, "a")
+            newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
+            newUserIdListFile.close()
 
-        # ÅÅĞò²¢±£´æĞÂµÄidList.txt
+        # æ’åºå¹¶ä¿å­˜æ–°çš„idList.txt
         tempList = []
-        tempUserIdList = sorted(newMemberUidList.keys())
+        tempUserIdList = sorted(newUserIdList.keys())
         for index in tempUserIdList:
-            tempList.append("\t".join(newMemberUidList[index]))
-        newMemberUidListString = "\n".join(tempList)
-        newMemberUidListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.memberUIdListFilePath)[-1]
-        self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş: " + newMemberUidListFilePath)
-        newMemberUidListFile = open(newMemberUidListFilePath, 'w')
-        newMemberUidListFile.write(newMemberUidListString)
-        newMemberUidListFile.close()
+            tempList.append("\t".join(newUserIdList[index]))
+        newUserIdListString = "\n".join(tempList)
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        self.printStepMsg(u"ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶ï¼š" + newUserIdListFilePath)
+        newUserIdListFile = open(newUserIdListFilePath, "w")
+        newUserIdListFile.write(newUserIdListString)
+        newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("´æµµÎÄ¼şÖĞËùÓĞÓÃ»§Í¼Æ¬ÒÑ³É¹¦ÏÂÔØ£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÍ¼Æ¬" + str(allImageCount) + "ÕÅ")
+        self.printStepMsg(u"å­˜æ¡£æ–‡ä»¶ä¸­æ‰€æœ‰ç”¨æˆ·å›¾ç‰‡å·²æˆåŠŸä¸‹è½½ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + u"ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(allImageCount) + u"å¼ ")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     downloadImage().main()
