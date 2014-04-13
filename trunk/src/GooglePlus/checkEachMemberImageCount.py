@@ -1,10 +1,10 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-4-14
 
 @author: rena
 
-杈撳嚭鐩綍鍜宼xt鏂囦欢涓浘鐗囨暟閲忎笉涓�鑷寸殑鎴愬憳鍚嶅瓧
+输出目录和txt文件中图片数量不一致的成员名字
 '''
 
 import os

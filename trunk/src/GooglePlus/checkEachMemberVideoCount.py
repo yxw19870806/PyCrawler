@@ -1,10 +1,10 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-4-21
 
 @author: rena
 
-杈撳嚭鐩綍鍜宼xt鏂囦欢涓棰戞暟閲忎笉涓�鑷寸殑鎴愬憳鍒楄〃
+输出目录和txt文件中视频数量不一致的成员列表
 '''
 
 import os
@@ -13,7 +13,7 @@ videoRootPath = "Z:\\G+\\video\\"
 allVideoUrlFilePath = os.getcwd() + "\\info\\allVideo.txt"
 unableDownloadFilePath = os.getcwd() + "\\info\\queshao.txt"
 
-# 瑙嗛璺緞涓悇鎴愬憳瑙嗛鏁伴噺
+# 视频路径中各成员视频数量
 memberList1 = {}
 list1 = os.listdir(videoRootPath)
 for path1 in list1:
@@ -25,7 +25,7 @@ for path1 in list1:
         for member in list3:
             memberList1[member] = len(os.listdir(videoRootPath + path1 + "\\" + path2 + "\\" + member))
 
-# 璁板綍鎵�鏈夎棰憉rl鐨則xt鏂囦欢涓悇鎴愬憳瑙嗛鏁伴噺
+# 记录所有视频url的txt文件中各成员视频数量
 memberList2 = {}
 isContinue = True
 name = ""
@@ -46,7 +46,7 @@ for line in lines:
             if not memberList2.has_key(name):
                 memberList2[name] = 0
 
-# 璁板綍鏃犳硶涓嬭浇鐨勮棰憉rl鐨則xt鏂囦欢涓悇鎴愬憳瑙嗛鏁伴噺
+# 记录无法下载的视频url的txt文件中各成员视频数量
 memberList3 = {}
 isContinue = True
 name = ""
