@@ -2,7 +2,7 @@
 '''
 Created on 2013-4-14
 
-@author: rena
+@author: hikaru
 
 输出目录和txt文件中图片数量不一致的成员名字
 '''

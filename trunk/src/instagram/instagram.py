@@ -1,11 +1,11 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-4-8
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
+ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
 '''
 
 from common import common, json
@@ -40,18 +40,18 @@ class instagram(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # ç¨‹åºé…ç½®
+        # ³ÌĞòÅäÖÃ
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 1, 2)
-        # ä»£ç†
+        # ´úÀí
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # æ–‡ä»¶è·¯å¾„
+        # ÎÄ¼şÂ·¾¶
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
@@ -62,35 +62,35 @@ class instagram(common.Tool):
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
         self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        self.printMsg(u"é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
+        self.printMsg(u"ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
 
     def main(self):
         startTime = time.time()
-        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
-        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
+        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
+        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.createDir(stepLogDir):
-                self.printErrorMsg(u"åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.printErrorMsg(u"´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
                 self.processExit()
-            self.printStepMsg(u"æ­¥éª¤æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + stepLogDir)
+            self.printStepMsg(u"²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
-                self.printErrorMsg(u"åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.printErrorMsg(u"´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
                 self.processExit()
-            self.printStepMsg(u"è°ƒè¯•æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + traceLogDir)
+            self.printStepMsg(u"µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.createDir(errorLogDir):
-            self.printErrorMsg(u"åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            self.printErrorMsg(u"´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
             self.processExit()
-        self.printStepMsg(u"é”™è¯¯æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + errorLogDir)
-        # å›¾ç‰‡ä¸‹è½½ç›®å½•
+        self.printStepMsg(u"´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
+        # Í¼Æ¬ÏÂÔØÄ¿Â¼
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
-                    input = raw_input(self.getTime() + u" å›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + u" å·²ç»å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¤¹å¹¶ç»§ç»­ç¨‹åºï¼Ÿ(Y)es or (N)o: ")
+                    # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
+                    input = raw_input(self.getTime() + u" Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + u" ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò£¿(Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -100,24 +100,24 @@ class instagram(common.Tool):
                     except Exception, e:
                         self.printErrorMsg(str(e)) 
                         pass
-                self.printStepMsg(u"åˆ é™¤å›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath)
-                # åˆ é™¤ç›®å½•
+                self.printStepMsg(u"É¾³ıÍ¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath)
+                # É¾³ıÄ¿Â¼
                 shutil.rmtree(self.imageDownloadPath, True)
-                # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
+                # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
                 while os.path.exists(self.imageDownloadPath):
                     shutil.rmtree(self.imageDownloadPath, True)
                     time.sleep(5)
             else:
-                self.printStepMsg(u"å›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + u"å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
+                self.printStepMsg(u"Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + u"ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg(u"åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath)
+        self.printStepMsg(u"´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg(u"åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            self.printErrorMsg(u"´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
             self.processExit()
-        # è®¾ç½®ä»£ç†
-        if self.isProxy == 1 or self.isProxy == 2:
+        # ÉèÖÃ´úÀí
+        if self.isProxy == 1:
             self.proxy(self.proxyIp, self.proxyPort, "http")
-        # å¯»æ‰¾idlistï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
+        # Ñ°ÕÒidlist£¬Èç¹ûÃ»ÓĞ½áÊø½ø³Ì
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
             userListFile = open(self.userIdListFilePath, "r")
@@ -131,46 +131,46 @@ class instagram(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg(u"ç”¨æˆ·IDå­˜æ¡£æ–‡ä»¶: " + self.userIdListFilePath + u"ä¸å­˜åœ¨ï¼Œç¨‹åºç»“æŸï¼")
+            self.printErrorMsg(u"ÓÃ»§ID´æµµÎÄ¼ş: " + self.userIdListFilePath + u"²»´æÔÚ£¬³ÌĞò½áÊø£¡")
             self.processExit()
-        # åˆ›å»ºä¸´æ—¶å­˜æ¡£æ–‡ä»¶
+        # ´´½¨ÁÙÊ±´æµµÎÄ¼ş
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.close()
-        # å¤åˆ¶å¤„ç†å­˜æ¡£æ–‡ä»¶
+        # ¸´ÖÆ´¦Àí´æµµÎÄ¼ş
         newUserIdList = copy.deepcopy(userIdList)
         for newUserAccount in newUserIdList:
-            # å¦‚æœæ²¡æœ‰åˆå§‹image countï¼Œåˆ™ä¸º0
+            # Èç¹ûÃ»ÓĞ³õÊ¼image count£¬ÔòÎª0
             if len(newUserIdList[newUserAccount]) < 2:
                 newUserIdList[newUserAccount].append("0")
-            # å¤„ç†ä¸Šä¸€æ¬¡image id
-            # éœ€ç½®ç©ºå­˜æ”¾æœ¬æ¬¡ç¬¬ä¸€å¼ è·å–çš„image URL
+            # ´¦ÀíÉÏÒ»´Îimage id
+            # ĞèÖÃ¿Õ´æ·Å±¾´ÎµÚÒ»ÕÅ»ñÈ¡µÄimage URL
             if len(newUserIdList[newUserAccount]) < 3:
                 newUserIdList[newUserAccount].append("")
             else:
                 newUserIdList[newUserAccount][2] = ""
         allImageCount = 0
-        # å¾ªç¯ä¸‹è½½æ¯ä¸ªid
+        # Ñ­»·ÏÂÔØÃ¿¸öid
         for userAccount in sorted(userIdList.keys()):
             self.printStepMsg("Account: " + userAccount)
-            # åˆå§‹åŒ–æ•°æ®
+            # ³õÊ¼»¯Êı¾İ
             imageId = ""
             imageCount = 1
             isPass = False
-            # å¦‚æœæœ‰å­˜æ¡£è®°å½•ï¼Œåˆ™ç›´åˆ°æ‰¾åˆ°ä¸å‰ä¸€æ¬¡ä¸€è‡´çš„åœ°å€ï¼Œå¦åˆ™éƒ½ç®—æœ‰å¼‚å¸¸
+            # Èç¹ûÓĞ´æµµ¼ÇÂ¼£¬ÔòÖ±µ½ÕÒµ½ÓëÇ°Ò»´ÎÒ»ÖÂµÄµØÖ·£¬·ñÔò¶¼ËãÓĞÒì³£
             if len(userIdList[userAccount]) > 2 and int(userIdList[userAccount][1]) != 0 and userIdList[userAccount][2] != "":
                 isError = True
             else:
                 isError = False
-            # å¦‚æœéœ€è¦é‡æ–°æ’åºåˆ™ä½¿ç”¨ä¸´æ—¶æ–‡ä»¶å¤¹ï¼Œå¦åˆ™ç›´æ¥ä¸‹è½½åˆ°ç›®æ ‡ç›®å½•
+            # Èç¹ûĞèÒªÖØĞÂÅÅĞòÔòÊ¹ÓÃÁÙÊ±ÎÄ¼ş¼Ğ£¬·ñÔòÖ±½ÓÏÂÔØµ½Ä¿±êÄ¿Â¼
             if self.isSort == 1:
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userAccount
             if not self.createDir(imagePath):
-                self.printErrorMsg(u"åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š " + imagePath + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.printErrorMsg(u"´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º " + imagePath + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
                 self.processExit()
-            # å›¾ç‰‡ä¸‹è½½
+            # Í¼Æ¬ÏÂÔØ
             while 1:
                 if isPass:
                     break
@@ -180,90 +180,90 @@ class instagram(common.Tool):
                     photoAlbumUrl = "http://instagram.com/%s/media?max_id=%s" % (userAccount, imageId)
                 photoAlbumPage = self.doGet(photoAlbumUrl)
                 if not photoAlbumPage:
-                    self.printErrorMsg(u"æ— æ³•è·å–ç›¸å†Œä¿¡æ¯: " + photoAlbumUrl)
+                    self.printErrorMsg(u"ÎŞ·¨»ñÈ¡Ïà²áĞÅÏ¢: " + photoAlbumUrl)
                     break
                 photoAlbumData = self.doGet(photoAlbumUrl)
                 try:
                     photoAlbumPage = json.read(photoAlbumData)
                 except:
-                    self.printErrorMsg(u"è¿”å›ä¿¡æ¯ï¼š" + str(photoAlbumData) + u" ä¸æ˜¯ä¸€ä¸ªJSONæ•°æ®, user id: " + str(userAccount))
+                    self.printErrorMsg(u"·µ»ØĞÅÏ¢£º" + str(photoAlbumData) + u" ²»ÊÇÒ»¸öJSONÊı¾İ, user id: " + str(userAccount))
                     break
                 if not isinstance(photoAlbumPage, dict):
-                    self.printErrorMsg(u"JSONæ•°æ®ï¼š" + str(photoAlbumPage) + u" ä¸æ˜¯ä¸€ä¸ªå­—å…¸, user id: " + str(userAccount))
+                    self.printErrorMsg(u"JSONÊı¾İ£º" + str(photoAlbumPage) + u" ²»ÊÇÒ»¸ö×Öµä, user id: " + str(userAccount))
                     break
                 if not photoAlbumPage.has_key("items"):
-                    self.printErrorMsg(u"åœ¨JSONæ•°æ®ï¼š" + str(photoAlbumPage) + u" ä¸­æ²¡æœ‰æ‰¾åˆ°'items'å­—æ®µ, user id: " + str(userAccount))
+                    self.printErrorMsg(u"ÔÚJSONÊı¾İ£º" + str(photoAlbumPage) + u" ÖĞÃ»ÓĞÕÒµ½'items'×Ö¶Î, user id: " + str(userAccount))
                     break
-                # ä¸‹è½½åˆ°äº†æœ€åä¸€å¼ å›¾äº†
+                # ÏÂÔØµ½ÁË×îºóÒ»ÕÅÍ¼ÁË
                 if photoAlbumPage["items"] == []:
                     break
                 for photoInfo in photoAlbumPage["items"]:
                     if not photoInfo.has_key("images"):
-                        self.printErrorMsg(u"åœ¨JSONæ•°æ®ï¼š" + str(photoInfo) + u" ä¸­æ²¡æœ‰æ‰¾åˆ°'images'å­—æ®µ, user id: " + str(userAccount))
+                        self.printErrorMsg(u"ÔÚJSONÊı¾İ£º" + str(photoInfo) + u" ÖĞÃ»ÓĞÕÒµ½'images'×Ö¶Î, user id: " + str(userAccount))
                         break
                     if not photoInfo.has_key("id"):
-                        self.printErrorMsg(u"åœ¨JSONæ•°æ®ï¼š" + str(photoInfo) + u" ä¸­æ²¡æœ‰æ‰¾åˆ°'id'å­—æ®µ, user id: " + str(userAccount))
+                        self.printErrorMsg(u"ÔÚJSONÊı¾İ£º" + str(photoInfo) + u" ÖĞÃ»ÓĞÕÒµ½'id'×Ö¶Î, user id: " + str(userAccount))
                         break
                     else:
                         imageId = photoInfo["id"]
-                    # å°†ç¬¬ä¸€å¼ imageçš„idä¿å­˜åˆ°æ–°id listä¸­
+                    # ½«µÚÒ»ÕÅimageµÄid±£´æµ½ĞÂid listÖĞ
                     if newUserIdList[userAccount][2] == "":
                         newUserIdList[userAccount][2] = imageId
-                    # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
+                    # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2].find("_") != -1:
                         if imageId == userIdList[userAccount][2]:
                             isPass = True
                             isError = False
                             break
                     if not photoInfo["images"].has_key("standard_resolution"):
-                        self.printErrorMsg(u"åœ¨JSONæ•°æ®ï¼š" + str(photoInfo["images"]) + u" ä¸­æ²¡æœ‰æ‰¾åˆ°'standard_resolution'å­—æ®µ, user id: " + str(userAccount) + ", image id: " + imageId)
+                        self.printErrorMsg(u"ÔÚJSONÊı¾İ£º" + str(photoInfo["images"]) + u" ÖĞÃ»ÓĞÕÒµ½'standard_resolution'×Ö¶Î, user id: " + str(userAccount) + ", image id: " + imageId)
                         break
                     if not photoInfo["images"]["standard_resolution"].has_key("url"):
-                        self.printErrorMsg(u"åœ¨JSONæ•°æ®ï¼š" + str(photoInfo["images"]["standard_resolution"]) + u" ä¸­æ²¡æœ‰æ‰¾åˆ°'url'å­—æ®µ, user id: " + str(userAccount) + ", image id: " + imageId)
+                        self.printErrorMsg(u"ÔÚJSONÊı¾İ£º" + str(photoInfo["images"]["standard_resolution"]) + u" ÖĞÃ»ÓĞÕÒµ½'url'×Ö¶Î, user id: " + str(userAccount) + ", image id: " + imageId)
                         break
                     imageUrl = photoInfo["images"]["standard_resolution"]["url"]
                     self.trace(u"image URL:" + imageUrl)
                     imgByte = self.doGet(imageUrl)
-                    # æ–‡ä»¶ç±»å‹
+                    # ÎÄ¼şÀàĞÍ
                     fileType = imageUrl.split(".")[-1]
-                    # ä¿å­˜å›¾ç‰‡
+                    # ±£´æÍ¼Æ¬
                     filename = str("%04d" % imageCount)
                     imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
                     if imgByte:
-                        self.printStepMsg(u"å¼€å§‹ä¸‹è½½ç¬¬" + str(imageCount) + u"å¼ å›¾ç‰‡ï¼š" + imageUrl)
+                        self.printStepMsg(u"¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + u"ÕÅÍ¼Æ¬£º" + imageUrl)
                         imageFile.write(imgByte)
-                        self.printStepMsg(u"ä¸‹è½½æˆåŠŸ")
+                        self.printStepMsg(u"ÏÂÔØ³É¹¦")
                     else:
-                        self.printErrorMsg(u"è·å–å›¾ç‰‡" + str(imageCount) + "ä¿¡æ¯å¤±è´¥ï¼š" + str(userAccount) + "ï¼Œ" + imageUrl)
+                        self.printErrorMsg(u"»ñÈ¡Í¼Æ¬" + str(imageCount) + "ĞÅÏ¢Ê§°Ü£º" + str(userAccount) + "£¬" + imageUrl)
                     imageFile.close()
                     imageCount += 1
-                    # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
+                    # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
                     if self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
                         isError = False
                         break
-            self.printStepMsg(userAccount + u"ä¸‹è½½å®Œæ¯•ï¼Œæ€»å…±è·å¾—" + str(imageCount - 1) + u"å¼ å›¾ç‰‡")
+            self.printStepMsg(userAccount + u"ÏÂÔØÍê±Ï£¬×Ü¹²»ñµÃ" + str(imageCount - 1) + u"ÕÅÍ¼Æ¬")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             allImageCount += imageCount - 1
             
-            # æ’åº
+            # ÅÅĞò
             if self.isSort == 1:
                 imageList = sorted(os.listdir(imagePath), reverse=True)
-                # åˆ¤æ–­æ’åºç›®æ ‡æ–‡ä»¶å¤¹æ˜¯å¦å­˜åœ¨
+                # ÅĞ¶ÏÅÅĞòÄ¿±êÎÄ¼ş¼ĞÊÇ·ñ´æÔÚ
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + userAccount
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg(u"å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath + u" å·²å­˜åœ¨ï¼Œåˆ é™¤ä¸­")
+                            self.printStepMsg(u"Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + u" ÒÑ´æÔÚ£¬É¾³ıÖĞ")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg(u"å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath + u"å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤ä¸­")
+                            self.printStepMsg(u"Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + u"ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ıÖĞ")
                             os.remove(destPath)
-                    self.printStepMsg(u"åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath)
+                    self.printStepMsg(u"´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + destPath)
                     if not self.createDir(destPath):
-                        self.printErrorMsg(u"åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š " + destPath + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                        self.printErrorMsg(u"´´½¨Í¼Æ¬±£´æÄ¿Â¼£º " + destPath + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
                         self.processExit()
-                    # å€’å™æ’åˆ—
+                    # µ¹ĞğÅÅÁĞ
                     if len(userIdList[userAccount]) >= 3:
                         count = int(userIdList[userAccount][1]) + 1
                     else:
@@ -272,32 +272,32 @@ class instagram(common.Tool):
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg(u"å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
-                # åˆ é™¤ä¸´æ—¶æ–‡ä»¶å¤¹
+                    self.printStepMsg(u"Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
+                # É¾³ıÁÙÊ±ÎÄ¼ş¼Ğ
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userAccount + u"å›¾ç‰‡æ•°é‡å¼‚å¸¸ï¼Œè¯·æ‰‹åŠ¨æ£€æŸ¥")
+                self.printErrorMsg(userAccount + u"Í¼Æ¬ÊıÁ¿Òì³££¬ÇëÊÖ¶¯¼ì²é")
 
-            # ä¿å­˜æœ€åçš„ä¿¡æ¯
+            # ±£´æ×îºóµÄĞÅÏ¢
             newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userAccount]) + "\n")
             newUserIdListFile.close()
 
-        # æ’åºå¹¶ä¿å­˜æ–°çš„idList.txt
+        # ÅÅĞò²¢±£´æĞÂµÄidList.txt
         tempList = []
         tempUserIdList = sorted(newUserIdList.keys())
         for index in tempUserIdList:
             tempList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tempList)
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg(u"ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶ï¼š" + newUserIdListFilePath)
+        self.printStepMsg(u"±£´æĞÂ´æµµÎÄ¼ş£º" + newUserIdListFilePath)
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg(u"å­˜æ¡£æ–‡ä»¶ä¸­æ‰€æœ‰ç”¨æˆ·å›¾ç‰‡å·²æˆåŠŸä¸‹è½½ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + u"ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(allImageCount) + u"å¼ ")
+        self.printStepMsg(u"´æµµÎÄ¼şÖĞËùÓĞÓÃ»§Í¼Æ¬ÒÑ³É¹¦ÏÂÔØ£¬ºÄÊ±" + str(int(stopTime - startTime)) + u"Ãë£¬¹²¼ÆÍ¼Æ¬" + str(allImageCount) + u"ÕÅ")
 
 if __name__ == "__main__":
     instagram().main()
