@@ -1,11 +1,11 @@
-# -*- coding:utf-8  -*-
+# -*- coding:GBK  -*-
 '''
 Created on 2013-6-15
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
+ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
 '''
 
 from common import common
@@ -39,16 +39,16 @@ class downloadVideo(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # ç¨‹åºé…ç½®
+        # ³ÌĞòÅäÖÃ
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        # ä»£ç†
+        # ´úÀí
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # æ–‡ä»¶è·¯å¾„
+        # ÎÄ¼şÂ·¾¶
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
@@ -58,40 +58,40 @@ class downloadVideo(common.Tool):
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
         self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
         self.resultFilePath = self.getConfig(config, "GET_VIDEO_DOWNLOAD_URL_FILE_NAME", "\\info\\get_result.html", 3)
-        self.printMsg(u"é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
+        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
         
     def main(self):
         startTime = time.time()
-        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
-        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
+        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
+        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.createDir(stepLogDir):
-                self.printErrorMsg(u"åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                 self.processExit()
-            self.printStepMsg(u"æ­¥éª¤æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + stepLogDir)
+            self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
-                self.printErrorMsg(u"åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
                 self.processExit()
-            self.printStepMsg(u"è°ƒè¯•æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + traceLogDir)
+            self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.createDir(errorLogDir):
-            self.printErrorMsg(u"åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + u" å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
             self.processExit()
-        self.printStepMsg(u"é”™è¯¯æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + errorLogDir)
-        # è§†é¢‘URLä¿å­˜æ–‡ä»¶
+        self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
+        # ÊÓÆµURL±£´æÎÄ¼ş
         videoUrlFileDir = os.path.dirname(self.resultFilePath)
         if not self.createDir(videoUrlFileDir):
-            self.printStepMsg(u"è§†é¢‘ä¸‹è½½åœ°å€é¡µé¢ç›®å½•ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + traceLogDir)
+            self.printStepMsg("ÊÓÆµÏÂÔØµØÖ·Ò³ÃæÄ¿Â¼£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
             self.processExit()
-        self.printStepMsg(u"è§†é¢‘ä¸‹è½½åœ°å€é¡µé¢ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + videoUrlFileDir)
-        # è§†é¢‘urlä¿å­˜çš„htmlæ–‡ä»¶
+        self.printStepMsg("ÊÓÆµÏÂÔØµØÖ·Ò³ÃæÄ¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + videoUrlFileDir)
+        # ÊÓÆµurl±£´æµÄhtmlÎÄ¼ş
         if os.path.exists(self.resultFilePath):
             isDelete = False
             while not isDelete:
-                # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§å­˜æ¡£æ–‡ä»¶
-                input = raw_input(self.getTime() + u" è§†é¢‘ä¸‹è½½åœ°å€é¡µé¢ï¼š" + self.resultFilePath + u" å·²ç»å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¹¶ç»§ç»­ç¨‹åº? (Y)es or (N)oï¼š")
+                # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾É´æµµÎÄ¼ş
+                input = raw_input(self.getTime() + " ÊÓÆµÏÂÔØµØÖ·Ò³Ãæ£º" + self.resultFilePath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş²¢¼ÌĞø³ÌĞò? (Y)es or (N)o£º")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
@@ -103,10 +103,10 @@ class downloadVideo(common.Tool):
                     pass
                 resultFile = open(self.resultFilePath, "w")
                 resultFile.close()
-        # è®¾ç½®ä»£ç†
+        # ÉèÖÃ´úÀí
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "https")
-        # å¯»æ‰¾idlistï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
+        # Ñ°ÕÒidlist£¬Èç¹ûÃ»ÓĞ½áÊø½ø³Ì
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
             userListFile = open(self.userIdListFilePath, "r")
@@ -120,15 +120,15 @@ class downloadVideo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg(u"ç”¨æˆ·IDå­˜æ¡£æ–‡ä»¶: " + self.userIdListFilePath + u"ä¸å­˜åœ¨ï¼Œç¨‹åºç»“æŸï¼")
+            self.printErrorMsg("ÓÃ»§ID´æµµÎÄ¼ş: " + self.userIdListFilePath + "²»´æÔÚ£¬³ÌĞò½áÊø£¡")
             self.processExit()
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.close()
-        # å¤åˆ¶å¤„ç†å­˜æ¡£æ–‡ä»¶
+        # ¸´ÖÆ´¦Àí´æµµÎÄ¼ş
         newUserIdList = copy.deepcopy(userIdList)
         for newUserId in newUserIdList:
-            # å¦‚æœæ²¡æœ‰åå­—ï¼Œåˆ™åå­—ç”¨uidä»£æ›¿
+            # Èç¹ûÃ»ÓĞÃû×Ö£¬ÔòÃû×ÖÓÃuid´úÌæ
             if len(newUserIdList[newUserId]) < 2:
                 newUserIdList[newUserId].append(newUserIdList[newUserId][0])
             # image count
@@ -145,25 +145,25 @@ class downloadVideo(common.Tool):
                 newUserIdList[newUserId].append("")
             else:
                 newUserIdList[newUserId][5] = ""
-            # å¤„ç†æˆå‘˜é˜Ÿä¼ä¿¡æ¯
+            # ´¦Àí³ÉÔ±¶ÓÎéĞÅÏ¢
             if len(newUserIdList[newUserId]) < 7:
                 newUserIdList[newUserId].append("")
                 
         allVideoCount = 0
-        # å¾ªç¯è·å–æ¯ä¸ªid
+        # Ñ­»·»ñÈ¡Ã¿¸öid
         for userId in userIdList:
             userName = newUserIdList[userId][1]
-            self.printStepMsg("ID: " + str(userId) + u", åå­—: " + userName.decode("GBK"))
-            # åˆå§‹åŒ–æ•°æ®
+            self.printStepMsg("ID: " + str(userId) + ", Ãû×Ö: " + userName.decode("GBK"))
+            # ³õÊ¼»¯Êı¾İ
             videoCount = 0
             videoUrlList = []
-            # å¦‚æœæœ‰å­˜æ¡£è®°å½•ï¼Œåˆ™ç›´åˆ°æ‰¾åˆ°ä¸å‰ä¸€æ¬¡ä¸€è‡´çš„åœ°å€ï¼Œå¦åˆ™éƒ½ç®—æœ‰å¼‚å¸¸
+            # Èç¹ûÓĞ´æµµ¼ÇÂ¼£¬ÔòÖ±µ½ÕÒµ½ÓëÇ°Ò»´ÎÒ»ÖÂµÄµØÖ·£¬·ñÔò¶¼ËãÓĞÒì³£
             if len(userIdList[userId]) >= 6 and userIdList[userId][2] != '':
                 isError = True
             else:
                 isError = False
             videoAlbumUrl = "https://plus.google.com/" + userId + "/videos"
-            self.trace(u"è§†é¢‘ä¸“è¾‘åœ°å€ï¼š" + videoAlbumUrl)
+            self.trace("ÊÓÆµ×¨¼­µØÖ·£º" + videoAlbumUrl)
             videoAlbumPage = self.doGet(videoAlbumUrl)
             if videoAlbumPage:
                 videoUrlIndex = videoAlbumPage.find("&quot;https://video.googleusercontent.com/?token")
@@ -171,18 +171,18 @@ class downloadVideo(common.Tool):
                     videoUrlStart = videoAlbumPage.find("http", videoUrlIndex)
                     videoUrlStop = videoAlbumPage.find("&quot;", videoUrlStart)
                     videoUrl = videoAlbumPage[videoUrlStart:videoUrlStop].replace("\u003d", "=")
-                    # video token å–å‰20ä½
+                    # video token È¡Ç°20Î»
                     tokenStart = videoUrl.find("?token=") + 7
                     videoToken = videoUrl[tokenStart:tokenStart + 20]
-                    # å°†ç¬¬ä¸€ä¸ªè§†é¢‘çš„tokenä¿å­˜åˆ°æ–°id listä¸­
+                    # ½«µÚÒ»¸öÊÓÆµµÄtoken±£´æµ½ĞÂid listÖĞ
                     if newUserIdList[userId][5] == "":
                         newUserIdList[userId][5] = videoToken
-                    # æ‰¾åˆ°ä¸Šæ¬¡ä¿å­˜çš„è§†é¢‘
+                    # ÕÒµ½ÉÏ´Î±£´æµÄÊÓÆµ
                     if len(userIdList[userId]) >= 6:
                         if videoToken == userIdList[userId][5]:
                             isError = False
                             break
-                    # åˆ¤æ–­æ˜¯å¦é‡å¤
+                    # ÅĞ¶ÏÊÇ·ñÖØ¸´
                     if videoUrl in videoUrlList:
                         videoUrlIndex = videoAlbumPage.find("&quot;https://video.googleusercontent.com/?token", videoUrlIndex + 1)
                         continue
@@ -190,8 +190,8 @@ class downloadVideo(common.Tool):
                     videoCount += 1
                     videoUrlIndex = videoAlbumPage.find("&quot;https://video.googleusercontent.com/?token", videoUrlIndex + 1)
             else:
-                self.printErrorMsg(u"æ— æ³•è·å–è§†é¢‘é¦–é¡µ: " + videoAlbumUrl)
-            # ç”Ÿæˆä¸‹è½½è§†é¢‘urlçš„æ–‡ä»¶
+                self.printErrorMsg("ÎŞ·¨»ñÈ¡ÊÓÆµÊ×Ò³: " + videoAlbumUrl)
+            # Éú³ÉÏÂÔØÊÓÆµurlµÄÎÄ¼ş
             if videoCount > 0:
                 allVideoCount += videoCount
                 index = 0
@@ -206,27 +206,27 @@ class downloadVideo(common.Tool):
                     index += 1
                     resultFile.writelines("<a href=" + videoUrl + ">" + str(userName + "_" + "%03d" % index) + "</a><br>\n")
                 resultFile.close()
-            # ä¿å­˜æœ€åçš„ä¿¡æ¯
+            # ±£´æ×îºóµÄĞÅÏ¢
             newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
             newUserIdListFile.close()
             if isError:
-                self.printErrorMsg(userName + u"è§†é¢‘æ•°é‡å¼‚å¸¸ï¼Œè¯·æ‰‹åŠ¨æ£€æŸ¥")
+                self.printErrorMsg(userName + "ÊÓÆµÊıÁ¿Òì³££¬ÇëÊÖ¶¯¼ì²é")
         
-        # æ’åºå¹¶ä¿å­˜æ–°çš„idList.txt
+        # ÅÅĞò²¢±£´æĞÂµÄidList.txt
         tmpList = []
         tmpUserIdList = sorted(newUserIdList.keys())
         for index in tmpUserIdList:
             tmpList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tmpList)
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg(u"ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶ï¼š" + newUserIdListFilePath)
+        self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş£º" + newUserIdListFilePath)
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg(u"å­˜æ¡£æ–‡ä»¶ä¸­æ‰€æœ‰ç”¨æˆ·è§†é¢‘åœ°å€å·²æˆåŠŸè·å–ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + u"ç§’ï¼Œå…±è®¡è§†é¢‘åœ°å€" + str(allVideoCount) + "ä¸ª")
+        self.printStepMsg("´æµµÎÄ¼şÖĞËùÓĞÓÃ»§ÊÓÆµµØÖ·ÒÑ³É¹¦»ñÈ¡£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÊÓÆµµØÖ·" + str(allVideoCount) + "¸ö")
         
 if __name__ == "__main__":
     downloadVideo().main()
