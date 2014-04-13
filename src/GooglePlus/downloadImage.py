@@ -47,7 +47,7 @@ class downloadImage(common.Tool):
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
-        self.getImagePageCount = self.getConfig(config, "GET_IMAGE_PAGE_COUNT", 1, 2)
+        self.getImageUrlCount = self.getConfig(config, "GET_IMAGE_URL_COUNT", 1, 2)
         # 代理
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
@@ -190,7 +190,7 @@ class downloadImage(common.Tool):
             photoAlbumUrl = 'https://plus.google.com/_/photos/pc/read/'
             now = time.time() * 100
             key = ''
-            postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, self.getImagePageCount * 100, key, now)
+            postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, self.getImageUrlCount * 100, key, now)
             self.trace(u"信息首页地址：" + photoAlbumUrl)
             photoAlbumPage = self.doGet(photoAlbumUrl, postData)
             if photoAlbumPage:
