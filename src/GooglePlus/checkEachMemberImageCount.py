@@ -18,7 +18,10 @@ def getCount(path):
     for line in lines:
         line = line.split("\t")
         imagePath = imageRootPath + line[6].replace("\n", "") + "\\" + line[1]
-        count1 = len(os.listdir(imagePath))
+        if os.path.exists(imagePath):
+            count1 = len(os.listdir(imagePath))
+        else:
+            count1 = 0
         count2 = int(line[2])
         if count1 != count2:
             print line[1] + ": " + str(count1) + ", " + str(count2)
