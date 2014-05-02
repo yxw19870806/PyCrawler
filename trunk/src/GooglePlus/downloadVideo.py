@@ -206,12 +206,18 @@ class downloadVideo(common.Tool):
                     index += 1
                     resultFile.writelines("<a href=" + videoUrl + ">" + str(userName + "_" + "%03d" % index) + "</a><br>\n")
                 resultFile.close()
+                
+            if isError:
+                if newUserIdList[userId][5] == "":
+                    if len(userIdList[userId]) >= 6 and userIdList[userId][5] != "":
+                        newUserIdList[userId][5] = userIdList[userId][5]
+                else:
+                    self.printErrorMsg(userName + "视频数量异常，请手动检查")
+                    
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
             newUserIdListFile.close()
-            if isError:
-                self.printErrorMsg(userName + "视频数量异常，请手动检查")
         
         # 排序并保存新的idList.txt
         tmpList = []
