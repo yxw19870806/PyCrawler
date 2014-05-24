@@ -37,14 +37,14 @@ class weibo(common.Tool):
 #                 redirectUrlStop = tempPage.find('"', redirectUrlStart)
                 redirectUrl = tempPage[redirectUrlStart:redirectUrlStop]
                 return str(self.doGet(redirectUrl))
-            elif tempPage.find(u"用户名或密码错误") != -1:
-                self.printErrorMsg(u"登陆状态异常，请在浏览器中重新登陆微博账号")
+            elif tempPage.find("用户名或密码错误") != -1:
+                self.printErrorMsg("登陆状态异常，请在浏览器中重新登陆微博账号")
                 self.processExit()
             else:
                 try:
                     tempPage = tempPage.decode("utf-8")
-                    if tempPage.find(u"用户名或密码错误") != -1:
-                        self.printErrorMsg(u"登陆状态异常，请在浏览器中重新登陆微博账号")
+                    if tempPage.find("用户名或密码错误") != -1:
+                        self.printErrorMsg("登陆状态异常，请在浏览器中重新登陆微博账号")
                         self.processExit()
                 except Exception, e:
                     self.printErrorMsg(str(e))
@@ -99,7 +99,7 @@ class weibo(common.Tool):
             self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
         else:
             self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
-        self.printMsg(u"配置文件读取完成")
+        self.printMsg("配置文件读取完成")
             
     def main(self):
         startTime = time.time()
@@ -107,24 +107,24 @@ class weibo(common.Tool):
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.createDir(stepLogDir):
-                self.printErrorMsg(u"创建步骤日志目录：" + stepLogDir + u" 失败，程序结束！")
+                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"步骤日志目录不存在，创建文件夹：" + stepLogDir)
+            self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
             errorLogDir = os.path.dirname(self.errorLogPath)
             if not self.createDir(errorLogDir):
-                self.printErrorMsg(u"创建错误日志目录：" + errorLogDir + u" 失败，程序结束！")
+                self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"错误日志目录不存在，创建文件夹：" + errorLogDir)
+            self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
-                self.printErrorMsg(u"创建调试日志目录：" + traceLogDir + u" 失败，程序结束！")
+                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg(u"调试日志目录不存在，创建文件夹：" + traceLogDir)
+            self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
                 while not isDelete:
-                    input = raw_input(self.getTime() + u" 图片保存目录：" + self.imageDownloadPath + u" 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input = raw_input(self.getTime() + " 图片保存目录：" + self.imageDownloadPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     try:
                         input = input.lower()
                         if input in ["y", "yes"]:
@@ -134,25 +134,25 @@ class weibo(common.Tool):
                     except Exception, e:
                         self.printErrorMsg(str(e))
                         pass
-                self.printStepMsg(u"删除图片保存目录：" + self.imageDownloadPath)
+                self.printStepMsg("删除图片保存目录：" + self.imageDownloadPath)
                 shutil.rmtree(self.imageDownloadPath, True)
                 # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
                 while os.path.exists(self.imageDownloadPath):
                     shutil.rmtree(self.imageDownloadPath, True)
                     time.sleep(5)
             else:
-                self.printStepMsg(u"图片保存目录：" + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
+                self.printStepMsg("图片保存目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg(u"创建图片下载目录：" + self.imageDownloadPath + u" 失败，程序结束！")
+            self.printErrorMsg("创建图片下载目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
-        self.printStepMsg(u"创建图片保存目录：" + self.imageDownloadPath)
+        self.printStepMsg("创建图片保存目录：" + self.imageDownloadPath)
         # 设置代理
         if self.isProxy == 1:
             self.proxy(self.proxyIp, self.proxyPort, "http")
         # 设置系统cookies (fire fox)
         if not self.cookie(self.cookiePath, self.browerVersion):
-            self.printErrorMsg(u"导入浏览器cookies失败，程序结束！")
+            self.printErrorMsg("导入浏览器cookies失败，程序结束！")
             self.processExit()
         # 寻找idlist，如果没有结束进程
         userIdList = {}
@@ -167,7 +167,7 @@ class weibo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg(u"用户ID存档文件：" + self.userIdListFilePath + u"不存在，程序结束！")
+            self.printErrorMsg("用户ID存档文件：" + self.userIdListFilePath + "不存在，程序结束！")
             self.processExit()
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, 'w')
@@ -208,7 +208,7 @@ class weibo(common.Tool):
             if os.path.exists(imagePath):
                 shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
-                self.printErrorMsg(u"创建图片下载目录：" + imagePath + u" 失败，程序结束！")
+                self.printErrorMsg("创建图片下载目录：" + imagePath + " 失败，程序结束！")
                 self.processExit()
             # 日志文件插入信息
             while 1:
@@ -219,30 +219,30 @@ class weibo(common.Tool):
                 try:
                     page = json.read(photoPageData)
                 except:
-                    self.printErrorMsg(u"返回信息：" + str(photoPageData) + u" 不是一个JSON数据, user id: " + str(userId))
+                    self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据, user id: " + str(userId))
                     break
                 if not isinstance(page, dict):
-                    self.printErrorMsg(u"JSON数据：" + str(page) + u" 不是一个字典, user id: " + str(userId))
+                    self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, user id: " + str(userId))
                     break
                 if not page.has_key("data"):
-                    self.printErrorMsg(u"在JSON数据：" + str(page) + u" 中没有找到'data'字段, user id: " + str(userId))
+                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'data'字段, user id: " + str(userId))
                     break
                 if totalImageCount == 0:
                     if page["data"].has_key("total"):
                         totalImageCount = page["data"]["total"]
                     else:
-                        self.printErrorMsg(u"在JSON数据：" + str(page) + u" 中没有找到'total'字段, user id: " + str(userId))
+                        self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(userId))
                         isPass = True
                         break
                 if not isinstance(page["data"], dict):
-                    self.printErrorMsg(u"JSON数据['data']：" + str(page["data"]) + u" 不是一个字典, user id: " + str(userId))
+                    self.printErrorMsg("JSON数据['data']：" + str(page["data"]) + " 不是一个字典, user id: " + str(userId))
                     break
                 if not page["data"].has_key("photo_list"):
-                    self.printErrorMsg(u"在JSON数据：" + str(page["data"]) + u" 中没有找到'photo_list'字段, user id: " + str(userId))
+                    self.printErrorMsg("在JSON数据：" + str(page["data"]) + " 中没有找到'photo_list'字段, user id: " + str(userId))
                     break
                 for imageInfo in page["data"]["photo_list"]:
                     if not isinstance(imageInfo, dict):
-                        self.printErrorMsg(u"JSON数据['photo_list']：" + str(imageInfo) + u" 不是一个字典, user id: " + str(userId))
+                        self.printErrorMsg("JSON数据['photo_list']：" + str(imageInfo) + " 不是一个字典, user id: " + str(userId))
                         continue
                     if imageInfo.has_key("pic_host"):
                         imageUrl = imageInfo["pic_host"]
@@ -259,8 +259,8 @@ class weibo(common.Tool):
                                 break
                         imageUrl += "/large/" + imageInfo["pic_name"]
                     else:
-                        self.printErrorMsg(u"在JSON数据：" + str(imageInfo) + u" 中没有找到'pic_name'字段, user id: " + str(userId))
-                    self.printStepMsg(u"开始下载第" + str(imageCount) + u"张图片：" + imageUrl)
+                        self.printErrorMsg("在JSON数据：" + str(imageInfo) + " 中没有找到'pic_name'字段, user id: " + str(userId))
+                    self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                     imgByte = self.doGet(imageUrl)
                     fileType = imageUrl.split(".")[-1]
                     if fileType.find('/') != -1:
@@ -268,9 +268,9 @@ class weibo(common.Tool):
                     imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                     if imgByte:
                         imageFile.write(imgByte)
-                        self.printStepMsg(u"下载成功")
+                        self.printStepMsg("下载成功")
                     else:
-                        self.printErrorMsg(u"下载图片失败，用户ID：" + str(userId) + u"，图片地址：" + imageUrl)
+                        self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
                     imageFile.close()
                     imageCount += 1
                     # 达到配置文件中的下载数量，结束
@@ -290,7 +290,7 @@ class weibo(common.Tool):
             if int(newUserIdList[userId][2]) == 0 and imageCount - 1 != totalImageCount:
                 isError = 2
             
-            self.printStepMsg(userName + u"下载完毕，总共获得" + str(imageCount - 1) + u"张图片")
+            self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
             
@@ -302,14 +302,14 @@ class weibo(common.Tool):
                     destPath = self.imageDownloadPath + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg(u"图片保存目录：" + destPath + u" 已存在，删除中")
+                            self.printStepMsg("图片保存目录：" + destPath + " 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg(u"图片保存目录：" + destPath + u"已存在相同名字的文件，自动删除")
+                            self.printStepMsg("图片保存目录：" + destPath + "已存在相同名字的文件，自动删除")
                             os.remove(destPath)
-                    self.printStepMsg(u"创建图片保存目录：" + destPath)
+                    self.printStepMsg("创建图片保存目录：" + destPath)
                     if not self.createDir(destPath):
-                        self.printErrorMsg(u"创建图片保存目录： " + destPath + u" 失败，程序结束！")
+                        self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
                         self.processExit()
                     # 倒叙排列
                     if len(userIdList[userId]) >= 3:
@@ -320,14 +320,14 @@ class weibo(common.Tool):
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg(u"图片从下载目录移动到保存目录成功")
+                    self.printStepMsg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
             if isError == 1:
-                self.printErrorMsg(userName + u"图片数量异常，请手动检查")
+                self.printErrorMsg(userName + "图片数量异常，请手动检查")
             elif isError == 2:
-                self.printErrorMsg(userName + u"图片数量" + str(imageCount) + u"张，小于相册图片数量" + str(totalImageCount) + u"张，请手动检查")
+                self.printErrorMsg(userName + "图片数量" + str(imageCount) + "张，小于相册图片数量" + str(totalImageCount) + "张，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, 'a')
@@ -341,13 +341,13 @@ class weibo(common.Tool):
             tempList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tempList)
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg(u"保存新存档文件：" + newUserIdListFilePath)
+        self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
         newUserIdListFile = open(newUserIdListFilePath, 'w')
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg(u"存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(allImageCount) + u"张")
+        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == '__main__':
     weibo().main()
