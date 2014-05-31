@@ -275,7 +275,7 @@ class weibo(common.Tool):
                     imageCount += 1
                     # 达到配置文件中的下载数量，结束
                     if self.getImageCount > 0 and imageCount > self.getImageCount:
-                        isPass = True
+                        isPass = False
                         break
                 if isPass:
                     break
