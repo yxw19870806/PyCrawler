@@ -106,20 +106,24 @@ class weibo(common.Tool):
         # 判断各种目录是否存在
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.createDir(stepLogDir):
-                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
-                self.processExit()
-            self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
-            errorLogDir = os.path.dirname(self.errorLogPath)
+            if not os.path.exists(stepLogDir):
+                self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
+                if not self.createDir(stepLogDir):
+                    self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                    self.processExit()
+            traceLogDir = os.path.dirname(self.traceLogPath)
+            if not os.path.exists(traceLogDir):
+                self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
+                if not self.createDir(traceLogDir):
+                    self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                    self.processExit()
+        errorLogDir = os.path.dirname(self.errorLogPath)
+        if not os.path.exists(errorLogDir):
+            self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
             if not self.createDir(errorLogDir):
                 self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
                 self.processExit()
-            self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
-            traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.createDir(traceLogDir):
-                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
-                self.processExit()
-            self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
+        # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
             if os.path.isdir(self.imageDownloadPath):
                 isDelete = False
