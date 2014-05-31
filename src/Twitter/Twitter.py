@@ -13,8 +13,6 @@ import copy
 import os
 import shutil
 import time
-import code
-import codecs
 
 class Twitter(common.Tool):
     
@@ -208,8 +206,7 @@ class Twitter(common.Tool):
                         self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'data'字段, account: " + userAccount)
                         break
                 else:
-                    lastPage = True
-                self.processExit()
+                    isLastPage = True
                 maxId = page['max_id']
                 if not page.has_key("items_html"):
                     self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'data'字段, account: " + userAccount)
@@ -255,7 +252,7 @@ class Twitter(common.Tool):
                     imageIndex = page.find('data-url', imageIndex + 1)
             
             self.printStepMsg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
-            newUserIdList[userAccount][2] = str(int(newUserIdList[userAccount][2]) + imageCount - 1)
+            newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             totalImageCount += imageCount - 1
             
             # 排序
