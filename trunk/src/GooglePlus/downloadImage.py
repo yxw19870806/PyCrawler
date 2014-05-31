@@ -163,7 +163,7 @@ class downloadImage(common.Tool):
             if len(newUserIdList[newUserId]) < 7:
                 newUserIdList[newUserId].append("")
         
-        allImageCount = 0
+        totalImageCount = 0
         # 循环下载每个id
         for userId in sorted(userIdList.keys()):
             userName = newUserIdList[userId][1]
@@ -199,14 +199,11 @@ class downloadImage(common.Tool):
 #             testFile.close()
             
             if photoAlbumPage:
-                messageIndex = 1
-                while messageIndex != 0:
-                    messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex)
+                messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId)
+                while messageIndex != -1:
                     messageStart = photoAlbumPage.find("http", messageIndex)                   
                     messageStop = photoAlbumPage.find('"', messageStart)
                     messageUrl = photoAlbumPage[messageStart:messageStop]
-                    if messageIndex == -1:
-                        break
                     # 将第一张image的URL保存到新id list中
                     if newUserIdList[userId][3] == "":
                         newUserIdList[userId][3] = messageUrl
@@ -218,13 +215,13 @@ class downloadImage(common.Tool):
                     self.trace("message URL:" + messageUrl)
                     # 判断是否重复
                     if messageUrl in messageUrlList:
-                        messageIndex += 1
+                        messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
                         continue
                     messageUrlList.append(messageUrl)
                     messagePage = self.doGet(messageUrl)
                     if not messagePage:
                         self.printErrorMsg("无法获取信息页: " + messageUrl)
-                        messageIndex += 1
+                        messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
                         continue
                     flag = messagePage.find("<div><a href=")
                     while flag != -1:
@@ -247,8 +244,8 @@ class downloadImage(common.Tool):
                         # 文件类型
                         imgByte = self.doGet(imageUrl)
                         fileType = imageUrl.split(".")[-1]
+                        imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                         if imgByte:
-                            imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                             self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                             imageFile.write(imgByte)
                             self.printStepMsg("下载成功")
@@ -261,13 +258,13 @@ class downloadImage(common.Tool):
                             self.printErrorMsg("达到下载限制数量")
                             break
                         flag = messagePage.find("<div><a href=", flag + 1)
-                    messageIndex += 1
+                    messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
             else:
                 self.printErrorMsg("无法获取相册首页: " + photoAlbumUrl + ' ' + userName)
             
             self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
-            allImageCount += imageCount - 1
+            totalImageCount += imageCount - 1
             
             # 排序
             if self.isSort == 1:
@@ -320,7 +317,7 @@ class downloadImage(common.Tool):
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
+        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
     downloadImage().main()
