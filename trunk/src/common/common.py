@@ -55,7 +55,7 @@ class Tool(object):
                     self.printMsg(str(e))
                     traceback.print_exc()
             count += 1
-            if count > 10:
+            if count > 50:
                 self.printErrorMsg(u"无法访问页面：" + url)
                 return False
 
