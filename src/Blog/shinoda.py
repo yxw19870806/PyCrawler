@@ -100,26 +100,29 @@ class shinoda(common.Tool):
                 self.processExit()
         # 图片排序后的保存目录
         if os.path.exists(self.imageDownloadPath):
+            # 路径是目录
             if os.path.isdir(self.imageDownloadPath):
-                isDelete = False
-                while not isDelete:
-                    # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input(self.getTime() + u" 图片保存目录：" + self.imageDownloadPath + u" 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
-                    try:
-                        input = input.lower()
-                        if input in ["y", "yes"]:
-                            isDelete = True
-                        elif input in ["n", "no"]:
-                            self.processExit()
-                    except:
-                        pass
-                self.printStepMsg(u"删除图片保存目录：" + self.imageDownloadPath)
-                # 删除目录
-                shutil.rmtree(self.imageDownloadPath, True)
-                # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
-                while os.path.exists(self.imageDownloadPath):
+                # 目录不为空
+                if os.listdir(self.imageDownloadPath):
+                    isDelete = False
+                    while not isDelete:
+                        # 手动输入是否删除旧文件夹中的目录
+                        input = raw_input(self.getTime() + u" 图片保存目录：" + self.imageDownloadPath + u" 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                        try:
+                            input = input.lower()
+                            if input in ["y", "yes"]:
+                                isDelete = True
+                            elif input in ["n", "no"]:
+                                self.processExit()
+                        except:
+                            pass
+                    self.printStepMsg(u"删除图片保存目录：" + self.imageDownloadPath)
+                    # 删除目录
                     shutil.rmtree(self.imageDownloadPath, True)
-                    time.sleep(5)
+                    # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+                    while os.path.exists(self.imageDownloadPath):
+                        shutil.rmtree(self.imageDownloadPath, True)
+                        time.sleep(5)
             else:
                 self.printStepMsg(u"图片保存目录：" + self.imageDownloadPath + u"已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
@@ -130,24 +133,26 @@ class shinoda(common.Tool):
         # 图片下载临时目录
         if os.path.exists(self.imageTempPath):
             if os.path.isdir(self.imageTempPath):
-                isDelete = False
-                while not isDelete:
-                    # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input(self.getTime() + u" 图片下载临时目录：" + self.imageTempPath + u" 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
-                    try:
-                        input = input.lower()
-                        if input in ["y", "yes"]:
-                            isDelete = True
-                        elif input in ["n", "no"]:
-                            self.processExit()
-                    except:
-                        pass
-                self.printStepMsg(u"删除图片下载临时目录：" + self.imageTempPath)
-                shutil.rmtree(self.imageTempPath, True)
-                # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
-                while os.path.exists(self.imageTempPath):
+                # 目录不为空
+                if os.listdir(self.imageTempPath):
+                    isDelete = False
+                    while not isDelete:
+                        # 手动输入是否删除旧文件夹中的目录
+                        input = raw_input(self.getTime() + u" 图片下载临时目录：" + self.imageTempPath + u" 已经存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                        try:
+                            input = input.lower()
+                            if input in ["y", "yes"]:
+                                isDelete = True
+                            elif input in ["n", "no"]:
+                                self.processExit()
+                        except:
+                            pass
+                    self.printStepMsg(u"删除图片下载临时目录：" + self.imageTempPath)
                     shutil.rmtree(self.imageTempPath, True)
-                    time.sleep(5)
+                    # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+                    while os.path.exists(self.imageTempPath):
+                        shutil.rmtree(self.imageTempPath, True)
+                        time.sleep(5)
             else:
                 self.printStepMsg(u"图片下载临时目录：" + self.imageTempPath + u"已存在相同名字的文件，自动删除")
                 os.remove(self.imageTempPath)
