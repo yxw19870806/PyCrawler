@@ -90,27 +90,30 @@ class downloadImage(common.Tool):
                 self.processExit()
         # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
+            # 路径是目录且
             if os.path.isdir(self.imageDownloadPath):
-                isDelete = False
-                while not isDelete:
-                    # 手动输入是否删除旧文件夹中的目录
-                    input = raw_input(self.getTime() + " 图片下载目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
-                    try:
-                        input = input.lower()
-                        if input in ["y", "yes"]:
-                            isDelete = True
-                        elif input in ["n", "no"]:
-                            self.processExit()
-                    except Exception, e:
-                        self.printErrorMsg(str(e)) 
-                        pass
-                self.printStepMsg("删除图片下载目录：" + self.imageDownloadPath)
-                # 删除目录
-                shutil.rmtree(self.imageDownloadPath, True)
-                # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
-                while os.path.exists(self.imageDownloadPath):
+                # 目录不为空
+                if os.listdir(self.imageDownloadPath):
+                    isDelete = False
+                    while not isDelete:
+                        # 手动输入是否删除旧文件夹中的目录
+                        input = raw_input(self.getTime() + " 图片下载目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
+                        try:
+                            input = input.lower()
+                            if input in ["y", "yes"]:
+                                isDelete = True
+                            elif input in ["n", "no"]:
+                                self.processExit()
+                        except Exception, e:
+                            self.printErrorMsg(str(e)) 
+                            pass
+                    self.printStepMsg("删除图片下载目录：" + self.imageDownloadPath)
+                    # 删除目录
                     shutil.rmtree(self.imageDownloadPath, True)
-                    time.sleep(5)
+                    # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+                    while os.path.exists(self.imageDownloadPath):
+                        shutil.rmtree(self.imageDownloadPath, True)
+                        time.sleep(5)
             else:
                 self.printStepMsg("图片下载目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
                 os.remove(self.imageDownloadPath)
