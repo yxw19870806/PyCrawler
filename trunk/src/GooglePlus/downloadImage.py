@@ -90,7 +90,7 @@ class downloadImage(common.Tool):
                 self.processExit()
         # 图片下载目录
         if os.path.exists(self.imageDownloadPath):
-            # 路径是目录且
+            # 路径是目录
             if os.path.isdir(self.imageDownloadPath):
                 # 目录不为空
                 if os.listdir(self.imageDownloadPath):
