@@ -145,7 +145,11 @@ class Tool(object):
                 expires = cookieInfo[3]
                 name = cookieInfo[4]
                 value = cookieInfo[5]
-                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+#                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+                try:
+                    s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+                except:
+                    pass
         elif browserType in [3, 4]:
             con = sqlite.connect(filePath + "\\Cookies")
             cur = con.cursor()
