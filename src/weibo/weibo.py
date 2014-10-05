@@ -47,7 +47,7 @@ class weibo(common.Tool):
                         self.printErrorMsg("µÇÂ½×´Ì¬Òì³££¬ÇëÔÚä¯ÀÀÆ÷ÖÐÖØÐÂµÇÂ½Î¢²©ÕËºÅ")
                         self.processExit()
                 except Exception, e:
-                    self.printErrorMsg(str(e))
+                    pass
                 return str(tempPage)
         return False
 
