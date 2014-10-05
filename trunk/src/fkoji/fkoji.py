@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 from common import common
-import BeautifulSoup
+from common import BeautifulSoup
 import os
 import shutil
 import sys
@@ -186,7 +186,7 @@ class fkoji(common.Tool):
             if isOver:
                 break
             # 达到配置文件中的下载数量，结束
-            if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
+            if self.getImagePageCount != 0 and imageCount > self.getImagePageCount:
                 break
             indexUrl = url % str(pageIndex)
             self.trace("网页地址：" + indexUrl)
@@ -208,12 +208,12 @@ class fkoji(common.Tool):
                     # user id
                     if isinstance(subTag, BeautifulSoup.NavigableString):
                         if subTag.find("@") == 0:
-                            userId = subTag[1:]
+                            userId = subTag[1:].encode("GBK")
                     # image url
                     elif isinstance(subTag, BeautifulSoup.Tag):
                         subTagAttrs = dict(subTag.attrs)
                         if subTagAttrs.has_key("src") and subTagAttrs.has_key("alt"):
-                            imageUrl = str(subTagAttrs["src"]).replace(" ", "")
+                            imageUrl = str(subTagAttrs["src"]).replace(" ", "").encode("GBK")
                             lastImageUrl = lastImageUrl.replace(" ", "")
                             if newLastImageUrl == "":
                                 newLastImageUrl = imageUrl
@@ -232,8 +232,8 @@ class fkoji(common.Tool):
                 if fileType.find('/') != -1:
                     fileType = 'jpg'
                 imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "_" + str(userId) + "." + fileType, "wb")
+                self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                 if imgByte:
-                    self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                     imageFile.write(imgByte)
                     self.printMsg("下载成功")
                 else:
