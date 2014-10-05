@@ -186,7 +186,7 @@ class fkoji(common.Tool):
             if isOver:
                 break
             # 达到配置文件中的下载数量，结束
-            if self.getImagePageCount != 0 and imageCount > self.getImagePageCount:
+            if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
                 break
             indexUrl = url % str(pageIndex)
             self.trace("网页地址：" + indexUrl)
