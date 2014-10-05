@@ -116,14 +116,16 @@ class weibo(common.Tool):
         url = "http://twintail-japan.com/campus/contents/%s.html"
         imageUrl = "http://twintail-japan.com/campus/contents/%s"
         allImageCount = 0
-        for pageNumber in range(56, 80):
+        for pageNumber in range(63, 80):
             page = self.doGet(url % pageNumber)
+            page = page.decode('utf-8')
             if not page:
                 self.printMsg("下载结束")
                 self.processExit()
-            nameStart = page.find("名前 /")
+            nameStart = page.find(u"名前 /")
             nameStop = page.find("(", nameStart)
-            name = page[nameStart + 9:nameStop].replace(" ", "").replace("\n", "").decode("utf-8")
+            name = page[nameStart + 4:nameStop].replace(" ", "").replace("\n", "").encode('GBK')
+            print nameStart,nameStop,name
             self.trace("页面地址:" + url % pageNumber)
             self.printMsg("名字：" + name)
             imagePath = self.imageDownloadPath + "\\" + ("%02d" % pageNumber) + " " + name
@@ -138,7 +140,7 @@ class weibo(common.Tool):
             imageStart = page.find("<span>")
             while imageStart != -1:
                 imageStop = page.find("</span>", imageStart)
-                imageUrlPath = page[imageStart + 6:imageStop]
+                imageUrlPath = page[imageStart + 6:imageStop].encode('GBK')
                 imgByte = self.doGet(imageUrl % imageUrlPath)
                 if imgByte:
                     fileType = (imageUrl % imageUrlPath).split(".")[-1]
