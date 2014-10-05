@@ -121,7 +121,7 @@ class instagram(common.Tool):
             self.printErrorMsg(u"创建图片下载目录：" + self.imageDownloadPath + u" 失败，程序结束！")
             self.processExit()
         # 设置代理
-        if self.isProxy == 1:
+        if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "http")
         # 寻找idlist，如果没有结束进程
         userIdList = {}
