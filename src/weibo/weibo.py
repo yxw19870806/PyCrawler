@@ -206,7 +206,10 @@ class weibo(common.Tool):
             imageCount = 1
             totalImageCount = 0
             isPass = False
-            isError = False
+            if len(userIdList[userId]) < 3 or userIdList[userId][3] == '':
+                isError = False
+            else:
+                isError = True
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if self.isSort == 1:
                 imagePath = self.imageTempPath
@@ -263,6 +266,7 @@ class weibo(common.Tool):
                         if len(userIdList[userId]) >= 4:
                             if imageInfo["pic_name"] == userIdList[userId][3]:
                                 isPass = True
+                                isError = False
                                 break
                         imageUrl += "/large/" + imageInfo["pic_name"]
                     else:
@@ -282,7 +286,7 @@ class weibo(common.Tool):
                     imageCount += 1
                     # 达到配置文件中的下载数量，结束
                     if self.getImageCount > 0 and imageCount > self.getImageCount:
-                        isPass = False
+                        isPass = True
                         break
                 if isPass:
                     break
@@ -291,11 +295,6 @@ class weibo(common.Tool):
                 else:
                     # 全部图片下载完毕
                     break
-            
-            if len(userIdList[userId]) >= 4 and userIdList[userId][3] != "" and int(newUserIdList[userId][2]) != 0 and (imageCount * 2) > int(newUserIdList[userId][2]):
-                isError = 1
-            if int(newUserIdList[userId][2]) == 0 and imageCount - 1 != totalImageCount:
-                isError = 2
             
             self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
@@ -331,11 +330,9 @@ class weibo(common.Tool):
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
-            if isError == 1:
+            if isError:
                 self.printErrorMsg(userName + "图片数量异常，请手动检查")
-            elif isError == 2:
-                self.printErrorMsg(userName + "图片数量" + str(imageCount) + "张，小于相册图片数量" + str(totalImageCount) + "张，请手动检查")
-
+                
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, 'a')
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
