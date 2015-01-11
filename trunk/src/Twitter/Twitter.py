@@ -179,7 +179,7 @@ class Twitter(common.Tool):
             else:
                 imagePath = self.imageDownloadPath + "\\" + userAccount
             if not self.createDir(imagePath):
-                self.printErrorMsg(u"创建图片下载目录： " + imagePath + u" 失败，程序结束！")
+                self.printErrorMsg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
                 self.processExit()
             # 图片下载
             while not isLastPage:
@@ -191,7 +191,7 @@ class Twitter(common.Tool):
 #                 photoPageData = f.read()
 #                 f.close()
                 if not photoPageData:
-                    self.printErrorMsg(u"无法获取相册信息: " + photoPageUrl)
+                    self.printErrorMsg("无法获取相册信息: " + photoPageUrl)
                     break
                 try:
                     page = json.read(photoPageData)
@@ -222,7 +222,7 @@ class Twitter(common.Tool):
                 while imageIndex != -1:
                     imageStart = page.find("http", imageIndex)
                     imageStop = page.find('"', imageStart)
-                    imageUrl = page[imageStart:imageStop]
+                    imageUrl = page[imageStart:imageStop].encode("utf-8")
                     self.trace("image URL:" + imageUrl)
                     # 将第一张image的URL保存到新id list中
                     if newUserIdList[userAccount][2] == "":
@@ -231,6 +231,7 @@ class Twitter(common.Tool):
                     if len(userIdList[userAccount]) >= 3:
                         if imageUrl == userIdList[userAccount][2]:
                             isPass = True
+                            isError = False
                             break
                     if imageUrl in imageUrlList:
                         imageIndex = page.find('data-url', imageIndex + 1)
@@ -241,7 +242,7 @@ class Twitter(common.Tool):
                     fileType = imageUrl.split(".")[-1].split(':')[0]
                     imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                     if imgByte:
-                        self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        self.printStepMsg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
                         imageFile.write(imgByte)
                         self.printStepMsg("下载成功")
                     else:
@@ -266,14 +267,14 @@ class Twitter(common.Tool):
                     destPath = self.imageDownloadPath + "\\" + userAccount
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg(u"图片保存目录：" + destPath + u" 已存在，删除中")
+                            self.printStepMsg("图片保存目录：" + destPath + " 已存在，删除中")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg(u"图片保存目录：" + destPath + u"已存在相同名字的文件，自动删除中")
+                            self.printStepMsg("图片保存目录：" + destPath + "已存在相同名字的文件，自动删除中")
                             os.remove(destPath)
-                    self.printStepMsg(u"创建图片保存目录：" + destPath)
+                    self.printStepMsg("创建图片保存目录：" + destPath)
                     if not self.createDir(destPath):
-                        self.printErrorMsg(u"创建图片保存目录： " + destPath + u" 失败，程序结束！")
+                        self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
                         self.processExit()
                     # 倒叙排列
                     if len(userIdList[userAccount]) >= 3:
@@ -284,12 +285,12 @@ class Twitter(common.Tool):
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg(u"图片从下载目录移动到保存目录成功")
+                    self.printStepMsg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userAccount + u"图片数量异常，请手动检查")
+                self.printErrorMsg(userAccount + "图片数量异常，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
@@ -303,13 +304,13 @@ class Twitter(common.Tool):
             tempList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tempList)
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg(u"保存新存档文件：" + newUserIdListFilePath)
+        self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg(u"存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(totalImageCount) + u"张")
+        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
     Twitter().main()
