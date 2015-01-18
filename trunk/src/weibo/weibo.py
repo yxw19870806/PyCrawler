@@ -8,12 +8,15 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common, json
 import copy
+import md5
 import os
 import random
 import shutil
 import time
+
+from common import common, json
+
 
 class weibo(common.Tool):
     
@@ -272,18 +275,26 @@ class weibo(common.Tool):
                     else:
                         self.printErrorMsg("在JSON数据：" + str(imageInfo) + " 中没有找到'pic_name'字段, user id: " + str(userId))
                     self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                    imgByte = self.doGet(imageUrl)
-                    fileType = imageUrl.split(".")[-1]
-                    if fileType.find('/') != -1:
-                        fileType = 'jpg'
-                    imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
-                    if imgByte:
-                        imageFile.write(imgByte)
-                        self.printStepMsg("下载成功")
-                    else:
-                        self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
-                    imageFile.close()
-                    imageCount += 1
+                    while True:
+                        imgByte = self.doGet(imageUrl)
+                        if imgByte:
+                            md5Digest = md5.new(imgByte).hexdigest()
+                            # 处理获取的文件为weibo默认获取失败的图片
+                            if md5Digest == 'd29352f3e0f276baaf97740d170467d7' or md5Digest == '7bd88df2b5be33e1a79ac91e7d0376b5':
+                                self.printStepMsg("源文件获取失败，重试")
+                            else:
+                                fileType = imageUrl.split(".")[-1]
+                                if fileType.find('/') != -1:
+                                    fileType = 'jpg'
+                                imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
+                                imageFile.write(imgByte)
+                                self.printStepMsg("下载成功")
+                                imageFile.close()
+                                imageCount += 1
+                                break
+                        else:
+                            self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
+                            break                    
                     # 达到配置文件中的下载数量，结束
                     if self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
