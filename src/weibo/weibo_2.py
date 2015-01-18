@@ -90,9 +90,9 @@ class weibo(common.Tool):
         else:
             self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.imageDownloadPath = os.getcwd() +  "\\photo2"
+        self.imageTempPath = os.getcwd() +  "\\photo2\\tempImage"
+        self.userIdListFilePath = os.getcwd() + "\\info\\idlist_2.txt"
         # 操作系统&浏览器
         self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
@@ -213,7 +213,7 @@ class weibo(common.Tool):
                 isError = False
             else:
                 isError = True
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
+            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录\
             if self.isSort == 1:
                 imagePath = self.imageTempPath
             else:
@@ -294,7 +294,7 @@ class weibo(common.Tool):
                                 break
                         else:
                             self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
-                            break                    
+                            break 
                     # 达到配置文件中的下载数量，结束
                     if self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
