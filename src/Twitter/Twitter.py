@@ -239,9 +239,9 @@ class Twitter(common.Tool):
                     imageUrlList.append(imageUrl)
                     # 文件类型
                     imgByte = self.doGet(imageUrl)
-                    fileType = imageUrl.split(".")[-1].split(':')[0]
-                    imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                     if imgByte:
+                        fileType = imageUrl.split(".")[-1].split(':')[0]
+                        imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                         self.printStepMsg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
                         imageFile.write(imgByte)
                         self.printStepMsg("下载成功")
@@ -250,7 +250,7 @@ class Twitter(common.Tool):
                     imageFile.close()
                     imageCount += 1
                     # 达到配置文件中的下载数量，结束
-                    if self.getImageCount > 0 and imageCount > self.getImageCount:
+                    if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         self.printErrorMsg("达到下载限制数量")
                         break
                     imageIndex = page.find('data-url', imageIndex + 1)
