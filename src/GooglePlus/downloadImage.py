@@ -199,13 +199,9 @@ class downloadImage(common.Tool):
             postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, self.getImageUrlCount, key, now)
             self.trace("信息首页地址：" + photoAlbumUrl)
             photoAlbumPage = self.doGet(photoAlbumUrl, postData)
-            
-#             testFile = open('test.txt', 'w')
-#             testFile.write(photoAlbumPage)
-#             testFile.close()
-            
             if photoAlbumPage:
                 messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId)
+                isOver = False
                 while messageIndex != -1:
                     messageStart = photoAlbumPage.find("http", messageIndex)                   
                     messageStop = photoAlbumPage.find('"', messageStart)
@@ -262,8 +258,11 @@ class downloadImage(common.Tool):
                         # 达到配置文件中的下载数量，结束
                         if self.getImageCount > 0 and imageCount > self.getImageCount:
                             self.printErrorMsg("达到下载限制数量")
+                            isOver = True
                             break
                         flag = messagePage.find("<div><a href=", flag + 1)
+                    if isOver:
+                        break
                     messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
             else:
                 self.printErrorMsg("无法获取相册首页: " + photoAlbumUrl + ' ' + userName)
