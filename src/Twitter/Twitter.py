@@ -245,10 +245,10 @@ class Twitter(common.Tool):
                         self.printStepMsg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
                         imageFile.write(imgByte)
                         self.printStepMsg("下载成功")
+                        imageCount += 1
+                        imageFile.close()
                     else:
                         self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + userAccount + "：" + imageUrl)
-                    imageFile.close()
-                    imageCount += 1
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         self.printErrorMsg("达到下载限制数量")
