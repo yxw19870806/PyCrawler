@@ -256,7 +256,7 @@ class downloadImage(common.Tool):
                         else:
                             self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + str(userId) + ": " + imageUrl)
                         # 达到配置文件中的下载数量，结束
-                        if self.getImageCount > 0 and imageCount > self.getImageCount:
+                        if len(userIdList[userId]) >= 4 and userIdList[userId][3] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                             self.printErrorMsg("达到下载限制数量")
                             isOver = True
                             break
@@ -270,7 +270,7 @@ class downloadImage(common.Tool):
             self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
             totalImageCount += imageCount - 1
-            
+
             # 排序
             if self.isSort == 1:
                 imageList = sorted(os.listdir(imagePath), reverse=True)
