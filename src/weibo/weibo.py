@@ -17,7 +17,6 @@ import time
 
 from common import common, json
 
-
 class weibo(common.Tool):
     
     def trace(self, msg):
@@ -104,7 +103,13 @@ class weibo(common.Tool):
             self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
         self.printMsg("配置文件读取完成")
             
-    def main(self):
+    def main(self, userIdListFilePath = '', imageDownloadPath = '', imageTempPath = ''):
+        if userIdListFilePath != '':
+            self.userIdListFilePath = userIdListFilePath
+        if imageDownloadPath != '':
+            self.imageDownloadPath = imageDownloadPath
+        if imageTempPath != '':
+            self.imageTempPath = imageTempPath
         startTime = time.time()
         # 判断各种目录是否存在
         if self.isLog == 1:
@@ -364,5 +369,5 @@ class weibo(common.Tool):
         stopTime = time.time()
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
-if __name__ == '__main__':
-    weibo().main()
+# if __name__ == '__main__':
+#     weibo().main()
