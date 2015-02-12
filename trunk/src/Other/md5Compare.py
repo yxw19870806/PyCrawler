@@ -85,11 +85,11 @@ if __name__ == "__main__":
     # Ð´ÐÂµÄmd5Âë
     md5Compare().writeMd5ResultFIle(md5ResultfilePath, newResult)
     
-#    for file in different:
-#        sourceFile = gamePath + file
-#        destFile = copyDestPath + file
-#        destDir = os.path.dirname(destFile)
-#        if not os.path.exists(destDir):
-#            os.makedirs(destDir)
-#        shutil.copyfile(sourceFile, destFile)
+    for file in different:
+        sourceFile = gamePath + file
+        destFile = copyDestPath + file
+        destDir = os.path.dirname(destFile)
+        if not os.path.exists(destDir):
+            os.makedirs(destDir)
+        shutil.copyfile(sourceFile, destFile)
         
