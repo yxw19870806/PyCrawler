@@ -25,5 +25,6 @@ def getCount(idPath, imageRootPath):
             print line[1] + ": " + str(count1) + ", " + str(count2)
     print "check over!"
 
-getCount("info\\idlist_2.txt", "Z:\\G+\\weibo2\\")
-getCount("info\\idlist.txt", "Z:\\G+\\weibo\\")
+getCount("info\\idlist_1.txt", "Z:\\G+\\weibo\\weibo1\\")
+getCount("info\\idlist_2.txt", "Z:\\G+\\weibo\\weibo2\\")
+getCount("info\\idlist_3.txt", "Z:\\G+\\weibo\\weibo3\\")
