@@ -116,7 +116,7 @@ class weibo(common.Tool):
         url = "http://twintail-japan.com/campus/contents/%s.html"
         imageUrl = "http://twintail-japan.com/campus/contents/%s"
         allImageCount = 0
-        for pageNumber in range(63, 80):
+        for pageNumber in range(69, 80):
             page = self.doGet(url % pageNumber)
             page = page.decode('utf-8')
             if not page:
