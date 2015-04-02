@@ -262,10 +262,6 @@ class weibo(common.Tool):
                     if not isinstance(imageInfo, dict):
                         self.printErrorMsg("JSON数据['photo_list']：" + str(imageInfo) + " 不是一个字典, user id: " + str(userId))
                         continue
-                    if imageInfo.has_key("pic_host"):
-                        imageUrl = imageInfo["pic_host"]
-                    else:
-                        imageUrl = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
                     if imageInfo.has_key("pic_name"):
                         # 将第一张image的URL保存到新id list中
                         if newUserIdList[userId][3] == "":
@@ -276,33 +272,44 @@ class weibo(common.Tool):
                                 isPass = True
                                 isError = False
                                 break
-                        imageUrl += "/large/" + imageInfo["pic_name"]
+                        if imageInfo.has_key("pic_host"):
+                            imageHost = imageInfo["pic_host"]
+                        else:
+                            imageHost = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
+                        tryCoount = 0
+                        while True:
+                            if tryCoount > 1:
+                                imageHost = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
+                            imageUrl = imageHost + "/large/" + imageInfo["pic_name"]
+                            if tryCoount == 0:
+                                self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                            else:
+                                self.printStepMsg("重试下载第" + str(imageCount) + "张图片：" + imageUrl)
+                            imgByte = self.doGet(imageUrl)
+                            if imgByte:
+                                md5Digest = md5.new(imgByte).hexdigest()
+                                # 处理获取的文件为weibo默认获取失败的图片
+                                if md5Digest == 'd29352f3e0f276baaf97740d170467d7' or md5Digest == '7bd88df2b5be33e1a79ac91e7d0376b5':
+                                    self.printStepMsg("源文件获取失败，重试")
+                                else:
+                                    fileType = imageUrl.split(".")[-1]
+                                    if fileType.find('/') != -1:
+                                        fileType = 'jpg'
+                                    imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
+                                    imageFile.write(imgByte)
+                                    self.printStepMsg("下载成功")
+                                    imageFile.close()
+                                    imageCount += 1
+                                break
+                            else:
+                                tryCoount += 1
+                            if tryCoount >= 5:
+                                self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
+                                break
+                            
                     else:
                         self.printErrorMsg("在JSON数据：" + str(imageInfo) + " 中没有找到'pic_name'字段, user id: " + str(userId))
-                    self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                    tryCoount = 0
-                    while True:
-                        imgByte = self.doGet(imageUrl)
-                        if imgByte:
-                            md5Digest = md5.new(imgByte).hexdigest()
-                            # 处理获取的文件为weibo默认获取失败的图片
-                            if md5Digest == 'd29352f3e0f276baaf97740d170467d7' or md5Digest == '7bd88df2b5be33e1a79ac91e7d0376b5':
-                                self.printStepMsg("源文件获取失败，重试")
-                            else:
-                                fileType = imageUrl.split(".")[-1]
-                                if fileType.find('/') != -1:
-                                    fileType = 'jpg'
-                                imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
-                                imageFile.write(imgByte)
-                                self.printStepMsg("下载成功")
-                                imageFile.close()
-                                imageCount += 1
-                                break
-                        else:
-                            tryCoount += 1
-                        if tryCoount >= 5:
-                            self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
-                            break            
+                           
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userId]) >= 4 and userIdList[userId][3] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
@@ -358,16 +365,16 @@ class weibo(common.Tool):
             newUserIdListFile.close()
 
         # 排序并保存新的idList.txt
-        tempList = []
-        tempUserIdList = sorted(newUserIdList.keys())
-        for index in tempUserIdList:
-            tempList.append("\t".join(newUserIdList[index]))
-        newUserIdListString = "\n".join(tempList)
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
-        newUserIdListFile = open(newUserIdListFilePath, 'w')
-        newUserIdListFile.write(newUserIdListString)
-        newUserIdListFile.close()
+#         tempList = []
+#         tempUserIdList = sorted(newUserIdList.keys())
+#         for index in tempUserIdList:
+#             tempList.append("\t".join(newUserIdList[index]))
+#         newUserIdListString = "\n".join(tempList)
+#         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+#         self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
+#         newUserIdListFile = open(newUserIdListFilePath, 'w')
+#         newUserIdListFile.write(newUserIdListString)
+#         newUserIdListFile.close()
         
         stopTime = time.time()
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
