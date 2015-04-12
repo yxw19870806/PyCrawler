@@ -304,7 +304,7 @@ class weibo(common.Tool):
                             else:
                                 tryCoount += 1
                             if tryCoount >= 5:
-                                self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + "，图片地址：" + imageUrl)
+                                self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + ", 第" + str(imageCount) +  "张，图片地址：" + imageUrl)
                                 break
                             
                     else:
