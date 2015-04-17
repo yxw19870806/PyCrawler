@@ -7,8 +7,8 @@ QQ: 286484545
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
+from src.common import common
 
-from common import common
 import copy
 import os
 import shutil

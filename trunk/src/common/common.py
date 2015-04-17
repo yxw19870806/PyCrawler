@@ -286,3 +286,7 @@ class Tool(object):
         import sys
         sys.exit()
     
+    def shutdown(self, widget, data=None):
+        from os import system
+        system("shutdown -h now")
+    
