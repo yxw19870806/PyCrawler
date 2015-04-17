@@ -7,24 +7,24 @@ QQ: 286484545
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
-from src.common import common
 
+from common import common, json
 import copy
 import os
 import shutil
 import time
 
-class downloadImage(common.Tool):
+class instagram(common.Tool):
     
     def trace(self, msg):
-        super(downloadImage, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(instagram, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(downloadImage, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(instagram, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(downloadImage, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
-    
+        super(instagram, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+         
     def __init__(self):
         processPath = os.getcwd()
         configFile = open(processPath + "\\..\\common\\config.ini", "r")
@@ -47,7 +47,6 @@ class downloadImage(common.Tool):
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
-        self.getImageUrlCount = self.getConfig(config, "GET_IMAGE_URL_COUNT", 100, 2)
         # 代理
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
@@ -123,7 +122,7 @@ class downloadImage(common.Tool):
             self.processExit()
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort, "https")
+            self.proxy(self.proxyIp, self.proxyPort, "http")
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
@@ -131,7 +130,7 @@ class downloadImage(common.Tool):
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
-                if len(userInfo) < 10:
+                if len(userInfo) < 2:
                     continue
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
@@ -146,40 +145,26 @@ class downloadImage(common.Tool):
         newUserIdListFile.close()
         # 复制处理存档文件
         newUserIdList = copy.deepcopy(userIdList)
-        for newUserId in newUserIdList:
-            # 如果没有名字，则名字用uid代替
-            if len(newUserIdList[newUserId]) < 2:
-                newUserIdList[newUserId].append(newUserIdList[newUserId][0])
-            # 如果没有初试image count，则为0
-            if len(newUserIdList[newUserId]) < 3:
-                newUserIdList[newUserId].append("0")
-            # 处理上一次image URL
+        for newUserAccount in newUserIdList:
+            # 如果没有初始image count，则为0
+            if len(newUserIdList[newUserAccount]) < 2:
+                newUserIdList[newUserAccount].append("0")
+            # 处理上一次image id
             # 需置空存放本次第一张获取的image URL
-            if len(newUserIdList[newUserId]) < 4:
-                newUserIdList[newUserId].append("")
+            if len(newUserIdList[newUserAccount]) < 3:
+                newUserIdList[newUserAccount].append("")
             else:
-                newUserIdList[newUserId][3] = ""
-            # video count
-            if len(newUserIdList[newUserId]) < 5:
-                newUserIdList[newUserId].append("0")
-            # video token
-            if len(newUserIdList[newUserId]) < 6:
-                newUserIdList[newUserId].append("")
-            # 处理成员队伍信息
-            if len(newUserIdList[newUserId]) < 7:
-                newUserIdList[newUserId].append("")
-        
-        totalImageCount = 0
+                newUserIdList[newUserAccount][2] = ""
+        allImageCount = 0
         # 循环下载每个id
-        for userId in sorted(userIdList.keys()):
-            userName = newUserIdList[userId][1]
-            self.printStepMsg("ID: " + str(userId) + ", 名字: " + userName)
+        for userAccount in sorted(userIdList.keys()):
+            self.printStepMsg("Account: " + userAccount)
             # 初始化数据
+            imageId = ""
             imageCount = 1
-            messageUrlList = []
-            imageUrlList = []
+            isPass = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if len(userIdList[userId]) > 3 and userIdList[userId][3].find("picasaweb.google.com/") != -1 and int(userIdList[userId][2]) != 0:
+            if len(userIdList[userAccount]) > 2 and int(userIdList[userAccount][1]) != 0 and userIdList[userAccount][2] != "":
                 isError = True
             else:
                 isError = False
@@ -187,96 +172,92 @@ class downloadImage(common.Tool):
             if self.isSort == 1:
                 imagePath = self.imageTempPath
             else:
-                imagePath = self.imageDownloadPath + "\\" + userName
+                imagePath = self.imageDownloadPath + "\\" + userAccount
             if not self.createDir(imagePath):
                 self.printErrorMsg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
                 self.processExit()
-            # 图片下载  
-#            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
-            photoAlbumUrl = 'https://plus.google.com/_/photos/pc/read/'
-            now = time.time() * 100
-            key = ''
-            postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, self.getImageUrlCount, key, now)
-            self.trace("信息首页地址：" + photoAlbumUrl)
-            photoAlbumPage = self.doGet(photoAlbumUrl, postData)
-            if photoAlbumPage:
-                messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId)
-                isOver = False
-                while messageIndex != -1:
-                    messageStart = photoAlbumPage.find("http", messageIndex)                   
-                    messageStop = photoAlbumPage.find('"', messageStart)
-                    messageUrl = photoAlbumPage[messageStart:messageStop]
-                    # 将第一张image的URL保存到新id list中
-                    if newUserIdList[userId][3] == "":
-                        newUserIdList[userId][3] = messageUrl
+            # 图片下载
+            while 1:
+                if isPass:
+                    break
+                if imageId == "":
+                    photoAlbumUrl = "http://instagram.com/%s/media" % userAccount
+                else:
+                    photoAlbumUrl = "http://instagram.com/%s/media?max_id=%s" % (userAccount, imageId)
+                photoAlbumPage = self.doGet(photoAlbumUrl)
+                if not photoAlbumPage:
+                    self.printErrorMsg("无法获取相册信息: " + photoAlbumUrl)
+                    break
+                photoAlbumData = self.doGet(photoAlbumUrl)
+                try:
+                    photoAlbumPage = json.read(photoAlbumData)
+                except:
+                    self.printErrorMsg("返回信息：" + str(photoAlbumData) + " 不是一个JSON数据, user id: " + str(userAccount))
+                    break
+                if not isinstance(photoAlbumPage, dict):
+                    self.printErrorMsg("JSON数据：" + str(photoAlbumPage) + " 不是一个字典, user id: " + str(userAccount))
+                    break
+                if not photoAlbumPage.has_key("items"):
+                    self.printErrorMsg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'items'字段, user id: " + str(userAccount))
+                    break
+                # 下载到了最后一张图了
+                if photoAlbumPage["items"] == []:
+                    break
+                for photoInfo in photoAlbumPage["items"]:
+                    if not photoInfo.has_key("images"):
+                        self.printErrorMsg("在JSON数据：" + str(photoInfo) + " 中没有找到'images'字段, user id: " + str(userAccount))
+                        break
+                    if not photoInfo.has_key("id"):
+                        self.printErrorMsg("在JSON数据：" + str(photoInfo) + " 中没有找到'id'字段, user id: " + str(userAccount))
+                        break
+                    else:
+                        imageId = photoInfo["id"]
+                    # 将第一张image的id保存到新id list中
+                    if newUserIdList[userAccount][2] == "":
+                        newUserIdList[userAccount][2] = imageId
                     # 检查是否已下载到前一次的图片
-                    if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/") != -1:
-                        if messageUrl == userIdList[userId][3]:
+                    if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2].find("_") != -1:
+                        if imageId == userIdList[userAccount][2]:
+                            isPass = True
                             isError = False
                             break
-                    self.trace("message URL:" + messageUrl)
-                    # 判断是否重复
-                    if messageUrl in messageUrlList:
-                        messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
-                        continue
-                    messageUrlList.append(messageUrl)
-                    messagePage = self.doGet(messageUrl)
-                    if not messagePage:
-                        self.printErrorMsg("无法获取信息页: " + messageUrl)
-                        messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
-                        continue
-                    flag = messagePage.find("<div><a href=")
-                    while flag != -1:
-                        imageIndex = messagePage.find("<img src=", flag, flag + 200)
-                        if imageIndex == -1:
-                            self.printErrorMsg("信息页：" + messageUrl + " 中没有找到标签'<img src='")
-                            break
-                        imageStart = messagePage.find("http", imageIndex)
-                        imageStop = messagePage.find('"', imageStart)
-                        imageUrl = messagePage[imageStart:imageStop]
-                        self.trace("image URL:" + imageUrl)
-                        if imageUrl in imageUrlList:
-                            flag = messagePage.find("<div><a href=", flag + 1)
-                            continue
-                        imageUrlList.append(imageUrl)
-                        tempList = imageUrl.split("/")
-                        # 使用最大分辨率
-                        tempList[-2] = "s0"
-                        imageUrl = "/".join(tempList)
-                        # 文件类型
-                        imgByte = self.doGet(imageUrl)
-                        if imgByte:
-                            fileType = imageUrl.split(".")[-1]
-                            imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
-                            self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                            imageFile.write(imgByte)
-                            self.printStepMsg("下载成功")
-                            imageCount += 1
-                            imageFile.close()
-                        else:
-                            self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + str(userId) + ": " + imageUrl)
-                        # 达到配置文件中的下载数量，结束
-                        if len(userIdList[userId]) >= 4 and userIdList[userId][3] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
-                            self.printErrorMsg("达到下载限制数量")
-                            isOver = True
-                            break
-                        flag = messagePage.find("<div><a href=", flag + 1)
-                    if isOver:
+                    if not photoInfo["images"].has_key("standard_resolution"):
+                        self.printErrorMsg("在JSON数据：" + str(photoInfo["images"]) + " 中没有找到'standard_resolution'字段, user id: " + str(userAccount) + ", image id: " + imageId)
                         break
-                    messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
-            else:
-                self.printErrorMsg("无法获取相册首页: " + photoAlbumUrl + ' ' + userName)
+                    if not photoInfo["images"]["standard_resolution"].has_key("url"):
+                        self.printErrorMsg("在JSON数据：" + str(photoInfo["images"]["standard_resolution"]) + " 中没有找到'url'字段, user id: " + str(userAccount) + ", image id: " + imageId)
+                        break
+                    imageUrl = photoInfo["images"]["standard_resolution"]["url"]
+                    self.trace("image URL:" + imageUrl)
+                    imgByte = self.doGet(imageUrl)
+                    # 文件类型
+                    fileType = imageUrl.split(".")[-1]
+                    # 保存图片
+                    filename = str("%04d" % imageCount)
+                    imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
+                    if imgByte:
+                        self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        imageFile.write(imgByte)
+                        self.printStepMsg("下载成功")
+                    else:
+                        self.printErrorMsg("获取图片" + str(imageCount) + "信息失败：" + str(userAccount) + "，" + imageUrl)
+                    imageFile.close()
+                    imageCount += 1
+                    # 达到配置文件中的下载数量，结束
+                    if self.getImageCount > 0 and imageCount > self.getImageCount:
+                        isPass = True
+                        isError = False
+                        break
+            self.printStepMsg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
+            newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
+            allImageCount += imageCount - 1
             
-            self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
-            newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
-            totalImageCount += imageCount - 1
-
             # 排序
             if self.isSort == 1:
                 imageList = sorted(os.listdir(imagePath), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
-                    destPath = self.imageDownloadPath + "\\" + newUserIdList[userId][6] + "\\" + userName
+                    destPath = self.imageDownloadPath + "\\" + userAccount
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
                             self.printStepMsg("图片保存目录：" + destPath + " 已存在，删除中")
@@ -289,8 +270,8 @@ class downloadImage(common.Tool):
                         self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
                         self.processExit()
                     # 倒叙排列
-                    if len(userIdList[userId]) >= 3:
-                        count = int(userIdList[userId][2]) + 1
+                    if len(userIdList[userAccount]) >= 3:
+                        count = int(userIdList[userAccount][1]) + 1
                     else:
                         count = 1
                     for fileName in imageList:
@@ -302,11 +283,11 @@ class downloadImage(common.Tool):
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userName + "图片数量异常，请手动检查")
+                self.printErrorMsg(userAccount + "图片数量异常，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
-            newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
+            newUserIdListFile.write("\t".join(newUserIdList[userAccount]) + "\n")
             newUserIdListFile.close()
 
         # 排序并保存新的idList.txt
@@ -322,7 +303,7 @@ class downloadImage(common.Tool):
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
+        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == "__main__":
-    downloadImage().main()
+    instagram().main()
