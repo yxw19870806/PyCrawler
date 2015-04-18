@@ -1,10 +1,10 @@
-# -*- coding:GBK  -*-
+# -*- coding:UTF-8  -*-
 '''
 Created on 2013-4-14
 
 @author: hikaru
 
-输出目录和txt文件中图片数量不一致的成员名字
+杈撳嚭鐩綍鍜宼xt鏂囦欢涓浘鐗囨暟閲忎笉涓�鑷寸殑鎴愬憳鍚嶅瓧
 '''
 
 import os
@@ -16,6 +16,7 @@ def getCount(idPath, imageRootPath):
     for line in lines:
         line = line.split("\t")
         imagePath = imageRootPath + line[1]
+        imagePath = imagePath.decode('UTF-8').encode('GBK')
         if os.path.exists(imagePath):
             count1 = len(os.listdir(imagePath))
         else:
