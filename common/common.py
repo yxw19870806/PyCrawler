@@ -1,4 +1,4 @@
-# -*- coding:GBK  -*-
+# -*- coding:UTF-8  -*-
 '''
 Created on 2013-7-16
 
@@ -10,7 +10,7 @@ IS_SET_TIMEOUT = False
 class Tool(object):
 
     def doGet(self, url, postData=None):
-    # httpÇëÇó
+    # httpè¯·æ±‚
         import sys
         import time
         import traceback
@@ -25,9 +25,9 @@ class Tool(object):
                     request = urllib2.Request(url, postData)
                 else:
                     request = urllib2.Request(url)
-                # ÉèÖÃÍ·ĞÅÏ¢
+                # è®¾ç½®å¤´ä¿¡æ¯
                 request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
-                # ÉèÖÃ·ÃÎÊ³¬Ê±
+                # è®¾ç½®è®¿é—®è¶…æ—¶
                 if sys.version_info < (2, 7):
                     if not IS_SET_TIMEOUT:
                         urllib2.socket.setdefaulttimeout(5)
@@ -37,30 +37,30 @@ class Tool(object):
                     response = urllib2.urlopen(request, timeout=5)
                 return response.read()
             except Exception, e:
-                # ´úÀíÎŞ·¨·ÃÎÊ
+                # ä»£ç†æ— æ³•è®¿é—®
                 if str(e).find("[Errno 10061]") != -1:
-                    input = raw_input("ÎŞ·¨·ÃÎÊ´úÀí·şÎñÆ÷£¬Çë¼ì²é´úÀíÉèÖÃ¡£ÊÇ·ñĞèÒª¼ÌĞø³ÌĞò£¿(Y)es or (N)o£º").lower()
+                    input = raw_input("æ— æ³•è®¿é—®ä»£ç†æœåŠ¡å™¨ï¼Œè¯·æ£€æŸ¥ä»£ç†è®¾ç½®ã€‚æ˜¯å¦éœ€è¦ç»§ç»­ç¨‹åºï¼Ÿ(Y)es or (N)oï¼š").lower()
                     if input in ["y", "yes"]:
                         pass
                     elif input in ["n", "no"]:
                         sys.exit()
-                # Á¬½Ó±»¹Ø±Õ£¬µÈ´ı1·ÖÖÓºóÔÙ³¢ÊÔ
+                # è¿æ¥è¢«å…³é—­ï¼Œç­‰å¾…1åˆ†é’Ÿåå†å°è¯•
                 elif str(e).find("[Errno 10053] ") != -1:
-                    self.printMsg("·ÃÎÊÒ³Ãæ³¬Ê±£¬ÖØĞÂÁ¬½ÓÇëÉÔºó")
+                    self.printMsg("è®¿é—®é¡µé¢è¶…æ—¶ï¼Œé‡æ–°è¿æ¥è¯·ç¨å")
                     time.sleep(60)
-                # ³¬Ê±
+                # è¶…æ—¶
                 elif str(e).find("timed out") != -1:
-                    self.printMsg("·ÃÎÊÒ³Ãæ³¬Ê±£¬ÖØĞÂÁ¬½ÓÇëÉÔºó")
+                    self.printMsg("è®¿é—®é¡µé¢è¶…æ—¶ï¼Œé‡æ–°è¿æ¥è¯·ç¨å")
                 else:
                     self.printMsg(str(e))
                     traceback.print_exc()
             count += 1
             if count > 50:
-                self.printErrorMsg("ÎŞ·¨·ÃÎÊÒ³Ãæ£º" + url)
+                self.printErrorMsg("æ— æ³•è®¿é—®é¡µé¢ï¼š" + url)
                 return False
 
     def getDefaultBrowserCookiePath(self, OSVersion, browserType):     
-    # ¸ù¾İä¯ÀÀÆ÷ºÍ²Ù×÷ÏµÍ³£¬×Ô¶¯²éÕÒÄ¬ÈÏä¯ÀÀÆ÷cookieÂ·¾¶
+    # æ ¹æ®æµè§ˆå™¨å’Œæ“ä½œç³»ç»Ÿï¼Œè‡ªåŠ¨æŸ¥æ‰¾é»˜è®¤æµè§ˆå™¨cookieè·¯å¾„
     # OSVersion=1: win7
     # OSVersion=2: xp
     # browserType=1: IE
@@ -96,11 +96,11 @@ class Tool(object):
                 return "C:\\Users\\%s\\AppData\\Local\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
             elif OSVersion == 2:
                 return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\MapleStudio\\ChromePlus\\User Data\\Default\\" % (getpass.getuser())
-        self.printMsg("ä¯ÀÀÆ÷ÀàĞÍ£º" + browserType + "²»´æÔÚ")
+        self.printMsg("æµè§ˆå™¨ç±»å‹ï¼š" + browserType + "ä¸å­˜åœ¨")
         return None
 
     def cookie(self, filePath, browserType=1):
-    # Ê¹ÓÃÏµÍ³cookies
+    # ä½¿ç”¨ç³»ç»Ÿcookies
     # browserType=1: IE
     # browserType=2: firefox
     # browserType=3: chrome
@@ -110,7 +110,7 @@ class Tool(object):
         import urllib2
         from pysqlite2 import dbapi2 as sqlite
         if not os.path.exists(filePath):
-            self.printMsg("cookieÄ¿Â¼£º" + filePath + " ²»´æÔÚ")
+            self.printMsg("cookieç›®å½•ï¼š" + filePath + " ä¸å­˜åœ¨")
             return False
         ftstr = ["FALSE", "TRUE"]
         s = cStringIO.StringIO()
@@ -171,22 +171,22 @@ class Tool(object):
         return True
     
     def proxy(self, ip, port, protocol):
-    # ÉèÖÃ´úÀí
+    # è®¾ç½®ä»£ç†
         import urllib2
         proxyHandler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
-        self.printMsg("ÉèÖÃ´úÀí³É¹¦")
+        self.printMsg("è®¾ç½®ä»£ç†æˆåŠŸ")
                 
     def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
-    # »ñÈ¡ÅäÖÃÎÄ¼ş
-    # config : ×Öµä¸ñÊ½£¬Èç£º{key1:value1, key2:value2}
-    # mode 0 : Ö±½Ó¸³Öµ
-    # mode 1 : ×Ö·û´®Æ´½Ó
-    # mode 2 : È¡Õû
-    # mode 3 : ÎÄ¼şÂ·¾¶£¬ÒÔ'\'¿ªÍ·µÄÎªµ±Ç°Ä¿Â¼ÏÂ´´½¨
-    # prefix: Ç°×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
-    # postfix: ºó×º£¬Ö»ÓĞÔÚmode=1Ê±ÓĞĞ§
+    # è·å–é…ç½®æ–‡ä»¶
+    # config : å­—å…¸æ ¼å¼ï¼Œå¦‚ï¼š{key1:value1, key2:value2}
+    # mode 0 : ç›´æ¥èµ‹å€¼
+    # mode 1 : å­—ç¬¦ä¸²æ‹¼æ¥
+    # mode 2 : å–æ•´
+    # mode 3 : æ–‡ä»¶è·¯å¾„ï¼Œä»¥'\'å¼€å¤´çš„ä¸ºå½“å‰ç›®å½•ä¸‹åˆ›å»º
+    # prefix: å‰ç¼€ï¼Œåªæœ‰åœ¨mode=1æ—¶æœ‰æ•ˆ
+    # postfix: åç¼€ï¼Œåªæœ‰åœ¨mode=1æ—¶æœ‰æ•ˆ
         import os
         import traceback
         value = None
@@ -203,7 +203,7 @@ class Tool(object):
                 try:
                     value = int(config[key])
                 except:
-                    self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞkeyÎª'" + key + "'µÄÖµ±ØĞëÊÇÒ»¸öÕûÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
+                    self.printMsg("é…ç½®æ–‡ä»¶config.iniä¸­keyä¸º'" + key + "'çš„å€¼å¿…é¡»æ˜¯ä¸€ä¸ªæ•´æ•°ï¼Œä½¿ç”¨ç¨‹åºé»˜è®¤è®¾ç½®")
                     traceback.print_exc()
                     value = defaultValue
             elif mode == 3:
@@ -212,7 +212,7 @@ class Tool(object):
                     value = os.getcwd() + value
                 return value
         else:
-            self.printMsg("ÅäÖÃÎÄ¼şconfig.iniÖĞÃ»ÓĞÕÒµ½keyÎª'" + key + "'µÄ²ÎÊı£¬Ê¹ÓÃ³ÌĞòÄ¬ÈÏÉèÖÃ")
+            self.printMsg("é…ç½®æ–‡ä»¶config.iniä¸­æ²¡æœ‰æ‰¾åˆ°keyä¸º'" + key + "'çš„å‚æ•°ï¼Œä½¿ç”¨ç¨‹åºé»˜è®¤è®¾ç½®")
             value = defaultValue
         return value
     
@@ -259,6 +259,7 @@ class Tool(object):
         import time
         import traceback
         import os
+        path = path.decode('UTF-8').encode('GBK')
         if not os.path.exists(path):
             count = 0
             while 1:

@@ -1,11 +1,11 @@
-# -*- coding:GBK  -*-
+# -*- coding:UTF-8  -*-
 '''
 Created on 2013-8-28
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 
 import copy
@@ -17,16 +17,16 @@ import time
 
 from common import common, json
 
-class weibo(common.Tool):
+class Weibo(common.Tool):
     
     def trace(self, msg):
-        super(weibo, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(Weibo, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(weibo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(Weibo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(weibo, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+        super(Weibo, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
         
     def visit(self, url):
         tempPage = self.doGet(url)
@@ -39,14 +39,14 @@ class weibo(common.Tool):
 #                 redirectUrlStop = tempPage.find('"', redirectUrlStart)
                 redirectUrl = tempPage[redirectUrlStart:redirectUrlStop]
                 return str(self.doGet(redirectUrl))
-            elif tempPage.find("ÓÃ»§Ãû»òÃÜÂë´íÎó") != -1:
-                self.printErrorMsg("µÇÂ½×´Ì¬Òì³££¬ÇëÔÚä¯ÀÀÆ÷ÖĞÖØĞÂµÇÂ½Î¢²©ÕËºÅ")
+            elif tempPage.find("ç”¨æˆ·åæˆ–å¯†ç é”™è¯¯") != -1:
+                self.printErrorMsg("ç™»é™†çŠ¶æ€å¼‚å¸¸ï¼Œè¯·åœ¨æµè§ˆå™¨ä¸­é‡æ–°ç™»é™†å¾®åšè´¦å·")
                 self.processExit()
             else:
                 try:
                     tempPage = tempPage.decode("utf-8")
-                    if tempPage.find("ÓÃ»§Ãû»òÃÜÂë´íÎó") != -1:
-                        self.printErrorMsg("µÇÂ½×´Ì¬Òì³££¬ÇëÔÚä¯ÀÀÆ÷ÖĞÖØĞÂµÇÂ½Î¢²©ÕËºÅ")
+                    if tempPage.find("ç”¨æˆ·åæˆ–å¯†ç é”™è¯¯") != -1:
+                        self.printErrorMsg("ç™»é™†çŠ¶æ€å¼‚å¸¸ï¼Œè¯·åœ¨æµè§ˆå™¨ä¸­é‡æ–°ç™»é™†å¾®åšè´¦å·")
                         self.processExit()
                 except Exception, e:
                     pass
@@ -68,20 +68,20 @@ class weibo(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # Ã¿´ÎÇëÇó»ñÈ¡µÄÍ¼Æ¬ÊıÁ¿
+        # æ¯æ¬¡è¯·æ±‚è·å–çš„å›¾ç‰‡æ•°é‡
         self.IMAGE_COUNT_PER_PAGE = 20
-        # ³ÌĞòÅäÖÃ
+        # ç¨‹åºé…ç½®
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
-        # ´úÀíÉèÖÃ
+        # ä»£ç†è®¾ç½®
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # ÎÄ¼şÂ·¾¶
+        # æ–‡ä»¶è·¯å¾„
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ''
@@ -92,7 +92,7 @@ class weibo(common.Tool):
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
         self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        # ²Ù×÷ÏµÍ³&ä¯ÀÀÆ÷
+        # æ“ä½œç³»ç»Ÿ&æµè§ˆå™¨
         self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
         # cookie
@@ -101,7 +101,7 @@ class weibo(common.Tool):
             self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
         else:
             self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
-        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
+        self.printMsg("é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
             
     def main(self, userIdListFilePath = '', imageDownloadPath = '', imageTempPath = ''):
         if userIdListFilePath != '':
@@ -111,35 +111,35 @@ class weibo(common.Tool):
         if imageTempPath != '':
             self.imageTempPath = imageTempPath
         startTime = time.time()
-        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
+        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not os.path.exists(stepLogDir):
-                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
+                self.printStepMsg("æ­¥éª¤æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + stepLogDir)
                 if not self.createDir(stepLogDir):
-                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    self.printErrorMsg("åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                     self.processExit()
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not os.path.exists(traceLogDir):
-                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
+                self.printStepMsg("è°ƒè¯•æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + traceLogDir)
                 if not self.createDir(traceLogDir):
-                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    self.printErrorMsg("åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                     self.processExit()
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not os.path.exists(errorLogDir):
-            self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
+            self.printStepMsg("é”™è¯¯æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + errorLogDir)
             if not self.createDir(errorLogDir):
-                self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                self.printErrorMsg("åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-        # Í¼Æ¬ÏÂÔØÄ¿Â¼
+        # å›¾ç‰‡ä¸‹è½½ç›®å½•
         if os.path.exists(self.imageDownloadPath):
-            # Â·¾¶ÊÇÄ¿Â¼
+            # è·¯å¾„æ˜¯ç›®å½•
             if os.path.isdir(self.imageDownloadPath):
-                # Ä¿Â¼²»Îª¿Õ
+                # ç›®å½•ä¸ä¸ºç©º
                 if os.listdir(self.imageDownloadPath):
                     isDelete = False
                     while not isDelete:
-                        input = raw_input(self.getTime() + " Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
+                        input = raw_input(self.getTime() + " å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + " å·²å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¤¹å¹¶ç»§ç»­ç¨‹åº? (Y)es or (N)o: ")
                         try:
                             input = input.lower()
                             if input in ["y", "yes"]:
@@ -149,27 +149,27 @@ class weibo(common.Tool):
                         except Exception, e:
                             self.printErrorMsg(str(e))
                             pass
-                    self.printStepMsg("É¾³ıÍ¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
+                    self.printStepMsg("åˆ é™¤å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath)
                     shutil.rmtree(self.imageDownloadPath, True)
-                    # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
+                    # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
                     while os.path.exists(self.imageDownloadPath):
                         shutil.rmtree(self.imageDownloadPath, True)
                         time.sleep(5)
             else:
-                self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
+                self.printStepMsg("å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + "å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
                 os.remove(self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageDownloadPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-        # ÉèÖÃ´úÀí
+        self.printStepMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath)
+        # è®¾ç½®ä»£ç†
         if self.isProxy == 1:
             self.proxy(self.proxyIp, self.proxyPort, "http")
-        # ÉèÖÃÏµÍ³cookies (fire fox)
+        # è®¾ç½®ç³»ç»Ÿcookies (fire fox)
         if not self.cookie(self.cookiePath, self.browerVersion):
-            self.printErrorMsg("µ¼Èëä¯ÀÀÆ÷cookiesÊ§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("å¯¼å…¥æµè§ˆå™¨cookieså¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # Ñ°ÕÒidlist£¬Èç¹ûÃ»ÓĞ½áÊø½ø³Ì
+        # å¯»æ‰¾idlistï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
             userListFile = open(self.userIdListFilePath, 'r')
@@ -182,7 +182,7 @@ class weibo(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("ÓÃ»§ID´æµµÎÄ¼ş£º" + self.userIdListFilePath + "²»´æÔÚ£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("ç”¨æˆ·IDå­˜æ¡£æ–‡ä»¶ï¼š" + self.userIdListFilePath + "ä¸å­˜åœ¨ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, 'w')
@@ -190,26 +190,26 @@ class weibo(common.Tool):
 
         newUserIdList = copy.deepcopy(userIdList)
         for newUserId in newUserIdList:
-            # Èç¹ûÃ»ÓĞÃû×Ö£¬ÔòÃû×ÖÓÃuid´úÌæ
+            # å¦‚æœæ²¡æœ‰åå­—ï¼Œåˆ™åå­—ç”¨uidä»£æ›¿
             if len(newUserIdList[newUserId]) < 2:
                 newUserIdList[newUserId].append(newUserIdList[newUserId][0])
-            # Èç¹ûÃ»ÓĞ³õÊÔimage count£¬ÔòÎª0
+            # å¦‚æœæ²¡æœ‰åˆè¯•image countï¼Œåˆ™ä¸º0
             if len(newUserIdList[newUserId]) < 3:
                 newUserIdList[newUserId].append("0")
-            # ´¦ÀíÉÏÒ»´Îimage URL
-            # ĞèÖÃ¿Õ´æ·Å±¾´ÎµÚÒ»ÕÅ»ñÈ¡µÄimage URL
+            # å¤„ç†ä¸Šä¸€æ¬¡image URL
+            # éœ€ç½®ç©ºå­˜æ”¾æœ¬æ¬¡ç¬¬ä¸€å¼ è·å–çš„image URL
             if len(newUserIdList[newUserId]) < 4:
                 newUserIdList[newUserId].append("")
             else:
                 newUserIdList[newUserId][3] = ""
-            # ´¦Àí³ÉÔ±¶ÓÎéĞÅÏ¢
+            # å¤„ç†æˆå‘˜é˜Ÿä¼ä¿¡æ¯
             if len(newUserIdList[newUserId]) < 5:
                 newUserIdList[newUserId].append("")
         allImageCount = 0
         for userId in sorted(userIdList.keys()):
             userName = newUserIdList[userId][1]
-            self.printStepMsg("UID: " + str(userId) + "£¬Name: " + userName)
-            # ³õÊ¼»¯Êı¾İ
+            self.printStepMsg("UID: " + str(userId) + "ï¼ŒName: " + userName)
+            # åˆå§‹åŒ–æ•°æ®
             pageCount = 1
             imageCount = 1
             totalImageCount = 0
@@ -218,7 +218,7 @@ class weibo(common.Tool):
                 isError = False
             else:
                 isError = True
-            # Èç¹ûĞèÒªÖØĞÂÅÅĞòÔòÊ¹ÓÃÁÙÊ±ÎÄ¼ş¼Ğ£¬·ñÔòÖ±½ÓÏÂÔØµ½Ä¿±êÄ¿Â¼
+            # å¦‚æœéœ€è¦é‡æ–°æ’åºåˆ™ä½¿ç”¨ä¸´æ—¶æ–‡ä»¶å¤¹ï¼Œå¦åˆ™ç›´æ¥ä¸‹è½½åˆ°ç›®æ ‡ç›®å½•
             if self.isSort == 1:
                 imagePath = self.imageTempPath
             else:
@@ -226,47 +226,47 @@ class weibo(common.Tool):
             if os.path.exists(imagePath):
                 shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
-                self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + imagePath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + imagePath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-            # ÈÕÖ¾ÎÄ¼ş²åÈëĞÅÏ¢
+            # æ—¥å¿—æ–‡ä»¶æ’å…¥ä¿¡æ¯
             while 1:
                 photoAlbumUrl = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (userId, self.IMAGE_COUNT_PER_PAGE, pageCount)
-                self.trace("Ïà²á×¨¼­µØÖ·£º" + photoAlbumUrl)
+                self.trace("ç›¸å†Œä¸“è¾‘åœ°å€ï¼š" + photoAlbumUrl)
                 photoPageData = self.visit(photoAlbumUrl)
-                self.trace("·µ»ØJSONÊı¾İ£º" + photoPageData)
+                self.trace("è¿”å›JSONæ•°æ®ï¼š" + photoPageData)
                 try:
                     page = json.read(photoPageData)
                 except:
-                    self.printErrorMsg("·µ»ØĞÅÏ¢£º" + str(photoPageData) + " ²»ÊÇÒ»¸öJSONÊı¾İ, user id: " + str(userId))
+                    self.printErrorMsg("è¿”å›ä¿¡æ¯ï¼š" + str(photoPageData) + " ä¸æ˜¯ä¸€ä¸ªJSONæ•°æ®, user id: " + str(userId))
                     break
                 if not isinstance(page, dict):
-                    self.printErrorMsg("JSONÊı¾İ£º" + str(page) + " ²»ÊÇÒ»¸ö×Öµä, user id: " + str(userId))
+                    self.printErrorMsg("JSONæ•°æ®ï¼š" + str(page) + " ä¸æ˜¯ä¸€ä¸ªå­—å…¸, user id: " + str(userId))
                     break
                 if not page.has_key("data"):
-                    self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(page) + " ÖĞÃ»ÓĞÕÒµ½'data'×Ö¶Î, user id: " + str(userId))
+                    self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(page) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'data'å­—æ®µ, user id: " + str(userId))
                     break
                 if totalImageCount == 0:
                     if page["data"].has_key("total"):
                         totalImageCount = page["data"]["total"]
                     else:
-                        self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(page) + " ÖĞÃ»ÓĞÕÒµ½'total'×Ö¶Î, user id: " + str(userId))
+                        self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(page) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'total'å­—æ®µ, user id: " + str(userId))
                         isPass = True
                         break
                 if not isinstance(page["data"], dict):
-                    self.printErrorMsg("JSONÊı¾İ['data']£º" + str(page["data"]) + " ²»ÊÇÒ»¸ö×Öµä, user id: " + str(userId))
+                    self.printErrorMsg("JSONæ•°æ®['data']ï¼š" + str(page["data"]) + " ä¸æ˜¯ä¸€ä¸ªå­—å…¸, user id: " + str(userId))
                     break
                 if not page["data"].has_key("photo_list"):
-                    self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(page["data"]) + " ÖĞÃ»ÓĞÕÒµ½'photo_list'×Ö¶Î, user id: " + str(userId))
+                    self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(page["data"]) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'photo_list'å­—æ®µ, user id: " + str(userId))
                     break
                 for imageInfo in page["data"]["photo_list"]:
                     if not isinstance(imageInfo, dict):
-                        self.printErrorMsg("JSONÊı¾İ['photo_list']£º" + str(imageInfo) + " ²»ÊÇÒ»¸ö×Öµä, user id: " + str(userId))
+                        self.printErrorMsg("JSONæ•°æ®['photo_list']ï¼š" + str(imageInfo) + " ä¸æ˜¯ä¸€ä¸ªå­—å…¸, user id: " + str(userId))
                         continue
                     if imageInfo.has_key("pic_name"):
-                        # ½«µÚÒ»ÕÅimageµÄURL±£´æµ½ĞÂid listÖĞ
+                        # å°†ç¬¬ä¸€å¼ imageçš„URLä¿å­˜åˆ°æ–°id listä¸­
                         if newUserIdList[userId][3] == "":
                             newUserIdList[userId][3] = imageInfo["pic_name"]
-                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
+                        # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
                         if len(userIdList[userId]) >= 4:
                             if imageInfo["pic_name"] == userIdList[userId][3]:
                                 isPass = True
@@ -282,35 +282,35 @@ class weibo(common.Tool):
                                 imageHost = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
                             imageUrl = imageHost + "/large/" + imageInfo["pic_name"]
                             if tryCoount == 0:
-                                self.printStepMsg("¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl)
+                                self.printStepMsg("å¼€å§‹ä¸‹è½½ç¬¬" + str(imageCount) + "å¼ å›¾ç‰‡ï¼š" + imageUrl)
                             else:
-                                self.printStepMsg("ÖØÊÔÏÂÔØµÚ" + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl)
+                                self.printStepMsg("é‡è¯•ä¸‹è½½ç¬¬" + str(imageCount) + "å¼ å›¾ç‰‡ï¼š" + imageUrl)
                             imgByte = self.doGet(imageUrl)
                             if imgByte:
                                 md5Digest = md5.new(imgByte).hexdigest()
-                                # ´¦Àí»ñÈ¡µÄÎÄ¼şÎªweiboÄ¬ÈÏ»ñÈ¡Ê§°ÜµÄÍ¼Æ¬
+                                # å¤„ç†è·å–çš„æ–‡ä»¶ä¸ºweiboé»˜è®¤è·å–å¤±è´¥çš„å›¾ç‰‡
                                 if md5Digest == 'd29352f3e0f276baaf97740d170467d7' or md5Digest == '7bd88df2b5be33e1a79ac91e7d0376b5':
-                                    self.printStepMsg("Ô´ÎÄ¼ş»ñÈ¡Ê§°Ü£¬ÖØÊÔ")
+                                    self.printStepMsg("æºæ–‡ä»¶è·å–å¤±è´¥ï¼Œé‡è¯•")
                                 else:
                                     fileType = imageUrl.split(".")[-1]
                                     if fileType.find('/') != -1:
                                         fileType = 'jpg'
                                     imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                                     imageFile.write(imgByte)
-                                    self.printStepMsg("ÏÂÔØ³É¹¦")
+                                    self.printStepMsg("ä¸‹è½½æˆåŠŸ")
                                     imageFile.close()
                                     imageCount += 1
                                 break
                             else:
                                 tryCoount += 1
                             if tryCoount >= 5:
-                                self.printErrorMsg("ÏÂÔØÍ¼Æ¬Ê§°Ü£¬ÓÃ»§ID£º" + str(userId) + ", µÚ" + str(imageCount) +  "ÕÅ£¬Í¼Æ¬µØÖ·£º" + imageUrl)
+                                self.printErrorMsg("ä¸‹è½½å›¾ç‰‡å¤±è´¥ï¼Œç”¨æˆ·IDï¼š" + str(userId) + ", ç¬¬" + str(imageCount) +  "å¼ ï¼Œå›¾ç‰‡åœ°å€ï¼š" + imageUrl)
                                 break
                             
                     else:
-                        self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(imageInfo) + " ÖĞÃ»ÓĞÕÒµ½'pic_name'×Ö¶Î, user id: " + str(userId))
+                        self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(imageInfo) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'pic_name'å­—æ®µ, user id: " + str(userId))
                            
-                    # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
+                    # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
                     if len(userIdList[userId]) >= 4 and userIdList[userId][3] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
                         break
@@ -319,31 +319,31 @@ class weibo(common.Tool):
                 if totalImageCount / self.IMAGE_COUNT_PER_PAGE > pageCount - 1:
                     pageCount += 1
                 else:
-                    # È«²¿Í¼Æ¬ÏÂÔØÍê±Ï
+                    # å…¨éƒ¨å›¾ç‰‡ä¸‹è½½å®Œæ¯•
                     break
             
-            self.printStepMsg(userName + "ÏÂÔØÍê±Ï£¬×Ü¹²»ñµÃ" + str(imageCount - 1) + "ÕÅÍ¼Æ¬")
+            self.printStepMsg(userName + "ä¸‹è½½å®Œæ¯•ï¼Œæ€»å…±è·å¾—" + str(imageCount - 1) + "å¼ å›¾ç‰‡")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
             allImageCount += imageCount - 1
             
-            # ÅÅĞò
+            # æ’åº
             if self.isSort == 1:
                 imageList = sorted(os.listdir(imagePath), reverse=True)
-                # ÅĞ¶ÏÅÅĞòÄ¿±êÎÄ¼ş¼ĞÊÇ·ñ´æÔÚ
+                # åˆ¤æ–­æ’åºç›®æ ‡æ–‡ä»¶å¤¹æ˜¯å¦å­˜åœ¨
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + userName
                     if os.path.exists(destPath):
                         if os.path.isdir(destPath):
-                            self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + " ÒÑ´æÔÚ£¬É¾³ıÖĞ")
+                            self.printStepMsg("å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath + " å·²å­˜åœ¨ï¼Œåˆ é™¤ä¸­")
                             self.removeDirFiles(destPath)
                         else:
-                            self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
+                            self.printStepMsg("å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath + "å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
                             os.remove(destPath)
-                    self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + destPath)
+                    self.printStepMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + destPath)
                     if not self.createDir(destPath):
-                        self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º " + destPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                        self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š " + destPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                         self.processExit()
-                    # µ¹ĞğÅÅÁĞ
+                    # å€’å™æ’åˆ—
                     if len(userIdList[userId]) >= 3:
                         count = int(userIdList[userId][2]) + 1
                     else:
@@ -352,35 +352,35 @@ class weibo(common.Tool):
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg("Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
-                # É¾³ıÁÙÊ±ÎÄ¼ş¼Ğ
+                    self.printStepMsg("å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
+                # åˆ é™¤ä¸´æ—¶æ–‡ä»¶å¤¹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userName + "Í¼Æ¬ÊıÁ¿Òì³££¬ÇëÊÖ¶¯¼ì²é")
+                self.printErrorMsg(userName + "å›¾ç‰‡æ•°é‡å¼‚å¸¸ï¼Œè¯·æ‰‹åŠ¨æ£€æŸ¥")
                 
-            # ±£´æ×îºóµÄĞÅÏ¢
+            # ä¿å­˜æœ€åçš„ä¿¡æ¯
             newUserIdListFile = open(newUserIdListFilePath, 'a')
             newUserIdListFile.write("\t".join(newUserIdList[userId]) + "\n")
             newUserIdListFile.close()
 
-        # ÅÅĞò²¢±£´æĞÂµÄidList.txt
+        # æ’åºå¹¶ä¿å­˜æ–°çš„idList.txt
 #         tempList = []
 #         tempUserIdList = sorted(newUserIdList.keys())
 #         for index in tempUserIdList:
 #             tempList.append("\t".join(newUserIdList[index]))
 #         newUserIdListString = "\n".join(tempList)
 #         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-#         self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş£º" + newUserIdListFilePath)
+#         self.printStepMsg("ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶ï¼š" + newUserIdListFilePath)
 #         newUserIdListFile = open(newUserIdListFilePath, 'w')
 #         newUserIdListFile.write(newUserIdListString)
 #         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("´æµµÎÄ¼şÖĞËùÓĞÓÃ»§Í¼Æ¬ÒÑ³É¹¦ÏÂÔØ£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÍ¼Æ¬" + str(allImageCount) + "ÕÅ")
+        self.printStepMsg("å­˜æ¡£æ–‡ä»¶ä¸­æ‰€æœ‰ç”¨æˆ·å›¾ç‰‡å·²æˆåŠŸä¸‹è½½ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + "ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(allImageCount) + "å¼ ")
 
 if __name__ == '__main__':
-    weibo().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
-    weibo().main(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\weibo2", os.getcwd() +  "\\photo\\weibo2\\tempImage")
-    weibo().main(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\weibo3", os.getcwd() +  "\\photo\\weibo3\\tempImage")
+    Weibo().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
+    Weibo().main(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\weibo2", os.getcwd() +  "\\photo\\weibo2\\tempImage")
+    Weibo().main(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\weibo3", os.getcwd() +  "\\photo\\weibo3\\tempImage")
 
