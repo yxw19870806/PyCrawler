@@ -100,6 +100,7 @@ class Weibo(common.Tool):
         startTime = time.time()
 
         # 判断各种目录是否存在
+        # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.makeDir(stepLogDir, 0):
@@ -117,7 +118,7 @@ class Weibo(common.Tool):
         # 图片保存目录
         self.printStepMsg("创建图片根目录：" + self.imageDownloadPath)
         if not self.makeDir(self.imageDownloadPath, 2):
-            self.printErrorMsg("创建图片根目录：" + errorLogDir + " 失败，程序结束！")
+            self.printErrorMsg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
 
         # 设置代理
