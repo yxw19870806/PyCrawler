@@ -83,15 +83,10 @@ class DownloadImage(common.Tool):
             self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
             self.processExit()
 
-        # 图片下载目录
-        self.printStepMsg("创建图片下载目录：" + self.imageDownloadPath)
-        if not self.makeDir(self.imageDownloadPath, 2):
-            self.printErrorMsg("图片下载目录：" + errorLogDir + " 失败，程序结束！")
-            self.processExit()
-
-        self.printStepMsg("创建图片下载目录：" + self.imageDownloadPath)
+        # 图片保存目录
+        self.printStepMsg("创建图片保存目录：" + self.imageDownloadPath)
         if not self.makeDir(self.imageDownloadPath, 1):
-            self.printErrorMsg("创建图片下载目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self.printErrorMsg("创建图片保存目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
 
         # 设置代理
@@ -156,6 +151,7 @@ class DownloadImage(common.Tool):
                 isError = True
             else:
                 isError = False
+
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if self.isSort == 1:
                 imagePath = self.imageTempPath
@@ -164,6 +160,7 @@ class DownloadImage(common.Tool):
             if not self.makeDir(imagePath, 1):
                 self.printErrorMsg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
                 self.processExit()
+
             # 图片下载
 #            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
             photoAlbumUrl = 'https://plus.google.com/_/photos/pc/read/'
@@ -251,8 +248,9 @@ class DownloadImage(common.Tool):
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + newUserIdList[userId][6] + "\\" + userName
                     if not self.makeDir(destPath, 1):
-                        self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
+                        self.printErrorMsg("创建图片子目录： " + destPath + " 失败，程序结束！")
                         self.processExit()
+
                     # 倒叙排列
                     if len(userIdList[userId]) >= 3:
                         count = int(userIdList[userId][2]) + 1
