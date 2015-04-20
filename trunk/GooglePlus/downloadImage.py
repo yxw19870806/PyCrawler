@@ -92,6 +92,7 @@ class DownloadImage(common.Tool):
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "https")
+
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
@@ -118,7 +119,7 @@ class DownloadImage(common.Tool):
             # 如果没有名字，则名字用uid代替
             if len(newUserIdList[newUserId]) < 2:
                 newUserIdList[newUserId].append(newUserIdList[newUserId][0])
-            # 如果没有初试image count，则为0
+            # 如果没有初始image count，则为0
             if len(newUserIdList[newUserId]) < 3:
                 newUserIdList[newUserId].append("0")
             # 处理上一次image URL
@@ -258,7 +259,7 @@ class DownloadImage(common.Tool):
                         count = 1
                     for fileName in imageList:
                         fileType = fileName.split(".")[1]
-                        shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
+                        self.copyFiles(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
                     self.printStepMsg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹

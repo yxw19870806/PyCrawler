@@ -54,20 +54,7 @@ class Weibo(common.Tool):
         return False
 
     def __init__(self):
-        processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", 'r')
-        lines = configFile.readlines()
-        configFile.close()
-        config = {}
-        for line in lines:
-            line = line.lstrip().rstrip().replace(" ", "")
-            if len(line) > 1 and line[0] != "#":
-                try:
-                    line = line.split("=")
-                    config[line[0]] = line[1]
-                except Exception, e:
-                    self.printMsg(str(e))
-                    pass
+        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
         # 每次请求获取的图片数量
         self.IMAGE_COUNT_PER_PAGE = 20
         # 程序配置
@@ -111,18 +98,19 @@ class Weibo(common.Tool):
         if imageTempPath != '':
             self.imageTempPath = imageTempPath
         startTime = time.time()
+
         # 判断各种目录是否存在
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.makeDir(stepLogDir):
+            if not self.makeDir(stepLogDir, 0):
                 self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                 self.processExit()
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.makeDir(traceLogDir):
+            if not self.makeDir(traceLogDir, 0):
                 self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                 self.processExit()
         errorLogDir = os.path.dirname(self.errorLogPath)
-        if not self.makeDir(errorLogDir):
+        if not self.makeDir(errorLogDir, 0):
             self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
             self.processExit()
 
@@ -139,6 +127,7 @@ class Weibo(common.Tool):
         if not self.cookie(self.cookiePath, self.browerVersion):
             self.printErrorMsg("导入浏览器cookies失败，程序结束！")
             self.processExit()
+
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
@@ -154,16 +143,17 @@ class Weibo(common.Tool):
         else:
             self.printErrorMsg("用户ID存档文件：" + self.userIdListFilePath + "不存在，程序结束！")
             self.processExit()
+        # 创建临时存档文件
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, 'w')
         newUserIdListFile.close()
-
+        # 复制处理存档文件
         newUserIdList = copy.deepcopy(userIdList)
         for newUserId in newUserIdList:
             # 如果没有名字，则名字用uid代替
             if len(newUserIdList[newUserId]) < 2:
                 newUserIdList[newUserId].append(newUserIdList[newUserId][0])
-            # 如果没有初试image count，则为0
+            # 如果没有初始image count，则为0
             if len(newUserIdList[newUserId]) < 3:
                 newUserIdList[newUserId].append("0")
             # 处理上一次image URL
@@ -175,6 +165,7 @@ class Weibo(common.Tool):
             # 处理成员队伍信息
             if len(newUserIdList[newUserId]) < 5:
                 newUserIdList[newUserId].append("")
+
         allImageCount = 0
         for userId in sorted(userIdList.keys()):
             userName = newUserIdList[userId][1]
@@ -315,7 +306,7 @@ class Weibo(common.Tool):
                         count = 1
                     for fileName in imageList:
                         fileType = fileName.split(".")[1]
-                        shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
+                        self.copyFiles(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
                     self.printStepMsg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹

@@ -9,8 +9,8 @@ IS_SET_TIMEOUT = False
 
 class Tool(object):
 
-    def doGet(self, url, postData=None):
     # http请求
+    def doGet(self, url, postData=None):
         import sys
         import time
         import traceback
@@ -59,13 +59,13 @@ class Tool(object):
                 self.printErrorMsg("无法访问页面：" + url)
                 return False
 
-    def getDefaultBrowserCookiePath(self, OSVersion, browserType):     
     # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
     # OSVersion=1: win7
     # OSVersion=2: xp
     # browserType=1: IE
     # browserType=2: firefox
     # browserType=3: chrome
+    def getDefaultBrowserCookiePath(self, OSVersion, browserType):
         import getpass
         import os
         if browserType == 1:
@@ -99,11 +99,11 @@ class Tool(object):
         self.printMsg("浏览器类型：" + browserType + "不存在")
         return None
 
-    def cookie(self, filePath, browserType=1):
     # 使用系统cookies
     # browserType=1: IE
     # browserType=2: firefox
     # browserType=3: chrome
+    def cookie(self, filePath, browserType=1):
         import cookielib
         import cStringIO
         import os
@@ -177,16 +177,16 @@ class Tool(object):
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
         self.printMsg("设置代理成功")
-                
-    def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
+
     # 获取配置文件
     # config : 字典格式，如：{key1:value1, key2:value2}
-    # mode 0 : 直接赋值
-    # mode 1 : 字符串拼接
-    # mode 2 : 取整
-    # mode 3 : 文件路径，以'\'开头的为当前目录下创建
+    # mode=0 : 直接赋值
+    # mode=1 : 字符串拼接
+    # mode=2 : 取整
+    # mode=3 : 文件路径，以'\'开头的为当前目录下创建
     # prefix: 前缀，只有在mode=1时有效
     # postfix: 后缀，只有在mode=1时有效
+    def getConfig(self, config, key, defaultValue, mode, prefix=None, postfix=None):
         import os
         import traceback
         value = None
@@ -215,7 +215,25 @@ class Tool(object):
             self.printMsg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
             value = defaultValue
         return value
-    
+
+    def analyzeConfig(self, configPath):
+        configFile = open(configPath, 'r')
+        lines = configFile.readlines()
+        configFile.close()
+        config = {}
+        for line in lines:
+            if len(line) == 0:
+                continue
+            line = line.lstrip().rstrip().replace(" ", "")
+            if len(line) > 1 and line[0] != "#" and line.find('=') >= 0:
+                try:
+                    line = line.split("=")
+                    config[line[0]] = line[1]
+                except Exception, e:
+                    self.printMsg(str(e))
+                    pass
+        return  config
+
     def printMsg(self, msg, isTime=True):
         if isTime:
             msg = self.getTime() + " " + msg
@@ -254,7 +272,8 @@ class Tool(object):
         logFile = open(filePath, 'a')
         logFile.write(msg + "\n")
         logFile.close()
-    
+
+    # old
     def createDir(self, path):
         import time
         import traceback
@@ -274,23 +293,25 @@ class Tool(object):
                     time.sleep(5)
                 count += 1
         return True
-    
-    def removeDirFiles(self, dirPath): 
+
+    # 删除目录下所有文件（保留目录）
+    def removeDirFiles(self, dirPath):
         import os
         for fileName in os.listdir(dirPath): 
             targetFile = os.path.join(dirPath, fileName) 
             if os.path.isfile(targetFile): 
                 os.remove(targetFile)
 
-    def makeDir(self, dirPath, createMode):
+    # 创建目录
     # createMode 0 : 不存在则创建
     # createMode 1 : 存在则删除并创建
     # createMode 2 : 存在提示删除，确定后删除创建，取消后退出程序
+    def makeDir(self, dirPath, createMode):
         import os
         import shutil
         import time
         dirPath = dirPath.decode('UTF-8').encode('GBK')
-        if createMode != 0 or createMode != 1 or createMode != 2:
+        if createMode != 0 and createMode != 1 and createMode != 2:
             createMode = 0
         # 目录存在
         if os.path.exists(dirPath):
@@ -345,10 +366,18 @@ class Tool(object):
             count += 1
         return False
 
+    def copyFiles(self, sourcePath, destPath):
+        import shutil
+        sourcePath = sourcePath.decode('UTF-8').encode('GBK')
+        destPath = destPath.decode('UTF-8').encode('GBK')
+        shutil.copyfile(sourcePath, destPath)
+
+    # 结束进程
     def processExit(self):
         import sys
         sys.exit()
-    
+
+    # 关机
     def shutdown(self, widget, data=None):
         from os import system
         system("shutdown -h now")
