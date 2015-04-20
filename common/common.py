@@ -296,7 +296,10 @@ class Tool(object):
         # 目录存在
         if os.path.exists(dirPath):
             if createMode == 0:
-                return True
+                if os.path.isdir(dirPath):
+                    return True
+                else:
+                    return False
             elif createMode == 1:
                 pass
             elif createMode == 2:
@@ -306,7 +309,7 @@ class Tool(object):
                 else:
                     isDelete = False
                     while not isDelete:
-                        input = raw_input(self.getTime() + " 图片保存目录：" + dirPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                        input = raw_input(self.getTime() + " 目录：" + dirPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                         try:
                             input = input.lower()
                             if input in ["y", "yes"]:
