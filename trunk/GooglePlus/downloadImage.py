@@ -26,20 +26,7 @@ class DownloadImage(common.Tool):
         super(DownloadImage, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
 
     def __init__(self):
-        processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", "r")
-        lines = configFile.readlines()
-        configFile.close()
-        config = {}
-        for line in lines:
-            line = line.lstrip().rstrip().replace(" ", "")
-            if len(line) > 1 and line[0] != "#":
-                try:
-                    line = line.split("=")
-                    config[line[0]] = line[1]
-                except Exception, e:
-                    self.printMsg(str(e))
-                    pass
+        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
@@ -84,9 +71,9 @@ class DownloadImage(common.Tool):
             self.processExit()
 
         # 图片保存目录
-        self.printStepMsg("创建图片保存目录：" + self.imageDownloadPath)
-        if not self.makeDir(self.imageDownloadPath, 1):
-            self.printErrorMsg("创建图片保存目录：" + self.imageDownloadPath + " 失败，程序结束！")
+        self.printStepMsg("创建图片根目录：" + self.imageDownloadPath)
+        if not self.makeDir(self.imageDownloadPath, 2):
+            self.printErrorMsg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.processExit()
 
         # 设置代理
