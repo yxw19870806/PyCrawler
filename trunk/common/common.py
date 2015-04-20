@@ -282,7 +282,67 @@ class Tool(object):
             targetFile = os.path.join(dirPath, fileName) 
             if os.path.isfile(targetFile): 
                 os.remove(targetFile)
-                
+
+    def makeDir(self, dirPath, createMode):
+    # createMode 0 : 不存在则创建
+    # createMode 1 : 存在则删除并创建
+    # createMode 2 : 存在提示删除，确定后删除创建，取消后退出程序
+        import os
+        import shutil
+        import time
+        dirPath = dirPath.decode('UTF-8').encode('GBK')
+        if createMode != 0 or createMode != 1 or createMode != 2:
+            createMode = 0
+        # 目录存在
+        if os.path.exists(dirPath):
+            if createMode == 0:
+                return True
+            elif createMode == 1:
+                pass
+            elif createMode == 2:
+                # 路径是空目录
+                if os.path.isdir(dirPath) and not os.listdir(dirPath):
+                    pass
+                else:
+                    isDelete = False
+                    while not isDelete:
+                        input = raw_input(self.getTime() + " 图片保存目录：" + dirPath + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                        try:
+                            input = input.lower()
+                            if input in ["y", "yes"]:
+                                isDelete = True
+                            elif input in ["n", "no"]:
+                                self.processExit()
+                        except Exception, e:
+                            self.printErrorMsg(str(e))
+                            pass
+
+            # 删除原本路劲
+            # 文件
+            if os.path.isfile(dirPath):
+                os.remove(dirPath)
+            # 目录
+            elif os.path.isdir(dirPath):
+                # 非空目录
+                if os.listdir(dirPath):
+                    shutil.rmtree(dirPath, True)
+                    # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+                    while os.path.exists(dirPath):
+                        shutil.rmtree(dirPath, True)
+                        time.sleep(5)
+
+        count = 0
+        while count <= 5:
+            try:
+                os.makedirs(dirPath)
+                if os.path.isdir(dirPath):
+                    return True
+            except Exception, e:
+                self.printMsg(str(e))
+                time.sleep(5)
+            count += 1
+        return False
+
     def processExit(self):
         import sys
         sys.exit()
