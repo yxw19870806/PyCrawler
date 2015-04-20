@@ -9,7 +9,7 @@ Created on 2013-4-14
 
 import os
 
-imageRootPath = "Z:\\G+\\photo\\"
+imageRootPath = "Z:\\G+\\G+\\"
 
 def getCount(path):
     tempFile = open(path, 'r')

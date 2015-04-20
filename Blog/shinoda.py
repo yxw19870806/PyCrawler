@@ -14,16 +14,16 @@ import shutil
 import sys
 import time
 
-class shinoda(common.Tool):
+class Shinoda(common.Tool):
 
     def trace(self, msg):
-        super(shinoda, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(Shinoda, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(shinoda, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(Shinoda, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(shinoda, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+        super(Shinoda, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
 
     def download(self, imageUrl, imagePath, imageCount):
         imgByte = self.doGet(imageUrl)
