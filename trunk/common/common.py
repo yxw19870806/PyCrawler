@@ -259,7 +259,6 @@ class Tool(object):
         import time
         import traceback
         import os
-        path = path.decode('UTF-8').encode('GBK')
         if not os.path.exists(path):
             count = 0
             while 1:
