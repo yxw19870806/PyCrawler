@@ -1,11 +1,11 @@
-# -*- coding:GBK  -*-
+# -*- coding:UTF-8  -*-
 '''
 Created on 2014-5-31
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 
 from common import common, json
@@ -26,21 +26,8 @@ class Twitter(common.Tool):
         super(Twitter, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
     
     def __init__(self):
-        processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", "r")
-        lines = configFile.readlines()
-        configFile.close()
-        config = {}
-        for line in lines:
-            line = line.lstrip().rstrip().replace(" ", "")
-            if len(line) > 1 and line[0] != "#":
-                try:
-                    line = line.split("=")
-                    config[line[0]] = line[1]
-                except Exception, e:
-                    self.printMsg(str(e))
-                    pass
-        # ³ÌĞòÅäÖÃ
+        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
+        # ç¨‹åºé…ç½®
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
@@ -48,11 +35,11 @@ class Twitter(common.Tool):
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
         self.getImageUrlCount = self.getConfig(config, "GET_IMAGE_URL_COUNT", 100, 2)
-        # ´úÀí
+        # ä»£ç†
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # ÎÄ¼şÂ·¾¶
+        # æ–‡ä»¶è·¯å¾„
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
@@ -63,68 +50,37 @@ class Twitter(common.Tool):
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
         self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
+        self.printMsg("é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
 
     def main(self):
         startTime = time.time()
-        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
-        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
+        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
+        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not os.path.exists(stepLogDir):
-                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
-                if not self.createDir(stepLogDir):
-                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
-            traceLogDir = os.path.dirname(self.traceLogPath)
-            if not os.path.exists(traceLogDir):
-                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
-                if not self.createDir(traceLogDir):
-                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
-        errorLogDir = os.path.dirname(self.errorLogPath)
-        if not os.path.exists(errorLogDir):
-            self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
-            if not self.createDir(errorLogDir):
-                self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            if not self.makeDir(stepLogDir, 0):
+                self.printErrorMsg("åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-        # Í¼Æ¬ÏÂÔØÄ¿Â¼
-        if os.path.exists(self.imageDownloadPath):
-            # Â·¾¶ÊÇÄ¿Â¼
-            if os.path.isdir(self.imageDownloadPath):
-                # Ä¿Â¼²»Îª¿Õ
-                if os.listdir(self.imageDownloadPath):
-                    isDelete = False
-                    while not isDelete:
-                        # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                        input = raw_input(self.getTime() + " Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò£¿(Y)es or (N)o: ")
-                        try:
-                            input = input.lower()
-                            if input in ["y", "yes"]:
-                                isDelete = True
-                            elif input in ["n", "no"]:
-                                self.processExit()
-                        except Exception, e:
-                            self.printErrorMsg(str(e)) 
-                            pass
-                    self.printStepMsg("É¾³ıÍ¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath)
-                    # É¾³ıÄ¿Â¼
-                    shutil.rmtree(self.imageDownloadPath, True)
-                    # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
-                    while os.path.exists(self.imageDownloadPath):
-                        shutil.rmtree(self.imageDownloadPath, True)
-                        time.sleep(5)
-            else:
-                self.printStepMsg("Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
-                os.remove(self.imageDownloadPath)
-        self.printStepMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath)
-        if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            traceLogDir = os.path.dirname(self.traceLogPath)
+            if not self.makeDir(traceLogDir, 0):
+                self.printErrorMsg("åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.processExit()
+        errorLogDir = os.path.dirname(self.errorLogPath)
+        if not self.makeDir(errorLogDir, 0):
+            self.printErrorMsg("åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # ÉèÖÃ´úÀí
+
+        # å›¾ç‰‡ä¿å­˜ç›®å½•
+        self.printStepMsg("åˆ›å»ºå›¾ç‰‡æ ¹ç›®å½•ï¼š" + self.imageDownloadPath)
+        if not self.makeDir(self.imageDownloadPath, 2):
+            self.printErrorMsg("åˆ›å»ºå›¾ç‰‡æ ¹ç›®å½•ï¼š" + self.imageDownloadPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            self.processExit()
+
+        # è®¾ç½®ä»£ç†
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "https")
-        # Ñ°ÕÒidlist£¬Èç¹ûÃ»ÓĞ½áÊø½ø³Ì
+
+        # å¯»æ‰¾idlistï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
             userListFile = open(self.userIdListFilePath, "r")
@@ -138,20 +94,20 @@ class Twitter(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("ÓÃ»§ID´æµµÎÄ¼ş: " + self.userIdListFilePath + "²»´æÔÚ£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("ç”¨æˆ·IDå­˜æ¡£æ–‡ä»¶: " + self.userIdListFilePath + "ä¸å­˜åœ¨ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # ´´½¨ÁÙÊ±´æµµÎÄ¼ş
+        # åˆ›å»ºä¸´æ—¶å­˜æ¡£æ–‡ä»¶
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.close()
-        # ¸´ÖÆ´¦Àí´æµµÎÄ¼ş
+        # å¤åˆ¶å¤„ç†å­˜æ¡£æ–‡ä»¶
         newUserIdList = copy.deepcopy(userIdList)
         for newUserAccount in newUserIdList:
-            # Èç¹ûÃ»ÓĞÃû×Ö£¬ÔòÃû×ÖÓÃuid´úÌæ
+            # å¦‚æœæ²¡æœ‰åå­—ï¼Œåˆ™åå­—ç”¨uidä»£æ›¿
             if len(newUserIdList[newUserAccount]) < 2:
                 newUserIdList[newUserAccount].append("0")
-            # ´¦ÀíÉÏÒ»´Îimage URL
-            # ĞèÖÃ¿Õ´æ·Å±¾´ÎµÚÒ»ÕÅ»ñÈ¡µÄimage URL
+            # å¤„ç†ä¸Šä¸€æ¬¡image URL
+            # éœ€ç½®ç©ºå­˜æ”¾æœ¬æ¬¡ç¬¬ä¸€å¼ è·å–çš„image URL
             if len(newUserIdList[newUserAccount]) < 3:
                 newUserIdList[newUserAccount].append("")
             else:
@@ -159,60 +115,65 @@ class Twitter(common.Tool):
         
         init_max_id = 999999999999999999
         totalImageCount = 0
-        # Ñ­»·ÏÂÔØÃ¿¸öid
+        # å¾ªç¯ä¸‹è½½æ¯ä¸ªid
         for userAccount in sorted(userIdList.keys()):
             self.printStepMsg("Account: " + userAccount)
-            # ³õÊ¼»¯Êı¾İ
+            # åˆå§‹åŒ–æ•°æ®
             maxId = init_max_id
             imageCount = 1
             imageUrlList = []
             isPass = False
             isLastPage = False
-            # Èç¹ûÓĞ´æµµ¼ÇÂ¼£¬ÔòÖ±µ½ÕÒµ½ÓëÇ°Ò»´ÎÒ»ÖÂµÄµØÖ·£¬·ñÔò¶¼ËãÓĞÒì³£
+            # å¦‚æœæœ‰å­˜æ¡£è®°å½•ï¼Œåˆ™ç›´åˆ°æ‰¾åˆ°ä¸å‰ä¸€æ¬¡ä¸€è‡´çš„åœ°å€ï¼Œå¦åˆ™éƒ½ç®—æœ‰å¼‚å¸¸
             if len(userIdList[userAccount]) > 2 and int(userIdList[userAccount][1]) != 0 and userIdList[userAccount][2] != "":
                 isError = True
             else:
                 isError = False
-            # Èç¹ûĞèÒªÖØĞÂÅÅĞòÔòÊ¹ÓÃÁÙÊ±ÎÄ¼ş¼Ğ£¬·ñÔòÖ±½ÓÏÂÔØµ½Ä¿±êÄ¿Â¼
+            # å¦‚æœéœ€è¦é‡æ–°æ’åºåˆ™ä½¿ç”¨ä¸´æ—¶æ–‡ä»¶å¤¹ï¼Œå¦åˆ™ç›´æ¥ä¸‹è½½åˆ°ç›®æ ‡ç›®å½•
             if self.isSort == 1:
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userAccount
-            if not self.createDir(imagePath):
-                self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º " + imagePath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            if not self.makeDir(imagePath, 1):
+                self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š " + imagePath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-            # Í¼Æ¬ÏÂÔØ
+
+            # å›¾ç‰‡ä¸‹è½½
             while not isLastPage:
                 if isPass:
                     break
                 photoPageUrl = "https://twitter.com/i/profiles/show/%s/media_timeline?max_id=%s" % (userAccount, maxId)
                 photoPageData = self.doGet(photoPageUrl)
-#                 f = open('a.txt', 'r')
-#                 photoPageData = f.read()
-#                 f.close()
+                # f = open('a.txt', 'w')
+                # f = open('a.txt', 'r')
+                # photoPageData = f.read()
+                # f.write(photoPageData)
+                # f.close()
+                # print photoPageData
                 if not photoPageData:
-                    self.printErrorMsg("ÎŞ·¨»ñÈ¡Ïà²áĞÅÏ¢: " + photoPageUrl)
+                    self.printErrorMsg("æ— æ³•è·å–ç›¸å†Œä¿¡æ¯: " + photoPageUrl)
                     break
                 try:
                     page = json.read(photoPageData)
                 except:
-                    self.printErrorMsg("·µ»ØĞÅÏ¢£º" + str(photoPageData) + " ²»ÊÇÒ»¸öJSONÊı¾İ, account: " + userAccount)
+                    self.printErrorMsg("è¿”å›ä¿¡æ¯ï¼š" + str(photoPageData) + " ä¸æ˜¯ä¸€ä¸ªJSONæ•°æ®, account: " + userAccount)
                     break
+                # print page['has_more_items'].keys()
                 if not isinstance(page, dict):
-                    self.printErrorMsg("JSONÊı¾İ£º" + str(page) + " ²»ÊÇÒ»¸ö×Öµä, account: " + userAccount)
+                    self.printErrorMsg("JSONæ•°æ®ï¼š" + str(page) + " ä¸æ˜¯ä¸€ä¸ªå­—å…¸, account: " + userAccount)
                     break
                 if not page.has_key("has_more_items"):
-                    self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(page) + " ÖĞÃ»ÓĞÕÒµ½'data'×Ö¶Î, account: " + userAccount)
+                    self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(page) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'has_more_items'å­—æ®µ, account: " + userAccount)
                     break
                 if page['has_more_items'] == True :
                     if not page.has_key("max_id"):
-                        self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(page) + " ÖĞÃ»ÓĞÕÒµ½'data'×Ö¶Î, account: " + userAccount)
+                        self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(page) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'max_id'å­—æ®µ, account: " + userAccount)
                         break
                 else:
                     isLastPage = True
                 maxId = page['max_id']
                 if not page.has_key("items_html"):
-                    self.printErrorMsg("ÔÚJSONÊı¾İ£º" + str(page) + " ÖĞÃ»ÓĞÕÒµ½'data'×Ö¶Î, account: " + userAccount)
+                    self.printErrorMsg("åœ¨JSONæ•°æ®ï¼š" + str(page) + " ä¸­æ²¡æœ‰æ‰¾åˆ°'items_html'å­—æ®µ, account: " + userAccount)
                     break
                 page = page['items_html']
 #                 f = codecs.open('b.txt', 'w', 'utf-8')
@@ -224,10 +185,10 @@ class Twitter(common.Tool):
                     imageStop = page.find('"', imageStart)
                     imageUrl = page[imageStart:imageStop].encode("utf-8")
                     self.trace("image URL:" + imageUrl)
-                    # ½«µÚÒ»ÕÅimageµÄURL±£´æµ½ĞÂid listÖĞ
+                    # å°†ç¬¬ä¸€å¼ imageçš„URLä¿å­˜åˆ°æ–°id listä¸­
                     if newUserIdList[userAccount][2] == "":
                         newUserIdList[userAccount][2] = imageUrl
-                    # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
+                    # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
                     if len(userIdList[userAccount]) >= 3:
                         if imageUrl == userIdList[userAccount][2]:
                             isPass = True
@@ -237,46 +198,39 @@ class Twitter(common.Tool):
                         imageIndex = page.find('data-url', imageIndex + 1)
                         continue
                     imageUrlList.append(imageUrl)
-                    # ÎÄ¼şÀàĞÍ
+                    # æ–‡ä»¶ç±»å‹
                     imgByte = self.doGet(imageUrl)
                     if imgByte:
                         fileType = imageUrl.split(".")[-1].split(':')[0]
                         imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
-                        self.printStepMsg("¿ªÊ¼ÏÂÔØµÚ " + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl)
+                        self.printStepMsg("å¼€å§‹ä¸‹è½½ç¬¬ " + str(imageCount) + "å¼ å›¾ç‰‡ï¼š" + imageUrl)
                         imageFile.write(imgByte)
-                        self.printStepMsg("ÏÂÔØ³É¹¦")
+                        self.printStepMsg("ä¸‹è½½æˆåŠŸ")
                         imageCount += 1
                         imageFile.close()
                     else:
-                        self.printErrorMsg("»ñÈ¡µÚ" + str(imageCount) + "ÕÅÍ¼Æ¬ĞÅÏ¢Ê§°Ü£º" + userAccount + "£º" + imageUrl)
-                    # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
+                        self.printErrorMsg("è·å–ç¬¬" + str(imageCount) + "å¼ å›¾ç‰‡ä¿¡æ¯å¤±è´¥ï¼š" + userAccount + "ï¼š" + imageUrl)
+                    # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
-                        self.printErrorMsg("´ïµ½ÏÂÔØÏŞÖÆÊıÁ¿")
+                        self.printErrorMsg("è¾¾åˆ°ä¸‹è½½é™åˆ¶æ•°é‡")
                         break
                     imageIndex = page.find('data-url', imageIndex + 1)
             
-            self.printStepMsg(userAccount + "ÏÂÔØÍê±Ï£¬×Ü¹²»ñµÃ" + str(imageCount - 1) + "ÕÅÍ¼Æ¬")
+            self.printStepMsg(userAccount + "ä¸‹è½½å®Œæ¯•ï¼Œæ€»å…±è·å¾—" + str(imageCount - 1) + "å¼ å›¾ç‰‡")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             totalImageCount += imageCount - 1
             
-            # ÅÅĞò
+            # æ’åº
             if self.isSort == 1:
                 imageList = sorted(os.listdir(imagePath), reverse=True)
-                # ÅĞ¶ÏÅÅĞòÄ¿±êÎÄ¼ş¼ĞÊÇ·ñ´æÔÚ
+                # åˆ¤æ–­æ’åºç›®æ ‡æ–‡ä»¶å¤¹æ˜¯å¦å­˜åœ¨
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + userAccount
-                    if os.path.exists(destPath):
-                        if os.path.isdir(destPath):
-                            self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + " ÒÑ´æÔÚ£¬É¾³ıÖĞ")
-                            self.removeDirFiles(destPath)
-                        else:
-                            self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + destPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ıÖĞ")
-                            os.remove(destPath)
-                    self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + destPath)
-                    if not self.createDir(destPath):
-                        self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º " + destPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    if not self.makeDir(destPath, 1):
+                        self.printErrorMsg("åˆ›å»ºå›¾ç‰‡å­ç›®å½•ï¼š " + destPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                         self.processExit()
-                    # µ¹ĞğÅÅÁĞ
+
+                    # å€’å™æ’åˆ—
                     if len(userIdList[userAccount]) >= 3:
                         count = int(userIdList[userAccount][1]) + 1
                     else:
@@ -285,32 +239,32 @@ class Twitter(common.Tool):
                         fileType = fileName.split(".")[1]
                         shutil.copyfile(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg("Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
-                # É¾³ıÁÙÊ±ÎÄ¼ş¼Ğ
+                    self.printStepMsg("å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
+                # åˆ é™¤ä¸´æ—¶æ–‡ä»¶å¤¹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userAccount + "Í¼Æ¬ÊıÁ¿Òì³££¬ÇëÊÖ¶¯¼ì²é")
+                self.printErrorMsg(userAccount + "å›¾ç‰‡æ•°é‡å¼‚å¸¸ï¼Œè¯·æ‰‹åŠ¨æ£€æŸ¥")
 
-            # ±£´æ×îºóµÄĞÅÏ¢
+            # ä¿å­˜æœ€åçš„ä¿¡æ¯
             newUserIdListFile = open(newUserIdListFilePath, "a")
             newUserIdListFile.write("\t".join(newUserIdList[userAccount]) + "\n")
             newUserIdListFile.close()
 
-        # ÅÅĞò²¢±£´æĞÂµÄidList.txt
+        # æ’åºå¹¶ä¿å­˜æ–°çš„idList.txt
         tempList = []
         tempUserIdList = sorted(newUserIdList.keys())
         for index in tempUserIdList:
             tempList.append("\t".join(newUserIdList[index]))
         newUserIdListString = "\n".join(tempList)
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş£º" + newUserIdListFilePath)
+        self.printStepMsg("ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶ï¼š" + newUserIdListFilePath)
         newUserIdListFile = open(newUserIdListFilePath, "w")
         newUserIdListFile.write(newUserIdListString)
         newUserIdListFile.close()
         
         stopTime = time.time()
-        self.printStepMsg("´æµµÎÄ¼şÖĞËùÓĞÓÃ»§Í¼Æ¬ÒÑ³É¹¦ÏÂÔØ£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÍ¼Æ¬" + str(totalImageCount) + "ÕÅ")
+        self.printStepMsg("å­˜æ¡£æ–‡ä»¶ä¸­æ‰€æœ‰ç”¨æˆ·å›¾ç‰‡å·²æˆåŠŸä¸‹è½½ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + "ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(totalImageCount) + "å¼ ")
 
 if __name__ == "__main__":
     Twitter().main()
