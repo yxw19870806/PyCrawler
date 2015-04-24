@@ -119,7 +119,7 @@ class Twitter(common.Tool):
         for userAccount in sorted(userIdList.keys()):
             self.printStepMsg("Account: " + userAccount)
             # 初始化数据
-            maxId = init_max_id
+            dataTweetId = init_max_id
             imageCount = 1
             imageUrlList = []
             isPass = False
@@ -142,14 +142,8 @@ class Twitter(common.Tool):
             while not isLastPage:
                 if isPass:
                     break
-                photoPageUrl = "https://twitter.com/i/profiles/show/%s/media_timeline?max_id=%s" % (userAccount, maxId)
+                photoPageUrl = "https://twitter.com/i/profiles/show/%s/media_timeline?max_id=%s" % (userAccount, dataTweetId)
                 photoPageData = self.doGet(photoPageUrl)
-                # f = open('a.txt', 'w')
-                # f = open('a.txt', 'r')
-                # photoPageData = f.read()
-                # f.write(photoPageData)
-                # f.close()
-                # print photoPageData
                 if not photoPageData:
                     self.printErrorMsg("无法获取相册信息: " + photoPageUrl)
                     break
@@ -158,28 +152,16 @@ class Twitter(common.Tool):
                 except:
                     self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据, account: " + userAccount)
                     break
-                # print page['has_more_items'].keys()
                 if not isinstance(page, dict):
                     self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, account: " + userAccount)
                     break
-                if not page.has_key("has_more_items"):
-                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段, account: " + userAccount)
-                    break
-                if page['has_more_items'] == True :
-                    if not page.has_key("max_id"):
-                        self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'max_id'字段, account: " + userAccount)
-                        break
-                else:
-                    isLastPage = True
-                maxId = page['max_id']
                 if not page.has_key("items_html"):
                     self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'items_html'字段, account: " + userAccount)
                     break
+
                 page = page['items_html']
-#                 f = codecs.open('b.txt', 'w', 'utf-8')
-#                 f.write(page)
-#                 f.close()
-                imageIndex = page.find('data-url')
+
+                imageIndex = page.find("data-url")
                 while imageIndex != -1:
                     imageStart = page.find("http", imageIndex)
                     imageStop = page.find('"', imageStart)
@@ -215,7 +197,16 @@ class Twitter(common.Tool):
                         self.printErrorMsg("达到下载限制数量")
                         break
                     imageIndex = page.find('data-url', imageIndex + 1)
-            
+
+                if not isPass:
+                    # 设置最后一张的data-tweet-id
+                    dataTweetIdIndex = page.find('data-tweet-id="')
+                    while dataTweetIdIndex != -1:
+                        dataTweetIdStart = page.find('"', dataTweetIdIndex)
+                        dataTweetIdStop = page.find('"', dataTweetIdStart + 1)
+                        dataTweetId = page[dataTweetIdStart + 1:dataTweetIdStop]
+                        dataTweetIdIndex = page.find('data-tweet-id="', dataTweetIdIndex + 1)
+
             self.printStepMsg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             totalImageCount += imageCount - 1
