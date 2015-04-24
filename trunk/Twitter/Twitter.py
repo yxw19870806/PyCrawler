@@ -155,6 +155,11 @@ class Twitter(common.Tool):
                 if not isinstance(page, dict):
                     self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, account: " + userAccount)
                     break
+                if not page.has_key("has_more_items"):
+                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段, account: " + userAccount)
+                    break
+                if page['has_more_items'] == False :
+                    isLastPage = True
                 if not page.has_key("items_html"):
                     self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'items_html'字段, account: " + userAccount)
                     break
@@ -198,7 +203,7 @@ class Twitter(common.Tool):
                         break
                     imageIndex = page.find('data-url', imageIndex + 1)
 
-                if not isPass:
+                if not isLastPage:
                     # 设置最后一张的data-tweet-id
                     dataTweetIdIndex = page.find('data-tweet-id="')
                     while dataTweetIdIndex != -1:
