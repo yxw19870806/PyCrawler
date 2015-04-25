@@ -14,32 +14,19 @@ import os
 import shutil
 import time
 
-class instagram(common.Tool):
+class Instagram(common.Tool):
     
     def trace(self, msg):
-        super(instagram, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(Instagram, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(instagram, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(Instagram, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(instagram, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+        super(Instagram, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
          
     def __init__(self):
-        processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", "r")
-        lines = configFile.readlines()
-        configFile.close()
-        config = {}
-        for line in lines:
-            line = line.lstrip().rstrip().replace(" ", "")
-            if len(line) > 1 and line[0] != "#":
-                try:
-                    line = line.split("=")
-                    config[line[0]] = line[1]
-                except Exception, e:
-                    self.printMsg(str(e))
-                    pass
+        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
@@ -70,59 +57,28 @@ class instagram(common.Tool):
         # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not os.path.exists(stepLogDir):
-                self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
-                if not self.createDir(stepLogDir):
-                    self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
-                    self.processExit()
-            traceLogDir = os.path.dirname(self.traceLogPath)
-            if not os.path.exists(traceLogDir):
-                self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
-                if not self.createDir(traceLogDir):
-                    self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
-                    self.processExit()
-        errorLogDir = os.path.dirname(self.errorLogPath)
-        if not os.path.exists(errorLogDir):
-            self.printStepMsg("错误日志目录不存在，创建文件夹：" + errorLogDir)
-            if not self.createDir(errorLogDir):
-                self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+            if not self.makeDir(stepLogDir, 0):
+                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                 self.processExit()
-        # 图片下载目录
-        if os.path.exists(self.imageDownloadPath):
-            # 路径是目录
-            if os.path.isdir(self.imageDownloadPath):
-                # 目录不为空
-                if os.listdir(self.imageDownloadPath):
-                    isDelete = False
-                    while not isDelete:
-                        # 手动输入是否删除旧文件夹中的目录
-                        input = raw_input(self.getTime() + " 图片下载目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
-                        try:
-                            input = input.lower()
-                            if input in ["y", "yes"]:
-                                isDelete = True
-                            elif input in ["n", "no"]:
-                                self.processExit()
-                        except Exception, e:
-                            self.printErrorMsg(str(e)) 
-                            pass
-                    self.printStepMsg("删除图片下载目录：" + self.imageDownloadPath)
-                    # 删除目录
-                    shutil.rmtree(self.imageDownloadPath, True)
-                    # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
-                    while os.path.exists(self.imageDownloadPath):
-                        shutil.rmtree(self.imageDownloadPath, True)
-                        time.sleep(5)
-            else:
-                self.printStepMsg("图片下载目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
-                os.remove(self.imageDownloadPath)
-        self.printStepMsg("创建图片下载目录：" + self.imageDownloadPath)
-        if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("创建图片下载目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            traceLogDir = os.path.dirname(self.traceLogPath)
+            if not self.makeDir(traceLogDir, 0):
+                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                self.processExit()
+        errorLogDir = os.path.dirname(self.errorLogPath)
+        if not self.makeDir(errorLogDir, 0):
+            self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
             self.processExit()
+
+         # 图片保存目录
+        self.printStepMsg("创建图片根目录：" + self.imageDownloadPath)
+        if not self.makeDir(self.imageDownloadPath, 2):
+            self.printErrorMsg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self.processExit()
+
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "http")
+
         # 寻找idlist，如果没有结束进程
         userIdList = {}
         if os.path.exists(self.userIdListFilePath):
@@ -258,17 +214,10 @@ class instagram(common.Tool):
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + userAccount
-                    if os.path.exists(destPath):
-                        if os.path.isdir(destPath):
-                            self.printStepMsg("图片保存目录：" + destPath + " 已存在，删除中")
-                            self.removeDirFiles(destPath)
-                        else:
-                            self.printStepMsg("图片保存目录：" + destPath + "已存在相同名字的文件，自动删除中")
-                            os.remove(destPath)
-                    self.printStepMsg("创建图片保存目录：" + destPath)
-                    if not self.createDir(destPath):
-                        self.printErrorMsg("创建图片保存目录： " + destPath + " 失败，程序结束！")
+                    if not self.makeDir(destPath, 1):
+                        self.printErrorMsg("创建图片子目录： " + destPath + " 失败，程序结束！")
                         self.processExit()
+
                     # 倒叙排列
                     if len(userIdList[userAccount]) >= 3:
                         count = int(userIdList[userAccount][1]) + 1
@@ -290,20 +239,8 @@ class instagram(common.Tool):
             newUserIdListFile.write("\t".join(newUserIdList[userAccount]) + "\n")
             newUserIdListFile.close()
 
-        # 排序并保存新的idList.txt
-        tempList = []
-        tempUserIdList = sorted(newUserIdList.keys())
-        for index in tempUserIdList:
-            tempList.append("\t".join(newUserIdList[index]))
-        newUserIdListString = "\n".join(tempList)
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
-        newUserIdListFile = open(newUserIdListFilePath, "w")
-        newUserIdListFile.write(newUserIdListString)
-        newUserIdListFile.close()
-        
         stopTime = time.time()
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == "__main__":
-    instagram().main()
+    Instagram().main()
