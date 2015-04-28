@@ -186,8 +186,6 @@ class Weibo(common.Tool):
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userName
-            if os.path.exists(imagePath):
-                shutil.rmtree(imagePath, True)
             if not self.makeDir(imagePath, 1):
                 self.printErrorMsg("创建图片下载目录：" + imagePath + " 失败，程序结束！")
                 self.processExit()
