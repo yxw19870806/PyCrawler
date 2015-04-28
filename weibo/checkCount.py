@@ -29,3 +29,4 @@ def getCount(idPath, imageRootPath):
 getCount("info\\idlist_1.txt", "Z:\\G+\\weibo\\weibo1\\")
 getCount("info\\idlist_2.txt", "Z:\\G+\\weibo\\weibo2\\")
 getCount("info\\idlist_3.txt", "Z:\\G+\\weibo\\weibo3\\")
+getCount("info\\idlist_4.txt", "Z:\\G+\\weibo\\weibo4\\")
