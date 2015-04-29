@@ -14,16 +14,16 @@ import os
 import shutil
 import time
 
-class DownloadImage(common.Tool):
+class GooglePlus(common.Tool):
 
     def trace(self, msg):
-        super(DownloadImage, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(GooglePlus, self).trace(msg, self.isShowError, self.traceLogPath)
 
     def printErrorMsg(self, msg):
-        super(DownloadImage, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(GooglePlus, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
 
     def printStepMsg(self, msg):
-        super(DownloadImage, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+        super(GooglePlus, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
 
     def __init__(self):
         config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
@@ -276,4 +276,4 @@ class DownloadImage(common.Tool):
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
-    DownloadImage().main()
+    GooglePlus().main()
