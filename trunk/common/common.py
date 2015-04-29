@@ -353,7 +353,8 @@ class Tool(object):
                     while os.path.exists(dirPath):
                         shutil.rmtree(dirPath, True)
                         time.sleep(5)
-
+                else:
+                    return  True
         count = 0
         while count <= 5:
             try:
