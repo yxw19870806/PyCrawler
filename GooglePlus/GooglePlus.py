@@ -89,6 +89,7 @@ class GooglePlus(common.Tool):
             for userInfo in allUserList:
                 if len(userInfo) < 10:
                     continue
+                userInfo = userInfo.replace("\xef\xbb\xbf", "")
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
                 userInfoList = userInfo.split("\t")
