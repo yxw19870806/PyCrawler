@@ -136,6 +136,7 @@ class Weibo(common.Tool):
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
+                userInfo = userInfo.replace("\xef\xbb\xbf", "")
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
                 userInfo = userInfo.replace("\r", "")
@@ -144,6 +145,7 @@ class Weibo(common.Tool):
         else:
             self.printErrorMsg("用户ID存档文件：" + self.userIdListFilePath + "不存在，程序结束！")
             self.processExit()
+
         # 创建临时存档文件
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, 'w')
@@ -176,7 +178,7 @@ class Weibo(common.Tool):
             imageCount = 1
             totalImageCount = 0
             isPass = False
-            if len(userIdList[userId]) < 3 or userIdList[userId][3] == '':
+            if len(userIdList[userId]) <= 3 or userIdList[userId][3] == '':
                 isError = False
             else:
                 isError = True
