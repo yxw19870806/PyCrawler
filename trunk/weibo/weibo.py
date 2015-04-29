@@ -136,6 +136,8 @@ class Weibo(common.Tool):
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
+                if len(userInfo) < 5:
+                    continue
                 userInfo = userInfo.replace("\xef\xbb\xbf", "")
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
