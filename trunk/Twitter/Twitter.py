@@ -199,7 +199,7 @@ class Twitter(common.Tool):
                         self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + userAccount + "：" + imageUrl)
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
-                        self.printErrorMsg("达到下载限制数量")
+                        isPass = True
                         break
                     imageIndex = page.find('data-url', imageIndex + 1)
 
@@ -248,16 +248,16 @@ class Twitter(common.Tool):
             newUserIdListFile.close()
 
         # 排序并保存新的idList.txt
-        tempList = []
-        tempUserIdList = sorted(newUserIdList.keys())
-        for index in tempUserIdList:
-            tempList.append("\t".join(newUserIdList[index]))
-        newUserIdListString = "\n".join(tempList)
-        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
-        newUserIdListFile = open(newUserIdListFilePath, "w")
-        newUserIdListFile.write(newUserIdListString)
-        newUserIdListFile.close()
+        # tempList = []
+        # tempUserIdList = sorted(newUserIdList.keys())
+        # for index in tempUserIdList:
+        #     tempList.append("\t".join(newUserIdList[index]))
+        # newUserIdListString = "\n".join(tempList)
+        # newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        # self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
+        # newUserIdListFile = open(newUserIdListFilePath, "w")
+        # newUserIdListFile.write(newUserIdListString)
+        # newUserIdListFile.close()
         
         stopTime = time.time()
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")

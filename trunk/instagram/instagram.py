@@ -205,7 +205,6 @@ class Instagram(common.Tool):
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
-                        isError = False
                         break
             self.printStepMsg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
