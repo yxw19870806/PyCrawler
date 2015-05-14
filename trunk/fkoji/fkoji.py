@@ -1,11 +1,11 @@
-# -*- coding:GBK  -*-
+# -*- coding:UTF-8  -*-
 '''
 Created on 2014-2-8
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 from common import common
 from common import BeautifulSoup
@@ -40,18 +40,18 @@ class fkoji(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # ³ÌĞòÅäÖÃ
+        # ç¨‹åºé…ç½®
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
         self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
         self.getImagePageCount = self.getConfig(config, "GET_IMAGE_PAGE_COUNT", 1, 2)
-        # ´úÀí
+        # ä»£ç†
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # ÎÄ¼şÂ·¾¶
+        # æ–‡ä»¶è·¯å¾„
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
@@ -61,98 +61,44 @@ class fkoji(common.Tool):
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
+        self.printMsg("é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
 
     def main(self):
         startTime = time.time()
-        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
-        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
+        # åˆ¤æ–­å„ç§ç›®å½•æ˜¯å¦å­˜åœ¨
+        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not os.path.exists(stepLogDir):
-                self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
-                if not self.createDir(stepLogDir):
-                    self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
+            if not self.makeDir(stepLogDir, 0):
+                self.printErrorMsg("åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.processExit()
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not os.path.exists(traceLogDir):
-                self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
-                if not self.createDir(traceLogDir):
-                    self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.processExit()
+            if not self.makeDir(traceLogDir, 0):
+                self.printErrorMsg("åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                self.processExit()
         errorLogDir = os.path.dirname(self.errorLogPath)
-        if not os.path.exists(errorLogDir):
-            self.printStepMsg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
-            if not self.createDir(errorLogDir):
-                self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                self.processExit()
-        # Í¼Æ¬ÅÅĞòºóµÄ±£´æÄ¿Â¼
-        if os.path.exists(self.imageDownloadPath):
-            # Â·¾¶ÊÇÄ¿Â¼
-            if os.path.isdir(self.imageDownloadPath):
-                # Ä¿Â¼²»Îª¿Õ
-                if os.listdir(self.imageDownloadPath):
-                    isDelete = False
-                    while not isDelete:
-                        # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                        input = raw_input(self.getTime() + " Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
-                        try:
-                            input = input.lower()
-                            if input in ["y", "yes"]:
-                                isDelete = True
-                            elif input in ["n", "no"]:
-                                self.processExit()
-                        except:
-                            pass
-                    self.printStepMsg("É¾³ıÍ¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-                    # É¾³ıÄ¿Â¼
-                    shutil.rmtree(self.imageDownloadPath, True)
-                    # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
-                    while os.path.exists(self.imageDownloadPath):
-                        shutil.rmtree(self.imageDownloadPath, True)
-                        time.sleep(5)
-            else:
-                self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
-                os.remove(self.imageDownloadPath)
-        self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-        if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+        if not self.makeDir(errorLogDir, 0):
+            self.printErrorMsg("åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼
+
+         # å›¾ç‰‡ä¿å­˜ç›®å½•
+        self.printStepMsg("åˆ›å»ºå›¾ç‰‡æ ¹ç›®å½•ï¼š" + self.imageDownloadPath)
+        if not self.makeDir(self.imageDownloadPath, 2):
+            self.printErrorMsg("åˆ›å»ºå›¾ç‰‡æ ¹ç›®å½•ï¼š" + self.imageDownloadPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            self.processExit()
+
+        # å›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•
         if self.isSort == 1:
-            if os.path.exists(self.imageTempPath):
-                # Â·¾¶ÊÇÄ¿Â¼
-                if os.path.isdir(self.imageTempPath):
-                    # Ä¿Â¼²»Îª¿Õ
-                    if os.listdir(self.imageDownloadPath):
-                        isDelete = False
-                        while not isDelete:
-                            # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                            input = raw_input(self.getTime() + " Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
-                            try:
-                                input = input.lower()
-                                if input in ["y", "yes"]:
-                                    isDelete = True
-                                elif input in ["n", "no"]:
-                                    self.processExit()
-                            except:
-                                pass
-                        self.printStepMsg("É¾³ıÍ¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath)
-                        shutil.rmtree(self.imageTempPath, True)
-                        # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
-                        while os.path.exists(self.imageTempPath):
-                            shutil.rmtree(self.imageTempPath, True)
-                            time.sleep(5)
-                else:
-                    self.printStepMsg("Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
-                    os.remove(self.imageTempPath)
-            self.printStepMsg("´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath)
-            if not self.createDir(self.imageTempPath):
-                self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printStepMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageTempPath)
+            if not self.makeDir(self.imageTempPath, 2):
+                self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.imageTempPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-        # ÉèÖÃ´úÀí
+
+        # è®¾ç½®ä»£ç†
         if self.isProxy == 1:
             self.proxy(self.proxyIp, self.proxyPort, "http")
+
+        # å¯»æ‰¾fkoji.saveï¼Œå¦‚æœæ²¡æœ‰ç»“æŸè¿›ç¨‹
         saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
         lastImageUrl = ""
         imageStartIndex = 0
@@ -171,7 +117,8 @@ class fkoji(common.Tool):
                     info = line.split("\t")
                     if len(info) >= 2:
                         userIdList[info[0]] = info[1]
-        # ÏÂÔØ
+
+        # ä¸‹è½½
         url = "http://jigadori.fkoji.com/?p=%s"
         pageIndex = 1
         imageCount = 1
@@ -185,16 +132,16 @@ class fkoji(common.Tool):
         while True:
             if isOver:
                 break
-            # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
+            # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
             if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
                 break
             indexUrl = url % str(pageIndex)
-            self.trace("ÍøÒ³µØÖ·£º" + indexUrl)
+            self.trace("ç½‘é¡µåœ°å€ï¼š" + indexUrl)
             indexPage = self.doGet(indexUrl)
             indexPage = BeautifulSoup.BeautifulSoup(indexPage)
      
             photoList = indexPage.body.findAll("div", "photo")
-            # ÒÑ¾­ÏÂÔØµ½×îºóÒ»Ò³
+            # å·²ç»ä¸‹è½½åˆ°æœ€åä¸€é¡µ
             if not photoList:
                 break
             for photoInfo in photoList:
@@ -217,13 +164,13 @@ class fkoji(common.Tool):
                             lastImageUrl = lastImageUrl.replace(" ", "")
                             if newLastImageUrl == "":
                                 newLastImageUrl = imageUrl
-                            # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
+                            # æ£€æŸ¥æ˜¯å¦å·²ä¸‹è½½åˆ°å‰ä¸€æ¬¡çš„å›¾ç‰‡
                             if lastImageUrl == imageUrl:
                                 isOver = True
                                 break
                 if isOver:
                     break
-                self.trace("id: " + userId + "£¬µØÖ·: " + imageUrl)
+                self.trace("id: " + userId + "ï¼Œåœ°å€: " + imageUrl)
                 if imageUrl in imageUrlList:
                     continue
                 imageUrlList.append(imageUrl)
@@ -232,23 +179,23 @@ class fkoji(common.Tool):
                 if fileType.find('/') != -1:
                     fileType = 'jpg'
                 imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "_" + str(userId) + "." + fileType, "wb")
-                self.printMsg("¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl)
+                self.printMsg("å¼€å§‹ä¸‹è½½ç¬¬" + str(imageCount) + "å¼ å›¾ç‰‡ï¼š" + imageUrl)
                 if imgByte:
                     imageFile.write(imgByte)
-                    self.printMsg("ÏÂÔØ³É¹¦")
+                    self.printMsg("ä¸‹è½½æˆåŠŸ")
                 else:
-                    self.printErrorMsg("»ñÈ¡Í¼Æ¬" + str(imageCount) + "ĞÅÏ¢Ê§°Ü£º" + imageUrl)
+                    self.printErrorMsg("è·å–å›¾ç‰‡" + str(imageCount) + "ä¿¡æ¯å¤±è´¥ï¼š" + imageUrl)
                 imageFile.close()
                 imageCount += 1
             pageIndex += 1   
-        self.printStepMsg("ÏÂÔØÍê±Ï")
+        self.printStepMsg("ä¸‹è½½å®Œæ¯•")
 
-        # ÅÅĞò¸´ÖÆµ½±£´æÄ¿Â¼
+        # æ’åºå¤åˆ¶åˆ°ä¿å­˜ç›®å½•
         if self.isSort == 1:
             isCheckOk = False
             while not isCheckOk:
-                # µÈ´ıÊÖ¶¯¼ì²âËùÓĞÍ¼Æ¬½áÊø
-                input = raw_input(self.getTime() + " ÒÑ¾­ÏÂÔØÍê±Ï£¬ÊÇ·ñÏÂÒ»²½²Ù×÷£¿ (Y)es or (N)o: ")
+                # ç­‰å¾…æ‰‹åŠ¨æ£€æµ‹æ‰€æœ‰å›¾ç‰‡ç»“æŸ
+                input = raw_input(self.getTime() + " å·²ç»ä¸‹è½½å®Œæ¯•ï¼Œæ˜¯å¦ä¸‹ä¸€æ­¥æ“ä½œï¼Ÿ (Y)es or (N)o: ")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
@@ -257,35 +204,37 @@ class fkoji(common.Tool):
                         self.processExit()
                 except:
                     pass
-            if not self.createDir(self.imageDownloadPath + "\\all"):
-                self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + "\\all" + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            if not self.makeDir(self.imageDownloadPath + "\\all", 1):
+                self.printErrorMsg("åˆ›å»ºç›®å½•ï¼š" + self.imageDownloadPath + "\\all" + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
+
             for fileName in sorted(os.listdir(self.imageTempPath), reverse=True):
                 imageStartIndex += 1
                 imagePath = self.imageTempPath + "\\" + fileName
                 fileNameList = fileName.split(".")
                 fileType = fileNameList[-1]
                 userId = "_".join(".".join(fileNameList[:-1]).split("_")[1:])
-                # ËùÓĞ
+                # æ‰€æœ‰
                 shutil.copyfile(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
-                # µ¥¸ö
+                # å•ä¸ª
                 eachUserPath = self.imageDownloadPath + "\\" + userId
                 if not os.path.exists(eachUserPath):
-                    if not self.createDir(eachUserPath):
-                        self.printErrorMsg("´´½¨µ¥¸öÍ¼Æ¬±£´æÄ¿Â¼£º" + eachUserPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                    if not self.makeDir(eachUserPath, 1):
+                        self.printErrorMsg("åˆ›å»ºç›®å½•ï¼š" + eachUserPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                         self.processExit()
+
                 if userIdList.has_key(userId):
                     userIdList[userId] = int(userIdList[userId]) + 1
                 else:
                     userIdList[userId] = 1
                 shutil.copyfile(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
-            self.printStepMsg("Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
-            # É¾³ıÏÂÔØÁÙÊ±Ä¿Â¼ÖĞµÄÍ¼Æ¬
+            self.printStepMsg("å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
+            # åˆ é™¤ä¸‹è½½ä¸´æ—¶ç›®å½•ä¸­çš„å›¾ç‰‡
             shutil.rmtree(self.imageTempPath, True)
             
-        # ±£´æĞÂµÄ´æµµÎÄ¼ş
+        # ä¿å­˜æ–°çš„å­˜æ¡£æ–‡ä»¶
         newSaveFilePath = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self.printStepMsg("±£´æĞÂ´æµµÎÄ¼ş: " + newSaveFilePath)
+        self.printStepMsg("ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, "w")
         newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl + "\n")
         tempList = []
@@ -296,7 +245,7 @@ class fkoji(common.Tool):
         newSaveFile.write(newUserIdListString)
         newSaveFile.close()
         stopTime = time.time()
-        self.printStepMsg("³É¹¦ÏÂÔØ×îĞÂÍ¼Æ¬£¬ºÄÊ±" + str(int(stopTime - startTime)) + "Ãë£¬¹²¼ÆÍ¼Æ¬" + str(imageCount - 1) + "ÕÅ")
+        self.printStepMsg("æˆåŠŸä¸‹è½½æœ€æ–°å›¾ç‰‡ï¼Œè€—æ—¶" + str(int(stopTime - startTime)) + "ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(imageCount - 1) + "å¼ ")
 
 if __name__ == "__main__":
     fkoji().main()
