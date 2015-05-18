@@ -147,46 +147,43 @@ class fkoji(common.Tool):
             for photoInfo in photoList:
                 if isinstance(photoInfo, BeautifulSoup.NavigableString):
                     continue
-                tags = photoInfo.findAll("a")
-                userId = ""
-                imageUrl = ""
+                tags = photoInfo.findAll("span")
+                # 找userId
                 for tag in tags:
-                    subTag = tag.next
-                    # user id
+                    subTag = tag.next.next
                     if isinstance(subTag, BeautifulSoup.NavigableString):
                         if subTag.find("@") == 0:
                             userId = subTag[1:].encode("GBK")
-                    # image url
-                    elif isinstance(subTag, BeautifulSoup.Tag):
-                        subTagAttrs = dict(subTag.attrs)
-                        if subTagAttrs.has_key("src") and subTagAttrs.has_key("alt"):
-                            imageUrl = str(subTagAttrs["src"]).replace(" ", "").encode("GBK")
-                            lastImageUrl = lastImageUrl.replace(" ", "")
-                            if newLastImageUrl == "":
-                                newLastImageUrl = imageUrl
-                            # 检查是否已下载到前一次的图片
-                            if lastImageUrl == imageUrl:
-                                isOver = True
-                                break
+                # 找图片
+                tags = photoInfo.findAll("img")
+                for tag in tags:
+                    tagAttrs = dict(tag.attrs)
+                    if tagAttrs.has_key("src") and tagAttrs.has_key("alt"):
+                        imageUrl = str(tagAttrs["src"]).replace(" ", "").encode("GBK")
+                        if newLastImageUrl == "":
+                            newLastImageUrl = imageUrl
+                        # 检查是否已下载到前一次的图片
+                        if lastImageUrl == imageUrl:
+                            isOver = True
+                            break
+                        self.trace("id: " + userId + "，地址: " + imageUrl)
+                        if imageUrl in imageUrlList:
+                            continue
+                        imgByte = self.doGet(imageUrl)
+                        fileType = imageUrl.split(".")[-1]
+                        if fileType.find('/') != -1:
+                            fileType = 'jpg'
+                        imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "_" + str(userId) + "." + fileType, "wb")
+                        self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        if imgByte:
+                            imageFile.write(imgByte)
+                            self.printMsg("下载成功")
+                        else:
+                            self.printErrorMsg("获取图片" + str(imageCount) + "信息失败：" + imageUrl)
+                        imageFile.close()
+                        imageCount += 1
                 if isOver:
                     break
-                self.trace("id: " + userId + "，地址: " + imageUrl)
-                if imageUrl in imageUrlList:
-                    continue
-                imageUrlList.append(imageUrl)
-                imgByte = self.doGet(imageUrl)
-                fileType = imageUrl.split(".")[-1]
-                if fileType.find('/') != -1:
-                    fileType = 'jpg'
-                imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "_" + str(userId) + "." + fileType, "wb")
-                self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                if imgByte:
-                    imageFile.write(imgByte)
-                    self.printMsg("下载成功")
-                else:
-                    self.printErrorMsg("获取图片" + str(imageCount) + "信息失败：" + imageUrl)
-                imageFile.close()
-                imageCount += 1
             pageIndex += 1   
         self.printStepMsg("下载完毕")
 
