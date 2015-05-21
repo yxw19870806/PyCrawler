@@ -203,7 +203,7 @@ class Weibo(common.Tool):
                 try:
                     page = json.read(photoPageData)
                 except:
-                    self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据, user id: " + str(userId))
+                    self.printErrorMsg("返回信息不是一个JSON数据, user id: " + str(userId))
                     break
                 if not isinstance(page, dict):
                     self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, user id: " + str(userId))

@@ -26,20 +26,7 @@ class fkoji(common.Tool):
         super(fkoji, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
          
     def __init__(self):
-        processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", "r")
-        lines = configFile.readlines()
-        configFile.close()
-        config = {}
-        for line in lines:
-            line = line.lstrip().rstrip().replace(" ", "")
-            if len(line) > 1 and line[0] != "#":
-                try:
-                    line = line.split("=")
-                    config[line[0]] = line[1]
-                except Exception, e:
-                    self.printMsg(str(e))
-                    pass
+        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
@@ -99,7 +86,7 @@ class fkoji(common.Tool):
             self.proxy(self.proxyIp, self.proxyPort, "http")
 
         # 寻找fkoji.save，如果没有结束进程
-        saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
+        saveFilePath = "fkoji.save"
         lastImageUrl = ""
         imageStartIndex = 0
         userIdList = {}
@@ -111,7 +98,7 @@ class fkoji(common.Tool):
                 info = lines[0].split("\t")
                 if len(info) >= 2:
                     imageStartIndex = int(info[0])
-                    lastImageUrl = info[1].replace("\n", "")
+                    lastImageUrl = info[1].replace("\xef\xbb\xbf", "").replace("\n", "").replace(" ", "")
                 for line in lines[1:]:
                     line = line.lstrip().rstrip().replace(" ", "")
                     info = line.split("\t")
