@@ -9,7 +9,6 @@ akimotooo726	950	https://pbs.twimg.com/media/CGi7shkUgAENHGi.jpg:large	秋元才
 asuka_k911	1197	https://pbs.twimg.com/media/CGT5QigUYAEh8Q4.jpg:large	仓持明日香
 can2525can	626	https://pbs.twimg.com/media/CGPgCCkUAAADYjn.jpg:large	石田晴香
 harukaono_	952	https://pbs.twimg.com/media/CGZexOTU8AAg8yO.jpg:large	小野晴香
-ichigo_aoi2	1237	https://pbs.twimg.com/media/CGbFDuuUkAEi-aN.jpg	青井いちご
 kanaco1114	1712	https://pbs.twimg.com/media/CGj4bEpUQAEQYnJ.jpg	平松可奈子
 kojiharunyan	214	https://pbs.twimg.com/media/CGbUGMCUIAAAs_r.jpg:large	小嶋阳菜
 m_bigbaby	1094	https://pbs.twimg.com/media/CGgMMFkUAAAZKHk.jpg:large
@@ -42,5 +41,3 @@ Atsuko_100			前田敦子
 mariyannu_s			鈴木まりや
 kyunmao_m99			三田麻央
 _Airi_Tanigawa			谷川愛梨
-aoi_sola			苍井空
-ozawahokkaido			小泽玛丽亚

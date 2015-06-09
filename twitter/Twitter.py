@@ -52,7 +52,13 @@ class Twitter(common.Tool):
         self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
         self.printMsg("配置文件读取完成")
 
-    def main(self):
+    def main(self, userIdListFilePath = '', imageDownloadPath = '', imageTempPath = ''):
+        if userIdListFilePath != '':
+            self.userIdListFilePath = userIdListFilePath
+        if imageDownloadPath != '':
+            self.imageDownloadPath = imageDownloadPath
+        if imageTempPath != '':
+            self.imageTempPath = imageTempPath
         startTime = time.time()
         # 判断各种目录是否存在
         # 日志文件保存目录
@@ -263,4 +269,6 @@ class Twitter(common.Tool):
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
-    Twitter().main()
+    Twitter().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\twitter1", os.getcwd() +  "\\photo\\twitter1\\tempImage")
+    Twitter().main(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\twitter2", os.getcwd() +  "\\photo\\twitter2\\tempImage")
+    Twitter().main(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\twitter3", os.getcwd() +  "\\photo\\twitter3\\tempImage")
