@@ -272,4 +272,4 @@ class Shinoda(common.Tool):
         self.printStepMsg(u"成功下载最新图片，耗时" + str(int(stopTime - startTime)) + u"秒，共计图片" + str(imageCount - 1) + u"张")
 
 if __name__ == "__main__":
-    shinoda().main()
+    Shinoda().main()
