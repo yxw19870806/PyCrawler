@@ -1,4 +1,4 @@
-730myao	269	https://pbs.twimg.com/media/CGOSj1tVAAE1NZF.jpg:large	宫崎美穂
+730myao	278	https://pbs.twimg.com/media/CHO9uYXUgAA_-q_.jpg:large	宫崎美穂
 96__neko	841	https://pbs.twimg.com/media/CGe7BwcUgAAd05S.jpg:large	96猫
 AyakaUmeda	1046	https://pbs.twimg.com/media/CGgXEM1U8AEJmtE.jpg:large	梅田彩佳
 HarukaN_JKT48	1348	https://pbs.twimg.com/media/CGi_p_FU8AAjjIk.jpg:large	仲川遥香
@@ -11,7 +11,7 @@ can2525can	626	https://pbs.twimg.com/media/CGPgCCkUAAADYjn.jpg:large	石田晴�
 harukaono_	952	https://pbs.twimg.com/media/CGZexOTU8AAg8yO.jpg:large	小野晴香
 kanaco1114	1712	https://pbs.twimg.com/media/CGj4bEpUQAEQYnJ.jpg	平松可奈子
 kojiharunyan	214	https://pbs.twimg.com/media/CGbUGMCUIAAAs_r.jpg:large	小嶋阳菜
-m_bigbaby	1094	https://pbs.twimg.com/media/CGgMMFkUAAAZKHk.jpg:large
+m_bigbaby	1094	https://pbs.twimg.com/media/CGgMMFkUAAAZKHk.jpg:large	今出舞
 mariko_dayo	934	https://pbs.twimg.com/media/CF3YPYlVEAAwguF.jpg:large	篠田麻里子
 marikorima1216	1315	https://pbs.twimg.com/media/CGfJKEAUkAAznaP.jpg:large	中村麻里子
 moenoxxx	911	https://pbs.twimg.com/media/CGYkEPUUAAIGEP1.jpg:large	仁藤萌乃
@@ -41,3 +41,10 @@ Atsuko_100			前田敦子
 mariyannu_s			鈴木まりや
 kyunmao_m99			三田麻央
 _Airi_Tanigawa			谷川愛梨
+yuiyui_0725			松下唯
+yukos_cook			菅本裕子
+mtmnkor			光宗薫
+miorin_lemon212			市川美織
+tmm_n0618			中塚智実
+Yukiriiiin__K			柏木由紀
+
