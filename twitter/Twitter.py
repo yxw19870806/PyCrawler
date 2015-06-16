@@ -109,9 +109,11 @@ class Twitter(common.Tool):
         # 复制处理存档文件
         newUserIdList = copy.deepcopy(userIdList)
         for newUserAccount in newUserIdList:
-            # 如果没有名字，则名字用uid代替
+            # 如果没有数量，则为0
             if len(newUserIdList[newUserAccount]) < 2:
                 newUserIdList[newUserAccount].append("0")
+            if newUserIdList[newUserAccount][1] == '':
+                newUserIdList[newUserAccount][1] = 0
             # 处理上一次image URL
             # 需置空存放本次第一张获取的image URL
             if len(newUserIdList[newUserAccount]) < 3:
@@ -131,7 +133,7 @@ class Twitter(common.Tool):
             isPass = False
             isLastPage = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if len(userIdList[userAccount]) > 2 and userIdList[userAccount][2] != "" and int(userIdList[userAccount][1]) != 0:
+            if len(userIdList[userAccount]) > 2 and userIdList[userAccount][1] != '' and int(userIdList[userAccount][1]) != 0:
                 isError = True
             else:
                 isError = False
@@ -233,7 +235,7 @@ class Twitter(common.Tool):
                         self.processExit()
 
                     # 倒叙排列
-                    if len(userIdList[userAccount]) >= 3:
+                    if len(userIdList[userAccount]) >= 2 and userIdList[userAccount][1] != '':
                         count = int(userIdList[userAccount][1]) + 1
                     else:
                         count = 1
