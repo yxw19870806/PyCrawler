@@ -1,52 +1,67 @@
-730myao	278	https://pbs.twimg.com/media/CHO9uYXUgAA_-q_.jpg:large	宫崎美穂
-96__neko	841	https://pbs.twimg.com/media/CGe7BwcUgAAd05S.jpg:large	96猫
-AyakaUmeda	1046	https://pbs.twimg.com/media/CGgXEM1U8AEJmtE.jpg:large	梅田彩佳
-HarukaN_JKT48	1348	https://pbs.twimg.com/media/CGi_p_FU8AAjjIk.jpg:large	仲川遥香
-Rie_Kitahara3	792	https://pbs.twimg.com/media/CGjiYnnUkAEDkUj.jpg:large	北原里英
-Riopyon1231	864	https://pbs.twimg.com/media/CGkUKRWUAAEuNve.jpg:large	太田里织菜
-Yui_yoko1208	686	https://pbs.twimg.com/media/CGduo9FUQAIYjAF.jpg:large	横山由衣
-akimotooo726	950	https://pbs.twimg.com/media/CGi7shkUgAENHGi.jpg:large	秋元才加
-asuka_k911	1197	https://pbs.twimg.com/media/CGT5QigUYAEh8Q4.jpg:large	仓持明日香
-can2525can	626	https://pbs.twimg.com/media/CGPgCCkUAAADYjn.jpg:large	石田晴香
-harukaono_	952	https://pbs.twimg.com/media/CGZexOTU8AAg8yO.jpg:large	小野晴香
-kanaco1114	1712	https://pbs.twimg.com/media/CGj4bEpUQAEQYnJ.jpg	平松可奈子
-kojiharunyan	214	https://pbs.twimg.com/media/CGbUGMCUIAAAs_r.jpg:large	小嶋阳菜
-m_bigbaby	1094	https://pbs.twimg.com/media/CGgMMFkUAAAZKHk.jpg:large	今出舞
-mariko_dayo	934	https://pbs.twimg.com/media/CF3YPYlVEAAwguF.jpg:large	篠田麻里子
-marikorima1216	1315	https://pbs.twimg.com/media/CGfJKEAUkAAznaP.jpg:large	中村麻里子
-moenoxxx	911	https://pbs.twimg.com/media/CGYkEPUUAAIGEP1.jpg:large	仁藤萌乃
+730myao	281	https://pbs.twimg.com/media/CHokjE7UcAA8AMv.jpg:large	宫崎美穂
+96__neko	886	https://pbs.twimg.com/media/CHhzcm4UAAAB7qj.jpg:large	96猫
+Atsuko_100	367	https://pbs.twimg.com/media/CHhL3KQUsAAtIis.jpg:large	前田敦子
+AyakaUmeda	1067	https://pbs.twimg.com/media/CHrJpL5UYAAR88i.jpg:large	梅田彩佳
+HarukaN_JKT48	1381	https://pbs.twimg.com/media/CHowe5mUEAAyuKT.jpg:large	仲川遥香
+Kobayashikana48	612	https://pbs.twimg.com/media/CHMR4RQUwAAoKKj.jpg	小林香菜
+Rie_Kitahara3	808	https://pbs.twimg.com/media/CHrwFjWUEAAMyTm.jpg	北原里英
+Riopyon1231	960	https://pbs.twimg.com/media/CHrk2RGUAAAFZ-3.jpg:large	太田里织菜
+Yui_yoko1208	696	https://pbs.twimg.com/media/CHsLcjOVEAExRhM.jpg:large	横山由衣
+Yukiriiiin__K	679	https://pbs.twimg.com/media/CG4v0ErVIAAUinC.jpg:large	柏木由紀
+_Airi_Tanigawa	1028	https://pbs.twimg.com/media/CHq1AcQUcAAhL-o.jpg:large	谷川愛梨
+akimotooo726	970	https://pbs.twimg.com/media/CHrLdgEUkAE12oC.jpg:large	秋元才加
+asuka_k911	1207	https://pbs.twimg.com/media/CHmCVSwWgAEKgCu.jpg:large	仓持明日香
+can2525can	637	https://pbs.twimg.com/media/CHsAr6gUEAAdLTJ.jpg	石田晴香
+hana_tojima	613	https://pbs.twimg.com/media/CHrcjtsUsAAWP04.jpg:large	戸岛花
+harukaono_	976	https://pbs.twimg.com/media/CHgM52rVEAESvdH.jpg:large	小野晴香
+hitomi_komatani	834	https://pbs.twimg.com/media/CHnaEuyUwAAenzQ.jpg:large	驹谷仁美
+kanaco1114	1773	https://pbs.twimg.com/media/CHraa2AUcAAFAmC.jpg:large	平松可奈子
+kapopo3	0		野吕佳代
+kojiharunyan	227	https://pbs.twimg.com/media/CHhBa_bUMAAX463.jpg:large	小嶋阳菜
+kyunmao_m99	1091	https://pbs.twimg.com/media/CHsAm3HUkAA3HZg.jpg:large	三田麻央
+m_bigbaby	1104	https://pbs.twimg.com/media/CHoggR-UwAEYwF8.jpg:large	今出舞
+mai911oshima	348	https://pbs.twimg.com/media/CHr2l0VUMAEMKGa.jpg:large	大岛麻衣
+mariko_dayo	946	https://pbs.twimg.com/media/CHi8BpGUwAAryUr.jpg:large	篠田麻里子
+marikorima1216	1351	https://pbs.twimg.com/media/CHr9yAIUcAAVZl0.jpg:large	中村麻里子
+mariyannu_s	1037	https://pbs.twimg.com/media/CHoNII_UYAI4igr.jpg:large	鈴木まりや
+miorin_lemon212	1255	https://pbs.twimg.com/media/CHmux6WUAAAY5IM.jpg	市川美織
+moenoxxx	923	https://pbs.twimg.com/media/CHm79iiVEAE5m-P.jpg:large	仁藤萌乃
+mtmnkor	353	https://pbs.twimg.com/media/CHsgrPgUsAA4a5B.jpg	光宗薫
+nabeshiho	120	https://pbs.twimg.com/media/B-3YUb8VEAAG0pW.jpg:large	渡辺志穂
 ohori_megumi	103	https://pbs.twimg.com/media/BZR3PFmCEAA-lHp.jpg:large	大堀恵
-ooyachaaan1228	744	https://pbs.twimg.com/media/CGf-7MNUYAE0kOr.jpg:large	大家志津香
-oyasuminaSAE_m	935	https://pbs.twimg.com/media/CGi6aInUYAEGI2X.jpg:large	宫泽佐江
-renampme	915	https://pbs.twimg.com/media/CGiFok4VIAACmuD.jpg:large	松井玲奈
-shiopiii0719	529	https://pbs.twimg.com/media/CGkJs13U8AA_QWf.jpg:large
-sumire_princess	922	https://pbs.twimg.com/media/CGQuz2JVIAAluFl.jpg:large	佐藤すみれ
-tomo_coco73	633	https://pbs.twimg.com/media/CGdCD0FUAAAdCKQ.jpg	板野友美
-tomoka_w	69	https://pbs.twimg.com/media/CGQuaTKVIAAUmiT.jpg	若林伦香
-yukoriyukori	461	https://pbs.twimg.com/media/CGbXIQrU8AA4Xhf.jpg:large	佐藤由加理
-rumiii0606			米沢瑠美
-mikachi_nu			佐伯美香
-mai911oshima			大岛麻衣
-nabeshiho			渡辺志穂
-lespros_erepyon			小野恵令奈
-hitomi_komatani			驹谷仁美
-hana_tojima			戸岛花
-tgsk48			户贺崎智信
-Kobayashikana48			小林香菜
-oshima_mai			大岛麻衣
-kapopo3			野吕佳代
-tomoomichan			河西智美
-yuka_masuda			増田有华
-Atsuko_100			前田敦子
-mariyannu_s			鈴木まりや
-kyunmao_m99			三田麻央
-_Airi_Tanigawa			谷川愛梨
-yuiyui_0725			松下唯
-yukos_cook			菅本裕子
-mtmnkor			光宗薫
-miorin_lemon212			市川美織
-tmm_n0618			中塚智実
-Yukiriiiin__K			柏木由紀
+ooyachaaan1228	767	https://pbs.twimg.com/media/CHsUhgYVAAAuw6i.jpg:large	大家志津香
+oyasuminaSAE_m	959	https://pbs.twimg.com/media/CHlC89YXAAAFZV-.jpg:large	宫泽佐江
+renampme	929	https://pbs.twimg.com/media/CHpVJ9FUwAAXp0M.jpg:large	松井玲奈
+shiopiii0719	542	https://pbs.twimg.com/media/CHsBAyIUEAAlcUG.jpg:large	高田志織
+sumire_princess	930	https://pbs.twimg.com/media/CHruiuXUMAEx9-Q.jpg:large	佐藤すみれ
+tgsk48	24	https://pbs.twimg.com/media/B3pWKCcCUAA5ii0.jpg:large	户贺崎智信
+tmm_n0618	909	https://pbs.twimg.com/media/CHnPt8-UkAAEakQ.jpg:large	中塚智実
+tomo_coco73	647	https://pbs.twimg.com/media/CHspa-LUsAAbQTa.jpg	板野友美
+tomoka_w	104	https://pbs.twimg.com/media/CHjepoJUsAIXMi0.jpg:large	若林伦香
+tomoomichan	0		河西智美
+yuiyui_0725	1122	https://pbs.twimg.com/media/CHd5rEjUwAIryf9.jpg:large	松下唯
+yuka_masuda	749	https://pbs.twimg.com/media/CHsj1yLUEAEQOdT.jpg:large	増田有华
+yukoriyukori	468	https://pbs.twimg.com/media/CHnA-PJVEAECrri.jpg:large	佐藤由加理
+yukos_cook	1003	https://pbs.twimg.com/media/CHsgEWPVAAA8A9C.jpg:large	菅本裕子
+karaage_mayu			渡辺麻友
+nacchan_h0528			平嶋夏海
+chunma04			小笠原茉由
+ami__maeda0601			前田亜美
+miyukiofficial9			 渡辺美優紀
+yamada7dayo			山田菜々
+shiningkaorurin			早野薫
+9922K			篠原栞那
 shimada_hrk1216			島田晴香
+haramina1224			原望奈美
+AKB48			AKB48
+ske48official			SKE48
+AKB48Shihainin			湯浅洋
+serina_serinko			芹那
+nkysyk_a			仲谷明香
+skc1210			松井咲子
+mariyagiii310			永尾まりや
+rino_sashihara			指原莉乃
+AKI_WISMALU			高城亜樹
+take_miyu112			竹内美宥
 renapyon_udon			川上礼奈
 shiori_m0618			松田栞
