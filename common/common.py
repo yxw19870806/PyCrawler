@@ -267,11 +267,40 @@ class Tool(object):
     def getTime(self):
         import time
         return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
-    
+
+
+    # 过滤一些文件夹名不支持的字符串
+    def filterPath(self, title):
+        # 盘符
+        if title[1] == ':':
+            title = title[:2] + title[2:].replace(':', '')
+        title = title.replace('*', '')
+        title = title.replace('?', '')
+        title = title.replace('"', '')
+        title = title.replace('<', '')
+        title = title.replace('>', '')
+        title = title.replace('|', '')
+        return title
+
     def writeFile(self, msg, filePath):
         logFile = open(filePath, 'a')
         logFile.write(msg + "\n")
         logFile.close()
+
+    # imagePath 包括路径和文件名
+    def saveImage(self, imageUrl, imagePath):
+        imagePath = self.filterPath(imagePath)
+        if isinstance(imagePath, unicode):
+            imagePath = imagePath.encode('GBK')
+        else:
+            imagePath = imagePath.decode('UTF-8').encode('GBK')
+        imageByte = self.doGet(imageUrl)
+        if imageByte:
+            imageFile = open(imagePath, "wb")
+            imageFile.write(imageByte)
+            imageFile.close()
+            return True
+        return False
 
     # old
     def createDir(self, path):
@@ -314,6 +343,7 @@ class Tool(object):
             dirPath = dirPath.encode('GBK')
         else:
             dirPath = dirPath.decode('UTF-8').encode('GBK')
+        dirPath = self.filterPath(dirPath)
         if createMode != 0 and createMode != 1 and createMode != 2:
             createMode = 0
         # 目录存在
