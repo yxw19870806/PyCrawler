@@ -141,7 +141,7 @@ class Bcy(common.Tool):
                 try:
                     photoAlbumPageData = photoAlbumPage['data']['data']
                 except:
-                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'data'字段, user id: " + str(userId))
+                    self.printErrorMsg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'data'字段, user id: " + str(userId))
                     break
                 for data in photoAlbumPageData:
                     try:
