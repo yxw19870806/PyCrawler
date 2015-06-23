@@ -178,7 +178,6 @@ class Weibo(common.Tool):
             # 初始化数据
             pageCount = 1
             imageCount = 1
-            totalImageCount = 0
             isPass = False
             if len(userIdList[userId]) <= 3 or userIdList[userId][3] == '':
                 isError = False
@@ -205,26 +204,21 @@ class Weibo(common.Tool):
                 except:
                     self.printErrorMsg("返回信息不是一个JSON数据, user id: " + str(userId))
                     break
-                if not isinstance(page, dict):
-                    self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, user id: " + str(userId))
+
+                # 总的图片数
+                try:
+                    totalImageCount = page["data"]["total"]
+                except:
+                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(userId))
                     break
-                if not page.has_key("data"):
-                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'data'字段, user id: " + str(userId))
+
+                try:
+                    photoList = page["data"]["photo_list"]
+                except:
+                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(userId))
                     break
-                if totalImageCount == 0:
-                    if page["data"].has_key("total"):
-                        totalImageCount = page["data"]["total"]
-                    else:
-                        self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(userId))
-                        isPass = True
-                        break
-                if not isinstance(page["data"], dict):
-                    self.printErrorMsg("JSON数据['data']：" + str(page["data"]) + " 不是一个字典, user id: " + str(userId))
-                    break
-                if not page["data"].has_key("photo_list"):
-                    self.printErrorMsg("在JSON数据：" + str(page["data"]) + " 中没有找到'photo_list'字段, user id: " + str(userId))
-                    break
-                for imageInfo in page["data"]["photo_list"]:
+
+                for imageInfo in photoList:
                     if not isinstance(imageInfo, dict):
                         self.printErrorMsg("JSON数据['photo_list']：" + str(imageInfo) + " 不是一个字典, user id: " + str(userId))
                         continue
@@ -242,12 +236,12 @@ class Weibo(common.Tool):
                             imageHost = imageInfo["pic_host"]
                         else:
                             imageHost = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                        tryCoount = 0
+                        tryCount = 0
                         while True:
-                            if tryCoount > 1:
+                            if tryCount > 1:
                                 imageHost = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
                             imageUrl = imageHost + "/large/" + imageInfo["pic_name"]
-                            if tryCoount == 0:
+                            if tryCount == 0:
                                 self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                             else:
                                 self.printStepMsg("重试下载第" + str(imageCount) + "张图片：" + imageUrl)
@@ -268,8 +262,8 @@ class Weibo(common.Tool):
                                     imageCount += 1
                                 break
                             else:
-                                tryCoount += 1
-                            if tryCoount >= 5:
+                                tryCount += 1
+                            if tryCount >= 5:
                                 self.printErrorMsg("下载图片失败，用户ID：" + str(userId) + ", 第" + str(imageCount) +  "张，图片地址：" + imageUrl)
                                 break
                             
