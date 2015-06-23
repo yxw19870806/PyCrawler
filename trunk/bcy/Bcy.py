@@ -95,9 +95,9 @@ class Bcy(common.Tool):
             self.processExit()
 
         # 创建临时存档文件
-        # newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        # newUserIdListFile = open(newUserIdListFilePath, "w")
-        # newUserIdListFile.close()
+        newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        newUserIdListFile = open(newUserIdListFilePath, "w")
+        newUserIdListFile.close()
 
         # 复制处理存档文件
         newUserIdList = copy.deepcopy(userIdList)
