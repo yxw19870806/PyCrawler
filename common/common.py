@@ -232,7 +232,7 @@ class Tool(object):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        return  config
+        return config
 
     def printMsg(self, msg, isTime=True):
         if isTime:
