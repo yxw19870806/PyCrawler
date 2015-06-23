@@ -10,8 +10,8 @@ email: hikaru870806@hotmail.com
 
 import copy
 import os
-import time
 import re
+import time
 
 from common import common, json
 
