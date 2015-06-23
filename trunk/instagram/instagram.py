@@ -187,21 +187,20 @@ class Instagram(common.Tool):
                         self.printErrorMsg("在JSON数据：" + str(photoInfo["images"]["standard_resolution"]) + " 中没有找到'url'字段, user id: " + str(userAccount) + ", image id: " + imageId)
                         break
                     imageUrl = photoInfo["images"]["standard_resolution"]["url"]
-                    self.trace("image URL:" + imageUrl)
+                    self.printStepMsg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
                     imgByte = self.doGet(imageUrl)
-                    # 文件类型
-                    fileType = imageUrl.split(".")[-1]
-                    # 保存图片
-                    filename = str("%04d" % imageCount)
-                    imageFile = open(imagePath + "\\" + str(filename) + "." + fileType, "wb")
                     if imgByte:
-                        self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        # 文件类型
+                        fileType = imageUrl.split(".")[-1]
+                        # 保存图片
+                        imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                         imageFile.write(imgByte)
                         self.printStepMsg("下载成功")
+                        imageFile.close()
+                        imageCount += 1
                     else:
-                        self.printErrorMsg("获取图片" + str(imageCount) + "信息失败：" + str(userAccount) + "，" + imageUrl)
-                    imageFile.close()
-                    imageCount += 1
+                        self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + str(userAccount) + "，" + imageUrl)
+
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
