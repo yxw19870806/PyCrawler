@@ -174,6 +174,7 @@ class Bcy(common.Tool):
                             imageStart = rpPage.find("http", imageIndex)
                             imageStop = rpPage.find("'", imageStart)
                             imageUrl = rpPage[imageStart:imageStop]
+                            # 禁用指定分辨率
                             imageUrl = "/".join(imageUrl.split("/")[0:-1])
                             self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                             imgByte = self.doGet(imageUrl)

@@ -198,20 +198,21 @@ class GooglePlus(common.Tool):
                             flag = messagePage.find("<div><a href=", flag + 1)
                             continue
                         imageUrlList.append(imageUrl)
-                        tempList = imageUrl.split("/")
                         # 使用最大分辨率
+                        tempList = imageUrl.split("/")
                         tempList[-2] = "s0"
                         imageUrl = "/".join(tempList)
-                        # 文件类型
+                        self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                         imgByte = self.doGet(imageUrl)
                         if imgByte:
+                            # 文件类型
                             fileType = imageUrl.split(".")[-1]
+                            # 保存图片
                             imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
-                            self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                             imageFile.write(imgByte)
                             self.printStepMsg("下载成功")
-                            imageCount += 1
                             imageFile.close()
+                            imageCount += 1
                         else:
                             self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + str(userId) + ": " + imageUrl)
                         # 达到配置文件中的下载数量，结束
