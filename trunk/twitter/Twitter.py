@@ -93,8 +93,9 @@ class Twitter(common.Tool):
             allUserList = userListFile.readlines()
             userListFile.close()
             for userInfo in allUserList:
-                if len(userInfo) < 10:
+                if len(userInfo) < 3:
                     continue
+                userInfo = userInfo.replace("\xef\xbb\xbf", "")
                 userInfo = userInfo.replace(" ", "")
                 userInfo = userInfo.replace("\n", "")
                 userInfoList = userInfo.split("\t")
@@ -255,18 +256,6 @@ class Twitter(common.Tool):
             newUserIdListFile.write("\t".join(newUserIdList[userAccount]) + "\n")
             newUserIdListFile.close()
 
-        # 排序并保存新的idList.txt
-        # tempList = []
-        # tempUserIdList = sorted(newUserIdList.keys())
-        # for index in tempUserIdList:
-        #     tempList.append("\t".join(newUserIdList[index]))
-        # newUserIdListString = "\n".join(tempList)
-        # newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
-        # self.printStepMsg("保存新存档文件：" + newUserIdListFilePath)
-        # newUserIdListFile = open(newUserIdListFilePath, "w")
-        # newUserIdListFile.write(newUserIdListString)
-        # newUserIdListFile.close()
-        
         stopTime = time.time()
         self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
