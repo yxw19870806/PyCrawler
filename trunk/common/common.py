@@ -232,7 +232,7 @@ class Tool(object):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        return config
+        return  config
 
     def printMsg(self, msg, isTime=True):
         if isTime:
@@ -310,7 +310,10 @@ class Tool(object):
         import os
         import shutil
         import time
-        dirPath = dirPath.decode('UTF-8').encode('GBK')
+        if isinstance(dirPath, unicode):
+            dirPath = dirPath.encode('GBK')
+        else:
+            dirPath = dirPath.decode('UTF-8').encode('GBK')
         if createMode != 0 and createMode != 1 and createMode != 2:
             createMode = 0
         # 目录存在
