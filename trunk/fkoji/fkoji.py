@@ -156,12 +156,13 @@ class fkoji(common.Tool):
                         self.trace("id: " + userId + "，地址: " + imageUrl)
                         if imageUrl in imageUrlList:
                             continue
-                        imgByte = self.doGet(imageUrl)
+                        # 文件类型
                         fileType = imageUrl.split(".")[-1]
                         if fileType.find('/') != -1:
                             fileType = 'jpg'
                         imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "_" + str(userId) + "." + fileType, "wb")
                         self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        imgByte = self.doGet(imageUrl)
                         if imgByte:
                             imageFile.write(imgByte)
                             self.printMsg("下载成功")
