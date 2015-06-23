@@ -8,10 +8,12 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common, json
 import copy
 import os
 import time
+import re
+
+from common import common, json
 
 class Bcy(common.Tool):
     
@@ -117,47 +119,73 @@ class Bcy(common.Tool):
         totalImageCount = 0
         # 循环下载每个id
         for userId in sorted(userIdList.keys()):
-            self.printStepMsg("CN: "  + userId)
+            if len(userIdList[userId]) >= 2 and userIdList[userId][1] != '':
+                cn = userIdList[userId][1]
+            else:
+                cn = userId
+            self.printStepMsg("CN: " + cn)
             cpId = int(userId) - 100876
+            pageCount = 1
+            maxPageCount = -1
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
             if len(userIdList[userId]) > 3 and userIdList[userId][2] != '':
                 isError = True
             else:
                 isError = False
+            isPass = False
             # 下载目录
-            imagePath = self.imageDownloadPath + "\\" + userId
+            imagePath = self.imageDownloadPath + "\\" + cn
             if not self.makeDir(imagePath, 1):
                 self.printErrorMsg("创建CN目录： " + imagePath + " 失败，程序结束！")
                 self.processExit()
 
             while 1:
-                photoAlbumUrl = 'http://bcy.net/coser/ajaxShowMore?type=works&cp_id=%s' % (cpId)
+                photoAlbumUrl = 'http://bcy.net/coser/ajaxShowMore?type=works&cp_id=%s&p=%s' % (cpId, pageCount)
                 photoAlbumPage = self.doGet(photoAlbumUrl)
+
                 try:
                     photoAlbumPage = json.read(photoAlbumPage)
                 except:
                     self.printErrorMsg("返回信息不是一个JSON数据, user id: " + str(userId))
                     break
+
+                # 总共多少页
+                if maxPageCount == -1:
+                    try:
+                        maxPageData = photoAlbumPage['data']['page']
+                    except:
+                        self.printErrorMsg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'page'字段, user id: " + str(userId))
+                        break
+                    if not maxPageData:
+                        maxPageCount = 1
+                    else:
+                        pageList = re.findall(u'<a href=\\"\\/coser\\/ajaxShowMore\?type=works&cp_id=' + str(cpId) + '&p=(\d)', maxPageData)
+                        maxPageCount = int(max(pageList))
+                    print 'max ,', maxPageCount
+
                 try:
                     photoAlbumPageData = photoAlbumPage['data']['data']
                 except:
                     self.printErrorMsg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'data'字段, user id: " + str(userId))
                     break
+
                 for data in photoAlbumPageData:
                     try:
                         rpId = data['rp_id']
-                        title = data['title']
+                        title = data['title'].encode('utf-8').replace('\\', '')
                     except:
                         self.printErrorMsg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
                         break
 
-                    # 检查是否已下载到前一次的图片
-                    if len(userIdList[userId]) >= 3:
-                        if rpId == userIdList[userId][3]:
-                            isError = False
-                            break
                     if newUserIdList[userId][2] == "":
                         newUserIdList[userId][2] = rpId
+                    # 检查是否已下载到前一次的图片
+                    if len(userIdList[userId]) >= 3:
+                        if rpId == userIdList[userId][2]:
+                            isError = False
+                            isPass = True
+                            break
+
                     self.printStepMsg("ur: " + rpId)
 
                     # 下载目录
@@ -177,20 +205,19 @@ class Bcy(common.Tool):
                             # 禁用指定分辨率
                             imageUrl = "/".join(imageUrl.split("/")[0:-1])
                             self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                            imgByte = self.doGet(imageUrl)
-                            if imgByte:
-                                fileType = imageUrl.split(".")[-1].split(':')[0]
-                                imageFile = open(rpPath + "\\" + str("%03d" % imageCount) + "." + fileType, "wb")
-                                imageFile.write(imgByte)
+                            fileType = imageUrl.split(".")[-1]
+                            if self.saveImage(imageUrl, rpPath + "\\" + str("%03d" % imageCount) + "." + fileType):
                                 self.printStepMsg("下载成功")
                                 imageCount += 1
-                                imageFile.close()
                             imageIndex = rpPage.find("src='", imageIndex + 1)
-                break
+                        totalImageCount += imageCount - 1
+                if isPass:
+                    break
+                if pageCount >= maxPageCount:
+                    break
+                pageCount += 1
 
-            self.printStepMsg(userId + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
-            newUserIdList[userId][1] = str(int(newUserIdList[userId][1]) + imageCount - 1)
-            totalImageCount += imageCount - 1
+            self.printStepMsg(cn + "下载完毕")
 
             if isError:
                 self.printErrorMsg(userId + "图片数量异常，请手动检查")
