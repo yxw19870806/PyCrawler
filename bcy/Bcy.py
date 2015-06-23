@@ -161,7 +161,6 @@ class Bcy(common.Tool):
                     else:
                         pageList = re.findall(u'<a href=\\"\\/coser\\/ajaxShowMore\?type=works&cp_id=' + str(cpId) + '&p=(\d)', maxPageData)
                         maxPageCount = int(max(pageList))
-                    print 'max ,', maxPageCount
 
                 try:
                     photoAlbumPageData = photoAlbumPage['data']['data']
@@ -172,7 +171,7 @@ class Bcy(common.Tool):
                 for data in photoAlbumPageData:
                     try:
                         rpId = data['rp_id']
-                        title = data['title'].encode('utf-8').replace('\\', '')
+                        title = data['title'].encode('utf-8').replace('\\', '').replace('/', '')
                     except:
                         self.printErrorMsg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
                         break
