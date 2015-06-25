@@ -180,6 +180,8 @@ class Twitter(common.Tool):
                     imageStart = page.find("http", imageIndex)
                     imageStop = page.find('"', imageStart)
                     imageUrl = page[imageStart:imageStop].encode("utf-8")
+                    if imageUrl.find('&quot') != -1:
+                        imageUrl = imageUrl[:imageUrl.find('&quot')]
                     self.trace("image URL:" + imageUrl)
                     # 将第一张image的URL保存到新id list中
                     if newUserIdList[userAccount][2] == "":
