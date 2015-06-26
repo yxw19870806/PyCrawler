@@ -122,7 +122,7 @@ class Instagram(common.Tool):
             imageCount = 1
             isPass = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if len(userIdList[userAccount]) > 2 and int(userIdList[userAccount][1]) != 0 and userIdList[userAccount][2] != "":
+            if len(userIdList[userAccount]) > 2 and userIdList[userAccount][1] != '' and int(userIdList[userAccount][1]) != 0 and userIdList[userAccount][2] != "":
                 isError = True
             else:
                 isError = False
