@@ -48,6 +48,15 @@ class Bcy(common.Tool):
             self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        # 操作系统&浏览器
+        self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
+        self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
+        # cookie
+        self.isAutoGetCookie = self.getConfig(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        if self.isAutoGetCookie == 0:
+            self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
+        else:
+            self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
         self.printMsg("配置文件读取完成")
 
     def main(self):
@@ -77,6 +86,11 @@ class Bcy(common.Tool):
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "https")
+
+        # 设置系统cookies (fire fox)
+        if not self.cookie(self.cookiePath, self.browerVersion):
+            self.printErrorMsg("导入浏览器cookies失败，程序结束！")
+            self.processExit()
 
         # 寻找idlist，如果没有结束进程
         userIdList = {}
