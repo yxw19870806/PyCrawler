@@ -290,10 +290,16 @@ class Tool(object):
     # imagePath 包括路径和文件名
     def saveImage(self, imageUrl, imagePath):
         imagePath = self.filterPath(imagePath)
-        if isinstance(imagePath, unicode):
-            imagePath = imagePath.encode('GBK')
-        else:
-            imagePath = imagePath.decode('UTF-8').encode('GBK')
+        try:
+            if isinstance(imagePath, unicode):
+                imagePath = imagePath.encode('GBK')
+            else:
+                imagePath = imagePath.decode('UTF-8').encode('GBK')
+        except:
+            if isinstance(imagePath, unicode):
+                imagePath = imagePath.encode('UTF-8')
+            else:
+                imagePath = imagePath.decode('UTF-8')
         imageByte = self.doGet(imageUrl)
         if imageByte:
             imageFile = open(imagePath, "wb")
@@ -339,10 +345,16 @@ class Tool(object):
         import os
         import shutil
         import time
-        if isinstance(dirPath, unicode):
-            dirPath = dirPath.encode('GBK')
-        else:
-            dirPath = dirPath.decode('UTF-8').encode('GBK')
+        try:
+            if isinstance(dirPath, unicode):
+                dirPath = dirPath.encode('GBK')
+            else:
+                dirPath = dirPath.decode('UTF-8').encode('GBK')
+        except:
+            if isinstance(dirPath, unicode):
+                dirPath = dirPath.encode('UTF-8')
+            else:
+                dirPath = dirPath.decode('UTF-8')
         dirPath = self.filterPath(dirPath)
         if createMode != 0 and createMode != 1 and createMode != 2:
             createMode = 0
