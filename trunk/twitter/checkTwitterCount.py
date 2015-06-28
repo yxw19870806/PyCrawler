@@ -26,4 +26,6 @@ def getCount(idPath, imageRootPath):
             print line[0] + ": " + str(count1) + ", " + str(count2)
     print "check over!"
 
-getCount("info\\idlist.txt", "Z:\\G+\\Twitter\\")
+getCount("info\\idlist_1.txt", "Z:\\G+\\Twitter\\twitter1\\")
+getCount("info\\idlist_2.txt", "Z:\\G+\\Twitter\\twitter2\\")
+getCount("info\\idlist_3.txt", "Z:\\G+\\Twitter\\twitter3\\")
