@@ -106,6 +106,8 @@ class Instagram(common.Tool):
             # 如果没有初始image count，则为0
             if len(newUserIdList[newUserAccount]) < 2:
                 newUserIdList[newUserAccount].append("0")
+            if newUserIdList[newUserAccount][1] == '':
+                newUserIdList[newUserAccount][1] = 0
             # 处理上一次image id
             # 需置空存放本次第一张获取的image URL
             if len(newUserIdList[newUserAccount]) < 3:
@@ -220,7 +222,7 @@ class Instagram(common.Tool):
                         self.processExit()
 
                     # 倒叙排列
-                    if len(userIdList[userAccount]) >= 3:
+                    if len(userIdList[userAccount]) >= 2 and userIdList[userAccount][1] != '':
                         count = int(userIdList[userAccount][1]) + 1
                     else:
                         count = 1

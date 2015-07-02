@@ -151,7 +151,7 @@ class Twitter(common.Tool):
             while not isLastPage:
                 if isPass:
                     break
-                photoPageUrl = "https://twitter.com/i/profiles/show/%s/media_timeline?max_id=%s" % (userAccount, dataTweetId)
+                photoPageUrl = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (userAccount, dataTweetId)
                 photoPageData = self.doGet(photoPageUrl)
                 if not photoPageData:
                     self.printErrorMsg("无法获取相册信息: " + photoPageUrl)
@@ -161,6 +161,7 @@ class Twitter(common.Tool):
                 except:
                     self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据, account: " + userAccount)
                     break
+
                 if not isinstance(page, dict):
                     self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, account: " + userAccount)
                     break
