@@ -21,6 +21,8 @@ def getCount(idPath, imageRootPath):
             count1 = len(os.listdir(imagePath))
         else:
             count1 = 0
+        if not isinstance(line[1], int):
+            continue
         count2 = int(line[1])
         if count1 != count2:
             print line[0] + ": " + str(count1) + ", " + str(count2)
