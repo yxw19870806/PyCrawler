@@ -185,7 +185,7 @@ class Bcy(common.Tool):
                 for data in photoAlbumPageData:
                     try:
                         rpId = data['rp_id']
-                        title = data['title'].encode('utf-8').replace('\\', '').replace('/', '')
+                        title = data['title'].encode('utf-8').replace('\\', '').replace('/', '').replace('.', '')
                     except:
                         self.printErrorMsg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
                         break
