@@ -185,7 +185,7 @@ class Bcy(common.Tool):
                 for data in photoAlbumPageData:
                     try:
                         rpId = data['rp_id']
-                        title = data['title'].encode('utf-8').replace('\\', '').replace('/', '').replace('.', '')
+                        title = data['title'].encode('utf-8').replace('\\', '').replace('/', '').replace('.', '').strip()
                     except:
                         self.printErrorMsg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
                         break
@@ -202,14 +202,17 @@ class Bcy(common.Tool):
                     self.printStepMsg("ur: " + rpId)
 
                     # 下载目录
-                    rpPath = imagePath + "\\" + rpId + ' ' + title
+                    if title != '':
+                        rpPath = imagePath + "\\" + rpId + ' ' + title
+                    else:
+                        rpPath = imagePath + "\\" + rpId
                     if not self.makeDir(rpPath, 1):
                         self.printErrorMsg("创建正片目录： " + rpPath + " 失败，程序结束！")
                         self.processExit()
                     rpUrl = 'http://bcy.net/coser/detail/%s/%s' % (cpId, rpId)
                     rpPage = self.doGet(rpUrl)
                     if rpPage:
-                        imageCount = 1
+                        imageCount = 0
                         imageIndex = rpPage.find("src='")
                         while imageIndex != -1:
                             imageStart = rpPage.find("http", imageIndex)
@@ -217,13 +220,15 @@ class Bcy(common.Tool):
                             imageUrl = rpPage[imageStart:imageStop]
                             # 禁用指定分辨率
                             imageUrl = "/".join(imageUrl.split("/")[0:-1])
+                            imageCount += 1
                             self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                             fileType = imageUrl.split(".")[-1]
                             if self.saveImage(imageUrl, rpPath + "\\" + str("%03d" % imageCount) + "." + fileType):
                                 self.printStepMsg("下载成功")
-                                imageCount += 1
                             imageIndex = rpPage.find("src='", imageIndex + 1)
-                        totalImageCount += imageCount - 1
+                        if imageCount == 0:
+                            self.printErrorMsg(cn + ": "  + rpId + " 没有任何图片")
+                        totalImageCount += imageCount
                 if isPass:
                     break
                 if pageCount >= maxPageCount:
