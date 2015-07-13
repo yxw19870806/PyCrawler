@@ -141,20 +141,16 @@ class Bcy(common.Tool):
             cpId = int(userId) - 100876
             pageCount = 1
             maxPageCount = -1
+            needMakeDownloadDir = True
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
             if len(userIdList[userId]) > 3 and userIdList[userId][2] != '':
                 isError = True
             else:
                 isError = False
             isPass = False
-            # 下载目录
-            imagePath = self.imageDownloadPath + "\\" + cn
-            if not self.makeDir(imagePath, 1):
-                self.printErrorMsg("创建CN目录： " + imagePath + " 失败，程序结束！")
-                self.processExit()
 
             while 1:
-                photoAlbumUrl = 'http://bcy.net/coser/ajaxShowMore?type=works&cp_id=%s&p=%s' % (cpId, pageCount)
+                photoAlbumUrl = 'http://bcy.net/coser/ajaxShowMore?type=all&cp_id=%s&p=%s' % (cpId, pageCount)
                 photoAlbumPage = self.doGet(photoAlbumUrl)
 
                 try:
@@ -173,7 +169,7 @@ class Bcy(common.Tool):
                     if not maxPageData:
                         maxPageCount = 1
                     else:
-                        pageList = re.findall(u'<a href=\\"\\/coser\\/ajaxShowMore\?type=works&cp_id=' + str(cpId) + '&p=(\d)', maxPageData)
+                        pageList = re.findall(u'<a href=\\"\\/coser\\/ajaxShowMore\?type=all&cp_id=' + str(cpId) + '&p=(\d)', maxPageData)
                         maxPageCount = int(max(pageList))
 
                 try:
@@ -199,16 +195,30 @@ class Bcy(common.Tool):
                             isPass = True
                             break
 
-                    self.printStepMsg("ur: " + rpId)
+                    self.printStepMsg("rp: " + rpId)
 
-                    # 下载目录
+                    # CN目录
+                    imagePath = self.imageDownloadPath + "\\" + cn
+
+                    if needMakeDownloadDir:
+                        if not self.makeDir(imagePath, 1):
+                            self.printErrorMsg("创建CN目录： " + imagePath + " 失败，程序结束！")
+                            self.processExit()
+                        needMakeDownloadDir = False
+
+                    # 正片目录
                     if title != '':
                         rpPath = imagePath + "\\" + rpId + ' ' + title
                     else:
                         rpPath = imagePath + "\\" + rpId
                     if not self.makeDir(rpPath, 1):
-                        self.printErrorMsg("创建正片目录： " + rpPath + " 失败，程序结束！")
-                        self.processExit()
+                         # 目录出错，把title去掉后再试一次，如果还不行退出
+                        self.printErrorMsg("创建正片目录： " + rpPath + " 失败，尝试不使用title！")
+                        rpPath = imagePath + "\\" + rpId
+                        if not self.makeDir(rpPath, 1):
+                            self.printErrorMsg("创建正片目录： " + rpPath + " 失败，程序结束！")
+                            self.processExit()
+
                     rpUrl = 'http://bcy.net/coser/detail/%s/%s' % (cpId, rpId)
                     rpPage = self.doGet(rpUrl)
                     if rpPage:
@@ -222,7 +232,10 @@ class Bcy(common.Tool):
                             imageUrl = "/".join(imageUrl.split("/")[0:-1])
                             imageCount += 1
                             self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                            fileType = imageUrl.split(".")[-1]
+                            if imageUrl.rfind('/') < imageUrl.rfind('.'):
+                                fileType = imageUrl.split(".")[-1]
+                            else:
+                                fileType = 'jpg'
                             if self.saveImage(imageUrl, rpPath + "\\" + str("%03d" % imageCount) + "." + fileType):
                                 self.printStepMsg("下载成功")
                             imageIndex = rpPage.find("src='", imageIndex + 1)
