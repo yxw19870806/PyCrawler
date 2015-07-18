@@ -198,15 +198,21 @@ class GooglePlus(common.Tool):
                             flag = messagePage.find("<div><a href=", flag + 1)
                             continue
                         imageUrlList.append(imageUrl)
-                        # 使用最大分辨率
+                        # 重组URL并使用最大分辨率
+                        # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
+                        # ->
+                        # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/s0-Ic42/16%252520-%2525201.jpg
                         tempList = imageUrl.split("/")
                         tempList[-2] = "s0"
-                        imageUrl = "/".join(tempList)
+                        imageUrl = "/".join(tempList[:-3]) + '/s0-' + tempList[-3] + '/' + tempList[-1]
                         self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                         imgByte = self.doGet(imageUrl)
                         if imgByte:
                             # 文件类型
-                            fileType = imageUrl.split(".")[-1]
+                            if imageUrl.rfind('/') < imageUrl.rfind('.'):
+                                fileType = imageUrl.split(".")[-1]
+                            else:
+                                fileType = 'jpg'
                             # 保存图片
                             imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                             imageFile.write(imgByte)
