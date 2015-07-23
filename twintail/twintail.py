@@ -1,11 +1,11 @@
-# -*- coding:GBK  -*-
+# -*- coding:utf-8  -*-
 '''
 Created on 2013-12-15
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 
 from common import common
@@ -13,16 +13,16 @@ import os
 import shutil
 import time
 
-class weibo(common.Tool):
+class twintail(common.Tool):
 
     def trace(self, msg):
-        super(weibo, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(twintail, self).trace(msg, self.isShowError, self.traceLogPath)
     
     def printErrorMsg(self, msg):
-        super(weibo, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+        super(twintail, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
         
     def printStepMsg(self, msg):
-        super(weibo, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+        super(twintail, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
 
     def printMsg(self, msg, isTime=True):
         if isTime:
@@ -44,48 +44,48 @@ class weibo(common.Tool):
                 except Exception, e:
                     self.printMsg(str(e))
                     pass
-        # ³ÌĞòÅäÖÃ
+        # ç¨‹åºé…ç½®
         self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
         self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
         self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
         self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        # ´úÀí
+        # ä»£ç†
         self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
         self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # ÎÄ¼şÂ·¾¶
+        # æ–‡ä»¶è·¯å¾„
         self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
         self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
         self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.printMsg("ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
+        self.printMsg("é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
             
     def main(self):
-        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
+        # æ—¥å¿—æ–‡ä»¶ä¿å­˜ç›®å½•
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.createDir(stepLogDir):
-                self.printErrorMsg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                self.printErrorMsg("åˆ›å»ºæ­¥éª¤æ—¥å¿—ç›®å½•ï¼š" + stepLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-            self.printStepMsg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
+            self.printStepMsg("æ­¥éª¤æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
-                self.printErrorMsg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                self.printErrorMsg("åˆ›å»ºè°ƒè¯•æ—¥å¿—ç›®å½•ï¼š" + traceLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
-            self.printStepMsg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
+            self.printStepMsg("è°ƒè¯•æ—¥å¿—ç›®å½•ä¸å­˜åœ¨ï¼Œåˆ›å»ºæ–‡ä»¶å¤¹ï¼š" + traceLogDir)
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.createDir(errorLogDir):
-            self.printErrorMsg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("åˆ›å»ºé”™è¯¯æ—¥å¿—ç›®å½•ï¼š" + errorLogDir + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
         if os.path.exists(self.imageDownloadPath):
-            # Â·¾¶ÊÇÄ¿Â¼
+            # è·¯å¾„æ˜¯ç›®å½•
             if os.path.isdir(self.imageDownloadPath):
-                # Ä¿Â¼²»Îª¿Õ
+                # ç›®å½•ä¸ä¸ºç©º
                 if os.listdir(self.imageDownloadPath):
                     isDelete = False
                     while not isDelete:
-                        # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                        input = raw_input(self.getTime() + " Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò£¿(Y)es or (N)o: ")
+                        # æ‰‹åŠ¨è¾“å…¥æ˜¯å¦åˆ é™¤æ—§æ–‡ä»¶å¤¹ä¸­çš„ç›®å½•
+                        input = raw_input(self.getTime() + " å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + " å·²ç»å­˜åœ¨ï¼Œæ˜¯å¦éœ€è¦åˆ é™¤è¯¥æ–‡ä»¶å¤¹å¹¶ç»§ç»­ç¨‹åºï¼Ÿ(Y)es or (N)o: ")
                         try:
                             input = input.lower()
                             if input in ["y", "yes"]:
@@ -95,21 +95,21 @@ class weibo(common.Tool):
                         except Exception, e:
                             self.printErrorMsg(str(e))
                             pass
-                    self.printStepMsg("É¾³ıÍ¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-                    # É¾³ıÄ¿Â¼
+                    self.printStepMsg("åˆ é™¤å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath)
+                    # åˆ é™¤ç›®å½•
                     shutil.rmtree(self.imageDownloadPath, True)
-                    # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
+                    # ä¿æŠ¤ï¼Œé˜²æ­¢æ–‡ä»¶è¿‡å¤šåˆ é™¤æ—¶é—´è¿‡é•¿ï¼Œ5ç§’æ£€æŸ¥ä¸€æ¬¡æ–‡ä»¶å¤¹æ˜¯å¦å·²ç»åˆ é™¤
                     while os.path.exists(self.imageDownloadPath):
                         shutil.rmtree(self.imageDownloadPath, True)
                         time.sleep(5)
             else:
-                self.printStepMsg("Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + "ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
+                self.printStepMsg("å›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + "å·²å­˜åœ¨ç›¸åŒåå­—çš„æ–‡ä»¶ï¼Œè‡ªåŠ¨åˆ é™¤")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
+        self.printStepMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+            self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¿å­˜ç›®å½•ï¼š" + self.imageDownloadPath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
             self.processExit()
-        # ÉèÖÃ´úÀí
+        # è®¾ç½®ä»£ç†
         if self.isProxy == 1 or self.isProxy == 2:
             self.proxy(self.proxyIp, self.proxyPort, "http")
         
@@ -120,19 +120,19 @@ class weibo(common.Tool):
             page = self.doGet(url % pageNumber)
             page = page.decode('utf-8')
             if not page:
-                self.printMsg("ÏÂÔØ½áÊø")
+                self.printMsg("ä¸‹è½½ç»“æŸ")
                 self.processExit()
-            nameStart = page.find(u"ÃûÇ° /")
+            nameStart = page.find(u"åå‰ /")
             nameStop = page.find("(", nameStart)
             name = page[nameStart + 4:nameStop].replace(" ", "").replace("\n", "").encode('GBK')
             print nameStart,nameStop,name
-            self.trace("Ò³ÃæµØÖ·:" + url % pageNumber)
-            self.printMsg("Ãû×Ö£º" + name)
+            self.trace("é¡µé¢åœ°å€:" + url % pageNumber)
+            self.printMsg("åå­—ï¼š" + name)
             imagePath = self.imageDownloadPath + "\\" + ("%02d" % pageNumber) + " " + name
             if os.path.exists(imagePath):
                 shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
-                self.printErrorMsg("´´½¨Í¼Æ¬ÏÂÔØÄ¿Â¼£º" + imagePath + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
+                self.printErrorMsg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + imagePath + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
                 self.processExit()
             imageCount = 1
             if page == False:
@@ -145,13 +145,13 @@ class weibo(common.Tool):
                 if imgByte:
                     fileType = (imageUrl % imageUrlPath).split(".")[-1]
                     imageFile = open(imagePath + "\\" + str("%02d" % imageCount) + "." + fileType, "wb")
-                    self.printMsg("¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + "ÕÅÍ¼Æ¬£º" + imageUrl % imageUrlPath)
+                    self.printMsg("å¼€å§‹ä¸‹è½½ç¬¬" + str(imageCount) + "å¼ å›¾ç‰‡ï¼š" + imageUrl % imageUrlPath)
                     imageFile.write(imgByte)
                     imageFile.close()
-                    self.printMsg("ÏÂÔØ³É¹¦")
+                    self.printMsg("ä¸‹è½½æˆåŠŸ")
                     imageCount += 1
                 imageStart = page.find("<span>", imageStart + 1)
             allImageCount += imageCount
 
 if __name__ == "__main__":
-    weibo().main()
+    twintail().main()
