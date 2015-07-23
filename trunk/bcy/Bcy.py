@@ -190,7 +190,7 @@ class Bcy(common.Tool):
                         newUserIdList[userId][2] = rpId
                     # 检查是否已下载到前一次的图片
                     if len(userIdList[userId]) >= 3:
-                        if rpId == userIdList[userId][2]:
+                        if int(rpId) <= int(userIdList[userId][2]):
                             isError = False
                             isPass = True
                             break
