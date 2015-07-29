@@ -59,7 +59,7 @@ class Tool(object):
                     traceback.print_exc()
             count += 1
             if count > 50:
-                self.print_error_msg("无法访问页面：" + url)
+                self._print_error_msg("无法访问页面：" + url)
                 return False
 
     # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
@@ -251,7 +251,7 @@ class Tool(object):
             if msg.find("urlopen error The read operation timed out") != -1:
                 return
             self.write_file(msg, log_path)
-    
+
     def print_step_msg(self, msg, is_print=1, log_path=''):
         if is_print == 1:
             msg = self.get_time() + " " + msg
@@ -342,7 +342,7 @@ class Tool(object):
                             elif input in ["n", "no"]:
                                 self.process_exit()
                         except Exception, e:
-                            self.print_error_msg(str(e))
+                            self._print_error_msg(str(e))
                             pass
 
             # 删除原本路劲

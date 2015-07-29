@@ -15,13 +15,13 @@ import time
 
 class twintail(common.Tool):
 
-    def trace(self, msg):
+    def _trace(self, msg):
         super(twintail, self).trace(msg, self.isShowError, self.traceLogPath)
     
-    def print_error_msg(self, msg):
+    def _print_error_msg(self, msg):
         super(twintail, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
         
-    def print_step_msg(self, msg):
+    def _print_step_msg(self, msg):
         super(twintail, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
         
     def __init__(self):
@@ -60,17 +60,17 @@ class twintail(common.Tool):
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.createDir(stepLogDir):
-                self.print_error_msg("鍒涘缓姝ラ鏃ュ織鐩綍锛�" + stepLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+                self._print_error_msg("鍒涘缓姝ラ鏃ュ織鐩綍锛�" + stepLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
                 self.process_exit()
-            self.print_step_msg("姝ラ鏃ュ織鐩綍涓嶅瓨鍦紝鍒涘缓鏂囦欢澶癸細" + stepLogDir)
+            self._print_step_msg("姝ラ鏃ュ織鐩綍涓嶅瓨鍦紝鍒涘缓鏂囦欢澶癸細" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
-                self.print_error_msg("鍒涘缓璋冭瘯鏃ュ織鐩綍锛�" + traceLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+                self._print_error_msg("鍒涘缓璋冭瘯鏃ュ織鐩綍锛�" + traceLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
                 self.process_exit()
-            self.print_step_msg("璋冭瘯鏃ュ織鐩綍涓嶅瓨鍦紝鍒涘缓鏂囦欢澶癸細" + traceLogDir)
+            self._print_step_msg("璋冭瘯鏃ュ織鐩綍涓嶅瓨鍦紝鍒涘缓鏂囦欢澶癸細" + traceLogDir)
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.createDir(errorLogDir):
-            self.print_error_msg("鍒涘缓閿欒鏃ュ織鐩綍锛�" + errorLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+            self._print_error_msg("鍒涘缓閿欒鏃ュ織鐩綍锛�" + errorLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
             self.process_exit()
         if os.path.exists(self.imageDownloadPath):
             # 璺緞鏄洰褰�
@@ -88,9 +88,9 @@ class twintail(common.Tool):
                             elif input in ["n", "no"]:
                                 self.process_exit()
                         except Exception, e:
-                            self.print_error_msg(str(e))
+                            self._print_error_msg(str(e))
                             pass
-                    self.print_step_msg("鍒犻櫎鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath)
+                    self._print_step_msg("鍒犻櫎鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath)
                     # 鍒犻櫎鐩綍
                     shutil.rmtree(self.imageDownloadPath, True)
                     # 淇濇姢锛岄槻姝㈡枃浠惰繃澶氬垹闄ゆ椂闂磋繃闀匡紝5绉掓鏌ヤ竴娆℃枃浠跺す鏄惁宸茬粡鍒犻櫎
@@ -98,11 +98,11 @@ class twintail(common.Tool):
                         shutil.rmtree(self.imageDownloadPath, True)
                         time.sleep(5)
             else:
-                self.print_step_msg("鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + "宸插瓨鍦ㄧ浉鍚屽悕瀛楃殑鏂囦欢锛岃嚜鍔ㄥ垹闄�")
+                self._print_step_msg("鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + "宸插瓨鍦ㄧ浉鍚屽悕瀛楃殑鏂囦欢锛岃嚜鍔ㄥ垹闄�")
                 os.remove(self.imageDownloadPath)
-        self.print_step_msg("鍒涘缓鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath)
+        self._print_step_msg("鍒涘缓鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.print_error_msg("鍒涘缓鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+            self._print_error_msg("鍒涘缓鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + " 澶辫触锛岀▼搴忕粨鏉燂紒")
             self.process_exit()
         # 璁剧疆浠ｇ悊
         if self.isProxy == 1 or self.isProxy == 2:
@@ -121,13 +121,13 @@ class twintail(common.Tool):
             nameStop = page.find("(", nameStart)
             name = page[nameStart + 4:nameStop].replace(" ", "").replace("\n", "").encode('GBK')
             print nameStart,nameStop,name
-            self.trace("椤甸潰鍦板潃:" + url % pageNumber)
+            self._trace("椤甸潰鍦板潃:" + url % pageNumber)
             self.print_msg("鍚嶅瓧锛�" + name)
             imagePath = self.imageDownloadPath + "\\" + ("%02d" % pageNumber) + " " + name
             if os.path.exists(imagePath):
                 shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
-                self.print_error_msg("鍒涘缓鍥剧墖涓嬭浇鐩綍锛�" + imagePath + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+                self._print_error_msg("鍒涘缓鍥剧墖涓嬭浇鐩綍锛�" + imagePath + " 澶辫触锛岀▼搴忕粨鏉燂紒")
                 self.process_exit()
             imageCount = 1
             if page == False:

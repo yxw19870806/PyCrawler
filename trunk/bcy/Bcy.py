@@ -17,13 +17,13 @@ from common import common, json
 
 class Bcy(common.Tool):
     
-    def trace(self, msg):
+    def _trace(self, msg):
         super(Bcy, self).trace(msg, self.isShowError, self.traceLogPath)
     
-    def print_error_msg(self, msg):
+    def _print_error_msg(self, msg):
         super(Bcy, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
         
-    def print_step_msg(self, msg):
+    def _print_step_msg(self, msg):
         super(Bcy, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
     
     def __init__(self):
@@ -66,21 +66,21 @@ class Bcy(common.Tool):
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.make_dir(stepLogDir, 0):
-                self.print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                self._print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                 self.process_exit()
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.make_dir(traceLogDir, 0):
-                self.print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                self._print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                 self.process_exit()
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.make_dir(errorLogDir, 0):
-            self.print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+            self._print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
             self.process_exit()
 
         # 图片保存目录
-        self.print_step_msg("创建图片根目录：" + self.imageDownloadPath)
+        self._print_step_msg("创建图片根目录：" + self.imageDownloadPath)
         if not self.make_dir(self.imageDownloadPath, 2):
-            self.print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self._print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.process_exit()
 
         # 设置代理
@@ -89,7 +89,7 @@ class Bcy(common.Tool):
 
         # 设置系统cookies (fire fox)
         if not self.set_cookie(self.cookiePath, self.browerVersion):
-            self.print_error_msg("导入浏览器cookies失败，程序结束！")
+            self._print_error_msg("导入浏览器cookies失败，程序结束！")
             self.process_exit()
 
         # 寻找idlist，如果没有结束进程
@@ -107,7 +107,7 @@ class Bcy(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.print_error_msg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
+            self._print_error_msg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
             self.process_exit()
 
         # 创建临时存档文件
@@ -137,7 +137,7 @@ class Bcy(common.Tool):
                 cn = userIdList[userId][1]
             else:
                 cn = userId
-            self.print_step_msg("CN: " + cn)
+            self._print_step_msg("CN: " + cn)
             cpId = int(userId) - 100876
             pageCount = 1
             maxPageCount = -1
@@ -156,7 +156,7 @@ class Bcy(common.Tool):
                 try:
                     photoAlbumPage = json.read(photoAlbumPage)
                 except:
-                    self.print_error_msg("返回信息不是一个JSON数据, user id: " + str(userId))
+                    self._print_error_msg("返回信息不是一个JSON数据, user id: " + str(userId))
                     break
 
                 # 总共多少页
@@ -164,7 +164,7 @@ class Bcy(common.Tool):
                     try:
                         maxPageData = photoAlbumPage['data']['page']
                     except:
-                        self.print_error_msg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'page'字段, user id: " + str(userId))
+                        self._print_error_msg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'page'字段, user id: " + str(userId))
                         break
                     if not maxPageData:
                         maxPageCount = 1
@@ -175,7 +175,7 @@ class Bcy(common.Tool):
                 try:
                     photoAlbumPageData = photoAlbumPage['data']['data']
                 except:
-                    self.print_error_msg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'data'字段, user id: " + str(userId))
+                    self._print_error_msg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'data'字段, user id: " + str(userId))
                     break
 
                 for data in photoAlbumPageData:
@@ -187,7 +187,7 @@ class Bcy(common.Tool):
                         for filter_char in filter_list:
                             title.replace(filter_char, '')
                     except:
-                        self.print_error_msg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
+                        self._print_error_msg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
                         break
 
                     if newUserIdList[userId][2] == "":
@@ -199,14 +199,14 @@ class Bcy(common.Tool):
                             isPass = True
                             break
 
-                    self.print_step_msg("rp: " + rpId)
+                    self._print_step_msg("rp: " + rpId)
 
                     # CN目录
                     imagePath = self.imageDownloadPath + "\\" + cn
 
                     if needMakeDownloadDir:
                         if not self.make_dir(imagePath, 1):
-                            self.print_error_msg("创建CN目录： " + imagePath + " 失败，程序结束！")
+                            self._print_error_msg("创建CN目录： " + imagePath + " 失败，程序结束！")
                             self.process_exit()
                         needMakeDownloadDir = False
 
@@ -217,10 +217,10 @@ class Bcy(common.Tool):
                         rpPath = imagePath + "\\" + rpId
                     if not self.make_dir(rpPath, 1):
                          # 目录出错，把title去掉后再试一次，如果还不行退出
-                        self.print_error_msg("创建正片目录： " + rpPath + " 失败，尝试不使用title！")
+                        self._print_error_msg("创建正片目录： " + rpPath + " 失败，尝试不使用title！")
                         rpPath = imagePath + "\\" + rpId
                         if not self.make_dir(rpPath, 1):
-                            self.print_error_msg("创建正片目录： " + rpPath + " 失败，程序结束！")
+                            self._print_error_msg("创建正片目录： " + rpPath + " 失败，程序结束！")
                             self.process_exit()
 
                     rpUrl = 'http://bcy.net/coser/detail/%s/%s' % (cpId, rpId)
@@ -235,16 +235,16 @@ class Bcy(common.Tool):
                             # 禁用指定分辨率
                             imageUrl = "/".join(imageUrl.split("/")[0:-1])
                             imageCount += 1
-                            self.print_step_msg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                            self._print_step_msg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
                             if imageUrl.rfind('/') < imageUrl.rfind('.'):
                                 fileType = imageUrl.split(".")[-1]
                             else:
                                 fileType = 'jpg'
                             if self.save_image(imageUrl, rpPath + "\\" + str("%03d" % imageCount) + "." + fileType):
-                                self.print_step_msg("下载成功")
+                                self._print_step_msg("下载成功")
                             imageIndex = rpPage.find("src='", imageIndex + 1)
                         if imageCount == 0:
-                            self.print_error_msg(cn + ": "  + rpId + " 没有任何图片")
+                            self._print_error_msg(cn + ": "  + rpId + " 没有任何图片")
                         totalImageCount += imageCount
                 if isPass:
                     break
@@ -252,10 +252,10 @@ class Bcy(common.Tool):
                     break
                 pageCount += 1
 
-            self.print_step_msg(cn + "下载完毕")
+            self._print_step_msg(cn + "下载完毕")
 
             if isError:
-                self.print_error_msg(userId + "图片数量异常，请手动检查")
+                self._print_error_msg(userId + "图片数量异常，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
@@ -263,7 +263,7 @@ class Bcy(common.Tool):
             newUserIdListFile.close()
 
         stopTime = time.time()
-        self.print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
+        self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
     Bcy().main()

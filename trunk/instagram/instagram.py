@@ -16,13 +16,13 @@ import time
 
 class Instagram(common.Tool):
     
-    def trace(self, msg):
+    def _trace(self, msg):
         super(Instagram, self).trace(msg, self.isShowError, self.traceLogPath)
     
-    def print_error_msg(self, msg):
+    def _print_error_msg(self, msg):
         super(Instagram, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
         
-    def print_step_msg(self, msg):
+    def _print_step_msg(self, msg):
         super(Instagram, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
          
     def __init__(self):
@@ -58,21 +58,21 @@ class Instagram(common.Tool):
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.make_dir(stepLogDir, 0):
-                self.print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                self._print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
                 self.process_exit()
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.make_dir(traceLogDir, 0):
-                self.print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                self._print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
                 self.process_exit()
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.make_dir(errorLogDir, 0):
-            self.print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+            self._print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
             self.process_exit()
 
          # 图片保存目录
-        self.print_step_msg("创建图片根目录：" + self.imageDownloadPath)
+        self._print_step_msg("创建图片根目录：" + self.imageDownloadPath)
         if not self.make_dir(self.imageDownloadPath, 2):
-            self.print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self._print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
             self.process_exit()
 
         # 设置代理
@@ -94,7 +94,7 @@ class Instagram(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.print_error_msg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
+            self._print_error_msg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
             self.process_exit()
         # 创建临时存档文件
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
@@ -118,7 +118,7 @@ class Instagram(common.Tool):
         allImageCount = 0
         # 循环下载每个id
         for userAccount in sorted(userIdList.keys()):
-            self.print_step_msg("Account: " + userAccount)
+            self._print_step_msg("Account: " + userAccount)
             # 初始化数据
             imageId = ""
             imageCount = 1
@@ -134,7 +134,7 @@ class Instagram(common.Tool):
             else:
                 imagePath = self.imageDownloadPath + "\\" + userAccount
             if not self.make_dir(imagePath, 1):
-                self.print_error_msg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
+                self._print_error_msg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
                 self.process_exit()
 
             # 图片下载
@@ -147,29 +147,29 @@ class Instagram(common.Tool):
                     photoAlbumUrl = "http://instagram.com/%s/media?max_id=%s" % (userAccount, imageId)
                 photoAlbumPage = self.do_get(photoAlbumUrl)
                 if not photoAlbumPage:
-                    self.print_error_msg("无法获取相册信息: " + photoAlbumUrl)
+                    self._print_error_msg("无法获取相册信息: " + photoAlbumUrl)
                     break
                 photoAlbumData = self.do_get(photoAlbumUrl)
                 try:
                     photoAlbumPage = json.read(photoAlbumData)
                 except:
-                    self.print_error_msg("返回信息：" + str(photoAlbumData) + " 不是一个JSON数据, user id: " + str(userAccount))
+                    self._print_error_msg("返回信息：" + str(photoAlbumData) + " 不是一个JSON数据, user id: " + str(userAccount))
                     break
                 if not isinstance(photoAlbumPage, dict):
-                    self.print_error_msg("JSON数据：" + str(photoAlbumPage) + " 不是一个字典, user id: " + str(userAccount))
+                    self._print_error_msg("JSON数据：" + str(photoAlbumPage) + " 不是一个字典, user id: " + str(userAccount))
                     break
                 if not photoAlbumPage.has_key("items"):
-                    self.print_error_msg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'items'字段, user id: " + str(userAccount))
+                    self._print_error_msg("在JSON数据：" + str(photoAlbumPage) + " 中没有找到'items'字段, user id: " + str(userAccount))
                     break
                 # 下载到了最后一张图了
                 if photoAlbumPage["items"] == []:
                     break
                 for photoInfo in photoAlbumPage["items"]:
                     if not photoInfo.has_key("images"):
-                        self.print_error_msg("在JSON数据：" + str(photoInfo) + " 中没有找到'images'字段, user id: " + str(userAccount))
+                        self._print_error_msg("在JSON数据：" + str(photoInfo) + " 中没有找到'images'字段, user id: " + str(userAccount))
                         break
                     if not photoInfo.has_key("id"):
-                        self.print_error_msg("在JSON数据：" + str(photoInfo) + " 中没有找到'id'字段, user id: " + str(userAccount))
+                        self._print_error_msg("在JSON数据：" + str(photoInfo) + " 中没有找到'id'字段, user id: " + str(userAccount))
                         break
                     else:
                         imageId = photoInfo["id"]
@@ -183,13 +183,13 @@ class Instagram(common.Tool):
                             isError = False
                             break
                     if not photoInfo["images"].has_key("standard_resolution"):
-                        self.print_error_msg("在JSON数据：" + str(photoInfo["images"]) + " 中没有找到'standard_resolution'字段, user id: " + str(userAccount) + ", image id: " + imageId)
+                        self._print_error_msg("在JSON数据：" + str(photoInfo["images"]) + " 中没有找到'standard_resolution'字段, user id: " + str(userAccount) + ", image id: " + imageId)
                         break
                     if not photoInfo["images"]["standard_resolution"].has_key("url"):
-                        self.print_error_msg("在JSON数据：" + str(photoInfo["images"]["standard_resolution"]) + " 中没有找到'url'字段, user id: " + str(userAccount) + ", image id: " + imageId)
+                        self._print_error_msg("在JSON数据：" + str(photoInfo["images"]["standard_resolution"]) + " 中没有找到'url'字段, user id: " + str(userAccount) + ", image id: " + imageId)
                         break
                     imageUrl = photoInfo["images"]["standard_resolution"]["url"]
-                    self.print_step_msg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
+                    self._print_step_msg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
                     imgByte = self.do_get(imageUrl)
                     if imgByte:
                         # 文件类型
@@ -197,17 +197,17 @@ class Instagram(common.Tool):
                         # 保存图片
                         imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                         imageFile.write(imgByte)
-                        self.print_step_msg("下载成功")
+                        self._print_step_msg("下载成功")
                         imageFile.close()
                         imageCount += 1
                     else:
-                        self.print_error_msg("获取第" + str(imageCount) + "张图片信息失败：" + str(userAccount) + "，" + imageUrl)
+                        self._print_error_msg("获取第" + str(imageCount) + "张图片信息失败：" + str(userAccount) + "，" + imageUrl)
 
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                         isPass = True
                         break
-            self.print_step_msg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
+            self._print_step_msg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             allImageCount += imageCount - 1
             
@@ -218,7 +218,7 @@ class Instagram(common.Tool):
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + userAccount
                     if not self.make_dir(destPath, 1):
-                        self.print_error_msg("创建图片子目录： " + destPath + " 失败，程序结束！")
+                        self._print_error_msg("创建图片子目录： " + destPath + " 失败，程序结束！")
                         self.process_exit()
 
                     # 倒叙排列
@@ -230,12 +230,12 @@ class Instagram(common.Tool):
                         fileType = fileName.split(".")[1]
                         self.copy_files(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.print_step_msg("图片从下载目录移动到保存目录成功")
+                    self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.print_error_msg(userAccount + "图片数量异常，请手动检查")
+                self._print_error_msg(userAccount + "图片数量异常，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
@@ -243,7 +243,7 @@ class Instagram(common.Tool):
             newUserIdListFile.close()
 
         stopTime = time.time()
-        self.print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
+        self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(allImageCount) + "张")
 
 if __name__ == "__main__":
     Instagram().main()
