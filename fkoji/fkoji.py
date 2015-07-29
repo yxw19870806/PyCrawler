@@ -200,7 +200,7 @@ class fkoji(common.Tool):
                 fileType = fileNameList[-1]
                 userId = "_".join(".".join(fileNameList[:-1]).split("_")[1:])
                 # 所有
-                shutil.copyfile(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
+                self.copyFiles(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
                 # 单个
                 eachUserPath = self.imageDownloadPath + "\\" + userId
                 if not os.path.exists(eachUserPath):
@@ -212,7 +212,7 @@ class fkoji(common.Tool):
                     userIdList[userId] = int(userIdList[userId]) + 1
                 else:
                     userIdList[userId] = 1
-                shutil.copyfile(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
+                self.copyFiles(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
             self.printStepMsg("图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.imageTempPath, True)
