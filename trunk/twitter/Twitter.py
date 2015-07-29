@@ -19,38 +19,38 @@ class Twitter(common.Tool):
     def trace(self, msg):
         super(Twitter, self).trace(msg, self.isShowError, self.traceLogPath)
     
-    def printErrorMsg(self, msg):
-        super(Twitter, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+    def print_error_msg(self, msg):
+        super(Twitter, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
         
-    def printStepMsg(self, msg):
-        super(Twitter, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+    def print_step_msg(self, msg):
+        super(Twitter, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
     
     def __init__(self):
-        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
+        config = self.analyze_config( os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
-        self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
-        self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
-        self.getImageUrlCount = self.getConfig(config, "GET_IMAGE_URL_COUNT", 100, 2)
+        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
+        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
+        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
+        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
+        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
+        self.getImageCount = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
+        self.getImageUrlCount = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
         # 代理
-        self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
+        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
+        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
         # 文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
             self.stepLogPath = ""
         else:
-            self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        self.printMsg("配置文件读取完成")
+            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+        self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.print_msg("配置文件读取完成")
 
     def main(self, userIdListFilePath = '', imageDownloadPath = '', imageTempPath = ''):
         if userIdListFilePath != '':
@@ -64,27 +64,27 @@ class Twitter(common.Tool):
         # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.makeDir(stepLogDir, 0):
-                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(stepLogDir, 0):
+                self.print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                self.process_exit()
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.makeDir(traceLogDir, 0):
-                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(traceLogDir, 0):
+                self.print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                self.process_exit()
         errorLogDir = os.path.dirname(self.errorLogPath)
-        if not self.makeDir(errorLogDir, 0):
-            self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
-            self.processExit()
+        if not self.make_dir(errorLogDir, 0):
+            self.print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+            self.process_exit()
 
         # 图片保存目录
-        self.printStepMsg("创建图片根目录：" + self.imageDownloadPath)
-        if not self.makeDir(self.imageDownloadPath, 2):
-            self.printErrorMsg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
-            self.processExit()
+        self.print_step_msg("创建图片根目录：" + self.imageDownloadPath)
+        if not self.make_dir(self.imageDownloadPath, 2):
+            self.print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self.process_exit()
 
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort, "https")
+            self.set_proxy(self.proxyIp, self.proxyPort, "https")
 
         # 寻找idlist，如果没有结束进程
         userIdList = {}
@@ -101,8 +101,8 @@ class Twitter(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
-            self.processExit()
+            self.print_error_msg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
+            self.process_exit()
         # 创建临时存档文件
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, "w")
@@ -126,7 +126,7 @@ class Twitter(common.Tool):
         totalImageCount = 0
         # 循环下载每个id
         for userAccount in sorted(userIdList.keys()):
-            self.printStepMsg("Account: " + userAccount)
+            self.print_step_msg("Account: " + userAccount)
             # 初始化数据
             dataTweetId = init_max_id
             imageCount = 1
@@ -143,35 +143,35 @@ class Twitter(common.Tool):
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userAccount
-            if not self.makeDir(imagePath, 1):
-                self.printErrorMsg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(imagePath, 1):
+                self.print_error_msg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
+                self.process_exit()
 
             # 图片下载
             while not isLastPage:
                 if isPass:
                     break
                 photoPageUrl = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (userAccount, dataTweetId)
-                photoPageData = self.doGet(photoPageUrl)
+                photoPageData = self.do_get(photoPageUrl)
                 if not photoPageData:
-                    self.printErrorMsg("无法获取相册信息: " + photoPageUrl)
+                    self.print_error_msg("无法获取相册信息: " + photoPageUrl)
                     break
                 try:
                     page = json.read(photoPageData)
                 except:
-                    self.printErrorMsg("返回信息：" + str(photoPageData) + " 不是一个JSON数据, account: " + userAccount)
+                    self.print_error_msg("返回信息：" + str(photoPageData) + " 不是一个JSON数据, account: " + userAccount)
                     break
 
                 if not isinstance(page, dict):
-                    self.printErrorMsg("JSON数据：" + str(page) + " 不是一个字典, account: " + userAccount)
+                    self.print_error_msg("JSON数据：" + str(page) + " 不是一个字典, account: " + userAccount)
                     break
                 if not page.has_key("has_more_items"):
-                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段, account: " + userAccount)
+                    self.print_error_msg("在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段, account: " + userAccount)
                     break
                 if page['has_more_items'] == False :
                     isLastPage = True
                 if not page.has_key("items_html"):
-                    self.printErrorMsg("在JSON数据：" + str(page) + " 中没有找到'items_html'字段, account: " + userAccount)
+                    self.print_error_msg("在JSON数据：" + str(page) + " 中没有找到'items_html'字段, account: " + userAccount)
                     break
 
                 page = page['items_html']
@@ -197,19 +197,19 @@ class Twitter(common.Tool):
                         imageIndex = page.find('data-url', imageIndex + 1)
                         continue
                     imageUrlList.append(imageUrl)
-                    self.printStepMsg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
-                    imgByte = self.doGet(imageUrl)
+                    self.print_step_msg("开始下载第 " + str(imageCount) + "张图片：" + imageUrl)
+                    imgByte = self.do_get(imageUrl)
                     if imgByte:
                         # 文件类型
                         fileType = imageUrl.split(".")[-1].split(':')[0]
                         # 保存图片
                         imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                         imageFile.write(imgByte)
-                        self.printStepMsg("下载成功")
+                        self.print_step_msg("下载成功")
                         imageFile.close()
                         imageCount += 1
                     else:
-                        self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + userAccount + "：" + imageUrl)
+                        self.print_error_msg("获取第" + str(imageCount) + "张图片信息失败：" + userAccount + "：" + imageUrl)
 
                     # 达到配置文件中的下载数量，结束
                     if len(userIdList[userAccount]) >= 3 and userIdList[userAccount][2] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
@@ -226,7 +226,7 @@ class Twitter(common.Tool):
                         dataTweetId = page[dataTweetIdStart + 1:dataTweetIdStop]
                         dataTweetIdIndex = page.find('data-tweet-id="', dataTweetIdIndex + 1)
 
-            self.printStepMsg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
+            self.print_step_msg(userAccount + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userAccount][1] = str(int(newUserIdList[userAccount][1]) + imageCount - 1)
             totalImageCount += imageCount - 1
             
@@ -236,9 +236,9 @@ class Twitter(common.Tool):
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + userAccount
-                    if not self.makeDir(destPath, 1):
-                        self.printErrorMsg("创建图片子目录： " + destPath + " 失败，程序结束！")
-                        self.processExit()
+                    if not self.make_dir(destPath, 1):
+                        self.print_error_msg("创建图片子目录： " + destPath + " 失败，程序结束！")
+                        self.process_exit()
 
                     # 倒叙排列
                     if len(userIdList[userAccount]) >= 2 and userIdList[userAccount][1] != '':
@@ -247,14 +247,14 @@ class Twitter(common.Tool):
                         count = 1
                     for fileName in imageList:
                         fileType = fileName.split(".")[1]
-                        self.copyFiles(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
+                        self.copy_files(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg("图片从下载目录移动到保存目录成功")
+                    self.print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userAccount + "图片数量异常，请手动检查")
+                self.print_error_msg(userAccount + "图片数量异常，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
@@ -262,7 +262,7 @@ class Twitter(common.Tool):
             newUserIdListFile.close()
 
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
+        self.print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
     Twitter().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\twitter1", os.getcwd() +  "\\photo\\twitter1\\tempImage")

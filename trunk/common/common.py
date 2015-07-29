@@ -15,7 +15,7 @@ IS_SET_TIMEOUT = False
 class Tool(object):
 
     # http请求
-    def doGet(self, url, post_data=None):
+    def do_get(self, url, post_data=None):
         import traceback
         import urllib2
         global IS_SET_TIMEOUT
@@ -49,17 +49,17 @@ class Tool(object):
                         sys.exit()
                 # 连接被关闭，等待1分钟后再尝试
                 elif str(e).find("[Errno 10053] ") != -1:
-                    self.printMsg("访问页面超时，重新连接请稍后")
+                    self.print_msg("访问页面超时，重新连接请稍后")
                     time.sleep(60)
                 # 超时
                 elif str(e).find("timed out") != -1:
-                    self.printMsg("访问页面超时，重新连接请稍后")
+                    self.print_msg("访问页面超时，重新连接请稍后")
                 else:
-                    self.printMsg(str(e))
+                    self.print_msg(str(e))
                     traceback.print_exc()
             count += 1
             if count > 50:
-                self.printErrorMsg("无法访问页面：" + url)
+                self.print_error_msg("无法访问页面：" + url)
                 return False
 
     # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
@@ -68,7 +68,7 @@ class Tool(object):
     # browser_type=1: IE
     # browser_type=2: firefox
     # browser_type=3: chrome
-    def getDefaultBrowserCookiePath(self, os_version, browser_type):
+    def get_default_browser_cookie_path(self, os_version, browser_type):
         import getpass
         if browser_type == 1:
             if os_version == 1:
@@ -93,20 +93,20 @@ class Tool(object):
                 return "C:\\Users\%s\\AppData\\Local\\Google\\Chrome\\User Data\\Default" % (getpass.getuser())
             elif os_version == 2:
                 return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Google\\Chrome\\User Data\Default\\" % (getpass.getuser())
-        self.printMsg("浏览器类型：" + browser_type + "不存在")
+        self.print_msg("浏览器类型：" + browser_type + "不存在")
         return None
 
     # 使用系统cookies
     # browser_type=1: IE
     # browser_type=2: firefox
     # browser_type=3: chrome
-    def cookie(self, filePath, browser_type=1):
+    def set_cookie(self, filePath, browser_type=1):
         import cookielib
         import cStringIO
         import urllib2
         from pysqlite2 import dbapi2 as sqlite
         if not os.path.exists(filePath):
-            self.printMsg("cookie目录：" + filePath + " 不存在")
+            self.print_msg("cookie目录：" + filePath + " 不存在")
             return False
         ftstr = ["FALSE", "TRUE"]
         s = cStringIO.StringIO()
@@ -166,13 +166,13 @@ class Tool(object):
         urllib2.install_opener(opener)
         return True
     
-    def proxy(self, ip, port, protocol):
+    def set_proxy(self, ip, port, protocol):
     # 设置代理
         import urllib2
         proxyHandler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
         opener = urllib2.build_opener(proxyHandler)
         urllib2.install_opener(opener)
-        self.printMsg("设置代理成功")
+        self.print_msg("设置代理成功")
 
     # 获取配置文件
     # config : 字典格式，如：{key1:value1, key2:value2}
@@ -182,7 +182,7 @@ class Tool(object):
     # mode=3 : 文件路径，以'\'开头的为当前目录下创建
     # prefix: 前缀，只有在mode=1时有效
     # postfix: 后缀，只有在mode=1时有效
-    def getConfig(self, config, key, default_value, mode, prefix=None, postfix=None):
+    def get_config(self, config, key, default_value, mode, prefix=None, postfix=None):
         import traceback
         value = None
         if config.has_key(key):
@@ -198,7 +198,7 @@ class Tool(object):
                 try:
                     value = int(config[key])
                 except:
-                    self.printMsg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+                    self.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
                     traceback.print_exc()
                     value = default_value
             elif mode == 3:
@@ -207,14 +207,14 @@ class Tool(object):
                     value = os.getcwd() + value
                 return value
         else:
-            self.printMsg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+            self.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
             value = default_value
         return value
 
-    def analyzeConfig(self, config_path):
-        configFile = open(config_path, 'r')
-        lines = configFile.readlines()
-        configFile.close()
+    def analyze_config(self, config_path):
+        config_file = open(config_path, 'r')
+        lines = config_file.readlines()
+        config_file.close()
         config = {}
         for line in lines:
             if len(line) == 0:
@@ -225,41 +225,41 @@ class Tool(object):
                     line = line.split("=")
                     config[line[0]] = line[1]
                 except Exception, e:
-                    self.printMsg(str(e))
+                    self.print_msg(str(e))
                     pass
         return  config
 
-    def printMsg(self, msg, is_time=True):
+    def print_msg(self, msg, is_time=True):
         if is_time:
-            msg = self.getTime() + " " + msg
+            msg = self.get_time() + " " + msg
         print msg
     
     def trace(self, msg, is_print=1, log_path=''):
         if is_print == 1:
-            msg = self.getTime() + " " + msg
-#             self.printMsg(msg, False)
+            msg = self.get_time() + " " + msg
+#             self.print_msg(msg, False)
         if log_path != '':
-            self.writeFile(msg, log_path)
+            self.write_file(msg, log_path)
     
-    def printErrorMsg(self, msg, is_print=1, log_path=''):
+    def print_error_msg(self, msg, is_print=1, log_path=''):
         if is_print == 1:
-            msg = self.getTime() + " [Error] " + msg
-            self.printMsg(msg, False)
+            msg = self.get_time() + " [Error] " + msg
+            self.print_msg(msg, False)
         if log_path != '':
             if msg.find("HTTP Error 500") != -1:
                 return
             if msg.find("urlopen error The read operation timed out") != -1:
                 return
-            self.writeFile(msg, log_path)
+            self.write_file(msg, log_path)
     
-    def printStepMsg(self, msg, is_print=1, log_path=''):
+    def print_step_msg(self, msg, is_print=1, log_path=''):
         if is_print == 1:
-            msg = self.getTime() + " " + msg
-            self.printMsg(msg, False)
+            msg = self.get_time() + " " + msg
+            self.print_msg(msg, False)
         if log_path != '':
-            self.writeFile(msg, log_path)
+            self.write_file(msg, log_path)
                 
-    def getTime(self):
+    def get_time(self):
         return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
 
     # 过滤一些文件夹名不支持的字符串
@@ -273,7 +273,7 @@ class Tool(object):
     #     return file_path
 
     # 文件路径编码转换
-    def changePathEncoding(self, path):
+    def change_path_encoding(self, path):
         try:
             if isinstance(path, unicode):
                 path = path.encode('GBK')
@@ -286,15 +286,15 @@ class Tool(object):
                 path = path.decode('UTF-8')
         return path
 
-    def writeFile(self, msg, file_path):
-        logFile = open(file_path, 'a')
-        logFile.write(msg + "\n")
-        logFile.close()
+    def write_file(self, msg, file_path):
+        log_file = open(file_path, 'a')
+        log_file.write(msg + "\n")
+        log_file.close()
 
     # image_path 包括路径和文件名
-    def saveImage(self, image_url, image_path):
-        image_path = self.changePathEncoding(image_path)
-        image_byte = self.doGet(image_url)
+    def save_image(self, image_url, image_path):
+        image_path = self.change_path_encoding(image_path)
+        image_byte = self.do_get(image_url)
         if image_byte:
             image_file = open(image_path, "wb")
             image_file.write(image_byte)
@@ -303,8 +303,8 @@ class Tool(object):
         return False
 
     # 删除目录下所有文件（保留目录）
-    def removeDirFiles(self, dir_path):
-        dir_path = self.changePathEncoding(dir_path)
+    def remove_dir_files(self, dir_path):
+        dir_path = self.change_path_encoding(dir_path)
         for file_name in os.listdir(dir_path):
             target_file = os.path.join(dir_path, file_name)
             if os.path.isfile(target_file):
@@ -314,8 +314,8 @@ class Tool(object):
     # create_mode 0 : 不存在则创建
     # create_mode 1 : 存在则删除并创建
     # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
-    def makeDir(self, dir_path, create_mode):
-        dir_path = self.changePathEncoding(dir_path)
+    def make_dir(self, dir_path, create_mode):
+        dir_path = self.change_path_encoding(dir_path)
         if create_mode != 0 and create_mode != 1 and create_mode != 2:
             create_mode = 0
         # 目录存在
@@ -334,15 +334,15 @@ class Tool(object):
                 else:
                     isDelete = False
                     while not isDelete:
-                        input = raw_input(self.getTime() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                        input = raw_input(self.get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                         try:
                             input = input.lower()
                             if input in ["y", "yes"]:
                                 isDelete = True
                             elif input in ["n", "no"]:
-                                self.processExit()
+                                self.process_exit()
                         except Exception, e:
-                            self.printErrorMsg(str(e))
+                            self.print_error_msg(str(e))
                             pass
 
             # 删除原本路劲
@@ -367,18 +367,18 @@ class Tool(object):
                 if os.path.isdir(dir_path):
                     return True
             except Exception, e:
-                self.printMsg(str(e))
+                self.print_msg(str(e))
                 time.sleep(5)
             count += 1
         return False
 
-    def copyFiles(self, source_path, destination_path):
-        source_path = self.changePathEncoding(source_path)
-        destination_path = self.changePathEncoding(destination_path)
+    def copy_files(self, source_path, destination_path):
+        source_path = self.change_path_encoding(source_path)
+        destination_path = self.change_path_encoding(destination_path)
         shutil.copyfile(source_path, destination_path)
 
     # 结束进程
-    def processExit(self):
+    def process_exit(self):
         sys.exit()
 
     # 关机

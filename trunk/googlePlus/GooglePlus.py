@@ -19,38 +19,38 @@ class GooglePlus(common.Tool):
     def trace(self, msg):
         super(GooglePlus, self).trace(msg, self.isShowError, self.traceLogPath)
 
-    def printErrorMsg(self, msg):
-        super(GooglePlus, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+    def print_error_msg(self, msg):
+        super(GooglePlus, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
 
-    def printStepMsg(self, msg):
-        super(GooglePlus, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+    def print_step_msg(self, msg):
+        super(GooglePlus, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
 
     def __init__(self):
-        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
+        config = self.analyze_config( os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
-        self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
-        self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.getConfig(config, "GET_IMAGE_COUNT", 0, 2)
-        self.getImageUrlCount = self.getConfig(config, "GET_IMAGE_URL_COUNT", 100, 2)
+        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
+        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
+        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
+        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
+        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
+        self.getImageCount = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
+        self.getImageUrlCount = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
         # 代理
-        self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
+        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
+        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
         # 文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
             self.stepLogPath = ""
         else:
-            self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.userIdListFilePath = self.getConfig(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        self.printMsg("配置文件读取完成")
+            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+        self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.print_msg("配置文件读取完成")
 
     def main(self):
         startTime = time.time()
@@ -58,27 +58,27 @@ class GooglePlus(common.Tool):
         # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.makeDir(stepLogDir, 0):
-                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(stepLogDir, 0):
+                self.print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                self.process_exit()
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.makeDir(traceLogDir, 0):
-                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(traceLogDir, 0):
+                self.print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                self.process_exit()
         errorLogDir = os.path.dirname(self.errorLogPath)
-        if not self.makeDir(errorLogDir, 0):
-            self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
-            self.processExit()
+        if not self.make_dir(errorLogDir, 0):
+            self.print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+            self.process_exit()
 
         # 图片保存目录
-        self.printStepMsg("创建图片根目录：" + self.imageDownloadPath)
-        if not self.makeDir(self.imageDownloadPath, 2):
-            self.printErrorMsg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
-            self.processExit()
+        self.print_step_msg("创建图片根目录：" + self.imageDownloadPath)
+        if not self.make_dir(self.imageDownloadPath, 2):
+            self.print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self.process_exit()
 
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort, "https")
+            self.set_proxy(self.proxyIp, self.proxyPort, "https")
 
         # 寻找idlist，如果没有结束进程
         userIdList = {}
@@ -95,8 +95,8 @@ class GooglePlus(common.Tool):
                 userInfoList = userInfo.split("\t")
                 userIdList[userInfoList[0]] = userInfoList
         else:
-            self.printErrorMsg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
-            self.processExit()
+            self.print_error_msg("用户ID存档文件: " + self.userIdListFilePath + "不存在，程序结束！")
+            self.process_exit()
         # 创建临时存档文件
         newUserIdListFilePath = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
         newUserIdListFile = open(newUserIdListFilePath, "w")
@@ -130,7 +130,7 @@ class GooglePlus(common.Tool):
         # 循环下载每个id
         for userId in sorted(userIdList.keys()):
             userName = newUserIdList[userId][1]
-            self.printStepMsg("ID: " + str(userId) + ", 名字: " + userName)
+            self.print_step_msg("ID: " + str(userId) + ", 名字: " + userName)
             # 初始化数据
             imageCount = 1
             messageUrlList = []
@@ -146,9 +146,9 @@ class GooglePlus(common.Tool):
                 imagePath = self.imageTempPath
             else:
                 imagePath = self.imageDownloadPath + "\\" + userName
-            if not self.makeDir(imagePath, 1):
-                self.printErrorMsg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(imagePath, 1):
+                self.print_error_msg("创建图片下载目录： " + imagePath + " 失败，程序结束！")
+                self.process_exit()
 
             # 图片下载
 #            photoAlbumUrl = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (userId)
@@ -157,7 +157,7 @@ class GooglePlus(common.Tool):
             key = ''
             postData = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (userId, userId, self.getImageUrlCount, key, now)
             self.trace("信息首页地址：" + photoAlbumUrl)
-            photoAlbumPage = self.doGet(photoAlbumUrl, postData)
+            photoAlbumPage = self.do_get(photoAlbumUrl, postData)
             if photoAlbumPage:
                 messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId)
                 isOver = False
@@ -179,16 +179,16 @@ class GooglePlus(common.Tool):
                         messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
                         continue
                     messageUrlList.append(messageUrl)
-                    messagePage = self.doGet(messageUrl)
+                    messagePage = self.do_get(messageUrl)
                     if not messagePage:
-                        self.printErrorMsg("无法获取信息页: " + messageUrl)
+                        self.print_error_msg("无法获取信息页: " + messageUrl)
                         messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
                         continue
                     flag = messagePage.find("<div><a href=")
                     while flag != -1:
                         imageIndex = messagePage.find("<img src=", flag, flag + 200)
                         if imageIndex == -1:
-                            self.printErrorMsg("信息页：" + messageUrl + " 中没有找到标签'<img src='")
+                            self.print_error_msg("信息页：" + messageUrl + " 中没有找到标签'<img src='")
                             break
                         imageStart = messagePage.find("http", imageIndex)
                         imageStop = messagePage.find('"', imageStart)
@@ -205,8 +205,8 @@ class GooglePlus(common.Tool):
                         tempList = imageUrl.split("/")
                         tempList[-2] = "s0"
                         imageUrl = "/".join(tempList[:-3]) + '/s0-' + tempList[-3] + '/' + tempList[-1]
-                        self.printStepMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                        imgByte = self.doGet(imageUrl)
+                        self.print_step_msg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        imgByte = self.do_get(imageUrl)
                         if imgByte:
                             # 文件类型
                             if imageUrl.rfind('/') < imageUrl.rfind('.'):
@@ -216,11 +216,11 @@ class GooglePlus(common.Tool):
                             # 保存图片
                             imageFile = open(imagePath + "\\" + str("%04d" % imageCount) + "." + fileType, "wb")
                             imageFile.write(imgByte)
-                            self.printStepMsg("下载成功")
+                            self.print_step_msg("下载成功")
                             imageFile.close()
                             imageCount += 1
                         else:
-                            self.printErrorMsg("获取第" + str(imageCount) + "张图片信息失败：" + str(userId) + ": " + imageUrl)
+                            self.print_error_msg("获取第" + str(imageCount) + "张图片信息失败：" + str(userId) + ": " + imageUrl)
                         # 达到配置文件中的下载数量，结束
                         if len(userIdList[userId]) >= 4 and userIdList[userId][3] != '' and self.getImageCount > 0 and imageCount > self.getImageCount:
                             isOver = True
@@ -230,9 +230,9 @@ class GooglePlus(common.Tool):
                         break
                     messageIndex = photoAlbumPage.find('[["https://picasaweb.google.com/' + userId, messageIndex + 1)
             else:
-                self.printErrorMsg("无法获取相册首页: " + photoAlbumUrl + ' ' + userName)
+                self.print_error_msg("无法获取相册首页: " + photoAlbumUrl + ' ' + userName)
 
-            self.printStepMsg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
+            self.print_step_msg(userName + "下载完毕，总共获得" + str(imageCount - 1) + "张图片")
             newUserIdList[userId][2] = str(int(newUserIdList[userId][2]) + imageCount - 1)
             totalImageCount += imageCount - 1
 
@@ -242,9 +242,9 @@ class GooglePlus(common.Tool):
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
                     destPath = self.imageDownloadPath + "\\" + newUserIdList[userId][6] + "\\" + userName
-                    if not self.makeDir(destPath, 1):
-                        self.printErrorMsg("创建图片子目录： " + destPath + " 失败，程序结束！")
-                        self.processExit()
+                    if not self.make_dir(destPath, 1):
+                        self.print_error_msg("创建图片子目录： " + destPath + " 失败，程序结束！")
+                        self.process_exit()
 
                     # 倒叙排列
                     if len(userIdList[userId]) >= 3:
@@ -253,14 +253,14 @@ class GooglePlus(common.Tool):
                         count = 1
                     for fileName in imageList:
                         fileType = fileName.split(".")[1]
-                        self.copyFiles(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
+                        self.copy_files(imagePath + "\\" + fileName, destPath + "\\" + str("%04d" % count) + "." + fileType)
                         count += 1
-                    self.printStepMsg("图片从下载目录移动到保存目录成功")
+                    self.print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
                 shutil.rmtree(imagePath, True)
 
             if isError:
-                self.printErrorMsg(userName + "图片数量异常，请手动检查")
+                self.print_error_msg(userName + "图片数量异常，请手动检查")
 
             # 保存最后的信息
             newUserIdListFile = open(newUserIdListFilePath, "a")
@@ -268,7 +268,7 @@ class GooglePlus(common.Tool):
             newUserIdListFile.close()
 
         stopTime = time.time()
-        self.printStepMsg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
+        self.print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(totalImageCount) + "张")
 
 if __name__ == "__main__":
     GooglePlus().main()

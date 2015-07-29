@@ -5,7 +5,7 @@ Created on 2013-12-15
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-如有问题或建议请联系
+濡傛湁闂鎴栧缓璁鑱旂郴
 '''
 
 from common import common
@@ -18,16 +18,11 @@ class twintail(common.Tool):
     def trace(self, msg):
         super(twintail, self).trace(msg, self.isShowError, self.traceLogPath)
     
-    def printErrorMsg(self, msg):
-        super(twintail, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+    def print_error_msg(self, msg):
+        super(twintail, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
         
-    def printStepMsg(self, msg):
-        super(twintail, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
-
-    def printMsg(self, msg, isTime=True):
-        if isTime:
-            msg = self.getTime() + " " + msg
-        print msg
+    def print_step_msg(self, msg):
+        super(twintail, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
         
     def __init__(self):
         processPath = os.getcwd()
@@ -42,98 +37,98 @@ class twintail(common.Tool):
                     line = line.split("=")
                     config[line[0]] = line[1]
                 except Exception, e:
-                    self.printMsg(str(e))
+                    self.print_msg(str(e))
                     pass
-        # 程序配置
-        self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
-        self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        # 代理
-        self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
-        # 文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-        self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.printMsg("配置文件读取完成")
+        # 绋嬪簭閰嶇疆
+        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
+        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
+        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
+        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
+        # 浠ｇ悊
+        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
+        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
+        # 鏂囦欢璺緞
+        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+        self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.print_msg("閰嶇疆鏂囦欢璇诲彇瀹屾垚")
             
     def main(self):
-        # 日志文件保存目录
+        # 鏃ュ織鏂囦欢淇濆瓨鐩綍
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
             if not self.createDir(stepLogDir):
-                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
-                self.processExit()
-            self.printStepMsg("步骤日志目录不存在，创建文件夹：" + stepLogDir)
+                self.print_error_msg("鍒涘缓姝ラ鏃ュ織鐩綍锛�" + stepLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+                self.process_exit()
+            self.print_step_msg("姝ラ鏃ュ織鐩綍涓嶅瓨鍦紝鍒涘缓鏂囦欢澶癸細" + stepLogDir)
             traceLogDir = os.path.dirname(self.traceLogPath)
             if not self.createDir(traceLogDir):
-                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
-                self.processExit()
-            self.printStepMsg("调试日志目录不存在，创建文件夹：" + traceLogDir)
+                self.print_error_msg("鍒涘缓璋冭瘯鏃ュ織鐩綍锛�" + traceLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+                self.process_exit()
+            self.print_step_msg("璋冭瘯鏃ュ織鐩綍涓嶅瓨鍦紝鍒涘缓鏂囦欢澶癸細" + traceLogDir)
         errorLogDir = os.path.dirname(self.errorLogPath)
         if not self.createDir(errorLogDir):
-            self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
-            self.processExit()
+            self.print_error_msg("鍒涘缓閿欒鏃ュ織鐩綍锛�" + errorLogDir + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+            self.process_exit()
         if os.path.exists(self.imageDownloadPath):
-            # 路径是目录
+            # 璺緞鏄洰褰�
             if os.path.isdir(self.imageDownloadPath):
-                # 目录不为空
+                # 鐩綍涓嶄负绌�
                 if os.listdir(self.imageDownloadPath):
                     isDelete = False
                     while not isDelete:
-                        # 手动输入是否删除旧文件夹中的目录
-                        input = raw_input(self.getTime() + " 图片保存目录：" + self.imageDownloadPath + " 已经存在，是否需要删除该文件夹并继续程序？(Y)es or (N)o: ")
+                        # 鎵嬪姩杈撳叆鏄惁鍒犻櫎鏃ф枃浠跺す涓殑鐩綍
+                        input = raw_input(self.get_time() + " 鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + " 宸茬粡瀛樺湪锛屾槸鍚﹂渶瑕佸垹闄よ鏂囦欢澶瑰苟缁х画绋嬪簭锛�(Y)es or (N)o: ")
                         try:
                             input = input.lower()
                             if input in ["y", "yes"]:
                                 isDelete = True
                             elif input in ["n", "no"]:
-                                self.processExit()
+                                self.process_exit()
                         except Exception, e:
-                            self.printErrorMsg(str(e))
+                            self.print_error_msg(str(e))
                             pass
-                    self.printStepMsg("删除图片保存目录：" + self.imageDownloadPath)
-                    # 删除目录
+                    self.print_step_msg("鍒犻櫎鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath)
+                    # 鍒犻櫎鐩綍
                     shutil.rmtree(self.imageDownloadPath, True)
-                    # 保护，防止文件过多删除时间过长，5秒检查一次文件夹是否已经删除
+                    # 淇濇姢锛岄槻姝㈡枃浠惰繃澶氬垹闄ゆ椂闂磋繃闀匡紝5绉掓鏌ヤ竴娆℃枃浠跺す鏄惁宸茬粡鍒犻櫎
                     while os.path.exists(self.imageDownloadPath):
                         shutil.rmtree(self.imageDownloadPath, True)
                         time.sleep(5)
             else:
-                self.printStepMsg("图片保存目录：" + self.imageDownloadPath + "已存在相同名字的文件，自动删除")
+                self.print_step_msg("鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + "宸插瓨鍦ㄧ浉鍚屽悕瀛楃殑鏂囦欢锛岃嚜鍔ㄥ垹闄�")
                 os.remove(self.imageDownloadPath)
-        self.printStepMsg("创建图片保存目录：" + self.imageDownloadPath)
+        self.print_step_msg("鍒涘缓鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath)
         if not self.createDir(self.imageDownloadPath):
-            self.printErrorMsg("创建图片保存目录：" + self.imageDownloadPath + " 失败，程序结束！")
-            self.processExit()
-        # 设置代理
+            self.print_error_msg("鍒涘缓鍥剧墖淇濆瓨鐩綍锛�" + self.imageDownloadPath + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+            self.process_exit()
+        # 璁剧疆浠ｇ悊
         if self.isProxy == 1 or self.isProxy == 2:
-            self.proxy(self.proxyIp, self.proxyPort, "http")
+            self.set_proxy(self.proxyIp, self.proxyPort, "http")
         
         url = "http://twintail-japan.com/campus/contents/%s.html"
         imageUrl = "http://twintail-japan.com/campus/contents/%s"
         allImageCount = 0
         for pageNumber in range(69, 80):
-            page = self.doGet(url % pageNumber)
+            page = self.do_get(url % pageNumber)
             page = page.decode('utf-8')
             if not page:
-                self.printMsg("下载结束")
-                self.processExit()
-            nameStart = page.find(u"名前 /")
+                self.print_msg("涓嬭浇缁撴潫")
+                self.process_exit()
+            nameStart = page.find(u"鍚嶅墠 /")
             nameStop = page.find("(", nameStart)
             name = page[nameStart + 4:nameStop].replace(" ", "").replace("\n", "").encode('GBK')
             print nameStart,nameStop,name
-            self.trace("页面地址:" + url % pageNumber)
-            self.printMsg("名字：" + name)
+            self.trace("椤甸潰鍦板潃:" + url % pageNumber)
+            self.print_msg("鍚嶅瓧锛�" + name)
             imagePath = self.imageDownloadPath + "\\" + ("%02d" % pageNumber) + " " + name
             if os.path.exists(imagePath):
                 shutil.rmtree(imagePath, True)
             if not self.createDir(imagePath):
-                self.printErrorMsg("创建图片下载目录：" + imagePath + " 失败，程序结束！")
-                self.processExit()
+                self.print_error_msg("鍒涘缓鍥剧墖涓嬭浇鐩綍锛�" + imagePath + " 澶辫触锛岀▼搴忕粨鏉燂紒")
+                self.process_exit()
             imageCount = 1
             if page == False:
                 break
@@ -141,14 +136,14 @@ class twintail(common.Tool):
             while imageStart != -1:
                 imageStop = page.find("</span>", imageStart)
                 imageUrlPath = page[imageStart + 6:imageStop].encode('GBK')
-                imgByte = self.doGet(imageUrl % imageUrlPath)
+                imgByte = self.do_get(imageUrl % imageUrlPath)
                 if imgByte:
                     fileType = (imageUrl % imageUrlPath).split(".")[-1]
                     imageFile = open(imagePath + "\\" + str("%02d" % imageCount) + "." + fileType, "wb")
-                    self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl % imageUrlPath)
+                    self.print_msg("寮�濮嬩笅杞界" + str(imageCount) + "寮犲浘鐗囷細" + imageUrl % imageUrlPath)
                     imageFile.write(imgByte)
                     imageFile.close()
-                    self.printMsg("下载成功")
+                    self.print_msg("涓嬭浇鎴愬姛")
                     imageCount += 1
                 imageStart = page.find("<span>", imageStart + 1)
             allImageCount += imageCount

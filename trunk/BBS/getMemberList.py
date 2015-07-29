@@ -25,32 +25,32 @@ class getMemberList(common.Tool):
                     line = line.split("=")
                     config[line[0]] = line[1]
                 except Exception, e:
-                    self.printMsg(str(e))
+                    self.print_msg(str(e))
                     pass
         # 配置文件获取配置信息
         # 论坛相关
-        self.fid = self.getConfig(config, "FID", 1, 2)
-        self.tid = self.getConfig(config, "TID", 1, 2)
-        self.endPageCount = self.getConfig(config, "END_PAGE_COUNT", 1, 2)
-        self.startPageCount = self.getConfig(config, "START_PAGE_COUNT", 1, 2)
-        self.isCorrectFlag = self.getConfig(config, "CORRECT_FLAG", 1, 0)
-        self.isIncorrectFlag = self.getConfig(config, "INCORRECT_FLAG", 1, 0)
+        self.fid = self.get_config(config, "FID", 1, 2)
+        self.tid = self.get_config(config, "TID", 1, 2)
+        self.endPageCount = self.get_config(config, "END_PAGE_COUNT", 1, 2)
+        self.startPageCount = self.get_config(config, "START_PAGE_COUNT", 1, 2)
+        self.isCorrectFlag = self.get_config(config, "CORRECT_FLAG", 1, 0)
+        self.isIncorrectFlag = self.get_config(config, "INCORRECT_FLAG", 1, 0)
         # 操作系统&浏览器
-        self.browerVersion = self.getConfig(config, "BROWSER_VERSION", 2, 2)
-        self.osVersion = self.getConfig(config, "OS_VERSION", 1, 2)
+        self.browerVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
+        self.osVersion = self.get_config(config, "OS_VERSION", 1, 2)
         # cookie
-        self.isAutoGetCookie = self.getConfig(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        self.isAutoGetCookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
         if self.isAutoGetCookie == 0:
-            self.cookiePath = self.getConfig(config, "COOKIE_PATH", "", 0)
+            self.cookiePath = self.get_config(config, "COOKIE_PATH", "", 0)
         else:
-            self.cookiePath = self.getDefaultBrowserCookiePath(self.osVersion, self.browerVersion)
-        self.printMsg("配置文件读取完成")
+            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browerVersion)
+        self.print_msg("配置文件读取完成")
         
     def main(self):
         # 设置系统cookies
-        if not self.cookie(self.cookiePath, self.browerVersion):
-            self.printMsg("导入浏览器cookies失败，程序结束！")
-            self.processExit() 
+        if not self.set_cookie(self.cookiePath, self.browerVersion):
+            self.print_msg("导入浏览器cookies失败，程序结束！")
+            self.process_exit()
         url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"  # 帖子地址
         self.ipUrl = "http://club.snh48.com/forum.php?mod=topicadmin&action=getip&fid=%s&tid=%s&pid=%s"  # ip查询地址
         floor = 1
@@ -62,7 +62,7 @@ class getMemberList(common.Tool):
         resultFile.write("楼层\tuid\t用户名\t是否正确\tip\t是否实名\t其他备注\n")
         page = True
         while page:
-            page = self.doGet(url % (self.tid, pageCount)).decode('utf-8')
+            page = self.do_get(url % (self.tid, pageCount)).decode('utf-8')
             index = page.find('<div class="authi"><a href="home.php?mod=space&amp;uid=')
             while index != -1:
                 # 楼层
@@ -118,7 +118,7 @@ class getMemberList(common.Tool):
                 else:
                     pidStart = page.find('<div id="userinfo', index) 
                     pid = page[pidStart + len('<div id="userinfo'):page.find('_', pidStart)]
-                    ipPage = self.doGet(self.ipUrl % (self.fid, self.tid, pid))
+                    ipPage = self.do_get(self.ipUrl % (self.fid, self.tid, pid))
                     ip = ipPage[ipPage.find("<b>") + 3:ipPage.find("</b>")]
                     ip2 = ".".join(ip.split(".")[:2])
                 # 检查是否二次回答
@@ -146,7 +146,7 @@ class getMemberList(common.Tool):
             if pageCount > self.endPageCount:
                 break
                     
-        self.printMsg("统计结束")
+        self.print_msg("统计结束")
           
 if __name__ == '__main__':
     getMemberList().main()

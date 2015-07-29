@@ -19,36 +19,36 @@ class fkoji(common.Tool):
     def trace(self, msg):
         super(fkoji, self).trace(msg, self.isShowError, self.traceLogPath)
     
-    def printErrorMsg(self, msg):
-        super(fkoji, self).printErrorMsg(msg, self.isShowError, self.errorLogPath)
+    def print_error_msg(self, msg):
+        super(fkoji, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
         
-    def printStepMsg(self, msg):
-        super(fkoji, self).printStepMsg(msg, self.isShowError, self.stepLogPath)
+    def print_step_msg(self, msg):
+        super(fkoji, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
          
     def __init__(self):
-        config = self.analyzeConfig( os.getcwd() + "\\..\\common\\config.ini")
+        config = self.analyze_config( os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
-        self.isLog = self.getConfig(config, "IS_LOG", 1, 2)
-        self.isShowError = self.getConfig(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.getConfig(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.getConfig(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.getConfig(config, "IS_SORT", 1, 2)
-        self.getImagePageCount = self.getConfig(config, "GET_IMAGE_PAGE_COUNT", 1, 2)
+        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
+        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
+        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
+        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
+        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
+        self.getImagePageCount = self.get_config(config, "GET_IMAGE_PAGE_COUNT", 1, 2)
         # 代理
-        self.isProxy = self.getConfig(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.getConfig(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.getConfig(config, "PROXY_PORT", "8087", 0)
+        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
+        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
         # 文件路径
-        self.errorLogPath = self.getConfig(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
         if self.isLog == 0:
             self.traceLogPath = ""
             self.stepLogPath = ""
         else:
-            self.traceLogPath = self.getConfig(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.getConfig(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.getConfig(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.getConfig(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.printMsg("配置文件读取完成")
+            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+        self.print_msg("配置文件读取完成")
 
     def main(self):
         startTime = time.time()
@@ -56,34 +56,34 @@ class fkoji(common.Tool):
         # 日志文件保存目录
         if self.isLog == 1:
             stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.makeDir(stepLogDir, 0):
-                self.printErrorMsg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(stepLogDir, 0):
+                self.print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+                self.process_exit()
             traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.makeDir(traceLogDir, 0):
-                self.printErrorMsg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(traceLogDir, 0):
+                self.print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+                self.process_exit()
         errorLogDir = os.path.dirname(self.errorLogPath)
-        if not self.makeDir(errorLogDir, 0):
-            self.printErrorMsg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
-            self.processExit()
+        if not self.make_dir(errorLogDir, 0):
+            self.print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+            self.process_exit()
 
          # 图片保存目录
-        self.printStepMsg("创建图片根目录：" + self.imageDownloadPath)
-        if not self.makeDir(self.imageDownloadPath, 2):
-            self.printErrorMsg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
-            self.processExit()
+        self.print_step_msg("创建图片根目录：" + self.imageDownloadPath)
+        if not self.make_dir(self.imageDownloadPath, 2):
+            self.print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+            self.process_exit()
 
         # 图片下载临时目录
         if self.isSort == 1:
-            self.printStepMsg("创建图片下载目录：" + self.imageTempPath)
-            if not self.makeDir(self.imageTempPath, 2):
-                self.printErrorMsg("创建图片下载目录：" + self.imageTempPath + " 失败，程序结束！")
-                self.processExit()
+            self.print_step_msg("创建图片下载目录：" + self.imageTempPath)
+            if not self.make_dir(self.imageTempPath, 2):
+                self.print_error_msg("创建图片下载目录：" + self.imageTempPath + " 失败，程序结束！")
+                self.process_exit()
 
         # 设置代理
         if self.isProxy == 1:
-            self.proxy(self.proxyIp, self.proxyPort, "http")
+            self.set_proxy(self.proxyIp, self.proxyPort, "http")
 
         # 寻找fkoji.save，如果没有结束进程
         saveFilePath = "fkoji.save"
@@ -124,7 +124,7 @@ class fkoji(common.Tool):
                 break
             indexUrl = url % str(pageIndex)
             self.trace("网页地址：" + indexUrl)
-            indexPage = self.doGet(indexUrl)
+            indexPage = self.do_get(indexUrl)
             indexPage = BeautifulSoup.BeautifulSoup(indexPage)
      
             photoList = indexPage.body.findAll("div", "photo")
@@ -161,37 +161,37 @@ class fkoji(common.Tool):
                         if fileType.find('/') != -1:
                             fileType = 'jpg'
                         imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "_" + str(userId) + "." + fileType, "wb")
-                        self.printMsg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
-                        imgByte = self.doGet(imageUrl)
+                        self.print_step_msg("开始下载第" + str(imageCount) + "张图片：" + imageUrl)
+                        imgByte = self.do_get(imageUrl)
                         if imgByte:
                             imageFile.write(imgByte)
-                            self.printMsg("下载成功")
+                            self.print_step_msg("下载成功")
                         else:
-                            self.printErrorMsg("获取图片" + str(imageCount) + "信息失败：" + imageUrl)
+                            self.print_error_msg("获取图片" + str(imageCount) + "信息失败：" + imageUrl)
                         imageFile.close()
                         imageCount += 1
                 if isOver:
                     break
             pageIndex += 1   
-        self.printStepMsg("下载完毕")
+        self.print_step_msg("下载完毕")
 
         # 排序复制到保存目录
         if self.isSort == 1:
             isCheckOk = False
             while not isCheckOk:
                 # 等待手动检测所有图片结束
-                input = raw_input(self.getTime() + " 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
+                input = raw_input(self.get_time() + " 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
                 try:
                     input = input.lower()
                     if input in ["y", "yes"]:
                         isCheckOk = True
                     elif input in ["n", "no"]:
-                        self.processExit()
+                        self.process_exit()
                 except:
                     pass
-            if not self.makeDir(self.imageDownloadPath + "\\all", 1):
-                self.printErrorMsg("创建目录：" + self.imageDownloadPath + "\\all" + " 失败，程序结束！")
-                self.processExit()
+            if not self.make_dir(self.imageDownloadPath + "\\all", 1):
+                self.print_error_msg("创建目录：" + self.imageDownloadPath + "\\all" + " 失败，程序结束！")
+                self.process_exit()
 
             for fileName in sorted(os.listdir(self.imageTempPath), reverse=True):
                 imageStartIndex += 1
@@ -200,26 +200,26 @@ class fkoji(common.Tool):
                 fileType = fileNameList[-1]
                 userId = "_".join(".".join(fileNameList[:-1]).split("_")[1:])
                 # 所有
-                self.copyFiles(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
+                self.copy_files(imagePath, self.imageDownloadPath + "\\all\\" + str("%05d" % imageStartIndex) + "_" + userId + "." + fileType)
                 # 单个
                 eachUserPath = self.imageDownloadPath + "\\" + userId
                 if not os.path.exists(eachUserPath):
-                    if not self.makeDir(eachUserPath, 1):
-                        self.printErrorMsg("创建目录：" + eachUserPath + " 失败，程序结束！")
-                        self.processExit()
+                    if not self.make_dir(eachUserPath, 1):
+                        self.print_error_msg("创建目录：" + eachUserPath + " 失败，程序结束！")
+                        self.process_exit()
 
                 if userIdList.has_key(userId):
                     userIdList[userId] = int(userIdList[userId]) + 1
                 else:
                     userIdList[userId] = 1
-                self.copyFiles(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
-            self.printStepMsg("图片从下载目录移动到保存目录成功")
+                self.copy_files(imagePath, eachUserPath + "\\" + str("%05d" % userIdList[userId]) + "." + fileType)
+            self.print_step_msg("图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.imageTempPath, True)
             
         # 保存新的存档文件
         newSaveFilePath = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self.printStepMsg("保存新存档文件: " + newSaveFilePath)
+        self.print_step_msg("保存新存档文件: " + newSaveFilePath)
         newSaveFile = open(newSaveFilePath, "w")
         newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl + "\n")
         tempList = []
@@ -230,7 +230,7 @@ class fkoji(common.Tool):
         newSaveFile.write(newUserIdListString)
         newSaveFile.close()
         stopTime = time.time()
-        self.printStepMsg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(imageCount - 1) + "张")
+        self.print_step_msg("成功下载最新图片，耗时" + str(int(stopTime - startTime)) + "秒，共计图片" + str(imageCount - 1) + "张")
 
 if __name__ == "__main__":
     fkoji().main()
