@@ -78,16 +78,16 @@ class Tool(object):
         elif browser_type == 2:
             if os_version == 1:
                 defaultBrowserPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-                for dirName in os.listdir(defaultBrowserPath):
-                    if os.path.isdir(defaultBrowserPath + "\\" + dirName):
-                        if os.path.exists(defaultBrowserPath + "\\" + dirName + "\\cookies.sqlite"):
-                            return defaultBrowserPath + "\\" + dirName + "\\"
+                for dir_name in os.listdir(defaultBrowserPath):
+                    if os.path.isdir(defaultBrowserPath + "\\" + dir_name):
+                        if os.path.exists(defaultBrowserPath + "\\" + dir_name + "\\cookies.sqlite"):
+                            return defaultBrowserPath + "\\" + dir_name + "\\"
             elif os_version == 2:
                 defaultBrowserPath = "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-                for dirName in os.listdir(defaultBrowserPath):
-                    if os.path.isdir(defaultBrowserPath + "\\" + dirName):
-                        if os.path.exists(defaultBrowserPath + "\\" + dirName + "\\cookies.sqlite"):
-                            return defaultBrowserPath + "\\" + dirName + "\\"                
+                for dir_name in os.listdir(defaultBrowserPath):
+                    if os.path.isdir(defaultBrowserPath + "\\" + dir_name):
+                        if os.path.exists(defaultBrowserPath + "\\" + dir_name + "\\cookies.sqlite"):
+                            return defaultBrowserPath + "\\" + dir_name + "\\"
         elif browser_type == 3:
             if os_version == 1:
                 return "C:\\Users\%s\\AppData\\Local\\Google\\Chrome\\User Data\\Default" % (getpass.getuser())
@@ -112,13 +112,13 @@ class Tool(object):
         s = cStringIO.StringIO()
         s.write("# Netscape HTTP Cookie File\n")
         if browser_type == 1:
-            for cookieName in os.listdir(filePath):
-                if cookieName.find(".txt") == -1:
+            for cookie_name in os.listdir(filePath):
+                if cookie_name.find(".txt") == -1:
                     continue
-                cookieFile = open(filePath + "\\" + cookieName, 'r')
-                cookieInfo = cookieFile.read()
+                cookieFile = open(filePath + "\\" + cookie_name, 'r')
+                cookie_info = cookieFile.read()
                 cookieFile.close()
-                for cookies in cookieInfo.split("*"):
+                for cookies in cookie_info.split("*"):
                     cookieList = cookies.strip("\n").split("\n")
                     if len(cookieList) >= 8:
                         domain = cookieList[2].split("/")[0]
@@ -133,14 +133,14 @@ class Tool(object):
             con = sqlite.connect(filePath + "\\cookies.sqlite")
             cur = con.cursor()
             cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
-            for cookieInfo in cur.fetchall():
-                domain = cookieInfo[0]
-                domainSpecified = ftstr[cookieInfo[0].startswith('.')]
-                path = cookieInfo[1]
-                secure = ftstr[cookieInfo[2]]
-                expires = cookieInfo[3]
-                name = cookieInfo[4]
-                value = cookieInfo[5]
+            for cookie_info in cur.fetchall():
+                domain = cookie_info[0]
+                domainSpecified = ftstr[cookie_info[0].startswith('.')]
+                path = cookie_info[1]
+                secure = ftstr[cookie_info[2]]
+                expires = cookie_info[3]
+                name = cookie_info[4]
+                value = cookie_info[5]
 #                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
                 try:
                     s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
@@ -150,14 +150,14 @@ class Tool(object):
             con = sqlite.connect(filePath + "\\Cookies")
             cur = con.cursor()
             cur.execute("select host_key, path, secure, expires_utc, name, value from cookies")
-            for cookieInfo in cur.fetchall():
-                domain = cookieInfo[0]
-                domainSpecified = ftstr[cookieInfo[0].startswith('.')]
-                path = cookieInfo[1]
-                secure = ftstr[cookieInfo[2]]
-                expires = cookieInfo[3]
-                name = cookieInfo[4]
-                value = cookieInfo[5]
+            for cookie_info in cur.fetchall():
+                domain = cookie_info[0]
+                domainSpecified = ftstr[cookie_info[0].startswith('.')]
+                path = cookie_info[1]
+                secure = ftstr[cookie_info[2]]
+                expires = cookie_info[3]
+                name = cookie_info[4]
+                value = cookie_info[5]
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
         s.seek(0)
         cookieJar = cookielib.MozillaCookieJar()
@@ -263,14 +263,14 @@ class Tool(object):
         return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
 
     # 过滤一些文件夹名不支持的字符串
-    def filterPath(self, file_path):
-        # 盘符
-        if file_path[1] == ':':
-            title = file_path[:2] + file_path[2:].replace(':', '')
-        filter_list = ['*', '?', '"', '<', '>', '|']
-        for filter_char in filter_list:
-            file_path.replace(filter_char, '')
-        return file_path
+    # def filterPath(self, file_path):
+    #     # 盘符
+    #     if file_path[1] == ':':
+    #         title = file_path[:2] + file_path[2:].replace(':', '')
+    #     filter_list = ['*', '?', '"', '<', '>', '|']
+    #     for filter_char in filter_list:
+    #         file_path.replace(filter_char, '')
+    #     return file_path
 
     # 文件路径编码转换
     def changePathEncoding(self, path):
@@ -293,7 +293,6 @@ class Tool(object):
 
     # image_path 包括路径和文件名
     def saveImage(self, image_url, image_path):
-        image_path = self.filterPath(image_path)
         image_path = self.changePathEncoding(image_path)
         image_byte = self.doGet(image_url)
         if image_byte:
@@ -306,8 +305,8 @@ class Tool(object):
     # 删除目录下所有文件（保留目录）
     def removeDirFiles(self, dir_path):
         dir_path = self.changePathEncoding(dir_path)
-        for fileName in os.listdir(dir_path):
-            target_file = os.path.join(dir_path, fileName)
+        for file_name in os.listdir(dir_path):
+            target_file = os.path.join(dir_path, file_name)
             if os.path.isfile(target_file):
                 os.remove(target_file)
 
@@ -316,7 +315,6 @@ class Tool(object):
     # create_mode 1 : 存在则删除并创建
     # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
     def makeDir(self, dir_path, create_mode):
-        dir_path = self.filterPath(dir_path)
         dir_path = self.changePathEncoding(dir_path)
         if create_mode != 0 and create_mode != 1 and create_mode != 2:
             create_mode = 0
@@ -374,10 +372,10 @@ class Tool(object):
             count += 1
         return False
 
-    def copyFiles(self, source_path, dest_path):
+    def copyFiles(self, source_path, destination_path):
         source_path = self.changePathEncoding(source_path)
-        dest_path = self.changePathEncoding(dest_path)
-        shutil.copyfile(source_path, dest_path)
+        destination_path = self.changePathEncoding(destination_path)
+        shutil.copyfile(source_path, destination_path)
 
     # 结束进程
     def processExit(self):

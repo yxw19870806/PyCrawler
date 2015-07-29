@@ -181,7 +181,11 @@ class Bcy(common.Tool):
                 for data in photoAlbumPageData:
                     try:
                         rpId = data['rp_id']
-                        title = data['title'].encode('utf-8').replace('\\', '').replace('/', '').replace('.', '').strip()
+                        title = data['title'].encode('utf-8').strip()
+                        # 过滤一些无法作为文件夹路径的符号
+                        filter_list = [':', '\\', '/', '.', '*', '?', '"', '<', '>', '|']
+                        for filter_char in filter_list:
+                            title.replace(filter_char, '')
                     except:
                         self.printErrorMsg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(userId))
                         break
