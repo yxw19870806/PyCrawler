@@ -6,6 +6,7 @@ Created on 2013-7-16
 '''
 
 import os
+import shutil
 import sys
 import time
 
@@ -262,17 +263,14 @@ class Tool(object):
         return time.strftime('%m-%d %H:%M:%S', time.localtime(time.time()))
 
     # 过滤一些文件夹名不支持的字符串
-    def filterPath(self, title):
+    def filterPath(self, file_path):
         # 盘符
-        if title[1] == ':':
-            title = title[:2] + title[2:].replace(':', '')
-        title = title.replace('*', '')
-        title = title.replace('?', '')
-        title = title.replace('"', '')
-        title = title.replace('<', '')
-        title = title.replace('>', '')
-        title = title.replace('|', '')
-        return title
+        if file_path[1] == ':':
+            title = file_path[:2] + file_path[2:].replace(':', '')
+        filter_list = ['*', '?', '"', '<', '>', '|']
+        for filter_char in filter_list:
+            file_path.replace(filter_char, '')
+        return file_path
 
     # 文件路径编码转换
     def changePathEncoding(self, path):
@@ -318,7 +316,6 @@ class Tool(object):
     # create_mode 1 : 存在则删除并创建
     # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
     def makeDir(self, dir_path, create_mode):
-        import shutil
         dir_path = self.filterPath(dir_path)
         dir_path = self.changePathEncoding(dir_path)
         if create_mode != 0 and create_mode != 1 and create_mode != 2:
@@ -378,7 +375,6 @@ class Tool(object):
         return False
 
     def copyFiles(self, source_path, dest_path):
-        import shutil
         source_path = self.changePathEncoding(source_path)
         dest_path = self.changePathEncoding(dest_path)
         shutil.copyfile(source_path, dest_path)
