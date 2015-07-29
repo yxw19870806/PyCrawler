@@ -255,7 +255,7 @@ class Shinoda(common.Tool):
                 imageStartIndex += 1
                 imagePath = self.imageTempPath + "\\" + fileName
                 fileType = fileName.split(".")[-1]
-                shutil.copyfile(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
+                self.copyFiles(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
                 allImageCount += 1
             self.printStepMsg(u"图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
