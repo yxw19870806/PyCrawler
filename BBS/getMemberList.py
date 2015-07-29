@@ -36,19 +36,19 @@ class getMemberList(common.Tool):
         self.isCorrectFlag = self.get_config(config, "CORRECT_FLAG", 1, 0)
         self.isIncorrectFlag = self.get_config(config, "INCORRECT_FLAG", 1, 0)
         # 操作系统&浏览器
-        self.browerVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
+        self.browserVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.get_config(config, "OS_VERSION", 1, 2)
         # cookie
         self.isAutoGetCookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
         if self.isAutoGetCookie == 0:
             self.cookiePath = self.get_config(config, "COOKIE_PATH", "", 0)
         else:
-            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browerVersion)
+            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browserVersion)
         self.print_msg("配置文件读取完成")
         
     def main(self):
         # 设置系统cookies
-        if not self.set_cookie(self.cookiePath, self.browerVersion):
+        if not self.set_cookie(self.cookiePath, self.browserVersion):
             self.print_msg("导入浏览器cookies失败，程序结束！")
             self.process_exit()
         url = "http://club.snh48.com/forum.php?mod=viewthread&tid=%s&extra=&page=%s"  # 帖子地址

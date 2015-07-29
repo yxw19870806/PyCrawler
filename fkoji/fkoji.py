@@ -55,17 +55,17 @@ class fkoji(common.Tool):
         # 判断各种目录是否存在
         # 日志文件保存目录
         if self.isLog == 1:
-            stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.make_dir(stepLogDir, 0):
-                self._print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+            step_log_dir = os.path.dirname(self.stepLogPath)
+            if not self.make_dir(step_log_dir, 0):
+                self._print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！")
                 self.process_exit()
-            traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.make_dir(traceLogDir, 0):
-                self._print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+            trace_log_dir = os.path.dirname(self.traceLogPath)
+            if not self.make_dir(trace_log_dir, 0):
+                self._print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！")
                 self.process_exit()
-        errorLogDir = os.path.dirname(self.errorLogPath)
-        if not self.make_dir(errorLogDir, 0):
-            self._print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+        error_log_dir = os.path.dirname(self.errorLogPath)
+        if not self.make_dir(error_log_dir, 0):
+            self._print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！")
             self.process_exit()
 
          # 图片保存目录
