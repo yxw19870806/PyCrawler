@@ -49,14 +49,14 @@ class Bcy(common.Tool):
         self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
         self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
         # 操作系统&浏览器
-        self.browerVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
+        self.browserVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
         self.osVersion = self.get_config(config, "OS_VERSION", 1, 2)
         # cookie
         self.isAutoGetCookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
         if self.isAutoGetCookie == 0:
             self.cookiePath = self.get_config(config, "COOKIE_PATH", "", 0)
         else:
-            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browerVersion)
+            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browserVersion)
         self.print_msg("配置文件读取完成")
 
     def main(self):
@@ -64,17 +64,17 @@ class Bcy(common.Tool):
         # 判断各种目录是否存在
         # 日志文件保存目录
         if self.isLog == 1:
-            stepLogDir = os.path.dirname(self.stepLogPath)
-            if not self.make_dir(stepLogDir, 0):
-                self._print_error_msg("创建步骤日志目录：" + stepLogDir + " 失败，程序结束！")
+            step_log_dir = os.path.dirname(self.stepLogPath)
+            if not self.make_dir(step_log_dir, 0):
+                self._print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！")
                 self.process_exit()
-            traceLogDir = os.path.dirname(self.traceLogPath)
-            if not self.make_dir(traceLogDir, 0):
-                self._print_error_msg("创建调试日志目录：" + traceLogDir + " 失败，程序结束！")
+            trace_log_dir = os.path.dirname(self.traceLogPath)
+            if not self.make_dir(trace_log_dir, 0):
+                self._print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！")
                 self.process_exit()
-        errorLogDir = os.path.dirname(self.errorLogPath)
-        if not self.make_dir(errorLogDir, 0):
-            self._print_error_msg("创建错误日志目录：" + errorLogDir + " 失败，程序结束！")
+        error_log_dir = os.path.dirname(self.errorLogPath)
+        if not self.make_dir(error_log_dir, 0):
+            self._print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！")
             self.process_exit()
 
         # 图片保存目录
@@ -88,7 +88,7 @@ class Bcy(common.Tool):
             self.set_proxy(self.proxyIp, self.proxyPort, "https")
 
         # 设置系统cookies (fire fox)
-        if not self.set_cookie(self.cookiePath, self.browerVersion):
+        if not self.set_cookie(self.cookiePath, self.browserVersion):
             self._print_error_msg("导入浏览器cookies失败，程序结束！")
             self.process_exit()
 
