@@ -54,7 +54,7 @@ class Weibo(common.Tool):
         return False
 
     def __init__(self):
-        config = self.analyze_config( os.getcwd() + "\\..\\common\\config.ini")
+        config = self.analyze_config(os.getcwd() + "\\..\\common\\config.ini")
         # 每次请求获取的图片数量
         self.IMAGE_COUNT_PER_PAGE = 20
         # 程序配置
