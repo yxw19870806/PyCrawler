@@ -1,4 +1,4 @@
-aoi_sola	333	https://pbs.twimg.com/media/CKXjgu4UwAA2Kod.jpg	苍井空
-ichigo_aoi2	1288	https://pbs.twimg.com/media/CKleiHzUcAAHqGX.jpg	青井いちご
+aoi_sola	335	https://pbs.twimg.com/media/CK5wT0RVEAAFH1p.jpg:large	苍井空
+ichigo_aoi2	1295	https://pbs.twimg.com/media/CLLQrYOUcAAdOo6.jpg	青井いちご
 ozawahokkaido	2	https://pbs.twimg.com/media/CEK_V6FUgAAMKmH.jpg:large	小泽玛丽亚
-riku_minato	1079	https://pbs.twimg.com/media/CKqNlIGUMAAU_Gp.jpg:large	凑莉久
+riku_minato	1105	https://pbs.twimg.com/media/CLP9uwdVAAQj90H.jpg:large	凑莉久
