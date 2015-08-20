@@ -17,7 +17,7 @@ def getCount(path):
     tempFile.close()
     for line in lines:
         line = line.split("\t")
-        imagePath = imageRootPath + line[6].replace("\n", "") + "\\" + line[1]
+        imagePath = imageRootPath + line[4].replace("\n", "") + "\\" + line[1]
         imagePath = imagePath.decode('UTF-8').encode('GBK')
         if os.path.exists(imagePath):
             count1 = len(os.listdir(imagePath))
