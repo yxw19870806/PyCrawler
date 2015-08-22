@@ -382,5 +382,5 @@ class Tool(object):
         sys.exit()
 
     # 关机
-    def shutdown(self, widget, data=None):
-        os.system("shutdown -h now")
+    def shutdown(self):
+        os.system("shutdown /h now")
