@@ -59,7 +59,7 @@ class Tool(object):
                     traceback.print_exc()
             count += 1
             if count > 50:
-                self._print_error_msg("无法访问页面：" + url)
+                self.print_error_msg("无法访问页面：" + url)
                 return False
 
     # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
