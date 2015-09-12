@@ -77,7 +77,7 @@ class Instagram(common.Tool):
 
         # 设置代理
         if self.isProxy == 1 or self.isProxy == 2:
-            self.set_proxy(self.proxyIp, self.proxyPort, "http")
+            self.set_proxy(self.proxyIp, self.proxyPort, "https")
 
         # 寻找idlist，如果没有结束进程
         userIdList = {}
@@ -142,9 +142,9 @@ class Instagram(common.Tool):
                 if isPass:
                     break
                 if imageId == "":
-                    photoAlbumUrl = "http://instagram.com/%s/media" % userAccount
+                    photoAlbumUrl = "https://instagram.com/%s/media" % userAccount
                 else:
-                    photoAlbumUrl = "http://instagram.com/%s/media?max_id=%s" % (userAccount, imageId)
+                    photoAlbumUrl = "https://instagram.com/%s/media?max_id=%s" % (userAccount, imageId)
                 photoAlbumPage = self.do_get(photoAlbumUrl)
                 if not photoAlbumPage:
                     self._print_error_msg("无法获取相册信息: " + photoAlbumUrl)
