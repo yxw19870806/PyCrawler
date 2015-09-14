@@ -116,14 +116,8 @@ class GooglePlus(common.Tool):
                 newUserIdList[newUserId].append("")
             else:
                 newUserIdList[newUserId][3] = ""
-            # video count
-            if len(newUserIdList[newUserId]) < 5:
-                newUserIdList[newUserId].append("0")
-            # video token
-            if len(newUserIdList[newUserId]) < 6:
-                newUserIdList[newUserId].append("")
             # 处理成员队伍信息
-            if len(newUserIdList[newUserId]) < 7:
+            if len(newUserIdList[newUserId]) < 5:
                 newUserIdList[newUserId].append("")
 
         totalImageCount = 0
@@ -241,7 +235,7 @@ class GooglePlus(common.Tool):
                 imageList = sorted(os.listdir(imagePath), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
-                    destPath = self.imageDownloadPath + "\\" + newUserIdList[userId][6] + "\\" + userName
+                    destPath = self.imageDownloadPath + "\\" + newUserIdList[userId][4] + "\\" + userName
                     if not self.make_dir(destPath, 1):
                         self._print_error_msg("创建图片子目录： " + destPath + " 失败，程序结束！")
                         self.process_exit()
