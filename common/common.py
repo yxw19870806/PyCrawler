@@ -50,15 +50,18 @@ class Tool(object):
                 # 连接被关闭，等待1分钟后再尝试
                 elif str(e).find("[Errno 10053] ") != -1:
                     self.print_msg("访问页面超时，重新连接请稍后")
-                    time.sleep(60)
+                    time.sleep(30)
                 # 超时
                 elif str(e).find("timed out") != -1:
                     self.print_msg("访问页面超时，重新连接请稍后")
+                # 404
+                elif str(e).find("HTTP Error 404: Not Found") != -1:
+                    return False
                 else:
                     self.print_msg(str(e))
                     traceback.print_exc()
             count += 1
-            if count > 50:
+            if count > 20:
                 self.print_error_msg("无法访问页面：" + url)
                 return False
 
