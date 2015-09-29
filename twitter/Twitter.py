@@ -135,7 +135,7 @@ class Twitter(common.Tool):
                     break
                 if not page['has_more_items']:
                     is_last_page = True
-                if not page.has_key("items_html"):
+                if page.has_key("items_html") is False:
                     self._print_error_msg("在JSON数据：" + str(page) + " 中没有找到'items_html'字段, account: " + user_account)
                     break
 
