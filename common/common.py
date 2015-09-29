@@ -51,6 +51,7 @@ class Tool(object):
 
         self.is_sort = self.get_config(config, "IS_SORT", 1, 2)
         self.get_image_count = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
+        self.get_image_page_count = self.get_config(config, "GET_IMAGE_PAGE_COUNT", 0, 2)
         self.ge_image_url_count = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
 
         self.user_id_list_file_path = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
@@ -99,10 +100,10 @@ class Tool(object):
             except Exception, e:
                 # 代理无法访问
                 if str(e).find("[Errno 10061]") != -1:
-                    input = raw_input("无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
-                    if input in ["y", "yes"]:
+                    input_str = raw_input("无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
+                    if input_str in ["y", "yes"]:
                         pass
-                    elif input in ["n", "no"]:
+                    elif input_str in ["n", "no"]:
                         sys.exit()
                 # 连接被关闭，等待1分钟后再尝试
                 elif str(e).find("[Errno 10053] ") != -1:
@@ -392,17 +393,17 @@ class Tool(object):
                 if os.path.isdir(dir_path) and not os.listdir(dir_path):
                     pass
                 else:
-                    isDelete = False
-                    while not isDelete:
-                        input = raw_input(self.get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    is_delete = False
+                    while not is_delete:
+                        input_str = raw_input(self.get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                         try:
-                            input = input.lower()
-                            if input in ["y", "yes"]:
-                                isDelete = True
-                            elif input in ["n", "no"]:
+                            input_str = input_str.lower()
+                            if input_str in ["y", "yes"]:
+                                is_delete = True
+                            elif input_str in ["n", "no"]:
                                 self.process_exit()
                         except Exception, e:
-                            self._print_error_msg(str(e))
+                            self.print_error_msg(str(e))
                             pass
 
             # 删除原本路劲
