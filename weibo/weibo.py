@@ -244,9 +244,9 @@ class Weibo(common.Tool):
             
             # 排序
             if self.is_sort == 1:
-                imageList = sorted(os.listdir(image_path), reverse=True)
+                image_list = sorted(os.listdir(image_path), reverse=True)
                 # 判断排序目标文件夹是否存在
-                if len(imageList) >= 1:
+                if len(image_list) >= 1:
                     destination_path = self.image_download_path + "\\" + user_name
                     if not self.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
@@ -257,9 +257,9 @@ class Weibo(common.Tool):
                         count = int(user_id_list[user_id][2]) + 1
                     else:
                         count = 1
-                    for fileName in imageList:
-                        file_type = fileName.split(".")[1]
-                        self.copy_files(image_path + "\\" + fileName, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                    for file_name in image_list:
+                        file_type = file_name.split(".")[1]
+                        self.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹

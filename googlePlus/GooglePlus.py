@@ -205,9 +205,9 @@ class GooglePlus(common.Tool):
                 image_list = sorted(os.listdir(image_path), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
-                    dest_path = self.image_download_path + "\\" + new_user_id_list[user_id][4] + "\\" + user_name
-                    if not self.make_dir(dest_path, 1):
-                        self._print_error_msg("创建图片子目录： " + dest_path + " 失败，程序结束！")
+                    destination_path = self.image_download_path + "\\" + new_user_id_list[user_id][4] + "\\" + user_name
+                    if not self.make_dir(destination_path, 1):
+                        self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
                         self.process_exit()
 
                     # 倒叙排列
@@ -217,7 +217,7 @@ class GooglePlus(common.Tool):
                         count = 1
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
-                        self.copy_files(image_path + "\\" + file_name, dest_path + "\\" + str("%04d" % count) + "." + file_type)
+                        self.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
