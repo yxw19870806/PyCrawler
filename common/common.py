@@ -12,42 +12,64 @@ import time
 
 IS_SET_TIMEOUT = False
 
+
 class Tool(object):
 
     def __init__(self):
         config = self.analyze_config(os.getcwd() + "\\..\\common\\config.ini")
         # 程序配置
-        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
-        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
-        self.getImageUrlCount = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
+
+        # 日志
+        self.is_log = self.get_config(config, "IS_LOG", 1, 2)
+        self.is_show_error = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
+        self.is_trace = self.get_config(config, "IS_TRACE", 1, 2)
+        self.is_show_step = self.get_config(config, "IS_SHOW_STEP", 1, 2)
+        if self.is_log == 0:
+            self.trace_log_path = ""
+            self.step_log_path = ""
+        else:
+            self.trace_log_path = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
+            self.step_log_path = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
+            # 日志文件保存目录
+            step_log_dir = os.path.dirname(self.step_log_path)
+            if not self.make_dir(step_log_dir, 0):
+                self.print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！", self.is_show_step, self.step_log_path)
+                self.process_exit()
+            trace_log_dir = os.path.dirname(self.trace_log_path)
+            if not self.make_dir(trace_log_dir, 0):
+                self.print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！", self.is_show_step, self.trace_log_path)
+                self.process_exit()
+        self.error_log_path = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
+        error_log_dir = os.path.dirname(self.error_log_path)
+        if not self.make_dir(error_log_dir, 0):
+            self.print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！", self.is_show_error, self.error_log_path)
+            self.process_exit()
+
+        # 存档
+        self.image_download_path = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
+        self.image_temp_path = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
+
+        self.is_sort = self.get_config(config, "IS_SORT", 1, 2)
+        self.get_image_count = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
+        self.ge_image_url_count = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
+
+        self.user_id_list_file_path = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+
         # 代理
-        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
-        # 文件路径
-        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        if self.isLog == 0:
-            self.traceLogPath = ""
-            self.stepLogPath = ""
-        else:
-            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
+        self.is_proxy = self.get_config(config, "IS_PROXY", 2, 2)
+        self.proxy_ip = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        self.proxy_port = self.get_config(config, "PROXY_PORT", "8087", 0)
+
         # 操作系统&浏览器
-        self.browserVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
-        self.osVersion = self.get_config(config, "OS_VERSION", 1, 2)
+        self.browser_version = self.get_config(config, "BROWSER_VERSION", 2, 2)
+
         # cookie
-        self.isAutoGetCookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
-        if self.isAutoGetCookie == 0:
-            self.cookiePath = self.get_config(config, "COOKIE_PATH", "", 0)
+        is_auto_get_cookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        if is_auto_get_cookie == 0:
+            self.cookie_path = self.get_config(config, "COOKIE_PATH", "", 0)
         else:
-            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browserVersion)
+            os_version = self.get_config(config, "OS_VERSION", 1, 2)
+            self.cookie_path = self.get_default_browser_cookie_path(os_version, self.browser_version)
 
     # http请求
     def do_get(self, url, post_data=None):

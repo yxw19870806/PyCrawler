@@ -15,67 +15,24 @@ import time
 
 from common import common, json
 
+
 class Bcy(common.Tool):
-    
+
+    def __init__(self):
+        super(Bcy, self).__init__()
+        self.print_msg("配置文件读取完成")
+
     def _trace(self, msg):
-        super(Bcy, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(Bcy, self).trace(msg, self.is_show_error, self.traceLogPath)
     
     def _print_error_msg(self, msg):
-        super(Bcy, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
+        super(Bcy, self).print_error_msg(msg, self.is_show_error, self.errorLogPath)
         
     def _print_step_msg(self, msg):
-        super(Bcy, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
-    
-    def __init__(self):
-        config = self.analyze_config( os.getcwd() + "\\..\\common\\config.ini")
-        # 程序配置
-        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
-        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
-
-        # 代理
-        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
-        # 文件路径
-        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        if self.isLog == 0:
-            self.traceLogPath = ""
-            self.stepLogPath = ""
-        else:
-            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        # 操作系统&浏览器
-        self.browserVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
-        self.osVersion = self.get_config(config, "OS_VERSION", 1, 2)
-        # cookie
-        self.isAutoGetCookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
-        if self.isAutoGetCookie == 0:
-            self.cookiePath = self.get_config(config, "COOKIE_PATH", "", 0)
-        else:
-            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browserVersion)
-        self.print_msg("配置文件读取完成")
+        super(Bcy, self).print_step_msg(msg, self.is_show_error, self.stepLogPath)
 
     def main(self):
         startTime = time.time()
-        # 判断各种目录是否存在
-        # 日志文件保存目录
-        if self.isLog == 1:
-            step_log_dir = os.path.dirname(self.stepLogPath)
-            if not self.make_dir(step_log_dir, 0):
-                self._print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！")
-                self.process_exit()
-            trace_log_dir = os.path.dirname(self.traceLogPath)
-            if not self.make_dir(trace_log_dir, 0):
-                self._print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！")
-                self.process_exit()
-        error_log_dir = os.path.dirname(self.errorLogPath)
-        if not self.make_dir(error_log_dir, 0):
-            self._print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！")
-            self.process_exit()
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.imageDownloadPath)

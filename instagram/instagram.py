@@ -22,33 +22,17 @@ class Instagram(common.Tool):
         self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(Instagram, self).trace(msg, self.isShowError, self.traceLogPath)
+        super(Instagram, self).trace(msg, self.is_show_error, self.traceLogPath)
     
     def _print_error_msg(self, msg):
-        super(Instagram, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
+        super(Instagram, self).print_error_msg(msg, self.is_show_error, self.errorLogPath)
         
     def _print_step_msg(self, msg):
-        super(Instagram, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
+        super(Instagram, self).print_step_msg(msg, self.is_show_error, self.stepLogPath)
 
     def main(self):
         startTime = time.time()
-        # 判断各种目录是否存在
-        # 日志文件保存目录
-        if self.isLog == 1:
-            step_log_dir = os.path.dirname(self.stepLogPath)
-            if not self.make_dir(step_log_dir, 0):
-                self._print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！")
-                self.process_exit()
-            trace_log_dir = os.path.dirname(self.traceLogPath)
-            if not self.make_dir(trace_log_dir, 0):
-                self._print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！")
-                self.process_exit()
-        error_log_dir = os.path.dirname(self.errorLogPath)
-        if not self.make_dir(error_log_dir, 0):
-            self._print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！")
-            self.process_exit()
-
-         # 图片保存目录
+        # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.imageDownloadPath)
         if not self.make_dir(self.imageDownloadPath, 2):
             self._print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")

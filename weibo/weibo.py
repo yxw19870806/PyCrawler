@@ -22,16 +22,18 @@ class Weibo(common.Tool):
 
     def __init__(self):
         super(Weibo, self).__init__()
+        # 每次请求获取的图片数量
+        self.IMAGE_COUNT_PER_PAGE = 20
         self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(Weibo, self).trace(msg, self.isShowError, self.traceLogPath)
-    
+        super(Weibo, self).trace(msg, self.is_show_error, self.trace_log_path)
+
     def _print_error_msg(self, msg):
-        super(Weibo, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
-        
+        super(Weibo, self).print_error_msg(msg, self.is_show_error, self.error_log_path)
+
     def _print_step_msg(self, msg):
-        super(Weibo, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
+        super(Weibo, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
         
     def _visit(self, url):
         temp_page = self.do_get(url)
@@ -59,48 +61,34 @@ class Weibo(common.Tool):
         return False
 
     def main(self, user_id_list_file_path = '', image_download_path = '', image_temp_path = ''):
-        if user_id_list_file_path != '':
-            self.userIdListFilePath = user_id_list_file_path
-        if image_download_path != '':
-            self.imageDownloadPath = image_download_path
-        if image_temp_path != '':
-            self.imageTempPath = image_temp_path
         start_time = time.time()
 
-        # 判断各种目录是否存在
-        # 日志文件保存目录
-        if self.isLog == 1:
-            step_log_dir = os.path.dirname(self.stepLogPath)
-            if not self.make_dir(step_log_dir, 0):
-                self._print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！")
-                self.process_exit()
-            trace_log_dir = os.path.dirname(self.traceLogPath)
-            if not self.make_dir(trace_log_dir, 0):
-                self._print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！")
-                self.process_exit()
-        error_log_dir = os.path.dirname(self.errorLogPath)
-        if not self.make_dir(error_log_dir, 0):
-            self._print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！")
-            self.process_exit()
+        if user_id_list_file_path != '':
+            self.user_id_list_file_path = user_id_list_file_path
+        if image_download_path != '':
+            self.image_download_path = image_download_path
+        if image_temp_path != '':
+            self.image_temp_path = image_temp_path
 
         # 图片保存目录
-        self._print_step_msg("创建图片根目录：" + self.imageDownloadPath)
-        if not self.make_dir(self.imageDownloadPath, 2):
-            self._print_error_msg("创建图片根目录：" + self.imageDownloadPath + " 失败，程序结束！")
+        self._print_step_msg("创建图片根目录：" + self.image_download_path)
+        if not self.make_dir(self.image_download_path, 2):
+            self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
             self.process_exit()
 
         # 设置代理
-        if self.isProxy == 1:
-            self.set_proxy(self.proxyIp, self.proxyPort, "http")
+        if self.is_proxy == 1:
+            self.set_proxy(self.proxy_ip, self.proxy_port, "http")
+
         # 设置系统cookies
-        if not self.set_cookie(self.cookiePath, self.browserVersion):
+        if not self.set_cookie(self.cookie_path, self.browser_version):
             self._print_error_msg("导入浏览器cookies失败，程序结束！")
             self.process_exit()
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
-        if os.path.exists(self.userIdListFilePath):
-            user_id_list_file = open(self.userIdListFilePath, 'r')
+        if os.path.exists(self.user_id_list_file_path):
+            user_id_list_file = open(self.user_id_list_file_path, 'r')
             all_user_list = user_id_list_file.readlines()
             user_id_list_file.close()
             for user_info in all_user_list:
@@ -113,90 +101,90 @@ class Weibo(common.Tool):
                 user_info_list = user_info.split("\t")
                 user_id_list[user_info_list[0]] = user_info_list
         else:
-            self._print_error_msg("用户ID存档文件：" + self.userIdListFilePath + "不存在，程序结束！")
+            self._print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
             self.process_exit()
 
         # 创建临时存档文件
-        new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.userIdListFilePath)[-1]
+        new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, 'w')
         new_user_id_list_file.close()
         # 复制处理存档文件
         new_user_id_list = copy.deepcopy(user_id_list)
-        for newUserId in new_user_id_list:
+        for user_id in new_user_id_list:
             # 如果没有名字，则名字用uid代替
-            if len(new_user_id_list[newUserId]) < 2:
-                new_user_id_list[newUserId].append(new_user_id_list[newUserId][0])
+            if len(new_user_id_list[user_id]) < 2:
+                new_user_id_list[user_id].append(new_user_id_list[user_id][0])
             # 如果没有初始image count，则为0
-            if len(new_user_id_list[newUserId]) < 3:
-                new_user_id_list[newUserId].append("0")
+            if len(new_user_id_list[user_id]) < 3:
+                new_user_id_list[user_id].append("0")
             # 处理上一次image URL
             # 需置空存放本次第一张获取的image URL
-            if len(new_user_id_list[newUserId]) < 4:
-                new_user_id_list[newUserId].append("")
+            if len(new_user_id_list[user_id]) < 4:
+                new_user_id_list[user_id].append("")
             else:
-                new_user_id_list[newUserId][3] = ""
+                new_user_id_list[user_id][3] = ""
             # 处理成员队伍信息
-            if len(new_user_id_list[newUserId]) < 5:
-                new_user_id_list[newUserId].append("")
+            if len(new_user_id_list[user_id]) < 5:
+                new_user_id_list[user_id].append("")
 
-        allImageCount = 0
-        for userId in sorted(user_id_list.keys()):
-            user_name = new_user_id_list[userId][1]
-            self._print_step_msg("UID: " + str(userId) + "，Name: " + user_name)
+        total_image_count = 0
+        for user_id in sorted(user_id_list.keys()):
+            user_name = new_user_id_list[user_id][1]
+            self._print_step_msg("UID: " + str(user_id) + "，Name: " + user_name)
             # 初始化数据
             page_count = 1
             image_count = 1
             is_pass = False
-            if len(user_id_list[userId]) <= 3 or user_id_list[userId][3] == '':
+            if len(user_id_list[user_id]) <= 3 or user_id_list[user_id][3] == '':
                 is_error = False
             else:
                 is_error = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if self.isSort == 1:
-                image_path = self.imageTempPath
+            if self.is_sort == 1:
+                image_path = self.image_temp_path
             else:
-                image_path = self.imageDownloadPath + "\\" + user_name
+                image_path = self.image_download_path + "\\" + user_name
             if not self.make_dir(image_path, 1):
                 self._print_error_msg("创建图片下载目录：" + image_path + " 失败，程序结束！")
                 self.process_exit()
 
             # 日志文件插入信息
             while 1:
-                photo_album_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (userId, self.IMAGE_COUNT_PER_PAGE, page_count)
+                photo_album_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (user_id, self.IMAGE_COUNT_PER_PAGE, page_count)
                 self._trace("相册专辑地址：" + photo_album_url)
                 photo_page_data = self._visit(photo_album_url)
                 self._trace("返回JSON数据：" + photo_page_data)
                 try:
                     page = json.read(photo_page_data)
                 except:
-                    self._print_error_msg("返回信息不是一个JSON数据, user id: " + str(userId))
+                    self._print_error_msg("返回信息不是一个JSON数据, user id: " + str(user_id))
                     break
 
                 # 总的图片数
                 try:
                     total_image_count = page["data"]["total"]
                 except:
-                    self._print_error_msg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(userId))
+                    self._print_error_msg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(user_id))
                     break
 
                 try:
                     photo_list = page["data"]["photo_list"]
                 except:
-                    self._print_error_msg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(userId))
+                    self._print_error_msg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + str(user_id))
                     break
 
                 for image_info in photo_list:
                     if not isinstance(image_info, dict):
-                        self._print_error_msg("JSON数据['photo_list']：" + str(image_info) + " 不是一个字典, user id: " + str(userId))
+                        self._print_error_msg("JSON数据['photo_list']：" + str(image_info) + " 不是一个字典, user id: " + str(user_id))
                         continue
                     if image_info.has_key("pic_name"):
                         # 将第一张image的URL保存到新id list中
-                        if new_user_id_list[userId][3] == "":
-                            new_user_id_list[userId][3] = image_info["pic_name"]
+                        if new_user_id_list[user_id][3] == "":
+                            new_user_id_list[user_id][3] = image_info["pic_name"]
                         # 检查是否已下载到前一次的图片
-                        if len(user_id_list[userId]) >= 4:
-                            if image_info["pic_name"] == user_id_list[userId][3]:
+                        if len(user_id_list[user_id]) >= 4:
+                            if image_info["pic_name"] == user_id_list[user_id][3]:
                                 is_pass = True
                                 is_error = False
                                 break
@@ -232,14 +220,14 @@ class Weibo(common.Tool):
                             else:
                                 try_count += 1
                             if try_count >= 5:
-                                self._print_error_msg("下载图片失败，用户ID：" + str(userId) + ", 第" + str(image_count) +  "张，图片地址：" + image_url)
+                                self._print_error_msg("下载图片失败，用户ID：" + str(user_id) + ", 第" + str(image_count) +  "张，图片地址：" + image_url)
                                 break
                             
                     else:
-                        self._print_error_msg("在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段, user id: " + str(userId))
+                        self._print_error_msg("在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段, user id: " + str(user_id))
                            
                     # 达到配置文件中的下载数量，结束
-                    if len(user_id_list[userId]) >= 4 and user_id_list[userId][3] != '' and self.getImageCount > 0 and image_count > self.getImageCount:
+                    if len(user_id_list[user_id]) >= 4 and user_id_list[user_id][3] != '' and self.get_image_count > 0 and image_count > self.get_image_count:
                         is_pass = True
                         break
                 if is_pass:
@@ -251,22 +239,22 @@ class Weibo(common.Tool):
                     break
             
             self._print_step_msg(user_name + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
-            new_user_id_list[userId][2] = str(int(new_user_id_list[userId][2]) + image_count - 1)
-            allImageCount += image_count - 1
+            new_user_id_list[user_id][2] = str(int(new_user_id_list[user_id][2]) + image_count - 1)
+            total_image_count += image_count - 1
             
             # 排序
-            if self.isSort == 1:
+            if self.is_sort == 1:
                 imageList = sorted(os.listdir(image_path), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(imageList) >= 1:
-                    destination_path = self.imageDownloadPath + "\\" + user_name
+                    destination_path = self.image_download_path + "\\" + user_name
                     if not self.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
                         self.process_exit()
 
                     # 倒叙排列
-                    if len(user_id_list[userId]) >= 3:
-                        count = int(user_id_list[userId][2]) + 1
+                    if len(user_id_list[user_id]) >= 3:
+                        count = int(user_id_list[user_id][2]) + 1
                     else:
                         count = 1
                     for fileName in imageList:
@@ -282,11 +270,11 @@ class Weibo(common.Tool):
                 
             # 保存最后的信息
             new_user_id_list_file = open(new_user_id_list_file_path, 'a')
-            new_user_id_list_file.write("\t".join(new_user_id_list[userId]) + "\n")
+            new_user_id_list_file.write("\t".join(new_user_id_list[user_id]) + "\n")
             new_user_id_list_file.close()
 
         stop_time = time.time()
-        self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(allImageCount) + "张")
+        self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(total_image_count) + "张")
 
 if __name__ == '__main__':
     Weibo().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
