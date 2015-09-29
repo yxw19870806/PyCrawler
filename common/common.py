@@ -176,27 +176,27 @@ class Tool(object):
             for cookie_name in os.listdir(filePath):
                 if cookie_name.find(".txt") == -1:
                     continue
-                cookieFile = open(filePath + "\\" + cookie_name, 'r')
-                cookie_info = cookieFile.read()
-                cookieFile.close()
+                cookie_file = open(filePath + "\\" + cookie_name, 'r')
+                cookie_info = cookie_file.read()
+                cookie_file.close()
                 for cookies in cookie_info.split("*"):
-                    cookieList = cookies.strip("\n").split("\n")
-                    if len(cookieList) >= 8:
-                        domain = cookieList[2].split("/")[0]
-                        domainSpecified = ftstr[cookieList[2].startswith('.')]
-                        path = cookieList[2].replace(domain, "")
+                    cookie_list = cookies.strip("\n").split("\n")
+                    if len(cookie_list) >= 8:
+                        domain = cookie_list[2].split("/")[0]
+                        domain_specified = ftstr[cookie_list[2].startswith('.')]
+                        path = cookie_list[2].replace(domain, "")
                         secure = ftstr[0]
-                        expires = cookieList[4]
-                        name = cookieList[0]
-                        value = cookieList[1]
-                        s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+                        expires = cookie_list[4]
+                        name = cookie_list[0]
+                        value = cookie_list[1]
+                        s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
         elif browser_type == 2:
             con = sqlite.connect(filePath + "\\cookies.sqlite")
             cur = con.cursor()
             cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
             for cookie_info in cur.fetchall():
                 domain = cookie_info[0]
-                domainSpecified = ftstr[cookie_info[0].startswith('.')]
+                domain_specified = ftstr[cookie_info[0].startswith('.')]
                 path = cookie_info[1]
                 secure = ftstr[cookie_info[2]]
                 expires = cookie_info[3]
@@ -204,7 +204,7 @@ class Tool(object):
                 value = cookie_info[5]
 #                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
                 try:
-                    s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+                    s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
                 except:
                     pass
         elif browser_type == 3:
@@ -213,25 +213,25 @@ class Tool(object):
             cur.execute("select host_key, path, secure, expires_utc, name, value from cookies")
             for cookie_info in cur.fetchall():
                 domain = cookie_info[0]
-                domainSpecified = ftstr[cookie_info[0].startswith('.')]
+                domain_specified = ftstr[cookie_info[0].startswith('.')]
                 path = cookie_info[1]
                 secure = ftstr[cookie_info[2]]
                 expires = cookie_info[3]
                 name = cookie_info[4]
                 value = cookie_info[5]
-                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domainSpecified, path, secure, expires, name, value))
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
         s.seek(0)
-        cookieJar = cookielib.MozillaCookieJar()
-        cookieJar._really_load(s, '', True, True)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
+        cookie_jar = cookielib.MozillaCookieJar()
+        cookie_jar._really_load(s, '', True, True)
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
         urllib2.install_opener(opener)
         return True
-    
-    def set_proxy(self, ip, port, protocol):
+
     # 设置代理
+    def set_proxy(self, ip, port, protocol):
         import urllib2
-        proxyHandler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
-        opener = urllib2.build_opener(proxyHandler)
+        proxy_handler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
+        opener = urllib2.build_opener(proxy_handler)
         urllib2.install_opener(opener)
         self.print_msg("设置代理成功")
 
@@ -420,7 +420,7 @@ class Tool(object):
                         shutil.rmtree(dir_path, True)
                         time.sleep(5)
                 else:
-                    return  True
+                    return True
         count = 0
         while count <= 5:
             try:
