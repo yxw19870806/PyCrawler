@@ -11,6 +11,7 @@ from common import common
 
 import copy
 import os
+import re
 import shutil
 import time
 
@@ -159,9 +160,16 @@ class GooglePlus(common.Tool):
                     messageStart = photoAlbumPage.find("http", messageIndex)
                     messageStop = photoAlbumPage.find('"', messageStart)
                     messageUrl = photoAlbumPage[messageStart:messageStop]
+                    messageUrl.replace('\u003d', '=')
                     # 将第一张image的URL保存到新id list中
                     if newUserIdList[userId][3] == "":
-                        newUserIdList[userId][3] = messageUrl
+                        # 有可能拿到带authkey的，需要去掉
+                        # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
+                        try:
+                            temp = re.findall('(.*)\?.*(#.*)', messageUrl)
+                            newUserIdList[userId][3] = temp[0][0] + temp[0][1]
+                        except:
+                            newUserIdList[userId][3] = messageUrl
                     # 检查是否已下载到前一次的图片
                     if len(userIdList[userId]) >= 4 and userIdList[userId][3].find("picasaweb.google.com/") != -1:
                         if messageUrl == userIdList[userId][3]:
