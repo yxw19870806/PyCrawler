@@ -138,17 +138,17 @@ class Tool(object):
                 return "C:\\Documents and Settings\\%s\\Cookies\\" % (getpass.getuser())
         elif browser_type == 2:
             if os_version == 1:
-                defaultBrowserPath = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-                for dir_name in os.listdir(defaultBrowserPath):
-                    if os.path.isdir(defaultBrowserPath + "\\" + dir_name):
-                        if os.path.exists(defaultBrowserPath + "\\" + dir_name + "\\cookies.sqlite"):
-                            return defaultBrowserPath + "\\" + dir_name + "\\"
+                default_browser_path = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
+                for dir_name in os.listdir(default_browser_path):
+                    if os.path.isdir(default_browser_path + "\\" + dir_name):
+                        if os.path.exists(default_browser_path + "\\" + dir_name + "\\cookies.sqlite"):
+                            return default_browser_path + "\\" + dir_name + "\\"
             elif os_version == 2:
-                defaultBrowserPath = "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-                for dir_name in os.listdir(defaultBrowserPath):
-                    if os.path.isdir(defaultBrowserPath + "\\" + dir_name):
-                        if os.path.exists(defaultBrowserPath + "\\" + dir_name + "\\cookies.sqlite"):
-                            return defaultBrowserPath + "\\" + dir_name + "\\"
+                default_browser_path = "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
+                for dir_name in os.listdir(default_browser_path):
+                    if os.path.isdir(default_browser_path + "\\" + dir_name):
+                        if os.path.exists(default_browser_path + "\\" + dir_name + "\\cookies.sqlite"):
+                            return default_browser_path + "\\" + dir_name + "\\"
         elif browser_type == 3:
             if os_version == 1:
                 return "C:\\Users\%s\\AppData\\Local\\Google\\Chrome\\User Data\\Default" % (getpass.getuser())
