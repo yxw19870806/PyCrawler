@@ -15,7 +15,12 @@ import re
 import shutil
 import time
 
+
 class GooglePlus(common.Tool):
+
+    def __init__(self):
+        super(GooglePlus, self).__init__()
+        self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
         super(GooglePlus, self).trace(msg, self.isShowError, self.traceLogPath)
@@ -25,33 +30,6 @@ class GooglePlus(common.Tool):
 
     def _print_step_msg(self, msg):
         super(GooglePlus, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
-
-    def __init__(self):
-        config = self.analyze_config( os.getcwd() + "\\..\\common\\config.ini")
-        # 程序配置
-        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
-        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
-        self.getImageUrlCount = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
-        # 代理
-        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
-        # 文件路径
-        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        if self.isLog == 0:
-            self.traceLogPath = ""
-            self.stepLogPath = ""
-        else:
-            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        self.print_msg("配置文件读取完成")
 
     def main(self):
         startTime = time.time()

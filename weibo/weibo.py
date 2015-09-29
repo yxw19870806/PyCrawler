@@ -17,8 +17,13 @@ import time
 
 from common import common, json
 
+
 class Weibo(common.Tool):
-    
+
+    def __init__(self):
+        super(Weibo, self).__init__()
+        self.print_msg("配置文件读取完成")
+
     def _trace(self, msg):
         super(Weibo, self).trace(msg, self.isShowError, self.traceLogPath)
     
@@ -53,43 +58,6 @@ class Weibo(common.Tool):
                 return str(temp_page)
         return False
 
-    def __init__(self):
-        config = self.analyze_config(os.getcwd() + "\\..\\common\\config.ini")
-        # 每次请求获取的图片数量
-        self.IMAGE_COUNT_PER_PAGE = 20
-        # 程序配置
-        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
-        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
-        self.getImageCount = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
-        # 代理设置
-        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
-        # 文件路径
-        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        if self.isLog == 0:
-            self.traceLogPath = ''
-            self.stepLogPath = ''
-        else:
-            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.userIdListFilePath = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
-        # 操作系统&浏览器
-        self.browserVersion = self.get_config(config, "BROWSER_VERSION", 2, 2)
-        self.osVersion = self.get_config(config, "OS_VERSION", 1, 2)
-        # cookie
-        self.isAutoGetCookie = self.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
-        if self.isAutoGetCookie == 0:
-            self.cookiePath = self.get_config(config, "COOKIE_PATH", "", 0)
-        else:
-            self.cookiePath = self.get_default_browser_cookie_path(self.osVersion, self.browserVersion)
-        self.print_msg("配置文件读取完成")
-            
     def main(self, user_id_list_file_path = '', image_download_path = '', image_temp_path = ''):
         if user_id_list_file_path != '':
             self.userIdListFilePath = user_id_list_file_path
