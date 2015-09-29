@@ -56,7 +56,7 @@ class Tool(object):
                     self.print_msg("访问页面超时，重新连接请稍后")
                 # 404
                 elif str(e).find("HTTP Error 404: Not Found") != -1:
-                    return False
+                    count += 100
                 else:
                     self.print_msg(str(e))
                     traceback.print_exc()
