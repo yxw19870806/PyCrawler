@@ -361,14 +361,17 @@ def save_image(image_url, image_path):
     return False
 
 
-# 删除目录下所有文件（保留目录）
-def remove_dir_files(dir_path):
+# 删除目录下所有文件
+# only_files 是否仅仅删除目录下文件而保留目录
+def remove_dir(dir_path, only_files=False):
     dir_path = change_path_encoding(dir_path)
-    for file_name in os.listdir(dir_path):
-        target_file = os.path.join(dir_path, file_name)
-        if os.path.isfile(target_file):
-            os.remove(target_file)
-
+    if only_files:
+        for file_name in os.listdir(dir_path):
+            target_file = os.path.join(dir_path, file_name)
+            if os.path.isfile(target_file):
+                os.remove(target_file)
+    else:
+        shutil.rmtree(dir_path, True)
 
 # 创建目录
 # create_mode 0 : 不存在则创建

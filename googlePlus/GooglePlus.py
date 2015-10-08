@@ -12,7 +12,6 @@ from common import common
 import copy
 import os
 import re
-import shutil
 import time
 
 
@@ -224,7 +223,7 @@ class GooglePlus(common.Robot):
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
-                shutil.rmtree(image_path, True)
+                common.remove_dir(image_path)
 
             if is_error:
                 self._print_error_msg(user_name + "图片数量异常，请手动检查")

@@ -11,7 +11,6 @@ email: hikaru870806@hotmail.com
 from common import common, json
 import copy
 import os
-import shutil
 import threading
 import time
 
@@ -219,7 +218,7 @@ class Twitter(common.Robot, threading.Thread):
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
-                shutil.rmtree(image_path, True)
+                common.remove_dir(image_path)
 
             if is_error:
                 self._print_error_msg(user_account + "图片数量异常，请手动检查")
