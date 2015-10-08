@@ -16,38 +16,39 @@ import time
 from common import common, json
 
 
-class Bcy(common.Tool):
+class Bcy(common.Robot):
 
     def __init__(self):
         super(Bcy, self).__init__()
-        self.print_msg("配置文件读取完成")
+
+        common.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(Bcy, self).trace(msg, self.is_show_error, self.trace_log_path)
+        common.trace(msg, self.is_show_error, self.trace_log_path)
 
     def _print_error_msg(self, msg):
-        super(Bcy, self).print_error_msg(msg, self.is_show_error, self.error_log_path)
+        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
 
     def _print_step_msg(self, msg):
-        super(Bcy, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
+        common.print_step_msg(msg, self.is_show_error, self.step_log_path)
 
     def main(self):
         start_time = time.time()
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not self.make_dir(self.image_download_path, 2):
+        if not common.make_dir(self.image_download_path, 2):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
-            self.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            common.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not self.set_cookie(self.cookie_path, self.browser_version):
+        if not common.set_cookie(self.cookie_path, self.browser_version):
             self._print_error_msg("导入浏览器cookies失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -65,7 +66,7 @@ class Bcy(common.Tool):
                 user_id_list[user_info_list[0]] = user_info_list
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
@@ -108,7 +109,7 @@ class Bcy(common.Tool):
 
             while 1:
                 photo_album_url = 'http://bcy.net/coser/ajaxShowMore?type=all&cp_id=%s&p=%s' % (cp_id, page_count)
-                photo_album_page = self.do_get(photo_album_url)
+                photo_album_page = common.do_get(photo_album_url)
 
                 try:
                     photo_album_page = json.read(photo_album_page)
@@ -162,9 +163,9 @@ class Bcy(common.Tool):
                     image_path = self.image_download_path + "\\" + cn
 
                     if need_make_download_dir:
-                        if not self.make_dir(image_path, 1):
+                        if not common.make_dir(image_path, 1):
                             self._print_error_msg("创建CN目录： " + image_path + " 失败，程序结束！")
-                            self.process_exit()
+                            common.process_exit()
                         need_make_download_dir = False
 
                     # 正片目录
@@ -172,16 +173,16 @@ class Bcy(common.Tool):
                         rp_path = image_path + "\\" + rp_id + ' ' + title
                     else:
                         rp_path = image_path + "\\" + rp_id
-                    if not self.make_dir(rp_path, 1):
+                    if not common.make_dir(rp_path, 1):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
                         self._print_error_msg("创建正片目录： " + rp_path + " 失败，尝试不使用title！")
                         rp_path = image_path + "\\" + rp_id
-                        if not self.make_dir(rp_path, 1):
+                        if not common.make_dir(rp_path, 1):
                             self._print_error_msg("创建正片目录： " + rp_path + " 失败，程序结束！")
-                            self.process_exit()
+                            common.process_exit()
 
                     rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
-                    rp_page = self.do_get(rp_url)
+                    rp_page = common.do_get(rp_url)
                     if rp_page:
                         image_count = 0
                         image_index = rp_page.find("src='")
@@ -197,7 +198,7 @@ class Bcy(common.Tool):
                                 file_type = image_url.split(".")[-1]
                             else:
                                 file_type = 'jpg'
-                            if self.save_image(image_url, rp_path + "\\" + str("%03d" % image_count) + "." + file_type):
+                            if common.save_image(image_url, rp_path + "\\" + str("%03d" % image_count) + "." + file_type):
                                 self._print_step_msg("下载成功")
                             image_index = rp_page.find("src='", image_index + 1)
                         if image_count == 0:

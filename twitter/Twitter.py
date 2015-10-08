@@ -16,11 +16,11 @@ import threading
 import time
 
 
-class Twitter(common.Tool, threading.Thread):
+class Twitter(common.Robot, threading.Thread):
 
     def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
         threading.Thread.__init__(self)
-        common.Tool.__init__(self)
+        common.Robot.__init__(self)
 
         if user_id_list_file_path != '':
             self.user_id_list_file_path = user_id_list_file_path
@@ -29,29 +29,29 @@ class Twitter(common.Tool, threading.Thread):
         if image_temp_path != '':
             self.image_temp_path = image_temp_path
 
-        self.print_msg("配置文件读取完成")
+        common.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(Twitter, self).trace(msg, self.is_show_error, self.trace_log_path)
+        common.trace(msg, self.is_show_error, self.trace_log_path)
 
     def _print_error_msg(self, msg):
-        super(Twitter, self).print_error_msg(msg, self.is_show_error, self.error_log_path)
+        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
 
     def _print_step_msg(self, msg):
-        super(Twitter, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
+        common.print_step_msg(msg, self.is_show_error, self.step_log_path)
 
     def run(self):
         start_time = time.time()
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not self.make_dir(self.image_download_path, 2):
+        if not common.make_dir(self.image_download_path, 2):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
-            self.set_proxy(self.proxy_ip, self.proxy_port, "https")
+            common.set_proxy(self.proxy_ip, self.proxy_port, "https")
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -69,7 +69,7 @@ class Twitter(common.Tool, threading.Thread):
                 user_id_list[user_info_list[0]] = user_info_list
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
@@ -111,9 +111,9 @@ class Twitter(common.Tool, threading.Thread):
                 image_path = self.image_temp_path
             else:
                 image_path = self.image_download_path + "\\" + user_account
-            if not self.make_dir(image_path, 1):
+            if not common.make_dir(image_path, 1):
                 self._print_error_msg("创建图片下载目录： " + image_path + " 失败，程序结束！")
-                self.process_exit()
+                common.process_exit()
 
             # 图片下载
             while not is_last_page:
@@ -166,7 +166,7 @@ class Twitter(common.Tool, threading.Thread):
                         continue
                     image_url_list.append(image_url)
                     self._print_step_msg("开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    img_byte = self.do_get(image_url)
+                    img_byte = common.do_get(image_url)
                     if img_byte:
                         # 文件类型
                         file_type = image_url.split(".")[-1].split(':')[0]
@@ -204,9 +204,9 @@ class Twitter(common.Tool, threading.Thread):
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = self.image_download_path + "\\" + user_account
-                    if not self.make_dir(destination_path, 1):
+                    if not common.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        self.process_exit()
+                        common.process_exit()
 
                     # 倒叙排列
                     if len(user_id_list[user_account]) >= 2 and user_id_list[user_account][1] != '':
@@ -215,7 +215,7 @@ class Twitter(common.Tool, threading.Thread):
                         count = 1
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
-                        self.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
