@@ -203,7 +203,9 @@ class Weibo(common.Robot, threading.Thread):
                                 self._print_step_msg("重试下载第" + str(image_count) + "张图片：" + image_url)
                             imgByte = common.do_get(image_url)
                             if imgByte:
-                                md5Digest = hashlib.md5().update(imgByte).hexdigest()
+                                md5Digest = hashlib.md5()
+                                md5Digest.update(imgByte)
+                                md5Digest.hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
                                 if md5Digest in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
                                     self._print_step_msg("源文件获取失败，重试")
