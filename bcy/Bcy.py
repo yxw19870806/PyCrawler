@@ -59,11 +59,21 @@ class Bcy(common.Robot):
             for user_info in all_user_list:
                 if len(user_info) < 3:
                     continue
-                user_info = user_info.replace("\xef\xbb\xbf", "")
-                user_info = user_info.replace(" ", "")
-                user_info = user_info.replace("\n", "")
+                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "").replace("\r", "")
                 user_info_list = user_info.split("\t")
-                user_id_list[user_info_list[0]] = user_info_list
+
+                user_id = user_info_list[0]
+                user_id_list[user_id] = user_info_list
+                # 如果没有数量，则为0
+                if len(user_id_list[user_id]) < 2:
+                    user_id_list[user_id].append("0")
+                if user_id_list[user_id][1] == '':
+                    user_id_list[user_id][1] = '0'
+                # 处理上一次rp id
+                if len(user_id_list[user_id]) < 3:
+                    user_id_list[user_id].append("")
+                if user_id_list[user_id][2] == '':
+                    user_id_list[user_id][2] = '0'
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -73,35 +83,20 @@ class Bcy(common.Robot):
         new_user_id_list_file = open(new_user_id_list_file_path, "w")
         new_user_id_list_file.close()
 
-        # 复制处理存档文件
-        new_user_id_list = copy.deepcopy(user_id_list)
-        for user_id in new_user_id_list:
-            # 如果没有数量，则为0
-            if len(new_user_id_list[user_id]) < 2:
-                new_user_id_list[user_id].append("0")
-            if new_user_id_list[user_id][1] == '':
-                new_user_id_list[user_id][1] = 0
-            # 处理上一次image URL
-            # 需置空存放本次第一张获取的image URL
-            if len(new_user_id_list[user_id]) < 3:
-                new_user_id_list[user_id].append("")
-            else:
-                new_user_id_list[user_id][2] = ""
-
         total_image_count = 0
         # 循环下载每个id
         for user_id in sorted(user_id_list.keys()):
-            if len(user_id_list[user_id]) >= 2 and user_id_list[user_id][1] != '':
-                cn = user_id_list[user_id][1]
-            else:
-                cn = user_id
+            cn = user_id_list[user_id][1]
             self._print_step_msg("CN: " + cn)
+
+            last_rp_id = user_id_list[user_id][2]
+            user_id_list[user_id][2] = ''  # 置空，存放此次的最后rp id
             cp_id = int(user_id) - 100876
             page_count = 1
             max_page_count = -1
             need_make_download_dir = True
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if len(user_id_list[user_id]) > 3 and user_id_list[user_id][2] != '':
+            if last_rp_id != '0':
                 is_error = True
             else:
                 is_error = False
@@ -148,14 +143,13 @@ class Bcy(common.Robot):
                         self._print_error_msg("在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段, user id: " + str(user_id))
                         break
 
-                    if new_user_id_list[user_id][2] == "":
-                        new_user_id_list[user_id][2] = rp_id
+                    if user_id_list[user_id][2] == '':
+                        user_id_list[user_id][2] = rp_id
                     # 检查是否已下载到前一次的图片
-                    if len(user_id_list[user_id]) >= 3:
-                        if int(rp_id) <= int(user_id_list[user_id][2]):
-                            is_error = False
-                            is_pass = True
-                            break
+                    if int(rp_id) <= int(last_rp_id):
+                        is_error = False
+                        is_pass = True
+                        break
 
                     self._print_step_msg("rp: " + rp_id)
 
@@ -217,7 +211,7 @@ class Bcy(common.Robot):
 
             # 保存最后的信息
             new_user_id_list_file = open(new_user_id_list_file_path, "a")
-            new_user_id_list_file.write("\t".join(new_user_id_list[user_id]) + "\n")
+            new_user_id_list_file.write("\t".join(user_id_list[user_id]) + "\n")
             new_user_id_list_file.close()
 
         stop_time = time.time()

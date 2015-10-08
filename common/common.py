@@ -373,6 +373,7 @@ def remove_dir(dir_path, only_files=False):
     else:
         shutil.rmtree(dir_path, True)
 
+
 # 创建目录
 # create_mode 0 : 不存在则创建
 # create_mode 1 : 存在则删除并创建

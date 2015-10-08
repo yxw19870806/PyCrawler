@@ -56,11 +56,27 @@ class GooglePlus(common.Robot):
             for user_info in all_user_list:
                 if len(user_info) < 10:
                     continue
-                user_info = user_info.replace("\xef\xbb\xbf", "")
-                user_info = user_info.replace(" ", "")
-                user_info = user_info.replace("\n", "")
+                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "").replace("\r", "")
                 user_info_list = user_info.split("\t")
-                user_id_list[user_info_list[0]] = user_info_list
+
+                user_id = user_info_list[0]
+                user_id_list[user_id] = user_info_list
+                # 如果没有名字，则名字用uid代替
+                if len(user_id_list[user_id]) < 2:
+                    user_id_list[user_id].append(user_id)
+                if user_id_list[user_id][1] == '':
+                    user_id_list[user_id][1] = user_id
+                # 如果没有数量，则为0
+                if len(user_id_list[user_id]) < 3:
+                    user_id_list[user_id].append("0")
+                if user_id_list[user_id][2] == '':
+                    user_id_list[user_id][2] = '0'
+                # 处理上一次image URL
+                if len(user_id_list[user_id]) < 4:
+                    user_id_list[user_id].append("")
+                # 处理成员队伍信息
+                if len(user_id_list[user_id]) < 5:
+                    user_id_list[user_id].append("")
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -68,36 +84,21 @@ class GooglePlus(common.Robot):
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, "w")
         new_user_id_list_file.close()
-        # 复制处理存档文件
-        new_user_id_list = copy.deepcopy(user_id_list)
-        for user_id in new_user_id_list:
-            # 如果没有名字，则名字用uid代替
-            if len(new_user_id_list[user_id]) < 2:
-                new_user_id_list[user_id].append(new_user_id_list[user_id][0])
-            # 如果没有初始image count，则为0
-            if len(new_user_id_list[user_id]) < 3:
-                new_user_id_list[user_id].append("0")
-            # 处理上一次image URL
-            # 需置空存放本次第一张获取的image URL
-            if len(new_user_id_list[user_id]) < 4:
-                new_user_id_list[user_id].append("")
-            else:
-                new_user_id_list[user_id][3] = ""
-            # 处理成员队伍信息
-            if len(new_user_id_list[user_id]) < 5:
-                new_user_id_list[user_id].append("")
 
         total_image_count = 0
         # 循环下载每个id
         for user_id in sorted(user_id_list.keys()):
-            user_name = new_user_id_list[user_id][1]
+            user_name = user_id_list[user_id][1]
             self._print_step_msg("ID: " + str(user_id) + ", 名字: " + user_name)
+
             # 初始化数据
+            last_image_url = user_id_list[user_id][3]
+            user_id_list[user_id][3] = ''  # 置空，存放此次的最后URL
             image_count = 1
             message_url_list = []
             image_url_list = []
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if len(user_id_list[user_id]) > 3 and user_id_list[user_id][3].find("picasaweb.google.com/") != -1 and int(user_id_list[user_id][2]) != 0:
+            if last_image_url.find("picasaweb.google.com/") != -1:
                 is_error = True
             else:
                 is_error = False
@@ -128,17 +129,18 @@ class GooglePlus(common.Robot):
                     message_url = photo_album_page[message_start:message_stop]
                     message_url.replace('\u003d', '=')
                     # 将第一张image的URL保存到新id list中
-                    if new_user_id_list[user_id][3] == "":
+                    if user_id_list[user_id][3] == '':
                         # 有可能拿到带authkey的，需要去掉
                         # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                         try:
                             temp = re.findall('(.*)\?.*(#.*)', message_url)
-                            new_user_id_list[user_id][3] = temp[0][0] + temp[0][1]
+                            user_id_list[user_id][3] = temp[0][0] + temp[0][1]
                         except:
-                            new_user_id_list[user_id][3] = message_url
+                            user_id_list[user_id][3] = message_url
+
                     # 检查是否已下载到前一次的图片
-                    if len(user_id_list[user_id]) >= 4 and user_id_list[user_id][3].find("picasaweb.google.com/") != -1:
-                        if message_url == user_id_list[user_id][3]:
+                    if last_image_url.find("picasaweb.google.com/") != -1:
+                        if message_url == last_image_url:
                             is_error = False
                             break
                     self._trace("message URL:" + message_url)
@@ -199,7 +201,7 @@ class GooglePlus(common.Robot):
                 self._print_error_msg("无法获取相册首页: " + photo_album_url + ' ' + user_name)
 
             self._print_step_msg(user_name + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
-            new_user_id_list[user_id][2] = str(int(new_user_id_list[user_id][2]) + image_count - 1)
+            user_id_list[user_id][2] = str(int(user_id_list[user_id][2]) + image_count - 1)
             total_image_count += image_count - 1
 
             # 排序
@@ -207,16 +209,14 @@ class GooglePlus(common.Robot):
                 image_list = sorted(os.listdir(image_path), reverse=True)
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
-                    destination_path = self.image_download_path + "\\" + new_user_id_list[user_id][4] + "\\" + user_name
+                    destination_path = self.image_download_path + "\\" + user_id_list[user_id][4] + "\\" + user_name
                     if not common.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
                         common.process_exit()
 
                     # 倒叙排列
-                    if len(user_id_list[user_id]) >= 3:
-                        count = int(user_id_list[user_id][2]) + 1
-                    else:
-                        count = 1
+                    count = int(user_id_list[user_id][2]) + 1
+
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
                         common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
@@ -230,7 +230,7 @@ class GooglePlus(common.Robot):
 
             # 保存最后的信息
             new_user_id_list_file = open(new_user_id_list_file_path, "a")
-            new_user_id_list_file.write("\t".join(new_user_id_list[user_id]) + "\n")
+            new_user_id_list_file.write("\t".join(user_id_list[user_id]) + "\n")
             new_user_id_list_file.close()
 
         stop_time = time.time()

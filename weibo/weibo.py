@@ -97,12 +97,24 @@ class Weibo(common.Robot, threading.Thread):
             for user_info in all_user_list:
                 if len(user_info) < 5:
                     continue
-                user_info = user_info.replace("\xef\xbb\xbf", "")
-                user_info = user_info.replace(" ", "")
-                user_info = user_info.replace("\n", "")
-                user_info = user_info.replace("\r", "")
+                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "").replace("\r", "")
                 user_info_list = user_info.split("\t")
-                user_id_list[user_info_list[0]] = user_info_list
+
+                user_id = user_info_list[0]
+                user_id_list[user_id] = user_info_list
+                # 如果没有名字，则名字用uid代替
+                if len(user_id_list[user_id]) < 2:
+                    user_id_list[user_id].append(user_id)
+                if user_id_list[user_id][1] == '':
+                    user_id_list[user_id][1] = user_id
+                # 如果没有数量，则为0
+                if len(user_id_list[user_id]) < 3:
+                    user_id_list[user_id].append("0")
+                if user_id_list[user_id][2] == '':
+                    user_id_list[user_id][2] = '0'
+                # 处理上一次image URL
+                if len(user_id_list[user_id]) < 4:
+                    user_id_list[user_id].append("")
         else:
             self._print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -111,34 +123,20 @@ class Weibo(common.Robot, threading.Thread):
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, 'w')
         new_user_id_list_file.close()
-        # 复制处理存档文件
-        new_user_id_list = copy.deepcopy(user_id_list)
-        for user_id in new_user_id_list:
-            # 如果没有名字，则名字用uid代替
-            if len(new_user_id_list[user_id]) < 2:
-                new_user_id_list[user_id].append(new_user_id_list[user_id][0])
-            # 如果没有初始image count，则为0
-            if len(new_user_id_list[user_id]) < 3:
-                new_user_id_list[user_id].append("0")
-            # 处理上一次image URL
-            # 需置空存放本次第一张获取的image URL
-            if len(new_user_id_list[user_id]) < 4:
-                new_user_id_list[user_id].append("")
-            else:
-                new_user_id_list[user_id][3] = ""
-            # 处理成员队伍信息
-            if len(new_user_id_list[user_id]) < 5:
-                new_user_id_list[user_id].append("")
 
         total_image_count = 0
         for user_id in sorted(user_id_list.keys()):
-            user_name = new_user_id_list[user_id][1]
+            user_name = user_id_list[user_id][1]
             self._print_step_msg("UID: " + str(user_id) + "，Name: " + user_name)
+
             # 初始化数据
+            last_image_url = user_id_list[user_id][3]
+            user_id_list[user_id][3] = ''  # 置空，存放此次的最后URL
             page_count = 1
             image_count = 1
             is_pass = False
-            if len(user_id_list[user_id]) <= 3 or user_id_list[user_id][3] == '':
+            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
+            if last_image_url == '':
                 is_error = False
             else:
                 is_error = True
@@ -183,14 +181,13 @@ class Weibo(common.Robot, threading.Thread):
                         continue
                     if image_info.has_key("pic_name"):
                         # 将第一张image的URL保存到新id list中
-                        if new_user_id_list[user_id][3] == "":
-                            new_user_id_list[user_id][3] = image_info["pic_name"]
+                        if user_id_list[user_id][3] == "":
+                            user_id_list[user_id][3] = image_info["pic_name"]
                         # 检查是否已下载到前一次的图片
-                        if len(user_id_list[user_id]) >= 4:
-                            if image_info["pic_name"] == user_id_list[user_id][3]:
-                                is_pass = True
-                                is_error = False
-                                break
+                        if image_info["pic_name"] == last_image_url:
+                            is_pass = True
+                            is_error = False
+                            break
                         if image_info.has_key("pic_host"):
                             image_host = image_info["pic_host"]
                         else:
@@ -230,7 +227,7 @@ class Weibo(common.Robot, threading.Thread):
                         self._print_error_msg("在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段, user id: " + str(user_id))
                            
                     # 达到配置文件中的下载数量，结束
-                    if len(user_id_list[user_id]) >= 4 and user_id_list[user_id][3] != '' and self.get_image_count > 0 and image_count > self.get_image_count:
+                    if last_image_url != '' and self.get_image_count > 0 and image_count > self.get_image_count:
                         is_pass = True
                         break
                 if is_pass:
@@ -241,9 +238,10 @@ class Weibo(common.Robot, threading.Thread):
                     # 全部图片下载完毕
                     break
             
-            self._print_step_msg(user_name + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
-            new_user_id_list[user_id][2] = str(int(new_user_id_list[user_id][2]) + image_count - 1)
+            user_id_list[user_id][2] = str(int(user_id_list[user_id][2]) + image_count - 1)
             total_image_count += image_count - 1
+
+            self._print_step_msg(user_name + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
             
             # 排序
             if self.is_sort == 1:
@@ -256,10 +254,8 @@ class Weibo(common.Robot, threading.Thread):
                         common.process_exit()
 
                     # 倒叙排列
-                    if len(user_id_list[user_id]) >= 3:
-                        count = int(user_id_list[user_id][2]) + 1
-                    else:
-                        count = 1
+                    count = int(user_id_list[user_id][2]) + 1
+
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
                         common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
@@ -273,7 +269,7 @@ class Weibo(common.Robot, threading.Thread):
                 
             # 保存最后的信息
             new_user_id_list_file = open(new_user_id_list_file_path, 'a')
-            new_user_id_list_file.write("\t".join(new_user_id_list[user_id]) + "\n")
+            new_user_id_list_file.write("\t".join(user_id_list[user_id]) + "\n")
             new_user_id_list_file.close()
 
         stop_time = time.time()

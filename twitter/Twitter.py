@@ -61,11 +61,19 @@ class Twitter(common.Robot, threading.Thread):
             for user_info in all_user_list:
                 if len(user_info) < 3:
                     continue
-                user_info = user_info.replace("\xef\xbb\xbf", "")
-                user_info = user_info.replace(" ", "")
-                user_info = user_info.replace("\n", "")
+                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "").replace("\r", "")
                 user_info_list = user_info.split("\t")
-                user_id_list[user_info_list[0]] = user_info_list
+
+                user_account = user_info_list[0]
+                user_id_list[user_account] = user_info_list
+                # 如果没有数量，则为0
+                if len(user_id_list[user_account]) < 2:
+                    user_id_list[user_account].append("0")
+                if user_id_list[user_account][1] == '':
+                    user_id_list[user_account][1] = '0'
+                # 处理上一次image URL
+                if len(user_id_list[user_account]) < 3:
+                    user_id_list[user_account].append("")
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -74,34 +82,23 @@ class Twitter(common.Robot, threading.Thread):
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, "w")
         new_user_id_list_file.close()
-        # 复制处理存档文件
-        new_user_id_list = copy.deepcopy(user_id_list)
-        for user_account in new_user_id_list:
-            # 如果没有数量，则为0
-            if len(new_user_id_list[user_account]) < 2:
-                new_user_id_list[user_account].append("0")
-            if new_user_id_list[user_account][1] == '':
-                new_user_id_list[user_account][1] = 0
-            # 处理上一次image URL
-            # 需置空存放本次第一张获取的image URL
-            if len(new_user_id_list[user_account]) < 3:
-                new_user_id_list[user_account].append("")
-            else:
-                new_user_id_list[user_account][2] = ""
-        
+
         init_max_id = 999999999999999999
         total_image_count = 0
         # 循环下载每个id
         for user_account in sorted(user_id_list.keys()):
             self._print_step_msg("Account: " + user_account)
+
             # 初始化数据
+            last_image_url = user_id_list[user_account][2]
+            user_id_list[user_account][2] = ''  # 置空，存放此次的最后URL
             data_tweet_id = init_max_id
             image_count = 1
             image_url_list = []
             is_pass = False
             is_last_page = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if len(user_id_list[user_account]) > 2 and user_id_list[user_account][1] != '' and int(user_id_list[user_account][1]) != 0:
+            if last_image_url != '':
                 is_error = True
             else:
                 is_error = False
@@ -152,14 +149,13 @@ class Twitter(common.Robot, threading.Thread):
                         image_url = image_url[:image_url.find('&quot')]
                     self._trace("image URL:" + image_url)
                     # 将第一张image的URL保存到新id list中
-                    if new_user_id_list[user_account][2] == "":
-                        new_user_id_list[user_account][2] = image_url
+                    if user_id_list[user_account][2] == "":
+                        user_id_list[user_account][2] = image_url
                     # 检查是否已下载到前一次的图片
-                    if len(user_id_list[user_account]) >= 3:
-                        if image_url == user_id_list[user_account][2]:
-                            is_pass = True
-                            is_error = False
-                            break
+                    if image_url == last_image_url:
+                        is_pass = True
+                        is_error = False
+                        break
                     if image_url in image_url_list:
                         image_index = page.find('data-url', image_index + 1)
                         continue
@@ -193,9 +189,10 @@ class Twitter(common.Robot, threading.Thread):
                         data_tweet_id = page[data_tweet_id_start + 1:data_tweet_id_stop]
                         data_tweet_id_index = page.find('data-tweet-id="', data_tweet_id_index + 1)
 
-            self._print_step_msg(user_account + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
-            new_user_id_list[user_account][1] = str(int(new_user_id_list[user_account][1]) + image_count - 1)
+            user_id_list[user_account][1] = str(int(user_id_list[user_account][1]) + image_count - 1)
             total_image_count += image_count - 1
+
+            self._print_step_msg(user_account + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
             
             # 排序
             if self.is_sort == 1:
@@ -225,7 +222,7 @@ class Twitter(common.Robot, threading.Thread):
 
             # 保存最后的信息
             new_user_id_list_file = open(new_user_id_list_file_path, "a")
-            new_user_id_list_file.write("\t".join(new_user_id_list[user_account]) + "\n")
+            new_user_id_list_file.write("\t".join(user_id_list[user_account]) + "\n")
             new_user_id_list_file.close()
 
         stop_time = time.time()
