@@ -18,7 +18,11 @@ class fkoji(common.Tool):
 
     def __init__(self):
         super(fkoji, self).__init__()
+
         self.user_id_list_file_path = os.getcwd() + "\\fkoji.save"
+        # 从当前时间开始下载N页照片,0 不限制
+        self.get_image_page_count = 0
+
         self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):

@@ -51,8 +51,6 @@ class Tool(object):
 
         self.is_sort = self.get_config(config, "IS_SORT", 1, 2)
         self.get_image_count = self.get_config(config, "GET_IMAGE_COUNT", 0, 2)
-        self.get_image_page_count = self.get_config(config, "GET_IMAGE_PAGE_COUNT", 0, 2)
-        self.ge_image_url_count = self.get_config(config, "GET_IMAGE_URL_COUNT", 100, 2)
 
         self.user_id_list_file_path = self.get_config(config, "USER_ID_LIST_FILE_NAME", "\\info\\idlist.txt", 3)
 

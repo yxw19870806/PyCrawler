@@ -20,6 +20,10 @@ class GooglePlus(common.Tool):
 
     def __init__(self):
         super(GooglePlus, self).__init__()
+
+        # 单次获取最新的N张照片,G+ 限制最多1000张
+        self.ge_image_url_count = 1000
+
         self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
