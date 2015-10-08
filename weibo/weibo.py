@@ -8,22 +8,22 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
+from common import common, json
+
 import copy
-import md5
+import hashlib
 import os
 import random
 import shutil
 import threading
 import time
 
-from common import common, json
 
-
-class Weibo(common.Tool, threading.Thread):
+class Weibo(common.Robot, threading.Thread):
 
     def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
         threading.Thread.__init__(self)
-        common.Tool.__init__(self)
+        common.Robot.__init__(self)
 
         if user_id_list_file_path != '':
             self.user_id_list_file_path = user_id_list_file_path
@@ -35,19 +35,19 @@ class Weibo(common.Tool, threading.Thread):
         # 每次请求获取的图片数量
         self.IMAGE_COUNT_PER_PAGE = 20
 
-        self.print_msg("配置文件读取完成")
+        common.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(Weibo, self).trace(msg, self.is_show_error, self.trace_log_path)
+        common.trace(msg, self.is_trace, self.trace_log_path)
 
     def _print_error_msg(self, msg):
-        super(Weibo, self).print_error_msg(msg, self.is_show_error, self.error_log_path)
+        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
 
     def _print_step_msg(self, msg):
-        super(Weibo, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
+        common.print_step_msg(msg, self.is_show_step, self.step_log_path)
         
     def _visit(self, url):
-        temp_page = self.do_get(url)
+        temp_page = common.do_get(url)
         if temp_page:
             redirect_url_index = temp_page.find("location.replace")
             if redirect_url_index != -1:
@@ -56,16 +56,16 @@ class Weibo(common.Tool, threading.Thread):
 #                 redirectUrlStart = temp_page.find('"', redirect_url_index) + 1
 #                 redirectUrlStop = temp_page.find('"', redirectUrlStart)
                 redirect_url = temp_page[redirect_url_start:redirect_url_stop]
-                return str(self.do_get(redirect_url))
+                return str(common.do_get(redirect_url))
             elif temp_page.find("用户名或密码错误") != -1:
                 self._print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-                self.process_exit()
+                common.process_exit()
             else:
                 try:
                     temp_page = temp_page.decode("utf-8")
                     if temp_page.find("用户名或密码错误") != -1:
                         self._print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-                        self.process_exit()
+                        common.process_exit()
                 except Exception, e:
                     pass
                 return str(temp_page)
@@ -76,18 +76,18 @@ class Weibo(common.Tool, threading.Thread):
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not self.make_dir(self.image_download_path, 2):
+        if not common.make_dir(self.image_download_path, 2):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
-            self.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            common.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not self.set_cookie(self.cookie_path, self.browser_version):
+        if not common.set_cookie(self.cookie_path, self.browser_version):
             self._print_error_msg("导入浏览器cookies失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -106,7 +106,7 @@ class Weibo(common.Tool, threading.Thread):
                 user_id_list[user_info_list[0]] = user_info_list
         else:
             self._print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime('%Y-%m-%d_%H_%M_%S_', time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
@@ -149,9 +149,9 @@ class Weibo(common.Tool, threading.Thread):
                 image_path = self.image_temp_path
             else:
                 image_path = self.image_download_path + "\\" + user_name
-            if not self.make_dir(image_path, 1):
+            if not common.make_dir(image_path, 1):
                 self._print_error_msg("创建图片下载目录：" + image_path + " 失败，程序结束！")
-                self.process_exit()
+                common.process_exit()
 
             # 日志文件插入信息
             while 1:
@@ -205,11 +205,11 @@ class Weibo(common.Tool, threading.Thread):
                                 self._print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
                             else:
                                 self._print_step_msg("重试下载第" + str(image_count) + "张图片：" + image_url)
-                            imgByte = self.do_get(image_url)
+                            imgByte = common.do_get(image_url)
                             if imgByte:
-                                md5Digest = md5.new(imgByte).hexdigest()
+                                md5Digest = hashlib.md5().update(imgByte).hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
-                                if md5Digest == 'd29352f3e0f276baaf97740d170467d7' or md5Digest == '7bd88df2b5be33e1a79ac91e7d0376b5':
+                                if md5Digest in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
                                     self._print_step_msg("源文件获取失败，重试")
                                 else:
                                     file_type = image_url.split(".")[-1]
@@ -252,9 +252,9 @@ class Weibo(common.Tool, threading.Thread):
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = self.image_download_path + "\\" + user_name
-                    if not self.make_dir(destination_path, 1):
+                    if not common.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        self.process_exit()
+                        common.process_exit()
 
                     # 倒叙排列
                     if len(user_id_list[user_id]) >= 3:
@@ -263,7 +263,7 @@ class Weibo(common.Tool, threading.Thread):
                         count = 1
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
-                        self.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹

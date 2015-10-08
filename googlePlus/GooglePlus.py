@@ -16,36 +16,37 @@ import shutil
 import time
 
 
-class GooglePlus(common.Tool):
+class GooglePlus(common.Robot):
 
     def __init__(self):
         super(GooglePlus, self).__init__()
 
         # 单次获取最新的N张照片,G+ 限制最多1000张
         self.ge_image_url_count = 1000
+        self.is_proxy = 0
 
-        self.print_msg("配置文件读取完成")
+        common.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(GooglePlus, self).trace(msg, self.is_show_error, self.trace_log_path)
+        common.trace(msg, self.is_trace, self.trace_log_path)
 
     def _print_error_msg(self, msg):
-        super(GooglePlus, self).print_error_msg(msg, self.is_show_error, self.error_log_path)
+        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
 
     def _print_step_msg(self, msg):
-        super(GooglePlus, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
+        common.print_step_msg(msg, self.is_show_step, self.step_log_path)
 
     def main(self):
         start_time = time.time()
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not self.make_dir(self.image_download_path, 2):
+        if not common.make_dir(self.image_download_path, 2):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
-            self.set_proxy(self.proxy_ip, self.proxy_port, "https")
+            common.set_proxy(self.proxy_ip, self.proxy_port, "https")
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -63,7 +64,7 @@ class GooglePlus(common.Tool):
                 user_id_list[user_info_list[0]] = user_info_list
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            self.process_exit()
+            common.process_exit()
         # 创建临时存档文件
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, "w")
@@ -107,9 +108,9 @@ class GooglePlus(common.Tool):
                 image_path = self.image_temp_path
             else:
                 image_path = self.image_download_path + "\\" + user_name
-            if not self.make_dir(image_path, 1):
+            if not common.make_dir(image_path, 1):
                 self._print_error_msg("创建图片下载目录： " + image_path + " 失败，程序结束！")
-                self.process_exit()
+                common.process_exit()
 
             # 图片下载
 #            photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
@@ -118,7 +119,7 @@ class GooglePlus(common.Tool):
             key = ''
             post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (user_id, user_id, self.ge_image_url_count, key, now)
             self._trace("信息首页地址：" + photo_album_url)
-            photo_album_page = self.do_get(photo_album_url, post_data)
+            photo_album_page = common.do_get(photo_album_url, post_data)
             if photo_album_page:
                 message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id)
                 is_over = False
@@ -147,7 +148,7 @@ class GooglePlus(common.Tool):
                         message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
                         continue
                     message_url_list.append(message_url)
-                    message_page = self.do_get(message_url)
+                    message_page = common.do_get(message_url)
                     if not message_page:
                         self._print_error_msg("无法获取信息页: " + message_url)
                         message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
@@ -174,21 +175,19 @@ class GooglePlus(common.Tool):
                         temp_list[-2] = "s0"
                         image_url = "/".join(temp_list[:-3]) + '/s0-' + temp_list[-3] + '/' + temp_list[-1]
                         self._print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
-                        img_byte = self.do_get(image_url)
-                        if img_byte:
-                            # 文件类型
-                            if image_url.rfind('/') < image_url.rfind('.'):
-                                file_type = image_url.split(".")[-1]
-                            else:
-                                file_type = 'jpg'
-                            # 保存图片
-                            image_file = open(image_path + "\\" + str("%04d" % image_count) + "." + file_type, "wb")
-                            image_file.write(img_byte)
+                        # 文件类型
+                        if image_url.rfind('/') < image_url.rfind('.'):
+                            file_type = image_url.split(".")[-1]
+                        else:
+                            file_type = 'jpg'
+                        file_name = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+
+                        if common.save_image(image_url, file_name):
                             self._print_step_msg("下载成功")
-                            image_file.close()
                             image_count += 1
                         else:
                             self._print_error_msg("获取第" + str(image_count) + "张图片信息失败：" + str(user_id) + ": " + image_url)
+
                         # 达到配置文件中的下载数量，结束
                         if len(user_id_list[user_id]) >= 4 and user_id_list[user_id][3] != '' and self.get_image_count > 0 and image_count > self.get_image_count:
                             is_over = True
@@ -210,9 +209,9 @@ class GooglePlus(common.Tool):
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = self.image_download_path + "\\" + new_user_id_list[user_id][4] + "\\" + user_name
-                    if not self.make_dir(destination_path, 1):
+                    if not common.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        self.process_exit()
+                        common.process_exit()
 
                     # 倒叙排列
                     if len(user_id_list[user_id]) >= 3:
@@ -221,7 +220,7 @@ class GooglePlus(common.Tool):
                         count = 1
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
-                        self.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
