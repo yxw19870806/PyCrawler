@@ -12,13 +12,23 @@ from common import common, json
 import copy
 import os
 import shutil
+import threading
 import time
 
 
-class Twitter(common.Tool):
+class Twitter(common.Tool, threading.Thread):
 
-    def __init__(self):
-        super(Twitter, self).__init__()
+    def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
+        threading.Thread.__init__(self)
+        common.Tool.__init__(self)
+
+        if user_id_list_file_path != '':
+            self.user_id_list_file_path = user_id_list_file_path
+        if image_download_path != '':
+            self.image_download_path = image_download_path
+        if image_temp_path != '':
+            self.image_temp_path = image_temp_path
+
         self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
@@ -30,15 +40,8 @@ class Twitter(common.Tool):
     def _print_step_msg(self, msg):
         super(Twitter, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
 
-    def main(self, user_id_list_file_path = '', image_download_path = '', image_temp_path = ''):
+    def run(self):
         start_time = time.time()
-
-        if user_id_list_file_path != '':
-            self.user_id_list_file_path = user_id_list_file_path
-        if image_download_path != '':
-            self.image_download_path = image_download_path
-        if image_temp_path != '':
-            self.image_temp_path = image_temp_path
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
@@ -230,6 +233,9 @@ class Twitter(common.Tool):
         self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(total_image_count) + "张")
 
 if __name__ == "__main__":
-    Twitter().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\twitter1", os.getcwd() +  "\\photo\\twitter1\\tempImage")
-    Twitter().main(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\twitter2", os.getcwd() +  "\\photo\\twitter2\\tempImage")
-    Twitter().main(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\twitter3", os.getcwd() +  "\\photo\\twitter3\\tempImage")
+    thread1 = Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage")
+    thread2 = Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage")
+    thread3 = Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage")
+    thread1.start()
+    thread2.start()
+    thread3.start()
