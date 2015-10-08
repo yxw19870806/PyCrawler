@@ -13,17 +13,28 @@ import md5
 import os
 import random
 import shutil
+import threading
 import time
 
 from common import common, json
 
 
-class Weibo(common.Tool):
+class Weibo(common.Tool, threading.Thread):
 
-    def __init__(self):
-        super(Weibo, self).__init__()
+    def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
+        threading.Thread.__init__(self)
+        common.Tool.__init__(self)
+
+        if user_id_list_file_path != '':
+            self.user_id_list_file_path = user_id_list_file_path
+        if image_download_path != '':
+            self.image_download_path = image_download_path
+        if image_temp_path != '':
+            self.image_temp_path = image_temp_path
+
         # 每次请求获取的图片数量
         self.IMAGE_COUNT_PER_PAGE = 20
+
         self.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
@@ -60,15 +71,8 @@ class Weibo(common.Tool):
                 return str(temp_page)
         return False
 
-    def main(self, user_id_list_file_path = '', image_download_path = '', image_temp_path = ''):
+    def run(self):
         start_time = time.time()
-
-        if user_id_list_file_path != '':
-            self.user_id_list_file_path = user_id_list_file_path
-        if image_download_path != '':
-            self.image_download_path = image_download_path
-        if image_temp_path != '':
-            self.image_temp_path = image_temp_path
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
@@ -277,8 +281,11 @@ class Weibo(common.Tool):
         self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(total_image_count) + "张")
 
 if __name__ == '__main__':
-    Weibo().main(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
-    Weibo().main(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\weibo2", os.getcwd() +  "\\photo\\weibo2\\tempImage")
-    Weibo().main(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\weibo3", os.getcwd() +  "\\photo\\weibo3\\tempImage")
-    Weibo().main(os.getcwd() + "\\info\\idlist_4.txt", os.getcwd() +  "\\photo\\weibo4", os.getcwd() +  "\\photo\\weibo4\\tempImage")
-
+    thread1 = Weibo(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
+    thread2 = Weibo(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\weibo2", os.getcwd() +  "\\photo\\weibo2\\tempImage")
+    thread3 = Weibo(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\weibo3", os.getcwd() +  "\\photo\\weibo3\\tempImage")
+    thread4 = Weibo(os.getcwd() + "\\info\\idlist_4.txt", os.getcwd() +  "\\photo\\weibo4", os.getcwd() +  "\\photo\\weibo4\\tempImage")
+    thread1.start()
+    thread2.start()
+    thread3.start()
+    thread4.start()
