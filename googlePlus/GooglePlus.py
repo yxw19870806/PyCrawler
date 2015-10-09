@@ -125,7 +125,7 @@ class GooglePlus(common.Robot):
                     message_start = photo_album_page.find("http", message_index)
                     message_stop = photo_album_page.find('"', message_start)
                     message_url = photo_album_page[message_start:message_stop]
-                    message_url.replace('\u003d', '=')
+                    message_url = message_url.replace('\u003d', '=')
                     # 将第一张image的URL保存到新id list中
                     if user_id_list[user_id][3] == '':
                         # 有可能拿到带authkey的，需要去掉
