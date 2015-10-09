@@ -54,9 +54,18 @@ class Instagram(common.Robot):
                 if len(user_info) < 2:
                     continue
                 user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "")
-
                 user_info_list = user_info.split("\t")
-                user_id_list[user_info_list[0]] = user_info_list
+
+                user_account = user_info_list[0]
+                user_id_list[user_account] = user_info_list
+                # 如果没有数量，则为0
+                if len(user_id_list[user_account]) < 2:
+                    user_id_list[user_account].append("0")
+                if user_id_list[user_account][1] == '':
+                    user_id_list[user_account][1] = '0'
+                # 处理上一次image id
+                if len(user_id_list[user_account]) < 3:
+                    user_id_list[user_account].append("")
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -64,26 +73,15 @@ class Instagram(common.Robot):
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, "w")
         new_user_id_list_file.close()
-        # 复制处理存档文件
-        new_user_id_list = copy.deepcopy(user_id_list)
-        for user_account in new_user_id_list:
-            # 如果没有初始image count，则为0
-            if len(new_user_id_list[user_account]) < 2:
-                new_user_id_list[user_account].append("0")
-            if new_user_id_list[user_account][1] == '':
-                new_user_id_list[user_account][1] = 0
-            # 处理上一次image id
-            # 需置空存放本次第一张获取的image URL
-            if len(new_user_id_list[user_account]) < 3:
-                new_user_id_list[user_account].append("")
-            else:
-                new_user_id_list[user_account][2] = ""
 
         total_image_count = 0
         # 循环下载每个id
         for user_account in sorted(user_id_list.keys()):
             self._print_step_msg("Account: " + user_account)
+
             # 初始化数据
+            last_image_id = user_id_list[user_account][2]
+            user_id_list[user_account][2] = ''
             image_id = ""
             image_count = 1
             is_pass = False
@@ -138,14 +136,13 @@ class Instagram(common.Robot):
                     else:
                         image_id = photo_info["id"]
                     # 将第一张image的id保存到新id list中
-                    if new_user_id_list[user_account][2] == "":
-                        new_user_id_list[user_account][2] = image_id
+                    if user_id_list[user_account][2] == "":
+                        user_id_list[user_account][2] = image_id
                     # 检查是否已下载到前一次的图片
-                    if len(user_id_list[user_account]) >= 3 and user_id_list[user_account][2].find("_") != -1:
-                        if image_id == user_id_list[user_account][2]:
-                            is_pass = True
-                            is_error = False
-                            break
+                    if image_id == last_image_id:
+                        is_pass = True
+                        is_error = False
+                        break
                     if not photo_info["images"].has_key("standard_resolution"):
                         self._print_error_msg("在JSON数据：" + str(photo_info["images"]) + " 中没有找到'standard_resolution'字段, user id: " + str(user_account) + ", image id: " + image_id)
                         break
@@ -172,7 +169,7 @@ class Instagram(common.Robot):
                         is_pass = True
                         break
             self._print_step_msg(user_account + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
-            new_user_id_list[user_account][1] = str(int(new_user_id_list[user_account][1]) + image_count - 1)
+            user_id_list[user_account][1] = str(int(user_id_list[user_account][1]) + image_count - 1)
             total_image_count += image_count - 1
             
             # 排序
@@ -186,10 +183,7 @@ class Instagram(common.Robot):
                         common.process_exit()
 
                     # 倒叙排列
-                    if len(user_id_list[user_account]) >= 2 and user_id_list[user_account][1] != '':
-                        count = int(user_id_list[user_account][1]) + 1
-                    else:
-                        count = 1
+                    count = int(user_id_list[user_account][1]) + 1
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
                         common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
@@ -203,7 +197,7 @@ class Instagram(common.Robot):
 
             # 保存最后的信息
             new_user_id_list_file = open(new_user_id_list_file_path, "a")
-            new_user_id_list_file.write("\t".join(new_user_id_list[user_account]) + "\n")
+            new_user_id_list_file.write("\t".join(user_id_list[user_account]) + "\n")
             new_user_id_list_file.close()
 
         stop_time = time.time()
