@@ -144,6 +144,12 @@ def do_get(url, post_data=None):
                 request = urllib2.Request(url)
             # 设置头信息
             request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
+
+            # cookie
+            # cookie = cookielib.CookieJar()
+            # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
+            # urllib2.install_opener(opener)
+
             # 设置访问超时
             if sys.version_info < (2, 7):
                 if not IS_SET_TIMEOUT:
@@ -152,6 +158,7 @@ def do_get(url, post_data=None):
                 response = urllib2.urlopen(request)
             else:
                 response = urllib2.urlopen(request, timeout=5)
+
             return response.read()
         except Exception, e:
             # 代理无法访问
@@ -219,7 +226,10 @@ def get_default_browser_cookie_path(os_version, browser_type):
 # browser_type=2: firefox
 # browser_type=3: chrome
 def set_cookie(file_path, browser_type=1):
-    from pysqlite2 import dbapi2 as sqlite
+    if sys.version.find('32 bit') != -1:
+        from pysqlite2_win32 import dbapi2 as sqlite
+    else:
+        from pysqlite2_win64 import dbapi2 as sqlite
     if not os.path.exists(file_path):
         print_msg("cookie目录：" + file_path + " 不存在")
         return False
