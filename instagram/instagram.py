@@ -15,33 +15,34 @@ import shutil
 import time
 
 
-class Instagram(common.Tool):
+class Instagram(common.Robot):
 
     def __init__(self):
         super(Instagram, self).__init__()
-        self.print_msg("配置文件读取完成")
+
+        common.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        super(Instagram, self).trace(msg, self.is_show_error, self.trace_log_path)
+        common.trace(msg, self.is_show_error, self.trace_log_path)
 
     def _print_error_msg(self, msg):
-        super(Instagram, self).print_error_msg(msg, self.is_show_error, self.error_log_path)
+        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
 
     def _print_step_msg(self, msg):
-        super(Instagram, self).print_step_msg(msg, self.is_show_error, self.step_log_path)
+        common.print_step_msg(msg, self.is_show_error, self.step_log_path)
 
     def main(self):
         start_time = time.time()
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not self.make_dir(self.image_download_path, 2):
+        if not common.make_dir(self.image_download_path, 2):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            self.process_exit()
+            common.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
-            self.set_proxy(self.proxy_ip, self.proxy_port, "https")
+            common.set_proxy(self.proxy_ip, self.proxy_port, "https")
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -52,14 +53,13 @@ class Instagram(common.Tool):
             for user_info in all_user_list:
                 if len(user_info) < 2:
                     continue
-                user_info = user_info.replace("\xef\xbb\xbf", "")
-                user_info = user_info.replace(" ", "")
-                user_info = user_info.replace("\n", "")
+                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "")
+
                 user_info_list = user_info.split("\t")
                 user_id_list[user_info_list[0]] = user_info_list
         else:
             self._print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            self.process_exit()
+            common.process_exit()
         # 创建临时存档文件
         new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
         new_user_id_list_file = open(new_user_id_list_file_path, "w")
@@ -97,9 +97,9 @@ class Instagram(common.Tool):
                 image_path = self.image_temp_path
             else:
                 image_path = self.image_download_path + "\\" + user_account
-            if not self.make_dir(image_path, 1):
+            if not common.make_dir(image_path, 1):
                 self._print_error_msg("创建图片下载目录： " + image_path + " 失败，程序结束！")
-                self.process_exit()
+                common.process_exit()
 
             # 图片下载
             while 1:
@@ -109,11 +109,11 @@ class Instagram(common.Tool):
                     photo_album_url = "https://instagram.com/%s/media" % user_account
                 else:
                     photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
-                photo_album_page = self.do_get(photo_album_url)
+                photo_album_page = common.do_get(photo_album_url)
                 if not photo_album_page:
                     self._print_error_msg("无法获取相册信息: " + photo_album_url)
                     break
-                photo_album_data = self.do_get(photo_album_url)
+                photo_album_data = common.do_get(photo_album_url)
                 try:
                     photo_album_page = json.read(photo_album_data)
                 except:
@@ -154,7 +154,7 @@ class Instagram(common.Tool):
                         break
                     image_url = photo_info["images"]["standard_resolution"]["url"]
                     self._print_step_msg("开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    imgByte = self.do_get(image_url)
+                    imgByte = common.do_get(image_url)
                     if imgByte:
                         # 文件类型
                         file_type = image_url.split(".")[-1]
@@ -181,9 +181,9 @@ class Instagram(common.Tool):
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = self.image_download_path + "\\" + user_account
-                    if not self.make_dir(destination_path, 1):
+                    if not common.make_dir(destination_path, 1):
                         self._print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        self.process_exit()
+                        common.process_exit()
 
                     # 倒叙排列
                     if len(user_id_list[user_account]) >= 2 and user_id_list[user_account][1] != '':
@@ -192,7 +192,7 @@ class Instagram(common.Tool):
                         count = 1
                     for file_name in image_list:
                         file_type = file_name.split(".")[1]
-                        self.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                         count += 1
                     self._print_step_msg("图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹

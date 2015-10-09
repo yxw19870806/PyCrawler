@@ -9,8 +9,6 @@ email: hikaru870806@hotmail.com
 '''
 
 from common import common, json
-
-import copy
 import hashlib
 import os
 import random

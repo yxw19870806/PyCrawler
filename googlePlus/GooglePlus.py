@@ -7,9 +7,8 @@ QQ: 286484545
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
-from common import common
 
-import copy
+from common import common
 import os
 import re
 import time
@@ -22,7 +21,6 @@ class GooglePlus(common.Robot):
 
         # 单次获取最新的N张照片,G+ 限制最多1000张
         self.ge_image_url_count = 1000
-        self.is_proxy = 0
 
         common.print_msg("配置文件读取完成")
 

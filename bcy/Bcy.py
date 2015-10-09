@@ -8,12 +8,10 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-import copy
+from common import common, json
 import os
 import re
 import time
-
-from common import common, json
 
 
 class Bcy(common.Robot):
@@ -181,9 +179,9 @@ class Bcy(common.Robot):
                         image_count = 0
                         image_index = rp_page.find("src='")
                         while image_index != -1:
-                            imageStart = rp_page.find("http", image_index)
-                            imageStop = rp_page.find("'", imageStart)
-                            image_url = rp_page[imageStart:imageStop]
+                            image_start = rp_page.find("http", image_index)
+                            image_stop = rp_page.find("'", image_start)
+                            image_url = rp_page[image_start:image_stop]
                             # 禁用指定分辨率
                             image_url = "/".join(image_url.split("/")[0:-1])
                             image_count += 1
