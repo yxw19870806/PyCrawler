@@ -188,7 +188,7 @@ class GooglePlus(common.Robot):
                             self._print_error_msg("获取第" + str(image_count) + "张图片信息失败：" + str(user_id) + ": " + image_url)
 
                         # 达到配置文件中的下载数量，结束
-                        if len(user_id_list[user_id]) >= 4 and user_id_list[user_id][3] != '' and self.get_image_count > 0 and image_count > self.get_image_count:
+                        if last_image_url != '' and self.get_image_count > 0 and image_count > self.get_image_count:
                             is_over = True
                             break
                         flag = message_page.find("<div><a href=", flag + 1)

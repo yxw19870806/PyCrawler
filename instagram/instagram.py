@@ -165,7 +165,7 @@ class Instagram(common.Robot):
                         self._print_error_msg("获取第" + str(image_count) + "张图片信息失败：" + str(user_account) + "，" + image_url)
 
                     # 达到配置文件中的下载数量，结束
-                    if len(user_id_list[user_account]) >= 3 and user_id_list[user_account][2] != '' and self.get_image_count > 0 and image_count > self.get_image_count:
+                    if last_image_id != '' and self.get_image_count > 0 and image_count > self.get_image_count:
                         is_pass = True
                         break
             self._print_step_msg(user_account + "下载完毕，总共获得" + str(image_count - 1) + "张图片")

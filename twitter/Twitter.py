@@ -174,7 +174,7 @@ class Twitter(common.Robot, threading.Thread):
                         self._print_error_msg("获取第" + str(image_count) + "张图片信息失败：" + user_account + "：" + image_url)
 
                     # 达到配置文件中的下载数量，结束
-                    if len(user_id_list[user_account]) >= 3 and user_id_list[user_account][2] != '' and self.get_image_count > 0 and image_count > self.get_image_count:
+                    if last_image_url != '' and self.get_image_count > 0 and image_count > self.get_image_count:
                         is_pass = True
                         break
                     image_index = page.find('data-url', image_index + 1)
