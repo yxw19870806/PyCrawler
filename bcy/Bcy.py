@@ -278,7 +278,7 @@ class Download(threading.Thread):
                         if common.save_image(image_url, rp_path + "\\" + str("%03d" % image_count) + "." + file_type):
                             print_step_msg(cn + " 第" + str(image_count) + "张图片下载成功")
                         else:
-                            print_error_msg(cn + " 第" + str(image_count) + "张图片下载失败")
+                            print_error_msg(cn + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
                         image_index = rp_page.find("src='", image_index + 1)
                     if image_count == 0:
                         print_error_msg(cn + " " + rp_id + " 没有任何图片")

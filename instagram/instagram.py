@@ -251,7 +251,7 @@ class Download(threading.Thread):
                     print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                     image_count += 1
                 else:
-                    print_error_msg(user_account + " 第" + str(image_count) + "张图片下载失败")
+                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
                 # 达到配置文件中的下载数量，结束
                 if last_image_id != '' and GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
