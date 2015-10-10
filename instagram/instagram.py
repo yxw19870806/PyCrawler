@@ -189,18 +189,18 @@ class Download(threading.Thread):
 
         # 图片下载
         while 1:
-            if is_pass:
-                break
-
             if image_id == "":
                 photo_album_url = "https://instagram.com/%s/media" % user_account
             else:
                 photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
             photo_album_data = common.do_get(photo_album_url)
+            if not photo_album_data:
+                print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
+                break
             try:
                 photo_album_page = json.read(photo_album_data)
             except:
-                print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
+                print_error_msg(user_account + " 相册信息：" + str(photo_album_data) + " 不是一个JSON")
                 break
             if not isinstance(photo_album_page, dict):
                 print_error_msg(user_account + " JSON数据：" + str(photo_album_page) + " 不是一个字典")
@@ -257,6 +257,9 @@ class Download(threading.Thread):
                 if last_image_id != '' and GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                     is_pass = True
                     break
+
+            if is_pass:
+                break
 
         print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
