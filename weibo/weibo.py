@@ -10,16 +10,16 @@ email: hikaru870806@hotmail.com
 
 from common import common, json
 import hashlib
+import multiprocessing
 import os
 import random
-import threading
 import time
 
 
-class Weibo(common.Robot, threading.Thread):
+class Weibo(common.Robot, multiprocessing.Process):
 
     def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
-        threading.Thread.__init__(self)
+        multiprocessing.Process.__init__(self)
         common.Robot.__init__(self)
 
         if user_id_list_file_path != '':
@@ -276,11 +276,11 @@ class Weibo(common.Robot, threading.Thread):
         self._print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(total_image_count) + "张")
 
 if __name__ == '__main__':
-    thread1 = Weibo(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
-    thread2 = Weibo(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\weibo2", os.getcwd() +  "\\photo\\weibo2\\tempImage")
-    thread3 = Weibo(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\weibo3", os.getcwd() +  "\\photo\\weibo3\\tempImage")
-    thread4 = Weibo(os.getcwd() + "\\info\\idlist_4.txt", os.getcwd() +  "\\photo\\weibo4", os.getcwd() +  "\\photo\\weibo4\\tempImage")
-    thread1.start()
-    thread2.start()
-    thread3.start()
-    thread4.start()
+    process1 = Weibo(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage")
+    process2 = Weibo(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() +  "\\photo\\weibo2", os.getcwd() +  "\\photo\\weibo2\\tempImage")
+    process3 = Weibo(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() +  "\\photo\\weibo3", os.getcwd() +  "\\photo\\weibo3\\tempImage")
+    process4 = Weibo(os.getcwd() + "\\info\\idlist_4.txt", os.getcwd() +  "\\photo\\weibo4", os.getcwd() +  "\\photo\\weibo4\\tempImage")
+    process1.start()
+    process2.start()
+    process3.start()
+    process4.start()
