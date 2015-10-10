@@ -260,6 +260,7 @@ class Download(threading.Thread):
                         flag = message_page.find("<div><a href=", flag + 1)
                         continue
                     image_url_list.append(image_url)
+
                     # 重组URL并使用最大分辨率
                     # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
                     # ->
@@ -267,7 +268,6 @@ class Download(threading.Thread):
                     temp_list = image_url.split("/")
                     temp_list[-2] = "s0"
                     image_url = "/".join(temp_list[:-3]) + '/s0-' + temp_list[-3] + '/' + temp_list[-1]
-                    print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                     # 文件类型
                     if image_url.rfind('/') < image_url.rfind('.'):
                         file_type = image_url.split(".")[-1]
@@ -275,6 +275,8 @@ class Download(threading.Thread):
                         file_type = 'jpg'
                     file_name = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
+                    # 下载
+                    print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                     if common.save_image(image_url, file_name):
                         print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
@@ -285,9 +287,12 @@ class Download(threading.Thread):
                     if last_image_url != '' and GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                         is_over = True
                         break
+
                     flag = message_page.find("<div><a href=", flag + 1)
+
                 if is_over:
                     break
+
                 message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
         else:
             print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url)
