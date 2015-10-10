@@ -11,9 +11,8 @@ email: hikaru870806@hotmail.com
 from common import common
 import os
 import re
-import time
 import threading
-
+import time
 
 IS_TRACE = False
 IS_SHOW_ERROR = False
@@ -126,7 +125,6 @@ class GooglePlus(common.Robot):
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
-
 
         # 创建临时存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
@@ -322,7 +320,7 @@ class Download(threading.Thread):
         user_id = self.user_info[0]
         user_name = self.user_info[1]
 
-        print_step_msg(user_name + "开始")
+        print_step_msg(user_name + " 开始")
 
         # 初始化数据
         last_image_url = self.user_info[3]
@@ -340,7 +338,7 @@ class Download(threading.Thread):
         if IS_SORT == 1:
             image_path = IMAGE_TEMP_PATH + "\\" + user_name
         else:
-            image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_name
+            image_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
         if not common.make_dir(image_path, 1):
             print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
             common.process_exit()
@@ -348,7 +346,6 @@ class Download(threading.Thread):
         # 图片下载
 #        photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
         photo_album_url = 'https://plus.google.com/_/photos/pc/read/'
-        now = time.time() * 100
         key = ''
         post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
         trace(user_name + " 信息首页地址：" + photo_album_url)
@@ -434,6 +431,7 @@ class Download(threading.Thread):
             print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url)
 
         print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+
         self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 
         # 排序
