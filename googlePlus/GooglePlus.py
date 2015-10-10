@@ -299,8 +299,6 @@ class Download(threading.Thread):
 
         print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
-        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-
         # 排序
         if IS_SORT == 1:
             image_list = sorted(os.listdir(image_path), reverse=True)
@@ -321,6 +319,8 @@ class Download(threading.Thread):
                 print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
             # 删除临时文件夹
             common.remove_dir(image_path)
+
+        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 
         if is_error:
             print_error_msg(user_name + " 图片数量异常，请手动检查")
