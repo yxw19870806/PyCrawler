@@ -292,23 +292,24 @@ class Download(threading.Thread):
         global TOTAL_IMAGE_COUNT
         global THREAD_COUNT
 
-        user_id = self.user_info[0]
         cn = self.user_info[1]
 
         print_step_msg(cn + " 开始")
 
         last_rp_id = self.user_info[2]
         self.user_info[2] = ''  # 置空，存放此次的最后rp id
-        cp_id = int(user_id) - 100876  # 网页规则，没有为什么
+        cp_id = int(self.user_info[0]) - 100876  # 网页规则，没有为什么
         page_count = 1
         max_page_count = -1
-        need_make_download_dir = True
+        need_make_download_dir = True  # 是否需要创建cn目录
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
         if last_rp_id != '0':
             is_error = True
         else:
             is_error = False
         is_pass = False
+
+        this_cn_total_image_count = 0
 
         while 1:
             photo_album_url = 'http://bcy.net/coser/ajaxShowMore?type=all&cp_id=%s&p=%s' % (cp_id, page_count)
@@ -409,7 +410,7 @@ class Download(threading.Thread):
                         image_index = rp_page.find("src='", image_index + 1)
                     if image_count == 0:
                         print_error_msg(cn + " " + rp_id + " 没有任何图片")
-                    # total_image_count += image_count
+                    this_cn_total_image_count += image_count - 1
             if is_pass:
                 break
             if page_count >= max_page_count:
@@ -426,7 +427,7 @@ class Download(threading.Thread):
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
         new_user_id_list_file.write("\t".join(self.user_info) + "\n")
         new_user_id_list_file.close()
-        # TOTAL_IMAGE_COUNT += image_count - 1
+        TOTAL_IMAGE_COUNT += this_cn_total_image_count
         THREAD_COUNT -= 1
         threadLock.release()
 
