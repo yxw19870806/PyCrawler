@@ -23,7 +23,6 @@ TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
 THREAD_COUNT = 0
-NEW_USER_ID_LIST_FILE_PATH = ''
 
 threadLock = threading.Lock()
 
@@ -231,7 +230,7 @@ class Download(threading.Thread):
         else:
             image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_name
         if not common.make_dir(image_path, 1):
-            print_error_msg("创建图片下载目录：" + image_path + " 失败，程序结束！")
+            print_error_msg(user_name + " 创建图片下载目录：" + image_path + " 失败，程序结束！")
             common.process_exit()
 
         # 日志文件插入信息
@@ -243,25 +242,25 @@ class Download(threading.Thread):
             try:
                 page = json.read(photo_page_data)
             except:
-                print_error_msg("返回信息不是一个JSON数据, user id: " + str(user_id))
+                print_error_msg(user_name + " 返回信息不是一个JSON数据")
                 break
 
             # 总的图片数
             try:
                 total_image_count = page["data"]["total"]
             except:
-                print_error_msg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + user_id)
+                print_error_msg(user_name + " 在JSON数据：" + str(page) + " 中没有找到'total'字段")
                 break
 
             try:
                 photo_list = page["data"]["photo_list"]
             except:
-                print_error_msg("在JSON数据：" + str(page) + " 中没有找到'total'字段, user id: " + user_id)
+                print_error_msg(user_name + " 在JSON数据：" + str(page) + " 中没有找到'total'字段" )
                 break
 
             for image_info in photo_list:
                 if not isinstance(image_info, dict):
-                    print_error_msg("JSON数据['photo_list']：" + str(image_info) + " 不是一个字典, user id: " + user_id)
+                    print_error_msg(user_name + " JSON数据['photo_list']：" + str(image_info) + " 不是一个字典")
                     continue
                 if image_info.has_key("pic_name"):
                     # 将第一张image的URL保存到新id list中
@@ -285,9 +284,9 @@ class Download(threading.Thread):
                         image_url = image_host + "/large/" + image_info["pic_name"]
 
                         if try_count == 0:
-                            print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
+                            print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                         else:
-                            print_step_msg("重试下载第" + str(image_count) + "张图片：" + image_url)
+                            print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
 
                         img_byte = common.do_get(image_url)
                         if img_byte:
@@ -296,7 +295,7 @@ class Download(threading.Thread):
                             md5_digest.hexdigest()
                             # 处理获取的文件为weibo默认获取失败的图片
                             if md5_digest in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
-                                print_step_msg("源文件获取失败，重试")
+                                print_step_msg(user_name + " 源文件获取失败，重试")
                             else:
                                 file_type = image_url.split(".")[-1]
                                 if file_type.find('/') != -1:
@@ -316,7 +315,7 @@ class Download(threading.Thread):
                             break
 
                 else:
-                    print_error_msg("在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段, user id: " + user_id)
+                    print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段")
 
                 # 达到配置文件中的下载数量，结束
                 if last_image_url != '' and GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
@@ -332,18 +331,16 @@ class Download(threading.Thread):
                 # 全部图片下载完毕
                 break
 
-        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-
-        print_step_msg(user_name + "下载完毕，总共获得" + str(image_count - 1) + "张图片")
+        print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
         # 排序
         if IS_SORT == 1:
-            image_list = common.get_dir_files_name(image_path)
+            image_list = common.get_dir_files_name(image_path, 'desc')
             # 判断排序目标文件夹是否存在
             if len(image_list) >= 1:
                 destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_name
                 if not common.make_dir(destination_path, 1):
-                    print_error_msg("创建图片子目录： " + destination_path + " 失败，程序结束！")
+                    print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     common.process_exit()
 
                 # 倒叙排列
@@ -354,12 +351,14 @@ class Download(threading.Thread):
                     common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                     count += 1
 
-                print_step_msg("图片从下载目录移动到保存目录成功")
+                print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
             # 删除临时文件夹
             common.remove_dir(image_path)
 
+        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
+
         if is_error:
-            print_error_msg(user_name + "图片数量异常，请手动检查")
+            print_error_msg(user_name + " 图片数量异常，请手动检查")
 
         # 保存最后的信息
         threadLock.acquire()
