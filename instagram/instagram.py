@@ -319,16 +319,11 @@ class Download(threading.Thread):
                 photo_album_url = "https://instagram.com/%s/media" % user_account
             else:
                 photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
-            photo_album_page = common.do_get(photo_album_url)
-            if not photo_album_page:
-                print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
-                break
-
             photo_album_data = common.do_get(photo_album_url)
             try:
                 photo_album_page = json.read(photo_album_data)
             except:
-                print_error_msg(user_account + " 返回信息：" + str(photo_album_data) + " 不是一个JSON数据")
+                print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
                 break
             if not isinstance(photo_album_page, dict):
                 print_error_msg(user_account + " JSON数据：" + str(photo_album_page) + " 不是一个字典")
