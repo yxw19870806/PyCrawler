@@ -143,9 +143,11 @@ class GooglePlus(common.Robot):
             THREAD_COUNT += 1
             threadLock.release()
 
+            # 开始下载
             thread = Download(user_id_list[user_id])
             thread.start()
 
+        # 检查所有线程是不是全部结束了
         while THREAD_COUNT != 0:
             time.sleep(10)
 
@@ -213,32 +215,37 @@ class Download(threading.Thread):
                 message_stop = photo_album_page.find('"', message_start)
                 message_url = photo_album_page[message_start:message_stop]
                 message_url = message_url.replace('\u003d', '=')
+
+                # 有可能拿到带authkey的，需要去掉
+                # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
+                try:
+                    temp = re.findall('(.*)\?.*(#.*)', message_url)
+                    real_message_url = temp[0][0] + temp[0][1]
+                except:
+                    real_message_url = message_url
+
                 # 将第一张image的URL保存到新id list中
                 if self.user_info[3] == '':
-                    # 有可能拿到带authkey的，需要去掉
-                    # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
-                    try:
-                        temp = re.findall('(.*)\?.*(#.*)', message_url)
-                        self.user_info[3] = temp[0][0] + temp[0][1]
-                    except:
-                        self.user_info[3] = message_url
+                    self.user_info[3] = real_message_url
 
                 # 检查是否已下载到前一次的图片
-                if last_image_url.find("picasaweb.google.com/") != -1:
-                    if message_url == last_image_url:
-                        is_error = False
-                        break
+                if real_message_url == last_image_url:
+                    is_error = False
+                    break
+
                 trace("message URL:" + message_url)
                 # 判断是否重复
                 if message_url in message_url_list:
                     message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
                     continue
                 message_url_list.append(message_url)
+
                 message_page = common.do_get(message_url)
                 if not message_page:
                     print_error_msg(user_name + " 无法获取信息页")
                     message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
                     continue
+
                 flag = message_page.find("<div><a href=")
                 while flag != -1:
                     image_index = message_page.find("<img src=", flag, flag + 200)
@@ -272,7 +279,7 @@ class Download(threading.Thread):
                         print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
-                        print_error_msg(user_name + " 获取第" + str(image_count) + "张图片信息失败：" + str(user_id) + ": " + image_url)
+                        print_error_msg(user_name + " 第" + str(image_count) + "张图片下载失败")
 
                     # 达到配置文件中的下载数量，结束
                     if last_image_url != '' and GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
