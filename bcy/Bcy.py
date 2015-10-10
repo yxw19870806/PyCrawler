@@ -48,11 +48,11 @@ class Bcy(common.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
+        global NEW_USER_ID_LIST_FILE_PATH
         global IS_SORT
         global IS_TRACE
         global IS_SHOW_ERROR
         global IS_SHOW_STEP
-        global NEW_USER_ID_LIST_FILE_PATH
         global TRACE_LOG_PATH
         global ERROR_LOG_PATH
         global STEP_LOG_PATH
@@ -159,8 +159,8 @@ class Download(threading.Thread):
     def run(self):
         global GET_IMAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
-        global IS_SORT
         global NEW_USER_ID_LIST_FILE_PATH
+        global IS_SORT
         global TOTAL_IMAGE_COUNT
         global THREAD_COUNT
 
