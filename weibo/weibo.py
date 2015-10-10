@@ -215,6 +215,12 @@ class Download(threading.Thread):
         # 初始化数据
         last_image_url = self.user_info[3]
         self.user_info[3] = ''  # 置空，存放此次的最后URL
+        # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
+        if last_image_url == '':
+            limit_download_count = 0
+        else:
+            # 历史总数的10%，下线50、上限300
+            limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
         page_count = 1
         image_count = 1
         is_pass = False
@@ -317,8 +323,13 @@ class Download(threading.Thread):
                 else:
                     print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段")
 
+                # 达到下载数量限制，结束
+                if limit_download_count > 0 and image_count > limit_download_count:
+                    is_pass = True
+                    break
+
                 # 达到配置文件中的下载数量，结束
-                if last_image_url != '' and GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
+                if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                     is_pass = True
                     break
 
