@@ -62,8 +62,6 @@ class GooglePlus(common.Robot):
 
         super(GooglePlus, self).__init__()
 
-        self.is_proxy = 0
-
         # 全局变量
         GET_IMAGE_URL_COUNT = 1000  # 单次获取最新的N张照片,G+ 限制最多1000张
         GET_IMAGE_COUNT = self.get_image_count
@@ -323,6 +321,7 @@ class Download(threading.Thread):
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
+
         print_step_msg(user_name + "开始")
 
         # 初始化数据
@@ -351,7 +350,7 @@ class Download(threading.Thread):
         photo_album_url = 'https://plus.google.com/_/photos/pc/read/'
         now = time.time() * 100
         key = ''
-        post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]&at=AObGSAj1ll9iGT-1d05vTuxV5yygWelh9g:%s&' % (user_id, user_id, GET_IMAGE_URL_COUNT, key, now)
+        post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
         trace(user_name + " 信息首页地址：" + photo_album_url)
         photo_album_page = common.do_get(photo_album_url, post_data)
         if photo_album_page:
