@@ -373,6 +373,22 @@ def save_image(image_url, image_path):
     return False
 
 
+# order desc 降序
+# order asc  升序
+# order 其他 不需要排序
+def get_dir_files_name(path, order=None):
+    path = change_path_encoding(path)
+    files_list = os.listdir(path)
+    # 升序
+    if order == 'asc':
+        return sorted(files_list, reverse=False)
+    # 降序
+    elif order == 'desc':
+        return sorted(files_list, reverse=True)
+    else:
+        return files_list
+
+
 # 删除目录下所有文件
 # only_files 是否仅仅删除目录下文件而保留目录
 def remove_dir(dir_path, only_files=False):
