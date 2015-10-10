@@ -126,7 +126,7 @@ class Bcy(common.Robot):
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
         new_user_id_list_file.close()
 
-        total_image_count = 0
+        TOTAL_IMAGE_COUNT = 0
         # 循环下载每个id
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
