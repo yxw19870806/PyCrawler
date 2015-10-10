@@ -75,6 +75,9 @@ class Robot(object):
             os_version = self.get_config(config, "OS_VERSION", 1, 2)
             self.cookie_path = get_default_browser_cookie_path(os_version, self.browser_version)
 
+        # 线程数
+        self.thread_count = self.get_config(config, "THREAD_COUNT", 10, 2)
+
     # 获取配置文件
     # config : 字典格式，如：{key1:value1, key2:value2}
     # mode=0 : 直接赋值
@@ -105,7 +108,6 @@ class Robot(object):
                 value = config[key]
                 if value[0] == "\\":
                     value = os.getcwd() + value
-                return value
         else:
             print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
             value = default_value
