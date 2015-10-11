@@ -187,7 +187,7 @@ class Download(threading.Thread):
             limit_download_count = 0
         else:
             # 历史总数的10%，下线50、上限1000
-            limit_download_count = min(max(50, int(self.user_info[3]) / 100 * 10), 1000)
+            limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 1000)
         image_count = 1
         message_url_list = []
         image_url_list = []
