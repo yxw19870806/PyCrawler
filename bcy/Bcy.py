@@ -264,24 +264,31 @@ class Download(threading.Thread):
                     image_count = 0
                     image_index = rp_page.find("src='")
                     while image_index != -1:
+                        image_count += 1
+
                         image_start = rp_page.find("http", image_index)
                         image_stop = rp_page.find("'", image_start)
                         image_url = rp_page[image_start:image_stop]
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        image_count += 1
-                        print_step_msg(cn + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+
                         if image_url.rfind('/') < image_url.rfind('.'):
                             file_type = image_url.split(".")[-1]
                         else:
                             file_type = 'jpg'
-                        if common.save_image(image_url, rp_path + "\\" + str("%03d" % image_count) + "." + file_type):
+                        file_path = rp_path + "\\" + str("%03d" % image_count) + "." + file_type
+
+                        print_step_msg(cn + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                        if common.save_image(image_url, file_path):
                             print_step_msg(cn + " 第" + str(image_count) + "张图片下载成功")
                         else:
                             print_error_msg(cn + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+
                         image_index = rp_page.find("src='", image_index + 1)
+
                     if image_count == 0:
                         print_error_msg(cn + " " + rp_id + " 没有任何图片")
+
                     this_cn_total_image_count += image_count - 1
             if is_pass:
                 break
