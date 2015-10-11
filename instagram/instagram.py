@@ -249,13 +249,13 @@ class Download(threading.Thread):
 
                 # 文件类型
                 file_type = image_url.split(".")[-1]
-                file_name = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
                 # 下载
                 print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                if common.save_image(image_url, file_name):
-                    image_count += 1
+                if common.save_image(image_url, file_path):
                     print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                    image_count += 1
                 else:
                     print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
