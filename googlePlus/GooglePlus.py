@@ -221,7 +221,6 @@ class Download(threading.Thread):
                 message_stop = photo_album_page.find('"', message_start)
                 message_url = photo_album_page[message_start:message_stop]
                 message_url = message_url.replace('\u003d', '=')
-
                 # 有可能拿到带authkey的，需要去掉
                 # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                 try:
@@ -229,6 +228,12 @@ class Download(threading.Thread):
                     real_message_url = temp[0][0] + temp[0][1]
                 except:
                     real_message_url = message_url
+                # 判断是否重复
+                if real_message_url in message_url_list:
+                    message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
+                    continue
+                message_url_list.append(real_message_url)
+                trace("message URL:" + message_url)
 
                 # 将第一张image的URL保存到新id list中
                 if self.user_info[3] == '':
@@ -238,13 +243,6 @@ class Download(threading.Thread):
                 if real_message_url == last_image_url:
                     is_error = False
                     break
-
-                trace("message URL:" + message_url)
-                # 判断是否重复
-                if message_url in message_url_list:
-                    message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
-                    continue
-                message_url_list.append(message_url)
 
                 message_page = common.do_get(message_url)
                 if not message_page:
@@ -261,11 +259,11 @@ class Download(threading.Thread):
                     image_start = message_page.find("http", image_index)
                     image_stop = message_page.find('"', image_start)
                     image_url = message_page[image_start:image_stop]
-                    trace("image URL:" + image_url)
                     if image_url in image_url_list:
                         flag = message_page.find("<div><a href=", flag + 1)
                         continue
                     image_url_list.append(image_url)
+                    trace("image URL:" + image_url)
 
                     # 重组URL并使用最大分辨率
                     # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
