@@ -254,8 +254,8 @@ class Download(threading.Thread):
                 # 下载
                 print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
                 if common.save_image(image_url, file_name):
-                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                     image_count += 1
+                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                 else:
                     print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
@@ -285,11 +285,12 @@ class Download(threading.Thread):
                     common.process_exit()
 
                 # 倒叙排列
-                count = int(self.user_info[1]) + 1
+                count = int(self.user_info[1])
                 for file_name in image_list:
+                    count += 1
                     file_type = file_name.split(".")[1]
                     common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
-                    count += 1
+
                 print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
             # 删除临时文件夹
             shutil.rmtree(image_path, True)

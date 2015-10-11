@@ -355,12 +355,12 @@ class Download(threading.Thread):
                     common.process_exit()
 
                 # 倒叙排列
-                count = int(self.user_info[2]) + 1
+                count = int(self.user_info[2])
 
                 for file_name in image_list:
+                    count += 1
                     file_type = file_name.split(".")[1]
                     common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
-                    count += 1
 
                 print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
             # 删除临时文件夹
