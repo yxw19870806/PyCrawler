@@ -174,7 +174,7 @@ class Download(threading.Thread):
             limit_download_count = 0
         else:
             # 历史总数的10%，下线50、上限300
-            limit_download_count = min(max(50, int(self.user_info[3]) / 100 * 10), 300)
+            limit_download_count = min(max(50, int(self.user_info[1]) / 100 * 10), 300)
         image_id = ""
         image_count = 1
         is_pass = False
