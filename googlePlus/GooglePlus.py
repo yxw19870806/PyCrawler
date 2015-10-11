@@ -312,7 +312,7 @@ class Download(threading.Thread):
 
         # 排序
         if IS_SORT == 1:
-            image_list = sorted(os.listdir(image_path), reverse=True)
+            image_list = common.get_dir_files_name(image_path, 'desc')
             # 判断排序目标文件夹是否存在
             if len(image_list) >= 1:
                 destination_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
