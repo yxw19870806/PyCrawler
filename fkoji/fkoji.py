@@ -66,8 +66,9 @@ class Fkoji(common.Robot):
                 if len(info) >= 2:
                     image_start_index = int(info[0])
                     last_image_url = info[1].replace("\xef\xbb\xbf", "").replace("\n", "").replace(" ", "")
+
                 for user_info in all_user_list[1:]:
-                    user_info = user_info.replace(" ", "")
+                    user_info = user_info.replace(" ", "").replace("\n", "").replace("\r", "")
                     user_info_list = user_info.split("\t")
                     if len(user_info_list) >= 2:
                         user_id_list[user_info_list[0]] = user_info_list[1]
@@ -76,16 +77,15 @@ class Fkoji(common.Robot):
         url = "http://jigadori.fkoji.com/?p=%s"
         page_index = 1
         image_count = 1
-        is_over = False
         new_last_image_url = ""
         image_url_list = []
         if self.is_sort == 1:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
-        while True:
-            if is_over:
-                break
+        is_over = False
+
+        while 1:
             index_url = url % str(page_index)
             self._trace("网页地址：" + index_url)
             index_page = common.do_get(index_url)
@@ -134,9 +134,11 @@ class Fkoji(common.Robot):
                             self._print_error_msg("获取图片" + str(image_count) + "信息失败：" + image_url)
                         image_file.close()
                         image_count += 1
+
                 if is_over:
                     break
             page_index += 1
+
         self._print_step_msg("下载完毕")
 
         # 排序复制到保存目录
@@ -157,29 +159,33 @@ class Fkoji(common.Robot):
                 self._print_error_msg("创建目录：" + self.image_download_path + "\\all" + " 失败，程序结束！")
                 common.process_exit()
 
-            for file_name in sorted(os.listdir(self.image_temp_path), reverse=True):
-                image_start_index += 1
+            file_list = common.get_dir_files_name(self.image_temp_path, 'desc')
+            for file_name in file_list:
                 image_path = self.image_temp_path + "\\" + file_name
                 file_name_list = file_name.split(".")
                 file_type = file_name_list[-1]
                 user_id = "_".join(".".join(file_name_list[:-1]).split("_")[1:])
+
                 # 所有
+                image_start_index += 1
                 common.copy_files(image_path, self.image_download_path + "\\all\\" + str("%05d" % image_start_index) + "_" + user_id + "." + file_type)
+
                 # 单个
                 each_user_path = self.image_download_path + "\\single\\" + user_id
                 if not os.path.exists(each_user_path):
                     if not common.make_dir(each_user_path, 1):
                         self._print_error_msg("创建目录：" + each_user_path + " 失败，程序结束！")
                         common.process_exit()
-
                 if user_id_list.has_key(user_id):
                     user_id_list[user_id] = int(user_id_list[user_id]) + 1
                 else:
                     user_id_list[user_id] = 1
                 common.copy_files(image_path, each_user_path + "\\" + str("%05d" % user_id_list[user_id]) + "." + file_type)
+
             self._print_step_msg("图片从下载目录移动到保存目录成功")
-            # 删除下载临时目录中的图片
-            shutil.rmtree(self.image_temp_path, True)
+
+            # 删除临时文件夹
+            common.remove_dir(image_path)
             
         # 保存新的存档文件
         new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
