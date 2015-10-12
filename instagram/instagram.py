@@ -10,7 +10,6 @@ email: hikaru870806@hotmail.com
 
 from common import common, json
 import os
-import shutil
 import threading
 import time
 

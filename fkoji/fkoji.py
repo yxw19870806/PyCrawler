@@ -11,7 +11,6 @@ email: hikaru870806@hotmail.com
 from common import common
 from common import BeautifulSoup
 import os
-import shutil
 import time
 
 
