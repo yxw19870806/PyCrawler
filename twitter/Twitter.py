@@ -173,7 +173,7 @@ class Download(threading.Thread):
 
         user_account = self.user_info[0]
 
-        print_step_msg("Account: " + user_account)
+        print_step_msg(user_account + " 开始")
 
         # 初始化数据
         last_image_url = self.user_info[2]
@@ -319,7 +319,19 @@ class Download(threading.Thread):
         if is_error:
             print_error_msg(user_account + " 图片数量异常，请手动检查")
 
+        # 保存最后的信息
+        threadLock.acquire()
+        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
+        new_user_id_list_file.write("\t".join(self.user_info) + "\n")
+        new_user_id_list_file.close()
+        TOTAL_IMAGE_COUNT += image_count - 1
+        THREAD_COUNT -= 1
+        threadLock.release()
+
+        print_step_msg(user_account + " 完成")
+
+
 if __name__ == "__main__":
     Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage").main()
-    # Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
-    # Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage").main()
+    Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
+    Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage").main()

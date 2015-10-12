@@ -210,7 +210,8 @@ class Download(threading.Thread):
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
-        # print_step_msg("UID: " + str(user_id) + "，Name: " + user_name)
+
+        print_step_msg(user_name + " 开始")
 
         # 初始化数据
         last_image_url = self.user_info[3]
@@ -380,6 +381,8 @@ class Download(threading.Thread):
         TOTAL_IMAGE_COUNT += image_count - 1
         THREAD_COUNT -= 1
         threadLock.release()
+
+        print_step_msg(user_name + " 完成")
 
 
 if __name__ == '__main__':

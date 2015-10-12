@@ -312,5 +312,6 @@ class Download(threading.Thread):
 
         print_step_msg(user_account + " 完成")
 
+
 if __name__ == "__main__":
     Instagram().main()
