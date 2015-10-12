@@ -184,7 +184,7 @@ def do_get(url, post_data=None):
                 print_msg(str(e))
                 traceback.print_exc()
         count += 1
-        if count > 20:
+        if count > 10:
             print_error_msg("无法访问页面：" + url)
             return False
 

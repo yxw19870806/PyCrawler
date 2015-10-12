@@ -10,7 +10,6 @@ email: hikaru870806@hotmail.com
 
 from common import common, json
 import os
-import shutil
 import threading
 import time
 
@@ -177,7 +176,7 @@ class Download(threading.Thread):
             limit_download_count = min(max(50, int(self.user_info[1]) / 100 * 10), 300)
         image_id = ""
         image_count = 1
-        is_pass = False
+        is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
         if last_image_id != "":
             is_error = True
@@ -234,7 +233,7 @@ class Download(threading.Thread):
 
                 # 检查是否已下载到前一次的图片
                 if image_id == last_image_id:
-                    is_pass = True
+                    is_over = True
                     is_error = False
                     break
 
@@ -261,15 +260,16 @@ class Download(threading.Thread):
 
                 # 达到下载数量限制，结束
                 if limit_download_count > 0 and image_count > limit_download_count:
-                    is_pass = True
+                    is_over = True
                     break
 
                 # 达到配置文件中的下载数量，结束
                 if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
-                    is_pass = True
+                    is_over = True
+                    is_error = False
                     break
 
-            if is_pass:
+            if is_over:
                 break
 
         print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
@@ -292,8 +292,9 @@ class Download(threading.Thread):
                     common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
 
                 print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
+
             # 删除临时文件夹
-            shutil.rmtree(image_path, True)
+            common.remove_dir(image_path)
 
         self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 
@@ -310,6 +311,7 @@ class Download(threading.Thread):
         threadLock.release()
 
         print_step_msg(user_account + " 完成")
+
 
 if __name__ == "__main__":
     Instagram().main()

@@ -173,7 +173,7 @@ class Download(threading.Thread):
 
         user_account = self.user_info[0]
 
-        print_step_msg("Account: " + user_account)
+        print_step_msg(user_account + " 开始")
 
         # 初始化数据
         last_image_url = self.user_info[2]
@@ -187,8 +187,7 @@ class Download(threading.Thread):
         data_tweet_id = INIT_MAX_ID
         image_count = 1
         image_url_list = []
-        is_pass = False
-        is_last_page = False
+        is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
         if last_image_url != '':
             is_error = True
@@ -205,10 +204,7 @@ class Download(threading.Thread):
             common.process_exit()
 
         # 图片下载
-        while not is_last_page:
-            if is_pass:
-                break
-
+        while 1:
             photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
             photo_page_data = common.do_get(photo_page_url)
             if not photo_page_data:
@@ -226,23 +222,21 @@ class Download(threading.Thread):
             if not page.has_key("has_more_items"):
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
                 break
-            if not page['has_more_items']:
-                is_last_page = True
             if page.has_key("items_html") is False:
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
                 break
 
-            page = page['items_html']
+            items_page = page['items_html']
 
-            image_index = page.find("data-url")
+            image_index = items_page.find("data-url")
             while image_index != -1:
-                image_start = page.find("http", image_index)
-                image_stop = page.find('"', image_start)
-                image_url = page[image_start:image_stop].encode("utf-8")
+                image_start = items_page.find("http", image_index)
+                image_stop = items_page.find('"', image_start)
+                image_url = items_page[image_start:image_stop].encode("utf-8")
                 if image_url.find('&quot') != -1:
                     image_url = image_url[:image_url.find('&quot')]
                 if image_url in image_url_list:
-                    image_index = page.find('data-url', image_index + 1)
+                    image_index = items_page.find('data-url', image_index + 1)
                     continue
                 image_url_list.append(image_url)
                 trace(user_account + " image URL:" + image_url)
@@ -253,7 +247,7 @@ class Download(threading.Thread):
 
                 # 检查是否已下载到前一次的图片
                 if image_url == last_image_url:
-                    is_pass = True
+                    is_over = True
                     is_error = False
                     break
 
@@ -270,24 +264,28 @@ class Download(threading.Thread):
 
                 # 达到下载数量限制，结束
                 if limit_download_count > 0 and image_count > limit_download_count:
-                    is_pass = True
+                    is_over = True
                     break
 
                 # 达到配置文件中的下载数量，结束
                 if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
-                    is_pass = True
+                    is_over = True
+                    is_error = False
                     break
 
-                image_index = page.find('data-url', image_index + 1)
+                image_index = items_page.find('data-url', image_index + 1)
 
-            if not is_last_page:
+            if is_over:
+                break
+
+            if page['has_more_items']:
                 # 设置最后一张的data-tweet-id
-                data_tweet_id_index = page.find('data-tweet-id="')
+                data_tweet_id_index = items_page.find('data-tweet-id="')
                 while data_tweet_id_index != -1:
-                    data_tweet_id_start = page.find('"', data_tweet_id_index)
-                    data_tweet_id_stop = page.find('"', data_tweet_id_start + 1)
-                    data_tweet_id = page[data_tweet_id_start + 1:data_tweet_id_stop]
-                    data_tweet_id_index = page.find('data-tweet-id="', data_tweet_id_index + 1)
+                    data_tweet_id_start = items_page.find('"', data_tweet_id_index)
+                    data_tweet_id_stop = items_page.find('"', data_tweet_id_start + 1)
+                    data_tweet_id = items_page[data_tweet_id_start + 1:data_tweet_id_stop]
+                    data_tweet_id_index = items_page.find('data-tweet-id="', data_tweet_id_index + 1)
 
         TOTAL_IMAGE_COUNT += image_count - 1
 
@@ -321,7 +319,19 @@ class Download(threading.Thread):
         if is_error:
             print_error_msg(user_account + " 图片数量异常，请手动检查")
 
+        # 保存最后的信息
+        threadLock.acquire()
+        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
+        new_user_id_list_file.write("\t".join(self.user_info) + "\n")
+        new_user_id_list_file.close()
+        TOTAL_IMAGE_COUNT += image_count - 1
+        THREAD_COUNT -= 1
+        threadLock.release()
+
+        print_step_msg(user_account + " 完成")
+
+
 if __name__ == "__main__":
     Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage").main()
-    # Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
-    # Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage").main()
+    Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
+    Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage").main()

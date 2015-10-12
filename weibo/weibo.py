@@ -210,7 +210,8 @@ class Download(threading.Thread):
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
-        # print_step_msg("UID: " + str(user_id) + "，Name: " + user_name)
+
+        print_step_msg(user_name + " 开始")
 
         # 初始化数据
         last_image_url = self.user_info[3]
@@ -223,7 +224,7 @@ class Download(threading.Thread):
             limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
         page_count = 1
         image_count = 1
-        is_pass = False
+        is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
         if last_image_url == '':
             is_error = False
@@ -274,7 +275,7 @@ class Download(threading.Thread):
                         self.user_info[3] = image_info["pic_name"]
                     # 检查是否已下载到前一次的图片
                     if image_info["pic_name"] == last_image_url:
-                        is_pass = True
+                        is_over = True
                         is_error = False
                         break
 
@@ -325,15 +326,16 @@ class Download(threading.Thread):
 
                 # 达到下载数量限制，结束
                 if limit_download_count > 0 and image_count > limit_download_count:
-                    is_pass = True
+                    is_over = True
                     break
 
                 # 达到配置文件中的下载数量，结束
                 if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
-                    is_pass = True
+                    is_over = True
+                    is_error = False
                     break
 
-            if is_pass:
+            if is_over:
                 break
 
             if total_image_count / IMAGE_COUNT_PER_PAGE > page_count - 1:
@@ -379,6 +381,8 @@ class Download(threading.Thread):
         TOTAL_IMAGE_COUNT += image_count - 1
         THREAD_COUNT -= 1
         threadLock.release()
+
+        print_step_msg(user_name + " 完成")
 
 
 if __name__ == '__main__':
