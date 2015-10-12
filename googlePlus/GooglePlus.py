@@ -211,12 +211,12 @@ class Download(threading.Thread):
         key = ''
         post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
         trace(user_name + " 信息首页地址：" + photo_album_url)
-        photo_album_page = common.do_get(photo_album_url, post_data)
+        photo_album_page = common.http_request(photo_album_url, post_data)
         # 换一个获取信息页的方法，这个只能获取最近的100张
         if not photo_album_page:
             photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
             trace(user_name + " 信息首页地址：" + photo_album_url)
-            photo_album_page = common.do_get(photo_album_url)
+            photo_album_page = common.http_request(photo_album_url)
 
         # 无法获取信息首页
         if not photo_album_page:
@@ -258,7 +258,7 @@ class Download(threading.Thread):
                     is_error = False
                     break
 
-                message_page = common.do_get(message_url)
+                message_page = common.http_request(message_url)
                 if not message_page:
                     print_error_msg(user_name + " 无法获取信息页")
                     message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)

@@ -184,7 +184,7 @@ class Download(threading.Thread):
 
         while 1:
             photo_album_url = 'http://bcy.net/coser/ajaxShowMore?type=all&cp_id=%s&p=%s' % (cp_id, page_count)
-            photo_album_page = common.do_get(photo_album_url)
+            photo_album_page = common.http_request(photo_album_url)
             if not photo_album_page:
                 print_error_msg(cn + " 无法获取数据: " + photo_album_url)
                 break
@@ -258,7 +258,7 @@ class Download(threading.Thread):
                         common.process_exit()
 
                 rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
-                rp_page = common.do_get(rp_url)
+                rp_page = common.http_request(rp_url)
                 if rp_page:
                     image_count = 0
                     image_index = rp_page.find("src='")
