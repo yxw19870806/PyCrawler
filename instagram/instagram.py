@@ -293,8 +293,9 @@ class Download(threading.Thread):
                     common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
 
                 print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
+
             # 删除临时文件夹
-            shutil.rmtree(image_path, True)
+            common.remove_dir(image_path)
 
         self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 
