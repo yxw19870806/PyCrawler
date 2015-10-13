@@ -87,7 +87,8 @@ class Fkoji(common.Robot):
         while 1:
             index_url = url % str(page_index)
             self._trace("网页地址：" + index_url)
-            index_page = common.do_get(index_url)
+
+            index_page = common.http_request(index_url)
             index_page = BeautifulSoup.BeautifulSoup(index_page)
      
             photo_list = index_page.body.findAll("div", "photo")
@@ -125,7 +126,7 @@ class Fkoji(common.Robot):
                             file_type = 'jpg'
                         image_file = open(image_path + "\\" + str("%05d" % image_count) + "_" + str(user_id) + "." + file_type, "wb")
                         self._print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
-                        img_byte = common.do_get(image_url)
+                        img_byte = common.http_request(image_url)
                         if img_byte:
                             image_file.write(img_byte)
                             self._print_step_msg("下载成功")

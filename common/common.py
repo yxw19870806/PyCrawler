@@ -133,7 +133,7 @@ class Robot(object):
 
 
 # http请求
-def do_get(url, post_data=None):
+def http_request(url, post_data=None):
     global IS_SET_TIMEOUT
     if url.find("http") == -1:
         return False
@@ -183,8 +183,9 @@ def do_get(url, post_data=None):
             else:
                 print_msg(str(e))
                 traceback.print_exc()
+
         count += 1
-        if count > 10:
+        if count > 100:
             print_error_msg("无法访问页面：" + url)
             return False
 
@@ -364,7 +365,7 @@ def write_file(msg, file_path):
 # image_path 包括路径和文件名
 def save_image(image_url, image_path):
     image_path = change_path_encoding(image_path)
-    image_byte = do_get(image_url)
+    image_byte = http_request(image_url)
     if image_byte:
         image_file = open(image_path, "wb")
         image_file.write(image_byte)

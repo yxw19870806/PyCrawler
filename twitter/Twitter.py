@@ -60,6 +60,8 @@ class Twitter(common.Robot):
         # multiprocessing.Process.__init__(self)
         common.Robot.__init__(self)
 
+        if user_id_list_file_path != '':
+            self.user_id_list_file_path = user_id_list_file_path
         INIT_MAX_ID = 999999999999999999
         GET_IMAGE_COUNT = self.get_image_count
         if image_temp_path != '':
@@ -182,8 +184,8 @@ class Download(threading.Thread):
         if last_image_url == '':
             limit_download_count = 0
         else:
-            # 历史总数的10%，下线50、上限300
-            limit_download_count = min(max(50, int(self.user_info[1]) / 100 * 10), 300)
+            # 历史总数的10%，下线100、上限500
+            limit_download_count = min(max(100, int(self.user_info[1]) / 100 * 10), 500)
         data_tweet_id = INIT_MAX_ID
         image_count = 1
         image_url_list = []
@@ -206,7 +208,7 @@ class Download(threading.Thread):
         # 图片下载
         while 1:
             photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
-            photo_page_data = common.do_get(photo_page_url)
+            photo_page_data = common.http_request(photo_page_url)
             if not photo_page_data:
                 print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                 break

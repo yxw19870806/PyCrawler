@@ -177,14 +177,14 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def _visit(self, url):
-        temp_page = common.do_get(url)
+        temp_page = common.http_request(url)
         if temp_page:
             redirect_url_index = temp_page.find("location.replace")
             if redirect_url_index != -1:
                 redirect_url_start = temp_page.find("'", redirect_url_index) + 1
                 redirect_url_stop = temp_page.find("'", redirect_url_start)
                 redirect_url = temp_page[redirect_url_start:redirect_url_stop]
-                return str(common.do_get(redirect_url))
+                return str(common.http_request(redirect_url))
             elif temp_page.find("用户名或密码错误") != -1:
                 print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
                 common.process_exit()
@@ -295,7 +295,7 @@ class Download(threading.Thread):
                         else:
                             print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
 
-                        img_byte = common.do_get(image_url)
+                        img_byte = common.http_request(image_url)
                         if img_byte:
                             md5_digest = hashlib.md5()
                             md5_digest.update(img_byte)
