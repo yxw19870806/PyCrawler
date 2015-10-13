@@ -297,9 +297,9 @@ class Download(threading.Thread):
 
                         img_byte = common.http_request(image_url)
                         if img_byte:
-                            md5_digest = hashlib.md5()
-                            md5_digest.update(img_byte)
-                            md5_digest.hexdigest()
+                            md5 = hashlib.md5()
+                            md5.update(img_byte)
+                            md5_digest = md5.hexdigest()
                             # 处理获取的文件为weibo默认获取失败的图片
                             if md5_digest in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
                                 print_step_msg(user_name + " 源文件获取失败，重试")
