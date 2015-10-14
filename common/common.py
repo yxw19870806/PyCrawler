@@ -133,7 +133,7 @@ class Robot(object):
 
 
 # http请求
-def http_request(url, post_data=None):
+def http_request(url, post_data=None, read_data=True):
     global IS_SET_TIMEOUT
     if url.find("http") == -1:
         return False
@@ -161,7 +161,10 @@ def http_request(url, post_data=None):
             else:
                 response = urllib2.urlopen(request, timeout=5)
 
-            return response.read()
+            if read_data:
+                return response.read()
+            else:
+                return response
         except Exception, e:
             # 代理无法访问
             if str(e).find("[Errno 10061]") != -1:
