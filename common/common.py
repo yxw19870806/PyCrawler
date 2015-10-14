@@ -193,6 +193,18 @@ def http_request(url, post_data=None, read_data=True):
             return False
 
 
+# 返回的是当前时区对应的时间
+def get_response_last_modify_timestamp(response):
+    try:
+        info = response.info()
+        if 'last-modified' in info:
+            # last-modified 是GMT时间
+            return int(time.strptime(info['last-modified'], '%a, %d %b %Y %H:%M:%S %Z')) - time.timezone
+    except:
+        pass
+    return 0
+
+
 # 根据浏览器和操作系统，自动查找默认浏览器cookie路径
 # os_version=1: win7
 # os_version=2: xp
