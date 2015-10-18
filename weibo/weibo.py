@@ -217,6 +217,7 @@ class Download(threading.Thread):
         last_image_name = self.user_info[3]
         self.user_info[3] = ''  # 置空，存放此次的最后URL
         # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
+        # 第一次下载，不用限制
         if last_image_name == '':
             limit_download_count = 0
         else:
@@ -227,7 +228,7 @@ class Download(threading.Thread):
             if last_img_byte:
                 limit_download_count = 0
             else:
-                # 历史总数的10%，下线50、上限300
+                # 历史总数的10%，下限50、上限300
                 limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
         page_count = 1
         image_count = 1
