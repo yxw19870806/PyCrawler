@@ -181,11 +181,17 @@ class Download(threading.Thread):
         last_image_url = self.user_info[2]
         self.user_info[2] = ''  # 置空，存放此次的最后URL
         # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
+        # 第一次下载，不用限制
         if last_image_url == '':
             limit_download_count = 0
         else:
-            # 历史总数的10%，下线100、上限500
-            limit_download_count = min(max(100, int(self.user_info[1]) / 100 * 10), 500)
+            last_img_byte = common.http_request(last_image_url)
+            # 上次记录的图片还在，那么不要限制
+            if last_img_byte:
+                limit_download_count = 0
+            else:
+                # 历史总数的10%，下限100、上限500
+                limit_download_count = min(max(100, int(self.user_info[1]) / 100 * 10), 500)
         data_tweet_id = INIT_MAX_ID
         image_count = 1
         image_url_list = []

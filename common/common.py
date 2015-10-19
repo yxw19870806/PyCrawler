@@ -181,7 +181,7 @@ def http_request(url, post_data=None, read_data=True):
             elif str(e).find("timed out") != -1:
                 print_msg("访问页面超时，重新连接请稍后")
             # 404
-            elif str(e).find("HTTP Error 404: Not Found") != -1:
+            elif str(e).lower().find("http error 404") != -1:
                 count += 100
             else:
                 print_msg(str(e))

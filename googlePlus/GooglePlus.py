@@ -180,19 +180,25 @@ class Download(threading.Thread):
         print_step_msg(user_name + " 开始")
 
         # 初始化数据
-        last_image_url = self.user_info[3]
+        last_message_url = self.user_info[3]
         self.user_info[3] = ''  # 置空，存放此次的最后URL
         # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        if last_image_url == '':
+        # 第一次下载，不用限制
+        if last_message_url == '':
             limit_download_count = 0
         else:
-            # 历史总数的10%，下线50、上限1000
-            limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 1000)
+            last_message_page = common.http_request(last_message_url)
+            # 上次记录的信息首页还在，那么不要限制
+            if last_message_page:
+                limit_download_count = 0
+            else:
+                # 历史总数的10%，下限50、上限1000
+                limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 1000)
         image_count = 1
         message_url_list = []
         image_url_list = []
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_image_url.find("picasaweb.google.com/") != -1:
+        if last_message_url.find("picasaweb.google.com/") != -1:
             is_error = True
         else:
             is_error = False
@@ -221,7 +227,7 @@ class Download(threading.Thread):
         # 无法获取信息首页
         if not photo_album_page:
             # 恢复最后的记录
-            self.user_info[3] = last_image_url
+            self.user_info[3] = last_message_url
 
             # 删除临时文件夹
             common.remove_dir(image_path)
@@ -254,7 +260,7 @@ class Download(threading.Thread):
                     self.user_info[3] = real_message_url
 
                 # 检查是否已下载到前一次的图片
-                if real_message_url == last_image_url:
+                if real_message_url == last_message_url:
                     is_error = False
                     break
 

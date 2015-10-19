@@ -198,6 +198,7 @@ class Download(threading.Thread):
                 photo_album_url = "https://instagram.com/%s/media" % user_account
             else:
                 photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
+
             photo_album_data = common.http_request(photo_album_url)
             if not photo_album_data:
                 print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
@@ -215,59 +216,60 @@ class Download(threading.Thread):
                 break
 
             # 下载到了最后一张图了
-            if photo_album_page["items"] is []:
-                break
-            for photo_info in photo_album_page["items"]:
-                if not photo_info.has_key("images"):
-                    print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'images'字段")
-                    break
-                if not photo_info.has_key("id"):
-                    print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'id'字段")
-                    break
-                else:
-                    image_id = photo_info["id"]
+            if photo_album_page["items"] == []:
+                is_over = True
+            else:
+                for photo_info in photo_album_page["items"]:
+                    if not photo_info.has_key("images"):
+                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'images'字段")
+                        break
+                    if not photo_info.has_key("id"):
+                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'id'字段")
+                        break
+                    else:
+                        image_id = photo_info["id"]
 
-                # 将第一张image的id保存到新id list中
-                if self.user_info[2] == "":
-                    self.user_info[2] = image_id
+                    # 将第一张image的id保存到新id list中
+                    if self.user_info[2] == "":
+                        self.user_info[2] = image_id
 
-                # 检查是否已下载到前一次的图片
-                if image_id == last_image_id:
-                    is_over = True
-                    is_error = False
-                    break
+                    # 检查是否已下载到前一次的图片
+                    if image_id == last_image_id:
+                        is_over = True
+                        is_error = False
+                        break
 
-                if not photo_info["images"].has_key("standard_resolution"):
-                    print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]) + " 中没有找到'standard_resolution'字段, image id: " + image_id)
-                    break
-                if not photo_info["images"]["standard_resolution"].has_key("url"):
-                    print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]["standard_resolution"]) + " 中没有找到'url'字段, image id: " + image_id)
-                    break
+                    if not photo_info["images"].has_key("standard_resolution"):
+                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]) + " 中没有找到'standard_resolution'字段, image id: " + image_id)
+                        break
+                    if not photo_info["images"]["standard_resolution"].has_key("url"):
+                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]["standard_resolution"]) + " 中没有找到'url'字段, image id: " + image_id)
+                        break
 
-                image_url = photo_info["images"]["standard_resolution"]["url"]
+                    image_url = photo_info["images"]["standard_resolution"]["url"]
 
-                # 文件类型
-                file_type = image_url.split(".")[-1]
-                file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                    # 文件类型
+                    file_type = image_url.split(".")[-1]
+                    file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
-                # 下载
-                print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                if common.save_image(image_url, file_path):
-                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                    image_count += 1
-                else:
-                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                    # 下载
+                    print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    if common.save_image(image_url, file_path):
+                        print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                        image_count += 1
+                    else:
+                        print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                # 达到下载数量限制，结束
-                if limit_download_count > 0 and image_count > limit_download_count:
-                    is_over = True
-                    break
+                    # 达到下载数量限制，结束
+                    if limit_download_count > 0 and image_count > limit_download_count:
+                        is_over = True
+                        break
 
-                # 达到配置文件中的下载数量，结束
-                if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
-                    is_over = True
-                    is_error = False
-                    break
+                    # 达到配置文件中的下载数量，结束
+                    if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
+                        is_over = True
+                        is_error = False
+                        break
 
             if is_over:
                 break

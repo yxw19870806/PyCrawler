@@ -147,7 +147,7 @@ class Bcy(common.Robot):
             time.sleep(10)
 
         stop_time = time.time()
-        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(total_image_count) + "张")
+        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
 
 class Download(threading.Thread):

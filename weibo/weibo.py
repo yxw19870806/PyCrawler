@@ -214,19 +214,27 @@ class Download(threading.Thread):
         print_step_msg(user_name + " 开始")
 
         # 初始化数据
-        last_image_url = self.user_info[3]
+        last_image_name = self.user_info[3]
         self.user_info[3] = ''  # 置空，存放此次的最后URL
         # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        if last_image_url == '':
+        # 第一次下载，不用限制
+        if last_image_name == '':
             limit_download_count = 0
         else:
-            # 历史总数的10%，下线50、上限300
-            limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
+            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
+            last_image_url = image_host + "/large/" + last_image_name
+            last_img_byte = common.http_request(last_image_url)
+            # 上次记录的图片还在，那么不要限制
+            if last_img_byte:
+                limit_download_count = 0
+            else:
+                # 历史总数的10%，下限50、上限300
+                limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
         page_count = 1
         image_count = 1
         is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_image_url == '':
+        if last_image_name == '':
             is_error = False
         else:
             is_error = True
@@ -274,7 +282,7 @@ class Download(threading.Thread):
                     if self.user_info[3] == "":
                         self.user_info[3] = image_info["pic_name"]
                     # 检查是否已下载到前一次的图片
-                    if image_info["pic_name"] == last_image_url:
+                    if image_info["pic_name"] == last_image_name:
                         is_over = True
                         is_error = False
                         break
