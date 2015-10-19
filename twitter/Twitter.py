@@ -288,6 +288,8 @@ class Download(threading.Thread):
                     data_tweet_id_stop = items_page.find('"', data_tweet_id_start + 1)
                     data_tweet_id = items_page[data_tweet_id_start + 1:data_tweet_id_stop]
                     data_tweet_id_index = items_page.find('data-tweet-id="', data_tweet_id_index + 1)
+            else:
+                break
 
         TOTAL_IMAGE_COUNT += image_count - 1
 
