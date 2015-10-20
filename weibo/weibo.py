@@ -159,6 +159,8 @@ class Weibo(common.Robot):
             thread = Download(user_id_list[user_id])
             thread.start()
 
+            time.sleep(1)
+
         # 检查所有线程是不是全部结束了
         while THREAD_COUNT != 0:
             time.sleep(10)
@@ -221,15 +223,8 @@ class Download(threading.Thread):
         if last_image_name == '':
             limit_download_count = 0
         else:
-            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-            last_image_url = image_host + "/large/" + last_image_name
-            last_img_byte = common.http_request(last_image_url)
-            # 上次记录的图片还在，那么不要限制
-            if last_img_byte:
-                limit_download_count = 0
-            else:
-                # 历史总数的10%，下限50、上限300
-                limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
+            # 历史总数的10%，下限50、上限300
+            limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
         page_count = 1
         image_count = 1
         is_over = False
