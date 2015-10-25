@@ -133,9 +133,9 @@ class Weibo(common.Robot):
                     user_id_list[user_id].append("0")
                 if user_id_list[user_id][2] == '':
                     user_id_list[user_id][2] = '0'
-                # 处理上一次image URL
+                # 处理上一次图片的上传时间
                 if len(user_id_list[user_id]) < 4:
-                    user_id_list[user_id].append("")
+                    user_id_list[user_id].append("0")
         else:
             print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -232,11 +232,11 @@ class Download(threading.Thread):
 
         # 初始化数据
         last_image_time = self.user_info[3]
-        self.user_info[3] = ''  # 置空，存放此次的最后URL
+        self.user_info[3] = '0'  # 置空，存放此次的最后图片上传时间
         page_count = 1
         image_count = 1
         is_over = False
-        if last_image_time == '':
+        if last_image_time == '0':
             is_error = False
         else:
             is_error = True
@@ -281,7 +281,7 @@ class Download(threading.Thread):
                     continue
                 if image_info.has_key("pic_name") and image_info.has_key("timestamp"):
                     # 将第一张image的时间戳保存到新id list中
-                    if self.user_info[3] == "":
+                    if self.user_info[3] == "0":
                         self.user_info[3] = str(image_info["timestamp"])
                     # 检查是否图片时间小于上次的记录
                     if int(image_info["timestamp"]) <= int(last_image_time):
