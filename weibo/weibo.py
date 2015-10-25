@@ -216,20 +216,12 @@ class Download(threading.Thread):
         print_step_msg(user_name + " 开始")
 
         # 初始化数据
-        last_image_name = self.user_info[3]
+        last_image_time = self.user_info[3]
         self.user_info[3] = ''  # 置空，存放此次的最后URL
-        # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        # 第一次下载，不用限制
-        if last_image_name == '':
-            limit_download_count = 0
-        else:
-            # 历史总数的10%，下限50、上限300
-            limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
         page_count = 1
         image_count = 1
         is_over = False
-        # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_image_name == '':
+        if last_image_time == '':
             is_error = False
         else:
             is_error = True
@@ -272,12 +264,12 @@ class Download(threading.Thread):
                 if not isinstance(image_info, dict):
                     print_error_msg(user_name + " JSON数据['photo_list']：" + str(image_info) + " 不是一个字典")
                     continue
-                if image_info.has_key("pic_name"):
-                    # 将第一张image的URL保存到新id list中
+                if image_info.has_key("pic_name") and image_info.has_key("timestamp"):
+                    # 将第一张image的时间戳保存到新id list中
                     if self.user_info[3] == "":
-                        self.user_info[3] = image_info["pic_name"]
-                    # 检查是否已下载到前一次的图片
-                    if image_info["pic_name"] == last_image_name:
+                        self.user_info[3] = str(image_info["timestamp"])
+                    # 检查是否图片时间小于上次的记录
+                    if int(image_info["timestamp"]) <= int(last_image_time):
                         is_over = True
                         is_error = False
                         break
@@ -325,17 +317,11 @@ class Download(threading.Thread):
                             break
 
                 else:
-                    print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段")
-
-                # 达到下载数量限制，结束
-                if limit_download_count > 0 and image_count > limit_download_count:
-                    is_over = True
-                    break
+                    print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'或'timestamp'字段")
 
                 # 达到配置文件中的下载数量，结束
                 if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                     is_over = True
-                    is_error = False
                     break
 
             if is_over:
