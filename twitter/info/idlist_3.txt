@@ -1,5 +1,5 @@
 Maeda_Nozomi	2316	https://pbs.twimg.com/media/COocwbJU8AAjftm.jpg	前田希美
-PredatorRat	1217	https://pbs.twimg.com/media/COrDMW8UkAEajd_.jpg:large
+PredatorRat	1217	https://pbs.twimg.com/media/COrDMW8UkAEajd_.jpg:large	うしじまいい肉
 Shimashima108	714	https://pbs.twimg.com/media/COqlsJxUkAEpTi6.jpg:large
 jun_amaki	1701	https://pbs.twimg.com/media/CNB8--_UwAAhUTE.jpg	天木じゅん
 nahachi_078	946	https://pbs.twimg.com/media/COoIISeUwAE3JoM.png:large
@@ -8,3 +8,5 @@ ruriko_kojima	248	https://pbs.twimg.com/media/CObWnwbU8AASbkX.jpg:large	小島�
 siika0322	1405	https://pbs.twimg.com/media/COqewmQUYAAkS0n.jpg:large
 yun0808	838	https://pbs.twimg.com/media/COdTzI9UkAEuXTU.jpg:large	香坂ゆん
 lespros_umika			川島海荷
+yukakuramoti			倉持由香
+yoshida_saki			吉田早希
