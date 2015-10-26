@@ -90,9 +90,9 @@ class Twitter(common.Robot):
         start_time = time.time()
 
         # 图片保存目录
-        print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not common.make_dir(self.image_download_path, 2):
-            print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
+        print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+        if not common.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
             common.process_exit()
 
         # 设置代理
