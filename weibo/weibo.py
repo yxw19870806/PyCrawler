@@ -133,9 +133,9 @@ class Weibo(common.Robot):
                     user_id_list[user_id].append("0")
                 if user_id_list[user_id][2] == '':
                     user_id_list[user_id][2] = '0'
-                # 处理上一次image URL
+                # 处理上一次图片的上传时间
                 if len(user_id_list[user_id]) < 4:
-                    user_id_list[user_id].append("")
+                    user_id_list[user_id].append("0")
         else:
             print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -159,12 +159,29 @@ class Weibo(common.Robot):
             thread = Download(user_id_list[user_id])
             thread.start()
 
+            time.sleep(1)
+
         # 检查所有线程是不是全部结束了
         while THREAD_COUNT != 0:
             time.sleep(10)
 
         # 删除临时文件夹
         common.remove_dir(IMAGE_TEMP_PATH)
+
+        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
+        all_user_list = new_user_id_list_file.readlines()
+        new_user_id_list_file.close()
+        user_id_list = {}
+        for user_info in all_user_list:
+            if len(user_info) < 5:
+                continue
+            user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+            user_info_list = user_info.split("\t")
+            user_id_list[user_info_list[0]] = user_info_list
+        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
+        for user_id in sorted(user_id_list.keys()):
+            new_user_id_list_file.write("\t".join(user_id_list[user_id]) + "\n")
+        new_user_id_list_file.close()
 
         stop_time = time.time()
         print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
@@ -214,27 +231,12 @@ class Download(threading.Thread):
         print_step_msg(user_name + " 开始")
 
         # 初始化数据
-        last_image_name = self.user_info[3]
-        self.user_info[3] = ''  # 置空，存放此次的最后URL
-        # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        # 第一次下载，不用限制
-        if last_image_name == '':
-            limit_download_count = 0
-        else:
-            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-            last_image_url = image_host + "/large/" + last_image_name
-            last_img_byte = common.http_request(last_image_url)
-            # 上次记录的图片还在，那么不要限制
-            if last_img_byte:
-                limit_download_count = 0
-            else:
-                # 历史总数的10%，下限50、上限300
-                limit_download_count = min(max(50, int(self.user_info[2]) / 100 * 10), 300)
+        last_image_time = self.user_info[3]
+        self.user_info[3] = '0'  # 置空，存放此次的最后图片上传时间
         page_count = 1
         image_count = 1
         is_over = False
-        # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_image_name == '':
+        if last_image_time == '0':
             is_error = False
         else:
             is_error = True
@@ -277,12 +279,12 @@ class Download(threading.Thread):
                 if not isinstance(image_info, dict):
                     print_error_msg(user_name + " JSON数据['photo_list']：" + str(image_info) + " 不是一个字典")
                     continue
-                if image_info.has_key("pic_name"):
-                    # 将第一张image的URL保存到新id list中
-                    if self.user_info[3] == "":
-                        self.user_info[3] = image_info["pic_name"]
-                    # 检查是否已下载到前一次的图片
-                    if image_info["pic_name"] == last_image_name:
+                if image_info.has_key("pic_name") and image_info.has_key("timestamp"):
+                    # 将第一张image的时间戳保存到新id list中
+                    if self.user_info[3] == "0":
+                        self.user_info[3] = str(image_info["timestamp"])
+                    # 检查是否图片时间小于上次的记录
+                    if int(image_info["timestamp"]) <= int(last_image_time):
                         is_over = True
                         is_error = False
                         break
@@ -330,17 +332,11 @@ class Download(threading.Thread):
                             break
 
                 else:
-                    print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段")
-
-                # 达到下载数量限制，结束
-                if limit_download_count > 0 and image_count > limit_download_count:
-                    is_over = True
-                    break
+                    print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'或'timestamp'字段")
 
                 # 达到配置文件中的下载数量，结束
                 if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                     is_over = True
-                    is_error = False
                     break
 
             if is_over:
