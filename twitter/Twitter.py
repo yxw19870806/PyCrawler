@@ -146,6 +146,8 @@ class Twitter(common.Robot):
             thread = Download(user_id_list[user_account])
             thread.start()
 
+            time.sleep(1)
+
         # 检查所有线程是不是全部结束了
         while THREAD_COUNT != 0:
             time.sleep(10)
@@ -162,6 +164,18 @@ class Download(threading.Thread):
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
+
+    # 返回的是当前时区对应的时间
+    def get_image_last_modified(self, info):
+        last_modified_time = common.get_response_info(info, 'last-modified')
+        last_modified_time = time.strptime(last_modified_time, '%a, %d %b %Y %H:%M:%S %Z')
+        return int(time.mktime(last_modified_time)) - time.timezone
+
+    def save_image(self, image_byte, image_path):
+        image_path = common.change_path_encoding(image_path)
+        image_file = open(image_path, "wb")
+        image_file.write(image_byte)
+        image_file.close()
 
     def run(self):
         global INIT_MAX_ID
@@ -251,30 +265,31 @@ class Download(threading.Thread):
                 image_url_list.append(image_url)
                 trace(user_account + " image URL:" + image_url)
 
-                # 将第一张image的URL保存到新id list中
-                if self.user_info[2] == "":
-                    self.user_info[2] = image_url
+                while 1:
+                    [image_response_data, image_response_info] = common.http_request(image_url, None, True)
+                    if image_response_data:
+                        image_timescamp = self.get_image_last_modified(image_response_info)
+                        # 将第一张image的URL保存到新id list中
+                        if self.user_info[2] == "":
+                            self.user_info[2] = str(image_timescamp)
 
-                # 检查是否已下载到前一次的图片
-                if image_url == last_image_url:
-                    is_over = True
-                    is_error = False
-                    break
+                        # 检查是否已下载到前一次的图片
+                        if image_url == last_image_url:
+                            is_over = True
+                            is_error = False
+                            break
 
-                # 文件类型
-                file_type = image_url.split(".")[-1].split(':')[0]
-                file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                        # 文件类型
+                        file_type = image_url.split(".")[-1].split(':')[0]
+                        file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
-                print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                if common.save_image(image_url, file_path):
-                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                    image_count += 1
-                else:
-                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                        print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                        self.save_image(image_response_data, file_path)
+                        print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                        image_count += 1
+                    else:
+                        print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
 
-                # 达到下载数量限制，结束
-                if limit_download_count > 0 and image_count > limit_download_count:
-                    is_over = True
                     break
 
                 # 达到配置文件中的下载数量，结束
