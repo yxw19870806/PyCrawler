@@ -136,6 +136,8 @@ class Weibo(common.Robot):
                 # 处理上一次图片的上传时间
                 if len(user_id_list[user_id]) < 4:
                     user_id_list[user_id].append("0")
+                if user_id_list[user_id][3] == '':
+                    user_id_list[user_id][3] = '0'
         else:
             print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -236,6 +238,7 @@ class Download(threading.Thread):
         page_count = 1
         image_count = 1
         is_over = False
+        # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
         if last_image_time == '0':
             is_error = False
         else:
