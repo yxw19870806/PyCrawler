@@ -286,14 +286,9 @@ class Download(threading.Thread):
             if is_over:
                 break
 
-            if page['has_more_items']:
+            if page['has_more_items'] and 'min_position' in page:
                 # 设置最后一张的data-tweet-id
-                data_tweet_id_index = items_page.find('data-tweet-id="')
-                while data_tweet_id_index != -1:
-                    data_tweet_id_start = items_page.find('"', data_tweet_id_index)
-                    data_tweet_id_stop = items_page.find('"', data_tweet_id_start + 1)
-                    data_tweet_id = items_page[data_tweet_id_start + 1:data_tweet_id_stop]
-                    data_tweet_id_index = items_page.find('data-tweet-id="', data_tweet_id_index + 1)
+                data_tweet_id = page['min_position']
             else:
                 break
 
