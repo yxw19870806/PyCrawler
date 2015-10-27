@@ -126,8 +126,7 @@ class Twitter(common.Robot):
             common.process_exit()
 
         # 创建临时存档文件
-        new_user_id_list_file_path = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
-        new_user_id_list_file = open(new_user_id_list_file_path, "w")
+        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
         new_user_id_list_file.close()
 
         TOTAL_IMAGE_COUNT = 0
