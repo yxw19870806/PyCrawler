@@ -227,11 +227,14 @@ class Download(threading.Thread):
             if not isinstance(page, dict):
                 print_error_msg(user_account + " JSON数据：" + str(page) + " 不是一个字典")
                 break
-            if not page.has_key("has_more_items"):
+            if 'has_more_items' not in page:
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
                 break
-            if page.has_key("items_html") is False:
+            if 'items_html' not in page:
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
+                break
+            if 'min_position' not in page:
+                print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
                 break
 
             items_page = page['items_html']
