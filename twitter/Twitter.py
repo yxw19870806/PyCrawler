@@ -118,9 +118,11 @@ class Twitter(common.Robot):
                     user_id_list[user_account].append("0")
                 if user_id_list[user_account][1] == '':
                     user_id_list[user_account][1] = '0'
-                # 处理上一次image URL
+                # 处理上一次图片的上传时间
                 if len(user_id_list[user_account]) < 3:
                     user_id_list[user_account].append("")
+                if user_id_list[user_account][3] == '':
+                    user_id_list[user_account][3] = '0'
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -191,29 +193,17 @@ class Download(threading.Thread):
         print_step_msg(user_account + " 开始")
 
         # 初始化数据
-        last_image_url = self.user_info[2]
-        self.user_info[2] = ''  # 置空，存放此次的最后URL
-        # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        # 第一次下载，不用限制
-        if last_image_url == '':
-            limit_download_count = 0
-        else:
-            last_img_byte = common.http_request(last_image_url)
-            # 上次记录的图片还在，那么不要限制
-            if last_img_byte:
-                limit_download_count = 0
-            else:
-                # 历史总数的10%，下限100、上限500
-                limit_download_count = min(max(100, int(self.user_info[1]) / 100 * 10), 500)
+        last_image_time = self.user_info[2]
+        self.user_info[2] = '0'  # 置空，存放此次的最后图片上传时间
         data_tweet_id = INIT_MAX_ID
         image_count = 1
         image_url_list = []
         is_over = False
-        # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_image_url != '':
-            is_error = True
-        else:
+        # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
+        if last_image_time == '0':
             is_error = False
+        else:
+            is_error = True
 
         # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
         if IS_SORT == 1:
@@ -274,7 +264,7 @@ class Download(threading.Thread):
                             self.user_info[2] = str(image_timescamp)
 
                         # 检查是否已下载到前一次的图片
-                        if image_url == last_image_url:
+                        if image_timescamp <= last_image_time:
                             is_over = True
                             is_error = False
                             break
