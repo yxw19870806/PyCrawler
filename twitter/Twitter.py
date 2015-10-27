@@ -226,11 +226,14 @@ class Download(threading.Thread):
             if not isinstance(page, dict):
                 print_error_msg(user_account + " JSON数据：" + str(page) + " 不是一个字典")
                 break
-            if not page.has_key("has_more_items"):
+            if 'has_more_items' not in page:
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
                 break
-            if page.has_key("items_html") is False:
+            if 'items_html' not in page:
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
+                break
+            if 'min_position' not in page:
+                print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
                 break
 
             items_page = page['items_html']
@@ -285,14 +288,9 @@ class Download(threading.Thread):
             if is_over:
                 break
 
-            if page['has_more_items']:
+            if page['has_more_items'] and 'min_position' in page:
                 # 设置最后一张的data-tweet-id
-                data_tweet_id_index = items_page.find('data-tweet-id="')
-                while data_tweet_id_index != -1:
-                    data_tweet_id_start = items_page.find('"', data_tweet_id_index)
-                    data_tweet_id_stop = items_page.find('"', data_tweet_id_start + 1)
-                    data_tweet_id = items_page[data_tweet_id_start + 1:data_tweet_id_stop]
-                    data_tweet_id_index = items_page.find('data-tweet-id="', data_tweet_id_index + 1)
+                data_tweet_id = page['min_position']
             else:
                 break
 
