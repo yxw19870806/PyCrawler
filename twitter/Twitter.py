@@ -10,6 +10,7 @@ email: hikaru870806@hotmail.com
 
 from common import common, json
 import os
+import re
 import threading
 import time
 
@@ -240,55 +241,41 @@ class Download(threading.Thread):
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
                 break
 
-            items_page = page['items_html']
-
-            image_index = items_page.find("data-url")
-            while image_index != -1:
-                image_start = items_page.find("http", image_index)
-                image_stop = items_page.find('"', image_start)
-                image_url = items_page[image_start:image_stop].encode("utf-8")
-                if image_url.find('&quot') != -1:
-                    image_url = image_url[:image_url.find('&quot')]
-                if image_url in image_url_list:
-                    image_index = items_page.find('data-url', image_index + 1)
-                    continue
+            # 正则表达，匹配data-url="XXX"
+            urls = re.findall('data-url="([^"]*)"', page['items_html'])
+            for image_url in urls:
                 image_url_list.append(image_url)
                 trace(user_account + " image URL:" + image_url)
 
-                while 1:
-                    [image_response_data, image_response_info] = common.http_request(image_url, None, True)
-                    if image_response_data:
-                        image_timescamp = self.get_image_last_modified(image_response_info)
-                        # 将第一张image的URL保存到新id list中
-                        if self.user_info[2] == "":
-                            self.user_info[2] = str(image_timescamp)
+                [image_response_data, image_response_info] = common.http_request(image_url, None, True)
+                if image_response_data:
+                    image_timescamp = self.get_image_last_modified(image_response_info)
+                    # 将第一张image的URL保存到新id list中
+                    if self.user_info[2] == "":
+                        self.user_info[2] = str(image_timescamp)
 
-                        # 检查是否已下载到前一次的图片
-                        if image_timescamp <= last_image_time:
-                            is_over = True
-                            is_error = False
-                            break
+                    # 检查是否已下载到前一次的图片
+                    if image_timescamp <= last_image_time:
+                        is_over = True
+                        is_error = False
+                        break
 
-                        # 文件类型
-                        file_type = image_url.split(".")[-1].split(':')[0]
-                        file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                    # 文件类型
+                    file_type = image_url.split(".")[-1].split(':')[0]
+                    file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
-                        print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                        self.save_image(image_response_data, file_path)
-                        print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                        image_count += 1
-                    else:
-                        print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
-
-                    break
+                    print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    self.save_image(image_response_data, file_path)
+                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                    image_count += 1
+                else:
+                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
 
                 # 达到配置文件中的下载数量，结束
                 if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                     is_over = True
                     is_error = False
                     break
-
-                image_index = items_page.find('data-url', image_index + 1)
 
             if is_over:
                 break
