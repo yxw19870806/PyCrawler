@@ -241,8 +241,8 @@ class Download(threading.Thread):
                 print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
                 break
 
-            # 正则表达，匹配data-url="XXX"
-            urls = re.findall('data-url="([^"]*)"', page['items_html'])
+            # 正则表达，匹配data-image-url="XXX"
+            urls = re.findall('data-image-url="([^"]*)"', page['items_html'])
             for image_url in urls:
                 image_url_list.append(image_url)
                 trace(user_account + " image URL:" + image_url)
