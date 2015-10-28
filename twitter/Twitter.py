@@ -121,8 +121,8 @@ class Twitter(common.Robot):
                 # 处理上一次图片的上传时间
                 if len(user_id_list[user_account]) < 3:
                     user_id_list[user_account].append("")
-                if user_id_list[user_account][3] == '':
-                    user_id_list[user_account][3] = '0'
+                if user_id_list[user_account][2] == '':
+                    user_id_list[user_account][2] = '0'
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -258,13 +258,13 @@ class Download(threading.Thread):
                 while 1:
                     [image_response_data, image_response_info] = common.http_request(image_url, None, True)
                     if image_response_data:
-                        image_timescamp = self.get_image_last_modified(image_response_info)
+                        image_time = self.get_image_last_modified(image_response_info)
                         # 将第一张image的URL保存到新id list中
                         if self.user_info[2] == "":
-                            self.user_info[2] = str(image_timescamp)
+                            self.user_info[2] = str(image_time)
 
                         # 检查是否已下载到前一次的图片
-                        if image_timescamp <= last_image_time:
+                        if image_time <= last_image_time:
                             is_over = True
                             is_error = False
                             break
