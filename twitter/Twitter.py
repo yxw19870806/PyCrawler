@@ -264,7 +264,7 @@ class Download(threading.Thread):
                             self.user_info[2] = str(image_time)
 
                         # 检查是否已下载到前一次的图片
-                        if image_time <= last_image_time:
+                        if int(last_image_time) > 0 and image_time <= int(last_image_time):
                             is_over = True
                             is_error = False
                             break
