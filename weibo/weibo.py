@@ -287,7 +287,7 @@ class Download(threading.Thread):
                     if self.user_info[3] == "0":
                         self.user_info[3] = str(image_info["timestamp"])
                     # 检查是否图片时间小于上次的记录
-                    if int(image_info["timestamp"]) <= int(last_image_time):
+                    if int(last_image_time) > 0 and int(image_info["timestamp"]) <= int(last_image_time):
                         is_over = True
                         is_error = False
                         break
