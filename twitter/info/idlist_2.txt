@@ -1,4 +1,5 @@
-aoi_sola	349	https://pbs.twimg.com/media/COX0xamUwAA52g2.jpg:large	苍井空
-ichigo_aoi2	1353	https://pbs.twimg.com/media/COl_P_0UYAAhHX3.png:large	青井いちご
-ozawahokkaido	2	https://pbs.twimg.com/media/CEK_V6FUgAAMKmH.jpg:large	小泽玛丽亚
-riku_minato	1228	https://pbs.twimg.com/media/COn8VpbUAAAnqym.jpg:large	凑莉久
+ozawahokkaido	3	1430753272	小泽玛丽亚
+aoi_sola	378	1445787739	苍井空
+riku_minato	1328	1445323562	凑莉久
+ichigo_aoi2	1476	1445581253	青井いちご
+rina_hatsume			初芽里奈
