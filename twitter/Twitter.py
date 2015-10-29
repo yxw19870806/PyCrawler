@@ -244,6 +244,7 @@ class Download(threading.Thread):
             # 正则表达，匹配data-image-url="XXX"
             urls = re.findall('data-image-url="([^"]*)"', page['items_html'])
             for image_url in urls:
+                image_url = str(image_url)
                 image_url_list.append(image_url)
                 trace(user_account + " image URL:" + image_url)
 
