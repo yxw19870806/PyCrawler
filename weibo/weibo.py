@@ -118,7 +118,7 @@ class Weibo(common.Robot):
             for user_info in all_user_list:
                 if len(user_info) < 5:
                     continue
-                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "").replace("\r", "")
+                user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
                 user_info_list = user_info.split("\t")
 
                 user_id = user_info_list[0]
@@ -170,6 +170,7 @@ class Weibo(common.Robot):
         # 删除临时文件夹
         common.remove_dir(IMAGE_TEMP_PATH)
 
+        # 重新排序保存存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
         all_user_list = new_user_id_list_file.readlines()
         new_user_id_list_file.close()
