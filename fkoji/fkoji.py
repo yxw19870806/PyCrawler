@@ -126,7 +126,7 @@ class Fkoji(common.Robot):
                             file_type = 'jpg'
                         image_file = open(image_path + "\\" + str("%05d" % image_count) + "_" + str(user_id) + "." + file_type, "wb")
                         self._print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
-                        img_byte = common.http_request(image_url)
+                        img_byte = common.http_request(image_url, None, False)
                         if img_byte:
                             image_file.write(img_byte)
                             self._print_step_msg("下载成功")
@@ -134,9 +134,10 @@ class Fkoji(common.Robot):
                             self._print_error_msg("获取图片" + str(image_count) + "信息失败：" + image_url)
                         image_file.close()
                         image_count += 1
-
                 if is_over:
                     break
+            if is_over:
+                break
             page_index += 1
 
         self._print_step_msg("下载完毕")
