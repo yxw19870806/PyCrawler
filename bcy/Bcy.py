@@ -193,6 +193,7 @@ class Download(threading.Thread):
         page_count = 1
         max_page_count = -1
         need_make_download_dir = True  # 是否需要创建cn目录
+        rp_id_list = []
         is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
         if last_rp_id != '0':
@@ -242,6 +243,10 @@ class Download(threading.Thread):
                 except:
                     print_error_msg(cn + " 在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段")
                     break
+
+                if rp_id in rp_id_list:
+                    continue
+                rp_id_list.append(rp_id)
 
                 if self.user_info[2] == '':
                     self.user_info[2] = rp_id
