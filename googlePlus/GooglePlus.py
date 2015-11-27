@@ -247,6 +247,7 @@ class Download(threading.Thread):
                 print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
                 break
 
+            # 相册也中全部的信息页
             this_page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', photo_album_page)
             for message_url in this_page_message_url_list:
                 # 有可能拿到带authkey的，需要去掉
@@ -326,6 +327,7 @@ class Download(threading.Thread):
 
                     flag = message_page.find("<div><a href=", flag + 1)
 
+            # 查找下一页的token key
             finds = re.findall('"([a-zA-Z0-9-]*)"', photo_album_page)
             if len(finds[0]) > 80:
                 key = finds[0]
