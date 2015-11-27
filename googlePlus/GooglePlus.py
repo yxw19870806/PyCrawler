@@ -62,7 +62,7 @@ class GooglePlus(common.Robot):
         super(GooglePlus, self).__init__()
 
         # 全局变量
-        GET_IMAGE_URL_COUNT = 1000  # 单次获取最新的N张照片,G+ 限制最多1000张
+        GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
@@ -231,25 +231,22 @@ class Download(threading.Thread):
         # 图片下载
         photo_album_url = 'https://plus.google.com/_/photos/pc/read/'
         key = ''
-        post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
         trace(user_name + " 信息首页地址：" + photo_album_url)
-        photo_album_page = common.http_request(photo_album_url, post_data)
-        # 换一个获取信息页的方法，这个只能获取最近的100张
-        if not photo_album_page:
-            photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
-            trace(user_name + " 信息首页地址：" + photo_album_url)
-            photo_album_page = common.http_request(photo_album_url)
 
-        # 无法获取信息首页
-        if not photo_album_page:
-            # 恢复最后的记录
-            self.user_info[3] = last_message_url
+        while 1:
+            post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
+            photo_album_page = common.http_request(photo_album_url, post_data)
+            # 换一个获取信息页的方法，这个只能获取最近的100张
+            # if not photo_album_page and key == '':
+            #     photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
+            #     trace(user_name + " 信息首页地址：" + photo_album_url)
+            #     photo_album_page = common.http_request(photo_album_url)
 
-            # 删除临时文件夹
-            common.remove_dir(image_path)
+            # 无法获取信息首页
+            if not photo_album_page:
+                print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
+                break
 
-            print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url)
-        else:
             message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id)
             is_over = False
             while message_index != -1:
@@ -340,34 +337,35 @@ class Download(threading.Thread):
 
                 message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
 
-            print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            finds = re.findall('"([a-zA-Z0-9-]*)"', photo_album_page)
+            if len(finds[0]) > 80:
+                key = finds[0]
 
-            # 排序
-            if IS_SORT == 1:
-                image_list = common.get_dir_files_name(image_path, 'desc')
-                # 判断排序目标文件夹是否存在
-                if len(image_list) >= 1:
-                    destination_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
-                    if not common.make_dir(destination_path, 1):
-                        print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        common.process_exit()
+        print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
-                    # 倒叙排列
-                    count = int(self.user_info[2])
+        # 排序
+        if IS_SORT == 1:
+            image_list = common.get_dir_files_name(image_path, 'desc')
+            # 判断排序目标文件夹是否存在
+            if len(image_list) >= 1:
+                destination_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
+                if not common.make_dir(destination_path, 1):
+                    print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                    common.process_exit()
+                # 倒叙排列
+                count = int(self.user_info[2])
+                for file_name in image_list:
+                    count += 1
+                    file_type = file_name.split(".")[1]
+                    common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
+            # 删除临时文件夹
+            common.remove_dir(image_path)
 
-                    for file_name in image_list:
-                        count += 1
-                        file_type = file_name.split(".")[1]
-                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 
-                    print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
-                # 删除临时文件夹
-                common.remove_dir(image_path)
-
-            self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-
-            if is_error:
-                print_error_msg(user_name + " 图片数量异常，请手动检查")
+        if is_error:
+            print_error_msg(user_name + " 图片数量异常，请手动检查")
 
         # 保存最后的信息
         threadLock.acquire()
