@@ -247,15 +247,11 @@ class Download(threading.Thread):
                 print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
                 break
 
-            message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id)
-            is_over = False
-            while message_index != -1:
-                message_start = photo_album_page.find("http", message_index)
-                message_stop = photo_album_page.find('"', message_start)
-                message_url = photo_album_page[message_start:message_stop]
-                message_url = message_url.replace('\u003d', '=')
+            this_page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', photo_album_page)
+            for message_url in this_page_message_url_list:
                 # 有可能拿到带authkey的，需要去掉
                 # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
+                message_url = message_url.replace('\u003d', '=')
                 try:
                     temp = re.findall('(.*)\?.*(#.*)', message_url)
                     real_message_url = temp[0][0] + temp[0][1]
@@ -263,7 +259,6 @@ class Download(threading.Thread):
                     real_message_url = message_url
                 # 判断是否重复
                 if real_message_url in message_url_list:
-                    message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
                     continue
                 message_url_list.append(real_message_url)
                 trace("message URL:" + message_url)
@@ -280,7 +275,6 @@ class Download(threading.Thread):
                 message_page = common.http_request(message_url)
                 if not message_page:
                     print_error_msg(user_name + " 无法获取信息页")
-                    message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
                     continue
 
                 flag = message_page.find("<div><a href=")
@@ -331,11 +325,6 @@ class Download(threading.Thread):
                         break
 
                     flag = message_page.find("<div><a href=", flag + 1)
-
-                if is_over:
-                    break
-
-                message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
 
             finds = re.findall('"([a-zA-Z0-9-]*)"', photo_album_page)
             if len(finds[0]) > 80:
