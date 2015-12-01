@@ -124,6 +124,7 @@ class Twitter(common.Robot):
                     user_id_list[user_account].append("")
                 if user_id_list[user_account][2] == '':
                     user_id_list[user_account][2] = '0'
+
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -235,8 +236,8 @@ class Download(threading.Thread):
             # 图片下载
             while 1:
                 photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
-                photo_page_data = common.http_request(photo_page_url)
-                if not photo_page_data:
+                [photo_page_return_code, photo_page_data] = common.http_request(photo_page_url)
+                if photo_page_return_code != 1:
                     print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
                 try:
@@ -265,8 +266,11 @@ class Download(threading.Thread):
                     image_url_list.append(image_url)
                     trace(user_account + " image URL:" + image_url)
 
-                    [image_response_data, image_response_info] = common.http_request(image_url, None, True)
-                    if image_response_data:
+                    [[image_response_return_code, image_response_data], image_response_info] = common.http_request(image_url, None, True)
+                    # 404，不算做错误，图片已经被删掉了
+                    if image_response_return_code == -1:
+                        pass
+                    elif image_response_return_code == 1:
                         image_time = self.get_image_last_modified(image_response_info)
                         # 将第一张image的URL保存到新id list中
                         if self.user_info[2] == "0":
@@ -352,5 +356,5 @@ class Download(threading.Thread):
 
 if __name__ == "__main__":
     Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage").main()
-    # Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
-    # Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage").main()
+    Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
+    Twitter(os.getcwd() + "\\info\\idlist_3.txt", os.getcwd() + "\\photo\\twitter3", os.getcwd() + "\\photo\\twitter3\\tempImage").main()
