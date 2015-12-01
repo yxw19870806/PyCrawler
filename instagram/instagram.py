@@ -199,8 +199,8 @@ class Download(threading.Thread):
             else:
                 photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
 
-            photo_album_data = common.http_request(photo_album_url)
-            if not photo_album_data:
+            [photo_album_return_code, photo_album_data] = common.http_request(photo_album_url)
+            if photo_album_return_code == 1:
                 print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
                 break
             try:
