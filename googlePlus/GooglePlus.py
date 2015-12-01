@@ -203,9 +203,9 @@ class Download(threading.Thread):
         if last_message_url == '':
             limit_download_count = 0
         else:
-            last_message_page = common.http_request(last_message_url)
+            [last_message_page_return_code, ] = common.http_request(last_message_url)
             # 上次记录的信息首页还在，那么不要限制
-            if last_message_page:
+            if last_message_page_return_code == 1:
                 limit_download_count = 0
             else:
                 # 历史总数的10%，下限50、上限1000
@@ -233,15 +233,15 @@ class Download(threading.Thread):
         key = ''
         post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
         trace(user_name + " 信息首页地址：" + photo_album_url)
-        photo_album_page = common.http_request(photo_album_url, post_data)
-        # 换一个获取信息页的方法，这个只能获取最近的100张
-        if not photo_album_page:
-            photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
-            trace(user_name + " 信息首页地址：" + photo_album_url)
-            photo_album_page = common.http_request(photo_album_url)
+        [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url, post_data)
+        # # 换一个获取信息页的方法，这个只能获取最近的100张
+        # if photo_album_page_return_code != 1:
+        #     photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
+        #     trace(user_name + " 信息首页地址：" + photo_album_url)
+        #     photo_album_page = common.http_request(photo_album_url)
 
         # 无法获取信息首页
-        if not photo_album_page:
+        if photo_album_page_return_code != 1:
             # 恢复最后的记录
             self.user_info[3] = last_message_url
 
@@ -280,8 +280,8 @@ class Download(threading.Thread):
                     is_error = False
                     break
 
-                message_page = common.http_request(message_url)
-                if not message_page:
+                [message_page_return_code, message_page] = common.http_request(message_url)
+                if message_page_return_code != 1:
                     print_error_msg(user_name + " 无法获取信息页")
                     message_index = photo_album_page.find('[["https://picasaweb.google.com/' + user_id, message_index + 1)
                     continue
