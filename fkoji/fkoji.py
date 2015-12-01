@@ -88,7 +88,12 @@ class Fkoji(common.Robot):
             index_url = url % str(page_index)
             self._trace("网页地址：" + index_url)
 
-            index_page = common.http_request(index_url)
+            [index_page_return_code, index_page] = common.http_request(index_url)
+
+            if index_page_return_code != 1:
+                self._print_error_msg("无法访问首页地址" + index_url)
+                common.process_exit()
+
             index_page = BeautifulSoup.BeautifulSoup(index_page)
      
             photo_list = index_page.body.findAll("div", "photo")
