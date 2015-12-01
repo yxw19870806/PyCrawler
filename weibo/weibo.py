@@ -44,6 +44,29 @@ def print_step_msg(msg):
     common.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
+def visit_weibo(url):
+    [temp_page_return_code, temp_page] = common.http_request(url)
+    if temp_page_return_code == 1:
+        redirect_url_index = temp_page.find("location.replace")
+        if redirect_url_index != -1:
+            redirect_url_start = temp_page.find("'", redirect_url_index) + 1
+            redirect_url_stop = temp_page.find("'", redirect_url_start)
+            redirect_url = temp_page[redirect_url_start:redirect_url_stop]
+            [page_return_code, page] = common.http_request(redirect_url)
+            if page_return_code == 1:
+                return str(page)
+        elif temp_page.find("用户名或密码错误") != -1:
+            print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
+            common.process_exit()
+        else:
+            try:
+                temp_page = temp_page.decode("utf-8")
+                if temp_page.find("用户名或密码错误") != -1:
+                    print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
+                    common.process_exit()
+            except Exception, e:
+                pass
+    return False
 
 class Weibo(common.Robot):
 
@@ -196,29 +219,6 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.user_info = user_info
 
-    def _visit(self, url):
-        temp_page = common.http_request(url)
-        if temp_page:
-            redirect_url_index = temp_page.find("location.replace")
-            if redirect_url_index != -1:
-                redirect_url_start = temp_page.find("'", redirect_url_index) + 1
-                redirect_url_stop = temp_page.find("'", redirect_url_start)
-                redirect_url = temp_page[redirect_url_start:redirect_url_stop]
-                return str(common.http_request(redirect_url))
-            elif temp_page.find("用户名或密码错误") != -1:
-                print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-                common.process_exit()
-            else:
-                try:
-                    temp_page = temp_page.decode("utf-8")
-                    if temp_page.find("用户名或密码错误") != -1:
-                        print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-                        common.process_exit()
-                except Exception, e:
-                    pass
-                return str(temp_page)
-        return False
-
     def run(self):
         global IMAGE_COUNT_PER_PAGE
         global GET_IMAGE_COUNT
@@ -258,7 +258,7 @@ class Download(threading.Thread):
         while 1:
             photo_album_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
             trace("相册专辑地址：" + photo_album_url)
-            photo_page_data = self._visit(photo_album_url)
+            photo_page_data = visit_weibo(photo_album_url)
             trace("返回JSON数据：" + photo_page_data)
             try:
                 page = json.read(photo_page_data)
@@ -309,10 +309,10 @@ class Download(threading.Thread):
                         else:
                             print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
 
-                        img_byte = common.http_request(image_url)
-                        if img_byte:
+                        [image_return_code, image_byte] = common.http_request(image_url)
+                        if image_return_code == 1:
                             md5 = hashlib.md5()
-                            md5.update(img_byte)
+                            md5.update(image_byte)
                             md5_digest = md5.hexdigest()
                             # 处理获取的文件为weibo默认获取失败的图片
                             if md5_digest in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
@@ -323,7 +323,7 @@ class Download(threading.Thread):
                                     file_type = 'jpg'
                                 file_path = common.change_path_encoding(image_path + "\\" + str("%04d" % image_count) + "." + file_type)
                                 image_file = open(file_path, "wb")
-                                image_file.write(img_byte)
+                                image_file.write(image_byte)
                                 image_file.close()
                                 print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                                 image_count += 1
