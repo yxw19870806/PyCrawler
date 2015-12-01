@@ -62,7 +62,7 @@ class GooglePlus(common.Robot):
         super(GooglePlus, self).__init__()
 
         # 全局变量
-        GET_IMAGE_URL_COUNT = 1000  # 单次获取最新的N张照片,G+ 限制最多1000张
+        GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
