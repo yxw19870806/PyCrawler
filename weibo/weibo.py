@@ -47,15 +47,15 @@ def print_step_msg(msg):
 def visit_weibo(url):
     [temp_page_return_code, temp_page] = common.http_request(url)
     if temp_page_return_code == 1:
+        # 有重定向
         redirect_url_index = temp_page.find("location.replace")
         if redirect_url_index != -1:
             redirect_url_start = temp_page.find("'", redirect_url_index) + 1
             redirect_url_stop = temp_page.find("'", redirect_url_start)
             redirect_url = temp_page[redirect_url_start:redirect_url_stop]
-            [page_return_code, page] = common.http_request(redirect_url)
-            if page_return_code == 1:
-                return str(page)
-        elif temp_page.find("用户名或密码错误") != -1:
+            return visit_weibo(redirect_url)
+        # 没有cookies无法访问的处理
+        if temp_page.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
             common.process_exit()
         else:
@@ -66,6 +66,8 @@ def visit_weibo(url):
                     common.process_exit()
             except Exception, e:
                 pass
+        # 返回页面
+        return str(temp_page)
     return False
 
 class Weibo(common.Robot):
@@ -259,7 +261,7 @@ class Download(threading.Thread):
             photo_album_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
             trace("相册专辑地址：" + photo_album_url)
             photo_page_data = visit_weibo(photo_album_url)
-            trace("返回JSON数据：" + photo_page_data)
+            trace("返回JSON数据：" + str(photo_page_data))
             try:
                 page = json.read(photo_page_data)
             except:
