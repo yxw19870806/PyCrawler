@@ -124,6 +124,7 @@ class Twitter(common.Robot):
                     user_id_list[user_account].append("")
                 if user_id_list[user_account][2] == '':
                     user_id_list[user_account][2] = '0'
+
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -207,145 +208,151 @@ class Download(threading.Thread):
 
         user_account = self.user_info[0]
 
-        print_step_msg(user_account + " 开始")
+        try:
+            print_step_msg(user_account + " 开始")
 
-        # 初始化数据
-        last_image_time = self.user_info[2]
-        self.user_info[2] = '0'  # 置空，存放此次的最后图片上传时间
-        data_tweet_id = INIT_MAX_ID
-        image_count = 1
-        image_url_list = []
-        is_over = False
-        # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
-        if last_image_time == '0':
-            is_error = False
-        else:
-            is_error = True
+            # 初始化数据
+            last_image_time = self.user_info[2]
+            self.user_info[2] = '0'  # 置空，存放此次的最后图片上传时间
+            data_tweet_id = INIT_MAX_ID
+            image_count = 1
+            image_url_list = []
+            is_over = False
+            # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
+            if last_image_time == '0':
+                is_error = False
+            else:
+                is_error = True
 
-        # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-        if IS_SORT == 1:
-            image_path = IMAGE_TEMP_PATH + "\\" + user_account
-        else:
-            image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-        if not common.make_dir(image_path, 1):
-            print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-            common.process_exit()
+            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
+            if IS_SORT == 1:
+                image_path = IMAGE_TEMP_PATH + "\\" + user_account
+            else:
+                image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
+            if not common.make_dir(image_path, 1):
+                print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                common.process_exit()
 
-        # 图片下载
-        while 1:
-            photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
-            photo_page_data = common.http_request(photo_page_url)
-            if not photo_page_data:
-                print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
-                break
-            try:
-                page = json.read(photo_page_data)
-            except:
-                print_error_msg(user_account + " 返回信息：" + str(photo_page_data) + " 不是一个JSON数据")
-                break
+            # 图片下载
+            while 1:
+                photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
+                [photo_page_return_code, photo_page_data] = common.http_request(photo_page_url)
+                if photo_page_return_code != 1:
+                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
+                    break
+                try:
+                    page = json.read(photo_page_data)
+                except:
+                    print_error_msg(user_account + " 返回信息：" + str(photo_page_data) + " 不是一个JSON数据")
+                    break
 
-            if not isinstance(page, dict):
-                print_error_msg(user_account + " JSON数据：" + str(page) + " 不是一个字典")
-                break
-            if 'has_more_items' not in page:
-                print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
-                break
-            if 'items_html' not in page:
-                print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
-                break
-            if 'min_position' not in page:
-                print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
-                break
+                if not isinstance(page, dict):
+                    print_error_msg(user_account + " JSON数据：" + str(page) + " 不是一个字典")
+                    break
+                if 'has_more_items' not in page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
+                    break
+                if 'items_html' not in page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
+                    break
+                if 'min_position' not in page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
+                    break
 
-            # 正则表达，匹配data-image-url="XXX"
-            urls = re.findall('data-image-url="([^"]*)"', page['items_html'])
-            for image_url in urls:
-                image_url = str(image_url)
-                image_url_list.append(image_url)
-                trace(user_account + " image URL:" + image_url)
+                # 正则表达，匹配data-image-url="XXX"
+                urls = re.findall('data-image-url="([^"]*)"', page['items_html'])
+                for image_url in urls:
+                    image_url = str(image_url)
+                    image_url_list.append(image_url)
+                    trace(user_account + " image URL:" + image_url)
 
-                [image_response_data, image_response_info] = common.http_request(image_url, None, True)
-                if image_response_data:
-                    image_time = self.get_image_last_modified(image_response_info)
-                    # 将第一张image的URL保存到新id list中
-                    if self.user_info[2] == "":
-                        self.user_info[2] = str(image_time)
+                    [[image_response_return_code, image_response_data], image_response_info] = common.http_request(image_url, None, True)
+                    # 404，不算做错误，图片已经被删掉了
+                    if image_response_return_code == -1:
+                        pass
+                    elif image_response_return_code == 1:
+                        image_time = self.get_image_last_modified(image_response_info)
+                        # 将第一张image的URL保存到新id list中
+                        if self.user_info[2] == "0":
+                            self.user_info[2] = str(image_time)
 
-                    # 检查是否已下载到前一次的图片
-                    if int(last_image_time) > 0 and image_time <= int(last_image_time):
+                        # 检查是否已下载到前一次的图片
+                        if int(last_image_time) > 0 and image_time <= int(last_image_time):
+                            is_over = True
+                            is_error = False
+                            break
+
+                        # 文件类型
+                        file_type = image_url.split(".")[-1].split(':')[0]
+                        file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+
+                        print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                        self.save_image(image_response_data, file_path)
+                        print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                        image_count += 1
+                    else:
+                        print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
+
+                    # 达到配置文件中的下载数量，结束
+                    if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                         is_over = True
                         is_error = False
                         break
 
-                    # 文件类型
-                    file_type = image_url.split(".")[-1].split(':')[0]
-                    file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
-
-                    print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    self.save_image(image_response_data, file_path)
-                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                    image_count += 1
-                else:
-                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
-
-                # 达到配置文件中的下载数量，结束
-                if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
-                    is_over = True
-                    is_error = False
+                if is_over:
                     break
 
-            if is_over:
-                break
+                if page['has_more_items'] and 'min_position' in page:
+                    # 设置最后一张的data-tweet-id
+                    data_tweet_id = page['min_position']
+                else:
+                    break
 
-            if page['has_more_items'] and 'min_position' in page:
-                # 设置最后一张的data-tweet-id
-                data_tweet_id = page['min_position']
-            else:
-                break
+            TOTAL_IMAGE_COUNT += image_count - 1
 
-        TOTAL_IMAGE_COUNT += image_count - 1
+            print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
-        print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            # 排序
+            if IS_SORT == 1:
+                image_list = sorted(os.listdir(image_path), reverse=True)
+                # 判断排序目标文件夹是否存在
+                if len(image_list) >= 1:
+                    destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
+                    if not common.make_dir(destination_path, 1):
+                        print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                        common.process_exit()
 
-        # 排序
-        if IS_SORT == 1:
-            image_list = sorted(os.listdir(image_path), reverse=True)
-            # 判断排序目标文件夹是否存在
-            if len(image_list) >= 1:
-                destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-                if not common.make_dir(destination_path, 1):
-                    print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                    common.process_exit()
+                    # 倒叙排列
+                    count = int(self.user_info[1])
 
-                # 倒叙排列
-                count = int(self.user_info[1])
+                    for file_name in image_list:
+                        count += 1
+                        file_type = file_name.split(".")[1]
+                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
 
-                for file_name in image_list:
-                    count += 1
-                    file_type = file_name.split(".")[1]
-                    common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                    print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
 
-                print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
+                # 删除临时文件夹
+                common.remove_dir(image_path)
 
-            # 删除临时文件夹
-            common.remove_dir(image_path)
+            self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 
-        self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
+            if is_error:
+                print_error_msg(user_account + " 图片数量异常，请手动检查")
 
-        if is_error:
-            print_error_msg(user_account + " 图片数量异常，请手动检查")
+            # 保存最后的信息
+            threadLock.acquire()
+            new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
+            new_user_id_list_file.write("\t".join(self.user_info) + "\n")
+            new_user_id_list_file.close()
+            TOTAL_IMAGE_COUNT += image_count - 1
+            THREAD_COUNT -= 1
+            threadLock.release()
 
-        # 保存最后的信息
-        threadLock.acquire()
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
-        new_user_id_list_file.write("\t".join(self.user_info) + "\n")
-        new_user_id_list_file.close()
-        TOTAL_IMAGE_COUNT += image_count - 1
-        THREAD_COUNT -= 1
-        threadLock.release()
-
-        print_step_msg(user_account + " 完成")
-
+            print_step_msg(user_account + " 完成")
+        except Exception, e:
+            print_step_msg(user_account + " 异常")
+            print_error_msg(str(e))
 
 if __name__ == "__main__":
     Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage").main()

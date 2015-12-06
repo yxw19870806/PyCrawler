@@ -133,10 +133,14 @@ class Robot(object):
 
 
 # http请求
+# 返回 【返回码，数据】 返回码 -1：页面不存在（404）；-2：暂时无法访问页面
 def http_request(url, post_data=None, need_info=False):
     global IS_SET_TIMEOUT
     if url.find("http") == -1:
-        return False
+        if need_info:
+            return [[-100, None], []]
+        else:
+            return [-100, None]
     count = 0
     while 1:
         try:
@@ -162,9 +166,9 @@ def http_request(url, post_data=None, need_info=False):
                 response = urllib2.urlopen(request, timeout=5)
 
             if need_info:
-                return [response.read(), response.info()]
+                return [[1, response.read()], response.info()]
             else:
-                return response.read()
+                return [1, response.read()]
         except Exception, e:
             # 代理无法访问
             if str(e).find("[Errno 10061]") != -1:
@@ -182,7 +186,10 @@ def http_request(url, post_data=None, need_info=False):
                 print_msg("访问页面超时，重新连接请稍后")
             # 404
             elif str(e).lower().find("http error 404") != -1:
-                count += 100
+                if need_info:
+                    return [[-1, None], []]
+                else:
+                    return [-1, None]
             else:
                 print_msg(str(e))
                 traceback.print_exc()
@@ -190,7 +197,10 @@ def http_request(url, post_data=None, need_info=False):
         count += 1
         if count > 100:
             print_error_msg("无法访问页面：" + url)
-            return False
+            if need_info:
+                return [[-2, None], []]
+            else:
+                return [-2, None]
 
 def get_response_info(response, key):
     try:
@@ -376,8 +386,8 @@ def write_file(msg, file_path):
 # image_path 包括路径和文件名
 def save_image(image_url, image_path):
     image_path = change_path_encoding(image_path)
-    image_byte = http_request(image_url)
-    if image_byte:
+    [image_return_code, image_byte] = http_request(image_url)
+    if image_return_code != 1:
         image_file = open(image_path, "wb")
         image_file.write(image_byte)
         image_file.close()
