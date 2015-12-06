@@ -346,7 +346,6 @@ class Download(threading.Thread):
             new_user_id_list_file.write("\t".join(self.user_info) + "\n")
             new_user_id_list_file.close()
             TOTAL_IMAGE_COUNT += image_count - 1
-            THREAD_COUNT -= 1
             threadLock.release()
 
             print_step_msg(user_account + " 完成")
