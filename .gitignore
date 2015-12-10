@@ -1,3 +1,6 @@
 .idea/
 *.pyc
-googlePlus/photo/tempImage/
+googlePlus/photo/
+weibo/photo/
+log/
+
