@@ -122,6 +122,7 @@ class GooglePlus(common.Robot):
                 # 处理成员队伍信息
                 if len(user_id_list[user_id]) < 5:
                     user_id_list[user_id].append("")
+
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
             common.process_exit()
@@ -232,11 +233,11 @@ class Download(threading.Thread):
             # 图片下载
             photo_album_url = 'https://plus.google.com/_/photos/pc/read/'
             key = ''
-            trace(user_name + " 信息首页地址：" + photo_album_url)
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
                 [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url, post_data)
+
                 # 换一个获取信息页的方法，这个只能获取最近的100张
                 # if not photo_album_page and key == '':
                 #     photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
@@ -328,10 +329,17 @@ class Download(threading.Thread):
 
                         flag = message_page.find("<div><a href=", flag + 1)
 
+                if is_over:
+                    break
+
                 # 查找下一页的token key
-                finds = re.findall('"([a-zA-Z0-9-]*)"', photo_album_page)
+                finds = re.findall('"([a-zA-Z0-9-_]*)"', photo_album_page)
                 if len(finds[0]) > 80:
                     key = finds[0]
+                    trace(user_name + " 下一个信息首页token:" + key)
+                else:
+                    print_error_msg(user_name + " 没有找到下一页的token，将该页保存")
+                    break
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
