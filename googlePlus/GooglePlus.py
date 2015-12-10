@@ -338,7 +338,8 @@ class Download(threading.Thread):
                     key = finds[0]
                     trace(user_name + " 下一个信息首页token:" + key)
                 else:
-                    print_error_msg(user_name + " 没有找到下一页的token，将该页保存")
+                    print_error_msg(user_name + " 没有找到下一页的token，将该页保存：")
+                    print_error_msg(photo_album_page)
                     break
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
