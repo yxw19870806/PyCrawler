@@ -1,4 +1,6 @@
 .idea/
 *.pyc
+googlePlus/photo/
 weibo/photo/
 log/
+
