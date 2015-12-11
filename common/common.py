@@ -387,7 +387,7 @@ def write_file(msg, file_path):
 def save_image(image_url, image_path):
     image_path = change_path_encoding(image_path)
     [image_return_code, image_byte] = http_request(image_url)
-    if image_return_code != 1:
+    if image_return_code == 1:
         image_file = open(image_path, "wb")
         image_file.write(image_byte)
         image_file.close()
