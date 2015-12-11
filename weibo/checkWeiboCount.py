@@ -9,6 +9,7 @@ Created on 2013-4-14
 
 import os
 
+
 def getCount(idPath, imageRootPath):
     tempFile = open(idPath, 'r')
     lines = tempFile.readlines()
