@@ -149,7 +149,7 @@ def http_request(url, post_data=None, need_info=False):
             else:
                 request = urllib2.Request(url)
             # 设置头信息
-            request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0 FirePHP/0.7.2')
+            request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0')
 
             # cookie
             # cookie = cookielib.CookieJar()
