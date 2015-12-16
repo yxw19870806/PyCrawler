@@ -182,13 +182,13 @@ class Download(threading.Thread):
         global TOTAL_IMAGE_COUNT
         global THREAD_COUNT
 
+        coser_id = self.user_info[0]
         cn = self.user_info[1]
 
         print_step_msg(cn + " 开始")
 
         last_rp_id = self.user_info[2]
         self.user_info[2] = ''  # 置空，存放此次的最后rp id
-        cp_id = int(self.user_info[0]) - 100876  # 网页规则，没有为什么
         this_cn_total_image_count = 0
         page_count = 1
         max_page_count = -1
@@ -202,50 +202,22 @@ class Download(threading.Thread):
             is_error = False
 
         while 1:
-            photo_album_url = 'http://bcy.net/coser/ajaxShowMore?type=all&cp_id=%s&p=%s' % (cp_id, page_count)
-            photo_album_page = common.http_request(photo_album_url)
-            if not photo_album_page:
+            photo_album_url = 'http://bcy.net/u/%s/post/cos?&p=%s' % (coser_id, page_count)
+            [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url)
+            if photo_album_page_return_code != 1:
                 print_error_msg(cn + " 无法获取数据: " + photo_album_url)
                 break
-            try:
-                photo_album_page = json.read(photo_album_page)
-            except:
-                print_error_msg(cn + " 返回信息不是一个JSON数据")
+
+            rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
+            title_result_list = re.findall('<footer class="[^\"]*">([\S ]*)</footer>\s*</div>', photo_album_page)
+            if len(rp_id_result_list) != len(title_result_list):
+                print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
                 break
 
-            # 总共多少页
-            if max_page_count == -1:
-                try:
-                    max_page_data = photo_album_page['data']['page']
-                except:
-                    print_error_msg(cn + " 在JSON数据：" + str(photo_album_page) + " 中没有找到'page'字段")
-                    break
-                if not max_page_data:
-                    max_page_count = 1
-                else:
-                    page_list = re.findall(u'<a href=\\"\\/coser\\/ajaxShowMore\?type=all&cp_id=' + str(cp_id) + '&p=(\d)', max_page_data)
-                    max_page_count = int(max(page_list))
-
-            try:
-                photo_album_page_data = photo_album_page['data']['data']
-            except:
-                print_error_msg(cn + " 在JSON数据：" + str(photo_album_page) + " 中没有找到'data'字段")
-                break
-
-            for data in photo_album_page_data:
-                try:
-                    rp_id = data['rp_id']
-                    title = data['title'].encode('utf-8').strip()
-                    # 过滤一些无法作为文件夹路径的符号
-                    filter_list = [':', '\\', '/', '.', '*', '?', '"', '<', '>', '|']
-                    for filter_char in filter_list:
-                        title = title.replace(filter_char, '')
-                except:
-                    print_error_msg(cn + " 在JSON数据：" + str(data) + " 中没有找到'ur_id'或'title'字段")
-                    break
-
-                if rp_id in rp_id_list:
-                    continue
+            title_index = 0
+            for data in rp_id_result_list:
+                cp_id = data[0]
+                rp_id = data[1]
                 rp_id_list.append(rp_id)
 
                 if self.user_info[2] == '':
@@ -268,6 +240,7 @@ class Download(threading.Thread):
                     need_make_download_dir = False
 
                 # 正片目录
+                title = title_result_list[title_index]
                 if title != '':
                     rp_path = image_path + "\\" + rp_id + ' ' + title
                 else:
@@ -281,8 +254,8 @@ class Download(threading.Thread):
                         common.process_exit()
 
                 rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
-                rp_page = common.http_request(rp_url)
-                if rp_page:
+                [rp_page_return_code, rp_page] = common.http_request(rp_url)
+                if rp_page_return_code == 1:
                     image_count = 0
                     image_index = rp_page.find("src='")
                     while image_index != -1:
@@ -313,12 +286,19 @@ class Download(threading.Thread):
 
                     this_cn_total_image_count += image_count - 1
 
+                title_index += 1
+
             if is_over:
                 break
 
             # 正常全部下载完毕
+            if max_page_count == -1:
+                max_page_count_result = re.findall(r'<a href="/u/'+ coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
+                max_page_count = int(max_page_count_result[0])
+
             if page_count >= max_page_count:
                 break
+
             page_count += 1
 
         print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
