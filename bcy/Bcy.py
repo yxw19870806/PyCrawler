@@ -291,10 +291,13 @@ class Download(threading.Thread):
             if is_over:
                 break
 
-            # 正常全部下载完毕
+            # 看看总共有几页
             if max_page_count == -1:
                 max_page_count_result = re.findall(r'<a href="/u/'+ coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
-                max_page_count = int(max_page_count_result[0])
+                if len(max_page_count_result) > 0:
+                    max_page_count = int(max_page_count_result[0])
+                else:
+                    max_page_count = 1
 
             if page_count >= max_page_count:
                 break
