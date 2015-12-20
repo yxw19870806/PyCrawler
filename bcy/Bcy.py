@@ -209,7 +209,8 @@ class Download(threading.Thread):
                 break
 
             rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
-            title_result_list = re.findall('<footer class="[^\"]*">([\S ]*)</footer>\s*</div>', photo_album_page)
+            title_result_list = re.findall('<img src="\S*" alt="([\S ]*)" />', photo_album_page)
+            title_result_list.remove('${post.title}')
             if len(rp_id_result_list) != len(title_result_list):
                 print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
                 break
