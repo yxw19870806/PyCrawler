@@ -171,6 +171,10 @@ class Weibo(common.Robot):
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, 'w')
         new_user_id_list_file.close()
 
+        # 先访问下页面，产生个cookies
+        visit_weibo('http://photo.weibo.com/photos/get_all?uid=1263970750&count=30&page=1&type=3')
+        time.sleep(2)
+
         TOTAL_IMAGE_COUNT = 0
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
