@@ -242,6 +242,9 @@ class Download(threading.Thread):
 
                 # 正片目录
                 title = title_result_list[title_index]
+                # 过滤一些windows文件名屏蔽的字符
+                for filter in ['\\', '/', ':', '*', '?', '"', '<', '>', '|']:
+                    title = title.replace(filter, ' ')
                 if title != '':
                     rp_path = image_path + "\\" + rp_id + ' ' + title
                 else:
