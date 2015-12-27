@@ -246,6 +246,8 @@ class Download(threading.Thread):
                     # 过滤一些windows文件名屏蔽的字符
                     for filter in ['\\', '/', ':', '*', '?', '"', '<', '>', '|']:
                         title = title.replace(filter, ' ')
+                    # 去除前后空格
+                    title = title.strip()
                     if title != '':
                         rp_path = image_path + "\\" + rp_id + ' ' + title
                     else:
