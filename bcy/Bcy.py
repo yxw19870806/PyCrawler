@@ -185,143 +185,149 @@ class Download(threading.Thread):
         coser_id = self.user_info[0]
         cn = self.user_info[1]
 
-        print_step_msg(cn + " 开始")
+        try:
+            print_step_msg(cn + " 开始")
 
-        last_rp_id = self.user_info[2]
-        self.user_info[2] = ''  # 置空，存放此次的最后rp id
-        this_cn_total_image_count = 0
-        page_count = 1
-        max_page_count = -1
-        need_make_download_dir = True  # 是否需要创建cn目录
-        rp_id_list = []
-        is_over = False
-        # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_rp_id != '0':
-            is_error = True
-        else:
-            is_error = False
+            last_rp_id = self.user_info[2]
+            self.user_info[2] = ''  # 置空，存放此次的最后rp id
+            this_cn_total_image_count = 0
+            page_count = 1
+            max_page_count = -1
+            need_make_download_dir = True  # 是否需要创建cn目录
+            rp_id_list = []
+            is_over = False
+            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
+            if last_rp_id != '0':
+                is_error = True
+            else:
+                is_error = False
 
-        while 1:
-            photo_album_url = 'http://bcy.net/u/%s/post/cos?&p=%s' % (coser_id, page_count)
-            [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url)
-            if photo_album_page_return_code != 1:
-                print_error_msg(cn + " 无法获取数据: " + photo_album_url)
-                break
-
-            rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
-            title_result_list = re.findall('<img src="\S*" alt="([\S ]*)" />', photo_album_page)
-            title_result_list.remove('${post.title}')
-            if len(rp_id_result_list) != len(title_result_list):
-                print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
-                break
-
-            title_index = 0
-            for data in rp_id_result_list:
-                cp_id = data[0]
-                rp_id = data[1]
-                rp_id_list.append(rp_id)
-
-                if self.user_info[2] == '':
-                    self.user_info[2] = rp_id
-                # 检查是否已下载到前一次的图片
-                if int(rp_id) <= int(last_rp_id):
-                    is_over = True
-                    is_error = False
+            while 1:
+                photo_album_url = 'http://bcy.net/u/%s/post/cos?&p=%s' % (coser_id, page_count)
+                [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url)
+                if photo_album_page_return_code != 1:
+                    print_error_msg(cn + " 无法获取数据: " + photo_album_url)
                     break
 
-                print_step_msg("rp: " + rp_id)
+                rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
+                title_result_list = re.findall('<img src="\S*" alt="([\S ]*)" />', photo_album_page)
+                title_result_list.remove('${post.title}')
+                if len(rp_id_result_list) != len(title_result_list):
+                    print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
+                    break
 
-                # CN目录
-                image_path = IMAGE_DOWNLOAD_PATH + "\\" + cn
+                title_index = 0
+                for data in rp_id_result_list:
+                    cp_id = data[0]
+                    rp_id = data[1]
+                    rp_id_list.append(rp_id)
 
-                if need_make_download_dir:
-                    if not common.make_dir(image_path, 1):
-                        print_error_msg(cn + " 创建CN目录： " + image_path + " 失败，程序结束！")
-                        common.process_exit()
-                    need_make_download_dir = False
+                    if self.user_info[2] == '':
+                        self.user_info[2] = rp_id
+                    # 检查是否已下载到前一次的图片
+                    if int(rp_id) <= int(last_rp_id):
+                        is_over = True
+                        is_error = False
+                        break
 
-                # 正片目录
-                title = title_result_list[title_index]
-                # 过滤一些windows文件名屏蔽的字符
-                for filter in ['\\', '/', ':', '*', '?', '"', '<', '>', '|']:
-                    title = title.replace(filter, ' ')
-                if title != '':
-                    rp_path = image_path + "\\" + rp_id + ' ' + title
-                else:
-                    rp_path = image_path + "\\" + rp_id
-                if not common.make_dir(rp_path, 1):
-                    # 目录出错，把title去掉后再试一次，如果还不行退出
-                    print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，尝试不使用title！")
-                    rp_path = image_path + "\\" + rp_id
+                    print_step_msg("rp: " + rp_id)
+
+                    # CN目录
+                    image_path = IMAGE_DOWNLOAD_PATH + "\\" + cn
+
+                    if need_make_download_dir:
+                        if not common.make_dir(image_path, 1):
+                            print_error_msg(cn + " 创建CN目录： " + image_path + " 失败，程序结束！")
+                            common.process_exit()
+                        need_make_download_dir = False
+
+                    # 正片目录
+                    title = title_result_list[title_index]
+                    # 过滤一些windows文件名屏蔽的字符
+                    for filter in ['\\', '/', ':', '*', '?', '"', '<', '>', '|']:
+                        title = title.replace(filter, ' ')
+                    if title != '':
+                        rp_path = image_path + "\\" + rp_id + ' ' + title
+                    else:
+                        rp_path = image_path + "\\" + rp_id
                     if not common.make_dir(rp_path, 1):
-                        print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
-                        common.process_exit()
+                        # 目录出错，把title去掉后再试一次，如果还不行退出
+                        print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，尝试不使用title！")
+                        rp_path = image_path + "\\" + rp_id
+                        if not common.make_dir(rp_path, 1):
+                            print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
+                            common.process_exit()
 
-                rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
-                [rp_page_return_code, rp_page] = common.http_request(rp_url)
-                if rp_page_return_code == 1:
-                    image_count = 0
-                    image_index = rp_page.find("src='")
-                    while image_index != -1:
-                        image_count += 1
+                    rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
+                    [rp_page_return_code, rp_page] = common.http_request(rp_url)
+                    if rp_page_return_code == 1:
+                        image_count = 0
+                        image_index = rp_page.find("src='")
+                        while image_index != -1:
+                            image_count += 1
 
-                        image_start = rp_page.find("http", image_index)
-                        image_stop = rp_page.find("'", image_start)
-                        image_url = rp_page[image_start:image_stop]
-                        # 禁用指定分辨率
-                        image_url = "/".join(image_url.split("/")[0:-1])
+                            image_start = rp_page.find("http", image_index)
+                            image_stop = rp_page.find("'", image_start)
+                            image_url = rp_page[image_start:image_stop]
+                            # 禁用指定分辨率
+                            image_url = "/".join(image_url.split("/")[0:-1])
 
-                        if image_url.rfind('/') < image_url.rfind('.'):
-                            file_type = image_url.split(".")[-1]
-                        else:
-                            file_type = 'jpg'
-                        file_path = rp_path + "\\" + str("%03d" % image_count) + "." + file_type
+                            if image_url.rfind('/') < image_url.rfind('.'):
+                                file_type = image_url.split(".")[-1]
+                            else:
+                                file_type = 'jpg'
+                            file_path = rp_path + "\\" + str("%03d" % image_count) + "." + file_type
 
-                        print_step_msg(cn + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                        if common.save_image(image_url, file_path):
-                            print_step_msg(cn + " 第" + str(image_count) + "张图片下载成功")
-                        else:
-                            print_error_msg(cn + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            print_step_msg(cn + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                            if common.save_image(image_url, file_path):
+                                print_step_msg(cn + " 第" + str(image_count) + "张图片下载成功")
+                            else:
+                                print_error_msg(cn + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                        image_index = rp_page.find("src='", image_index + 1)
+                            image_index = rp_page.find("src='", image_index + 1)
 
-                    if image_count == 0:
-                        print_error_msg(cn + " " + rp_id + " 没有任何图片")
+                        if image_count == 0:
+                            print_error_msg(cn + " " + rp_id + " 没有任何图片")
 
-                    this_cn_total_image_count += image_count - 1
+                        this_cn_total_image_count += image_count - 1
 
-                title_index += 1
+                    title_index += 1
 
-            if is_over:
-                break
+                if is_over:
+                    break
 
-            # 看看总共有几页
-            if max_page_count == -1:
-                max_page_count_result = re.findall(r'<a href="/u/'+ coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
-                if len(max_page_count_result) > 0:
-                    max_page_count = int(max_page_count_result[0])
-                else:
-                    max_page_count = 1
+                # 看看总共有几页
+                if max_page_count == -1:
+                    max_page_count_result = re.findall(r'<a href="/u/'+ coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
+                    if len(max_page_count_result) > 0:
+                        max_page_count = int(max_page_count_result[0])
+                    else:
+                        max_page_count = 1
 
-            if page_count >= max_page_count:
-                break
+                if page_count >= max_page_count:
+                    break
 
-            page_count += 1
+                page_count += 1
 
-        print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
+            print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
 
-        if is_error:
-            print_error_msg(cn + " 图片数量异常，请手动检查")
+            if is_error:
+                print_error_msg(cn + " 图片数量异常，请手动检查")
 
-        # 保存最后的信息
-        threadLock.acquire()
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
-        new_user_id_list_file.write("\t".join(self.user_info) + "\n")
-        new_user_id_list_file.close()
-        TOTAL_IMAGE_COUNT += this_cn_total_image_count
+            # 保存最后的信息
+            threadLock.acquire()
+            new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
+            new_user_id_list_file.write("\t".join(self.user_info) + "\n")
+            new_user_id_list_file.close()
+            TOTAL_IMAGE_COUNT += this_cn_total_image_count
+            threadLock.release()
+
+            print_step_msg(cn + " 完成")
+        except Exception, e:
+            print_step_msg(cn + " 异常")
+            print_error_msg(str(e))
+
         THREAD_COUNT -= 1
-        threadLock.release()
-
 
 if __name__ == "__main__":
     Bcy().main()
