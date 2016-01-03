@@ -211,7 +211,8 @@ class Download(threading.Thread):
 
                 rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
                 title_result_list = re.findall('<img src="\S*" alt="([\S ]*)" />', photo_album_page)
-                title_result_list.remove('${post.title}')
+                if '${post.title}' in title_result_list:
+                    title_result_list.remove('${post.title}')
                 if len(rp_id_result_list) != len(title_result_list):
                     print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
                     break
@@ -280,11 +281,11 @@ class Download(threading.Thread):
                                 file_type = 'jpg'
                             file_path = rp_path + "\\" + str("%03d" % image_count) + "." + file_type
 
-                            print_step_msg(cn + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                            print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             if common.save_image(image_url, file_path):
-                                print_step_msg(cn + " 第" + str(image_count) + "张图片下载成功")
+                                print_step_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片下载成功")
                             else:
-                                print_error_msg(cn + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                                print_error_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
                             image_index = rp_page.find("src='", image_index + 1)
 
