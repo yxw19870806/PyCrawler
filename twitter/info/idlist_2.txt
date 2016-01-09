@@ -1,5 +1,5 @@
-ozawahokkaido	3	1430753272	小泽玛丽亚
-aoi_sola	378	1445787739	苍井空
-riku_minato	1328	1445323562	凑莉久
-ichigo_aoi2	1476	1445581253	青井いちご
-rina_hatsume			初芽里奈
+aoi_sola	379	1449062222	苍井空
+ichigo_aoi2	1065	1448970607	青井いちご
+ozawahokkaido	2	1430753272	小泽玛丽亚
+riku_minato	1063	1448875180	凑莉久
+rina_hatsume	653	1448979222	初芽里奈
