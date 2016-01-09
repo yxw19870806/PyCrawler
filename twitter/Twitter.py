@@ -353,6 +353,8 @@ class Download(threading.Thread):
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
 
+        THREAD_COUNT -= 1
+
 if __name__ == "__main__":
     Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage").main()
     Twitter(os.getcwd() + "\\info\\idlist_2.txt", os.getcwd() + "\\photo\\twitter2", os.getcwd() + "\\photo\\twitter2\\tempImage").main()
