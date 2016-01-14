@@ -1,275 +1,134 @@
-# -*- coding:GBK  -*-
+# -*- coding:UTF-8  -*-
 '''
 Created on 2013-5-6
 
 @author: hikaru
 QQ: 286484545
 email: hikaru870806@hotmail.com
-ÈçÓĞÎÊÌâ»ò½¨ÒéÇëÁªÏµ
+å¦‚æœ‰é—®é¢˜æˆ–å»ºè®®è¯·è”ç³»
 '''
 
 from common import common
 import os
+import re
 import shutil
-import sys
 import time
 
-class Shinoda(common.Tool):
+class Shinoda(common.Robot):
+
+    def __init__(self):
+        super(Shinoda, self).__init__()
+
+        self.get_image_page_count = 28
+        self.user_id_list_file_path = os.getcwd() + "\\shinoda.save"
+
+        common.print_msg("é…ç½®æ–‡ä»¶è¯»å–å®Œæˆ")
 
     def _trace(self, msg):
-        super(Shinoda, self).trace(msg, self.isShowError, self.traceLogPath)
-    
-    def _print_error_msg(self, msg):
-        super(Shinoda, self).print_error_msg(msg, self.isShowError, self.errorLogPath)
-        
-    def _print_step_msg(self, msg):
-        super(Shinoda, self).print_step_msg(msg, self.isShowError, self.stepLogPath)
+        common.trace(msg, self.is_trace, self.trace_log_path)
 
-    def download(self, imageUrl, imagePath, imageCount):
-        imgByte = self.do_get(imageUrl)
-        fileType = imageUrl.split(".")[-1]
-        imageFile = open(imagePath + "\\" + str("%05d" % imageCount) + "." + fileType, "wb")
-        if imgByte:
-            self.print_msg(u"¿ªÊ¼ÏÂÔØµÚ" + str(imageCount) + u"ÕÅÍ¼Æ¬£º" + imageUrl)
-            imageFile.write(imgByte)
-            self.print_msg(u"ÏÂÔØ³É¹¦")
-        else:
-            self._print_error_msg(u"»ñÈ¡Í¼Æ¬ĞÅÏ¢Ê§°Ü£º" + imageUrl)
-        imageFile.close()
-                           
-    def __init__(self):
-        processPath = os.getcwd()
-        configFile = open(processPath + "\\..\\common\\config.ini", "r")
-        lines = configFile.readlines()
-        configFile.close()
-        config = {}
-        for line in lines:
-            line = line.lstrip().rstrip().replace(" ", "")
-            if len(line) > 1 and line[0] != "#":
-                try:
-                    line = line.split("=")
-                    config[line[0]] = line[1]
-                except Exception, e:
-                    self.print_msg(str(e))
-                    pass
-        # ³ÌĞòÅäÖÃ
-        self.isLog = self.get_config(config, "IS_LOG", 1, 2)
-        self.isShowError = self.get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.isDebug = self.get_config(config, "IS_DEBUG", 1, 2)
-        self.isShowStep = self.get_config(config, "IS_SHOW_STEP", 1, 2)
-        self.isSort = self.get_config(config, "IS_SORT", 1, 2)
-        self.getImagePageCount = self.get_config(config, "GET_IMAGE_PAGE_COUNT", 1, 2)
-        # ´úÀí
-        self.isProxy = self.get_config(config, "IS_PROXY", 2, 2)
-        self.proxyIp = self.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxyPort = self.get_config(config, "PROXY_PORT", "8087", 0)
-        # ÎÄ¼şÂ·¾¶
-        self.errorLogPath = self.get_config(config, "ERROR_LOG_FILE_NAME", "\\log\\errorLog.txt", 3)
-        if self.isLog == 0:
-            self.traceLogPath = ""
-            self.stepLogPath = ""
-        else:
-            self.traceLogPath = self.get_config(config, "TRACE_LOG_FILE_NAME", "\\log\\traceLog.txt", 3)
-            self.stepLogPath = self.get_config(config, "STEP_LOG_FILE_NAME", "\\log\\stepLog.txt", 3)
-        self.imageDownloadPath = self.get_config(config, "IMAGE_DOWNLOAD_DIR_NAME", "\\photo", 3)
-        self.imageTempPath = self.get_config(config, "IMAGE_TEMP_DIR_NAME", "\\tempImage", 3)
-        self.print_msg(u"ÅäÖÃÎÄ¼ş¶ÁÈ¡Íê³É")
-    
+    def _print_error_msg(self, msg):
+        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
+
+    def _print_step_msg(self, msg):
+        common.print_step_msg(msg, self.is_show_step, self.step_log_path)
+
     def main(self):
-        startTime = time.time()
-        # ÅĞ¶Ï¸÷ÖÖÄ¿Â¼ÊÇ·ñ´æÔÚ
-        # ÈÕÖ¾ÎÄ¼ş±£´æÄ¿Â¼
-        if self.isLog == 1:
-            stepLogDir = os.path.dirname(self.stepLogPath)
-            if not os.path.exists(stepLogDir):
-                self._print_step_msg("²½ÖèÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + stepLogDir)
-                if not self.createDir(stepLogDir):
-                    self._print_error_msg("´´½¨²½ÖèÈÕÖ¾Ä¿Â¼£º" + stepLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.process_exit()
-            traceLogDir = os.path.dirname(self.traceLogPath)
-            if not os.path.exists(traceLogDir):
-                self._print_step_msg("µ÷ÊÔÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + traceLogDir)
-                if not self.createDir(traceLogDir):
-                    self._print_error_msg("´´½¨µ÷ÊÔÈÕÖ¾Ä¿Â¼£º" + traceLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                    self.process_exit()
-        errorLogDir = os.path.dirname(self.errorLogPath)
-        if not os.path.exists(errorLogDir):
-            self._print_step_msg("´íÎóÈÕÖ¾Ä¿Â¼²»´æÔÚ£¬´´½¨ÎÄ¼ş¼Ğ£º" + errorLogDir)
-            if not self.createDir(errorLogDir):
-                self._print_error_msg("´´½¨´íÎóÈÕÖ¾Ä¿Â¼£º" + errorLogDir + " Ê§°Ü£¬³ÌĞò½áÊø£¡")
-                self.process_exit()
-        # Í¼Æ¬ÅÅĞòºóµÄ±£´æÄ¿Â¼
-        if os.path.exists(self.imageDownloadPath):
-            # Â·¾¶ÊÇÄ¿Â¼
-            if os.path.isdir(self.imageDownloadPath):
-                # Ä¿Â¼²»Îª¿Õ
-                if os.listdir(self.imageDownloadPath):
-                    isDelete = False
-                    while not isDelete:
-                        # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                        input = raw_input(self.get_time() + u" Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + u" ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
-                        try:
-                            input = input.lower()
-                            if input in ["y", "yes"]:
-                                isDelete = True
-                            elif input in ["n", "no"]:
-                                self.process_exit()
-                        except:
-                            pass
-                    self._print_step_msg(u"É¾³ıÍ¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-                    # É¾³ıÄ¿Â¼
-                    shutil.rmtree(self.imageDownloadPath, True)
-                    # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
-                    while os.path.exists(self.imageDownloadPath):
-                        shutil.rmtree(self.imageDownloadPath, True)
-                        time.sleep(5)
-            else:
-                self._print_step_msg(u"Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + u"ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
-                os.remove(self.imageDownloadPath)
-        self._print_step_msg(u"´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath)
-        if not self.createDir(self.imageDownloadPath):
-            self._print_error_msg(u"´´½¨Í¼Æ¬±£´æÄ¿Â¼£º" + self.imageDownloadPath + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
-            self.process_exit()
-        # Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼
-        if os.path.exists(self.imageTempPath):
-            if os.path.isdir(self.imageTempPath):
-                # Ä¿Â¼²»Îª¿Õ
-                if os.listdir(self.imageTempPath):
-                    isDelete = False
-                    while not isDelete:
-                        # ÊÖ¶¯ÊäÈëÊÇ·ñÉ¾³ı¾ÉÎÄ¼ş¼ĞÖĞµÄÄ¿Â¼
-                        input = raw_input(self.get_time() + u" Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + u" ÒÑ¾­´æÔÚ£¬ÊÇ·ñĞèÒªÉ¾³ı¸ÃÎÄ¼ş¼Ğ²¢¼ÌĞø³ÌĞò? (Y)es or (N)o: ")
-                        try:
-                            input = input.lower()
-                            if input in ["y", "yes"]:
-                                isDelete = True
-                            elif input in ["n", "no"]:
-                                self.process_exit()
-                        except:
-                            pass
-                    self._print_step_msg(u"É¾³ıÍ¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath)
-                    shutil.rmtree(self.imageTempPath, True)
-                    # ±£»¤£¬·ÀÖ¹ÎÄ¼ş¹ı¶àÉ¾³ıÊ±¼ä¹ı³¤£¬5Ãë¼ì²éÒ»´ÎÎÄ¼ş¼ĞÊÇ·ñÒÑ¾­É¾³ı
-                    while os.path.exists(self.imageTempPath):
-                        shutil.rmtree(self.imageTempPath, True)
-                        time.sleep(5)
-            else:
-                self._print_step_msg(u"Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + u"ÒÑ´æÔÚÏàÍ¬Ãû×ÖµÄÎÄ¼ş£¬×Ô¶¯É¾³ı")
-                os.remove(self.imageTempPath)
-        self._print_step_msg(u"´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath)
-        if not self.createDir(self.imageTempPath):
-            self._print_error_msg(u"´´½¨Í¼Æ¬ÏÂÔØÁÙÊ±Ä¿Â¼£º" + self.imageTempPath + u" Ê§°Ü£¬³ÌĞò½áÊø£¡")
-            self.process_exit()
-        # ÉèÖÃ´úÀí
-        if self.isProxy == 1 or self.isProxy == 2:
-            self.set_proxy(self.proxyIp, self.proxyPort, "http")
-        # ¶ÁÈ¡´æµµÎÄ¼ş
-        saveFilePath = os.getcwd() + "\\" + ".".join(sys.argv[0].split("\\")[-1].split(".")[:-1]) + ".save"
-        lastImageUrl = ""
-        imageStartIndex = 0
-        if os.path.exists(saveFilePath):
-            saveFile = open(saveFilePath, "r")
-            saveInfo = saveFile.read()
-            saveFile.close()
-            saveList = saveInfo.split("\t")
-            if len(saveList) >= 2:
-                imageStartIndex = int(saveList[0])
-                lastImageUrl = saveList[1]
-        # ÏÂÔØ
-        
-        pageIndex = 1
-        imageCount = 1
-        isOver = False
-        newLastImageUrl = ""
-        while True:
-            if isOver:
-                break
-            indexUrl = "http://blog.mariko-shinoda.net/page%s.html" % (pageIndex - 1)
-            indexPage = self.do_get(indexUrl)
-            self._trace(u"²©¿ÍÒ³ÃæµØÖ·£º" + indexUrl)
-            if indexPage:
-                # old image:
-                imageIndex = 0
-                while True:
-                    imageIndex = indexPage.find('<a href="http://mariko-shinoda.up.seesaa.net', imageIndex)
-                    if imageIndex == -1:
+        start_time = time.time()
+
+        # å›¾ç‰‡ä¿å­˜ç›®å½•
+        self._print_step_msg("åˆ›å»ºå›¾ç‰‡æ ¹ç›®å½•ï¼š" + self.image_download_path)
+        if not common.make_dir(self.image_download_path, 2):
+            self._print_error_msg("åˆ›å»ºå›¾ç‰‡æ ¹ç›®å½•ï¼š" + self.image_download_path + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+            common.process_exit()
+
+        # å›¾ç‰‡ä¸‹è½½ä¸´æ—¶ç›®å½•
+        if self.is_sort == 1:
+            self._print_step_msg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.image_temp_path)
+            if not common.make_dir(self.image_temp_path, 2):
+                self._print_error_msg("åˆ›å»ºå›¾ç‰‡ä¸‹è½½ç›®å½•ï¼š" + self.image_temp_path + " å¤±è´¥ï¼Œç¨‹åºç»“æŸï¼")
+                common.process_exit()
+
+        # è®¾ç½®ä»£ç†
+        if self.is_proxy == 1:
+            common.set_proxy(self.proxy_ip, self.proxy_port, "http")
+
+        # è¯»å–å­˜æ¡£æ–‡ä»¶
+        last_blog_id = ""
+        image_start_index = 0
+        if os.path.exists(self.user_id_list_file_path):
+            save_file = open(self.user_id_list_file_path, "r")
+            save_info = save_file.read()
+            save_file.close()
+            save_info = save_info.split("\t")
+            if len(save_info) >= 2:
+                image_start_index = int(save_info[0])
+                last_blog_id = save_info[1]
+
+        # ä¸‹è½½
+        page_index = 1
+        image_count = 1
+        is_over = False
+        new_last_blog_id = ''
+        host = 'http://blog.mariko-shinoda.net/'
+        if self.is_sort == 1:
+            image_path = self.image_temp_path
+        else:
+            image_path = self.image_download_path
+        while not is_over:
+            index_url = host + "page%s.html" % (page_index - 1)
+            [index_page_return_code, index_page] = common.http_request(index_url)
+            self._trace("åšå®¢é¡µé¢åœ°å€ï¼š" + index_url)
+
+            if index_page_return_code == 1:
+                image_name_list = re.findall('data-original="./([^"]*)"', index_page)
+                for image_name in image_name_list:
+                    blog_id = image_name.split('-')[0]
+                    if blog_id == last_blog_id:
+                        is_over = True
                         break
-                    imageStart = indexPage.find("http", imageIndex) 
-                    imageStop = indexPage.find('"', imageStart)
-                    imageUrl = indexPage[imageStart:imageStop]
-                    self._trace(u"Í¼Æ¬µØÖ·£º" + imageUrl)
-                    if imageUrl.find("data") == -1:
-                        if newLastImageUrl == "":
-                            newLastImageUrl = imageUrl
-                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
-                        if lastImageUrl == imageUrl:
-                            isOver = True
-                            break
-                        # ÏÂÔØÍ¼Æ¬
-                        self.download(imageUrl, self.imageTempPath, imageCount)
-                        imageCount += 1
-                    imageIndex += 1
-                if isOver:
-                    break
-                # new image:
-                imgTagStart = 0
-                while True:
-                    imgTagStart = indexPage.find("<img ", imgTagStart)
-                    if imgTagStart == -1:
-                        break
-                    imgTagStop = indexPage.find("/>", imgTagStart)
-                    imageIndex = indexPage.find('src="http://blog.mariko-shinoda.net', imgTagStart, imgTagStop)
-                    if imageIndex == -1:
-                        imgTagStart += 1  
-                        continue
-                    imageStart = indexPage.find("http", imageIndex)
-                    imageStop = indexPage.find('"', imageStart)
-                    imageUrl = indexPage[imageStart:imageStop]
-                    self._trace(u"Í¼Æ¬µØÖ·£º" + imageUrl)
-                    if imageUrl.find("data") == -1:
-                        if newLastImageUrl == "":
-                            newLastImageUrl = imageUrl
-                        # ¼ì²éÊÇ·ñÒÑÏÂÔØµ½Ç°Ò»´ÎµÄÍ¼Æ¬
-                        if lastImageUrl == imageUrl:
-                            isOver = True
-                            break
-                        # ÏÂÔØÍ¼Æ¬
-                        self.download(imageUrl, self.imageTempPath, imageCount)
-                        imageCount += 1
-                    imgTagStart += 1
-                if isOver:
+                    if new_last_blog_id == '':
+                        new_last_blog_id = blog_id
+                    image_url = host + image_name
+                    # æ–‡ä»¶ç±»å‹
+                    file_type = image_url.split(".")[-1].split(':')[0]
+                    file_path = image_path + "\\" + str("%05d" % image_count) + "." + file_type
+                    self._print_step_msg("å¼€å§‹ä¸‹è½½ç¬¬ " + str(image_count) + "å¼ å›¾ç‰‡ï¼š" + image_url)
+                    if common.save_image(image_url, file_path):
+                        self._print_step_msg("ç¬¬" + str(image_count) + "å¼ å›¾ç‰‡ä¸‹è½½æˆåŠŸ")
+                        image_count += 1
+                    else:
+                        self._print_step_msg("ç¬¬" + str(image_count) + "å¼ å›¾ç‰‡ " + image_url + " ä¸‹è½½å¤±è´¥")
+                page_index += 1
+                # è¾¾åˆ°é…ç½®æ–‡ä»¶ä¸­çš„ä¸‹è½½æ•°é‡ï¼Œç»“æŸ
+                if self.get_image_page_count != 0 and page_index > self.get_image_page_count:
                     break
             else:
-                break
-            pageIndex += 1
-            # ´ïµ½ÅäÖÃÎÄ¼şÖĞµÄÏÂÔØÊıÁ¿£¬½áÊø
-            if self.getImagePageCount != 0 and pageIndex > self.getImagePageCount:
-                break
+                self._print_error_msg("æ— æ³•è®¿é—®åšå®¢é¡µé¢" + index_url)
+                is_over = True
+
+        self._print_step_msg("ä¸‹è½½å®Œæ¯•")
         
-        self._print_step_msg(u"ÏÂÔØÍê±Ï")
-        
-        # ÅÅĞò¸´ÖÆµ½±£´æÄ¿Â¼
-        if self.isSort == 1:
-            allImageCount = 0
-            for fileName in sorted(os.listdir(self.imageTempPath), reverse=True):
-                imageStartIndex += 1
-                imagePath = self.imageTempPath + "\\" + fileName
-                fileType = fileName.split(".")[-1]
-                self.copy_files(imagePath, self.imageDownloadPath + "\\" + str("%05d" % imageStartIndex) + "." + fileType)
-                allImageCount += 1
-            self._print_step_msg(u"Í¼Æ¬´ÓÏÂÔØÄ¿Â¼ÒÆ¶¯µ½±£´æÄ¿Â¼³É¹¦")
-            # É¾³ıÏÂÔØÁÙÊ±Ä¿Â¼ÖĞµÄÍ¼Æ¬
-            shutil.rmtree(self.imageTempPath, True)
+        # æ’åºå¤åˆ¶åˆ°ä¿å­˜ç›®å½•
+        if self.is_sort == 1:
+            for fileName in sorted(os.listdir(self.image_temp_path), reverse=True):
+                image_start_index += 1
+                image_path = self.image_temp_path + "\\" + fileName
+                file_type = fileName.split(".")[-1]
+                common.copy_files(image_path, self.image_download_path + "\\" + str("%05d" % image_start_index) + "." + file_type)
+            self._print_step_msg("å›¾ç‰‡ä»ä¸‹è½½ç›®å½•ç§»åŠ¨åˆ°ä¿å­˜ç›®å½•æˆåŠŸ")
+            # åˆ é™¤ä¸‹è½½ä¸´æ—¶ç›®å½•ä¸­çš„å›¾ç‰‡
+            shutil.rmtree(self.image_temp_path, True)
             
-        # ±£´æĞÂµÄ´æµµÎÄ¼ş
-        newSaveFilePath = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(saveFilePath)[-1]
-        self._print_step_msg(u"±£´æĞÂ´æµµÎÄ¼ş: " + newSaveFilePath)
-        newSaveFile = open(newSaveFilePath, "w")
-        newSaveFile.write(str(imageStartIndex) + "\t" + newLastImageUrl)
-        newSaveFile.close()
+        # ä¿å­˜æ–°çš„å­˜æ¡£æ–‡ä»¶
+        new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
+        self._print_step_msg("ä¿å­˜æ–°å­˜æ¡£æ–‡ä»¶: " + new_save_file_path)
+        new_save_file = open(new_save_file_path, "w")
+        new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
+        new_save_file.close()
             
-        stopTime = time.time()
-        self._print_step_msg(u"³É¹¦ÏÂÔØ×îĞÂÍ¼Æ¬£¬ºÄÊ±" + str(int(stopTime - startTime)) + u"Ãë£¬¹²¼ÆÍ¼Æ¬" + str(imageCount - 1) + u"ÕÅ")
+        stop_time = time.time()
+        self._print_step_msg("æˆåŠŸä¸‹è½½æœ€æ–°å›¾ç‰‡ï¼Œè€—æ—¶" + str(int(stop_time - start_time)) + "ç§’ï¼Œå…±è®¡å›¾ç‰‡" + str(image_count - 1) + "å¼ ")
 
 if __name__ == "__main__":
     Shinoda().main()
