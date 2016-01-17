@@ -215,6 +215,7 @@ class Download(threading.Thread):
             image_count = 1
             message_url_list = []
             image_url_list = []
+            is_over = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
             if last_message_url.find("picasaweb.google.com/") != -1:
                 is_error = True
