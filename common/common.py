@@ -430,6 +430,8 @@ def remove_dir(dir_path, only_files=False):
 # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
 def make_dir(dir_path, create_mode):
     dir_path = change_path_encoding(dir_path)
+    if dir_path[-1] != '/' or dir_path[-1] != '\\':
+        dir_path = dir_path + '/'
     if create_mode != 0 and create_mode != 1 and create_mode != 2:
         create_mode = 0
     # 目录存在
