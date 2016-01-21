@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common, json
+from common import tool, json
 import os
 import threading
 import time
@@ -20,29 +20,30 @@ TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
 THREAD_COUNT = 0
+PROCESS_PAUSE = False
 
 threadLock = threading.Lock()
 
 
 def trace(msg):
     threadLock.acquire()
-    common.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
 def print_error_msg(msg):
     threadLock.acquire()
-    common.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
+    tool.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
     threadLock.release()
 
 
 def print_step_msg(msg):
     threadLock.acquire()
-    common.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
+    tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
 
-class Instagram(common.Robot):
+class Instagram(tool.Robot):
 
     def __init__(self):
         global GET_IMAGE_COUNT
@@ -72,23 +73,24 @@ class Instagram(common.Robot):
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
 
-        common.print_msg("配置文件读取完成")
+        tool.print_msg("配置文件读取完成")
 
     def main(self):
         global TOTAL_IMAGE_COUNT
         global THREAD_COUNT
+        global PROCESS_PAUSE
 
         start_time = time.time()
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not common.make_dir(self.image_download_path, 2):
+        if not tool.make_dir(self.image_download_path, 2):
             print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
-            common.set_proxy(self.proxy_ip, self.proxy_port, "https")
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "https")
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -114,7 +116,7 @@ class Instagram(common.Robot):
                     user_id_list[user_account].append("")
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
@@ -127,6 +129,10 @@ class Instagram(common.Robot):
             # 检查正在运行的线程数
             while THREAD_COUNT >= self.thread_count:
                 time.sleep(10)
+                if os.path.exists('stop'):
+                    PROCESS_PAUSE = True
+                else:
+                    PROCESS_PAUSE = False
 
             # 线程数+1
             threadLock.acquire()
@@ -142,7 +148,7 @@ class Instagram(common.Robot):
             time.sleep(10)
 
         # 删除临时文件夹
-        common.remove_dir(IMAGE_TEMP_PATH)
+        tool.remove_dir(IMAGE_TEMP_PATH)
 
         stop_time = time.time()
         print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
@@ -162,6 +168,7 @@ class Download(threading.Thread):
         global IS_SORT
         global TOTAL_IMAGE_COUNT
         global THREAD_COUNT
+        global PROCESS_PAUSE
 
         user_account = self.user_info[0]
 
@@ -190,9 +197,9 @@ class Download(threading.Thread):
             image_path = IMAGE_TEMP_PATH + "\\" + user_account
         else:
             image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-        if not common.make_dir(image_path, 1):
+        if not tool.make_dir(image_path, 1):
             print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 图片下载
         while 1:
@@ -201,7 +208,7 @@ class Download(threading.Thread):
             else:
                 photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
 
-            [photo_album_return_code, photo_album_data] = common.http_request(photo_album_url)
+            [photo_album_return_code, photo_album_data] = tool.http_request(photo_album_url)
             if photo_album_return_code != 1:
                 print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
                 break
@@ -256,11 +263,14 @@ class Download(threading.Thread):
 
                     # 下载
                     print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    if common.save_image(image_url, file_path):
+                    if tool.save_image(image_url, file_path):
                         print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
                         print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+
+                    while PROCESS_PAUSE:
+                        time.sleep(10)
 
                     # 达到下载数量限制，结束
                     if limit_download_count > 0 and image_count > limit_download_count:
@@ -284,21 +294,21 @@ class Download(threading.Thread):
             # 判断排序目标文件夹是否存在
             if len(image_list) >= 1:
                 destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-                if not common.make_dir(destination_path, 1):
+                if not tool.make_dir(destination_path, 1):
                     print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                    common.process_exit()
+                    tool.process_exit()
 
                 # 倒叙排列
                 count = int(self.user_info[1])
                 for file_name in image_list:
                     count += 1
                     file_type = file_name.split(".")[1]
-                    common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                    tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
 
                 print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
 
             # 删除临时文件夹
-            common.remove_dir(image_path)
+            tool.remove_dir(image_path)
 
         self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 

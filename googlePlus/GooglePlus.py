@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common
+from common import tool
 import os
 import re
 import threading
@@ -27,23 +27,23 @@ threadLock = threading.Lock()
 
 def trace(msg):
     threadLock.acquire()
-    common.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
 def print_error_msg(msg):
     threadLock.acquire()
-    common.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
+    tool.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
     threadLock.release()
 
 
 def print_step_msg(msg):
     threadLock.acquire()
-    common.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
+    tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
 
-class GooglePlus(common.Robot):
+class GooglePlus(tool.Robot):
 
     def __init__(self):
         global GET_IMAGE_URL_COUNT
@@ -75,7 +75,7 @@ class GooglePlus(common.Robot):
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
 
-        common.print_msg("配置文件读取完成")
+        tool.print_msg("配置文件读取完成")
 
     def main(self):
         global TOTAL_IMAGE_COUNT
@@ -84,13 +84,13 @@ class GooglePlus(common.Robot):
         start_time = time.time()
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not common.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
-            common.set_proxy(self.proxy_ip, self.proxy_port, "https")
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "https")
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -125,7 +125,7 @@ class GooglePlus(common.Robot):
 
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
@@ -153,7 +153,7 @@ class GooglePlus(common.Robot):
             time.sleep(10)
 
         # 删除临时文件夹
-        common.remove_dir(IMAGE_TEMP_PATH)
+        tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
@@ -205,7 +205,7 @@ class Download(threading.Thread):
             if last_message_url == '':
                 limit_download_count = 0
             else:
-                [last_message_page_return_code, ] = common.http_request(last_message_url)
+                [last_message_page_return_code, ] = tool.http_request(last_message_url)
                 # 上次记录的信息首页还在，那么不要限制
                 if last_message_page_return_code == 1:
                     limit_download_count = 0
@@ -227,9 +227,9 @@ class Download(threading.Thread):
                 image_path = IMAGE_TEMP_PATH + "\\" + user_name
             else:
                 image_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
-            if not common.make_dir(image_path, 1):
+            if not tool.make_dir(image_path, 1):
                 print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                common.process_exit()
+                tool.process_exit()
 
             # 图片下载
             photo_album_url = 'https://plus.google.com/_/photos/pc/read/'
@@ -237,7 +237,7 @@ class Download(threading.Thread):
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
-                [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url, post_data)
+                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url, post_data)
 
                 # 换一个获取信息页的方法，这个只能获取最近的100张
                 # if not photo_album_page and key == '':
@@ -276,7 +276,7 @@ class Download(threading.Thread):
                         is_error = False
                         break
 
-                    [message_page_return_code, message_page] = common.http_request(message_url)
+                    [message_page_return_code, message_page] = tool.http_request(message_url)
                     if message_page_return_code != 1:
                         print_error_msg(user_name + " 无法获取信息页")
                         continue
@@ -312,7 +312,7 @@ class Download(threading.Thread):
 
                         # 下载
                         print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                        if common.save_image(image_url, file_name):
+                        if tool.save_image(image_url, file_name):
                             print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
@@ -347,22 +347,22 @@ class Download(threading.Thread):
 
             # 排序
             if IS_SORT == 1:
-                image_list = common.get_dir_files_name(image_path, 'desc')
+                image_list = tool.get_dir_files_name(image_path, 'desc')
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
-                    if not common.make_dir(destination_path, 1):
+                    if not tool.make_dir(destination_path, 1):
                         print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        common.process_exit()
+                        tool.process_exit()
                     # 倒叙排列
                     count = int(self.user_info[2])
                     for file_name in image_list:
                         count += 1
                         file_type = file_name.split(".")[1]
-                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
                     print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
-                common.remove_dir(image_path)
+                tool.remove_dir(image_path)
 
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 

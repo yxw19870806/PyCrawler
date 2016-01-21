@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common, json
+from common import tool, json
 import os
 import re
 import threading
@@ -27,22 +27,22 @@ threadLock = threading.Lock()
 
 def trace(msg):
     threadLock.acquire()
-    common.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
 def print_error_msg(msg):
     threadLock.acquire()
-    common.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
+    tool.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
     threadLock.release()
 
 
 def print_step_msg(msg):
     threadLock.acquire()
-    common.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
+    tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
-class Twitter(common.Robot):
+class Twitter(tool.Robot):
 
     def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
         global INIT_MAX_ID
@@ -59,7 +59,7 @@ class Twitter(common.Robot):
         global STEP_LOG_PATH
 
         # multiprocessing.Process.__init__(self)
-        common.Robot.__init__(self)
+        tool.Robot.__init__(self)
 
         if user_id_list_file_path != '':
             self.user_id_list_file_path = user_id_list_file_path
@@ -82,7 +82,7 @@ class Twitter(common.Robot):
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
 
-        common.print_msg("配置文件读取完成")
+        tool.print_msg("配置文件读取完成")
 
     def main(self):
         global TOTAL_IMAGE_COUNT
@@ -92,13 +92,13 @@ class Twitter(common.Robot):
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not common.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
-            common.set_proxy(self.proxy_ip, self.proxy_port, "https")
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "https")
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -127,7 +127,7 @@ class Twitter(common.Robot):
 
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
@@ -157,7 +157,7 @@ class Twitter(common.Robot):
             time.sleep(10)
 
         # 删除临时文件夹
-        common.remove_dir(IMAGE_TEMP_PATH)
+        tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
@@ -187,12 +187,12 @@ class Download(threading.Thread):
 
     # 返回的是当前时区对应的时间
     def get_image_last_modified(self, info):
-        last_modified_time = common.get_response_info(info, 'last-modified')
+        last_modified_time = tool.get_response_info(info, 'last-modified')
         last_modified_time = time.strptime(last_modified_time, '%a, %d %b %Y %H:%M:%S %Z')
         return int(time.mktime(last_modified_time)) - time.timezone
 
     def save_image(self, image_byte, image_path):
-        image_path = common.change_path_encoding(image_path)
+        image_path = tool.change_path_encoding(image_path)
         image_file = open(image_path, "wb")
         image_file.write(image_byte)
         image_file.close()
@@ -229,14 +229,14 @@ class Download(threading.Thread):
                 image_path = IMAGE_TEMP_PATH + "\\" + user_account
             else:
                 image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-            if not common.make_dir(image_path, 1):
+            if not tool.make_dir(image_path, 1):
                 print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                common.process_exit()
+                tool.process_exit()
 
             # 图片下载
             while 1:
                 photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
-                [photo_page_return_code, photo_page_data] = common.http_request(photo_page_url)
+                [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)
                 if photo_page_return_code != 1:
                     print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
@@ -266,7 +266,7 @@ class Download(threading.Thread):
                     image_url_list.append(image_url)
                     trace(user_account + " image URL:" + image_url)
 
-                    [[image_response_return_code, image_response_data], image_response_info] = common.http_request(image_url, None, True)
+                    [[image_response_return_code, image_response_data], image_response_info] = tool.http_request(image_url, None, True)
                     # 404，不算做错误，图片已经被删掉了
                     if image_response_return_code == -1:
                         pass
@@ -318,9 +318,9 @@ class Download(threading.Thread):
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-                    if not common.make_dir(destination_path, 1):
+                    if not tool.make_dir(destination_path, 1):
                         print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        common.process_exit()
+                        tool.process_exit()
 
                     # 倒叙排列
                     count = int(self.user_info[1])
@@ -328,12 +328,12 @@ class Download(threading.Thread):
                     for file_name in image_list:
                         count += 1
                         file_type = file_name.split(".")[1]
-                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
 
                     print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
 
                 # 删除临时文件夹
-                common.remove_dir(image_path)
+                tool.remove_dir(image_path)
 
             self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 

@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common, json
+from common import tool, json
 import os
 import re
 import threading
@@ -27,23 +27,23 @@ threadLock = threading.Lock()
 
 def trace(msg):
     threadLock.acquire()
-    common.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
 def print_error_msg(msg):
     threadLock.acquire()
-    common.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
+    tool.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
     threadLock.release()
 
 
 def print_step_msg(msg):
     threadLock.acquire()
-    common.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
+    tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
 
-class Bcy(common.Robot):
+class Bcy(tool.Robot):
 
     def __init__(self):
         global GET_IMAGE_COUNT
@@ -71,7 +71,7 @@ class Bcy(common.Robot):
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
 
-        common.print_msg("配置文件读取完成")
+        tool.print_msg("配置文件读取完成")
 
     def main(self):
         global TOTAL_IMAGE_COUNT
@@ -81,18 +81,18 @@ class Bcy(common.Robot):
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not common.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
-            common.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not common.set_cookie(self.cookie_path, self.browser_version):
+        if not tool.set_cookie(self.cookie_path, self.browser_version):
             print_error_msg("导入浏览器cookies失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -120,7 +120,7 @@ class Bcy(common.Robot):
                     user_id_list[user_id][2] = '0'
         else:
             print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
@@ -204,7 +204,7 @@ class Download(threading.Thread):
 
             while 1:
                 photo_album_url = 'http://bcy.net/u/%s/post/cos?&p=%s' % (coser_id, page_count)
-                [photo_album_page_return_code, photo_album_page] = common.http_request(photo_album_url)
+                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url)
                 if photo_album_page_return_code != 1:
                     print_error_msg(cn + " 无法获取数据: " + photo_album_url)
                     break
@@ -237,9 +237,9 @@ class Download(threading.Thread):
                     image_path = IMAGE_DOWNLOAD_PATH + "\\" + cn
 
                     if need_make_download_dir:
-                        if not common.make_dir(image_path, 1):
+                        if not tool.make_dir(image_path, 1):
                             print_error_msg(cn + " 创建CN目录： " + image_path + " 失败，程序结束！")
-                            common.process_exit()
+                            tool.process_exit()
                         need_make_download_dir = False
 
                     # 正片目录
@@ -253,16 +253,16 @@ class Download(threading.Thread):
                         rp_path = image_path + "\\" + rp_id + ' ' + title
                     else:
                         rp_path = image_path + "\\" + rp_id
-                    if not common.make_dir(rp_path, 1):
+                    if not tool.make_dir(rp_path, 1):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
                         print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，尝试不使用title！")
                         rp_path = image_path + "\\" + rp_id
-                        if not common.make_dir(rp_path, 1):
+                        if not tool.make_dir(rp_path, 1):
                             print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
-                            common.process_exit()
+                            tool.process_exit()
 
                     rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
-                    [rp_page_return_code, rp_page] = common.http_request(rp_url)
+                    [rp_page_return_code, rp_page] = tool.http_request(rp_url)
                     if rp_page_return_code == 1:
                         image_count = 0
                         image_index = rp_page.find("src='")
@@ -282,7 +282,7 @@ class Download(threading.Thread):
                             file_path = rp_path + "\\" + str("%03d" % image_count) + "." + file_type
 
                             print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                            if common.save_image(image_url, file_path):
+                            if tool.save_image(image_url, file_path):
                                 print_step_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片下载成功")
                             else:
                                 print_error_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")

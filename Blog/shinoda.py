@@ -8,13 +8,13 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common
+from common import tool
 import os
 import re
 import shutil
 import time
 
-class Shinoda(common.Robot):
+class Shinoda(tool.Robot):
 
     def __init__(self):
         super(Shinoda, self).__init__()
@@ -22,36 +22,36 @@ class Shinoda(common.Robot):
         self.get_image_page_count = 28
         self.user_id_list_file_path = os.getcwd() + "\\shinoda.save"
 
-        common.print_msg("配置文件读取完成")
+        tool.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        common.trace(msg, self.is_trace, self.trace_log_path)
+        tool.trace(msg, self.is_trace, self.trace_log_path)
 
     def _print_error_msg(self, msg):
-        common.print_error_msg(msg, self.is_show_error, self.error_log_path)
+        tool.print_error_msg(msg, self.is_show_error, self.error_log_path)
 
     def _print_step_msg(self, msg):
-        common.print_step_msg(msg, self.is_show_step, self.step_log_path)
+        tool.print_step_msg(msg, self.is_show_step, self.step_log_path)
 
     def main(self):
         start_time = time.time()
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not common.make_dir(self.image_download_path, 2):
+        if not tool.make_dir(self.image_download_path, 2):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort == 1:
             self._print_step_msg("创建图片下载目录：" + self.image_temp_path)
-            if not common.make_dir(self.image_temp_path, 2):
+            if not tool.make_dir(self.image_temp_path, 2):
                 self._print_error_msg("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
-                common.process_exit()
+                tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
-            common.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 读取存档文件
         last_blog_id = ""
@@ -77,7 +77,7 @@ class Shinoda(common.Robot):
             image_path = self.image_download_path
         while not is_over:
             index_url = host + "page%s.html" % (page_index - 1)
-            [index_page_return_code, index_page] = common.http_request(index_url)
+            [index_page_return_code, index_page] = tool.http_request(index_url)
             self._trace("博客页面地址：" + index_url)
 
             if index_page_return_code == 1:
@@ -94,7 +94,7 @@ class Shinoda(common.Robot):
                     file_type = image_url.split(".")[-1].split(':')[0]
                     file_path = image_path + "\\" + str("%05d" % image_count) + "." + file_type
                     self._print_step_msg("开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    if common.save_image(image_url, file_path):
+                    if tool.save_image(image_url, file_path):
                         self._print_step_msg("第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
@@ -115,7 +115,7 @@ class Shinoda(common.Robot):
                 image_start_index += 1
                 image_path = self.image_temp_path + "\\" + fileName
                 file_type = fileName.split(".")[-1]
-                common.copy_files(image_path, self.image_download_path + "\\" + str("%05d" % image_start_index) + "." + file_type)
+                tool.copy_files(image_path, self.image_download_path + "\\" + str("%05d" % image_start_index) + "." + file_type)
             self._print_step_msg("图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.image_temp_path, True)

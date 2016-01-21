@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import common, json
+from common import tool, json
 import hashlib
 # import multiprocessing
 import os
@@ -29,23 +29,23 @@ threadLock = threading.Lock()
 
 def trace(msg):
     threadLock.acquire()
-    common.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
 def print_error_msg(msg):
     threadLock.acquire()
-    common.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
+    tool.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
     threadLock.release()
 
 
 def print_step_msg(msg):
     threadLock.acquire()
-    common.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
+    tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
 def visit_weibo(url):
-    [temp_page_return_code, temp_page] = common.http_request(url)
+    [temp_page_return_code, temp_page] = tool.http_request(url)
     if temp_page_return_code == 1:
         # 有重定向
         redirect_url_index = temp_page.find("location.replace")
@@ -57,20 +57,20 @@ def visit_weibo(url):
         # 没有cookies无法访问的处理
         if temp_page.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-            common.process_exit()
+            tool.process_exit()
         else:
             try:
                 temp_page = temp_page.decode("utf-8")
                 if temp_page.find("用户名或密码错误") != -1:
                     print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-                    common.process_exit()
+                    tool.process_exit()
             except Exception, e:
                 pass
         # 返回页面
         return str(temp_page)
     return False
 
-class Weibo(common.Robot):
+class Weibo(tool.Robot):
 
     def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
         global IMAGE_COUNT_PER_PAGE
@@ -87,7 +87,7 @@ class Weibo(common.Robot):
         global STEP_LOG_PATH
 
         # multiprocessing.Process.__init__(self)
-        common.Robot.__init__(self)
+        tool.Robot.__init__(self)
 
         if user_id_list_file_path != '':
             self.user_id_list_file_path = user_id_list_file_path
@@ -111,7 +111,7 @@ class Weibo(common.Robot):
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
 
-        common.print_msg("配置文件读取完成")
+        tool.print_msg("配置文件读取完成")
 
     def main(self):
         global TOTAL_IMAGE_COUNT
@@ -121,18 +121,18 @@ class Weibo(common.Robot):
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not common.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
-            common.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not common.set_cookie(self.cookie_path, self.browser_version):
+        if not tool.set_cookie(self.cookie_path, self.browser_version):
             print_error_msg("导入浏览器cookies失败，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
@@ -165,7 +165,7 @@ class Weibo(common.Robot):
                     user_id_list[user_id][3] = '0'
         else:
             print_error_msg("用户ID存档文件：" + self.user_id_list_file_path + "不存在，程序结束！")
-            common.process_exit()
+            tool.process_exit()
 
         # 创建临时存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, 'w')
@@ -197,7 +197,7 @@ class Weibo(common.Robot):
             time.sleep(10)
 
         # 删除临时文件夹
-        common.remove_dir(IMAGE_TEMP_PATH)
+        tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
         new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
@@ -238,7 +238,6 @@ class Download(threading.Thread):
         user_name = self.user_info[1]
 
         try:
-
             print_step_msg(user_name + " 开始")
 
             # 初始化数据
@@ -258,9 +257,9 @@ class Download(threading.Thread):
                 image_path = IMAGE_TEMP_PATH + "\\" + user_name
             else:
                 image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_name
-            if not common.make_dir(image_path, 1):
+            if not tool.make_dir(image_path, 1):
                 print_error_msg(user_name + " 创建图片下载目录：" + image_path + " 失败，程序结束！")
-                common.process_exit()
+                tool.process_exit()
 
             # 日志文件插入信息
             while 1:
@@ -317,7 +316,7 @@ class Download(threading.Thread):
                             else:
                                 print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
 
-                            [image_return_code, image_byte] = common.http_request(image_url)
+                            [image_return_code, image_byte] = tool.http_request(image_url)
                             if image_return_code == 1:
                                 md5 = hashlib.md5()
                                 md5.update(image_byte)
@@ -329,7 +328,7 @@ class Download(threading.Thread):
                                     file_type = image_url.split(".")[-1]
                                     if file_type.find('/') != -1:
                                         file_type = 'jpg'
-                                    file_path = common.change_path_encoding(image_path + "\\" + str("%04d" % image_count) + "." + file_type)
+                                    file_path = tool.change_path_encoding(image_path + "\\" + str("%04d" % image_count) + "." + file_type)
                                     image_file = open(file_path, "wb")
                                     image_file.write(image_byte)
                                     image_file.close()
@@ -364,13 +363,13 @@ class Download(threading.Thread):
 
             # 排序
             if IS_SORT == 1:
-                image_list = common.get_dir_files_name(image_path, 'desc')
+                image_list = tool.get_dir_files_name(image_path, 'desc')
                 # 判断排序目标文件夹是否存在
                 if len(image_list) >= 1:
                     destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_name
-                    if not common.make_dir(destination_path, 1):
+                    if not tool.make_dir(destination_path, 1):
                         print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        common.process_exit()
+                        tool.process_exit()
 
                     # 倒叙排列
                     count = int(self.user_info[2])
@@ -378,11 +377,11 @@ class Download(threading.Thread):
                     for file_name in image_list:
                         count += 1
                         file_type = file_name.split(".")[1]
-                        common.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                        tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
 
                     print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
                 # 删除临时文件夹
-                common.remove_dir(image_path)
+                tool.remove_dir(image_path)
 
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 
