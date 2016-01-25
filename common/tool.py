@@ -12,10 +12,12 @@ import os
 import shutil
 import sys
 import time
+import threading
 import traceback
 import urllib2
 
 IS_SET_TIMEOUT = False
+PROCESS_STATUS = 2
 
 
 class Robot(object):
@@ -132,10 +134,31 @@ class Robot(object):
         return config
 
 
+class ProcessControl(threading.Thread):
+    PROCESS_RUN = 0
+    PROCESS_PAUSE = 1
+    PROCESS_STOP = 2
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        global PROCESS_STATUS
+        while 1:
+            if os.path.exists(os.getcwd() + '/../common/pause'):
+                PROCESS_STATUS = self.PROCESS_PAUSE
+            elif os.path.exists(os.getcwd() + '/../common/stop'):
+                PROCESS_STATUS = self.PROCESS_STOP
+            else:
+                PROCESS_STATUS = self.PROCESS_RUN
+            time.sleep(10)
+
+
 # http请求
 # 返回 【返回码，数据】 返回码 -1：页面不存在（404）；-2：暂时无法访问页面
 def http_request(url, post_data=None, need_info=False):
     global IS_SET_TIMEOUT
+    global PROCESS_STATUS
     if url.find("http") == -1:
         if need_info:
             return [[-100, None], []]
@@ -143,6 +166,8 @@ def http_request(url, post_data=None, need_info=False):
             return [-100, None]
     count = 0
     while 1:
+        while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
+            time.sleep(10)
         try:
             if post_data:
                 request = urllib2.Request(url, post_data)
@@ -201,6 +226,7 @@ def http_request(url, post_data=None, need_info=False):
                 return [[-2, None], []]
             else:
                 return [-2, None]
+
 
 def get_response_info(response, key):
     try:
