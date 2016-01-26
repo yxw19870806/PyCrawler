@@ -148,6 +148,8 @@ class GooglePlus(tool.Robot):
             thread = Download(user_id_list[user_id])
             thread.start()
 
+            time.sleep(1)
+
         # 检查所有线程是不是全部结束了
         while THREAD_COUNT != 0:
             time.sleep(10)
