@@ -20,7 +20,6 @@ IS_SHOW_STEP = False
 TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
-THREAD_COUNT = 0
 
 threadLock = threading.Lock()
 
@@ -101,7 +100,6 @@ class Twitter(tool.Robot):
 
     def main(self):
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         start_time = time.time()
 
@@ -153,13 +151,8 @@ class Twitter(tool.Robot):
         # 循环下载每个id
         for user_account in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while THREAD_COUNT >= self.thread_count:
+            while threading.activeCount() >= self.thread_count + 1:
                 time.sleep(10)
-
-            # 线程数+1
-            threadLock.acquire()
-            THREAD_COUNT += 1
-            threadLock.release()
 
             # 开始下载
             thread = Download(user_id_list[user_account])
@@ -167,8 +160,8 @@ class Twitter(tool.Robot):
 
             time.sleep(1)
 
-        # 检查所有线程是不是全部结束了
-        while THREAD_COUNT != 0:
+        # 检查除主线程外的其他所有线程是不是全部结束了
+        while threading.activeCount() > 1:
             time.sleep(10)
 
         # 删除临时文件夹
@@ -207,7 +200,6 @@ class Download(threading.Thread):
         global IMAGE_DOWNLOAD_PATH
         global NEW_USER_ID_LIST_FILE_PATH
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         user_account = self.user_info[0]
 
@@ -355,8 +347,6 @@ class Download(threading.Thread):
         except Exception, e:
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
-
-        THREAD_COUNT -= 1
 
 
 if __name__ == "__main__":
