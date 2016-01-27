@@ -22,7 +22,6 @@ IS_SHOW_STEP = False
 TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
-THREAD_COUNT = 0
 
 threadLock = threading.Lock()
 
@@ -43,6 +42,7 @@ def print_step_msg(msg):
     threadLock.acquire()
     tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
+
 
 def visit_weibo(url):
     [temp_page_return_code, temp_page] = tool.http_request(url)
@@ -69,6 +69,7 @@ def visit_weibo(url):
         # 返回页面
         return str(temp_page)
     return False
+
 
 class Weibo(tool.Robot):
 
@@ -115,7 +116,6 @@ class Weibo(tool.Robot):
 
     def main(self):
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         start_time = time.time()
 
@@ -178,22 +178,19 @@ class Weibo(tool.Robot):
         TOTAL_IMAGE_COUNT = 0
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while THREAD_COUNT >= self.thread_count:
+            while threading.activeCount() >= self.thread_count + 1:
                 time.sleep(10)
 
             # 线程数+1
             threadLock.acquire()
-            THREAD_COUNT += 1
             threadLock.release()
 
             # 开始下载
             thread = Download(user_id_list[user_id])
             thread.start()
 
-            time.sleep(1)
-
         # 检查所有线程是不是全部结束了
-        while THREAD_COUNT != 0:
+        while threading.activeCount() > 1:
             time.sleep(10)
 
         # 删除临时文件夹
@@ -232,7 +229,6 @@ class Download(threading.Thread):
         global IMAGE_DOWNLOAD_PATH
         global NEW_USER_ID_LIST_FILE_PATH
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
@@ -401,7 +397,6 @@ class Download(threading.Thread):
             print_step_msg(user_name + " 异常")
             print_error_msg(str(e))
 
-        THREAD_COUNT -= 1
 
 if __name__ == '__main__':
     Weibo(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() +  "\\photo\\weibo1", os.getcwd() +  "\\photo\\weibo1\\tempImage").main()
