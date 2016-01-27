@@ -19,8 +19,6 @@ IS_SHOW_STEP = False
 TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
-THREAD_COUNT = 0
-PROCESS_PAUSE = False
 
 threadLock = threading.Lock()
 
@@ -77,8 +75,6 @@ class Instagram(tool.Robot):
 
     def main(self):
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
-        global PROCESS_PAUSE
 
         start_time = time.time()
 
@@ -127,24 +123,15 @@ class Instagram(tool.Robot):
         # 循环下载每个id
         for user_account in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while THREAD_COUNT >= self.thread_count:
+            while threading.activeCount() >= self.thread_count:
                 time.sleep(10)
-                if os.path.exists('stop'):
-                    PROCESS_PAUSE = True
-                else:
-                    PROCESS_PAUSE = False
-
-            # 线程数+1
-            threadLock.acquire()
-            THREAD_COUNT += 1
-            threadLock.release()
 
             thread = Download(user_id_list[user_account])
             thread.start()
 
             time.sleep(1)
 
-        while THREAD_COUNT != 0:
+        while threading.activeCount() != 0:
             time.sleep(10)
 
         # 删除临时文件夹
@@ -167,8 +154,6 @@ class Download(threading.Thread):
         global NEW_USER_ID_LIST_FILE_PATH
         global IS_SORT
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
-        global PROCESS_PAUSE
 
         user_account = self.user_info[0]
 
@@ -269,9 +254,6 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                    while PROCESS_PAUSE:
-                        time.sleep(10)
-
                     # 达到下载数量限制，结束
                     if limit_download_count > 0 and image_count > limit_download_count:
                         is_over = True
@@ -321,7 +303,6 @@ class Download(threading.Thread):
         new_user_id_list_file.write("\t".join(self.user_info) + "\n")
         new_user_id_list_file.close()
         TOTAL_IMAGE_COUNT += image_count - 1
-        THREAD_COUNT -= 1
         threadLock.release()
 
         print_step_msg(user_account + " 完成")
