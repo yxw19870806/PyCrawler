@@ -42,6 +42,21 @@ def print_step_msg(msg):
     tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
     threadLock.release()
 
+
+# 返回的是当前时区对应的时间
+def get_image_last_modified(self, info):
+    last_modified_time = tool.get_response_info(info, 'last-modified')
+    last_modified_time = time.strptime(last_modified_time, '%a, %d %b %Y %H:%M:%S %Z')
+    return int(time.mktime(last_modified_time)) - time.timezone
+
+
+def save_image(self, image_byte, image_path):
+    image_path = tool.change_path_encoding(image_path)
+    image_file = open(image_path, "wb")
+    image_file.write(image_byte)
+    image_file.close()
+
+
 class Twitter(tool.Robot):
 
     def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
@@ -185,18 +200,6 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.user_info = user_info
 
-    # 返回的是当前时区对应的时间
-    def get_image_last_modified(self, info):
-        last_modified_time = tool.get_response_info(info, 'last-modified')
-        last_modified_time = time.strptime(last_modified_time, '%a, %d %b %Y %H:%M:%S %Z')
-        return int(time.mktime(last_modified_time)) - time.timezone
-
-    def save_image(self, image_byte, image_path):
-        image_path = tool.change_path_encoding(image_path)
-        image_file = open(image_path, "wb")
-        image_file.write(image_byte)
-        image_file.close()
-
     def run(self):
         global INIT_MAX_ID
         global GET_IMAGE_COUNT
@@ -271,7 +274,7 @@ class Download(threading.Thread):
                     if image_response_return_code == -1:
                         pass
                     elif image_response_return_code == 1:
-                        image_time = self.get_image_last_modified(image_response_info)
+                        image_time = get_image_last_modified(image_response_info)
                         # 将第一张image的URL保存到新id list中
                         if self.user_info[2] == "0":
                             self.user_info[2] = str(image_time)
@@ -287,7 +290,7 @@ class Download(threading.Thread):
                         file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
                         print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                        self.save_image(image_response_data, file_path)
+                        save_image(image_response_data, file_path)
                         print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
@@ -354,6 +357,7 @@ class Download(threading.Thread):
             print_error_msg(str(e))
 
         THREAD_COUNT -= 1
+
 
 if __name__ == "__main__":
     Twitter(os.getcwd() + "\\info\\idlist_1.txt", os.getcwd() + "\\photo\\twitter1", os.getcwd() + "\\photo\\twitter1\\tempImage").main()
