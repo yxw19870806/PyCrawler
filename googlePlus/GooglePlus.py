@@ -20,7 +20,6 @@ IS_SHOW_STEP = False
 TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
-THREAD_COUNT = 0
 
 threadLock = threading.Lock()
 
@@ -79,7 +78,6 @@ class GooglePlus(tool.Robot):
 
     def main(self):
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         start_time = time.time()
         # 图片保存目录
@@ -136,13 +134,8 @@ class GooglePlus(tool.Robot):
         # 循环下载每个id
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while THREAD_COUNT >= self.thread_count:
+            while threading.activeCount() >= self.thread_count + 1:
                 time.sleep(10)
-
-            # 线程数+1
-            threadLock.acquire()
-            THREAD_COUNT += 1
-            threadLock.release()
 
             # 开始下载
             thread = Download(user_id_list[user_id])
@@ -151,7 +144,7 @@ class GooglePlus(tool.Robot):
             time.sleep(1)
 
         # 检查所有线程是不是全部结束了
-        while THREAD_COUNT != 0:
+        while threading.activeCount() > 1:
             time.sleep(10)
 
         # 删除临时文件夹
@@ -191,7 +184,6 @@ class Download(threading.Thread):
         global NEW_USER_ID_LIST_FILE_PATH
         global IS_SORT
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
@@ -377,7 +369,6 @@ class Download(threading.Thread):
             new_user_id_list_file.write("\t".join(self.user_info) + "\n")
             new_user_id_list_file.close()
             TOTAL_IMAGE_COUNT += image_count - 1
-            THREAD_COUNT -= 1
             threadLock.release()
 
             print_step_msg(user_name + " 完成")
