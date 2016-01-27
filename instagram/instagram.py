@@ -126,6 +126,7 @@ class Instagram(tool.Robot):
             while threading.activeCount() >= self.thread_count:
                 time.sleep(10)
 
+            # 开始下载
             thread = Download(user_id_list[user_account])
             thread.start()
 

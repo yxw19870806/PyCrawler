@@ -185,6 +185,8 @@ class Weibo(tool.Robot):
             thread = Download(user_id_list[user_id])
             thread.start()
 
+            time.sleep(1)
+
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > 1:
             time.sleep(10)
