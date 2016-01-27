@@ -181,15 +181,11 @@ class Weibo(tool.Robot):
             while threading.activeCount() >= self.thread_count + 1:
                 time.sleep(10)
 
-            # 线程数+1
-            threadLock.acquire()
-            threadLock.release()
-
             # 开始下载
             thread = Download(user_id_list[user_id])
             thread.start()
 
-        # 检查所有线程是不是全部结束了
+        # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > 1:
             time.sleep(10)
 
