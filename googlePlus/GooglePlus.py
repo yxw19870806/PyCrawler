@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import tool
+from common import robot, tool
 import os
 import re
 import threading
@@ -42,14 +42,14 @@ def print_step_msg(msg):
     threadLock.release()
 
 
-class GooglePlus(tool.Robot):
+class GooglePlus(robot.Robot):
 
     def __init__(self):
         global GET_IMAGE_URL_COUNT
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global NEW_USER_ID_LIST_FILE_PATH
+        global NEW_SAVE_DATA_PATH
         global IS_SORT
         global IS_TRACE
         global IS_SHOW_ERROR
@@ -69,7 +69,7 @@ class GooglePlus(tool.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_USER_ID_LIST_FILE_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(''), 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.basename(self.save_data_path))
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -92,10 +92,10 @@ class GooglePlus(tool.Robot):
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
-        if os.path.exists(self.user_id_list_file_path):
-            user_id_list_file = open(self.user_id_list_file_path, "r")
-            all_user_list = user_id_list_file.readlines()
-            user_id_list_file.close()
+        if os.path.exists(self.save_data_path):
+            save_data_file = open(self.save_data_path, "r")
+            all_user_list = save_data_file.readlines()
+            save_data_file.close()
             for user_info in all_user_list:
                 if len(user_info) < 10:
                     continue
@@ -122,12 +122,12 @@ class GooglePlus(tool.Robot):
                     user_id_list[user_id].append("")
 
         else:
-            print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
+            print_error_msg("存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
 
         # 创建临时存档文件
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
-        new_user_id_list_file.close()
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
+        new_save_data_file.close()
 
         TOTAL_IMAGE_COUNT = 0
 
@@ -151,9 +151,9 @@ class GooglePlus(tool.Robot):
         tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
-        all_user_list = new_user_id_list_file.readlines()
-        new_user_id_list_file.close()
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, 'r')
+        all_user_list = new_save_data_file.readlines()
+        new_save_data_file.close()
         user_id_list = {}
         for user_info in all_user_list:
             if len(user_info) < 5:
@@ -161,13 +161,13 @@ class GooglePlus(tool.Robot):
             user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
             user_info_list = user_info.split("\t")
             user_id_list[user_info_list[0]] = user_info_list
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, 'w')
         for user_id in sorted(user_id_list.keys()):
-            new_user_id_list_file.write("\t".join(user_id_list[user_id]) + "\n")
-        new_user_id_list_file.close()
+            new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+        new_save_data_file.close()
 
-        stop_time = time.time()
-        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        duration_time = int(time.time() - start_time)
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
 
 class Download(threading.Thread):
@@ -181,7 +181,7 @@ class Download(threading.Thread):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global NEW_USER_ID_LIST_FILE_PATH
+        global NEW_SAVE_DATA_PATH
         global IS_SORT
         global TOTAL_IMAGE_COUNT
 
@@ -199,7 +199,7 @@ class Download(threading.Thread):
             if last_message_url == '':
                 limit_download_count = 0
             else:
-                [last_message_page_return_code, ] = tool.http_request(last_message_url)
+                last_message_page_return_code = tool.http_request(last_message_url)[0]
                 # 上次记录的信息首页还在，那么不要限制
                 if last_message_page_return_code == 1:
                     limit_download_count = 0
@@ -218,9 +218,9 @@ class Download(threading.Thread):
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
-                image_path = IMAGE_TEMP_PATH + "\\" + user_name
+                image_path = os.path.join(IMAGE_TEMP_PATH, user_name)
             else:
-                image_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
+                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.user_info[4], user_name)
             if not tool.make_dir(image_path, 1):
                 print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                 tool.process_exit()
@@ -231,7 +231,7 @@ class Download(threading.Thread):
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
-                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url, post_data)
+                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url, post_data)[:2]
 
                 # 换一个获取信息页的方法，这个只能获取最近的100张
                 # if not photo_album_page and key == '':
@@ -270,7 +270,7 @@ class Download(threading.Thread):
                         is_error = False
                         break
 
-                    [message_page_return_code, message_page] = tool.http_request(message_url)
+                    [message_page_return_code, message_page] = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
                         print_error_msg(user_name + " 无法获取信息页")
                         continue
@@ -302,7 +302,7 @@ class Download(threading.Thread):
                             file_type = image_url.split(".")[-1]
                         else:
                             file_type = 'jpg'
-                        file_name = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                        file_name = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
                         # 下载
                         print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
@@ -313,12 +313,12 @@ class Download(threading.Thread):
                             print_error_msg(user_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
                         # 达到下载数量限制，结束
-                        if limit_download_count > 0 and image_count > limit_download_count:
+                        if 0 < limit_download_count < image_count:
                             is_over = True
                             break
 
                         # 达到配置文件中的下载数量，结束
-                        if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
+                        if 0 < GET_IMAGE_COUNT < image_count:
                             is_over = True
                             break
 
@@ -333,30 +333,22 @@ class Download(threading.Thread):
                     key = finds[0]
                     trace(user_name + " 下一个信息首页token:" + key)
                 else:
-                    print_error_msg(user_name + " 没有找到下一页的token，将该页保存：")
-                    print_error_msg(photo_album_page)
-                    break
+                    # 不是第一次下载
+                    if last_message_url != '':
+                        print_error_msg(user_name + " 没有找到下一页的token，将该页保存：")
+                        print_error_msg(photo_album_page)
+                        break
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
             if IS_SORT == 1:
-                image_list = tool.get_dir_files_name(image_path, 'desc')
-                # 判断排序目标文件夹是否存在
-                if len(image_list) >= 1:
-                    destination_path = IMAGE_DOWNLOAD_PATH + "\\" + self.user_info[4] + "\\" + user_name
-                    if not tool.make_dir(destination_path, 1):
-                        print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        tool.process_exit()
-                    # 倒叙排列
-                    count = int(self.user_info[2])
-                    for file_name in image_list:
-                        count += 1
-                        file_type = file_name.split(".")[1]
-                        tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.user_info[4], user_name)
+                if robot.sort_file(image_path, destination_path, int(self.user_info[2]), 4):
                     print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
-                # 删除临时文件夹
-                tool.remove_dir(image_path)
+                else:
+                    print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                    tool.process_exit()
 
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 
@@ -365,9 +357,9 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             threadLock.acquire()
-            new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
-            new_user_id_list_file.write("\t".join(self.user_info) + "\n")
-            new_user_id_list_file.close()
+            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
+            new_save_data_file.write("\t".join(self.user_info) + "\n")
+            new_save_data_file.close()
             TOTAL_IMAGE_COUNT += image_count - 1
             threadLock.release()
 
