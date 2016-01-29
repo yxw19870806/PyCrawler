@@ -134,3 +134,4 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
             tool.copy_files(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
         # 删除临时文件夹
         tool.remove_dir(source_path)
+    return True
