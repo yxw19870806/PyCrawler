@@ -7,8 +7,8 @@ Created on 2013-7-16
 
 import cookielib
 import cStringIO
-import getpass
 import os
+import platform
 import shutil
 import sys
 import time
@@ -226,36 +226,23 @@ def get_response_info(response, key):
     return None
 
 
-# 根据浏览器和操作系统，自动查找默认浏览器cookie路径
-# os_version=1: win7
-# os_version=2: xp
+# 根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
 # browser_type=1: IE
 # browser_type=2: firefox
 # browser_type=3: chrome
-def get_default_browser_cookie_path(os_version, browser_type):
+def get_default_browser_cookie_path(browser_type):
+    if platform.system() != 'Windows':
+        return  None
     if browser_type == 1:
-        if os_version == 1:
-            return "C:\\Users\\%s\\AppData\\Roaming\\Microsoft\\Windows\\Cookies\\" % (getpass.getuser())
-        elif os_version == 2:
-            return "C:\\Documents and Settings\\%s\\Cookies\\" % (getpass.getuser())
+        return os.path.join(os.getenv("APPDATA"), 'Microsoft\\Windows\\Cookies')
     elif browser_type == 2:
-        if os_version == 1:
-            default_browser_path = "C:\\Users\\%s\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-            for dir_name in os.listdir(default_browser_path):
-                if os.path.isdir(default_browser_path + "\\" + dir_name):
-                    if os.path.exists(default_browser_path + "\\" + dir_name + "\\cookies.sqlite"):
-                        return default_browser_path + "\\" + dir_name + "\\"
-        elif os_version == 2:
-            default_browser_path = "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Mozilla\\Firefox\\Profiles\\" % (getpass.getuser())
-            for dir_name in os.listdir(default_browser_path):
-                if os.path.isdir(default_browser_path + "\\" + dir_name):
-                    if os.path.exists(default_browser_path + "\\" + dir_name + "\\cookies.sqlite"):
-                        return default_browser_path + "\\" + dir_name + "\\"
+        default_browser_path = os.path.join(os.getenv("APPDATA"), 'Mozilla\\Firefox\\Profiles')
+        for dir_name in os.listdir(default_browser_path):
+            if os.path.isdir(os.path.join(default_browser_path, dir_name)):
+                if os.path.exists(os.path.join(default_browser_path, dir_name, 'cookies.sqlite')):
+                    return os.path.join(default_browser_path, dir_name)
     elif browser_type == 3:
-        if os_version == 1:
-            return "C:\\Users\%s\\AppData\\Local\\Google\\Chrome\\User Data\\Default" % (getpass.getuser())
-        elif os_version == 2:
-            return "C:\\Documents and Settings\\%s\\Local Settings\\Application Data\\Google\\Chrome\\User Data\Default\\" % (getpass.getuser())
+        return os.path.join(os.getenv("APPDATA"), 'Google\\Chrome\\User Data\\Default')
     print_msg("浏览器类型：" + browser_type + "不存在")
     return None
 
