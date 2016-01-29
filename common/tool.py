@@ -145,9 +145,9 @@ class ProcessControl(threading.Thread):
     def run(self):
         global PROCESS_STATUS
         while 1:
-            if os.path.exists(os.getcwd() + '/../common/pause'):
+            if os.path.exists(os.path.join(os.path.abspath(''), '..\\pause')):
                 PROCESS_STATUS = self.PROCESS_PAUSE
-            elif os.path.exists(os.getcwd() + '/../common/stop'):
+            elif os.path.exists(os.path.join(os.path.abspath(''), '..\\stop')):
                 PROCESS_STATUS = self.PROCESS_STOP
             else:
                 PROCESS_STATUS = self.PROCESS_RUN
@@ -266,7 +266,7 @@ def set_cookie(file_path, browser_type=1):
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
                 continue
-            cookie_file = open(file_path + "\\" + cookie_name, 'r')
+            cookie_file = open(os.path.join(file_path, cookie_name), 'r')
             cookie_info = cookie_file.read()
             cookie_file.close()
             for cookies in cookie_info.split("*"):
@@ -281,7 +281,7 @@ def set_cookie(file_path, browser_type=1):
                     value = cookie_list[1]
                     s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
     elif browser_type == 2:
-        con = sqlite.connect(file_path + "\\cookies.sqlite")
+        con = sqlite.connect(os.path.join(file_path, 'cookies.sqlite'))
         cur = con.cursor()
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
@@ -298,7 +298,7 @@ def set_cookie(file_path, browser_type=1):
             except:
                 pass
     elif browser_type == 3:
-        con = sqlite.connect(file_path + "\\Cookies")
+        con = sqlite.connect(os.path.join(file_path, 'Cookies'))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value from cookies")
         for cookie_info in cur.fetchall():
@@ -432,8 +432,6 @@ def remove_dir(dir_path, only_files=False):
 # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
 def make_dir(dir_path, create_mode):
     dir_path = change_path_encoding(dir_path)
-    if dir_path[-1] != '/' or dir_path[-1] != '\\':
-        dir_path = dir_path + '/'
     if create_mode != 0 and create_mode != 1 and create_mode != 2:
         create_mode = 0
     # 目录存在
@@ -500,4 +498,3 @@ def copy_files(source_path, destination_path):
 # 结束进程
 def process_exit():
     sys.exit()
-
