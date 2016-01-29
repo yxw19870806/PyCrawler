@@ -155,15 +155,13 @@ class ProcessControl(threading.Thread):
 
 
 # http请求
-# 返回 【返回码，数据】 返回码 -1：页面不存在（404）；-2：暂时无法访问页面
+# 返回 【返回码，数据, 请求信息】
+# 返回码 -1：页面不存在（404）；-2：暂时无法访问页面
 def http_request(url, post_data=None, need_info=False):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
     if url.find("http") == -1:
-        if need_info:
-            return [[-100, None], []]
-        else:
-            return [-100, None]
+        return [-100, None, []]
     count = 0
     while 1:
         while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
@@ -190,10 +188,7 @@ def http_request(url, post_data=None, need_info=False):
             else:
                 response = urllib2.urlopen(request, timeout=5)
 
-            if need_info:
-                return [[1, response.read()], response.info()]
-            else:
-                return [1, response.read()]
+            return [1, response.read(), response.info()]
         except Exception, e:
             # 代理无法访问
             if str(e).find("[Errno 10061]") != -1:
@@ -211,21 +206,15 @@ def http_request(url, post_data=None, need_info=False):
                 print_msg("访问页面超时，重新连接请稍后")
             # 404
             elif str(e).lower().find("http error 404") != -1:
-                if need_info:
-                    return [[-1, None], []]
-                else:
-                    return [-1, None]
+                return [-1, None, []]
             else:
                 print_msg(str(e))
                 traceback.print_exc()
 
         count += 1
-        if count > 100:
+        if count > 9999:
             print_error_msg("无法访问页面：" + url)
-            if need_info:
-                return [[-2, None], []]
-            else:
-                return [-2, None]
+            return [-2, None, []]
 
 
 def get_response_info(response, key):
