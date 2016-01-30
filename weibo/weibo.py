@@ -294,7 +294,7 @@ class Download(threading.Thread):
                             is_error = False
                             break
 
-                        if image_info.has_key("pic_host"):
+                        if 'pic_host' in image_info:
                             image_host = image_info["pic_host"]
                         else:
                             image_host = ''
