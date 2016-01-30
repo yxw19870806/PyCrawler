@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import tool, json
+from common import robot, tool, json
 import os
 import re
 import threading
@@ -56,14 +56,14 @@ def save_image(self, image_byte, image_path):
     image_file.close()
 
 
-class Twitter(tool.Robot):
+class Twitter(robot.Robot):
 
-    def __init__(self, user_id_list_file_path='', image_download_path='', image_temp_path=''):
+    def __init__(self, save_data_path='', image_download_path='', image_temp_path=''):
         global INIT_MAX_ID
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global NEW_USER_ID_LIST_FILE_PATH
+        global NEW_SAVE_DATA_PATH
         global IS_SORT
         global IS_TRACE
         global IS_SHOW_ERROR
@@ -73,10 +73,10 @@ class Twitter(tool.Robot):
         global STEP_LOG_PATH
 
         # multiprocessing.Process.__init__(self)
-        tool.Robot.__init__(self)
+        robot.Robot.__init__(self)
 
-        if user_id_list_file_path != '':
-            self.user_id_list_file_path = user_id_list_file_path
+        if save_data_path != '':
+            self.save_data_path = save_data_path
         INIT_MAX_ID = 999999999999999999
         GET_IMAGE_COUNT = self.get_image_count
         if image_temp_path != '':
@@ -91,7 +91,7 @@ class Twitter(tool.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_USER_ID_LIST_FILE_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
+        NEW_SAVE_DATA_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -115,10 +115,10 @@ class Twitter(tool.Robot):
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
-        if os.path.exists(self.user_id_list_file_path):
-            user_id_list_file = open(self.user_id_list_file_path, "r")
-            all_user_list = user_id_list_file.readlines()
-            user_id_list_file.close()
+        if os.path.exists(self.save_data_path):
+            save_data_file = open(self.save_data_path, "r")
+            all_user_list = save_data_file.readlines()
+            save_data_file.close()
             for user_info in all_user_list:
                 if len(user_info) < 3:
                     continue
@@ -139,12 +139,12 @@ class Twitter(tool.Robot):
                     user_id_list[user_account][2] = '0'
 
         else:
-            print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
+            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
 
         # 创建临时存档文件
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
-        new_user_id_list_file.close()
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
+        new_save_data_file.close()
 
         TOTAL_IMAGE_COUNT = 0
 
@@ -168,9 +168,9 @@ class Twitter(tool.Robot):
         tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "r")
-        all_user_list = new_user_id_list_file.readlines()
-        new_user_id_list_file.close()
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "r")
+        all_user_list = new_save_data_file.readlines()
+        new_save_data_file.close()
         user_id_list = {}
         for user_info in all_user_list:
             if len(user_info) < 5:
@@ -178,10 +178,10 @@ class Twitter(tool.Robot):
             user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
             user_info_list = user_info.split("\t")
             user_id_list[user_info_list[0]] = user_info_list
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         for user_id in sorted(user_id_list.keys()):
-            new_user_id_list_file.write("\t".join(user_id_list[user_id]) + "\n")
-        new_user_id_list_file.close()
+            new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+        new_save_data_file.close()
 
         stop_time = time.time()
         print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
@@ -198,7 +198,7 @@ class Download(threading.Thread):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global NEW_USER_ID_LIST_FILE_PATH
+        global NEW_SAVE_DATA_PATH
         global TOTAL_IMAGE_COUNT
 
         user_account = self.user_info[0]
@@ -337,9 +337,9 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             threadLock.acquire()
-            new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
-            new_user_id_list_file.write("\t".join(self.user_info) + "\n")
-            new_user_id_list_file.close()
+            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
+            new_save_data_file.write("\t".join(self.user_info) + "\n")
+            new_save_data_file.close()
             TOTAL_IMAGE_COUNT += image_count - 1
             threadLock.release()
 
