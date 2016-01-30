@@ -284,7 +284,7 @@ class Download(threading.Thread):
                     if not isinstance(image_info, dict):
                         print_error_msg(user_name + " JSON数据['photo_list']：" + str(image_info) + " 不是一个字典")
                         continue
-                    if image_info.has_key("pic_name") and image_info.has_key("timestamp"):
+                    if ('pic_name' and 'timestamp') in image_info:
                         # 将第一张image的时间戳保存到新id list中
                         if self.user_info[3] == "0":
                             self.user_info[3] = str(image_info["timestamp"])
