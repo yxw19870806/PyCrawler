@@ -66,7 +66,7 @@ class Bcy(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(''), 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1])
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -234,7 +234,7 @@ class Download(threading.Thread):
                     print_step_msg("rp: " + rp_id)
 
                     # CN目录
-                    image_path = IMAGE_DOWNLOAD_PATH + "\\" + cn
+                    image_path = os.path.join(IMAGE_DOWNLOAD_PATH, cn)
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 1):
@@ -250,13 +250,13 @@ class Download(threading.Thread):
                     # 去除前后空格
                     title = title.strip()
                     if title != '':
-                        rp_path = image_path + "\\" + rp_id + ' ' + title
+                        rp_path = os.path.join(image_path, rp_id + ' ' + title)
                     else:
-                        rp_path = image_path + "\\" + rp_id
+                        rp_path = os.path.join(image_path, rp_id)
                     if not tool.make_dir(rp_path, 1):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
                         print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，尝试不使用title！")
-                        rp_path = image_path + "\\" + rp_id
+                        rp_path = os.path.join(image_path, rp_id)
                         if not tool.make_dir(rp_path, 1):
                             print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
                             tool.process_exit()
@@ -279,7 +279,7 @@ class Download(threading.Thread):
                                 file_type = image_url.split(".")[-1]
                             else:
                                 file_type = 'jpg'
-                            file_path = rp_path + "\\" + str("%03d" % image_count) + "." + file_type
+                            file_path = os.path.join(rp_path, str("%03d" % image_count) + "." + file_type)
 
                             print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             if tool.save_image(image_url, file_path):
