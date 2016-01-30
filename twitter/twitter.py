@@ -43,7 +43,7 @@ def print_step_msg(msg):
 
 
 # 返回的是当前时区对应的时间
-def get_image_last_modified(self, info):
+def get_image_last_modified(info):
     last_modified_time = tool.get_response_info(info, 'last-modified')
     last_modified_time = time.strptime(last_modified_time, '%a, %d %b %Y %H:%M:%S %Z')
     return int(time.mktime(last_modified_time)) - time.timezone
@@ -91,7 +91,7 @@ class Twitter(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath('') , 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1])
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -231,7 +231,7 @@ class Download(threading.Thread):
             # 图片下载
             while 1:
                 photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
-                [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)
+                [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)[:2]
                 if photo_page_return_code != 1:
                     print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
@@ -261,7 +261,7 @@ class Download(threading.Thread):
                     image_url_list.append(image_url)
                     trace(user_account + " image URL:" + image_url)
 
-                    [[image_response_return_code, image_response_data], image_response_info] = tool.http_request(image_url, None, True)
+                    [image_response_return_code, image_response_data, image_response_info] = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
                     if image_response_return_code == -1:
                         pass
@@ -272,7 +272,7 @@ class Download(threading.Thread):
                             self.user_info[2] = str(image_time)
 
                         # 检查是否已下载到前一次的图片
-                        if int(last_image_time) > 0 and image_time <= int(last_image_time):
+                        if 0 < int(last_image_time) >= image_time:
                             is_over = True
                             is_error = False
                             break
