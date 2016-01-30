@@ -49,7 +49,7 @@ def get_image_last_modified(self, info):
     return int(time.mktime(last_modified_time)) - time.timezone
 
 
-def save_image(self, image_byte, image_path):
+def save_image(image_byte, image_path):
     image_path = tool.change_path_encoding(image_path)
     image_file = open(image_path, "wb")
     image_file.write(image_byte)
