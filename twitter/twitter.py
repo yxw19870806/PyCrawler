@@ -58,7 +58,7 @@ def save_image(image_byte, image_path):
 
 class Twitter(robot.Robot):
 
-    def __init__(self, save_data_path='', image_download_path='', image_temp_path=''):
+    def __init__(self, save_data_path='', this_image_download_path='', this_image_temp_path=''):
         global INIT_MAX_ID
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -79,12 +79,12 @@ class Twitter(robot.Robot):
             self.save_data_path = save_data_path
         INIT_MAX_ID = 999999999999999999
         GET_IMAGE_COUNT = self.get_image_count
-        if image_temp_path != '':
-            IMAGE_TEMP_PATH = image_temp_path
+        if this_image_temp_path != '':
+            IMAGE_TEMP_PATH = this_image_temp_path
         else:
             IMAGE_TEMP_PATH = self.image_temp_path
-        if image_download_path != '':
-            IMAGE_DOWNLOAD_PATH = image_download_path
+        if this_image_download_path != '':
+            IMAGE_DOWNLOAD_PATH = this_image_download_path
         else:
             IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort

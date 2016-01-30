@@ -64,7 +64,7 @@ def visit_weibo(url):
                 if temp_page.find("用户名或密码错误") != -1:
                     print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
                     tool.process_exit()
-            except Exception, e:
+            except:
                 pass
         # 返回页面
         return str(temp_page)
@@ -73,7 +73,7 @@ def visit_weibo(url):
 
 class Weibo(robot.Robot):
 
-    def __init__(self, save_data_path='', image_download_path='', image_temp_path=''):
+    def __init__(self, save_data_path='', this_image_download_path='', this_image_temp_path=''):
         global IMAGE_COUNT_PER_PAGE
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -95,12 +95,12 @@ class Weibo(robot.Robot):
 
         IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
         GET_IMAGE_COUNT = self.get_image_count
-        if image_temp_path != '':
-            IMAGE_TEMP_PATH = image_temp_path
+        if this_image_temp_path != '':
+            IMAGE_TEMP_PATH = this_image_temp_path
         else:
             IMAGE_TEMP_PATH = self.image_temp_path
-        if image_download_path != '':
-            IMAGE_DOWNLOAD_PATH = image_download_path
+        if this_image_download_path != '':
+            IMAGE_DOWNLOAD_PATH = this_image_download_path
         else:
             IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
