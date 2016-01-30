@@ -204,7 +204,7 @@ class Download(threading.Thread):
 
             while 1:
                 photo_album_url = 'http://bcy.net/u/%s/post/cos?&p=%s' % (coser_id, page_count)
-                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url)
+                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url)[:2]
                 if photo_album_page_return_code != 1:
                     print_error_msg(cn + " 无法获取数据: " + photo_album_url)
                     break
@@ -262,7 +262,7 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
-                    [rp_page_return_code, rp_page] = tool.http_request(rp_url)
+                    [rp_page_return_code, rp_page] = tool.http_request(rp_url)[:2]
                     if rp_page_return_code == 1:
                         image_count = 0
                         image_index = rp_page.find("src='")
