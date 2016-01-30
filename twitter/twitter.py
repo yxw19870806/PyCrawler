@@ -221,9 +221,9 @@ class Download(threading.Thread):
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
-                image_path = IMAGE_TEMP_PATH + "\\" + user_account
+                image_path = os.path.join(IMAGE_TEMP_PATH, user_account)
             else:
-                image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
+                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
             if not tool.make_dir(image_path, 1):
                 print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                 tool.process_exit()
@@ -279,7 +279,7 @@ class Download(threading.Thread):
 
                         # 文件类型
                         file_type = image_url.split(".")[-1].split(':')[0]
-                        file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                        file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
                         print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
                         save_image(image_response_data, file_path)
@@ -307,7 +307,7 @@ class Download(threading.Thread):
 
             # 排序
             if IS_SORT == 1:
-                destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
+                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
                 if robot.sort_file(image_path, destination_path, self.user_info[1], 4):
                     print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
                 else:
