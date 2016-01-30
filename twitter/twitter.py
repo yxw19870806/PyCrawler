@@ -308,7 +308,7 @@ class Download(threading.Thread):
             # 排序
             if IS_SORT == 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
-                if robot.sort_file(image_path, destination_path, self.user_info[1], 4):
+                if robot.sort_file(image_path, destination_path, int(self.user_info[1]), 4):
                     print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
                 else:
                     print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
