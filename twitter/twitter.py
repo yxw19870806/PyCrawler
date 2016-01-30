@@ -303,32 +303,16 @@ class Download(threading.Thread):
                 else:
                     break
 
-            TOTAL_IMAGE_COUNT += image_count - 1
-
             print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
             if IS_SORT == 1:
-                image_list = sorted(os.listdir(image_path), reverse=True)
-                # 判断排序目标文件夹是否存在
-                if len(image_list) >= 1:
-                    destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-                    if not tool.make_dir(destination_path, 1):
-                        print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                        tool.process_exit()
-
-                    # 倒叙排列
-                    count = int(self.user_info[1])
-
-                    for file_name in image_list:
-                        count += 1
-                        file_type = file_name.split(".")[1]
-                        tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
-
+                destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
+                if robot.sort_file(image_path, destination_path, self.user_info[1], 4):
                     print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
-
-                # 删除临时文件夹
-                tool.remove_dir(image_path)
+                else:
+                    print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                    tool.process_exit()
 
             self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 
