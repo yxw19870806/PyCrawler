@@ -157,7 +157,7 @@ class ProcessControl(threading.Thread):
 # http请求
 # 返回 【返回码，数据, 请求信息】
 # 返回码 -1：页面不存在（404）；-2：暂时无法访问页面
-def http_request(url, post_data=None, need_info=False):
+def http_request(url, post_data=None):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
     if url.find("http") == -1:
