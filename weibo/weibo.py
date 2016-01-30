@@ -297,28 +297,22 @@ class Download(threading.Thread):
                         if image_info.has_key("pic_host"):
                             image_host = image_info["pic_host"]
                         else:
-                            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                        try_count = 0
-                        while True:
-                            # 如果是第二次获取图片的话，试试换个域名
-                            if try_count > 1:
+                            image_host = ''
+                        for try_count in range(1, 6):
+                            if image_host == '':
                                 image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                            image_url = image_host + "/large/" + image_info["pic_name"]
-
-                            if try_count == 0:
+                            image_url = image_host + "/large/" + image_info['pic_name']
+                            if try_count == 1:
                                 print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             else:
                                 print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
-
                             [image_return_code, image_byte] = tool.http_request(image_url)[:2]
                             if image_return_code == 1:
                                 md5 = hashlib.md5()
                                 md5.update(image_byte)
                                 md5_digest = md5.hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
-                                if md5_digest in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
-                                    print_step_msg(user_name + " 源文件获取失败，重试")
-                                else:
+                                if md5_digest not in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
                                     file_type = image_url.split(".")[-1]
                                     if file_type.find('/') != -1:
                                         file_type = 'jpg'
@@ -328,15 +322,10 @@ class Download(threading.Thread):
                                     image_file.write(image_byte)
                                     image_file.close()
                                     print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
-                                    image_count += 1
-                                break
-                            else:
-                                try_count += 1
-
-                            if try_count >= 5:
+                                    break
+                            if try_count == 5:
                                 print_error_msg(user_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-                                break
-
+                            image_host = ''
                     else:
                         print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'或'timestamp'字段")
 
