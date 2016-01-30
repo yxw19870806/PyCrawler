@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import tool, json
+from common import robot, tool, json
 import os
 import threading
 import time
@@ -41,13 +41,13 @@ def print_step_msg(msg):
     threadLock.release()
 
 
-class Instagram(tool.Robot):
+class Instagram(robot.Robot):
 
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global NEW_USER_ID_LIST_FILE_PATH
+        global NEW_SAVE_DATA_PATH
         global IS_SORT
         global IS_TRACE
         global IS_SHOW_ERROR
@@ -66,7 +66,7 @@ class Instagram(tool.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_USER_ID_LIST_FILE_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
+        NEW_SAVE_DATA_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -90,10 +90,10 @@ class Instagram(tool.Robot):
 
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
-        if os.path.exists(self.user_id_list_file_path):
-            user_id_list_file = open(self.user_id_list_file_path, "r")
-            all_user_list = user_id_list_file.readlines()
-            user_id_list_file.close()
+        if os.path.exists(self.save_data_path):
+            save_data_file = open(self.save_data_path, "r")
+            all_user_list = save_data_file.readlines()
+            save_data_file.close()
             for user_info in all_user_list:
                 if len(user_info) < 2:
                     continue
@@ -111,12 +111,12 @@ class Instagram(tool.Robot):
                 if len(user_id_list[user_account]) < 3:
                     user_id_list[user_account].append("")
         else:
-            print_error_msg("用户ID存档文件: " + self.user_id_list_file_path + "不存在，程序结束！")
+            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
 
         # 创建临时存档文件
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "w")
-        new_user_id_list_file.close()
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
+        new_save_data_file.close()
 
         TOTAL_IMAGE_COUNT = 0
 
@@ -152,7 +152,7 @@ class Download(threading.Thread):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global NEW_USER_ID_LIST_FILE_PATH
+        global NEW_SAVE_DATA_PATH
         global IS_SORT
         global TOTAL_IMAGE_COUNT
 
@@ -300,9 +300,9 @@ class Download(threading.Thread):
 
         # 保存最后的信息
         threadLock.acquire()
-        new_user_id_list_file = open(NEW_USER_ID_LIST_FILE_PATH, "a")
-        new_user_id_list_file.write("\t".join(self.user_info) + "\n")
-        new_user_id_list_file.close()
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
+        new_save_data_file.write("\t".join(self.user_info) + "\n")
+        new_save_data_file.close()
         TOTAL_IMAGE_COUNT += image_count - 1
         threadLock.release()
 
