@@ -321,6 +321,7 @@ class Download(threading.Thread):
                                     image_file = open(file_path, "wb")
                                     image_file.write(image_byte)
                                     image_file.close()
+                                    image_count += 1
                                     print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                                     break
                             if try_count == 5:
@@ -353,9 +354,7 @@ class Download(threading.Thread):
                 else:
                     print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
-
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-
             if is_error:
                 print_error_msg(user_name + " 图片数量异常，请手动检查")
 
