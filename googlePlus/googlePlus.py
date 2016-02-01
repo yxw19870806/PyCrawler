@@ -135,10 +135,10 @@ class GooglePlus(robot.Robot):
         tool.ProcessControl().start()
 
         # 循环下载每个id
-        thread_count = threading.activeCount()
+        main_thread_count = threading.activeCount()
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + thread_count:
+            while threading.activeCount() >= self.thread_count + main_thread_count:
                 time.sleep(10)
 
             # 开始下载
@@ -148,7 +148,7 @@ class GooglePlus(robot.Robot):
             time.sleep(1)
 
         # 检查所有线程是不是全部结束了
-        while threading.activeCount() > thread_count:
+        while threading.activeCount() > main_thread_count:
             time.sleep(10)
 
         # 删除临时文件夹
@@ -237,12 +237,6 @@ class Download(threading.Thread):
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
                 [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url, post_data)[:2]
 
-                # 换一个获取信息页的方法，这个只能获取最近的100张
-                # if not photo_album_page and key == '':
-                #     photo_album_url = "https://plus.google.com/photos/%s/albums/posts?banner=pwa" % (user_id)
-                #     trace(user_name + " 信息首页地址：" + photo_album_url)
-                #     photo_album_page = common.http_request(photo_album_url)
-
                 # 无法获取信息首页
                 if photo_album_page_return_code != 1:
                     print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
@@ -272,6 +266,7 @@ class Download(threading.Thread):
                     # 检查是否已下载到前一次的图片
                     if real_message_url == last_message_url:
                         is_error = False
+                        is_over = True
                         break
 
                     [message_page_return_code, message_page] = tool.http_request(message_url)[:2]
@@ -279,28 +274,24 @@ class Download(threading.Thread):
                         print_error_msg(user_name + " 无法获取信息页")
                         continue
 
-                    flag = message_page.find("<div><a href=")
-                    while flag != -1:
-                        image_index = message_page.find("<img src=", flag, flag + 200)
-                        if image_index == -1:
-                            print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到标签'<img src='")
-                            break
-                        image_start = message_page.find("http", image_index)
-                        image_stop = message_page.find('"', image_start)
-                        image_url = message_page[image_start:image_stop]
+                    message_page_image_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page)
+                    if len(message_page_image_data) != 1:
+                        print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到相关图片信息")
+                        continue
+                    message_page_image_data = message_page_image_data[0]
+
+                    urls = re.findall('<img src="(\S*)">', message_page_image_data)
+                    if len(urls) == 0:
+                        print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到标签'<img src='")
+                        continue
+
+                    for image_url in urls:
                         if image_url in image_url_list:
-                            flag = message_page.find("<div><a href=", flag + 1)
                             continue
                         image_url_list.append(image_url)
                         trace("image URL:" + image_url)
 
-                        # 重组URL并使用最大分辨率
-                        # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
-                        # ->
-                        # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/s0-Ic42/16%252520-%2525201.jpg
-                        temp_list = image_url.split("/")
-                        temp_list[-2] = "s0"
-                        image_url = "/".join(temp_list[:-3]) + '/s0-' + temp_list[-3] + '/' + temp_list[-1]
+                        image_url = generate_max_resolution_image_url(image_url)
                         # 文件类型
                         if image_url.rfind('/') < image_url.rfind('.'):
                             file_type = image_url.split(".")[-1]
@@ -325,8 +316,6 @@ class Download(threading.Thread):
                         if 0 < GET_IMAGE_COUNT < image_count:
                             is_over = True
                             break
-
-                        flag = message_page.find("<div><a href=", flag + 1)
 
                 if is_over:
                     break
@@ -372,6 +361,16 @@ class Download(threading.Thread):
         except Exception, e:
             print_step_msg(user_name + " 异常")
             print_error_msg(str(e))
+
+
+# 重组URL并使用最大分辨率
+# https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
+# ->
+# https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/s0-Ic42/16%252520-%2525201.jpg
+def generate_max_resolution_image_url(image_url):
+    temp_list = image_url.split("/")
+    temp_list[-2] = "s0"
+    return "/".join(temp_list[:-3]) + '/s0-' + temp_list[-3] + '/' + temp_list[-1]
 
 
 if __name__ == "__main__":
