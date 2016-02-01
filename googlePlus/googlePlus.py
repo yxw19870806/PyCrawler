@@ -131,10 +131,14 @@ class GooglePlus(robot.Robot):
 
         TOTAL_IMAGE_COUNT = 0
 
+        # 启用线程监控是否需要暂停其他下载线程
+        tool.ProcessControl().start()
+
         # 循环下载每个id
+        thread_count = threading.activeCount()
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + 1:
+            while threading.activeCount() >= self.thread_count + thread_count:
                 time.sleep(10)
 
             # 开始下载
@@ -144,7 +148,7 @@ class GooglePlus(robot.Robot):
             time.sleep(1)
 
         # 检查所有线程是不是全部结束了
-        while threading.activeCount() > 1:
+        while threading.activeCount() > thread_count:
             time.sleep(10)
 
         # 删除临时文件夹
@@ -302,11 +306,11 @@ class Download(threading.Thread):
                             file_type = image_url.split(".")[-1]
                         else:
                             file_type = 'jpg'
-                        file_name = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                        file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
                         # 下载
                         print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                        if tool.save_image(image_url, file_name):
+                        if tool.save_image(image_url, file_path):
                             print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
