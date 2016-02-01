@@ -120,10 +120,14 @@ class Instagram(robot.Robot):
 
         TOTAL_IMAGE_COUNT = 0
 
+        # 启用线程监控是否需要暂停其他下载线程
+        tool.ProcessControl().start()
+
         # 循环下载每个id
+        main_thread_count = threading.activeCount()
         for user_account in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count:
+            while threading.activeCount() >= self.thread_count + main_thread_count:
                 time.sleep(10)
 
             # 开始下载
@@ -132,7 +136,7 @@ class Instagram(robot.Robot):
 
             time.sleep(1)
 
-        while threading.activeCount() != 0:
+        while threading.activeCount() > main_thread_count:
             time.sleep(10)
 
         # 删除临时文件夹
