@@ -330,7 +330,7 @@ class Download(threading.Thread):
                     if last_message_url != '':
                         print_error_msg(user_name + " 没有找到下一页的token，将该页保存：")
                         print_error_msg(photo_album_page)
-                        break
+                    break
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
