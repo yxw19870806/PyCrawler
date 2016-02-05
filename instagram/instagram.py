@@ -144,6 +144,22 @@ class Instagram(robot.Robot):
         # 删除临时文件夹
         tool.remove_dir(IMAGE_TEMP_PATH)
 
+        # 重新排序保存存档文件
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "r")
+        all_user_list = new_save_data_file.readlines()
+        new_save_data_file.close()
+        user_id_list = {}
+        for user_info in all_user_list:
+            if len(user_info) < 2:
+                continue
+            user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+            user_info_list = user_info.split("\t")
+            user_id_list[user_info_list[0]] = user_info_list
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
+        for user_id in sorted(user_id_list.keys()):
+            new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+        new_save_data_file.close()
+
         stop_time = time.time()
         print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
