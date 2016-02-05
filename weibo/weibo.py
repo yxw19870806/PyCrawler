@@ -178,7 +178,9 @@ class Weibo(robot.Robot):
         TOTAL_IMAGE_COUNT = 0
 
         # 启用线程监控是否需要暂停其他下载线程
-        tool.ProcessControl().start()
+        process_control_thread = tool.ProcessControl()
+        process_control_thread.setDaemon(True)
+        process_control_thread.start()
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
