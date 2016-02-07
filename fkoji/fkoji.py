@@ -8,18 +8,16 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import tool
+from common import robot, tool
 from common import BeautifulSoup
 import os
 import time
 
 
-class Fkoji(tool.Robot):
+class Fkoji(robot.Robot):
 
     def __init__(self):
         super(Fkoji, self).__init__()
-
-        self.user_id_list_file_path = os.getcwd() + "\\fkoji.save"
 
         tool.print_msg("配置文件读取完成")
 
@@ -56,8 +54,8 @@ class Fkoji(tool.Robot):
         last_image_url = ""
         image_start_index = 0
         user_id_list = {}
-        if os.path.exists(self.user_id_list_file_path):
-            user_id_list_file = open(self.user_id_list_file_path, "r")
+        if os.path.exists(self.save_data_path):
+            user_id_list_file = open(self.save_data_path, "r")
             all_user_list = user_id_list_file.readlines()
             user_id_list_file.close()
             if len(all_user_list) >= 1:
@@ -88,7 +86,7 @@ class Fkoji(tool.Robot):
             index_url = url % str(page_index)
             self._trace("网页地址：" + index_url)
 
-            [index_page_return_code, index_page] = tool.http_request(index_url)
+            [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
 
             if index_page_return_code != 1:
                 self._print_error_msg("无法访问首页地址" + index_url)
@@ -136,7 +134,6 @@ class Fkoji(tool.Robot):
                             image_count += 1
                         else:
                             self._print_error_msg("第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-                        img_byte = tool.http_request(image_url, None, False)
                 if is_over:
                     break
             if is_over:
@@ -192,7 +189,7 @@ class Fkoji(tool.Robot):
             tool.remove_dir(image_path)
             
         # 保存新的存档文件
-        new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
+        new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
         self._print_step_msg("保存新存档文件: " + new_save_file_path)
         new_save_file = open(new_save_file_path, "w")
         new_save_file.write(str(image_start_index) + "\t" + new_last_image_url + "\n")
