@@ -381,9 +381,9 @@ class Download(threading.Thread):
 
 
 if __name__ == '__main__':
-    for i in range(1, 5):
-        save_file_name = 'info\\save_%s.data' % i
-        image_download_dir_name = 'photo\\weibo%s' % i
+    for id in ['snh48', 'lunar', 'ATF', 'save_1', 'save_2']:
+        save_file_name = 'info\\%s.data' % id
+        image_download_dir_name = 'photo\\%s' % id
         save_file_path = os.path.join(os.path.abspath(''), save_file_name)
         image_download_path = os.path.join(os.path.abspath(''), image_download_dir_name)
         image_temp_path = os.path.join(image_download_path, 'tempImage')
