@@ -188,7 +188,7 @@ class Fkoji(robot.Robot):
             self._print_step_msg("图片从下载目录移动到保存目录成功")
 
             # 删除临时文件夹
-            tool.remove_dir(image_path)
+            tool.remove_dir(self.image_temp_path)
             
         # 保存新的存档文件
         new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
