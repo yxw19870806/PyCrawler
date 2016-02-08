@@ -19,6 +19,8 @@ class Fkoji(robot.Robot):
     def __init__(self):
         super(Fkoji, self).__init__()
 
+        self.save_data_path = os.path.join(os.path.abspath(''), 'save.data')
+
         tool.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
@@ -133,7 +135,7 @@ class Fkoji(robot.Robot):
                             self._print_step_msg("第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
-                            self._print_error_msg("第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            self._print_error_msg("第" + str(image_count) + "张图片 " + image_url + ", id: " + user_id + " 下载失败")
                 if is_over:
                     break
             if is_over:
