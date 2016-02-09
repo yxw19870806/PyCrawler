@@ -19,8 +19,6 @@ class Fkoji(robot.Robot):
     def __init__(self):
         super(Fkoji, self).__init__()
 
-        self.save_data_path = os.path.join(os.path.abspath(''), 'save.data')
-
         tool.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
