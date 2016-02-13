@@ -20,8 +20,6 @@ class Shinoda(robot.Robot):
     def __init__(self):
         super(Shinoda, self).__init__()
 
-        self.save_data_path = os.getcwd() + "\\shinoda.save"
-
         tool.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
