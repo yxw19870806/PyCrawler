@@ -264,6 +264,7 @@ class Download(threading.Thread):
                         break
 
                     image_url = photo_info["images"]["standard_resolution"]["url"]
+                    image_url = image_url.split("?")[0]
 
                     # 文件类型
                     file_type = image_url.split(".")[-1]
