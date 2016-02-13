@@ -20,7 +20,6 @@ class Shinoda(robot.Robot):
     def __init__(self):
         super(Shinoda, self).__init__()
 
-        self.get_image_page_count = 28
         self.save_data_path = os.getcwd() + "\\shinoda.save"
 
         tool.print_msg("配置文件读取完成")
@@ -79,7 +78,7 @@ class Shinoda(robot.Robot):
         while not is_over:
             index_url = host + "page%s.html" % (page_index - 1)
             [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
-            self._trace("博客页面地址：" + index_url)
+            self._print_step_msg("博客页面地址：" + index_url)
 
             if index_page_return_code == 1:
                 image_name_list = re.findall('data-original="./([^"]*)"', index_page)
@@ -101,9 +100,6 @@ class Shinoda(robot.Robot):
                     else:
                         self._print_step_msg("第" + str(image_count) + "张图片 " + image_url + " 下载失败")
                 page_index += 1
-                # 达到配置文件中的下载数量，结束
-                if self.get_image_page_count != 0 and page_index > self.get_image_page_count:
-                    break
             else:
                 self._print_error_msg("无法访问博客页面" + index_url)
                 is_over = True
