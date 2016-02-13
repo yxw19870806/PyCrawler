@@ -8,19 +8,20 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import tool
+from common import robot, tool
 import os
 import re
 import shutil
 import time
 
-class Shinoda(tool.Robot):
+
+class Shinoda(robot.Robot):
 
     def __init__(self):
         super(Shinoda, self).__init__()
 
         self.get_image_page_count = 28
-        self.user_id_list_file_path = os.getcwd() + "\\shinoda.save"
+        self.save_data_path = os.getcwd() + "\\shinoda.save"
 
         tool.print_msg("配置文件读取完成")
 
@@ -56,8 +57,8 @@ class Shinoda(tool.Robot):
         # 读取存档文件
         last_blog_id = ""
         image_start_index = 0
-        if os.path.exists(self.user_id_list_file_path):
-            save_file = open(self.user_id_list_file_path, "r")
+        if os.path.exists(self.save_data_path):
+            save_file = open(self.save_data_path, "r")
             save_info = save_file.read()
             save_file.close()
             save_info = save_info.split("\t")
@@ -77,7 +78,7 @@ class Shinoda(tool.Robot):
             image_path = self.image_download_path
         while not is_over:
             index_url = host + "page%s.html" % (page_index - 1)
-            [index_page_return_code, index_page] = tool.http_request(index_url)
+            [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
             self._trace("博客页面地址：" + index_url)
 
             if index_page_return_code == 1:
@@ -121,7 +122,7 @@ class Shinoda(tool.Robot):
             shutil.rmtree(self.image_temp_path, True)
             
         # 保存新的存档文件
-        new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.user_id_list_file_path)[-1]
+        new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
         self._print_step_msg("保存新存档文件: " + new_save_file_path)
         new_save_file = open(new_save_file_path, "w")
         new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
