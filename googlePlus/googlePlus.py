@@ -334,6 +334,10 @@ class Download(threading.Thread):
                         print_error_msg(photo_album_page)
                     break
 
+            # 如果有错误且没有发现新的图片，复原旧数据
+            if self.user_info[3] == '' and last_message_url != '':
+                self.user_info[3] = last_message_url
+
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
