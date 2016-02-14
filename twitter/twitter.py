@@ -309,6 +309,10 @@ class Download(threading.Thread):
                 else:
                     break
 
+            # 如果有错误且没有发现新的图片，复原旧数据
+            if self.user_info[2] == "0" and last_image_time != '0':
+                self.user_info[2] = last_image_time
+
             print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
