@@ -20,6 +20,7 @@ IS_SHOW_STEP = False
 TRACE_LOG_PATH = ''
 ERROR_LOG_PATH = ''
 STEP_LOG_PATH = ''
+INIT_MAX_ID = 999999999999999999
 
 threadLock = threading.Lock()
 
@@ -59,7 +60,6 @@ def save_image(image_byte, image_path):
 class Twitter(robot.Robot):
 
     def __init__(self, save_data_path='', this_image_download_path='', this_image_temp_path=''):
-        global INIT_MAX_ID
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -77,7 +77,7 @@ class Twitter(robot.Robot):
 
         if save_data_path != '':
             self.save_data_path = save_data_path
-        INIT_MAX_ID = 999999999999999999
+
         GET_IMAGE_COUNT = self.get_image_count
         if this_image_temp_path != '':
             IMAGE_TEMP_PATH = this_image_temp_path
@@ -200,7 +200,6 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def run(self):
-        global INIT_MAX_ID
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
