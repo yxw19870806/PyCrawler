@@ -19,9 +19,9 @@ import time
 IS_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
-TRACE_LOG_PATH = ''
-ERROR_LOG_PATH = ''
-STEP_LOG_PATH = ''
+TRACE_LOG_PATH = ""
+ERROR_LOG_PATH = ""
+STEP_LOG_PATH = ""
 
 threadLock = threading.Lock()
 
@@ -73,7 +73,7 @@ def visit_weibo(url):
 
 class Weibo(robot.Robot):
 
-    def __init__(self, save_data_path='', this_image_download_path='', this_image_temp_path=''):
+    def __init__(self, save_data_path="", this_image_download_path="", this_image_temp_path=""):
         global IMAGE_COUNT_PER_PAGE
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -90,16 +90,16 @@ class Weibo(robot.Robot):
         # multiprocessing.Process.__init__(self)
         robot.Robot.__init__(self)
 
-        if save_data_path != '':
+        if save_data_path != "":
             self.save_data_path = save_data_path
 
         IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
         GET_IMAGE_COUNT = self.get_image_count
-        if this_image_temp_path != '':
+        if this_image_temp_path != "":
             IMAGE_TEMP_PATH = this_image_temp_path
         else:
             IMAGE_TEMP_PATH = self.image_temp_path
-        if this_image_download_path != '':
+        if this_image_download_path != "":
             IMAGE_DOWNLOAD_PATH = this_image_download_path
         else:
             IMAGE_DOWNLOAD_PATH = self.image_download_path
@@ -107,7 +107,7 @@ class Weibo(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(''), 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.basename(self.save_data_path))
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(""), "info", time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.basename(self.save_data_path))
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -134,10 +134,10 @@ class Weibo(robot.Robot):
             print_error_msg("导入浏览器cookies失败，程序结束！")
             tool.process_exit()
 
-        # 寻找idlist，如果没有结束进程
+        # 寻找存档，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            save_data_file = open(self.save_data_path, 'r')
+            save_data_file = open(self.save_data_path, "r")
             all_user_list = save_data_file.readlines()
             save_data_file.close()
             for user_info in all_user_list:
@@ -151,28 +151,28 @@ class Weibo(robot.Robot):
                 # 如果没有名字，则名字用uid代替
                 if len(user_id_list[user_id]) < 2:
                     user_id_list[user_id].append(user_id)
-                if user_id_list[user_id][1] == '':
+                if user_id_list[user_id][1] == "":
                     user_id_list[user_id][1] = user_id
                 # 如果没有数量，则为0
                 if len(user_id_list[user_id]) < 3:
                     user_id_list[user_id].append("0")
-                if user_id_list[user_id][2] == '':
-                    user_id_list[user_id][2] = '0'
+                if user_id_list[user_id][2] == "":
+                    user_id_list[user_id][2] = "0"
                 # 处理上一次图片的上传时间
                 if len(user_id_list[user_id]) < 4:
                     user_id_list[user_id].append("0")
-                if user_id_list[user_id][3] == '':
-                    user_id_list[user_id][3] = '0'
+                if user_id_list[user_id][3] == "":
+                    user_id_list[user_id][3] = "0"
         else:
             print_error_msg("存档文件：" + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
 
         # 创建临时存档文件
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, 'w')
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
 
         # 先访问下页面，产生个cookies
-        visit_weibo('http://photo.weibo.com/photos/get_all?uid=1263970750&count=30&page=1&type=3')
+        visit_weibo("http://photo.weibo.com/photos/get_all?uid=1263970750&count=30&page=1&type=3")
         time.sleep(2)
 
         TOTAL_IMAGE_COUNT = 0
@@ -218,8 +218,8 @@ class Weibo(robot.Robot):
             new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
         new_save_data_file.close()
 
-        stop_time = time.time()
-        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        duration_time = int(time.time() - start_time)
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
 
 class Download(threading.Thread):
@@ -244,12 +244,12 @@ class Download(threading.Thread):
 
             # 初始化数据
             last_image_time = self.user_info[3]
-            self.user_info[3] = '0'  # 置空，存放此次的最后图片上传时间
+            self.user_info[3] = "0"  # 置空，存放此次的最后图片上传时间
             page_count = 1
             image_count = 1
             is_over = False
             # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
-            if last_image_time == '0':
+            if last_image_time == "0":
                 is_error = False
             else:
                 is_error = True
@@ -292,7 +292,7 @@ class Download(threading.Thread):
                     if not isinstance(image_info, dict):
                         print_error_msg(user_name + " JSON数据['photo_list']：" + str(image_info) + " 不是一个字典")
                         continue
-                    if ('pic_name' and 'timestamp') in image_info:
+                    if ("pic_name" and "timestamp") in image_info:
                         # 将第一张image的时间戳保存到新id list中
                         if self.user_info[3] == "0":
                             self.user_info[3] = str(image_info["timestamp"])
@@ -302,14 +302,14 @@ class Download(threading.Thread):
                             is_error = False
                             break
 
-                        if 'pic_host' in image_info:
+                        if "pic_host" in image_info:
                             image_host = image_info["pic_host"]
                         else:
-                            image_host = ''
+                            image_host = ""
                         for try_count in range(1, 6):
-                            if image_host == '':
+                            if image_host == "":
                                 image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                            image_url = image_host + "/large/" + image_info['pic_name']
+                            image_url = image_host + "/large/" + image_info["pic_name"]
                             if try_count == 1:
                                 print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             else:
@@ -320,10 +320,10 @@ class Download(threading.Thread):
                                 md5.update(image_byte)
                                 md5_digest = md5.hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
-                                if md5_digest not in ['d29352f3e0f276baaf97740d170467d7', '7bd88df2b5be33e1a79ac91e7d0376b5']:
+                                if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
                                     file_type = image_url.split(".")[-1]
-                                    if file_type.find('/') != -1:
-                                        file_type = 'jpg'
+                                    if file_type.find("/") != -1:
+                                        file_type = "jpg"
                                     file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
                                     file_path = tool.change_path_encoding(file_path)
                                     image_file = open(file_path, "wb")
@@ -334,7 +334,7 @@ class Download(threading.Thread):
                                     break
                             if try_count == 5:
                                 print_error_msg(user_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-                            image_host = ''
+                            image_host = ""
                     else:
                         print_error_msg(user_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'或'timestamp'字段")
 
@@ -353,7 +353,7 @@ class Download(threading.Thread):
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.user_info[3] == '0' and last_image_time != '0':
+            if self.user_info[3] == "0" and last_image_time != "0":
                 self.user_info[3] = last_image_time
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
@@ -384,11 +384,11 @@ class Download(threading.Thread):
             print_error_msg(str(e))
 
 
-if __name__ == '__main__':
-    for id in ['snh48', 'lunar', 'ATF', 'save_1', 'save_2']:
-        save_file_name = 'info\\%s.data' % id
-        image_download_dir_name = 'photo\\%s' % id
-        save_file_path = os.path.join(os.path.abspath(''), save_file_name)
-        image_download_path = os.path.join(os.path.abspath(''), image_download_dir_name)
-        image_temp_path = os.path.join(image_download_path, 'tempImage')
+if __name__ == "__main__":
+    for id in ["snh48", "lunar", "ATF", "save_1", "save_2"]:
+        save_file_name = "info\\%s.data" % id
+        image_download_dir_name = "photo\\%s" % id
+        save_file_path = os.path.join(os.path.abspath(""), save_file_name)
+        image_download_path = os.path.join(os.path.abspath(""), image_download_dir_name)
+        image_temp_path = os.path.join(image_download_path, "tempImage")
         Weibo(save_file_path, image_download_path, image_temp_path).main()

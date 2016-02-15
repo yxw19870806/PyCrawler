@@ -9,7 +9,7 @@ class Robot(object):
 
     def __init__(self):
 
-        config = analyze_config(os.path.join(os.path.abspath(''), "..\\common\\config.ini"))
+        config = analyze_config(os.path.join(os.path.abspath(""), "..\\common\\config.ini"))
 
         # 日志
         self.is_log = get_config(config, "IS_LOG", 1, 2)
@@ -70,7 +70,7 @@ class Robot(object):
 # mode=0 : 直接赋值
 # mode=1 : 字符串拼接
 # mode=2 : 取整
-# mode=3 : 文件路径，以'\'开头的为当前目录下创建
+# mode=3 : 文件路径，以"\"开头的为当前目录下创建
 # prefix: 前缀，只有在mode=1时有效
 # postfix: 后缀，只有在mode=1时有效
 def get_config(config, key, default_value, mode, prefix=None, postfix=None):
@@ -93,8 +93,8 @@ def get_config(config, key, default_value, mode, prefix=None, postfix=None):
                 value = default_value
         elif mode == 3:
             value = config[key]
-            if value[0] == '\\':
-                value = os.path.join(os.path.abspath(''), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
+            if value[0] == "\\":
+                value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
     else:
         tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
@@ -102,7 +102,7 @@ def get_config(config, key, default_value, mode, prefix=None, postfix=None):
 
 
 def analyze_config(config_path):
-    config_file = open(config_path, 'r')
+    config_file = open(config_path, "r")
     lines = config_file.readlines()
     config_file.close()
     config = {}
@@ -110,7 +110,7 @@ def analyze_config(config_path):
         if len(line) == 0:
             continue
         line = line.lstrip().rstrip().replace(" ", "")
-        if len(line) > 1 and line[0] != "#" and line.find('=') >= 0:
+        if len(line) > 1 and line[0] != "#" and line.find("=") >= 0:
             try:
                 line = line.split("=")
                 config[line[0]] = line[1]
@@ -121,7 +121,7 @@ def analyze_config(config_path):
 
 
 def sort_file(source_path, destination_path, start_count, file_name_length):
-    image_list = tool.get_dir_files_name(source_path, 'desc')
+    image_list = tool.get_dir_files_name(source_path, "desc")
     # 判断排序目标文件夹是否存在
     if len(image_list) >= 1:
         if not tool.make_dir(destination_path, 1):
@@ -135,3 +135,20 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
         # 删除临时文件夹
         tool.remove_dir(source_path)
     return True
+
+
+def sort_save_data(save_data_path, sort_key_index=0):
+    save_data_file = open(save_data_path, "")
+    lines = save_data_file.readlines()
+    save_data_file.close()
+    line_list = {}
+    for line in lines:
+        line = line.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+        temp_list = line.split("\t")
+        if len(temp_list) > 0:
+            line_list[temp_list[sort_key_index]] = temp_list
+
+    save_data_file = open(save_data_path, "w")
+    for sort_key in sorted(line_list.keys()):
+        save_data_file.write("\t".join(line_list[sort_key]) + "\n")
+    save_data_file.close()

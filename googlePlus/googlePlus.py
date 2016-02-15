@@ -17,9 +17,9 @@ import time
 IS_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
-TRACE_LOG_PATH = ''
-ERROR_LOG_PATH = ''
-STEP_LOG_PATH = ''
+TRACE_LOG_PATH = ""
+ERROR_LOG_PATH = ""
+STEP_LOG_PATH = ""
 
 threadLock = threading.Lock()
 
@@ -69,7 +69,7 @@ class GooglePlus(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(''), 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.basename(self.save_data_path))
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(""), "info", time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.basename(self.save_data_path))
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -107,13 +107,13 @@ class GooglePlus(robot.Robot):
                 # 如果没有名字，则名字用uid代替
                 if len(user_id_list[user_id]) < 2:
                     user_id_list[user_id].append(user_id)
-                if user_id_list[user_id][1] == '':
+                if user_id_list[user_id][1] == "":
                     user_id_list[user_id][1] = user_id
                 # 如果没有数量，则为0
                 if len(user_id_list[user_id]) < 3:
                     user_id_list[user_id].append("0")
-                if user_id_list[user_id][2] == '':
-                    user_id_list[user_id][2] = '0'
+                if user_id_list[user_id][2] == "":
+                    user_id_list[user_id][2] = "0"
                 # 处理上一次image URL
                 if len(user_id_list[user_id]) < 4:
                     user_id_list[user_id].append("")
@@ -157,7 +157,7 @@ class GooglePlus(robot.Robot):
         tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, 'r')
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "r")
         all_user_list = new_save_data_file.readlines()
         new_save_data_file.close()
         user_id_list = {}
@@ -167,7 +167,7 @@ class GooglePlus(robot.Robot):
             user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
             user_info_list = user_info.split("\t")
             user_id_list[user_info_list[0]] = user_info_list
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, 'w')
+        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         for user_id in sorted(user_id_list.keys()):
             new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
         new_save_data_file.close()
@@ -199,10 +199,10 @@ class Download(threading.Thread):
         try:
             # 初始化数据
             last_message_url = self.user_info[3]
-            self.user_info[3] = ''  # 置空，存放此次的最后URL
+            self.user_info[3] = ""  # 置空，存放此次的最后URL
             # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
             # 第一次下载，不用限制
-            if last_message_url == '':
+            if last_message_url == "":
                 limit_download_count = 0
             else:
                 last_message_page_return_code = tool.http_request(last_message_url)[0]
@@ -232,8 +232,8 @@ class Download(threading.Thread):
                 tool.process_exit()
 
             # 图片下载
-            photo_album_url = 'https://plus.google.com/_/photos/pc/read/'
-            key = ''
+            photo_album_url = "https://plus.google.com/_/photos/pc/read/"
+            key = ""
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
@@ -249,9 +249,9 @@ class Download(threading.Thread):
                 for message_url in this_page_message_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
-                    message_url = message_url.replace('\u003d', '=')
+                    message_url = message_url.replace("\u003d", "=")
                     try:
-                        temp = re.findall('(.*)\?.*(#.*)', message_url)
+                        temp = re.findall("(.*)\?.*(#.*)", message_url)
                         real_message_url = temp[0][0] + temp[0][1]
                     except:
                         real_message_url = message_url
@@ -262,7 +262,7 @@ class Download(threading.Thread):
                     trace("message URL:" + message_url)
 
                     # 将第一张image的URL保存到新id list中
-                    if self.user_info[3] == '':
+                    if self.user_info[3] == "":
                         self.user_info[3] = real_message_url
 
                     # 检查是否已下载到前一次的图片
@@ -295,10 +295,10 @@ class Download(threading.Thread):
 
                         image_url = generate_max_resolution_image_url(image_url)
                         # 文件类型
-                        if image_url.rfind('/') < image_url.rfind('.'):
+                        if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
                         else:
-                            file_type = 'jpg'
+                            file_type = "jpg"
                         file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
                         # 下载
@@ -329,13 +329,13 @@ class Download(threading.Thread):
                     trace(user_name + " 下一个信息首页token:" + key)
                 else:
                     # 不是第一次下载
-                    if last_message_url != '':
+                    if last_message_url != "":
                         print_error_msg(user_name + " 没有找到下一页的token，将该页保存：")
                         print_error_msg(photo_album_page)
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.user_info[3] == '' and last_message_url != '':
+            if self.user_info[3] == "" and last_message_url != "":
                 self.user_info[3] = last_message_url
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
@@ -376,7 +376,7 @@ class Download(threading.Thread):
 def generate_max_resolution_image_url(image_url):
     temp_list = image_url.split("/")
     temp_list[-2] = "s0"
-    return "/".join(temp_list[:-3]) + '/s0-' + temp_list[-3] + '/' + temp_list[-1]
+    return "/".join(temp_list[:-3]) + "/s0-" + temp_list[-3] + "/" + temp_list[-1]
 
 
 if __name__ == "__main__":

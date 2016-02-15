@@ -17,9 +17,9 @@ import time
 IS_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
-TRACE_LOG_PATH = ''
-ERROR_LOG_PATH = ''
-STEP_LOG_PATH = ''
+TRACE_LOG_PATH = ""
+ERROR_LOG_PATH = ""
+STEP_LOG_PATH = ""
 INIT_MAX_ID = 999999999999999999
 
 threadLock = threading.Lock()
@@ -45,8 +45,8 @@ def print_step_msg(msg):
 
 # 返回的是当前时区对应的时间
 def get_image_last_modified(info):
-    last_modified_time = tool.get_response_info(info, 'last-modified')
-    last_modified_time = time.strptime(last_modified_time, '%a, %d %b %Y %H:%M:%S %Z')
+    last_modified_time = tool.get_response_info(info, "last-modified")
+    last_modified_time = time.strptime(last_modified_time, "%a, %d %b %Y %H:%M:%S %Z")
     return int(time.mktime(last_modified_time)) - time.timezone
 
 
@@ -59,7 +59,7 @@ def save_image(image_byte, image_path):
 
 class Twitter(robot.Robot):
 
-    def __init__(self, save_data_path='', this_image_download_path='', this_image_temp_path=''):
+    def __init__(self, save_data_path="", this_image_download_path="", this_image_temp_path=""):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -75,15 +75,15 @@ class Twitter(robot.Robot):
         # multiprocessing.Process.__init__(self)
         robot.Robot.__init__(self)
 
-        if save_data_path != '':
+        if save_data_path != "":
             self.save_data_path = save_data_path
 
         GET_IMAGE_COUNT = self.get_image_count
-        if this_image_temp_path != '':
+        if this_image_temp_path != "":
             IMAGE_TEMP_PATH = this_image_temp_path
         else:
             IMAGE_TEMP_PATH = self.image_temp_path
-        if this_image_download_path != '':
+        if this_image_download_path != "":
             IMAGE_DOWNLOAD_PATH = this_image_download_path
         else:
             IMAGE_DOWNLOAD_PATH = self.image_download_path
@@ -91,7 +91,7 @@ class Twitter(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath('') , 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1])
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath("") , "info", time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1])
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -130,13 +130,13 @@ class Twitter(robot.Robot):
                 # 如果没有数量，则为0
                 if len(user_id_list[user_account]) < 2:
                     user_id_list[user_account].append("0")
-                if user_id_list[user_account][1] == '':
-                    user_id_list[user_account][1] = '0'
+                if user_id_list[user_account][1] == "":
+                    user_id_list[user_account][1] = "0"
                 # 处理上一次图片的上传时间
                 if len(user_id_list[user_account]) < 3:
                     user_id_list[user_account].append("")
-                if user_id_list[user_account][2] == '':
-                    user_id_list[user_account][2] = '0'
+                if user_id_list[user_account][2] == "":
+                    user_id_list[user_account][2] = "0"
 
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
@@ -189,8 +189,8 @@ class Twitter(robot.Robot):
             new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
         new_save_data_file.close()
 
-        stop_time = time.time()
-        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        duration_time = int(time.time() - start_time)
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
 
 class Download(threading.Thread):
@@ -213,13 +213,13 @@ class Download(threading.Thread):
 
             # 初始化数据
             last_image_time = self.user_info[2]
-            self.user_info[2] = '0'  # 置空，存放此次的最后图片上传时间
+            self.user_info[2] = "0"  # 置空，存放此次的最后图片上传时间
             data_tweet_id = INIT_MAX_ID
             image_count = 1
             image_url_list = []
             is_over = False
             # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
-            if last_image_time == '0':
+            if last_image_time == "0":
                 is_error = False
             else:
                 is_error = True
@@ -249,18 +249,18 @@ class Download(threading.Thread):
                 if not isinstance(page, dict):
                     print_error_msg(user_account + " JSON数据：" + str(page) + " 不是一个字典")
                     break
-                if 'has_more_items' not in page:
+                if "has_more_items" not in page:
                     print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
                     break
-                if 'items_html' not in page:
+                if "items_html" not in page:
                     print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
                     break
-                if 'min_position' not in page:
+                if "min_position" not in page:
                     print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
                     break
 
                 # 正则表达，匹配data-image-url="XXX"
-                urls = re.findall('data-image-url="([^"]*)"', page['items_html'])
+                urls = re.findall('data-image-url="([^"]*)"', page["items_html"])
                 for image_url in urls:
                     image_url = str(image_url)
                     image_url_list.append(image_url)
@@ -283,7 +283,7 @@ class Download(threading.Thread):
                             break
 
                         # 文件类型
-                        file_type = image_url.split(".")[-1].split(':')[0]
+                        file_type = image_url.split(".")[-1].split(":")[0]
                         file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
                         print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
@@ -302,14 +302,14 @@ class Download(threading.Thread):
                 if is_over:
                     break
 
-                if page['has_more_items'] and 'min_position' in page:
+                if page["has_more_items"] and "min_position" in page:
                     # 设置最后一张的data-tweet-id
-                    data_tweet_id = page['min_position']
+                    data_tweet_id = page["min_position"]
                 else:
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.user_info[2] == "0" and last_image_time != '0':
+            if self.user_info[2] == "0" and last_image_time != "0":
                 self.user_info[2] = last_image_time
 
             print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
@@ -344,9 +344,9 @@ class Download(threading.Thread):
 
 if __name__ == "__main__":
     for i in range(1, 4):
-        save_file_name = 'info\\save_%s.data' % i
-        image_download_dir_name = 'photo\\twitter%s' % i
-        save_file_path = os.path.join(os.path.abspath(''), save_file_name)
-        image_download_path = os.path.join(os.path.abspath(''), image_download_dir_name)
-        image_temp_path = os.path.join(image_download_path, 'tempImage')
+        save_file_name = "info\\save_%s.data" % i
+        image_download_dir_name = "photo\\twitter%s" % i
+        save_file_path = os.path.join(os.path.abspath(""), save_file_name)
+        image_download_path = os.path.join(os.path.abspath(""), image_download_dir_name)
+        image_temp_path = os.path.join(image_download_path, "tempImage")
         Twitter(save_file_path, image_download_path, image_temp_path).main()

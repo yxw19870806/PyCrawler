@@ -125,8 +125,8 @@ class Fkoji(robot.Robot):
                             continue
                         # 文件类型
                         file_type = image_url.split(".")[-1]
-                        if file_type.find('/') != -1:
-                            file_type = 'jpg'
+                        if file_type.find("/") != -1:
+                            file_type = "jpg"
                         file_path = image_path + "\\" + str("%05d" % image_count) + "_" + str(user_id) + "." + file_type
                         self._print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
                         if tool.save_image(image_url, file_path):
@@ -160,7 +160,7 @@ class Fkoji(robot.Robot):
                 self._print_error_msg("创建目录：" + self.image_download_path + "\\all" + " 失败，程序结束！")
                 tool.process_exit()
 
-            file_list = tool.get_dir_files_name(self.image_temp_path, 'desc')
+            file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
             for file_name in file_list:
                 image_path = self.image_temp_path + "\\" + file_name
                 file_name_list = file_name.split(".")
@@ -200,8 +200,8 @@ class Fkoji(robot.Robot):
         new_save_file.write(new_user_id_list_string)
         new_save_file.close()
 
-        stop_time = time.time()
-        self._print_step_msg("成功下载最新图片，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(image_count - 1) + "张")
+        duration_time = int(time.time() - start_time)
+        self._print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
 
 
 if __name__ == "__main__":

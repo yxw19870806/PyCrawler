@@ -17,9 +17,9 @@ import time
 IS_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
-TRACE_LOG_PATH = ''
-ERROR_LOG_PATH = ''
-STEP_LOG_PATH = ''
+TRACE_LOG_PATH = ""
+ERROR_LOG_PATH = ""
+STEP_LOG_PATH = ""
 THREAD_COUNT = 0
 
 threadLock = threading.Lock()
@@ -66,7 +66,7 @@ class Bcy(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(''), 'info', time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1])
+        NEW_SAVE_DATA_PATH = os.path.join(os.path.abspath(""), "info", time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1])
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path
@@ -111,13 +111,13 @@ class Bcy(robot.Robot):
                 # 如果没有数量，则为0
                 if len(user_id_list[user_id]) < 2:
                     user_id_list[user_id].append("0")
-                if user_id_list[user_id][1] == '':
-                    user_id_list[user_id][1] = '0'
+                if user_id_list[user_id][1] == "":
+                    user_id_list[user_id][1] = "0"
                 # 处理上一次rp id
                 if len(user_id_list[user_id]) < 3:
                     user_id_list[user_id].append("")
-                if user_id_list[user_id][2] == '':
-                    user_id_list[user_id][2] = '0'
+                if user_id_list[user_id][2] == "":
+                    user_id_list[user_id][2] = "0"
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
@@ -164,8 +164,8 @@ class Bcy(robot.Robot):
             new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
         new_save_data_file.close()
 
-        stop_time = time.time()
-        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        duration_time = int(time.time() - start_time)
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
 
 class Download(threading.Thread):
@@ -189,7 +189,7 @@ class Download(threading.Thread):
             print_step_msg(cn + " 开始")
 
             last_rp_id = self.user_info[2]
-            self.user_info[2] = ''  # 置空，存放此次的最后rp id
+            self.user_info[2] = ""  # 置空，存放此次的最后rp id
             this_cn_total_image_count = 0
             page_count = 1
             max_page_count = -1
@@ -197,13 +197,13 @@ class Download(threading.Thread):
             rp_id_list = []
             is_over = False
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if last_rp_id != '0':
+            if last_rp_id != "0":
                 is_error = True
             else:
                 is_error = False
 
             while 1:
-                photo_album_url = 'http://bcy.net/u/%s/post/cos?&p=%s' % (coser_id, page_count)
+                photo_album_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
                 [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url)[:2]
                 if photo_album_page_return_code != 1:
                     print_error_msg(cn + " 无法获取数据: " + photo_album_url)
@@ -211,8 +211,8 @@ class Download(threading.Thread):
 
                 rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
                 title_result_list = re.findall('<img src="\S*" alt="([\S ]*)" />', photo_album_page)
-                if '${post.title}' in title_result_list:
-                    title_result_list.remove('${post.title}')
+                if "${post.title}" in title_result_list:
+                    title_result_list.remove("${post.title}")
                 if len(rp_id_result_list) != len(title_result_list):
                     print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
                     break
@@ -223,7 +223,7 @@ class Download(threading.Thread):
                     rp_id = data[1]
                     rp_id_list.append(rp_id)
 
-                    if self.user_info[2] == '':
+                    if self.user_info[2] == "":
                         self.user_info[2] = rp_id
                     # 检查是否已下载到前一次的图片
                     if int(rp_id) <= int(last_rp_id):
@@ -245,12 +245,12 @@ class Download(threading.Thread):
                     # 正片目录
                     title = title_result_list[title_index]
                     # 过滤一些windows文件名屏蔽的字符
-                    for filter in ['\\', '/', ':', '*', '?', '"', '<', '>', '|']:
-                        title = title.replace(filter, ' ')
+                    for filter in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
+                        title = title.replace(filter, " ")
                     # 去除前后空格
                     title = title.strip()
-                    if title != '':
-                        rp_path = os.path.join(image_path, rp_id + ' ' + title)
+                    if title != "":
+                        rp_path = os.path.join(image_path, rp_id + " " + title)
                     else:
                         rp_path = os.path.join(image_path, rp_id)
                     if not tool.make_dir(rp_path, 1):
@@ -261,7 +261,7 @@ class Download(threading.Thread):
                             print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
                             tool.process_exit()
 
-                    rp_url = 'http://bcy.net/coser/detail/%s/%s' % (cp_id, rp_id)
+                    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
                     [rp_page_return_code, rp_page] = tool.http_request(rp_url)[:2]
                     if rp_page_return_code == 1:
                         image_count = 0
@@ -275,10 +275,10 @@ class Download(threading.Thread):
                             # 禁用指定分辨率
                             image_url = "/".join(image_url.split("/")[0:-1])
 
-                            if image_url.rfind('/') < image_url.rfind('.'):
+                            if image_url.rfind("/") < image_url.rfind("."):
                                 file_type = image_url.split(".")[-1]
                             else:
-                                file_type = 'jpg'
+                                file_type = "jpg"
                             file_path = os.path.join(rp_path, str("%03d" % image_count) + "." + file_type)
 
                             print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)

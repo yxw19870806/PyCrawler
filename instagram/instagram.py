@@ -16,9 +16,9 @@ import time
 IS_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
-TRACE_LOG_PATH = ''
-ERROR_LOG_PATH = ''
-STEP_LOG_PATH = ''
+TRACE_LOG_PATH = ""
+ERROR_LOG_PATH = ""
+STEP_LOG_PATH = ""
 
 threadLock = threading.Lock()
 
@@ -105,8 +105,8 @@ class Instagram(robot.Robot):
                 # 如果没有数量，则为0
                 if len(user_id_list[user_account]) < 2:
                     user_id_list[user_account].append("0")
-                if user_id_list[user_account][1] == '':
-                    user_id_list[user_account][1] = '0'
+                if user_id_list[user_account][1] == "":
+                    user_id_list[user_account][1] = "0"
                 # 处理上一次image id
                 if len(user_id_list[user_account]) < 3:
                     user_id_list[user_account].append("")
@@ -160,8 +160,8 @@ class Instagram(robot.Robot):
             new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
         new_save_data_file.close()
 
-        stop_time = time.time()
-        print_step_msg("存档文件中所有用户图片已成功下载，耗时" + str(int(stop_time - start_time)) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        duration_time = int(time.time() - start_time)
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
 
 
 class Download(threading.Thread):
@@ -184,9 +184,9 @@ class Download(threading.Thread):
 
         # 初始化数据
         last_image_id = self.user_info[2]
-        self.user_info[2] = ''
+        self.user_info[2] = ""
         # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        if last_image_id == '':
+        if last_image_id == "":
             limit_download_count = 0
         else:
             # 历史总数的10%，下线50、上限300
