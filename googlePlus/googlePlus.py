@@ -227,13 +227,11 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_TEMP_PATH, user_name)
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.user_info[4], user_name)
-            if not tool.make_dir(image_path, 1):
-                print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                tool.process_exit()
 
             # 图片下载
             photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             key = ""
+            need_make_download_dir = True
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
@@ -304,6 +302,12 @@ class Download(threading.Thread):
 
                         # 下载
                         print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                        # 第一张图片，创建目录
+                        if need_make_download_dir:
+                            if not tool.make_dir(image_path, 1):
+                                print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                tool.process_exit()
+                            need_make_download_dir = False
                         if tool.save_image(image_url, file_path):
                             print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                             image_count += 1
