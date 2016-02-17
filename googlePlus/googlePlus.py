@@ -278,7 +278,8 @@ class Download(threading.Thread):
 
                     message_page_image_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page)
                     if len(message_page_image_data) != 1:
-                        print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到相关图片信息")
+                        print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到相关图片信息，第" + str(image_count) + "张图片")
+                        image_count += 1
                         continue
                     message_page_image_data = message_page_image_data[0]
 
