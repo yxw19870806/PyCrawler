@@ -385,7 +385,7 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    for id in ["snh48", "lunar", "ATF", "save_1", "save_2"]:
+    for id in ["ATF", "lunar", "save_1", "save_2", "snh48"]:
         save_file_name = "info\\%s.data" % id
         image_download_dir_name = "photo\\%s" % id
         save_file_path = os.path.join(os.path.abspath(""), save_file_name)
