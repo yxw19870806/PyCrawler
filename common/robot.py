@@ -2,6 +2,7 @@
 
 import tool
 import os
+import time
 import traceback
 
 
@@ -152,3 +153,7 @@ def sort_save_data(save_data_path, sort_key_index=0):
     for sort_key in sorted(line_list.keys()):
         save_data_file.write("\t".join(line_list[sort_key]) + "\n")
     save_data_file.close()
+
+
+def get_new_save_file_path(old_save_file_path):
+    return os.path.join(os.path.dirname(old_save_file_path), time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path))

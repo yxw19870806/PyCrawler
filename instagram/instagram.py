@@ -66,7 +66,7 @@ class Instagram(robot.Robot):
         IS_TRACE = self.is_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
-        NEW_SAVE_DATA_PATH = os.getcwd() + "\\info\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
+        NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         TRACE_LOG_PATH = self.trace_log_path
         ERROR_LOG_PATH = self.error_log_path
         STEP_LOG_PATH = self.step_log_path

@@ -189,7 +189,7 @@ class Fkoji(robot.Robot):
             tool.remove_dir(self.image_temp_path)
             
         # 保存新的存档文件
-        new_save_file_path = os.getcwd() + "\\" + time.strftime("%Y-%m-%d_%H_%M_%S_", time.localtime(time.time())) + os.path.split(self.save_data_path)[-1]
+        new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
         self._print_step_msg("保存新存档文件: " + new_save_file_path)
         new_save_file = open(new_save_file_path, "w")
         new_save_file.write(str(image_start_index) + "\t" + new_last_image_url + "\n")
