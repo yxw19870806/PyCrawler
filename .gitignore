@@ -2,11 +2,10 @@
 *.pyc
 googlePlus/photo/
 weibo/photo/
-log/
-
 bcy/photo/
 twitter/photo/
 instagram/photo/
 fkoji/photo/
 Blog/photo/
-*_save.data
+log/
+*-*_*_*.data
