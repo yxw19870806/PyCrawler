@@ -54,8 +54,8 @@ def weibo():
         image_temp_path = os.path.join(image_download_path, "tempImage")
         weibo.Weibo(save_file_path, image_download_path, image_temp_path).main()
 
-# fkoji()
-# google_plus()
-# instagram()
-# twitter()
+fkoji()
+google_plus()
+instagram()
+twitter()
 weibo()
