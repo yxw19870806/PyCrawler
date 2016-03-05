@@ -121,7 +121,7 @@ class Weibo(robot.Robot):
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
             tool.process_exit()
 
@@ -260,7 +260,7 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_TEMP_PATH, user_name)
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
-            if not tool.make_dir(image_path, 1):
+            if not tool.make_dir(image_path, 0):
                 print_error_msg(user_name + " 创建图片下载目录：" + image_path + " 失败，程序结束！")
                 tool.process_exit()
 
