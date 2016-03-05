@@ -54,6 +54,12 @@ def is_process_end():
     return 0
 
 
+def restore_process_status():
+    for file_name in ['pause', 'stop', 'finish']:
+        file_path = os.path.join(os.path.abspath(".."), file_name)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
 
 # http请求
 # 返回 【返回码，数据, 请求信息】
