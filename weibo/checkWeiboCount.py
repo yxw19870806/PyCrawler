@@ -29,7 +29,5 @@ def getCount(idPath, imageRootPath):
             print line[1] + ": " + str(count1) + ", " + str(count2) + ", " + str(max_count)
     print "check over!"
 
-getCount("info\\idlist_1.txt", "Z:\\G+\\weibo\\weibo1\\")
-getCount("info\\idlist_2.txt", "Z:\\G+\\weibo\\weibo2\\")
-getCount("info\\idlist_3.txt", "Z:\\G+\\weibo\\weibo3\\")
-getCount("info\\idlist_4.txt", "Z:\\G+\\weibo\\weibo4\\")
+for save_file in ["ATF", "lunar", "save_1", "save_2", "snh48"]:
+    getCount("info\\%s.data" % save_file, "Z:\\G+\\weibo\\%s\\" % save_file)
