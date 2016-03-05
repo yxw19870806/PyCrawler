@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 
-
+from common import tool
 import os
 
 # fkoji
@@ -32,8 +32,8 @@ def twitter():
     from twitter import twitter
     twitter_path = os.path.join(os.path.abspath('..'), 'twitter')
     os.chdir(twitter_path)
-    for i in range(1, 3):
-        save_file_name = 'info\\idlist_%s.txt' % i
+    for i in range(1, 4):
+        save_file_name = 'info\\save_%s.data' % i
         image_download_dir_name = 'photo\\twitter%s' % i
         save_file_path = os.path.join(twitter_path, save_file_name)
         image_download_path = os.path.join(twitter_path, image_download_dir_name)
@@ -54,6 +54,7 @@ def weibo():
         image_temp_path = os.path.join(image_download_path, "tempImage")
         weibo.Weibo(save_file_path, image_download_path, image_temp_path).main()
 
+tool.restore_process_status()
 fkoji()
 google_plus()
 instagram()
