@@ -17,13 +17,14 @@ import traceback
 import urllib2
 
 IS_SET_TIMEOUT = False
-PROCESS_STATUS = 2
+PROCESS_STATUS = 0
 
 
 class ProcessControl(threading.Thread):
     PROCESS_RUN = 0
-    PROCESS_PAUSE = 1
-    PROCESS_STOP = 2
+    PROCESS_PAUSE = 1   # 进程暂停，知道状态变为0时才继续下载
+    PROCESS_STOP = 2    # 进程立刻停止，删除还未完成的数据
+    PROCESS_FINISH = 3  # 进程等待现有任务完成后停止
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -35,9 +36,23 @@ class ProcessControl(threading.Thread):
                 PROCESS_STATUS = self.PROCESS_PAUSE
             elif os.path.exists(os.path.join(os.path.abspath(""), "..\\stop")):
                 PROCESS_STATUS = self.PROCESS_STOP
+            elif os.path.exists(os.path.join(os.path.abspath(""), "..\\finish")):
+                PROCESS_STATUS = self.PROCESS_STOP
             else:
                 PROCESS_STATUS = self.PROCESS_RUN
             time.sleep(10)
+
+
+# 进程是否需要结束
+# 返回码 0: 正常运行; 1 立刻结束; 2 等待现有任务完成后结束
+def is_process_end():
+    global PROCESS_STATUS
+    if PROCESS_STATUS == ProcessControl.PROCESS_STOP:
+        return 1
+    elif PROCESS_STATUS == ProcessControl.PROCESS_FINISH:
+        return 2
+    return 0
+
 
 
 # http请求
