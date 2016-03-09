@@ -183,10 +183,11 @@ class GooglePlus(robot.Robot):
             user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
             user_info_list = user_info.split("\t")
             user_id_list[user_info_list[0]] = user_info_list
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
+        new_save_data_file = open(self.save_data_path, "w")
         for user_id in sorted(user_id_list.keys()):
             new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
         new_save_data_file.close()
+        os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
         print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
@@ -382,7 +383,7 @@ class Download(threading.Thread):
             new_save_data_file.write("\t".join(self.user_info) + "\n")
             new_save_data_file.close()
             TOTAL_IMAGE_COUNT += image_count - 1
-            USER_IDS.remove(user_account)
+            USER_IDS.remove(user_id)
             threadLock.release()
 
             print_step_msg(user_name + " 完成")
