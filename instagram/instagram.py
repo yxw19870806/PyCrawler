@@ -19,6 +19,7 @@ IS_SHOW_STEP = False
 TRACE_LOG_PATH = ""
 ERROR_LOG_PATH = ""
 STEP_LOG_PATH = ""
+USER_IDS = []
 
 threadLock = threading.Lock()
 
@@ -75,6 +76,7 @@ class Instagram(robot.Robot):
 
     def main(self):
         global TOTAL_IMAGE_COUNT
+        global USER_IDS
 
         start_time = time.time()
 
@@ -110,6 +112,7 @@ class Instagram(robot.Robot):
                 # 处理上一次image id
                 if len(user_id_list[user_account]) < 3:
                     user_id_list[user_account].append("")
+                USER_IDS.append(user_account)
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
@@ -130,7 +133,14 @@ class Instagram(robot.Robot):
         for user_account in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
-                time.sleep(10)
+                if tool.is_process_end() == 0:
+                    time.sleep(10)
+                else:
+                    break
+
+            # 提前结束
+            if tool.is_process_end() > 0:
+                break
 
             # 开始下载
             thread = Download(user_id_list[user_account])
@@ -138,8 +148,16 @@ class Instagram(robot.Robot):
 
             time.sleep(1)
 
+        # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
             time.sleep(10)
+
+        # 未完成的数据保存
+        if len(USER_IDS) > 0:
+            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
+            for user_id in USER_IDS:
+                new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+            new_save_data_file.close()
 
         # 删除临时文件夹
         tool.remove_dir(IMAGE_TEMP_PATH)
@@ -177,6 +195,7 @@ class Download(threading.Thread):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
         global TOTAL_IMAGE_COUNT
+        global USER_IDS
 
         user_account = self.user_info[0]
 
@@ -327,6 +346,7 @@ class Download(threading.Thread):
         new_save_data_file.write("\t".join(self.user_info) + "\n")
         new_save_data_file.close()
         TOTAL_IMAGE_COUNT += image_count - 1
+        USER_IDS.remove(user_account)
         threadLock.release()
 
         print_step_msg(user_account + " 完成")
