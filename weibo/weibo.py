@@ -45,6 +45,13 @@ def print_step_msg(msg):
     threadLock.release()
 
 
+def save_image(image_byte, image_path):
+    image_path = tool.change_path_encoding(image_path)
+    image_file = open(image_path, "wb")
+    image_file.write(image_byte)
+    image_file.close()
+
+
 def visit_weibo(url):
     [temp_page_return_code, temp_page] = tool.http_request(url)[:2]
     if temp_page_return_code == 1:
@@ -338,22 +345,19 @@ class Download(threading.Thread):
                                 md5_digest = md5.hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
                                 if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+                                    file_type = image_url.split(".")[-1]
+                                    if file_type.find("/") != -1:
+                                        file_type = "jpg"
+                                    file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
                                     # 第一张图片，创建目录
                                     if need_make_download_dir:
                                         if not tool.make_dir(image_path, 0):
                                             print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                             tool.process_exit()
                                         need_make_download_dir = False
-                                    file_type = image_url.split(".")[-1]
-                                    if file_type.find("/") != -1:
-                                        file_type = "jpg"
-                                    file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                                    file_path = tool.change_path_encoding(file_path)
-                                    image_file = open(file_path, "wb")
-                                    image_file.write(image_byte)
-                                    image_file.close()
-                                    image_count += 1
+                                    save_image(image_byte, file_path)
                                     print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
+                                    image_count += 1
                                     break
                             if try_count == 5:
                                 print_error_msg(user_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
