@@ -84,7 +84,7 @@ class GooglePlus(robot.Robot):
         start_time = time.time()
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
             tool.process_exit()
 
@@ -239,6 +239,7 @@ class Download(threading.Thread):
                 is_error = True
             else:
                 is_error = False
+            need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
@@ -249,7 +250,6 @@ class Download(threading.Thread):
             # 图片下载
             photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             key = ""
-            need_make_download_dir = True
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
@@ -322,7 +322,7 @@ class Download(threading.Thread):
                         print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                         # 第一张图片，创建目录
                         if need_make_download_dir:
-                            if not tool.make_dir(image_path, 1):
+                            if not tool.make_dir(image_path, 0):
                                 print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_download_dir = False
@@ -364,7 +364,7 @@ class Download(threading.Thread):
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
-            if IS_SORT == 1:
+            if IS_SORT == 1 and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.user_info[4], user_name)
                 if robot.sort_file(image_path, destination_path, int(self.user_info[2]), 4):
                     print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
