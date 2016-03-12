@@ -81,7 +81,7 @@ class Bcy(robot.Robot):
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 2):
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
             tool.process_exit()
 
@@ -237,7 +237,7 @@ class Download(threading.Thread):
                     image_path = os.path.join(IMAGE_DOWNLOAD_PATH, cn)
 
                     if need_make_download_dir:
-                        if not tool.make_dir(image_path, 1):
+                        if not tool.make_dir(image_path, 0):
                             print_error_msg(cn + " 创建CN目录： " + image_path + " 失败，程序结束！")
                             tool.process_exit()
                         need_make_download_dir = False
@@ -253,11 +253,11 @@ class Download(threading.Thread):
                         rp_path = os.path.join(image_path, rp_id + " " + title)
                     else:
                         rp_path = os.path.join(image_path, rp_id)
-                    if not tool.make_dir(rp_path, 1):
+                    if not tool.make_dir(rp_path, 0):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
                         print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，尝试不使用title！")
                         rp_path = os.path.join(image_path, rp_id)
-                        if not tool.make_dir(rp_path, 1):
+                        if not tool.make_dir(rp_path, 0):
                             print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
                             tool.process_exit()
 

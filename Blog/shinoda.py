@@ -36,14 +36,14 @@ class Shinoda(robot.Robot):
 
         # 图片保存目录
         self._print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not tool.make_dir(self.image_download_path, 2):
+        if not tool.make_dir(self.image_download_path, 0):
             self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
             tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort == 1:
             self._print_step_msg("创建图片下载目录：" + self.image_temp_path)
-            if not tool.make_dir(self.image_temp_path, 2):
+            if not tool.make_dir(self.image_temp_path, 0):
                 self._print_error_msg("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
                 tool.process_exit()
 
