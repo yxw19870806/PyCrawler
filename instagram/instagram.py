@@ -82,7 +82,7 @@ class Instagram(robot.Robot):
 
         # 图片保存目录
         print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not tool.make_dir(self.image_download_path, 2):
+        if not tool.make_dir(self.image_download_path, 0):
             print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
             tool.process_exit()
 
@@ -219,15 +219,13 @@ class Download(threading.Thread):
             is_error = True
         else:
             is_error = False
+        need_make_download_dir = True
 
         # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
         if IS_SORT == 1:
             image_path = IMAGE_TEMP_PATH + "\\" + user_account
         else:
             image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-        if not tool.make_dir(image_path, 1):
-            print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-            tool.process_exit()
 
         # 图片下载
         while 1:
@@ -292,6 +290,11 @@ class Download(threading.Thread):
 
                     # 下载
                     print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    # 第一张图片，创建目录
+                    if need_make_download_dir:
+                        if not tool.make_dir(image_path, 0):
+                            print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                            tool.process_exit()
                     if tool.save_image(image_url, file_path):
                         print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
@@ -320,7 +323,7 @@ class Download(threading.Thread):
             # 判断排序目标文件夹是否存在
             if len(image_list) >= 1:
                 destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-                if not tool.make_dir(destination_path, 1):
+                if not tool.make_dir(destination_path, 0):
                     print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
