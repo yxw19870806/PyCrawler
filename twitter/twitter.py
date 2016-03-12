@@ -338,7 +338,7 @@ class Download(threading.Thread):
             print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
-            if IS_SORT == 1:
+            if IS_SORT == 1 and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
                 if robot.sort_file(image_path, destination_path, int(self.user_info[1]), 4):
                     print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
