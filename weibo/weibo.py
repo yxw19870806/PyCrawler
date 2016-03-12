@@ -272,15 +272,13 @@ class Download(threading.Thread):
                 is_error = False
             else:
                 is_error = True
+            need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, user_name)
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
-            if not tool.make_dir(image_path, 0):
-                print_error_msg(user_name + " 创建图片下载目录：" + image_path + " 失败，程序结束！")
-                tool.process_exit()
 
             # 日志文件插入信息
             while 1:
@@ -340,6 +338,12 @@ class Download(threading.Thread):
                                 md5_digest = md5.hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
                                 if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+                                    # 第一张图片，创建目录
+                                    if need_make_download_dir:
+                                        if not tool.make_dir(image_path, 0):
+                                            print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                            tool.process_exit()
+                                        need_make_download_dir = False
                                     file_type = image_url.split(".")[-1]
                                     if file_type.find("/") != -1:
                                         file_type = "jpg"
@@ -378,7 +382,7 @@ class Download(threading.Thread):
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
-            if IS_SORT == 1:
+            if IS_SORT == 1 and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
                 if robot.sort_file(image_path, destination_path, int(self.user_info[2]), 4):
                     print_step_msg(user_name + " 图片从下载目录移动到保存目录成功")
