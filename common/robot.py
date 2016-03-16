@@ -102,6 +102,7 @@ def get_config(config, key, default_value, mode, prefix=None, postfix=None):
     return value
 
 
+# 读取配置文件，并生成配置字典
 def analyze_config(config_path):
     config_file = open(config_path, "r")
     lines = config_file.readlines()
@@ -121,6 +122,7 @@ def analyze_config(config_path):
     return config
 
 
+# 将制定文件夹内的所有文件排序重命名并复制到其他文件夹中
 def sort_file(source_path, destination_path, start_count, file_name_length):
     image_list = tool.get_dir_files_name(source_path, "desc")
     # 判断排序目标文件夹是否存在
@@ -138,6 +140,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
     return True
 
 
+# 对存档文件夹按照制定列重新排序
 def sort_save_data(save_data_path, sort_key_index=0):
     save_data_file = open(save_data_path, "")
     lines = save_data_file.readlines()
@@ -155,5 +158,6 @@ def sort_save_data(save_data_path, sort_key_index=0):
     save_data_file.close()
 
 
+# 生成新存档的文件路径
 def get_new_save_file_path(old_save_file_path):
     return os.path.join(os.path.dirname(old_save_file_path), time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path))
