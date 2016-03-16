@@ -118,28 +118,8 @@ class Twitter(robot.Robot):
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            save_data_file = open(self.save_data_path, "r")
-            all_user_list = save_data_file.readlines()
-            save_data_file.close()
-            for user_info in all_user_list:
-                if len(user_info) < 3:
-                    continue
-                user_info = user_info.replace("\xef\xbb\xbf", "").replace(" ", "").replace("\n", "").replace("\r", "")
-                user_info_list = user_info.split("\t")
-
-                user_account = user_info_list[0]
-                user_id_list[user_account] = user_info_list
-                # 如果没有数量，则为0
-                if len(user_id_list[user_account]) < 2:
-                    user_id_list[user_account].append("0")
-                if user_id_list[user_account][1] == "":
-                    user_id_list[user_account][1] = "0"
-                # 处理上一次图片的上传时间
-                if len(user_id_list[user_account]) < 3:
-                    user_id_list[user_account].append("")
-                if user_id_list[user_account][2] == "":
-                    user_id_list[user_account][2] = "0"
-                USER_IDS.append(user_account)
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
+            USER_IDS = user_id_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
