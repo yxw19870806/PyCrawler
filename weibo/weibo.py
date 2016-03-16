@@ -146,7 +146,7 @@ class Weibo(robot.Robot):
         # 寻找存档，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ['', '_0', '0', '0'])
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "_0", "0", "0"])
             USER_IDS = user_id_list.keys()
         else:
             print_error_msg("存档文件：" + self.save_data_path + "不存在，程序结束！")
