@@ -310,6 +310,17 @@ def save_image(image_url, image_path):
     return False
 
 
+# 按照指定连接符合并二维数组生成字符串
+def list_to_string(source_lists, first_sign='\n', second_sign='\t'):
+    temp_list = []
+    for value in source_lists:
+        if second_sign != '':
+            temp_list.append(second_sign.join(map(str, value)))
+        else:
+            temp_list.append(str(value))
+    return first_sign.join(temp_list)
+
+
 # order desc 降序
 # order asc  升序
 # order 其他 不需要排序
