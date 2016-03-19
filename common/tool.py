@@ -286,8 +286,14 @@ def change_path_encoding(path):
     return path
 
 
-def write_file(msg, file_path):
-    log_file = open(file_path, "a")
+# 写文件
+# type=1: 追加
+# type=2: 覆盖
+def write_file(msg, file_path, append_type=1):
+    if append_type == 1:
+        log_file = open(file_path, "a")
+    else:
+        log_file = open(file_path, "w")
     log_file.write(msg + "\n")
     log_file.close()
 
