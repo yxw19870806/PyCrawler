@@ -320,7 +320,7 @@ class Download(threading.Thread):
                     break
 
                 # 查找下一页的token key
-                finds = re.findall('"([a-zA-Z0-9-_]*)"', photo_album_page)
+                finds = re.findall('"([.]?[a-zA-Z0-9-_]*)"', photo_album_page)
                 if len(finds[0]) > 80:
                     key = finds[0]
                     trace(user_name + " 下一个信息首页token:" + key)
