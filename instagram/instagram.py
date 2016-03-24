@@ -300,7 +300,7 @@ class Download(threading.Thread):
         print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
         # 排序
-        if IS_SORT == 1:
+        if IS_SORT == 1 and image_count > 1:
             image_list = sorted(os.listdir(image_path), reverse=True)
             # 判断排序目标文件夹是否存在
             if len(image_list) >= 1:
