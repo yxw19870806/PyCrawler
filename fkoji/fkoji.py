@@ -16,6 +16,8 @@ import time
 
 class Fkoji(robot.Robot):
 
+    ALL_SIGN = '_____'
+
     def __init__(self):
         super(Fkoji, self).__init__()
 
@@ -50,25 +52,19 @@ class Fkoji(robot.Robot):
         if self.is_proxy == 1 or self.is_proxy == 2:
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
-        # 寻找fkoji.save，如果没有结束进程
-        last_image_url = ""
-        image_start_index = 0
+        # 寻找fkoji.save
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list_file = open(self.save_data_path, "r")
-            all_user_list = user_id_list_file.readlines()
-            user_id_list_file.close()
-            if len(all_user_list) >= 1:
-                info = all_user_list[0].split("\t")
-                if len(info) >= 2:
-                    image_start_index = int(info[0])
-                    last_image_url = info[1].replace("\xef\xbb\xbf", "").replace("\n", "").replace(" ", "")
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
 
-                for user_info in all_user_list[1:]:
-                    user_info = user_info.replace(" ", "").replace("\n", "").replace("\r", "")
-                    user_info_list = user_info.split("\t")
-                    if len(user_info_list) >= 2:
-                        user_id_list[user_info_list[0]] = user_info_list[1]
+        # 这个key的内容为总数据
+        if self.ALL_SIGN in user_id_list:
+            image_start_index = int(user_id_list[self.ALL_SIGN][1])
+            last_image_url = user_id_list[self.ALL_SIGN][2]
+            user_id_list.pop(self.ALL_SIGN)
+        else:
+            last_image_url = ""
+            image_start_index = 0
 
         # 下载
         url = "http://jigadori.fkoji.com/?p=%s"
@@ -178,10 +174,10 @@ class Fkoji(robot.Robot):
                         self._print_error_msg("创建目录：" + each_user_path + " 失败，程序结束！")
                         tool.process_exit()
                 if user_id_list.has_key(user_id):
-                    user_id_list[user_id] = int(user_id_list[user_id]) + 1
+                    user_id_list[user_id][1] = int(user_id_list[user_id][1]) + 1
                 else:
-                    user_id_list[user_id] = 1
-                tool.copy_files(image_path, each_user_path + "\\" + str("%05d" % user_id_list[user_id]) + "." + file_type)
+                    user_id_list[user_id][1] = 1
+                tool.copy_files(image_path, each_user_path + "\\" + str("%05d" % user_id_list[user_id][1]) + "." + file_type)
 
             self._print_step_msg("图片从下载目录移动到保存目录成功")
 
@@ -189,16 +185,10 @@ class Fkoji(robot.Robot):
             tool.remove_dir(self.image_temp_path)
             
         # 保存新的存档文件
-        new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
-        self._print_step_msg("保存新存档文件: " + new_save_file_path)
-        new_save_file = open(new_save_file_path, "w")
-        new_save_file.write(str(image_start_index) + "\t" + new_last_image_url + "\n")
-        temp_list = []
-        for user_id in sorted(user_id_list.keys()):
-            temp_list.append(user_id + "\t" + str(user_id_list[user_id]))
-        new_user_id_list_string = "\n".join(temp_list)
-        new_save_file.write(new_user_id_list_string)
-        new_save_file.close()
+        temp_list = [user_id_list[key] for key in sorted(user_id_list.keys())]
+        # 把总数据插入列表头
+        temp_list.insert(0, [self.ALL_SIGN, str(image_start_index), new_last_image_url])
+        tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
 
         duration_time = int(time.time() - start_time)
         self._print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
