@@ -170,20 +170,9 @@ class Twitter(robot.Robot):
         tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, "r")
-        all_user_list = new_save_data_file.readlines()
-        new_save_data_file.close()
-        user_id_list = {}
-        for user_info in all_user_list:
-            if len(user_info) < 5:
-                continue
-            user_info = user_info.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
-            user_info_list = user_info.split("\t")
-            user_id_list[user_info_list[0]] = user_info_list
-        new_save_data_file = open(self.save_data_path, "w")
-        for user_id in sorted(user_id_list.keys()):
-            new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
-        new_save_data_file.close()
+        user_id_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
+        temp_list = [user_id_list[key] for key in sorted(user_id_list.keys())]
+        tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
@@ -333,9 +322,7 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             threadLock.acquire()
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            new_save_data_file.write("\t".join(self.user_info) + "\n")
-            new_save_data_file.close()
+            tool.write_file("\t".join(self.user_info) + "\n", NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += image_count - 1
             USER_IDS.remove(user_account)
             threadLock.release()
