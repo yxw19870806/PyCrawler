@@ -97,7 +97,7 @@ class Bcy(robot.Robot):
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0"])
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
@@ -271,7 +271,7 @@ class Download(threading.Thread):
 
                 # 看看总共有几页
                 if max_page_count == -1:
-                    max_page_count_result = re.findall(r'<a href="/u/'+ coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
+                    max_page_count_result = re.findall(r'<a href="/u/' + coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
                     if len(max_page_count_result) > 0:
                         max_page_count = int(max_page_count_result[0])
                     else:
