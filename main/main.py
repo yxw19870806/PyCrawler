@@ -55,8 +55,8 @@ def weibo():
         weibo.Weibo(save_file_path, image_download_path, image_temp_path).main()
 
 tool.restore_process_status()
-fkoji()
-google_plus()
-instagram()
+# fkoji()
+# google_plus()
+# instagram()
 twitter()
-weibo()
+# weibo()

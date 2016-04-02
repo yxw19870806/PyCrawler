@@ -289,7 +289,7 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             threadLock.acquire()
-            tool.write_file("\t".join(self.user_info) + "\n", NEW_SAVE_DATA_PATH)
+            tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += this_cn_total_image_count
             threadLock.release()
 
