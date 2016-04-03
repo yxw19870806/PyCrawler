@@ -63,7 +63,7 @@ def restore_process_status():
 
 # http请求
 # 返回 【返回码，数据, 请求信息】
-# 返回码 -1：页面不存在（404）；-2：暂时无法访问页面
+# 返回码 -1：暂时无法访问页面；-2：页面不存在（404）；-3：没有权限（403）
 def http_request(url, post_data=None):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
@@ -113,7 +113,10 @@ def http_request(url, post_data=None):
                 print_msg("访问页面超时，重新连接请稍后")
             # 404
             elif str(e).lower().find("http error 404") != -1:
-                return [-1, None, []]
+                return [-2, None, []]
+            # 404
+            elif str(e).lower().find("http error 404") != -1:
+                return [-3, None, []]
             else:
                 print_msg(str(e))
                 traceback.print_exc()
@@ -121,7 +124,7 @@ def http_request(url, post_data=None):
         count += 1
         if count > 9999:
             print_error_msg("无法访问页面：" + url)
-            return [-2, None, []]
+            return [-1, None, []]
 
 
 def get_response_info(response, key):
