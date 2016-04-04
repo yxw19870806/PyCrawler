@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import robot, tool
+from common import log, robot, tool
 import os
 import re
 import shutil
@@ -22,29 +22,20 @@ class Shinoda(robot.Robot):
 
         tool.print_msg("配置文件读取完成")
 
-    def _trace(self, msg):
-        tool.trace(msg, self.is_show_trace, self.trace_log_path)
-
-    def _print_error_msg(self, msg):
-        tool.print_error_msg(msg, self.is_show_error, self.error_log_path)
-
-    def _print_step_msg(self, msg):
-        tool.print_step_msg(msg, self.is_show_step, self.step_log_path)
-
     def main(self):
         start_time = time.time()
 
         # 图片保存目录
-        self._print_step_msg("创建图片根目录：" + self.image_download_path)
+        log.step("创建图片根目录：" + self.image_download_path)
         if not tool.make_dir(self.image_download_path, 0):
-            self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
+            log.error("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
             tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort == 1:
-            self._print_step_msg("创建图片下载目录：" + self.image_temp_path)
+            log.step("创建图片下载目录：" + self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
-                self._print_error_msg("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
+                log.error("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
                 tool.process_exit()
 
         # 设置代理
@@ -76,7 +67,7 @@ class Shinoda(robot.Robot):
         while not is_over:
             index_url = host + "page%s.html" % (page_index - 1)
             [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
-            self._print_step_msg("博客页面地址：" + index_url)
+            log.step("博客页面地址：" + index_url)
 
             if index_page_return_code == 1:
                 image_name_list = re.findall('data-original="./([^"]*)"', index_page)
@@ -91,18 +82,18 @@ class Shinoda(robot.Robot):
                     # 文件类型
                     file_type = image_url.split(".")[-1].split(":")[0]
                     file_path = image_path + "\\" + str("%05d" % image_count) + "." + file_type
-                    self._print_step_msg("开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    log.step("开始下载第 " + str(image_count) + "张图片：" + image_url)
                     if tool.save_image(image_url, file_path):
-                        self._print_step_msg("第" + str(image_count) + "张图片下载成功")
+                        log.step("第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
-                        self._print_step_msg("第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                        log.step("第" + str(image_count) + "张图片 " + image_url + " 下载失败")
                 page_index += 1
             else:
-                self._print_error_msg("无法访问博客页面" + index_url)
+                log.error("无法访问博客页面" + index_url)
                 is_over = True
 
-        self._print_step_msg("下载完毕")
+        log.step("下载完毕")
         
         # 排序复制到保存目录
         if self.is_sort == 1:
@@ -111,19 +102,19 @@ class Shinoda(robot.Robot):
                 image_path = self.image_temp_path + "\\" + fileName
                 file_type = fileName.split(".")[-1]
                 tool.copy_files(image_path, self.image_download_path + "\\" + str("%05d" % image_start_index) + "." + file_type)
-            self._print_step_msg("图片从下载目录移动到保存目录成功")
+            log.step("图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.image_temp_path, True)
             
         # 保存新的存档文件
         new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
-        self._print_step_msg("保存新存档文件: " + new_save_file_path)
+        log.step("保存新存档文件: " + new_save_file_path)
         new_save_file = open(new_save_file_path, "w")
         new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
         new_save_file.close()
             
         duration_time = int(time.time() - start_time)
-        self._print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
+        log.step("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
 
 if __name__ == "__main__":
     Shinoda().main()
