@@ -1,22 +1,25 @@
 # -*- coding:UTF-8  -*-
 
+from common import log
 import tool
 import os
 import time
 import traceback
 
+IS_INIT = False
+
 
 class Robot(object):
 
     def __init__(self):
-
+        global IS_INIT
         config = analyze_config(os.path.join(os.path.abspath(""), "..\\common\\config.ini"))
 
         # 日志
         self.is_log = get_config(config, "IS_LOG", 1, 2)
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 1, 2)
         self.is_show_step = get_config(config, "IS_SHOW_STEP", 1, 2)
+        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 1, 2)
         if self.is_log == 0:
             self.trace_log_path = ""
         else:
@@ -39,6 +42,15 @@ class Robot(object):
         if not tool.make_dir(error_log_dir, 0):
             tool.print_error_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！", self.is_show_error, self.error_log_path)
             tool.process_exit()
+
+        if not IS_INIT:
+            log.IS_SHOW_ERROR = self.is_show_error
+            log.IS_SHOW_STEP = self.is_show_step
+            log.IS_SHOW_TRACE = self.is_show_trace
+            log.ERROR_LOG_PATH = self.error_log_path
+            log.STEP_LOG_PATH = self.step_log_path
+            log.TRACE_LOG_PATH = self.trace_log_path
+            IS_INIT = True
 
         # 存档
         self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
