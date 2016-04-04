@@ -16,7 +16,7 @@ import random
 import threading
 import time
 
-IS_TRACE = False
+IS_SHOW_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
 TRACE_LOG_PATH = ""
@@ -29,7 +29,7 @@ threadLock = threading.Lock()
 
 def trace(msg):
     threadLock.acquire()
-    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_SHOW_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
@@ -88,7 +88,7 @@ class Weibo(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
-        global IS_TRACE
+        global IS_SHOW_TRACE
         global IS_SHOW_ERROR
         global IS_SHOW_STEP
         global TRACE_LOG_PATH
@@ -112,7 +112,7 @@ class Weibo(robot.Robot):
         else:
             IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
-        IS_TRACE = self.is_trace
+        IS_SHOW_TRACE = self.is_show_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
@@ -239,10 +239,10 @@ class Download(threading.Thread):
             image_count = 1
             is_over = False
             # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
-            if last_image_time == "0":
-                is_error = False
-            else:
-                is_error = True
+            # if last_image_time == "0":
+            #     is_error = False
+            # else:
+            #     is_error = True
             need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -254,9 +254,9 @@ class Download(threading.Thread):
             # 日志文件插入信息
             while 1:
                 photo_album_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
-                trace("相册专辑地址：" + photo_album_url)
+                trace(user_name + "相册专辑地址：" + photo_album_url)
                 photo_page_data = visit_weibo(photo_album_url)
-                trace("返回JSON数据：" + str(photo_page_data))
+                trace(user_name + "返回JSON数据：" + str(photo_page_data))
                 try:
                     page = json.read(photo_page_data)
                 except:
@@ -287,7 +287,7 @@ class Download(threading.Thread):
                         # 检查是否图片时间小于上次的记录
                         if 0 < int(last_image_time) >= int(image_info["timestamp"]):
                             is_over = True
-                            is_error = False
+                            # is_error = False
                             break
 
                         if "pic_host" in image_info:
@@ -358,8 +358,8 @@ class Download(threading.Thread):
                     print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-            if is_error:
-                print_error_msg(user_name + " 图片数量异常，请手动检查")
+            # if is_error:
+            #     print_error_msg(user_name + " 图片数量异常，请手动检查")
 
             # 保存最后的信息
             threadLock.acquire()

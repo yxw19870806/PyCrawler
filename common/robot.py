@@ -15,19 +15,21 @@ class Robot(object):
         # 日志
         self.is_log = get_config(config, "IS_LOG", 1, 2)
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.is_trace = get_config(config, "IS_TRACE", 1, 2)
+        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 1, 2)
         self.is_show_step = get_config(config, "IS_SHOW_STEP", 1, 2)
         if self.is_log == 0:
             self.trace_log_path = ""
-            self.step_log_path = ""
         else:
             self.trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
-            self.step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
                 tool.print_error_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！", self.is_show_step, self.step_log_path)
                 tool.process_exit()
+        if False:
+            self.step_log_path = ""
+        else:
+            self.step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
                 tool.print_error_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！", self.is_show_step, self.trace_log_path)

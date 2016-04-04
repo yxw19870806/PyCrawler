@@ -14,7 +14,7 @@ import re
 import threading
 import time
 
-IS_TRACE = False
+IS_SHOW_TRACE = False
 IS_SHOW_ERROR = False
 IS_SHOW_STEP = False
 TRACE_LOG_PATH = ""
@@ -28,7 +28,7 @@ threadLock = threading.Lock()
 
 def trace(msg):
     threadLock.acquire()
-    tool.trace(msg, IS_TRACE, TRACE_LOG_PATH)
+    tool.trace(msg, IS_SHOW_TRACE, TRACE_LOG_PATH)
     threadLock.release()
 
 
@@ -66,7 +66,7 @@ class Twitter(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
-        global IS_TRACE
+        global IS_SHOW_TRACE
         global IS_SHOW_ERROR
         global IS_SHOW_STEP
         global TRACE_LOG_PATH
@@ -89,7 +89,7 @@ class Twitter(robot.Robot):
         else:
             IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
-        IS_TRACE = self.is_trace
+        IS_SHOW_TRACE = self.is_show_trace
         IS_SHOW_ERROR = self.is_show_error
         IS_SHOW_STEP = self.is_show_step
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)

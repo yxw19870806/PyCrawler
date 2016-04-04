@@ -23,7 +23,7 @@ class Shinoda(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def _trace(self, msg):
-        tool.trace(msg, self.is_trace, self.trace_log_path)
+        tool.trace(msg, self.is_show_trace, self.trace_log_path)
 
     def _print_error_msg(self, msg):
         tool.print_error_msg(msg, self.is_show_error, self.error_log_path)
