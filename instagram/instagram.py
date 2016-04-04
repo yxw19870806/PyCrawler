@@ -8,37 +8,31 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import robot, tool, json
+from common import log, robot, tool, json
 import os
 import threading
 import time
 
-IS_SHOW_TRACE = False
-IS_SHOW_ERROR = False
-IS_SHOW_STEP = False
-TRACE_LOG_PATH = ""
-ERROR_LOG_PATH = ""
-STEP_LOG_PATH = ""
 USER_IDS = []
 
 threadLock = threading.Lock()
 
 
-def trace(msg):
-    threadLock.acquire()
-    tool.trace(msg, IS_SHOW_TRACE, TRACE_LOG_PATH)
-    threadLock.release()
-
-
 def print_error_msg(msg):
     threadLock.acquire()
-    tool.print_error_msg(msg, IS_SHOW_ERROR, ERROR_LOG_PATH)
+    log.error(msg)
     threadLock.release()
 
 
 def print_step_msg(msg):
     threadLock.acquire()
-    tool.print_step_msg(msg, IS_SHOW_STEP, STEP_LOG_PATH)
+    log.step(msg)
+    threadLock.release()
+
+
+def trace(msg):
+    threadLock.acquire()
+    log.trace(msg)
     threadLock.release()
 
 
@@ -50,12 +44,6 @@ class Instagram(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
-        global IS_SHOW_TRACE
-        global IS_SHOW_ERROR
-        global IS_SHOW_STEP
-        global TRACE_LOG_PATH
-        global ERROR_LOG_PATH
-        global STEP_LOG_PATH
 
         super(Instagram, self).__init__()
 
@@ -64,13 +52,7 @@ class Instagram(robot.Robot):
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
-        IS_SHOW_TRACE = self.is_show_trace
-        IS_SHOW_ERROR = self.is_show_error
-        IS_SHOW_STEP = self.is_show_step
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        TRACE_LOG_PATH = self.trace_log_path
-        ERROR_LOG_PATH = self.error_log_path
-        STEP_LOG_PATH = self.step_log_path
 
         tool.print_msg("配置文件读取完成")
 
