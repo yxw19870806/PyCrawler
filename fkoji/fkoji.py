@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import robot, tool
+from common import log, robot, tool
 from common import BeautifulSoup
 import os
 import time
@@ -23,29 +23,20 @@ class Fkoji(robot.Robot):
 
         tool.print_msg("配置文件读取完成")
 
-    def _trace(self, msg):
-        tool.trace(msg, self.is_show_error, self.trace_log_path)
-
-    def _print_error_msg(self, msg):
-        tool.print_error_msg(msg, self.is_show_error, self.error_log_path)
-
-    def _print_step_msg(self, msg):
-        tool.print_step_msg(msg, self.is_show_error, self.step_log_path)
-
     def main(self):
         start_time = time.time()
 
         # 图片保存目录
-        self._print_step_msg("创建图片根目录：" + self.image_download_path)
+        log.step("创建图片根目录：" + self.image_download_path)
         if not tool.make_dir(self.image_download_path, 0):
-            self._print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
+            log.error("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
             tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort == 1:
-            self._print_step_msg("创建图片下载目录：" + self.image_temp_path)
+            log.step("创建图片下载目录：" + self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
-                self._print_error_msg("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
+                log.error("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
                 tool.process_exit()
 
         # 设置代理
@@ -80,12 +71,12 @@ class Fkoji(robot.Robot):
 
         while 1:
             index_url = url % str(page_index)
-            self._trace("网页地址：" + index_url)
+            log.trace("网页地址：" + index_url)
 
             [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
 
             if index_page_return_code != 1:
-                self._print_error_msg("无法访问首页地址" + index_url)
+                log.error("无法访问首页地址" + index_url)
                 tool.process_exit()
 
             index_page = BeautifulSoup.BeautifulSoup(index_page)
@@ -116,7 +107,7 @@ class Fkoji(robot.Robot):
                         if last_image_url == image_url:
                             is_over = True
                             break
-                        self._trace("id: " + user_id + "，地址: " + image_url)
+                        log.trace("id: " + user_id + "，地址: " + image_url)
                         if image_url in image_url_list:
                             continue
                         # 文件类型
@@ -124,19 +115,19 @@ class Fkoji(robot.Robot):
                         if file_type.find("/") != -1:
                             file_type = "jpg"
                         file_path = image_path + "\\" + str("%05d" % image_count) + "_" + str(user_id) + "." + file_type
-                        self._print_step_msg("开始下载第" + str(image_count) + "张图片：" + image_url)
+                        log.step("开始下载第" + str(image_count) + "张图片：" + image_url)
                         if tool.save_image(image_url, file_path):
-                            self._print_step_msg("第" + str(image_count) + "张图片下载成功")
+                            log.step("第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
-                            self._print_error_msg("第" + str(image_count) + "张图片 " + image_url + ", id: " + user_id + " 下载失败")
+                            log.error("第" + str(image_count) + "张图片 " + image_url + ", id: " + user_id + " 下载失败")
                 if is_over:
                     break
             if is_over:
                 break
             page_index += 1
 
-        self._print_step_msg("下载完毕")
+        log.step("下载完毕")
 
         # 排序复制到保存目录
         if self.is_sort == 1:
@@ -153,7 +144,7 @@ class Fkoji(robot.Robot):
                 except:
                     pass
             if not tool.make_dir(self.image_download_path + "\\all", 0):
-                self._print_error_msg("创建目录：" + self.image_download_path + "\\all" + " 失败，程序结束！")
+                log.error("创建目录：" + self.image_download_path + "\\all" + " 失败，程序结束！")
                 tool.process_exit()
 
             file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
@@ -171,7 +162,7 @@ class Fkoji(robot.Robot):
                 each_user_path = self.image_download_path + "\\single\\" + user_id
                 if not os.path.exists(each_user_path):
                     if not tool.make_dir(each_user_path, 0):
-                        self._print_error_msg("创建目录：" + each_user_path + " 失败，程序结束！")
+                        log.error("创建目录：" + each_user_path + " 失败，程序结束！")
                         tool.process_exit()
                 if user_id_list.has_key(user_id):
                     user_id_list[user_id][1] = int(user_id_list[user_id][1]) + 1
@@ -179,7 +170,7 @@ class Fkoji(robot.Robot):
                     user_id_list[user_id][1] = 1
                 tool.copy_files(image_path, each_user_path + "\\" + str("%05d" % user_id_list[user_id][1]) + "." + file_type)
 
-            self._print_step_msg("图片从下载目录移动到保存目录成功")
+            log.step("图片从下载目录移动到保存目录成功")
 
             # 删除临时文件夹
             tool.remove_dir(self.image_temp_path)
@@ -191,7 +182,7 @@ class Fkoji(robot.Robot):
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
 
         duration_time = int(time.time() - start_time)
-        self._print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
+        log.step("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
 
 
 if __name__ == "__main__":
