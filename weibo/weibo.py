@@ -8,9 +8,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import log, robot, tool, json
+from common import log, robot, tool
 import hashlib
-# import multiprocessing
+import json
 import os
 import random
 import threading
@@ -83,7 +83,6 @@ class Weibo(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
-        # multiprocessing.Process.__init__(self)
         robot.Robot.__init__(self)
 
         if save_data_path != "":
@@ -240,7 +239,7 @@ class Download(threading.Thread):
                 photo_page_data = visit_weibo(photo_album_url)
                 trace(user_name + "返回JSON数据：" + str(photo_page_data))
                 try:
-                    page = json.read(photo_page_data)
+                    page = json.loads(photo_page_data)
                 except:
                     print_error_msg(user_name + " 返回信息不是一个JSON数据")
                     break
