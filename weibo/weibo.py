@@ -238,6 +238,7 @@ class Download(threading.Thread):
                 trace(user_name + "相册专辑地址：" + photo_album_url)
                 photo_page_data = visit_weibo(photo_album_url)
                 trace(user_name + "返回JSON数据：" + str(photo_page_data))
+
                 try:
                     page = json.loads(photo_page_data)
                 except:
@@ -278,7 +279,7 @@ class Download(threading.Thread):
                         for try_count in range(1, 6):
                             if image_host == "":
                                 image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                            image_url = image_host + "/large/" + image_info["pic_name"]
+                            image_url = image_host + "/large/" + str(image_info["pic_name"])
                             if try_count == 1:
                                 print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             else:
@@ -352,7 +353,6 @@ class Download(threading.Thread):
             print_step_msg(user_name + " 完成")
         except Exception, e:
             print_step_msg(user_name + " 异常")
-            print_error_msg(str(e))
 
 
 if __name__ == "__main__":
