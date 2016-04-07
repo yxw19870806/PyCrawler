@@ -28,7 +28,7 @@ class Robot(object):
         if is_log == 0:
             self.step_log_path = ""
         else:
-            self.step_log_path = get_config(config, "TRACE_LOG_PATH", "log/stepLog.txt", 3)
+            self.step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
@@ -37,7 +37,7 @@ class Robot(object):
         if False:
             self.trace_log_path = ""
         else:
-            self.trace_log_path = get_config(config, "STEP_LOG_PATH", "log/traceLog.txt", 3)
+            self.trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
                 tool.print_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！", True)
