@@ -8,7 +8,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import log, robot, tool, json
+from common import log, robot, tool
+import json
 import os
 import re
 import threading
@@ -208,7 +209,7 @@ class Download(threading.Thread):
                     print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
                 try:
-                    page = json.read(photo_page_data)
+                    page = json.loads(photo_page_data)
                 except:
                     print_error_msg(user_account + " 返回信息：" + str(photo_page_data) + " 不是一个JSON数据")
                     break
