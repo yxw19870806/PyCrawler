@@ -215,7 +215,7 @@ class Download(threading.Thread):
             print_step_msg(user_name + " 开始")
 
             # 初始化数据
-            last_image_time = self.user_info[3]
+            last_image_time = int(self.user_info[3])
             self.user_info[3] = "0"  # 置空，存放此次的最后图片上传时间
             page_count = 1
             image_count = 1
@@ -268,7 +268,7 @@ class Download(threading.Thread):
                         if self.user_info[3] == "0":
                             self.user_info[3] = str(image_info["timestamp"])
                         # 检查是否图片时间小于上次的记录
-                        if 0 < int(last_image_time) >= int(image_info["timestamp"]):
+                        if 0 < last_image_time >= image_info["timestamp"]:
                             is_over = True
                             # is_error = False
                             break
@@ -327,8 +327,8 @@ class Download(threading.Thread):
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.user_info[3] == "0" and last_image_time != "0":
-                self.user_info[3] = last_image_time
+            if self.user_info[3] == "0" and last_image_time != 0:
+                self.user_info[3] = str(last_image_time)
 
             print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
