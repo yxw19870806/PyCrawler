@@ -167,7 +167,7 @@ class Download(threading.Thread):
         print_step_msg(user_account + " 开始")
 
         # 初始化数据
-        last_created_time = self.user_info[2]
+        last_created_time = int(self.user_info[2])
         self.user_info[2] = ""
         # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
         if last_created_time == "0":
@@ -233,10 +233,10 @@ class Download(threading.Thread):
 
                     # 将第一张image的created_time保存到新id list中
                     if self.user_info[2] == "":
-                        self.user_info[2] = photo_info["created_time"]
+                        self.user_info[2] = str(photo_info["created_time"])
 
                     # 检查是否已下载到前一次的图片
-                    if int(photo_info["created_time"]) <= last_created_time:
+                    if 0 < last_created_time >= int(photo_info["created_time"]):
                         is_over = True
                         is_error = False
                         break
