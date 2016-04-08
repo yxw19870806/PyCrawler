@@ -204,7 +204,7 @@ class Download(threading.Thread):
             if not isinstance(photo_album_page, dict):
                 print_error_msg(user_account + " JSON数据：" + str(photo_album_page) + " 不是一个字典")
                 break
-            if not photo_album_page.has_key("items"):
+            if "items" not in photo_album_page:
                 print_error_msg(user_account + " 在JSON数据：" + str(photo_album_page) + " 中没有找到'items'字段")
                 break
 
@@ -213,13 +213,13 @@ class Download(threading.Thread):
                 is_over = True
             else:
                 for photo_info in photo_album_page["items"]:
-                    if not photo_info.has_key("images"):
+                    if "images" not in photo_info:
                         print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'images'字段")
                         break
-                    if not photo_info.has_key("created_time"):
+                    if "created_time" not in photo_info:
                         print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'created_time'字段")
                         break
-                    if not photo_info.has_key("id"):
+                    if "id" not in photo_info:
                         print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'id'字段")
                         break
                     else:
@@ -235,10 +235,10 @@ class Download(threading.Thread):
                         # is_error = False
                         break
 
-                    if not photo_info["images"].has_key("standard_resolution"):
+                    if "standard_resolution" not in photo_info["images"]:
                         print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]) + " 中没有找到'standard_resolution'字段, image id: " + image_id)
                         break
-                    if not photo_info["images"]["standard_resolution"].has_key("url"):
+                    if "url" not in photo_info["images"]["standard_resolution"]:
                         print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]["standard_resolution"]) + " 中没有找到'url'字段, image id: " + image_id)
                         break
 
