@@ -179,10 +179,10 @@ class Download(threading.Thread):
         image_count = 1
         is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        if last_created_time != "0":
-            is_error = True
-        else:
-            is_error = False
+        # if last_created_time != "0":
+        #     is_error = True
+        # else:
+        #     is_error = False
         need_make_download_dir = True
 
         # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -238,7 +238,7 @@ class Download(threading.Thread):
                     # 检查是否已下载到前一次的图片
                     if 0 < last_created_time >= int(photo_info["created_time"]):
                         is_over = True
-                        is_error = False
+                        # is_error = False
                         break
 
                     if not photo_info["images"].has_key("standard_resolution"):
@@ -276,7 +276,7 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载数量，结束
                     if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
                         is_over = True
-                        is_error = False
+                        # is_error = False
                         break
 
             if is_over:
@@ -308,8 +308,8 @@ class Download(threading.Thread):
 
         self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 
-        if is_error:
-            print_error_msg(user_account + " 图片数量异常，请手动检查")
+        # if is_error:
+        #     print_error_msg(user_account + " 图片数量异常，请手动检查")
 
         # 保存最后的信息
         threadLock.acquire()
