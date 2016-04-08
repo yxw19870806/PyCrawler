@@ -169,12 +169,6 @@ class Download(threading.Thread):
         # 初始化数据
         last_created_time = int(self.user_info[2])
         self.user_info[2] = ""
-        # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-        if last_created_time == "0":
-            limit_download_count = 0
-        else:
-            # 历史总数的10%，下线50、上限300
-            limit_download_count = min(max(50, int(self.user_info[1]) / 100 * 10), 300)
         image_id = ""
         image_count = 1
         is_over = False
@@ -267,11 +261,6 @@ class Download(threading.Thread):
                         image_count += 1
                     else:
                         print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-
-                    # 达到下载数量限制，结束
-                    if limit_download_count > 0 and image_count > limit_download_count:
-                        is_over = True
-                        break
 
                     # 达到配置文件中的下载数量，结束
                     if GET_IMAGE_COUNT > 0 and image_count > GET_IMAGE_COUNT:
