@@ -14,6 +14,7 @@ import os
 import re
 import threading
 import time
+import traceback
 
 USER_IDS = []
 INIT_MAX_ID = 999999999999999999
@@ -314,7 +315,7 @@ class Download(threading.Thread):
         except Exception, e:
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
-
+            print_error_msg(str(e) + '\n' + str(traceback.print_exc()))
 
 if __name__ == "__main__":
     tool.restore_process_status()

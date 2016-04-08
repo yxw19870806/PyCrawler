@@ -15,6 +15,7 @@ import os
 import random
 import threading
 import time
+import traceback
 
 USER_IDS = []
 
@@ -353,6 +354,7 @@ class Download(threading.Thread):
             print_step_msg(user_name + " 完成")
         except Exception, e:
             print_step_msg(user_name + " 异常")
+            print_error_msg(str(e) + '\n' + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
