@@ -97,7 +97,7 @@ class GooglePlus(robot.Robot):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for user_id in sorted(user_id_list.keys()):
-             # 检查正在运行的线程数
+            # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
                 if tool.is_process_end() == 0:
                     time.sleep(10)

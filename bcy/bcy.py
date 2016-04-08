@@ -197,8 +197,8 @@ class Download(threading.Thread):
                     # 正片目录
                     title = title_result_list[title_index]
                     # 过滤一些windows文件名屏蔽的字符
-                    for filter in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
-                        title = title.replace(filter, " ")
+                    for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
+                        title = title.replace(filter_char, " ")
                     # 去除前后空格
                     title = title.strip()
                     if title != "":

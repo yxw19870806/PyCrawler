@@ -34,7 +34,7 @@ class Robot(object):
             if not tool.make_dir(step_log_dir, 0):
                 tool.print_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！", True)
                 tool.process_exit()
-        if False:
+        if True:
             self.trace_log_path = ""
         else:
             self.trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
