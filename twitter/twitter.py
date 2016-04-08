@@ -183,7 +183,7 @@ class Download(threading.Thread):
             print_step_msg(user_account + " 开始")
 
             # 初始化数据
-            last_image_time = self.user_info[2]
+            last_image_time = int(self.user_info[2])
             self.user_info[2] = "0"  # 置空，存放此次的最后图片上传时间
             data_tweet_id = INIT_MAX_ID
             image_count = 1
@@ -246,7 +246,7 @@ class Download(threading.Thread):
                             self.user_info[2] = str(image_time)
 
                         # 检查是否已下载到前一次的图片
-                        if 0 < int(last_image_time) >= image_time:
+                        if 0 < last_image_time >= image_time:
                             is_over = True
                             # is_error = False
                             break
@@ -285,8 +285,8 @@ class Download(threading.Thread):
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.user_info[2] == "0" and last_image_time != "0":
-                self.user_info[2] = last_image_time
+            if self.user_info[2] == "0" and last_image_time != 0:
+                self.user_info[2] = str(last_image_time)
 
             print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
