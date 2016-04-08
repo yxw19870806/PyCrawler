@@ -274,7 +274,7 @@ class Download(threading.Thread):
                             break
 
                         if "pic_host" in image_info:
-                            image_host = image_info["pic_host"]
+                            image_host = str(image_info["pic_host"])
                         else:
                             image_host = ""
                         for try_count in range(1, 6):
