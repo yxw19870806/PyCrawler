@@ -167,7 +167,7 @@ class Fkoji(robot.Robot):
                 if user_id_list.has_key(user_id):
                     user_id_list[user_id][1] = int(user_id_list[user_id][1]) + 1
                 else:
-                    user_id_list[user_id][1] = 1
+                    user_id_list[user_id] = [user_id, 1]
                 tool.copy_files(image_path, each_user_path + "\\" + str("%05d" % user_id_list[user_id][1]) + "." + file_type)
 
             log.step("图片从下载目录移动到保存目录成功")
