@@ -163,13 +163,14 @@ class Download(threading.Thread):
         global USER_IDS
 
         user_account = self.user_info[0]
+        user_id = self.user_info[1]
 
         print_step_msg(user_account + " 开始")
 
         # 初始化数据
-        last_created_time = int(self.user_info[2])
-        self.user_info[2] = ""
-        image_id = ""
+        last_created_time = int(self.user_info[3])
+        self.user_info[3] = "0"
+        image_id = "9999999999999999999"
         image_count = 1
         is_over = False
         # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
@@ -187,12 +188,12 @@ class Download(threading.Thread):
 
         # 图片下载
         while 1:
-            if image_id == "":
-                photo_album_url = "https://instagram.com/%s/media" % user_account
-            else:
-                photo_album_url = "https://instagram.com/%s/media?max_id=%s" % (user_account, image_id)
+            photo_album_url = "https://www.instagram.com/query/"
+            # photo_album_url += "?q=ig_user(%s) { media.after(%s, 12) {nodes {date,display_src,is_video},page_info}}" % (user_id, image_id)
+            photo_album_url += "?q=ig_user(%s){media.after(%s,12){nodes{date,display_src,is_video},page_info}}" % (user_id, image_id)
 
             [photo_album_return_code, photo_album_data] = tool.http_request(photo_album_url)[:2]
+
             if photo_album_return_code != 1:
                 print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
                 break
@@ -201,74 +202,71 @@ class Download(threading.Thread):
             except:
                 print_error_msg(user_account + " 相册信息：" + str(photo_album_data) + " 不是一个JSON")
                 break
-            if not isinstance(photo_album_page, dict):
-                print_error_msg(user_account + " JSON数据：" + str(photo_album_page) + " 不是一个字典")
+            if "media" not in photo_album_page:
+                print_error_msg(user_account + " 在JSON数据：" + str(photo_album_page) + " 中没有找到'media'字段")
                 break
-            if "items" not in photo_album_page:
-                print_error_msg(user_account + " 在JSON数据：" + str(photo_album_page) + " 中没有找到'items'字段")
+            if "page_info" not in photo_album_page["media"]:
+                print_error_msg(user_account + " 在media中：" + str(photo_album_page["media"]) + " 中没有找到'page_info'字段")
+                break
+            if "has_next_page" not in photo_album_page["media"]["page_info"]:
+                print_error_msg(user_account + " 在page_info中：" + str(photo_album_page["media"]["page_info"]) + " 中没有找到'has_next_page'字段")
+                break
+            if "end_cursor" not in photo_album_page["media"]["page_info"]:
+                print_error_msg(user_account + " 在page_info中：" + str(photo_album_page["media"]["page_info"]) + " 中没有找到'end_cursor'字段")
+                break
+            if "nodes" not in photo_album_page["media"]:
+                print_error_msg(user_account + " 在media中：" + str(photo_album_page["media"]) + " 中没有找到'nodes'字段")
                 break
 
-            # 下载到了最后一张图了
-            if photo_album_page["items"] == []:
-                is_over = True
-            else:
-                for photo_info in photo_album_page["items"]:
-                    if "images" not in photo_info:
-                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'images'字段")
-                        break
-                    if "created_time" not in photo_info:
-                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'created_time'字段")
-                        break
-                    if "id" not in photo_info:
-                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info) + " 中没有找到'id'字段")
-                        break
-                    else:
-                        image_id = photo_info["id"]
+            for photo_info in photo_album_page["media"]["nodes"]:
+                if "display_src" not in photo_info:
+                    print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'display_src'字段")
+                    break
+                if "date" not in photo_info:
+                    print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'date'字段")
+                    break
 
-                    # 将第一张image的created_time保存到新id list中
-                    if self.user_info[2] == "":
-                        self.user_info[2] = str(photo_info["created_time"])
+                # 将第一张image的created_time保存到新id list中
+                if self.user_info[3] == "0":
+                    self.user_info[3] = str(int(photo_info["date"]))
 
-                    # 检查是否已下载到前一次的图片
-                    if 0 < last_created_time >= int(photo_info["created_time"]):
-                        is_over = True
-                        # is_error = False
-                        break
+                # 检查是否已下载到前一次的图片
+                if 0 < last_created_time >= int(photo_info["date"]):
+                    is_over = True
+                    # is_error = False
+                    break
 
-                    if "standard_resolution" not in photo_info["images"]:
-                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]) + " 中没有找到'standard_resolution'字段, image id: " + image_id)
-                        break
-                    if "url" not in photo_info["images"]["standard_resolution"]:
-                        print_error_msg(user_account + " 在JSON数据：" + str(photo_info["images"]["standard_resolution"]) + " 中没有找到'url'字段, image id: " + image_id)
-                        break
+                image_url = str(photo_info["display_src"].split("?")[0])
 
-                    image_url = photo_info["images"]["standard_resolution"]["url"]
-                    image_url = image_url.split("?")[0]
+                # 文件类型
+                file_type = image_url.split(".")[-1]
+                file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
-                    # 文件类型
-                    file_type = image_url.split(".")[-1]
-                    file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                # 下载
+                print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                # 第一张图片，创建目录
+                if need_make_download_dir:
+                    if not tool.make_dir(image_path, 0):
+                        print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                        tool.process_exit()
+                if tool.save_image(image_url, file_path):
+                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                    image_count += 1
+                else:
+                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                    # 下载
-                    print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    # 第一张图片，创建目录
-                    if need_make_download_dir:
-                        if not tool.make_dir(image_path, 0):
-                            print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                            tool.process_exit()
-                    if tool.save_image(image_url, file_path):
-                        print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                        image_count += 1
-                    else:
-                        print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_IMAGE_COUNT < image_count:
-                        is_over = True
-                        # is_error = False
-                        break
+                # 达到配置文件中的下载数量，结束
+                if 0 < GET_IMAGE_COUNT < image_count:
+                    is_over = True
+                    # is_error = False
+                    break
 
             if is_over:
+                break
+
+            if photo_album_page["media"]["page_info"]["has_next_page"]:
+                image_id = photo_album_page["media"]["page_info"]["end_cursor"]
+            else:
                 break
 
         print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
@@ -284,7 +282,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 倒叙排列
-                count = int(self.user_info[1])
+                count = int(self.user_info[2])
                 for file_name in image_list:
                     count += 1
                     file_type = file_name.split(".")[1]
@@ -295,7 +293,7 @@ class Download(threading.Thread):
             # 删除临时文件夹
             tool.remove_dir(image_path)
 
-        self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
+        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
 
         # if is_error:
         #     print_error_msg(user_account + " 图片数量异常，请手动检查")
