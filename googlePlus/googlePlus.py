@@ -340,10 +340,14 @@ class Download(threading.Thread):
 # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
 # ->
 # https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/s0-Ic42/16%252520-%2525201.jpg
+
+# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s128/24%2B-%2B1
+# ->
+# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s0/24%2B-%2B1
 def generate_max_resolution_image_url(image_url):
     temp_list = image_url.split("/")
     temp_list[-2] = "s0"
-    return "/".join(temp_list[:-3]) + "/s0-" + temp_list[-3] + "/" + temp_list[-1]
+    return "/".join(temp_list)
 
 
 if __name__ == "__main__":
