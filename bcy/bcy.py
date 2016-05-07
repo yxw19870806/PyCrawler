@@ -264,6 +264,10 @@ class Download(threading.Thread):
 
                 page_count += 1
 
+            # 如果有错误且没有发现新的图片，复原旧数据
+            if self.user_info[2] == "" and last_rp_id != "0":
+                self.user_info[2] = str(last_rp_id)
+
             print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
 
             if is_error:
