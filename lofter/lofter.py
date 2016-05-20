@@ -191,9 +191,9 @@ class Download(threading.Thread):
                     break
                 else:
                     # 去重排序
-                    trace(user_account + " 第" + str(page_count) + "页获取的所有信息页: " + str(this_page_post_url_list))
+                    trace(user_account + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(this_page_post_url_list))
                     this_page_post_url_list = sorted(list(set(this_page_post_url_list)), reverse=True)
-                    trace(user_account + " 第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
+                    trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
 
                     for post_url in this_page_post_url_list:
                         if post_url in post_url_list:

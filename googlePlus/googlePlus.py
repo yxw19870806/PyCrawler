@@ -207,6 +207,7 @@ class Download(threading.Thread):
 
                 # 相册也中全部的信息页
                 this_page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', photo_album_page)
+                trace(user_name + " 相册获取的所有信息页: " + str(this_page_message_url_list))
                 for message_url in this_page_message_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
@@ -220,7 +221,6 @@ class Download(threading.Thread):
                     if real_message_url in message_url_list:
                         continue
                     message_url_list.append(real_message_url)
-                    trace("message URL:" + message_url)
 
                     # 将第一张image的URL保存到新id list中
                     if self.user_info[3] == "":
@@ -244,16 +244,16 @@ class Download(threading.Thread):
                         continue
                     message_page_image_data = message_page_image_data[0]
 
-                    urls = re.findall('<img src="(\S*)">', message_page_image_data)
-                    if len(urls) == 0:
+                    message_page_image_url_list = re.findall('<img src="(\S*)">', message_page_image_data)
+                    trace(user_name + " 信息页" + message_url + " 获取的所有图片: " + str(message_page_image_url_list))
+                    if len(message_page_image_url_list) == 0:
                         print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到标签'<img src='")
                         continue
 
-                    for image_url in urls:
+                    for image_url in message_page_image_url_list:
                         if image_url in image_url_list:
                             continue
                         image_url_list.append(image_url)
-                        trace("image URL:" + image_url)
 
                         image_url = generate_max_resolution_image_url(image_url)
                         # 文件类型
