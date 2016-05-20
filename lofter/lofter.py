@@ -273,6 +273,8 @@ class Download(threading.Thread):
                     print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
+            self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
+
             if is_error:
                 print_error_msg(user_account + " 图片数量异常，请手动检查")
 
