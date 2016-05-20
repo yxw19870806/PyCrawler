@@ -163,7 +163,6 @@ class Download(threading.Thread):
             image_count = 1
             post_url_list = []
             is_over = False
-            is_error = True  # 临时看看，是不是会有问题
             need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -209,7 +208,6 @@ class Download(threading.Thread):
 
                         # 检查是否已下载到前一次的图片
                         if post_id <= last_post_id:
-                            is_error = False
                             is_over = True
                             break
 
@@ -274,9 +272,6 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
-
-            if is_error:
-                print_error_msg(user_account + " 图片数量异常，请手动检查")
 
             # 保存最后的信息
             threadLock.acquire()
