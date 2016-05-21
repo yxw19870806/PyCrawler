@@ -223,7 +223,8 @@ class Download(threading.Thread):
                             continue
 
                         for image_url in post_page_image_list:
-                            image_url = image_url.split("?", 2)[0]
+                            if image_url.rfind("?") > image_url.rfind("."):
+                                image_url = image_url.split("?", 2)[0]
 
                             # 文件类型
                             file_type = image_url.split(".")[-1]
