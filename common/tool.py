@@ -117,12 +117,15 @@ def http_request(url, post_data=None):
             # 404
             elif str(e).lower().find("http error 404") != -1:
                 return [-3, None, []]
+            # 400
+            elif str(e).lower().find("http error 400") != -1:
+                return [-4, None, []]
             else:
                 print_msg(str(e))
                 traceback.print_exc()
 
         count += 1
-        if count > 9999:
+        if count > 500:
             print_error_msg("无法访问页面：" + url)
             return [-1, None, []]
 
