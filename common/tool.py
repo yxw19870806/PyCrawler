@@ -428,3 +428,10 @@ def copy_files(source_path, destination_path):
 # 结束进程
 def process_exit():
     sys.exit()
+
+
+def shutdown():
+    if platform.system() == "Windows":
+        os.system('shutdown -s -f -t 3')
+    else:
+        os.system('halt')
