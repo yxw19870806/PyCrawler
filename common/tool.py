@@ -67,7 +67,7 @@ def restore_process_status():
 def http_request(url, post_data=None):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
-    if url.find("http") == -1:
+    if url.find("http://") == -1 and url.find("https://") == -1:
         return [-100, None, []]
     count = 0
     while 1:
