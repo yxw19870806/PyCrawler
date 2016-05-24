@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import time
+import urllib2
 
 USER_IDS = []
 
@@ -183,7 +184,7 @@ class Download(threading.Thread):
                     break
 
                 # 相册也中全部的信息页
-                this_page_post_url_list = re.findall('"(http://' + user_account + '.tumblr.com/post/[^"|^/]*)["|/]', photo_album_page)
+                this_page_post_url_list = re.findall('"(http://' + user_account + '.tumblr.com/post/[^"|^#]*)["|#]', photo_album_page)
 
                 if len(this_page_post_url_list) == 0:
                     # 下载完毕了
@@ -211,6 +212,8 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
+                        temp = post_url.split('://')
+                        post_url = temp[0] + '://' + urllib2.quote(temp[1])
                         [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
                         if post_page_return_code != 1:
                             print_error_msg(user_account + " 无法获取信息页：" + post_url)
