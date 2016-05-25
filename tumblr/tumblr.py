@@ -70,7 +70,7 @@ class Tumblr(robot.Robot):
             tool.process_exit()
 
         # 设置代理
-        if self.is_proxy == 1:
+        if self.is_proxy == 1 or self.is_proxy == 2:
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 寻找idlist，如果没有结束进程
