@@ -186,7 +186,7 @@ class Download(threading.Thread):
 
                 # 相册也中全部的信息页
 
-                this_page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"|^#]*)["|#]', photo_album_page)
+                this_page_post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', photo_album_page)
 
                 if len(this_page_post_url_list) == 0:
                     # 下载完毕了
@@ -234,7 +234,8 @@ class Download(threading.Thread):
                             print_error_msg(user_account + " 信息页：" + post_url + " 截取head标签异常")
                             continue
 
-                        post_page_image_list = re.findall('"(http://\w*.media.tumblr.com/[^"]*)"', post_page)
+                        post_page_image_list = re.findall('"(http[s]?://\w*.media.tumblr.com/[^"]*)"', post_page)
+                        post_page_image_list += re.findall('"(http[s]?://vt.tumblr.com/[^"]*)"', post_page)
                         trace(user_account + " 信息页" + post_url + "获取的所有图片和视频: " + str(post_page_image_list))
                         if len(post_page_image_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
