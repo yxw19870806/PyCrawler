@@ -235,6 +235,7 @@ class Download(threading.Thread):
                             continue
 
                         post_page_image_list = re.findall('"(http[s]?://\w*.media.tumblr.com/[^"]*)"', post_page)
+                        post_page_image_list = filter_different_resolution_images(post_page_image_list)
                         post_page_image_list += re.findall('"(http[s]?://vt.tumblr.com/[^"]*)"', post_page)
                         trace(user_account + " 信息页" + post_url + "获取的所有图片和视频: " + str(post_page_image_list))
                         if len(post_page_image_list) == 0:
@@ -306,6 +307,23 @@ class Download(threading.Thread):
         except Exception, e:
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
+
+
+# 过滤页面上找到不同分辨率的同一张图，保留分辨率较大的那张
+def filter_different_resolution_images(post_page_image_list):
+    new_post_page_image_list = {}
+    for image_url in post_page_image_list:
+        if image_url.find('/avatar_') == -1:
+            image_id = image_url[image_url.find('media.tumblr.com/')+len('media.tumblr.com/'):].split('/')[0]
+
+            if image_id in new_post_page_image_list:
+                resolution = int(image_url.split('_')[-1].split('.')[0])
+                old_resolution = int(new_post_page_image_list[image_id].split('_')[-1].split('.')[0])
+                if resolution < old_resolution:
+                    continue
+            new_post_page_image_list[image_id] = image_url
+
+    return new_post_page_image_list.values()
 
 
 if __name__ == "__main__":
