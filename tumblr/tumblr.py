@@ -116,7 +116,7 @@ class Tumblr(robot.Robot):
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
             time.sleep(10)
-        tool.process_exit()
+        
         # 未完成的数据保存
         if len(USER_IDS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
