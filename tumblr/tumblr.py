@@ -116,7 +116,7 @@ class Tumblr(robot.Robot):
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
             time.sleep(10)
-        
+
         # 未完成的数据保存
         if len(USER_IDS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
@@ -162,7 +162,7 @@ class Download(threading.Thread):
             self.user_info[2] = ""  # 置空，存放此次的最后URL
             page_count = 1
             image_count = 1
-            post_url_list = []
+            post_id_list = []
             is_over = False
             need_make_download_dir = True
 
@@ -175,7 +175,7 @@ class Download(threading.Thread):
             host_url = '%s.tumblr.com' % user_account
             # 图片下载
             while 1:
-                page_url = "http://%s.tumblr.com/page/%s" % (user_account, page_count)
+                page_url = "http://%s/page/%s" % (host_url, page_count)
 
                 [photo_album_page_return_code, photo_album_page] = tool.http_request(page_url)[:2]
 
@@ -185,7 +185,8 @@ class Download(threading.Thread):
                     break
 
                 # 相册也中全部的信息页
-                this_page_post_url_list = re.findall('"(http://' + user_account + '.tumblr.com/post/[^"|^#]*)["|#]', photo_album_page)
+
+                this_page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"|^#]*)["|#]', photo_album_page)
 
                 if len(this_page_post_url_list) == 0:
                     # 下载完毕了
@@ -197,12 +198,13 @@ class Download(threading.Thread):
                     trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
 
                     for post_url in this_page_post_url_list:
-                        if post_url in post_url_list:
-                            continue
-                        post_url_list.append(post_url)
                         trace(user_account + " 信息页URL:" + post_url)
 
                         post_id = post_url[post_url.find(host_url + '/post/') + len(host_url + '/post/'):].split("/")[0]
+
+                        # 已经下载过了
+                        if post_id in post_id_list:
+                            continue
 
                         # 将第一张image的URL保存到新id list中
                         if self.user_info[2] == "":
@@ -213,12 +215,16 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
-                        temp = post_url.split('://')
-                        post_url = temp[0] + '://' + urllib2.quote(temp[1])
-                        [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
+                        temp_post_url = 'http://%s/post/%s' % (host_url, post_id)
+                        [post_page_return_code, post_page] = tool.http_request(temp_post_url)[:2]
                         if post_page_return_code != 1:
-                            print_error_msg(user_account + " 无法获取信息页：" + post_url)
-                            continue
+                            temp = post_url.split('://')
+                            post_url = temp[0] + '://' + urllib2.quote(temp[1])
+                            [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
+                            if post_page_return_code != 1:
+                                print_error_msg(user_account + " 无法获取信息页：" + post_url)
+                                continue
+                        post_id_list.append(post_id)
 
                         # 截取html中的head标签内的内容
                         post_page = re.findall('(<head[\S|\s]*</head>)', post_page)
@@ -229,7 +235,7 @@ class Download(threading.Thread):
                             continue
 
                         post_page_image_list = re.findall('"(http://\w*.media.tumblr.com/[^"]*)"', post_page)
-                        trace(user_account + " 信息页" + post_url + "获取的所有图片: " + str(post_page_image_list))
+                        trace(user_account + " 信息页" + post_url + "获取的所有图片和视频: " + str(post_page_image_list))
                         if len(post_page_image_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
                             continue
