@@ -172,6 +172,7 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
 
+            host_url = '%s.tumblr.com' % user_account
             # 图片下载
             while 1:
                 page_url = "http://%s.tumblr.com/page/%s" % (user_account, page_count)
@@ -201,7 +202,7 @@ class Download(threading.Thread):
                         post_url_list.append(post_url)
                         trace(user_account + " 信息页URL:" + post_url)
 
-                        post_id = post_url.split("/")[-1].split("_")[-1]
+                        post_id = post_url[post_url.find(host_url + '/post/') + len(host_url + '/post/'):].split("/")[0]
 
                         # 将第一张image的URL保存到新id list中
                         if self.user_info[2] == "":
