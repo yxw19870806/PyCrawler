@@ -185,7 +185,6 @@ class Download(threading.Thread):
                     break
 
                 # 相册也中全部的信息页
-
                 this_page_post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', photo_album_page)
 
                 if len(this_page_post_url_list) == 0:
@@ -243,10 +242,6 @@ class Download(threading.Thread):
                             continue
 
                         for image_url in post_page_image_list:
-                            # 过滤掉头像
-                            if image_url.find('/avatar_') != -1:
-                                continue
-
                             # 文件类型
                             file_type = image_url.split(".")[-1]
                             file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
