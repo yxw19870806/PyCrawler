@@ -191,16 +191,11 @@ class Download(threading.Thread):
                     # 下载完毕了
                     break
                 else:
-                    # 去重排序
                     trace(user_account + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(this_page_post_url_list))
-                    this_page_post_url_list = sorted(list(set(this_page_post_url_list)), reverse=True)
+                    this_page_post_url_list = filter_post_url(this_page_post_url_list)
                     trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
 
-                    for post_url in this_page_post_url_list:
-                        trace(user_account + " 信息页URL:" + post_url)
-
-                        post_id = post_url[post_url.find(host_url + '/post/') + len(host_url + '/post/'):].split("/")[0]
-
+                    for post_id in this_page_post_url_list:
                         # 已经下载过了
                         if post_id in post_id_list:
                             continue
@@ -214,16 +209,18 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
-                        temp_post_url = 'http://%s/post/%s' % (host_url, post_id)
-                        [post_page_return_code, post_page] = tool.http_request(temp_post_url)[:2]
+                        post_url = 'http://%s/post/%s' % (host_url, post_id)
+                        trace(user_account + " 信息页URL:" + post_url)
+                        [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
                         if post_page_return_code != 1:
-                            temp = post_url.split('://')
-                            post_url = temp[0] + '://' + urllib2.quote(temp[1])
-                            [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
-                            if post_page_return_code != 1:
+                            for postfix in this_page_post_url_list[post_id]:
+                                temp_post_url = post_url + '/' + urllib2.quote(postfix)
+                                [post_page_return_code, post_page] = tool.http_request(temp_post_url)[:2]
+                                if post_page_return_code == 1:
+                                    break
+                            if not post_page:
                                 print_error_msg(user_account + " 无法获取信息页：" + post_url)
                                 continue
-                        post_id_list.append(post_id)
 
                         # 截取html中的head标签内的内容
                         post_page = re.findall('(<head[\S|\s]*</head>)', post_page)
@@ -233,13 +230,15 @@ class Download(threading.Thread):
                             print_error_msg(user_account + " 信息页：" + post_url + " 截取head标签异常")
                             continue
 
-                        post_page_image_list = re.findall('"(http[s]?://\w*.media.tumblr.com/[^"]*)"', post_page)
+                        post_page_image_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page)
                         post_page_image_list = filter_different_resolution_images(post_page_image_list)
                         post_page_image_list += re.findall('"(http[s]?://vt.tumblr.com/[^"]*)"', post_page)
                         trace(user_account + " 信息页" + post_url + "获取的所有图片和视频: " + str(post_page_image_list))
                         if len(post_page_image_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
                             continue
+
+                        post_id_list.append(post_id)
 
                         for image_url in post_page_image_list:
                             # 文件类型
@@ -319,6 +318,25 @@ def filter_different_resolution_images(post_page_image_list):
             new_post_page_image_list[image_id] = image_url
 
     return new_post_page_image_list.values()
+
+
+def filter_post_url(this_page_post_url_list):
+    new_post_url_list = {}
+    for post_url in this_page_post_url_list:
+        # 无效的信息页
+        post_url = post_url.replace('/embed', '')
+        temp = post_url[post_url.find('tumblr.com/post/') + len('tumblr.com/post/'):].split("/", 1)
+        post_id = temp[0]
+        if post_id in new_post_url_list:
+            if len(temp) == 2:
+                new_post_url_list[post_id].append(temp[1])
+        else:
+            new_post_url_list[post_id] = []
+    # 去重排序
+    for post_id in new_post_url_list:
+        new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
+
+    return new_post_url_list
 
 
 if __name__ == "__main__":
