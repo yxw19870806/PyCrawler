@@ -10,6 +10,7 @@ email: hikaru870806@hotmail.com
 
 from common import log, robot, tool, json
 import os
+import re
 import threading
 import time
 
@@ -179,7 +180,7 @@ class Download(threading.Thread):
         while 1:
             photo_album_url = "https://www.instagram.com/query/"
             # photo_album_url += "?q=ig_user(%s) { media.after(%s, 12) {nodes {date,display_src,is_video},page_info}}" % (user_id, image_id)
-            photo_album_url += "?q=ig_user(%s){media.after(%s,12){nodes{date,display_src,is_video},page_info}}" % (user_id, image_id)
+            photo_album_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, image_id)
 
             [photo_album_return_code, photo_album_data] = tool.http_request(photo_album_url)[:2]
             if photo_album_return_code != 1:
@@ -207,6 +208,13 @@ class Download(threading.Thread):
                 break
 
             for photo_info in photo_album_page["media"]["nodes"]:
+                if "is_video" not in photo_info:
+                    print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'is_video'字段")
+                    break
+                if photo_info["is_video"]:
+                    if "code" not in photo_info:
+                        print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'code'字段")
+                        break
                 if "display_src" not in photo_info:
                     print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'display_src'字段")
                     break
@@ -231,6 +239,7 @@ class Download(threading.Thread):
                 file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
                 # 下载
+                # 图片
                 print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
                 # 第一张图片，创建目录
                 if need_make_download_dir:
@@ -242,6 +251,28 @@ class Download(threading.Thread):
                     image_count += 1
                 else:
                     print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+
+                # 视频
+                if photo_info["is_video"]:
+                    post_page_url = 'https://www.instagram.com/p/%s/' % photo_info["code"]
+                    [post_page_return_code, post_page_data] = tool.http_request(post_page_url)[:2]
+                    if post_page_return_code == 1:
+                        meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_data)
+                        find_video = False
+                        for meta_property, meta_content in meta_list:
+                            if meta_property == 'og:video:secure_url':
+                                file_type = meta_content.split(".")[-1]
+                                video_path = IMAGE_DOWNLOAD_PATH + "\\video\\" + user_account
+                                if tool.save_image(meta_content, video_path + "\\" + photo_info["code"] + '.' + file_type):
+                                    print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载成功")
+                                else:
+                                    print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载失败")
+                                find_video = True
+                                break
+                        if not find_video:
+                            print_error_msg(user_account + " 视频：" + photo_info["code"] + "没有获取到源地址")
+                    else:
+                        print_error_msg(user_account + " 信息页：" + post_page_url + " 访问失败")
 
                 # 达到配置文件中的下载数量，结束
                 if 0 < GET_IMAGE_COUNT < image_count:
