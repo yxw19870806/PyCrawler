@@ -75,7 +75,7 @@ class Instagram(robot.Robot):
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "", "", ""])
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", ""])
             USER_IDS = user_id_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
@@ -182,7 +182,6 @@ class Download(threading.Thread):
             photo_album_url += "?q=ig_user(%s){media.after(%s,12){nodes{date,display_src,is_video},page_info}}" % (user_id, image_id)
 
             [photo_album_return_code, photo_album_data] = tool.http_request(photo_album_url)[:2]
-
             if photo_album_return_code != 1:
                 print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
                 break
