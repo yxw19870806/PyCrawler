@@ -262,8 +262,8 @@ class Download(threading.Thread):
                         for meta_property, meta_content in meta_list:
                             if meta_property == 'og:video:secure_url':
                                 file_type = meta_content.split(".")[-1]
-                                video_path = IMAGE_DOWNLOAD_PATH + "\\video\\" + user_account
-                                if tool.save_image(meta_content, video_path + "\\" + photo_info["code"] + '.' + file_type):
+                                video_path = os.path.join(IMAGE_DOWNLOAD_PATH, "video", user_account, photo_info["code"] + '.' + file_type)
+                                if tool.save_image(meta_content, video_path):
                                     print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载成功")
                                 else:
                                     print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载失败")
@@ -295,7 +295,7 @@ class Download(threading.Thread):
             image_list = sorted(os.listdir(image_path), reverse=True)
             # 判断排序目标文件夹是否存在
             if len(image_list) >= 1:
-                destination_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
+                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
                 if not tool.make_dir(destination_path, 0):
                     print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
