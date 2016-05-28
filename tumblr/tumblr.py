@@ -340,4 +340,5 @@ def filter_post_url(this_page_post_url_list):
 
 
 if __name__ == "__main__":
+    tool.restore_process_status()
     Tumblr().main()
