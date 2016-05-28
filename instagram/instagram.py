@@ -43,6 +43,7 @@ class Instagram(robot.Robot):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
+        global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
@@ -52,6 +53,7 @@ class Instagram(robot.Robot):
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
+        VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -64,9 +66,15 @@ class Instagram(robot.Robot):
         start_time = time.time()
 
         # 图片保存目录
-        print_step_msg("创建图片根目录：" + self.image_download_path)
-        if not tool.make_dir(self.image_download_path, 0):
-            print_error_msg("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
+        print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
+            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+            tool.process_exit()
+
+        # 视频保存目录
+        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
             tool.process_exit()
 
         # 设置代理
@@ -262,7 +270,9 @@ class Download(threading.Thread):
                         for meta_property, meta_content in meta_list:
                             if meta_property == 'og:video:secure_url':
                                 file_type = meta_content.split(".")[-1]
-                                video_path = os.path.join(IMAGE_DOWNLOAD_PATH, "video", user_account, photo_info["code"] + '.' + file_type)
+                                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
+                                tool.make_dir(video_path, 0)
+                                video_path = os.path.join(video_path, photo_info["code"] + '.' + file_type)
                                 if tool.save_image(meta_content, video_path):
                                     print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载成功")
                                 else:
