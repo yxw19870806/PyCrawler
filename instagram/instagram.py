@@ -340,4 +340,5 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
+    tool.restore_process_status()
     Instagram().main()
