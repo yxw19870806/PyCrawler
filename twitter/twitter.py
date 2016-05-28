@@ -237,7 +237,7 @@ class Download(threading.Thread):
 
                     [image_response_return_code, image_response_data, image_response_info] = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
-                    if image_response_return_code == -2:
+                    if image_response_return_code == -404:
                         pass
                     elif image_response_return_code == 1:
                         image_time = get_image_last_modified(image_response_info)

@@ -111,15 +111,15 @@ def http_request(url, post_data=None):
             # 超时
             elif str(e).find("timed out") != -1:
                 print_msg("访问页面超时，重新连接请稍后")
-            # 404
-            elif str(e).lower().find("http error 404") != -1:
-                return [-2, None, []]
-            # 404
-            elif str(e).lower().find("http error 404") != -1:
-                return [-3, None, []]
             # 400
             elif str(e).lower().find("http error 400") != -1:
-                return [-4, None, []]
+                return [-400, None, []]
+            # 403
+            elif str(e).lower().find("http error 403") != -1:
+                return [-403, None, []]
+            # 404
+            elif str(e).lower().find("http error 404") != -1:
+                return [-404, None, []]
             else:
                 print_msg(str(e))
                 traceback.print_exc()
