@@ -155,6 +155,7 @@ class Download(threading.Thread):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
+        global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
         global TOTAL_IMAGE_COUNT
