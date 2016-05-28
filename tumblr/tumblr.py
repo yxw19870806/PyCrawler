@@ -71,6 +71,12 @@ class Tumblr(robot.Robot):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
             tool.process_exit()
 
+        # 视频保存目录
+        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
+            tool.process_exit()
+
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
