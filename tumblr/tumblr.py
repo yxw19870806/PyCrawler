@@ -195,7 +195,7 @@ class Download(threading.Thread):
                     this_page_post_url_list = filter_post_url(this_page_post_url_list)
                     trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
 
-                    for post_id in this_page_post_url_list:
+                    for post_id in sorted(this_page_post_url_list.keys(), reverse=True):
                         # 已经下载过了
                         if post_id in post_id_list:
                             continue
