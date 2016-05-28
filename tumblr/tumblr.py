@@ -234,9 +234,9 @@ class Download(threading.Thread):
                             continue
 
                         # 视频
-                        og_type = re.findall('<meta property="og:type" content="(^")*" />', post_page)
+                        og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page)
                         if len(og_type) != 1:
-                            print_error_msg(user_account + " 信息页：" + post_url + " og:type获取异常")
+                            print_error_msg(user_account + " 信息页：" + post_url + " '，og:type'获取异常")
                         else:
                             og_type = og_type[0]
                             if og_type == "tumblr-feed:video":
