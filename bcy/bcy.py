@@ -287,4 +287,5 @@ class Download(threading.Thread):
         THREAD_COUNT -= 1
 
 if __name__ == "__main__":
+    tool.restore_process_status()
     Bcy().main()
