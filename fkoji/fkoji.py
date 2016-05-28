@@ -186,4 +186,5 @@ class Fkoji(robot.Robot):
 
 
 if __name__ == "__main__":
+    tool.restore_process_status()
     Fkoji().main()
