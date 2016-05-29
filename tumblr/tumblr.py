@@ -259,9 +259,9 @@ class Download(threading.Thread):
                                             video_path = os.path.join(video_path, post_id + '.' + file_type)
                                             if tool.save_image(video_url, video_path):
                                                 video_post_id_list.append(post_id)
-                                                print_step_msg(user_account + " 视频：" + video_url + "下载成功")
+                                                print_error_msg(user_account + " 视频：" + video_url + "下载成功")
                                             else:
-                                                print_step_msg(user_account + " 视频：" + video_url + "下载失败")
+                                                print_error_msg(user_account + " 视频：" + video_url + "下载失败")
                                     else:
                                         print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
                                 else:
