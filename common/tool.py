@@ -155,7 +155,7 @@ def get_default_browser_cookie_path(browser_type):
                 if os.path.exists(os.path.join(default_browser_path, dir_name, "cookies.sqlite")):
                     return os.path.join(default_browser_path, dir_name)
     elif browser_type == 3:
-        return os.path.join(os.getenv("APPDATA"), "Google\\Chrome\\User Data\\Default")
+        return os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default")
     print_msg("浏览器类型：" + browser_type + "不存在")
     return None
 
@@ -222,7 +222,10 @@ def set_cookie(file_path, browser_type=1):
             expires = cookie_info[3]
             name = cookie_info[4]
             value = cookie_info[5]
-            s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+            try:
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+            except:
+                pass
     s.seek(0)
     cookie_jar = cookielib.MozillaCookieJar()
     cookie_jar._really_load(s, "", True, True)
