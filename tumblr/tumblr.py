@@ -264,8 +264,6 @@ class Download(threading.Thread):
                                                 print_error_msg(user_account + " 视频：" + video_url + "下载失败")
                                     else:
                                         print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
-                                else:
-                                    tool.write_test_file(post_url + '\t' + og_type)
 
                         post_page_image_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page)
                         post_page_image_list = filter_different_resolution_images(post_page_image_list)
