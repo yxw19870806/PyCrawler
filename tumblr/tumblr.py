@@ -172,7 +172,6 @@ class Download(threading.Thread):
             page_count = 1
             image_count = 1
             post_id_list = []
-            video_post_id_list = []
             is_over = False
             need_make_download_dir = True
 
@@ -240,40 +239,41 @@ class Download(threading.Thread):
                             print_error_msg(user_account + " 信息页：" + post_url + " 截取head标签异常")
                             continue
 
-                        # 视频
-                        if post_id not in video_post_id_list:
-                            og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page)
-                            if len(og_type) != 1:
-                                print_error_msg(user_account + " 信息页：" + post_url + " '，og:type'获取异常")
-                            else:
-                                og_type = og_type[0]
-                                if og_type == "tumblr-feed:video":
-                                    video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (user_account, post_id)
-                                    [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
-                                    if video_page_return_code == 1:
-                                        video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id +'/[^"]*)" type="([^"]*)"', video_page)
-                                        for video_url, video_type in video_list:
-                                            file_type = video_type.split("/")[-1]
-                                            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
-                                            tool.make_dir(video_path, 0)
-                                            video_path = os.path.join(video_path, post_id + '.' + file_type)
-                                            if tool.save_image(video_url, video_path):
-                                                video_post_id_list.append(post_id)
-                                                print_step_msg(user_account + " 视频：" + video_url + "下载成功")
-                                            else:
-                                                print_error_msg(user_account + " 视频：" + video_url + "下载失败")
-                                    else:
-                                        print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
+                        og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page)
+                        if len(og_type) != 1:
+                            print_error_msg(user_account + " 信息页：" + post_url + " '，og:type'获取异常")
+                            continue
+                        og_type = og_type[0]
+                        post_id_list.append(post_id)
 
+                        # 空
+                        if og_type == "tumblr-feed:entry":
+                            continue
+
+                        # 视频
+                        if og_type == "tumblr-feed:video":
+                            video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (user_account, post_id)
+                            [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
+                            if video_page_return_code == 1:
+                                video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id +'/[^"]*)" type="([^"]*)"', video_page)
+                                for video_url, video_type in video_list:
+                                    file_type = video_type.split("/")[-1]
+                                    video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
+                                    tool.make_dir(video_path, 0)
+                                    video_path = os.path.join(video_path, post_id + '.' + file_type)
+                                    if tool.save_image(video_url, video_path):
+                                        print_step_msg(user_account + " 视频：" + video_url + "下载成功")
+                                    else:
+                                        print_error_msg(user_account + " 视频：" + video_url + "下载失败")
+                            else:
+                                print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
+#
                         post_page_image_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page)
                         post_page_image_list = filter_different_resolution_images(post_page_image_list)
-                        # post_page_video_list = re.findall('"(http[s]?://vt.tumblr.com/[^"]*)"', post_page)
                         trace(user_account + " 信息页" + post_url + "获取的所有图片和视频: " + str(post_page_image_list))
                         if len(post_page_image_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
                             continue
-
-                        post_id_list.append(post_id)
 
                         for image_url in post_page_image_list:
                             # 文件类型
