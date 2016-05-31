@@ -39,7 +39,6 @@ def trace(msg):
 
 
 class Tumblr(robot.Robot):
-
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -146,7 +145,6 @@ class Tumblr(robot.Robot):
 
 
 class Download(threading.Thread):
-
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
@@ -163,9 +161,9 @@ class Download(threading.Thread):
 
         user_account = self.user_info[0]
 
-        print_step_msg(user_account + " 开始")
-
         try:
+            print_step_msg(user_account + " 开始")
+
             # 初始化数据
             last_post_id = self.user_info[2]
             self.user_info[2] = ""  # 置空，存放此次的最后URL
@@ -181,30 +179,27 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
 
-            host_url = '%s.tumblr.com' % user_account
+            host_url = "%s.tumblr.com" % user_account
             # 图片下载
-            while 1:
-                page_url = "http://%s/page/%s" % (host_url, page_count)
+            while True:
+                photo_page_url = "http://%s/page/%s" % (host_url, page_count)
 
-                [photo_album_page_return_code, photo_album_page] = tool.http_request(page_url)[:2]
-
+                [index_page_return_code, index_page_data] = tool.http_request(photo_page_url)[:2]
                 # 无法获取信息首页
-                if photo_album_page_return_code != 1:
-                    print_error_msg(user_account + " 无法获取相册页: " + page_url)
+                if index_page_return_code != 1:
+                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
 
                 # 相册也中全部的信息页
-                this_page_post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', photo_album_page)
-
-                if len(this_page_post_url_list) == 0:
+                post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', index_page_data)
+                if len(post_url_list) == 0:
                     # 下载完毕了
                     break
                 else:
-                    trace(user_account + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(this_page_post_url_list))
-                    this_page_post_url_list = filter_post_url(this_page_post_url_list)
-                    trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
-
-                    for post_id in sorted(this_page_post_url_list.keys(), reverse=True):
+                    trace(user_account + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(post_url_list))
+                    post_url_list = filter_post_url(post_url_list)
+                    trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_url_list))
+                    for post_id in sorted(post_url_list.keys(), reverse=True):
                         # 已经下载过了
                         if post_id in post_id_list:
                             continue
@@ -218,30 +213,29 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
-                        post_url = 'http://%s/post/%s' % (host_url, post_id)
-                        trace(user_account + " 信息页URL:" + post_url)
-                        [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
+                        post_url = "http://%s/post/%s" % (host_url, post_id)
+                        [post_page_return_code, post_page_data] = tool.http_request(post_url)[:2]
                         if post_page_return_code != 1:
-                            for postfix in this_page_post_url_list[post_id]:
-                                temp_post_url = post_url + '/' + urllib2.quote(postfix)
-                                [post_page_return_code, post_page] = tool.http_request(temp_post_url)[:2]
+                            for postfix in post_url_list[post_id]:
+                                temp_post_url = post_url + "/" + urllib2.quote(postfix)
+                                [post_page_return_code, post_page_data] = tool.http_request(temp_post_url)[:2]
                                 if post_page_return_code == 1:
                                     break
-                            if not post_page:
+                            if not post_page_data:
                                 print_error_msg(user_account + " 无法获取信息页：" + post_url)
                                 continue
 
                         # 截取html中的head标签内的内容
-                        post_page = re.findall('(<head[\S|\s]*</head>)', post_page)
-                        if len(post_page) == 1:
-                            post_page = post_page[0]
+                        post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_data)
+                        if len(post_page_head) == 1:
+                            post_page_head = post_page_head[0]
                         else:
                             print_error_msg(user_account + " 信息页：" + post_url + " 截取head标签异常")
                             continue
 
-                        og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page)
+                        og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
                         if len(og_type) != 1:
-                            print_error_msg(user_account + " 信息页：" + post_url + " '，og:type'获取异常")
+                            print_error_msg(user_account + " 信息页：" + post_url + " ，'og:type'获取异常")
                             continue
                         og_type = og_type[0]
                         post_id_list.append(post_id)
@@ -255,27 +249,33 @@ class Download(threading.Thread):
                             video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (user_account, post_id)
                             [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
                             if video_page_return_code == 1:
-                                video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id +'/[^"]*)" type="([^"]*)"', video_page)
-                                for video_url, video_type in video_list:
-                                    file_type = video_type.split("/")[-1]
-                                    video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
-                                    tool.make_dir(video_path, 0)
-                                    video_path = os.path.join(video_path, post_id + '.' + file_type)
-                                    if tool.save_image(video_url, video_path):
-                                        print_step_msg(user_account + " 视频：" + video_url + "下载成功")
-                                    else:
-                                        print_error_msg(user_account + " 视频：" + video_url + "下载失败")
+                                video_list = re.findall(
+                                    'src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"',
+                                    video_page)
+                                if len(video_list) == 0:
+                                    print_error_msg(user_account + " 视频页：" + video_page_url + "中没有找到视频")
+                                else:
+                                    for video_url, video_type in video_list:
+                                        file_type = video_type.split("/")[-1]
+                                        video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
+                                        tool.make_dir(video_path, 0)
+                                        video_path = os.path.join(video_path, post_id + "." + file_type)
+                                        if tool.save_image(video_url, video_path):
+                                            print_step_msg(user_account + " 视频：" + video_url + "下载成功")
+                                        else:
+                                            print_error_msg(user_account + " 视频：" + video_url + "下载失败")
                             else:
                                 print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
-#
-                        post_page_image_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page)
-                        post_page_image_list = filter_different_resolution_images(post_page_image_list)
-                        trace(user_account + " 信息页" + post_url + "获取的所有图片和视频: " + str(post_page_image_list))
-                        if len(post_page_image_list) == 0:
+
+                        # 图片
+                        page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+                        trace(user_account + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
+                        page_image_url_list = filter_different_resolution_images(page_image_url_list)
+                        trace(user_account + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
+                        if len(page_image_url_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
                             continue
-
-                        for image_url in post_page_image_list:
+                        for image_url in page_image_url_list:
                             # 文件类型
                             file_type = image_url.split(".")[-1]
                             file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
@@ -332,35 +332,34 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(user_account + " 完成")
-
         except Exception, e:
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
 
 
 # 过滤页面上找到不同分辨率的同一张图，保留分辨率较大的那张
-def filter_different_resolution_images(post_page_image_list):
-    new_post_page_image_list = {}
-    for image_url in post_page_image_list:
-        if image_url.find('/avatar_') == -1:
-            image_id = image_url[image_url.find('media.tumblr.com/') + len('media.tumblr.com/'):].split('/')[0]
+def filter_different_resolution_images(image_url_list):
+    new_image_url_list = {}
+    for image_url in image_url_list:
+        if image_url.find("/avatar_") == -1:
+            image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("/")[0]
 
-            if image_id in new_post_page_image_list:
-                resolution = int(image_url.split('_')[-1].split('.')[0])
-                old_resolution = int(new_post_page_image_list[image_id].split('_')[-1].split('.')[0])
+            if image_id in new_image_url_list:
+                resolution = int(image_url.split("_")[-1].split(".")[0])
+                old_resolution = int(new_image_url_list[image_id].split("_")[-1].split(".")[0])
                 if resolution < old_resolution:
                     continue
-            new_post_page_image_list[image_id] = image_url
+            new_image_url_list[image_id] = image_url
 
-    return new_post_page_image_list.values()
+    return new_image_url_list.values()
 
 
-def filter_post_url(this_page_post_url_list):
+def filter_post_url(post_url_list):
     new_post_url_list = {}
-    for post_url in this_page_post_url_list:
+    for post_url in post_url_list:
         # 无效的信息页
-        post_url = post_url.replace('/embed', '')
-        temp = post_url[post_url.find('tumblr.com/post/') + len('tumblr.com/post/'):].split("/", 1)
+        post_url = post_url.replace("/embed", "")
+        temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
         post_id = temp[0]
         if post_id in new_post_url_list:
             if len(temp) == 2:
