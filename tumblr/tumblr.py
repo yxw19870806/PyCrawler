@@ -249,7 +249,7 @@ class Download(threading.Thread):
                                 og_type = og_type[0]
                                 if og_type == "tumblr-feed:video":
                                     video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (user_account, post_id)
-                                    [video_page_return_code, video_page] =  tool.http_request(video_page_url)[:2]
+                                    [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
                                     if video_page_return_code == 1:
                                         video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id +'/[^"]*)" type="([^"]*)"', video_page)
                                         for video_url, video_type in video_list:
@@ -259,7 +259,7 @@ class Download(threading.Thread):
                                             video_path = os.path.join(video_path, post_id + '.' + file_type)
                                             if tool.save_image(video_url, video_path):
                                                 video_post_id_list.append(post_id)
-                                                print_error_msg(user_account + " 视频：" + video_url + "下载成功")
+                                                print_step_msg(user_account + " 视频：" + video_url + "下载成功")
                                             else:
                                                 print_error_msg(user_account + " 视频：" + video_url + "下载失败")
                                     else:
