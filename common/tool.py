@@ -145,7 +145,7 @@ def get_response_info(response, key):
 # browser_type=3: chrome
 def get_default_browser_cookie_path(browser_type):
     if platform.system() != "Windows":
-        return  None
+        return None
     if browser_type == 1:
         return os.path.join(os.getenv("APPDATA"), "Microsoft\\Windows\\Cookies")
     elif browser_type == 2:
