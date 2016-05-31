@@ -55,7 +55,6 @@ def save_image(image_byte, image_path):
 
 
 class Twitter(robot.Robot):
-
     def __init__(self, save_data_path="", this_image_download_path="", this_image_temp_path=""):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -164,7 +163,6 @@ class Twitter(robot.Robot):
 
 
 class Download(threading.Thread):
-
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
@@ -189,11 +187,6 @@ class Download(threading.Thread):
             image_count = 1
             image_url_list = []
             is_over = False
-            # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
-            # if last_image_time == "0":
-            #     is_error = False
-            # else:
-            #     is_error = True
             need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -203,43 +196,45 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
 
             # 图片下载
-            while 1:
-                photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
+            while True:
+                photo_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1" \
+                                 "&include_entities=1&max_position=%s" % (user_account, data_tweet_id)
+
                 [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)[:2]
                 if photo_page_return_code != 1:
                     print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
                 try:
-                    page = json.loads(photo_page_data)
+                    photo_page = json.loads(photo_page_data)
                 except:
                     print_error_msg(user_account + " 返回信息：" + str(photo_page_data) + " 不是一个JSON数据")
                     break
 
-                if not isinstance(page, dict):
-                    print_error_msg(user_account + " JSON数据：" + str(page) + " 不是一个字典")
+                if not isinstance(photo_page, dict):
+                    print_error_msg(user_account + " JSON数据：" + str(photo_page) + " 不是一个字典")
                     break
-                if "has_more_items" not in page:
-                    print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'has_more_items'字段")
+                if "has_more_items" not in photo_page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(photo_page) + " 中没有找到'has_more_items'字段")
                     break
-                if "items_html" not in page:
-                    print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'items_html'字段")
+                if "items_html" not in photo_page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(photo_page) + " 中没有找到'items_html'字段")
                     break
-                if "min_position" not in page:
-                    print_error_msg(user_account + " 在JSON数据：" + str(page) + " 中没有找到'min_position'字段")
+                if "min_position" not in photo_page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(photo_page) + " 中没有找到'min_position'字段")
                     break
 
                 # 正则表达，匹配data-image-url="XXX"
-                urls = re.findall('data-image-url="([^"]*)"', page["items_html"])
-                for image_url in urls:
+                this_page_image_url_list = re.findall('data-image-url="([^"]*)"', photo_page["items_html"])
+                trace(user_account + " data_tweet_id：" + str(data_tweet_id) + " 的全部图片列表" + str(this_page_image_url_list))
+                for image_url in this_page_image_url_list:
                     image_url = str(image_url)
                     image_url_list.append(image_url)
-                    trace(user_account + " image URL:" + image_url)
 
-                    [image_response_return_code, image_response_data, image_response_info] = tool.http_request(image_url)
+                    [image_return_code, image_data, image_response_info] = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
-                    if image_response_return_code == -404:
+                    if image_return_code == -404:
                         pass
-                    elif image_response_return_code == 1:
+                    elif image_return_code == 1:
                         image_time = get_image_last_modified(image_response_info)
                         # 将第一张image的URL保存到新id list中
                         if self.user_info[2] == "0":
@@ -248,7 +243,6 @@ class Download(threading.Thread):
                         # 检查是否已下载到前一次的图片
                         if 0 < last_image_time >= image_time:
                             is_over = True
-                            # is_error = False
                             break
 
                         # 文件类型
@@ -263,7 +257,7 @@ class Download(threading.Thread):
                                 print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_download_dir = False
-                        save_image(image_response_data, file_path)
+                        save_image(image_data, file_path)
                         print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
@@ -272,15 +266,14 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
                         is_over = True
-                        # is_error = False
                         break
 
                 if is_over:
                     break
 
-                if page["has_more_items"] and "min_position" in page:
+                if photo_page["has_more_items"] and "min_position" in photo_page:
                     # 设置最后一张的data-tweet-id
-                    data_tweet_id = page["min_position"]
+                    data_tweet_id = photo_page["min_position"]
                 else:
                     break
 
@@ -301,9 +294,6 @@ class Download(threading.Thread):
 
             self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
 
-            # if is_error:
-            #     print_error_msg(user_account + " 图片数量异常，请手动检查")
-
             # 保存最后的信息
             threadLock.acquire()
             tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
@@ -315,7 +305,8 @@ class Download(threading.Thread):
         except Exception, e:
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
-            print_error_msg(str(e) + '\n' + str(traceback.print_exc()))
+            print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
+
 
 if __name__ == "__main__":
     tool.restore_process_status()
