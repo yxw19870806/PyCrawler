@@ -17,7 +17,7 @@ import time
 import traceback
 
 USER_IDS = []
-INIT_MAX_ID = 999999999999999999
+INIT_MAX_ID = "999999999999999999"
 
 threadLock = threading.Lock()
 
@@ -225,7 +225,7 @@ class Download(threading.Thread):
 
                 # 正则表达，匹配data-image-url="XXX"
                 this_page_image_url_list = re.findall('data-image-url="([^"]*)"', photo_page["items_html"])
-                trace(user_account + " data_tweet_id：" + str(data_tweet_id) + " 的全部图片列表" + str(this_page_image_url_list))
+                trace(user_account + " data_tweet_id：" + data_tweet_id + " 的全部图片列表" + str(this_page_image_url_list))
                 for image_url in this_page_image_url_list:
                     image_url = str(image_url)
                     image_url_list.append(image_url)
@@ -273,7 +273,7 @@ class Download(threading.Thread):
 
                 if photo_page["has_more_items"] and "min_position" in photo_page:
                     # 设置最后一张的data-tweet-id
-                    data_tweet_id = photo_page["min_position"]
+                    data_tweet_id = str(photo_page["min_position"])
                 else:
                     break
 
