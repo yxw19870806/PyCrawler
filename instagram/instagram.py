@@ -262,17 +262,17 @@ class Download(threading.Thread):
 
                     # 视频
                     if photo_info["is_video"]:
-                        post_page_url = 'https://www.instagram.com/p/%s/' % photo_info["code"]
+                        post_page_url = "https://www.instagram.com/p/%s/" % photo_info["code"]
                         [post_page_return_code, post_page_data] = tool.http_request(post_page_url)[:2]
                         if post_page_return_code == 1:
                             meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_data)
                             find_video = False
                             for meta_property, meta_content in meta_list:
-                                if meta_property == 'og:video:secure_url':
+                                if meta_property == "og:video:secure_url":
                                     file_type = meta_content.split(".")[-1]
                                     video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
                                     tool.make_dir(video_path, 0)
-                                    video_path = os.path.join(video_path, photo_info["code"] + '.' + file_type)
+                                    video_path = os.path.join(video_path, photo_info["code"] + "." + file_type)
                                     if tool.save_image(meta_content, video_path):
                                         print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载成功")
                                     else:
