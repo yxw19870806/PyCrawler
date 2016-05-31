@@ -38,7 +38,6 @@ def trace(msg):
 
 
 class GooglePlus(robot.Robot):
-
     def __init__(self):
         global GET_IMAGE_URL_COUNT
         global GET_IMAGE_COUNT
@@ -139,7 +138,6 @@ class GooglePlus(robot.Robot):
 
 
 class Download(threading.Thread):
-
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
@@ -199,16 +197,15 @@ class Download(threading.Thread):
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
                 [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url, post_data)[:2]
-
                 # 无法获取信息首页
                 if photo_album_page_return_code != 1:
                     print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
                     break
 
                 # 相册也中全部的信息页
-                this_page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', photo_album_page)
-                trace(user_name + " 相册获取的所有信息页: " + str(this_page_message_url_list))
-                for message_url in this_page_message_url_list:
+                page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', photo_album_page)
+                trace(user_name + " 相册获取的所有信息页: " + str(page_message_url_list))
+                for message_url in page_message_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     message_url = message_url.replace("\u003d", "=")
@@ -232,25 +229,25 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                    [message_page_return_code, message_page] = tool.http_request(message_url)[:2]
+                    [message_page_return_code, message_page_data] = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
                         print_error_msg(user_name + " 无法获取信息页")
                         continue
 
-                    message_page_image_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page)
-                    if len(message_page_image_data) != 1:
+                    message_page_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page_data)
+                    if len(message_page_data) != 1:
                         print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到相关图片信息，第" + str(image_count) + "张图片")
                         image_count += 1
                         continue
-                    message_page_image_data = message_page_image_data[0]
+                    message_page_data = message_page_data[0]
 
-                    message_page_image_url_list = re.findall('<img src="(\S*)">', message_page_image_data)
-                    trace(user_name + " 信息页" + message_url + " 获取的所有图片: " + str(message_page_image_url_list))
-                    if len(message_page_image_url_list) == 0:
+                    page_image_url_list = re.findall('<img src="(\S*)">', message_page_data)
+                    trace(user_name + " 信息页" + message_url + " 获取的所有图片: " + str(page_image_url_list))
+                    if len(page_image_url_list) == 0:
                         print_error_msg(user_name + " 信息页：" + message_url + " 中没有找到标签'<img src='")
                         continue
 
-                    for image_url in message_page_image_url_list:
+                    for image_url in page_image_url_list:
                         if image_url in image_url_list:
                             continue
                         image_url_list.append(image_url)
