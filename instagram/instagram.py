@@ -16,6 +16,7 @@ import time
 import traceback
 
 USER_IDS = []
+INIT_CURSOR = "9999999999999999999"
 
 threadLock = threading.Lock()
 
@@ -169,14 +170,9 @@ class Download(threading.Thread):
             # 初始化数据
             last_created_time = int(self.user_info[3])
             self.user_info[3] = "0"
-            image_id = "9999999999999999999"
+            cursor = INIT_CURSOR
             image_count = 1
             is_over = False
-            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            # if last_created_time != "0":
-            #     is_error = True
-            # else:
-            #     is_error = False
             need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -188,9 +184,7 @@ class Download(threading.Thread):
             # 图片下载
             while 1:
                 photo_page_url = "https://www.instagram.com/query/"
-                # photo_page_url += "?q=ig_user(%s) { media.after(%s, 12) {nodes {date,display_src,is_video},page_info}}" % (user_id, image_id)
-                photo_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (
-                user_id, image_id)
+                photo_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, cursor)
 
                 [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)[:2]
                 if photo_page_return_code != 1:
@@ -244,7 +238,6 @@ class Download(threading.Thread):
                     # 检查是否已下载到前一次的图片
                     if 0 < last_created_time >= int(photo_info["date"]):
                         is_over = True
-                        # is_error = False
                         break
 
                     image_url = str(photo_info["display_src"].split("?")[0])
@@ -294,14 +287,13 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
                         is_over = True
-                        # is_error = False
                         break
 
                 if is_over:
                     break
 
                 if photo_page_media["page_info"]["has_next_page"]:
-                    image_id = photo_page_media["page_info"]["end_cursor"]
+                    cursor = str(photo_page_media["page_info"]["end_cursor"])
                 else:
                     break
 
@@ -323,9 +315,6 @@ class Download(threading.Thread):
                 tool.remove_dir(image_path)
 
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-
-            # if is_error:
-            #     print_error_msg(user_account + " 图片数量异常，请手动检查")
 
             # 保存最后的信息
             threadLock.acquire()
