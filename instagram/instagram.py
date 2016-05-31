@@ -182,7 +182,7 @@ class Download(threading.Thread):
                 image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
 
             # 图片下载
-            while 1:
+            while True:
                 media_page_url = "https://www.instagram.com/query/"
                 media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, cursor)
 

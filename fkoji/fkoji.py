@@ -57,30 +57,28 @@ class Fkoji(robot.Robot):
             last_image_url = ""
             image_start_index = 0
 
-        # 下载
-        url = "http://jigadori.fkoji.com/?p=%s"
         page_index = 1
         image_count = 1
         new_last_image_url = ""
         image_url_list = []
+        is_over = False
+
         if self.is_sort == 1:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
-        is_over = False
 
-        while 1:
-            index_url = url % str(page_index)
+        # 下载
+        while True:
+            index_url = "http://jigadori.fkoji.com/?p=%s" % str(page_index)
             log.trace("网页地址：" + index_url)
 
-            [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
-
+            [index_page_return_code, index_page_response] = tool.http_request(index_url)[:2]
             if index_page_return_code != 1:
                 log.error("无法访问首页地址" + index_url)
                 tool.process_exit()
 
-            index_page = BeautifulSoup.BeautifulSoup(index_page)
-     
+            index_page = BeautifulSoup.BeautifulSoup(index_page_response)
             photo_list = index_page.body.findAll("div", "photo")
             # 已经下载到最后一页
             if not photo_list:

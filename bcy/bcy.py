@@ -38,7 +38,6 @@ def trace(msg):
 
 
 class Bcy(robot.Robot):
-
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
@@ -121,7 +120,6 @@ class Bcy(robot.Robot):
 
 
 class Download(threading.Thread):
-
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
@@ -154,23 +152,23 @@ class Download(threading.Thread):
             else:
                 is_error = False
 
-            while 1:
-                photo_album_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url)[:2]
-                if photo_album_page_return_code != 1:
-                    print_error_msg(cn + " 无法获取数据: " + photo_album_url)
+            while True:
+                post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
+                [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
+                if post_page_return_code != 1:
+                    print_error_msg(cn + " 无法获取数据: " + post_url)
                     break
 
-                rp_id_result_list = re.findall('/coser/detail/(\d+)/(\d+)"', photo_album_page)
-                title_result_list = re.findall('<img src="\S*" alt="([\S ]*)" />', photo_album_page)
-                if "${post.title}" in title_result_list:
-                    title_result_list.remove("${post.title}")
-                if len(rp_id_result_list) != len(title_result_list):
+                page_rp_id_list = re.findall('/coser/detail/(\d+)/(\d+)"', post_page_response)
+                page_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', post_page_response)
+                if "${post.title}" in page_title_list:
+                    page_title_list.remove("${post.title}")
+                if len(page_rp_id_list) != len(page_title_list):
                     print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
                     break
 
                 title_index = 0
-                for data in rp_id_result_list:
+                for data in page_rp_id_list:
                     cp_id = data[0]
                     rp_id = data[1]
                     rp_id_list.append(rp_id)
@@ -195,7 +193,7 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     # 正片目录
-                    title = title_result_list[title_index]
+                    title = page_title_list[title_index]
                     # 过滤一些windows文件名屏蔽的字符
                     for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
                         title = title.replace(filter_char, " ")
@@ -214,16 +212,16 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-                    [rp_page_return_code, rp_page] = tool.http_request(rp_url)[:2]
+                    [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
                     if rp_page_return_code == 1:
                         image_count = 0
-                        image_index = rp_page.find("src='")
+                        image_index = rp_page_response.find("src='")
                         while image_index != -1:
                             image_count += 1
 
-                            image_start = rp_page.find("http", image_index)
-                            image_stop = rp_page.find("'", image_start)
-                            image_url = rp_page[image_start:image_stop]
+                            image_start = rp_page_response.find("http", image_index)
+                            image_stop = rp_page_response.find("'", image_start)
+                            image_url = rp_page_response[image_start:image_stop]
                             # 禁用指定分辨率
                             image_url = "/".join(image_url.split("/")[0:-1])
 
@@ -239,7 +237,7 @@ class Download(threading.Thread):
                             else:
                                 print_error_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                            image_index = rp_page.find("src='", image_index + 1)
+                            image_index = rp_page_response.find("src='", image_index + 1)
 
                         if image_count == 0:
                             print_error_msg(cn + " " + rp_id + " 没有任何图片")
@@ -253,7 +251,7 @@ class Download(threading.Thread):
 
                 # 看看总共有几页
                 if max_page_count == -1:
-                    max_page_count_result = re.findall(r'<a href="/u/' + coser_id + '/post/cos\?&p=(\d*)">尾页</a>', photo_album_page)
+                    max_page_count_result = re.findall(r'<a href="/u/' + coser_id + '/post/cos\?&p=(\d*)">尾页</a>', post_page_response)
                     if len(max_page_count_result) > 0:
                         max_page_count = int(max_page_count_result[0])
                     else:
@@ -285,6 +283,7 @@ class Download(threading.Thread):
             print_error_msg(str(e))
 
         THREAD_COUNT -= 1
+
 
 if __name__ == "__main__":
     tool.restore_process_status()
