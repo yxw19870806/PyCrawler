@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import time
+import traceback
 
 USER_IDS = []
 
@@ -38,7 +39,6 @@ def trace(msg):
 
 
 class Instagram(robot.Robot):
-
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -146,7 +146,6 @@ class Instagram(robot.Robot):
 
 
 class Download(threading.Thread):
-
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
@@ -164,180 +163,184 @@ class Download(threading.Thread):
         user_account = self.user_info[0]
         user_id = self.user_info[1]
 
-        print_step_msg(user_account + " 开始")
+        try:
+            print_step_msg(user_account + " 开始")
 
-        # 初始化数据
-        last_created_time = int(self.user_info[3])
-        self.user_info[3] = "0"
-        image_id = "9999999999999999999"
-        image_count = 1
-        is_over = False
-        # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-        # if last_created_time != "0":
-        #     is_error = True
-        # else:
-        #     is_error = False
-        need_make_download_dir = True
+            # 初始化数据
+            last_created_time = int(self.user_info[3])
+            self.user_info[3] = "0"
+            image_id = "9999999999999999999"
+            image_count = 1
+            is_over = False
+            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
+            # if last_created_time != "0":
+            #     is_error = True
+            # else:
+            #     is_error = False
+            need_make_download_dir = True
 
-        # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-        if IS_SORT == 1:
-            image_path = IMAGE_TEMP_PATH + "\\" + user_account
-        else:
-            image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
-
-        # 图片下载
-        while 1:
-            photo_album_url = "https://www.instagram.com/query/"
-            # photo_album_url += "?q=ig_user(%s) { media.after(%s, 12) {nodes {date,display_src,is_video},page_info}}" % (user_id, image_id)
-            photo_album_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, image_id)
-
-            [photo_album_return_code, photo_album_data] = tool.http_request(photo_album_url)[:2]
-            if photo_album_return_code != 1:
-                print_error_msg(user_account + " 无法获取相册信息: " + photo_album_url)
-                break
-            try:
-                photo_album_page = json.read(photo_album_data)
-            except:
-                print_error_msg(user_account + " 相册信息：" + str(photo_album_data) + " 不是一个JSON")
-                break
-            if "media" not in photo_album_page:
-                print_error_msg(user_account + " 在JSON数据：" + str(photo_album_page) + " 中没有找到'media'字段")
-                break
-            if "page_info" not in photo_album_page["media"]:
-                print_error_msg(user_account + " 在media中：" + str(photo_album_page["media"]) + " 中没有找到'page_info'字段")
-                break
-            if "has_next_page" not in photo_album_page["media"]["page_info"]:
-                print_error_msg(user_account + " 在page_info中：" + str(photo_album_page["media"]["page_info"]) + " 中没有找到'has_next_page'字段")
-                break
-            if "end_cursor" not in photo_album_page["media"]["page_info"]:
-                print_error_msg(user_account + " 在page_info中：" + str(photo_album_page["media"]["page_info"]) + " 中没有找到'end_cursor'字段")
-                break
-            if "nodes" not in photo_album_page["media"]:
-                print_error_msg(user_account + " 在media中：" + str(photo_album_page["media"]) + " 中没有找到'nodes'字段")
-                break
-
-            for photo_info in photo_album_page["media"]["nodes"]:
-                if "is_video" not in photo_info:
-                    print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'is_video'字段")
-                    break
-                if photo_info["is_video"]:
-                    if "code" not in photo_info:
-                        print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'code'字段")
-                        break
-                if "display_src" not in photo_info:
-                    print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'display_src'字段")
-                    break
-                if "date" not in photo_info:
-                    print_error_msg(user_account + " 在node中：" + str(photo_album_page["media"]["nodes"]) + " 中没有找到'date'字段")
-                    break
-
-                # 将第一张image的created_time保存到新id list中
-                if self.user_info[3] == "0":
-                    self.user_info[3] = str(int(photo_info["date"]))
-
-                # 检查是否已下载到前一次的图片
-                if 0 < last_created_time >= int(photo_info["date"]):
-                    is_over = True
-                    # is_error = False
-                    break
-
-                image_url = str(photo_info["display_src"].split("?")[0])
-
-                # 文件类型
-                file_type = image_url.split(".")[-1]
-                file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
-
-                # 下载
-                # 图片
-                print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
-                # 第一张图片，创建目录
-                if need_make_download_dir:
-                    if not tool.make_dir(image_path, 0):
-                        print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                        tool.process_exit()
-                if tool.save_image(image_url, file_path):
-                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                    image_count += 1
-                else:
-                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-
-                # 视频
-                if photo_info["is_video"]:
-                    post_page_url = 'https://www.instagram.com/p/%s/' % photo_info["code"]
-                    [post_page_return_code, post_page_data] = tool.http_request(post_page_url)[:2]
-                    if post_page_return_code == 1:
-                        meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_data)
-                        find_video = False
-                        for meta_property, meta_content in meta_list:
-                            if meta_property == 'og:video:secure_url':
-                                file_type = meta_content.split(".")[-1]
-                                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
-                                tool.make_dir(video_path, 0)
-                                video_path = os.path.join(video_path, photo_info["code"] + '.' + file_type)
-                                if tool.save_image(meta_content, video_path):
-                                    print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载成功")
-                                else:
-                                    print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载失败")
-                                find_video = True
-                                break
-                        if not find_video:
-                            print_error_msg(user_account + " 视频：" + photo_info["code"] + "没有获取到源地址")
-                    else:
-                        print_error_msg(user_account + " 信息页：" + post_page_url + " 访问失败")
-
-                # 达到配置文件中的下载数量，结束
-                if 0 < GET_IMAGE_COUNT < image_count:
-                    is_over = True
-                    # is_error = False
-                    break
-
-            if is_over:
-                break
-
-            if photo_album_page["media"]["page_info"]["has_next_page"]:
-                image_id = photo_album_page["media"]["page_info"]["end_cursor"]
+            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
+            if IS_SORT == 1:
+                image_path = IMAGE_TEMP_PATH + "\\" + user_account
             else:
-                break
+                image_path = IMAGE_DOWNLOAD_PATH + "\\" + user_account
 
-        print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            # 图片下载
+            while 1:
+                photo_page_url = "https://www.instagram.com/query/"
+                # photo_page_url += "?q=ig_user(%s) { media.after(%s, 12) {nodes {date,display_src,is_video},page_info}}" % (user_id, image_id)
+                photo_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (
+                user_id, image_id)
 
-        # 排序
-        if IS_SORT == 1 and image_count > 1:
-            image_list = sorted(os.listdir(image_path), reverse=True)
-            # 判断排序目标文件夹是否存在
-            if len(image_list) >= 1:
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
-                if not tool.make_dir(destination_path, 0):
-                    print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
-                    tool.process_exit()
+                [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)[:2]
+                if photo_page_return_code != 1:
+                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
+                    break
+                try:
+                    photo_page = json.read(photo_page_data)
+                except:
+                    print_error_msg(user_account + " 相册信息：" + str(photo_page_data) + " 不是一个JSON")
+                    break
+                if "media" not in photo_page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(photo_page) + " 中没有找到'media'字段")
+                    break
 
-                # 倒叙排列
-                count = int(self.user_info[2])
-                for file_name in image_list:
-                    count += 1
-                    file_type = file_name.split(".")[1]
-                    tool.copy_files(image_path + "\\" + file_name, destination_path + "\\" + str("%04d" % count) + "." + file_type)
+                photo_page_media = photo_page["media"]
+                if "page_info" not in photo_page_media:
+                    print_error_msg(user_account + " 在media中：" + str(photo_page_media) + " 中没有找到'page_info'字段")
+                    break
+                if "has_next_page" not in photo_page_media["page_info"]:
+                    print_error_msg(user_account + " 在page_info中：" + str(photo_page_media["page_info"]) +
+                                    " 中没有找到'has_next_page'字段")
+                    break
+                if "end_cursor" not in photo_page_media["page_info"]:
+                    print_error_msg(user_account + " 在page_info中：" + str(photo_page_media["page_info"]) +
+                                    " 中没有找到'end_cursor'字段")
+                    break
+                if "nodes" not in photo_page_media:
+                    print_error_msg(user_account + " 在media中：" + str(photo_page_media) + " 中没有找到'nodes'字段")
+                    break
 
-                print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
+                photo_page_nodes = photo_page_media["nodes"]
+                for photo_info in photo_page_nodes:
+                    if "is_video" not in photo_info:
+                        print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'is_video'字段")
+                        break
+                    if photo_info["is_video"]:
+                        if "code" not in photo_info:
+                            print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'code'字段")
+                            break
+                    if "display_src" not in photo_info:
+                        print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'display_src'字段")
+                        break
+                    if "date" not in photo_info:
+                        print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'date'字段")
+                        break
 
-            # 删除临时文件夹
-            tool.remove_dir(image_path)
+                    # 将第一张image的created_time保存到新id list中
+                    if self.user_info[3] == "0":
+                        self.user_info[3] = str(int(photo_info["date"]))
 
-        self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
+                    # 检查是否已下载到前一次的图片
+                    if 0 < last_created_time >= int(photo_info["date"]):
+                        is_over = True
+                        # is_error = False
+                        break
 
-        # if is_error:
-        #     print_error_msg(user_account + " 图片数量异常，请手动检查")
+                    image_url = str(photo_info["display_src"].split("?")[0])
 
-        # 保存最后的信息
-        threadLock.acquire()
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-        new_save_data_file.write("\t".join(self.user_info) + "\n")
-        new_save_data_file.close()
-        TOTAL_IMAGE_COUNT += image_count - 1
-        USER_IDS.remove(user_account)
-        threadLock.release()
+                    # 文件类型
+                    file_type = image_url.split(".")[-1]
+                    file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
 
-        print_step_msg(user_account + " 完成")
+                    # 下载
+                    # 图片
+                    print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    # 第一张图片，创建目录
+                    if need_make_download_dir:
+                        if not tool.make_dir(image_path, 0):
+                            print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                            tool.process_exit()
+                    if tool.save_image(image_url, file_path):
+                        print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                        image_count += 1
+                    else:
+                        print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+
+                    # 视频
+                    if photo_info["is_video"]:
+                        post_page_url = 'https://www.instagram.com/p/%s/' % photo_info["code"]
+                        [post_page_return_code, post_page_data] = tool.http_request(post_page_url)[:2]
+                        if post_page_return_code == 1:
+                            meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_data)
+                            find_video = False
+                            for meta_property, meta_content in meta_list:
+                                if meta_property == 'og:video:secure_url':
+                                    file_type = meta_content.split(".")[-1]
+                                    video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
+                                    tool.make_dir(video_path, 0)
+                                    video_path = os.path.join(video_path, photo_info["code"] + '.' + file_type)
+                                    if tool.save_image(meta_content, video_path):
+                                        print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载成功")
+                                    else:
+                                        print_step_msg(user_account + " 视频：" + photo_info["code"] + "下载失败")
+                                    find_video = True
+                                    break
+                            if not find_video:
+                                print_error_msg(user_account + " 视频：" + photo_info["code"] + "没有获取到源地址")
+                        else:
+                            print_error_msg(user_account + " 信息页：" + post_page_url + " 访问失败")
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_IMAGE_COUNT < image_count:
+                        is_over = True
+                        # is_error = False
+                        break
+
+                if is_over:
+                    break
+
+                if photo_page_media["page_info"]["has_next_page"]:
+                    image_id = photo_page_media["page_info"]["end_cursor"]
+                else:
+                    break
+
+            print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+
+            # 排序
+            if IS_SORT == 1 and image_count > 1:
+                image_list = sorted(os.listdir(image_path), reverse=True)
+                # 判断排序目标文件夹是否存在
+                if len(image_list) >= 1:
+                    destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
+                    if robot.sort_file(image_path, destination_path, int(self.user_info[2]), 4):
+                        print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                        tool.process_exit()
+
+                # 删除临时文件夹
+                tool.remove_dir(image_path)
+
+            self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
+
+            # if is_error:
+            #     print_error_msg(user_account + " 图片数量异常，请手动检查")
+
+            # 保存最后的信息
+            threadLock.acquire()
+            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
+            new_save_data_file.write("\t".join(self.user_info) + "\n")
+            new_save_data_file.close()
+            TOTAL_IMAGE_COUNT += image_count - 1
+            USER_IDS.remove(user_account)
+            threadLock.release()
+
+            print_step_msg(user_account + " 完成")
+        except Exception, e:
+            print_step_msg(user_account + " 异常")
+            print_error_msg(str(e))
+            print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
