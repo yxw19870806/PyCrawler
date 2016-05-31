@@ -172,15 +172,15 @@ class Download(threading.Thread):
             host_url = "%s.lofter.com" % user_account
             # 图片下载
             while True:
-                photo_page_url = "http://%s/?page=%s" % (host_url, page_count)
-                [index_page_return_code, index_page_data] = tool.http_request(photo_page_url)[:2]
+                index_page_url = "http://%s/?page=%s" % (host_url, page_count)
+                [index_page_return_code, index_page_response] = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
+                    print_error_msg(user_account + " 无法获取相册信息: " + index_page_url)
                     break
 
                 # 相册也中全部的信息页
-                page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_data)
+                page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_response)
                 if len(page_post_url_list) == 0:
                     # 下载完毕了
                     break
@@ -206,12 +206,12 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
-                        [post_page_return_code, post_page] = tool.http_request(post_url)[:2]
+                        [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
                         if post_page_return_code != 1:
                             print_error_msg(user_account + " 无法获取信息页：" + post_url)
                             continue
 
-                        post_page_image_list = re.findall('bigimgsrc="([^"]*)"', post_page)
+                        post_page_image_list = re.findall('bigimgsrc="([^"]*)"', post_page_response)
                         trace(user_account + " 信息页" + post_url + "获取的所有图片: " + str(post_page_image_list))
                         if len(post_page_image_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")

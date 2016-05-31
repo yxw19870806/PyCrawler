@@ -182,16 +182,16 @@ class Download(threading.Thread):
             host_url = "%s.tumblr.com" % user_account
             # 图片下载
             while True:
-                photo_page_url = "http://%s/page/%s" % (host_url, page_count)
+                index_page_url = "http://%s/page/%s" % (host_url, page_count)
 
-                [index_page_return_code, index_page_data] = tool.http_request(photo_page_url)[:2]
+                [index_page_return_code, index_page_response] = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
+                    print_error_msg(user_account + " 无法获取相册信息: " + index_page_url)
                     break
 
                 # 相册也中全部的信息页
-                post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', index_page_data)
+                post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', index_page_response)
                 if len(post_url_list) == 0:
                     # 下载完毕了
                     break
@@ -214,19 +214,19 @@ class Download(threading.Thread):
                             break
 
                         post_url = "http://%s/post/%s" % (host_url, post_id)
-                        [post_page_return_code, post_page_data] = tool.http_request(post_url)[:2]
+                        [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
                         if post_page_return_code != 1:
                             for postfix in post_url_list[post_id]:
                                 temp_post_url = post_url + "/" + urllib2.quote(postfix)
-                                [post_page_return_code, post_page_data] = tool.http_request(temp_post_url)[:2]
+                                [post_page_return_code, post_page_response] = tool.http_request(temp_post_url)[:2]
                                 if post_page_return_code == 1:
                                     break
-                            if not post_page_data:
+                            if not post_page_response:
                                 print_error_msg(user_account + " 无法获取信息页：" + post_url)
                                 continue
 
                         # 截取html中的head标签内的内容
-                        post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_data)
+                        post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_response)
                         if len(post_page_head) == 1:
                             post_page_head = post_page_head[0]
                         else:

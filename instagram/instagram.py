@@ -183,52 +183,52 @@ class Download(threading.Thread):
 
             # 图片下载
             while 1:
-                photo_page_url = "https://www.instagram.com/query/"
-                photo_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, cursor)
+                media_page_url = "https://www.instagram.com/query/"
+                media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, cursor)
 
-                [photo_page_return_code, photo_page_data] = tool.http_request(photo_page_url)[:2]
+                [photo_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
                 if photo_page_return_code != 1:
-                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
+                    print_error_msg(user_account + " 无法获取媒体信息: " + media_page_url)
                     break
                 try:
-                    photo_page = json.read(photo_page_data)
+                    media_page = json.read(media_page_response)
                 except:
-                    print_error_msg(user_account + " 相册信息：" + str(photo_page_data) + " 不是一个JSON")
+                    print_error_msg(user_account + " 媒体信息：" + str(media_page_response) + " 不是一个JSON")
                     break
-                if "media" not in photo_page:
-                    print_error_msg(user_account + " 在JSON数据：" + str(photo_page) + " 中没有找到'media'字段")
+                if "media" not in media_page:
+                    print_error_msg(user_account + " 在JSON数据：" + str(media_page) + " 中没有找到'media'字段")
                     break
 
-                photo_page_media = photo_page["media"]
-                if "page_info" not in photo_page_media:
-                    print_error_msg(user_account + " 在media中：" + str(photo_page_media) + " 中没有找到'page_info'字段")
+                media_data = media_page["media"]
+                if "page_info" not in media_data:
+                    print_error_msg(user_account + " 在media中：" + str(media_data) + " 中没有找到'page_info'字段")
                     break
-                if "has_next_page" not in photo_page_media["page_info"]:
-                    print_error_msg(user_account + " 在page_info中：" + str(photo_page_media["page_info"]) +
+                if "has_next_page" not in media_data["page_info"]:
+                    print_error_msg(user_account + " 在page_info中：" + str(media_data["page_info"]) +
                                     " 中没有找到'has_next_page'字段")
                     break
-                if "end_cursor" not in photo_page_media["page_info"]:
-                    print_error_msg(user_account + " 在page_info中：" + str(photo_page_media["page_info"]) +
+                if "end_cursor" not in media_data["page_info"]:
+                    print_error_msg(user_account + " 在page_info中：" + str(media_data["page_info"]) +
                                     " 中没有找到'end_cursor'字段")
                     break
-                if "nodes" not in photo_page_media:
-                    print_error_msg(user_account + " 在media中：" + str(photo_page_media) + " 中没有找到'nodes'字段")
+                if "nodes" not in media_data:
+                    print_error_msg(user_account + " 在media中：" + str(media_data) + " 中没有找到'nodes'字段")
                     break
 
-                photo_page_nodes = photo_page_media["nodes"]
-                for photo_info in photo_page_nodes:
+                nodes_data = media_data["nodes"]
+                for photo_info in nodes_data:
                     if "is_video" not in photo_info:
-                        print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'is_video'字段")
+                        print_error_msg(user_account + " 在node中：" + str(nodes_data) + " 中没有找到'is_video'字段")
                         break
                     if photo_info["is_video"]:
                         if "code" not in photo_info:
-                            print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'code'字段")
+                            print_error_msg(user_account + " 在node中：" + str(nodes_data) + " 中没有找到'code'字段")
                             break
                     if "display_src" not in photo_info:
-                        print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'display_src'字段")
+                        print_error_msg(user_account + " 在node中：" + str(nodes_data) + " 中没有找到'display_src'字段")
                         break
                     if "date" not in photo_info:
-                        print_error_msg(user_account + " 在node中：" + str(photo_page_nodes) + " 中没有找到'date'字段")
+                        print_error_msg(user_account + " 在node中：" + str(nodes_data) + " 中没有找到'date'字段")
                         break
 
                     # 将第一张image的created_time保存到新id list中
@@ -263,9 +263,9 @@ class Download(threading.Thread):
                     # 视频
                     if photo_info["is_video"]:
                         post_page_url = "https://www.instagram.com/p/%s/" % photo_info["code"]
-                        [post_page_return_code, post_page_data] = tool.http_request(post_page_url)[:2]
+                        [post_page_return_code, post_page_response] = tool.http_request(post_page_url)[:2]
                         if post_page_return_code == 1:
-                            meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_data)
+                            meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_response)
                             find_video = False
                             for meta_property, meta_content in meta_list:
                                 if meta_property == "og:video:secure_url":
@@ -292,8 +292,8 @@ class Download(threading.Thread):
                 if is_over:
                     break
 
-                if photo_page_media["page_info"]["has_next_page"]:
-                    cursor = str(photo_page_media["page_info"]["end_cursor"])
+                if media_data["page_info"]["has_next_page"]:
+                    cursor = str(media_data["page_info"]["end_cursor"])
                 else:
                     break
 
