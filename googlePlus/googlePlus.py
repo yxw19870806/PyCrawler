@@ -196,14 +196,14 @@ class Download(threading.Thread):
 
             while 1:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (user_id, user_id, GET_IMAGE_URL_COUNT, key)
-                [photo_album_page_return_code, photo_album_page] = tool.http_request(photo_album_url, post_data)[:2]
+                [index_page_return_code, index_page_data] = tool.http_request(photo_album_url, post_data)[:2]
                 # 无法获取信息首页
-                if photo_album_page_return_code != 1:
+                if index_page_return_code != 1:
                     print_error_msg(user_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
                     break
 
                 # 相册也中全部的信息页
-                page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', photo_album_page)
+                page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_data)
                 trace(user_name + " 相册获取的所有信息页: " + str(page_message_url_list))
                 for message_url in page_message_url_list:
                     # 有可能拿到带authkey的，需要去掉
@@ -288,7 +288,7 @@ class Download(threading.Thread):
                     break
 
                 # 查找下一页的token key
-                finds = re.findall('"([.]?[a-zA-Z0-9-_]*)"', photo_album_page)
+                finds = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_data)
                 if len(finds[0]) > 80:
                     key = finds[0]
                     trace(user_name + " 下一个信息首页token:" + key)
@@ -296,7 +296,7 @@ class Download(threading.Thread):
                     # 不是第一次下载
                     if last_message_url != "":
                         print_error_msg(user_name + " 没有找到下一页的token，将该页保存：")
-                        print_error_msg(photo_album_page)
+                        print_error_msg(index_page_data)
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
