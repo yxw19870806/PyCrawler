@@ -38,7 +38,6 @@ def trace(msg):
 
 
 class Lofter(robot.Robot):
-
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -137,7 +136,6 @@ class Lofter(robot.Robot):
 
 
 class Download(threading.Thread):
-
     def __init__(self, user_info):
         threading.Thread.__init__(self)
         self.user_info = user_info
@@ -153,9 +151,9 @@ class Download(threading.Thread):
 
         user_account = self.user_info[0]
 
-        print_step_msg(user_account + " 开始")
-
         try:
+            print_step_msg(user_account + " 开始")
+
             # 初始化数据
             last_post_id = self.user_info[2]
             self.user_info[2] = ""  # 置空，存放此次的最后URL
@@ -171,30 +169,27 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
 
+            host_url = "%s.lofter.com" % user_account
             # 图片下载
-            while 1:
-                page_url = "http://%s.lofter.com/?page=%s" % (user_account, page_count)
-
-                [photo_album_page_return_code, photo_album_page] = tool.http_request(page_url)[:2]
-
+            while True:
+                photo_page_url = "http://%s/?page=%s" % (host_url, page_count)
+                [index_page_return_code, index_page_data] = tool.http_request(photo_page_url)[:2]
                 # 无法获取信息首页
-                if photo_album_page_return_code != 1:
-                    print_error_msg(user_account + " 无法获取相册页: " + page_url)
+                if index_page_return_code != 1:
+                    print_error_msg(user_account + " 无法获取相册信息: " + photo_page_url)
                     break
 
                 # 相册也中全部的信息页
-                this_page_post_url_list = re.findall('"(http://' + user_account + '.lofter.com/post/[^"]*)"', photo_album_page)
-
-                if len(this_page_post_url_list) == 0:
+                page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_data)
+                if len(page_post_url_list) == 0:
                     # 下载完毕了
                     break
                 else:
                     # 去重排序
-                    trace(user_account + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(this_page_post_url_list))
-                    this_page_post_url_list = sorted(list(set(this_page_post_url_list)), reverse=True)
-                    trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(this_page_post_url_list))
-
-                    for post_url in this_page_post_url_list:
+                    trace(user_account + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(page_post_url_list))
+                    page_post_url_list = sorted(list(set(page_post_url_list)), reverse=True)
+                    trace(user_account + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(page_post_url_list))
+                    for post_url in page_post_url_list:
                         if post_url in post_url_list:
                             continue
                         post_url_list.append(post_url)
@@ -221,7 +216,6 @@ class Download(threading.Thread):
                         if len(post_page_image_list) == 0:
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
                             continue
-
                         for image_url in post_page_image_list:
                             if image_url.rfind("?") > image_url.rfind("."):
                                 image_url = image_url.split("?", 2)[0]
@@ -282,7 +276,6 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(user_account + " 完成")
-
         except Exception, e:
             print_step_msg(user_account + " 异常")
             print_error_msg(str(e))
