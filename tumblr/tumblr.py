@@ -268,6 +268,7 @@ class Download(threading.Thread):
 
                                         # 下载
                                         print_step_msg(user_account + " 开始下载第" + str(video_count) + "个视频：" + video_url)
+                                        # 第一个视频，创建目录
                                         if need_make_video_dir:
                                             if not tool.make_dir(video_path, 0):
                                                 print_error_msg(user_account + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
@@ -277,7 +278,7 @@ class Download(threading.Thread):
                                             print_step_msg(user_account + " 第" + str(video_count) + "个视频下载成功")
                                             video_count += 1
                                         else:
-                                            print_error_msg(user_account + " 第" + str(video_count) + "个视频 " + video_path + " 下载失败")
+                                            print_error_msg(user_account + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
                             else:
                                 print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
 
@@ -328,20 +329,21 @@ class Download(threading.Thread):
             print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片，" + str(video_count - 1) + "个视频")
 
             # 排序
-            if IS_SORT == 1 and image_count > 1:
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
-                if robot.sort_file(image_path, destination_path, int(self.user_info[1]), 4):
-                    print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
-                else:
-                    print_error_msg(user_account + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
-                    tool.process_exit()
-
-                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
-                if robot.sort_file(video_path, destination_path, int(self.user_info[2]), 4):
-                    print_step_msg(user_account + " 视频从下载目录移动到保存目录成功")
-                else:
-                    print_error_msg(user_account + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
-                    tool.process_exit()
+            if IS_SORT == 1:
+                if image_count > 1:
+                    destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
+                    if robot.sort_file(image_path, destination_path, int(self.user_info[1]), 4):
+                        print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(user_account + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
+                        tool.process_exit()
+                if video_count > 1:
+                    destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
+                    if robot.sort_file(video_path, destination_path, int(self.user_info[2]), 4):
+                        print_step_msg(user_account + " 视频从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(user_account + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
+                        tool.process_exit()
 
             self.user_info[1] = str(int(self.user_info[1]) + image_count - 1)
             self.user_info[2] = str(int(self.user_info[2]) + video_count - 1)
