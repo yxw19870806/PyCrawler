@@ -48,29 +48,29 @@ def save_image(image_byte, image_path):
 
 
 def visit_weibo(url):
-    [temp_page_return_code, temp_page] = tool.http_request(url)[:2]
-    if temp_page_return_code == 1:
+    [page_return_code, page_response] = tool.http_request(url)[:2]
+    if page_return_code == 1:
         # 有重定向
-        redirect_url_index = temp_page.find("location.replace")
+        redirect_url_index = page_response.find("location.replace")
         if redirect_url_index != -1:
-            redirect_url_start = temp_page.find("'", redirect_url_index) + 1
-            redirect_url_stop = temp_page.find("'", redirect_url_start)
-            redirect_url = temp_page[redirect_url_start:redirect_url_stop]
+            redirect_url_start = page_response.find("'", redirect_url_index) + 1
+            redirect_url_stop = page_response.find("'", redirect_url_start)
+            redirect_url = page_response[redirect_url_start:redirect_url_stop]
             return visit_weibo(redirect_url)
         # 没有cookies无法访问的处理
-        if temp_page.find("用户名或密码错误") != -1:
+        if page_response.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
             tool.process_exit()
         else:
             try:
-                temp_page = temp_page.decode("utf-8")
+                temp_page = page_response.decode("utf-8")
                 if temp_page.find("用户名或密码错误") != -1:
                     print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
                     tool.process_exit()
             except:
                 pass
         # 返回页面
-        return str(temp_page)
+        return str(page_response)
     return False
 
 
@@ -220,11 +220,6 @@ class Download(threading.Thread):
             page_count = 1
             image_count = 1
             is_over = False
-            # 如果有存档记录，则直到找到在记录之前的图片，否则都算错误
-            # if last_image_time == "0":
-            #     is_error = False
-            # else:
-            #     is_error = True
             need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -234,10 +229,10 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
 
             # 日志文件插入信息
-            while 1:
-                photo_album_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
-                trace(user_name + "相册专辑地址：" + photo_album_url)
-                photo_page_data = visit_weibo(photo_album_url)
+            while True:
+                photo_page_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
+                trace(user_name + "相册专辑地址：" + photo_page_url)
+                photo_page_data = visit_weibo(photo_page_url)
                 trace(user_name + "返回JSON数据：" + str(photo_page_data))
 
                 try:
@@ -270,7 +265,6 @@ class Download(threading.Thread):
                         # 检查是否图片时间小于上次的记录
                         if 0 < last_image_time >= image_info["timestamp"]:
                             is_over = True
-                            # is_error = False
                             break
 
                         if "pic_host" in image_info:
@@ -285,10 +279,10 @@ class Download(threading.Thread):
                                 print_step_msg(user_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             else:
                                 print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
-                            [image_return_code, image_byte] = tool.http_request(image_url)[:2]
+                            [image_return_code, image_response] = tool.http_request(image_url)[:2]
                             if image_return_code == 1:
                                 md5 = hashlib.md5()
-                                md5.update(image_byte)
+                                md5.update(image_response)
                                 md5_digest = md5.hexdigest()
                                 # 处理获取的文件为weibo默认获取失败的图片
                                 if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
@@ -302,7 +296,7 @@ class Download(threading.Thread):
                                             print_error_msg(user_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                             tool.process_exit()
                                         need_make_download_dir = False
-                                    save_image(image_byte, file_path)
+                                    save_image(image_response, file_path)
                                     print_step_msg(user_name + " 第" + str(image_count) + "张图片下载成功")
                                     image_count += 1
                                     break
@@ -341,8 +335,6 @@ class Download(threading.Thread):
                     print_error_msg(user_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-            # if is_error:
-            #     print_error_msg(user_name + " 图片数量异常，请手动检查")
 
             # 保存最后的信息
             threadLock.acquire()
