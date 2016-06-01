@@ -87,7 +87,8 @@ class Instagram(robot.Robot):
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", ""])
+            # user_account  user_id  image_count  video_count  last_created_time
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
             USER_IDS = user_id_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
@@ -187,7 +188,6 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_account)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
 
-            # 图片下载
             while True:
                 media_page_url = "https://www.instagram.com/query/"
                 media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (user_id, cursor)
@@ -246,11 +246,10 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                    # 下载
                     # 图片
                     image_url = str(photo_info["display_src"].split("?")[0])
                     file_type = image_url.split(".")[-1]
-                    file_path = image_path + "\\" + str("%04d" % image_count) + "." + file_type
+                    image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
                     print_step_msg(user_account + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
                     # 第一张图片，创建目录
                     if need_make_image_dir:
@@ -258,7 +257,7 @@ class Download(threading.Thread):
                             print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                             tool.process_exit()
                         need_make_image_dir = False
-                    if tool.save_image(image_url, file_path):
+                    if tool.save_image(image_url, image_file_path):
                         print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
@@ -280,11 +279,11 @@ class Download(threading.Thread):
                                     print_step_msg(user_account + " 开始下载第" + str(video_count) + "个视频：" + meta_content)
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
-                                        if not tool.make_dir(image_path, 0):
-                                            print_error_msg(user_account + " 创建视频下载目录： " + image_path + " 失败，程序结束！")
+                                        if not tool.make_dir(video_path, 0):
+                                            print_error_msg(user_account + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
                                             tool.process_exit()
                                         need_make_video_dir = False
-                                    if tool.save_image(meta_content, video_path):
+                                    if tool.save_image(meta_content, video_file_path):
                                         print_step_msg(user_account + " 第" + str(video_count) + "个视频下载成功")
                                         video_count += 1
                                     else:
