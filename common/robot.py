@@ -56,6 +56,7 @@ class Robot(object):
         self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
         self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
         self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
+        self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
 
         self.is_sort = get_config(config, "IS_SORT", 1, 2)
         self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 2)
