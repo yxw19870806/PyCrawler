@@ -85,7 +85,8 @@ class Tumblr(robot.Robot):
         # 寻找idlist，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+            # user_account  image_count  video_count  last_post_id
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
             USER_IDS = user_id_list.keys()
         else:
             print_error_msg("存档文件: " + self.save_data_path + "不存在，程序结束！")
@@ -291,7 +292,6 @@ class Download(threading.Thread):
                             print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
                             continue
                         for image_url in page_image_url_list:
-                            # 文件类型
                             file_type = image_url.split(".")[-1]
                             image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
