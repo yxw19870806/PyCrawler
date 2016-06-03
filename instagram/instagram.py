@@ -291,7 +291,7 @@ class Download(threading.Thread):
                                     find_video = True
                                     break
                             if not find_video:
-                                print_error_msg(user_account + " 视频：" + photo_info["code"] + "没有获取到源地址")
+                                print_error_msg(user_account + " 视频：" + post_page_url + "没有获取到源地址")
                         else:
                             print_error_msg(user_account + " 信息页：" + post_page_url + " 访问失败")
 
