@@ -306,6 +306,13 @@ class Download(threading.Thread):
                     else:  # 其他视频，暂时不支持，收集看看有没有
                         print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
                         break
+
+                since_id_data = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
+                if len(since_id_data) == 1:
+                    since_id = since_id_data[0]
+                    trace(user_name + "下一页的since_id：" + since_id)
+                else:
+                    break
             
             # 图片
             while True:
