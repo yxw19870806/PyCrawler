@@ -249,17 +249,18 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_name)
 
+            page_id = 0
             # 视频
             while True:
-                index_url = "http://weibo.com/u/%s?is_all=1" % user_id
-                index_page = visit_weibo(index_url)
+                if page_id == 0:
+                    index_url = "http://weibo.com/u/%s?is_all=1" % user_id
+                    index_page = visit_weibo(index_url)
+                    page_id = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
+                    if len(page_id) != 1:
+                        print_error_msg(user_name + " 微博主页没有获取到page_id")
+                        break
+                    page_id = page_id[0]
 
-                page_id = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
-                if len(page_id) != 1:
-                    print_error_msg(user_name + " 微博主页没有获取到page_id")
-                    break
-
-                page_id = page_id[0]
                 video_album_url = "http://weibo.com/p/aj/album/loading"
                 video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
                 video_page = visit_weibo(video_album_url)
