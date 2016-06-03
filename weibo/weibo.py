@@ -130,6 +130,12 @@ class Weibo(robot.Robot):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
             tool.process_exit()
 
+        # 视频保存目录
+        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
+            tool.process_exit()
+
         # 设置代理
         if self.is_proxy == 1:
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
@@ -282,10 +288,11 @@ class Download(threading.Thread):
 
                 video_page_data = video_page[u"data"].encode("utf-8")
                 
-                video_page_url_list = re.findall('<a target="_blank" href="([^"]*)">', video_page_data)
+                video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
+                trace(user_name + "视频列表：" + video_album_url + "中的全部视频：" + str(video_page_url_list))
                 for video_page_url in video_page_url_list:
                     video_source_url = find_real_video_url(user_name, video_page_url)
-                    if not video_source_url:
+                    if video_source_url == "":
                         continue
 
                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
@@ -448,15 +455,16 @@ def find_real_video_url(user_name, video_page_url):
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = video_page_url.split("/")[-1].split(".")[0]
         return "http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id
+    # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
+        return ""
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
             meta_list = re.findall('<meta content="([^"]*)" property="([^"]*)">', source_video_page)
             for meta_content, meta_property in meta_list:
-                if meta_property == 'og:video:url':
+                if meta_property == "og:video:url":
                     return meta_content
             print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
         else:
@@ -464,7 +472,7 @@ def find_real_video_url(user_name, video_page_url):
     else:  # 其他视频，暂时不支持，收集看看有没有
         print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
 
-    return ''
+    return ""
 
 
 if __name__ == "__main__":
