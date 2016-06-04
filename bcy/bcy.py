@@ -15,6 +15,10 @@ import threading
 import time
 
 USER_IDS = []
+TOTAL_IMAGE_COUNT = 0
+IMAGE_DOWNLOAD_PATH = ''
+NEW_SAVE_DATA_PATH = ''
+IS_DOWNLOAD_IMAGE = 1
 
 threadLock = threading.Lock()
 
@@ -39,23 +43,25 @@ def trace(msg):
 
 class Bcy(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_SORT
+        global IS_DOWNLOAD_IMAGE
 
         super(Bcy, self).__init__()
 
         # 全局变量
-        GET_IMAGE_COUNT = self.get_image_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
-        IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        IS_DOWNLOAD_IMAGE = self.is_download_image
 
         tool.print_msg("配置文件读取完成")
 
     def main(self):
         global USER_IDS
+
+        if IS_DOWNLOAD_IMAGE == 0:
+            print_error_msg("下载图片没开启，请检查配置！")
+            tool.process_exit()
 
         start_time = time.time()
 
@@ -131,12 +137,7 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def run(self):
-        global GET_IMAGE_COUNT
-        global IMAGE_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-        global IS_SORT
         global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
 
         coser_id = self.user_info[0]
         cn = self.user_info[1]
