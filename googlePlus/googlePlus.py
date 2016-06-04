@@ -15,6 +15,16 @@ import threading
 import time
 
 USER_IDS = []
+GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
+TOTAL_IMAGE_COUNT = 0
+GET_IMAGE_COUNT = 0
+IMAGE_TEMP_PATH = ''
+IMAGE_DOWNLOAD_PATH = ''
+VIDEO_TEMP_PATH = ''
+VIDEO_DOWNLOAD_PATH = ''
+NEW_SAVE_DATA_PATH = ''
+IS_SORT = 1
+IS_DOWNLOAD_IMAGE = 1
 
 threadLock = threading.Lock()
 
@@ -39,28 +49,31 @@ def trace(msg):
 
 class GooglePlus(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_URL_COUNT
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
+        global IS_DOWNLOAD_IMAGE
 
         super(GooglePlus, self).__init__()
 
         # 全局变量
-        GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
+        IS_DOWNLOAD_IMAGE = self.is_download_image
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global TOTAL_IMAGE_COUNT
         global USER_IDS
+
+        if IS_DOWNLOAD_IMAGE == 0:
+            print_error_msg("下载图片没开启，请检查配置！")
+            tool.process_exit()
 
         start_time = time.time()
         # 图片保存目录
@@ -85,8 +98,6 @@ class GooglePlus(robot.Robot):
         # 创建临时存档文件
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
-
-        TOTAL_IMAGE_COUNT = 0
 
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = tool.ProcessControl()
@@ -143,14 +154,7 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def run(self):
-        global GET_IMAGE_URL_COUNT
-        global GET_IMAGE_COUNT
-        global IMAGE_TEMP_PATH
-        global IMAGE_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-        global IS_SORT
         global TOTAL_IMAGE_COUNT
-        global USER_IDS
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
