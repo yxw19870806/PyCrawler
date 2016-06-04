@@ -52,6 +52,10 @@ class Robot(object):
             log.TRACE_LOG_PATH = self.trace_log_path
             IS_INIT = True
 
+        # 是否下载
+        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", 1, 2)
+        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", 1, 2)
+
         # 存档
         self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
         self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
