@@ -14,8 +14,6 @@ import re
 import threading
 import time
 
-THREAD_COUNT = 0
-
 threadLock = threading.Lock()
 
 
@@ -55,9 +53,6 @@ class Bcy(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global TOTAL_IMAGE_COUNT
-        global THREAD_COUNT
-
         start_time = time.time()
 
         # 图片保存目录
@@ -87,17 +82,16 @@ class Bcy(robot.Robot):
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
 
-        TOTAL_IMAGE_COUNT = 0
         # 循环下载每个id
+        main_thread_count = threading.activeCount()
         for user_id in sorted(user_id_list.keys()):
             # 检查正在运行的线程数
-            while THREAD_COUNT >= self.thread_count:
+            while threading.activeCount() >= self.thread_count + main_thread_count:
                 time.sleep(10)
 
-            # 线程数+1
-            threadLock.acquire()
-            THREAD_COUNT += 1
-            threadLock.release()
+            # 提前结束
+            if tool.is_process_end() > 0:
+                break
 
             # 开始下载
             thread = Download(user_id_list[user_id])
@@ -105,8 +99,8 @@ class Bcy(robot.Robot):
 
             time.sleep(1)
 
-        # 检查所有线程是不是全部结束了
-        while THREAD_COUNT != 0:
+        # 检查除主线程外的其他所有线程是不是全部结束了
+        while threading.activeCount() > main_thread_count:
             time.sleep(10)
 
         # 重新排序保存存档文件
