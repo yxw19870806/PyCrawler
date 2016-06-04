@@ -14,6 +14,8 @@ import re
 import threading
 import time
 
+USER_IDS = []
+
 threadLock = threading.Lock()
 
 
@@ -53,6 +55,8 @@ class Bcy(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
+        global USER_IDS
+
         start_time = time.time()
 
         # 图片保存目录
@@ -74,6 +78,7 @@ class Bcy(robot.Robot):
         user_id_list = {}
         if os.path.exists(self.save_data_path):
             user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0"])
+            USER_IDS = user_id_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
@@ -102,6 +107,13 @@ class Bcy(robot.Robot):
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
             time.sleep(10)
+
+        # 未完成的数据保存
+        if len(USER_IDS) > 0:
+            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
+            for user_id in USER_IDS:
+                new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+            new_save_data_file.close()
 
         # 重新排序保存存档文件
         user_id_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
@@ -269,6 +281,7 @@ class Download(threading.Thread):
             threadLock.acquire()
             tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += this_cn_total_image_count
+            USER_IDS.remove(coser_id)
             threadLock.release()
 
             print_step_msg(cn + " 完成")
