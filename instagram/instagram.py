@@ -77,12 +77,11 @@ class Instagram(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global TOTAL_IMAGE_COUNT
         global USER_IDS
 
         start_time = time.time()
 
-        if IS_DOWNLOAD_IMAGE == 1 and IS_DOWNLOAD_VIDEO == 1:
+        if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
             print_error_msg("下载图片和视频都没开启，请检查配置！")
             tool.process_exit()
 
@@ -117,8 +116,6 @@ class Instagram(robot.Robot):
         # 创建临时存档文件
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
-
-        TOTAL_IMAGE_COUNT = 0
 
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = tool.ProcessControl()
@@ -178,14 +175,6 @@ class Download(threading.Thread):
     def run(self):
         global TOTAL_IMAGE_COUNT
         global USER_IDS
-        global GET_IMAGE_COUNT
-        global IMAGE_TEMP_PATH
-        global IMAGE_DOWNLOAD_PATH
-        global VIDEO_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-        global IS_SORT
-        global IS_DOWNLOAD_IMAGE
-        global IS_DOWNLOAD_VIDEO
 
         user_account = self.user_info[0]
         user_id = self.user_info[1]
