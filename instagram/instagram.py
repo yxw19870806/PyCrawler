@@ -211,12 +211,10 @@ class Download(threading.Thread):
                     print_error_msg(user_account + " 在media中：" + str(media_data) + " 中没有找到'page_info'字段")
                     break
                 if "has_next_page" not in media_data["page_info"]:
-                    print_error_msg(user_account + " 在page_info中：" + str(media_data["page_info"]) +
-                                    " 中没有找到'has_next_page'字段")
+                    print_error_msg(user_account + " 在page_info中：" + str(media_data["page_info"]) + " 中没有找到'has_next_page'字段")
                     break
                 if "end_cursor" not in media_data["page_info"]:
-                    print_error_msg(user_account + " 在page_info中：" + str(media_data["page_info"]) +
-                                    " 中没有找到'end_cursor'字段")
+                    print_error_msg(user_account + " 在page_info中：" + str(media_data["page_info"]) + " 中没有找到'end_cursor'字段")
                     break
                 if "nodes" not in media_data:
                     print_error_msg(user_account + " 在media中：" + str(media_data) + " 中没有找到'nodes'字段")
@@ -319,7 +317,7 @@ class Download(threading.Thread):
                     if robot.sort_file(image_path, destination_path, int(self.user_info[2]), 4):
                         print_step_msg(user_account + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(user_account + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                        print_error_msg(user_account + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
                 # 删除临时文件夹
                 tool.remove_dir(image_path)
