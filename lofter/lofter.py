@@ -15,6 +15,14 @@ import threading
 import time
 
 USER_IDS = []
+GET_IMAGE_COUNT = 0
+IMAGE_TEMP_PATH = ''
+IMAGE_DOWNLOAD_PATH = ''
+VIDEO_TEMP_PATH = ''
+VIDEO_DOWNLOAD_PATH = ''
+NEW_SAVE_DATA_PATH = ''
+IS_SORT = 1
+IS_DOWNLOAD_IMAGE = 1
 
 threadLock = threading.Lock()
 
@@ -44,6 +52,7 @@ class Lofter(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
+        global IS_DOWNLOAD_IMAGE
 
         super(Lofter, self).__init__()
 
@@ -57,10 +66,14 @@ class Lofter(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global TOTAL_IMAGE_COUNT
         global USER_IDS
 
+        if IS_DOWNLOAD_IMAGE == 0:
+            print_error_msg("下载图片没开启，请检查配置！")
+            tool.process_exit()
+
         start_time = time.time()
+
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
@@ -83,8 +96,6 @@ class Lofter(robot.Robot):
         # 创建临时存档文件
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
-
-        TOTAL_IMAGE_COUNT = 0
 
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = tool.ProcessControl()
@@ -141,13 +152,7 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def run(self):
-        global GET_IMAGE_COUNT
-        global IMAGE_TEMP_PATH
-        global IMAGE_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-        global IS_SORT
         global TOTAL_IMAGE_COUNT
-        global USER_IDS
 
         user_account = self.user_info[0]
 
