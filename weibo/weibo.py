@@ -20,6 +20,17 @@ import traceback
 
 USER_IDS = []
 INIT_SINCE_ID = "9999999999999999"
+IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
+TOTAL_IMAGE_COUNT = 0
+GET_IMAGE_COUNT = 0
+IMAGE_TEMP_PATH = ''
+IMAGE_DOWNLOAD_PATH = ''
+VIDEO_TEMP_PATH = ''
+VIDEO_DOWNLOAD_PATH = ''
+NEW_SAVE_DATA_PATH = ''
+IS_SORT = 1
+IS_DOWNLOAD_IMAGE = 1
+IS_DOWNLOAD_VIDEO = 1
 
 threadLock = threading.Lock()
 
@@ -80,7 +91,6 @@ def visit_weibo(url):
 class Weibo(robot.Robot):
     def __init__(self, save_data_path="", this_image_download_path="", this_image_temp_path="",
                  this_video_download_path="", this_video_temp_path=""):
-        global IMAGE_COUNT_PER_PAGE
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -88,13 +98,14 @@ class Weibo(robot.Robot):
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
+        global IS_DOWNLOAD_IMAGE
+        global IS_DOWNLOAD_VIDEO
 
         robot.Robot.__init__(self)
 
         if save_data_path != "":
             self.save_data_path = save_data_path
 
-        IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
         GET_IMAGE_COUNT = self.get_image_count
         if this_image_temp_path != "":
             IMAGE_TEMP_PATH = this_image_temp_path
@@ -112,29 +123,35 @@ class Weibo(robot.Robot):
             VIDEO_DOWNLOAD_PATH = this_video_download_path
         else:
             VIDEO_DOWNLOAD_PATH = self.video_download_path
-
         IS_SORT = self.is_sort
+        IS_DOWNLOAD_IMAGE = self.is_download_image
+        IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global TOTAL_IMAGE_COUNT
         global USER_IDS
 
         start_time = time.time()
 
-        # 图片保存目录
-        print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+        if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
+            print_error_msg("下载图片和视频都没开启，请检查配置！")
             tool.process_exit()
 
+        # 图片保存目录
+        if IS_DOWNLOAD_IMAGE == 1:
+            print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+            if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
+                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+                tool.process_exit()
+
         # 视频保存目录
-        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
-        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
-            tool.process_exit()
+        if IS_DOWNLOAD_VIDEO == 1:
+            print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+            if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
+                tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
@@ -162,8 +179,6 @@ class Weibo(robot.Robot):
         # 先访问下页面，产生个cookies
         visit_weibo("http://photo.weibo.com/photos/get_all?uid=1263970750&count=30&page=1&type=3")
         time.sleep(2)
-
-        TOTAL_IMAGE_COUNT = 0
 
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = tool.ProcessControl()
@@ -220,15 +235,7 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def run(self):
-        global IMAGE_COUNT_PER_PAGE
-        global GET_IMAGE_COUNT
-        global IMAGE_TEMP_PATH
-        global IMAGE_DOWNLOAD_PATH
-        global VIDEO_TEMP_PATH
-        global VIDEO_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
         global TOTAL_IMAGE_COUNT
-        global USER_IDS
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
@@ -257,7 +264,7 @@ class Download(threading.Thread):
 
             page_id = 0
             # 视频
-            while True:
+            while IS_DOWNLOAD_VIDEO == 1 and True:
                 if page_id == 0:
                     index_url = "http://weibo.com/u/%s?is_all=1" % user_id
                     index_page = visit_weibo(index_url)
@@ -318,7 +325,7 @@ class Download(threading.Thread):
                     break
 
             # 图片
-            while True:
+            while IS_DOWNLOAD_IMAGE == 1 and True:
                 photo_page_url = "http://photo.weibo.com/photos/get_all"
                 photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
                 photo_page_data = visit_weibo(photo_page_url)

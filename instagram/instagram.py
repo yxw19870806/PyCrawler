@@ -174,7 +174,6 @@ class Download(threading.Thread):
 
     def run(self):
         global TOTAL_IMAGE_COUNT
-        global USER_IDS
 
         user_account = self.user_info[0]
         user_id = self.user_info[1]
