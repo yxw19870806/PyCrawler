@@ -138,6 +138,7 @@ class Instagram(robot.Robot):
 
         # 删除临时文件夹
         tool.remove_dir(IMAGE_TEMP_PATH)
+        tool.remove_dir(VIDEO_TEMP_PATH)
 
         # 重新排序保存存档文件
         user_id_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
@@ -308,7 +309,7 @@ class Download(threading.Thread):
                 else:
                     break
 
-            print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            print_step_msg(user_account + " 下载完毕，总共获得" + str(image_count - 1) + "张图片" + "和" + str(video_count - 1) + "个视频")
 
             # 排序
             if IS_SORT == 1:
