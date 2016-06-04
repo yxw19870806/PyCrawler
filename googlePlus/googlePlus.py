@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import time
+import traceback
 
 USER_IDS = []
 GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
@@ -331,10 +332,9 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(user_name + " 完成")
-
         except Exception, e:
             print_step_msg(user_name + " 异常")
-            print_error_msg(str(e))
+            print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 # 重组URL并使用最大分辨率

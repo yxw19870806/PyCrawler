@@ -311,7 +311,6 @@ class Download(threading.Thread):
             print_step_msg(user_account + " 完成")
         except Exception, e:
             print_step_msg(user_account + " 异常")
-            print_error_msg(str(e))
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 

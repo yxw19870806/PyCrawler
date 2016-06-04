@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import time
+import traceback
 
 USER_IDS = []
 TOTAL_IMAGE_COUNT = 0
@@ -285,7 +286,7 @@ class Download(threading.Thread):
             print_step_msg(user_account + " 完成")
         except Exception, e:
             print_step_msg(user_account + " 异常")
-            print_error_msg(str(e))
+            print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
