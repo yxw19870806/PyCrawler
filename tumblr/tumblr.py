@@ -16,6 +16,16 @@ import time
 import urllib2
 
 USER_IDS = []
+TOTAL_IMAGE_COUNT = 0
+GET_IMAGE_COUNT = 0
+IMAGE_TEMP_PATH = ''
+IMAGE_DOWNLOAD_PATH = ''
+VIDEO_TEMP_PATH = ''
+VIDEO_DOWNLOAD_PATH = ''
+NEW_SAVE_DATA_PATH = ''
+IS_SORT = 1
+IS_DOWNLOAD_IMAGE = 1
+IS_DOWNLOAD_VIDEO = 1
 
 threadLock = threading.Lock()
 
@@ -47,6 +57,8 @@ class Tumblr(robot.Robot):
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
+        global IS_DOWNLOAD_IMAGE
+        global IS_DOWNLOAD_VIDEO
 
         super(Tumblr, self).__init__()
 
@@ -57,26 +69,34 @@ class Tumblr(robot.Robot):
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
+        IS_DOWNLOAD_IMAGE = self.is_download_image
+        IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global TOTAL_IMAGE_COUNT
         global USER_IDS
 
-        start_time = time.time()
-        # 图片保存目录
-        print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
-        if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+        if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
+            print_error_msg("下载图片和视频都没开启，请检查配置！")
             tool.process_exit()
 
+        start_time = time.time()
+
+        # 图片保存目录
+        if IS_DOWNLOAD_IMAGE == 1:
+            print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+            if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
+                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+                tool.process_exit()
+
         # 视频保存目录
-        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
-        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
-            tool.process_exit()
+        if IS_DOWNLOAD_VIDEO == 1:
+            print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+            if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
+                tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1 or self.is_proxy == 2:
@@ -95,8 +115,6 @@ class Tumblr(robot.Robot):
         # 创建临时存档文件
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
-
-        TOTAL_IMAGE_COUNT = 0
 
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = tool.ProcessControl()
@@ -153,15 +171,7 @@ class Download(threading.Thread):
         self.user_info = user_info
 
     def run(self):
-        global GET_IMAGE_COUNT
-        global IMAGE_TEMP_PATH
-        global IMAGE_DOWNLOAD_PATH
-        global VIDEO_TEMP_PATH
-        global VIDEO_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-        global IS_SORT
         global TOTAL_IMAGE_COUNT
-        global USER_IDS
 
         user_account = self.user_info[0]
 
@@ -188,7 +198,7 @@ class Download(threading.Thread):
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
 
             host_url = "%s.tumblr.com" % user_account
-            # 图片下载
+            # 下载
             while True:
                 index_page_url = "http://%s/page/%s" % (host_url, page_count)
 
@@ -253,7 +263,7 @@ class Download(threading.Thread):
                             continue
 
                         # 视频
-                        if og_type == "tumblr-feed:video":
+                        if IS_DOWNLOAD_IMAGE == 1 and og_type == "tumblr-feed:video":
                             video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (user_account, post_id)
                             [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
                             if video_page_return_code == 1:
@@ -284,35 +294,36 @@ class Download(threading.Thread):
                                 print_error_msg(user_account + " 无法获取视频页：" + video_page_url)
 
                         # 图片
-                        page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-                        trace(user_account + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
-                        page_image_url_list = filter_different_resolution_images(page_image_url_list)
-                        trace(user_account + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
-                        if len(page_image_url_list) == 0:
-                            print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
-                            continue
-                        for image_url in page_image_url_list:
-                            file_type = image_url.split(".")[-1]
-                            image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                        if IS_DOWNLOAD_IMAGE == 1:
+                            page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+                            trace(user_account + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
+                            page_image_url_list = filter_different_resolution_images(page_image_url_list)
+                            trace(user_account + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
+                            if len(page_image_url_list) == 0:
+                                print_error_msg(user_account + " 信息页：" + post_url + " 中没有找到图片")
+                                continue
+                            for image_url in page_image_url_list:
+                                file_type = image_url.split(".")[-1]
+                                image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
-                            # 下载
-                            print_step_msg(user_account + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                                    tool.process_exit()
-                                need_make_image_dir = False
-                            if tool.save_image(image_url, image_file_path):
-                                print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
-                                image_count += 1
-                            else:
-                                print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                                # 下载
+                                print_step_msg(user_account + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                                # 第一张图片，创建目录
+                                if need_make_image_dir:
+                                    if not tool.make_dir(image_path, 0):
+                                        print_error_msg(user_account + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                        tool.process_exit()
+                                    need_make_image_dir = False
+                                if tool.save_image(image_url, image_file_path):
+                                    print_step_msg(user_account + " 第" + str(image_count) + "张图片下载成功")
+                                    image_count += 1
+                                else:
+                                    print_error_msg(user_account + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                            # 达到配置文件中的下载数量，结束
-                            if 0 < GET_IMAGE_COUNT < image_count:
-                                is_over = True
-                                break
+                                # 达到配置文件中的下载数量，结束
+                                if 0 < GET_IMAGE_COUNT < image_count:
+                                    is_over = True
+                                    break
 
                         if is_over:
                             break
