@@ -133,11 +133,11 @@ class Weibo(robot.Robot):
     def main(self):
         global USER_IDS
 
-        start_time = time.time()
-
         if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
             print_error_msg("下载图片和视频都没开启，请检查配置！")
             tool.process_exit()
+
+        start_time = time.time()
 
         # 图片保存目录
         if IS_DOWNLOAD_IMAGE == 1:
