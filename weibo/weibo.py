@@ -165,8 +165,8 @@ class Weibo(robot.Robot):
         # 寻找存档，如果没有结束进程
         user_id_list = {}
         if os.path.exists(self.save_data_path):
-            # account_id  account_name  image_count  video_count  last_image_time
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "_0", "0", "0", "0"])
+            # account_id  account_name  image_count  last_image_time  video_count  last_video_url
+            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "_0", "0", "0", "0", ""])
             USER_IDS = user_id_list.keys()
         else:
             print_error_msg("存档文件：" + self.save_data_path + "不存在，程序结束！")
@@ -442,7 +442,7 @@ class Download(threading.Thread):
                         tool.process_exit()
 
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
-            self.user_info[3] = str(int(self.user_info[3]) + image_count - 1)
+            self.user_info[4] = str(int(self.user_info[4]) + video_count - 1)
 
             # 保存最后的信息
             threadLock.acquire()
