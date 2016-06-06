@@ -9,6 +9,7 @@ import cookielib
 import cStringIO
 import os
 import platform
+import random
 import shutil
 import sys
 import time
@@ -460,6 +461,31 @@ def copy_files(source_path, destination_path):
     source_path = change_path_encoding(source_path)
     destination_path = change_path_encoding(destination_path)
     shutil.copyfile(source_path, destination_path)
+
+
+# 生成指定长度的随机字符串
+# char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 3 - 数字，默认7(1+2+3)包括全部
+def generate_random_string(string_length, char_lib_type=7):
+    result = ''
+    char_lib = {
+        1: 'abcdefghijklmnopqrstuvwxyz',  # 小写字母
+        2: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',  # 大写字母
+        4: '0123456789',  # 数字
+    }
+    random_string = ''
+    for i in char_lib:
+        if char_lib_type & i == i:
+            for char in char_lib[i]:
+                random_string += char
+
+    if not random_string:
+        return result
+
+    length = len(random_string) - 1
+    for i in range(0, string_length):
+        result += random_string[random.randint(0, length)]
+
+    print result
 
 
 # 结束进程
