@@ -65,7 +65,7 @@ def visit_weibo(url):
     [page_return_code, page_response] = tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
-        redirect_url = re.findall('location.replace\("([^"]*)"\)', page_response)
+        redirect_url = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
         if len(redirect_url) == 1:
             return visit_weibo(redirect_url[0])
         # 没有cookies无法访问的处理
