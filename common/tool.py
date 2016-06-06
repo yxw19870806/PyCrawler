@@ -167,7 +167,7 @@ def get_default_browser_cookie_path(browser_type):
 # browser_type=1: IE
 # browser_type=2: firefox
 # browser_type=3: chrome
-def set_cookie(file_path, browser_type=1, target_domains=()):
+def set_cookie(file_path, browser_type=1, target_domains=''):
     if sys.version.find("32 bit") != -1:
         from pysqlite2_win32 import dbapi2 as sqlite
     else:
