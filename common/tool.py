@@ -164,7 +164,7 @@ def get_default_browser_cookie_path(browser_type):
 # browser_type=1: IE
 # browser_type=2: firefox
 # browser_type=3: chrome
-def set_cookie(file_path, browser_type=1):
+def set_cookie(file_path, browser_type=1, target_domains=()):
     if sys.version.find("32 bit") != -1:
         from pysqlite2_win32 import dbapi2 as sqlite
     else:
@@ -184,21 +184,26 @@ def set_cookie(file_path, browser_type=1):
             cookie_file.close()
             for cookies in cookie_info.split("*"):
                 cookie_list = cookies.strip("\n").split("\n")
-                if len(cookie_list) >= 8:
-                    domain = cookie_list[2].split("/")[0]
-                    domain_specified = ftstr[cookie_list[2].startswith(".")]
-                    path = cookie_list[2].replace(domain, "")
-                    secure = ftstr[0]
-                    expires = cookie_list[4]
-                    name = cookie_list[0]
-                    value = cookie_list[1]
-                    s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+                if len(cookie_list) < 8:
+                    continue
+                domain = cookie_list[2].split("/")[0]
+                if _filter_domain(domain, target_domains):
+                    continue
+                domain_specified = ftstr[cookie_list[2].startswith(".")]
+                path = cookie_list[2].replace(domain, "")
+                secure = ftstr[0]
+                expires = cookie_list[4]
+                name = cookie_list[0]
+                value = cookie_list[1]
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
     elif browser_type == 2:
         con = sqlite.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
+            if _filter_domain(domain, target_domains):
+                continue
             domain_specified = ftstr[cookie_info[0].startswith(".")]
             path = cookie_info[1]
             secure = ftstr[cookie_info[2]]
@@ -219,6 +224,8 @@ def set_cookie(file_path, browser_type=1):
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
+            if _filter_domain(domain, target_domains):
+                continue
             domain_specified = ftstr[cookie_info[0].startswith(".")]
             path = cookie_info[1]
             secure = ftstr[cookie_info[2]]
@@ -231,7 +238,7 @@ def set_cookie(file_path, browser_type=1):
                 pass
             try:
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
-            except Exception, e:
+            except:
                 pass
     s.seek(0)
     cookie_jar = cookielib.MozillaCookieJar()
@@ -239,6 +246,23 @@ def set_cookie(file_path, browser_type=1):
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
     urllib2.install_opener(opener)
     return True
+
+
+# 是否需要过滤这个域的cookie
+# return True - 过滤，不需要加载
+# return False - 不过滤，需要加载
+def _filter_domain(domain, target_domains):
+    if target_domains:
+        if isinstance(target_domains, str):
+            if domain.find(target_domains) > 0:
+                return False
+        else:
+            for target_domain in target_domains:
+                if domain.find(target_domain) >= 0:
+                    return False
+        return True
+    else:
+        return False
 
 
 # 设置代理
