@@ -9,8 +9,8 @@ lofter/photo/
 tumblr/photo/
 twitter/photo/
 weibo/photo/
+instagram/video/
+tumblr/video/
 log/
 *-*_*_*.data
 main/main.py
-
-tumblr/video/
