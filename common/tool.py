@@ -205,16 +205,18 @@ def set_cookie(file_path, browser_type=1):
             expires = cookie_info[3]
             name = cookie_info[4]
             value = cookie_info[5]
-            #s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
             try:
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
             except:
                 pass
     elif browser_type == 3:
-        import win32crypt
+        try:
+            import win32crypt
+        except:
+            pass
         con = sqlite.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
-        cur.execute("select host_key, path, secure, expires_utc, name, value from cookies")
+        cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
             domain_specified = ftstr[cookie_info[0].startswith(".")]
@@ -224,9 +226,12 @@ def set_cookie(file_path, browser_type=1):
             name = cookie_info[4]
             value = cookie_info[5]
             try:
-                value = win32crypt.CryptUnprotectData(value, None, None, None, 0)
-                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+                value = win32crypt.CryptUnprotectData(cookie_info[6], None, None, None, 0)[1]
             except:
+                pass
+            try:
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+            except Exception, e:
                 pass
     s.seek(0)
     cookie_jar = cookielib.MozillaCookieJar()
