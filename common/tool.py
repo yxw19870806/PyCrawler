@@ -211,6 +211,7 @@ def set_cookie(file_path, browser_type=1):
             except:
                 pass
     elif browser_type == 3:
+        import win32crypt
         con = sqlite.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value from cookies")
@@ -223,6 +224,7 @@ def set_cookie(file_path, browser_type=1):
             name = cookie_info[4]
             value = cookie_info[5]
             try:
+                value = win32crypt.CryptUnprotectData(value, None, None, None, 0)
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
             except:
                 pass
