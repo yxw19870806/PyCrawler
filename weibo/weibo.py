@@ -65,12 +65,9 @@ def visit_weibo(url):
     [page_return_code, page_response] = tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
-        redirect_url_index = page_response.find("location.replace")
-        if redirect_url_index != -1:
-            redirect_url_start = page_response.find("'", redirect_url_index) + 1
-            redirect_url_stop = page_response.find("'", redirect_url_start)
-            redirect_url = page_response[redirect_url_start:redirect_url_stop]
-            return visit_weibo(redirect_url)
+        redirect_url = re.findall('location.replace\("([^"]*)"\)', page_response)
+        if len(redirect_url) == 1:
+            return visit_weibo(redirect_url[0])
         # 没有cookies无法访问的处理
         if page_response.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
