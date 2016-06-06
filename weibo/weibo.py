@@ -156,7 +156,7 @@ class Weibo(robot.Robot):
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not tool.set_cookie(self.cookie_path, self.browser_version):
+        if not tool.set_cookie(self.cookie_path, self.browser_version, ('weibo.com', '.sina.com.cn')):
             print_error_msg("导入浏览器cookies失败，程序结束！")
             tool.process_exit()
 
