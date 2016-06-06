@@ -14,6 +14,7 @@ import sys
 import time
 import threading
 import traceback
+import urllib
 import urllib2
 
 IS_SET_TIMEOUT = False
@@ -75,6 +76,8 @@ def http_request(url, post_data=None):
             time.sleep(10)
         try:
             if post_data:
+                if isinstance(post_data, dict):
+                    post_data = urllib.urlencode(post_data)
                 request = urllib2.Request(url, post_data)
             else:
                 request = urllib2.Request(url)
