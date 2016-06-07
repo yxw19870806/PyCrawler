@@ -379,10 +379,8 @@ class Download(threading.Thread):
                             print_step_msg(user_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
                         [image_return_code, image_response] = tool.http_request(image_url)[:2]
                         if image_return_code == 1:
-                            md5 = hashlib.md5()
-                            md5.update(image_response)
-                            md5_digest = md5.hexdigest()
                             # 处理获取的文件为weibo默认获取失败的图片
+                            md5_digest = md5(image_response)
                             if md5_digest in ['14f2559305a6c96608c474f4ca47e6b0']:
                                 print_error_msg(user_name + " 图片" + image_url + " 已经在服务器上被删除，跳过")
                                 continue
@@ -498,6 +496,12 @@ def find_real_video_url(user_name, video_page_url):
         print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
 
     return ""
+
+
+def md5(file_byte):
+    md5_obj = hashlib.md5()
+    md5_obj.update(file_byte)
+    return md5_obj.hexdigest()
 
 
 if __name__ == "__main__":
