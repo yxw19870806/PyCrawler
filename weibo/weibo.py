@@ -383,6 +383,9 @@ class Download(threading.Thread):
                             md5.update(image_response)
                             md5_digest = md5.hexdigest()
                             # 处理获取的文件为weibo默认获取失败的图片
+                            if md5_digest in ['14f2559305a6c96608c474f4ca47e6b0']:
+                                print_error_msg(user_name + " 图片" + image_url + " 已经在服务器上被删除，跳过")
+                                continue
                             if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
                                 file_type = image_url.split(".")[-1]
                                 if file_type.find("/") != -1:
