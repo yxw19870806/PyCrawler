@@ -23,6 +23,7 @@ USER_IDS = []
 INIT_SINCE_ID = "9999999999999999"
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 TOTAL_IMAGE_COUNT = 0
+TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ''
 IMAGE_DOWNLOAD_PATH = ''
@@ -224,7 +225,7 @@ class Weibo(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张，视频" + str(TOTAL_VIDEO_COUNT) + "个")
 
 
 class Download(threading.Thread):
@@ -234,6 +235,7 @@ class Download(threading.Thread):
 
     def run(self):
         global TOTAL_IMAGE_COUNT
+        global TOTAL_VIDEO_COUNT
 
         user_id = self.user_info[0]
         user_name = self.user_info[1]
@@ -421,7 +423,7 @@ class Download(threading.Thread):
             if self.user_info[3] == "0" and last_image_time != 0:
                 self.user_info[3] = str(last_image_time)
 
-            print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            print_step_msg(user_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
 
             # 排序
             if IS_SORT == 1:
@@ -447,6 +449,7 @@ class Download(threading.Thread):
             threadLock.acquire()
             tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += image_count - 1
+            TOTAL_VIDEO_COUNT += video_count - 1
             USER_IDS.remove(user_id)
             threadLock.release()
 
