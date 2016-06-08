@@ -18,6 +18,7 @@ import traceback
 USER_IDS = []
 INIT_CURSOR = "9999999999999999999"
 TOTAL_IMAGE_COUNT = 0
+TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ''
 IMAGE_DOWNLOAD_PATH = ''
@@ -164,7 +165,7 @@ class Instagram(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张，视频" + str(TOTAL_VIDEO_COUNT) + "个")
 
 
 class Download(threading.Thread):
@@ -174,6 +175,7 @@ class Download(threading.Thread):
 
     def run(self):
         global TOTAL_IMAGE_COUNT
+        global TOTAL_VIDEO_COUNT
 
         user_account = self.user_info[0]
         user_id = self.user_info[1]
@@ -352,6 +354,7 @@ class Download(threading.Thread):
             new_save_data_file.write("\t".join(self.user_info) + "\n")
             new_save_data_file.close()
             TOTAL_IMAGE_COUNT += image_count - 1
+            TOTAL_VIDEO_COUNT += video_count - 1
             USER_IDS.remove(user_account)
             threadLock.release()
 
