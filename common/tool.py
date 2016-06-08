@@ -65,7 +65,7 @@ def restore_process_status():
 
 # http请求
 # 返回 【返回码，数据, 请求信息】
-# 返回码 -1：暂时无法访问页面；-2：页面不存在（404）；-3：没有权限（403）
+# 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
 def http_request(url, post_data=None):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
@@ -130,7 +130,7 @@ def http_request(url, post_data=None):
 
         count += 1
         if count > 500:
-            print_error_msg("无法访问页面：" + url)
+            print_msg("无法访问页面：" + url)
             return [-1, None, []]
 
 
@@ -271,7 +271,7 @@ def _filter_domain(domain, target_domains):
 
 # 设置代理
 def set_proxy(ip, port, protocol):
-    proxy_handler = urllib2.ProxyHandler({protocol:"http://" + ip + ":" + port})
+    proxy_handler = urllib2.ProxyHandler({protocol: "http://" + ip + ":" + port})
     opener = urllib2.build_opener(proxy_handler)
     urllib2.install_opener(opener)
     print_msg("设置代理成功")
@@ -281,34 +281,6 @@ def print_msg(msg, is_time=True):
     if is_time:
         msg = get_time() + " " + msg
     print msg
-
-
-def trace(msg, is_print=1, log_path=""):
-    if is_print == 1:
-        msg = get_time() + " " + msg
-        print_msg(msg, False)
-    if log_path != "":
-        write_file(msg, log_path)
-
-
-def print_error_msg(msg, is_print=1, log_path=""):
-    if is_print == 1:
-        msg = get_time() + " [Error] " + msg
-        print_msg(msg, False)
-    if log_path != "":
-        if msg.find("HTTP Error 500") != -1:
-            return
-        if msg.find("urlopen error The read operation timed out") != -1:
-            return
-        write_file(msg, log_path)
-
-
-def print_step_msg(msg, is_print=1, log_path=""):
-    if is_print == 1:
-        msg = get_time() + " " + msg
-        print_msg(msg, False)
-    if log_path != "":
-        write_file(msg, log_path)
 
 
 def get_time():
