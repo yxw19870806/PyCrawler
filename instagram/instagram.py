@@ -350,9 +350,7 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             threadLock.acquire()
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            new_save_data_file.write("\t".join(self.user_info) + "\n")
-            new_save_data_file.close()
+            tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             USER_IDS.remove(user_account)
