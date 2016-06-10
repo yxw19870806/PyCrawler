@@ -11,6 +11,7 @@ twitter/photo/
 weibo/photo/
 instagram/video/
 tumblr/video/
+weibo/video/
 log/
 *-*_*_*.data
 main/main.py
