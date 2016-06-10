@@ -253,7 +253,6 @@ class Download(threading.Thread):
             image_count = 1
             video_count = 1
             since_id = INIT_SINCE_ID
-            is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
 
@@ -265,9 +264,10 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_name)
 
-            page_id = 0
             # 视频
-            while IS_DOWNLOAD_VIDEO == 1 and True:
+            page_id = 0
+            is_over = False
+            while IS_DOWNLOAD_VIDEO == 1:
                 if page_id == 0:
                     index_url = "http://weibo.com/u/%s?is_all=1" % user_id
                     index_page = visit_weibo(index_url)
@@ -301,11 +301,15 @@ class Download(threading.Thread):
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
                 trace(user_name + "视频列表：" + video_album_url + "中的全部视频：" + str(video_page_url_list))
                 for video_page_url in video_page_url_list:
+                    if self.user_info[5] == "":
+                        self.user_info[5] = video_page_url
+                    # 检查是否是上一次的最后视频
+                    if last_video_url == video_page_url:
+                        is_over = True
+                        break
                     video_source_url = find_real_video_url(user_name, video_page_url)
                     if video_source_url == "":
                         continue
-                    if self.user_info[5] == "":
-                        self.user_info[5] = video_page_url
                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
                     # 下载
                     print_step_msg(user_name + " 开始下载第" + str(video_count) + "个视频：" + video_page_url)
@@ -321,6 +325,9 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(user_name + " 第" + str(video_count) + "个视频 " + video_page_url + " 下载失败")
 
+                if is_over:
+                    break
+
                 since_id_data = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
                 if len(since_id_data) == 1:
                     since_id = since_id_data[0]
@@ -329,7 +336,7 @@ class Download(threading.Thread):
                     break
 
             # 图片
-            while IS_DOWNLOAD_IMAGE == 1 and True:
+            while IS_DOWNLOAD_IMAGE == 1:
                 photo_page_url = "http://photo.weibo.com/photos/get_all"
                 photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
                 photo_page_data = visit_weibo(photo_page_url)
