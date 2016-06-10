@@ -3,6 +3,13 @@
 from common import tool
 import os
 
+# 半次元
+def bcy():
+    from bcy import bcy
+    bcy_path = os.path.join(os.path.abspath('..'), 'bcy')
+    os.chdir(bcy_path)
+    bcy.Bcy().main()
+
 # fkoji
 def fkoji():
     from fkoji import fkoji
@@ -11,7 +18,7 @@ def fkoji():
     fkoji.Fkoji().main()
 
 
-# # GooglePlus
+# GooglePlus
 def google_plus():
     from googlePlus import googlePlus
     google_plus_path = os.path.join(os.path.abspath('..'), 'googlePlus')
@@ -19,7 +26,7 @@ def google_plus():
     googlePlus.GooglePlus().main()
 
 
-# # Instagram
+# Instagram
 def instagram():
     from instagram import instagram
     instagram_path = os.path.join(os.path.abspath('..'), 'instagram')
@@ -74,6 +81,7 @@ def weibo():
         weibo.Weibo(save_file_path, image_download_path, image_temp_path, video_download_path, video_temp_path).main()
 
 tool.restore_process_status()
+bcy()
 fkoji()
 google_plus()
 instagram()
