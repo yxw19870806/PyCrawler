@@ -304,7 +304,7 @@ class Download(threading.Thread):
                     video_source_url = find_real_video_url(user_name, video_page_url)
                     if video_source_url == "":
                         continue
-                    if last_video_url == "":
+                    if self.user_info[5] == "":
                         self.user_info[5] = video_page_url
                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
                     # 下载
@@ -470,7 +470,7 @@ def find_real_video_url(user_name, video_page_url):
         return "http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        for i in range(0, 10):
+        for i in range(0, 50):
             source_video_page = visit_weibo(video_page_url)
             if source_video_page:
                 ssig_file_url = re.findall('flashvars=\\\\"file=([^"]*)\\\\"', source_video_page)
