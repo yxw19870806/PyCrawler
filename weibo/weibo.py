@@ -246,6 +246,8 @@ class Download(threading.Thread):
             # 初始化数据
             last_image_time = int(self.user_info[3])
             self.user_info[3] = "0"  # 置空，存放此次的最后图片上传时间
+            last_video_url = self.user_info[5]
+            self.user_info[5] = ""  # 置空，存放此次的的最后一个视频地址
             page_count = 1
             image_count = 1
             video_count = 1
@@ -301,7 +303,8 @@ class Download(threading.Thread):
                     video_source_url = find_real_video_url(user_name, video_page_url)
                     if video_source_url == "":
                         continue
-
+                    if last_video_url == "":
+                        self.user_info[5] = video_page_url
                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
                     # 下载
                     print_step_msg(user_name + " 开始下载第" + str(video_count) + "个视频：" + video_page_url)
@@ -436,7 +439,7 @@ class Download(threading.Thread):
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_name)
-                    if robot.sort_file(video_path, destination_path, int(self.user_info[3]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.user_info[4]), 4):
                         print_step_msg(user_name + " 视频从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(user_name + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
@@ -481,7 +484,7 @@ def find_real_video_url(user_name, video_page_url):
                 else:
                     print_error_msg(user_name + " 视频：" + video_page_url + "里的SSIG文件：" + ssig_file_page + "无法访问")
             else:
-                print_error_msg(user_name + " 视频：" + video_page_url + "没有找到SSIG文件")
+                print_error_msg(user_name + " 视频：" + video_page_url + "没有找到SSIG文件：" + source_video_page)
         else:
             print_error_msg(user_name + " 视频：" + video_page_url + "无法访问")
     # http://www.meipai.com/media/98089758
