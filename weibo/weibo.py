@@ -259,7 +259,7 @@ class Download(threading.Thread):
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, user_name)
-                video_path = os.path.join(IMAGE_TEMP_PATH, user_name)
+                video_path = os.path.join(VIDEO_TEMP_PATH, user_name)
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, user_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_name)
