@@ -469,24 +469,18 @@ def find_real_video_url(user_name, video_page_url):
         return "http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        source_video_page = visit_weibo(video_page_url)
-        if source_video_page:
-            ssig_file_url = re.findall('flashvars=\\\\"file=([^"]*)\\\\"', source_video_page)
-            if len(ssig_file_url) == 1:
-                ssig_file_url = ssig_file_url[0]
-                ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
-                if ssig_file_page:
-                    ssig = re.findall('\s([^#]\S*)', ssig_file_page)
-                    if len(ssig) == 1:
-                        return 'http://us.sinaimg.cn/' + ssig[0]
-                    else:
-                        print_error_msg(user_name + " 视频：" + video_page_url + "的SSIG文件：" + str(ssig_file_page) + "里没有找到视频下载地址")
-                else:
-                    print_error_msg(user_name + " 视频：" + video_page_url + "里的SSIG文件：" + ssig_file_page + "无法访问")
-            else:
-                print_error_msg(user_name + " 视频：" + video_page_url + "没有找到SSIG文件：" + source_video_page)
-        else:
-            print_error_msg(user_name + " 视频：" + video_page_url + "无法访问")
+        for i in range(0, 10):
+            source_video_page = visit_weibo(video_page_url)
+            if source_video_page:
+                ssig_file_url = re.findall('flashvars=\\\\"file=([^"]*)\\\\"', source_video_page)
+                if len(ssig_file_url) == 1:
+                    ssig_file_url = ssig_file_url[0]
+                    ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
+                    if ssig_file_page:
+                        ssig = re.findall('\s([^#]\S*)', ssig_file_page)
+                        if len(ssig) == 1:
+                            return 'http://us.sinaimg.cn/' + ssig[0]
+        print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
