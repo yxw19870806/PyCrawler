@@ -493,6 +493,10 @@ def find_real_video_url(user_name, video_page_url):
             print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
         else:
             print_error_msg(user_name + " 视频：" + video_page_url + "无法访问")
+    # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
+    elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
+        video_id = video_page_url.split("/")[-1].split(".")[0]
+        return "http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id
     else:  # 其他视频，暂时不支持，收集看看有没有
         print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
 
