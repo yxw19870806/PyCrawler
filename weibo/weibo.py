@@ -217,6 +217,7 @@ class Weibo(robot.Robot):
 
         # 删除临时文件夹
         tool.remove_dir(IMAGE_TEMP_PATH)
+        tool.remove_dir(VIDEO_TEMP_PATH)
 
         # 重新排序保存存档文件
         user_id_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
