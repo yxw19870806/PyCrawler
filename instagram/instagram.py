@@ -332,8 +332,6 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(user_account + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
-                # 删除临时文件夹
-                tool.remove_dir(image_path)
 
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, user_account)
@@ -342,8 +340,6 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(user_account + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
-                # 删除临时文件夹
-                tool.remove_dir(video_path)
 
             self.user_info[2] = str(int(self.user_info[2]) + image_count - 1)
             self.user_info[3] = str(int(self.user_info[3]) + video_count - 1)
