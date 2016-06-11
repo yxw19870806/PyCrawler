@@ -307,7 +307,7 @@ class Download(threading.Thread):
                     if last_video_url == video_page_url:
                         is_over = True
                         break
-                    video_source_url_list = find_real_video_url(user_name, video_page_url, str(video_count))
+                    video_source_url_list = find_real_video_url(video_page_url, user_name, str(video_count))
                     if not video_source_url_list:
                         continue
                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
@@ -476,7 +476,7 @@ class Download(threading.Thread):
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
-def find_real_video_url(user_name, video_page_url, video_count):
+def find_real_video_url(video_page_url, user_name, video_count):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = video_page_url.split("/")[-1].split(".")[0]
