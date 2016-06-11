@@ -307,8 +307,8 @@ class Download(threading.Thread):
                     if last_video_url == video_page_url:
                         is_over = True
                         break
-                    video_source_url = find_real_video_url(user_name, video_page_url)
-                    if video_source_url == "":
+                    video_source_url_list = find_real_video_url(user_name, video_page_url, str(video_count))
+                    if not video_source_url_list:
                         continue
                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
                     # 下载
@@ -319,11 +319,12 @@ class Download(threading.Thread):
                             print_error_msg(user_name + " 创建图片下载目录： " + video_path + " 失败，程序结束！")
                             tool.process_exit()
                         need_make_video_dir = False
-                    if tool.save_image(video_source_url, video_file_path):
-                        print_step_msg(user_name + " 第" + str(video_count) + "个视频下载成功")
-                        video_count += 1
-                    else:
-                        print_error_msg(user_name + " 第" + str(video_count) + "个视频 " + video_page_url + " 下载失败")
+                    for video_source_url in video_source_url_list:
+                        if tool.save_image(video_source_url, video_file_path):
+                            print_step_msg(user_name + " 第" + str(video_count) + "个视频下载成功")
+                            video_count += 1
+                        else:
+                            print_error_msg(user_name + " 第" + str(video_count) + "个视频 " + video_page_url + " 下载失败")
 
                 if is_over:
                     break
@@ -475,11 +476,11 @@ class Download(threading.Thread):
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
-def find_real_video_url(user_name, video_page_url):
+def find_real_video_url(user_name, video_page_url, video_count):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return "http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id
+        return ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         for i in range(0, 50):
@@ -490,10 +491,13 @@ def find_real_video_url(user_name, video_page_url):
                     ssig_file_url = ssig_file_url[0]
                     ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
                     if ssig_file_page:
-                        ssig = re.findall('\s([^#]\S*)', ssig_file_page)
-                        if len(ssig) == 1:
-                            return 'http://us.sinaimg.cn/' + ssig[0]
-        print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
+                        ssig_list = re.findall('\s([^#]\S*)', ssig_file_page)
+                        if len(ssig_list) >= 1:
+                            video_source_url = []
+                            for ssig in ssig_list:
+                                video_source_url.append('http://us.sinaimg.cn/' + ssig)
+                            return video_source_url
+        print_error_msg(user_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
@@ -501,14 +505,14 @@ def find_real_video_url(user_name, video_page_url):
             meta_list = re.findall('<meta content="([^"]*)" property="([^"]*)">', source_video_page)
             for meta_content, meta_property in meta_list:
                 if meta_property == "og:video:url":
-                    return meta_content
-            print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
+                    return [meta_content]
+            print_error_msg(user_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
         else:
-            print_error_msg(user_name + " 视频：" + video_page_url + "无法访问")
+            print_error_msg(user_name + " 第" + video_count + "个视频：" + video_page_url + "无法访问")
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return "http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id
+        return ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]
     # http://www.weishi.com/t/2000546051794045
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
@@ -524,14 +528,16 @@ def find_real_video_url(user_name, video_page_url):
                         video_info_page = json.loads(video_info_page)
                         if 'data' in video_info_page:
                             if 'url' in video_info_page['data']:
-                                return random.choice(video_info_page['data']['url'])
+                                return [random.choice(video_info_page['data']['url'])]
                     except:
                         pass
-        print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
+            print_error_msg(user_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
+        else:
+            print_error_msg(user_name + " 第" + video_count + "个视频：" + video_page_url + "无法访问")
     else:  # 其他视频，暂时不支持，收集看看有没有
-        print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
+        print_error_msg(user_name + " 第" + video_count + "个视频：" + video_page_url + "，暂不支持的视频源")
 
-    return ""
+    return []
 
 
 def md5(file_byte):
