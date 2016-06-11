@@ -509,6 +509,25 @@ def find_real_video_url(user_name, video_page_url):
     elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_page_url.split("/")[-1].split(".")[0]
         return "http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id
+    # http://www.weishi.com/t/2000546051794045
+    elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
+        [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
+        if source_video_page_return_code == 1:
+            video_id = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
+            if len(video_id) == 1:
+                video_page_id = video_page_url.split("/")[-1]
+                video_id = video_id[0]
+                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id, video_page_id)
+                [video_info_page_return_code, video_info_page] = tool.http_request(video_info_url)[:2]
+                if video_info_page_return_code == 1:
+                    try:
+                        video_info_page = json.loads(video_info_page)
+                        if 'data' in video_info_page:
+                            if 'url' in video_info_page['data']:
+                                return random.choice(video_info_page['data']['url'])
+                    except:
+                        pass
+        print_error_msg(user_name + " 视频：" + video_page_url + "没有获取到源地址")
     else:  # 其他视频，暂时不支持，收集看看有没有
         print_error_msg(user_name + " 不支持的视频类型：" + video_page_url)
 
