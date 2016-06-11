@@ -335,7 +335,12 @@ class Download(threading.Thread):
                 else:
                     break
 
+            # 如果有错误且没有发现新的图片，复原旧数据
+            if self.user_info[5] == "" and last_video_url != "":
+                self.user_info[5] = last_video_url
+
             # 图片
+            is_over = False
             while IS_DOWNLOAD_IMAGE == 1:
                 photo_page_url = "http://photo.weibo.com/photos/get_all"
                 photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (user_id, IMAGE_COUNT_PER_PAGE, page_count)
