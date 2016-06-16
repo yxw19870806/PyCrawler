@@ -279,13 +279,18 @@ class Download(threading.Thread):
 
                 video_album_url = "http://weibo.com/p/aj/album/loading"
                 video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
-                video_page = visit_weibo(video_album_url)
-                try:
-                    video_page = json.loads(video_page)
-                except:
-                    print_error_msg(user_name + " 返回的视频列表不是一个JSON数据")
+                video_page = None
+                for i in range(0, 10):
+                    video_page = visit_weibo(video_album_url)
+                    try:
+                        video_page = json.loads(video_page)
+                    except:
+                        continue
                     break
 
+                if not isinstance(video_page, dict):
+                    print_error_msg(user_name + " 视频列表解析异常")
+                    break
                 if "code" not in video_page:
                     print_error_msg(user_name + " 在视频列表：" + str(video_page) + " 中没有找到'code'字段")
                     break
@@ -335,6 +340,9 @@ class Download(threading.Thread):
                     trace(user_name + "下一页的since_id：" + since_id)
                 else:
                     break
+
+            if video_count > 1 and last_video_url != "" and not is_over:
+                print_error_msg(user_name + " 视频数量异常")
 
             # 如果有错误且没有发现新的图片，复原旧数据
             if self.user_info[5] == "" and last_video_url != "":
