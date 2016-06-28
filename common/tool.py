@@ -457,7 +457,7 @@ def generate_random_string(string_length, char_lib_type=7):
     for i in range(0, string_length):
         result += random_string[random.randint(0, length)]
 
-    print result
+    return result
 
 
 # 结束进程
