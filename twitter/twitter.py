@@ -115,7 +115,7 @@ class Twitter(robot.Robot):
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
