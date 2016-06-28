@@ -44,15 +44,15 @@ class Fkoji(robot.Robot):
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 寻找fkoji.save
-        user_id_list = {}
+        account_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
 
         # 这个key的内容为总数据
-        if self.ALL_SIGN in user_id_list:
-            image_start_index = int(user_id_list[self.ALL_SIGN][1])
-            last_image_url = user_id_list[self.ALL_SIGN][2]
-            user_id_list.pop(self.ALL_SIGN)
+        if self.ALL_SIGN in account_list:
+            image_start_index = int(account_list[self.ALL_SIGN][1])
+            last_image_url = account_list[self.ALL_SIGN][2]
+            account_list.pop(self.ALL_SIGN)
         else:
             last_image_url = ""
             image_start_index = 0
@@ -87,12 +87,12 @@ class Fkoji(robot.Robot):
                 if isinstance(photo_info, BeautifulSoup.NavigableString):
                     continue
                 tags = photo_info.findAll("span")
-                # 找user_id
+                # 找account_id
                 for tag in tags:
                     sub_tag = tag.next.next
                     if isinstance(sub_tag, BeautifulSoup.NavigableString):
                         if sub_tag.find("@") == 0:
-                            user_id = sub_tag[1:].encode("GBK")
+                            account_id = sub_tag[1:].encode("GBK")
                 # 找图片
                 tags = photo_info.findAll("img")
                 for tag in tags:
@@ -105,20 +105,20 @@ class Fkoji(robot.Robot):
                         if last_image_url == image_url:
                             is_over = True
                             break
-                        log.trace("id: " + user_id + "，地址: " + image_url)
+                        log.trace("id: " + account_id + "，地址: " + image_url)
                         if image_url in image_url_list:
                             continue
                         # 文件类型
                         file_type = image_url.split(".")[-1]
                         if file_type.find("/") != -1:
                             file_type = "jpg"
-                        file_path = image_path + "\\" + str("%05d" % image_count) + "_" + str(user_id) + "." + file_type
+                        file_path = image_path + "\\" + str("%05d" % image_count) + "_" + str(account_id) + "." + file_type
                         log.step("开始下载第" + str(image_count) + "张图片：" + image_url)
                         if tool.save_image(image_url, file_path):
                             log.step("第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
-                            log.error("第" + str(image_count) + "张图片 " + image_url + ", id: " + user_id + " 下载失败")
+                            log.error("第" + str(image_count) + "张图片 " + image_url + ", id: " + account_id + " 下载失败")
                 if is_over:
                     break
             if is_over:
@@ -150,23 +150,23 @@ class Fkoji(robot.Robot):
                 image_path = self.image_temp_path + "\\" + file_name
                 file_name_list = file_name.split(".")
                 file_type = file_name_list[-1]
-                user_id = "_".join(".".join(file_name_list[:-1]).split("_")[1:])
+                account_id = "_".join(".".join(file_name_list[:-1]).split("_")[1:])
 
                 # 所有
                 image_start_index += 1
-                tool.copy_files(image_path, self.image_download_path + "\\all\\" + str("%05d" % image_start_index) + "_" + user_id + "." + file_type)
+                tool.copy_files(image_path, self.image_download_path + "\\all\\" + str("%05d" % image_start_index) + "_" + account_id + "." + file_type)
 
                 # 单个
-                each_user_path = self.image_download_path + "\\single\\" + user_id
-                if not os.path.exists(each_user_path):
-                    if not tool.make_dir(each_user_path, 0):
-                        log.error("创建目录：" + each_user_path + " 失败，程序结束！")
+                each_account_path = self.image_download_path + "\\single\\" + account_id
+                if not os.path.exists(each_account_path):
+                    if not tool.make_dir(each_account_path, 0):
+                        log.error("创建目录：" + each_account_path + " 失败，程序结束！")
                         tool.process_exit()
-                if user_id_list.has_key(user_id):
-                    user_id_list[user_id][1] = int(user_id_list[user_id][1]) + 1
+                if account_list.has_key(account_id):
+                    account_list[account_id][1] = int(account_list[account_id][1]) + 1
                 else:
-                    user_id_list[user_id] = [user_id, 1]
-                tool.copy_files(image_path, each_user_path + "\\" + str("%05d" % user_id_list[user_id][1]) + "." + file_type)
+                    account_list[account_id] = [account_id, 1]
+                tool.copy_files(image_path, each_account_path + "\\" + str("%05d" % account_list[account_id][1]) + "." + file_type)
 
             log.step("图片从下载目录移动到保存目录成功")
 
@@ -174,7 +174,7 @@ class Fkoji(robot.Robot):
             tool.remove_dir(self.image_temp_path)
             
         # 保存新的存档文件
-        temp_list = [user_id_list[key] for key in sorted(user_id_list.keys())]
+        temp_list = [account_list[key] for key in sorted(account_list.keys())]
         # 把总数据插入列表头
         temp_list.insert(0, [self.ALL_SIGN, str(image_start_index), new_last_image_url])
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
