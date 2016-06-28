@@ -9,15 +9,12 @@ email: hikaru870806@hotmail.com
 '''
 
 from common import log, robot, tool
-import hashlib
 import json
 import os
-import random
 import re
 import threading
 import time
 import traceback
-import urllib2
 
 USER_IDS = []
 TOTAL_IMAGE_COUNT = 0
@@ -179,7 +176,6 @@ class Download(threading.Thread):
             page_count = 1
             video_count = 1
             need_make_download_dir = True
-            is_over = False
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
