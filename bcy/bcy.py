@@ -15,7 +15,7 @@ import threading
 import time
 import traceback
 
-USER_IDS = []
+ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ''
 NEW_SAVE_DATA_PATH = ''
@@ -58,7 +58,7 @@ class Bcy(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global USER_IDS
+        global ACCOUNTS
 
         if IS_DOWNLOAD_IMAGE == 0:
             print_error_msg("下载图片没开启，请检查配置！")
@@ -82,10 +82,10 @@ class Bcy(robot.Robot):
             tool.process_exit()
 
         # 寻找idlist，如果没有结束进程
-        user_id_list = {}
+        account_list = {}
         if os.path.exists(self.save_data_path):
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0"])
-            USER_IDS = user_id_list.keys()
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0"])
+            ACCOUNTS = account_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
@@ -96,7 +96,7 @@ class Bcy(robot.Robot):
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for user_id in sorted(user_id_list.keys()):
+        for account_id in sorted(account_list.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
                 time.sleep(10)
@@ -106,7 +106,7 @@ class Bcy(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(user_id_list[user_id])
+            thread = Download(account_list[account_id])
             thread.start()
 
             time.sleep(1)
@@ -116,15 +116,15 @@ class Bcy(robot.Robot):
             time.sleep(10)
 
         # 未完成的数据保存
-        if len(USER_IDS) > 0:
+        if len(ACCOUNTS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for user_id in USER_IDS:
-                new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+            for account_id in ACCOUNTS:
+                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
         # 重新排序保存存档文件
-        user_id_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
-        temp_list = [user_id_list[key] for key in sorted(user_id_list.keys())]
+        account_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
+        temp_list = [account_list[key] for key in sorted(account_list.keys())]
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
         os.remove(NEW_SAVE_DATA_PATH)
 
@@ -133,21 +133,21 @@ class Bcy(robot.Robot):
 
 
 class Download(threading.Thread):
-    def __init__(self, user_info):
+    def __init__(self, account_info):
         threading.Thread.__init__(self)
-        self.user_info = user_info
+        self.account_info = account_info
 
     def run(self):
         global TOTAL_IMAGE_COUNT
 
-        coser_id = self.user_info[0]
-        cn = self.user_info[1]
+        coser_id = self.account_info[0]
+        cn = self.account_info[1]
 
         try:
             print_step_msg(cn + " 开始")
 
-            last_rp_id = self.user_info[2]
-            self.user_info[2] = ""  # 置空，存放此次的最后rp id
+            last_rp_id = self.account_info[2]
+            self.account_info[2] = ""  # 置空，存放此次的最后rp id
             this_cn_total_image_count = 0
             page_count = 1
             max_page_count = -1
@@ -181,8 +181,8 @@ class Download(threading.Thread):
                     rp_id = data[1]
                     rp_id_list.append(rp_id)
 
-                    if self.user_info[2] == "":
-                        self.user_info[2] = rp_id
+                    if self.account_info[2] == "":
+                        self.account_info[2] = rp_id
                     # 检查是否已下载到前一次的图片
                     if int(rp_id) <= int(last_rp_id):
                         is_over = True
@@ -271,8 +271,8 @@ class Download(threading.Thread):
                 page_count += 1
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.user_info[2] == "" and last_rp_id != "0":
-                self.user_info[2] = str(last_rp_id)
+            if self.account_info[2] == "" and last_rp_id != "0":
+                self.account_info[2] = str(last_rp_id)
 
             print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
 
@@ -281,9 +281,9 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             threadLock.acquire()
-            tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += this_cn_total_image_count
-            USER_IDS.remove(coser_id)
+            ACCOUNTS.remove(coser_id)
             threadLock.release()
 
             print_step_msg(cn + " 完成")
