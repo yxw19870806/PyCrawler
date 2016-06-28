@@ -90,6 +90,7 @@ class Lofter(robot.Robot):
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
+            # account_id  image_count  last_post_id
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
