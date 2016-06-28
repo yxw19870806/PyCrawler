@@ -16,7 +16,7 @@ import threading
 import time
 import traceback
 
-USER_IDS = []
+ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ''
@@ -73,7 +73,7 @@ class Miaopai(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        global USER_IDS
+        global ACCOUNTS
 
         start_time = time.time()
 
@@ -94,11 +94,11 @@ class Miaopai(robot.Robot):
             tool.process_exit()
 
         # 寻找存档，如果没有结束进程
-        user_id_list = {}
+        account_list = {}
         if os.path.exists(self.save_data_path):
             # account_id  video_count  last_video_url
-            user_id_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
-            USER_IDS = user_id_list.keys()
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
+            ACCOUNTS = account_list.keys()
         else:
             print_error_msg("存档文件：" + self.save_data_path + "不存在，程序结束！")
             tool.process_exit()
@@ -114,7 +114,7 @@ class Miaopai(robot.Robot):
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for user_id in sorted(user_id_list.keys()):
+        for account_id in sorted(account_list.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
                 if tool.is_process_end() == 0:
@@ -127,7 +127,7 @@ class Miaopai(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(user_id_list[user_id])
+            thread = Download(account_list[account_id])
             thread.start()
 
             time.sleep(1)
@@ -137,18 +137,18 @@ class Miaopai(robot.Robot):
             time.sleep(10)
 
         # 未完成的数据保存
-        if len(USER_IDS) > 0:
+        if len(ACCOUNTS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for user_id in USER_IDS:
-                new_save_data_file.write("\t".join(user_id_list[user_id]) + "\n")
+            for account_id in ACCOUNTS:
+                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
         # 删除临时文件夹
         tool.remove_dir(VIDEO_TEMP_PATH)
 
         # 重新排序保存存档文件
-        user_id_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
-        temp_list = [user_id_list[key] for key in sorted(user_id_list.keys())]
+        account_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
+        temp_list = [account_list[key] for key in sorted(account_list.keys())]
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
         os.remove(NEW_SAVE_DATA_PATH)
 
@@ -157,22 +157,22 @@ class Miaopai(robot.Robot):
 
 
 class Download(threading.Thread):
-    def __init__(self, user_info):
+    def __init__(self, account_info):
         threading.Thread.__init__(self)
-        self.user_info = user_info
+        self.account_info = account_info
 
     def run(self):
         global TOTAL_IMAGE_COUNT
         global TOTAL_VIDEO_COUNT
 
-        account_id = self.user_info[0]
+        account_id = self.account_info[0]
 
         try:
             print_step_msg(account_id + " 开始")
 
             # 初始化数据
-            last_video_url = self.user_info[2]
-            self.user_info[2] = ""  # 置空，存放此次的最后视频地址
+            last_video_url = self.account_info[2]
+            self.account_info[2] = ""  # 置空，存放此次的最后视频地址
             page_count = 1
             video_count = 1
             need_make_download_dir = True
@@ -248,8 +248,8 @@ class Download(threading.Thread):
                 page_count += 1
 
             # 如果有错误且没有发现新的视频，复原旧数据
-            if self.user_info[2] == "" and last_video_url != "":
-                self.user_info[2] = last_video_url
+            if self.account_info[2] == "" and last_video_url != "":
+                self.account_info[2] = last_video_url
 
             print_step_msg(account_id + " 下载完毕，总共获得" + str(video_count - 1) + "个视频")
 
@@ -257,19 +257,19 @@ class Download(threading.Thread):
             if IS_SORT == 1:
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
-                    if robot.sort_file(video_path, destination_path, int(self.user_info[4]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[4]), 4):
                         print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
-            self.user_info[1] = str(int(self.user_info[1]) + video_count - 1)
+            self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
 
             # 保存最后的信息
             threadLock.acquire()
-            tool.write_file("\t".join(self.user_info), NEW_SAVE_DATA_PATH)
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_VIDEO_COUNT += video_count - 1
-            USER_IDS.remove(account_id)
+            ACCOUNTS.remove(account_id)
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
@@ -281,6 +281,3 @@ class Download(threading.Thread):
 if __name__ == "__main__":
     tool.restore_process_status()
     Miaopai().main()
-
-
-# http://www.miaopai.com/miaopai/plaza
