@@ -178,7 +178,7 @@ class Download(threading.Thread):
             self.user_info[2] = ""  # 置空，存放此次的最后视频地址
             page_count = 1
             video_count = 1
-            need_make_dir = True
+            need_make_download_dir = True
             is_over = False
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -221,18 +221,37 @@ class Download(threading.Thread):
                     break
 
                 msg_data = media_page['msg']
-
                 scid_list = re.findall('data-scid="([^"]*)"', msg_data)
-                print scid_list
                 if len(scid_list) > 0:
                     for scid in scid_list:
-                        video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4"
+                        video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % str(scid)
+
+                        # 文件类型
+                        file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
+
+                        # 保存视频
+                        print_step_msg(account_id + " 开始下载第 " + str(video_count) + "个视频：" + video_url)
+                        # 第一个视频，创建目录
+                        if need_make_download_dir:
+                            if not tool.make_dir(video_path, 0):
+                                print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
+                                tool.process_exit()
+                            need_make_download_dir = False
+                        if tool.save_image(video_url, file_path):
+                            print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
+                            video_count += 1
+                        else:
+                            print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
                 else:
                     print_error_msg(account_id + " 在视频列表：" + str(media_page) + " 中没有找到视频scid")
+                    break
 
+                if media_page['isall']:
+                    break
 
-            tool.process_exit()
-            # 如果有错误且没有发现新的图片，复原旧数据
+                page_count += 1
+
+            # 如果有错误且没有发现新的视频，复原旧数据
             if self.user_info[2] == "" and last_video_url != "":
                 self.user_info[2] = last_video_url
 
