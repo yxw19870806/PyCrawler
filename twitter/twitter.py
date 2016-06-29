@@ -158,9 +158,9 @@ class Twitter(robot.Robot):
         # 未完成的数据保存
         if len(ACCOUNTS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for user_id in ACCOUNTS:
+            for account_id in ACCOUNTS:
                 # account_id  image_count  last_image_time
-                new_save_data_file.write("\t".join(account_list[user_id]) + "\n")
+                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
         # 删除临时文件夹
