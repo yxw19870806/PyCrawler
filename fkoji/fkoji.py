@@ -25,6 +25,10 @@ class Fkoji(robot.Robot):
     def main(self):
         start_time = time.time()
 
+        # 设置代理
+        if self.is_proxy == 1 or self.is_proxy == 2:
+            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
+
         # 图片保存目录
         log.step("创建图片根目录：" + self.image_download_path)
         if not tool.make_dir(self.image_download_path, 0):
@@ -37,10 +41,6 @@ class Fkoji(robot.Robot):
             if not tool.make_dir(self.image_temp_path, 0):
                 log.error("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
                 tool.process_exit()
-
-        # 设置代理
-        if self.is_proxy == 1 or self.is_proxy == 2:
-            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 寻找fkoji.save
         account_list = {}
@@ -132,14 +132,12 @@ class Fkoji(robot.Robot):
             while not is_check_ok:
                 # 等待手动检测所有图片结束
                 input_str = raw_input(tool.get_time() + " 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
-                try:
-                    input_str = input_str.lower()
-                    if input_str in ["y", "yes"]:
-                        is_check_ok = True
-                    elif input_str in ["n", "no"]:
-                        tool.process_exit()
-                except:
-                    pass
+                input_str = input_str.lower()
+                if input_str in ["y", "yes"]:
+                    is_check_ok = True
+                elif input_str in ["n", "no"]:
+                    tool.process_exit()
+
             if not tool.make_dir(os.path.join(self.image_download_path, "all"), 0):
                 log.error("创建目录：" + os.path.join(self.image_download_path, "all") + " 失败，程序结束！")
                 tool.process_exit()
