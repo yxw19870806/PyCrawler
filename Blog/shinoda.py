@@ -81,7 +81,7 @@ class Shinoda(robot.Robot):
                     image_url = host + image_name
                     # 文件类型
                     file_type = image_url.split(".")[-1].split(":")[0]
-                    file_path = image_path + "\\" + str("%05d" % image_count) + "." + file_type
+                    file_path = os.path.join(image_path, str("%05d" % image_count) + "." + file_type)
                     log.step("开始下载第 " + str(image_count) + "张图片：" + image_url)
                     if tool.save_image(image_url, file_path):
                         log.step("第" + str(image_count) + "张图片下载成功")
@@ -99,9 +99,9 @@ class Shinoda(robot.Robot):
         if self.is_sort == 1:
             for fileName in sorted(os.listdir(self.image_temp_path), reverse=True):
                 image_start_index += 1
-                image_path = self.image_temp_path + "\\" + fileName
+                image_path = os.path.join(self.image_temp_path, fileName)
                 file_type = fileName.split(".")[-1]
-                tool.copy_files(image_path, self.image_download_path + "\\" + str("%05d" % image_start_index) + "." + file_type)
+                tool.copy_files(image_path, os.path.join(self.image_download_path, str("%05d" % image_start_index) + "." + file_type))
             log.step("图片从下载目录移动到保存目录成功")
             # 删除下载临时目录中的图片
             shutil.rmtree(self.image_temp_path, True)
