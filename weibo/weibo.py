@@ -164,8 +164,8 @@ class Weibo(robot.Robot):
         # 寻找存档，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
-            # account_id  account_name  image_count  last_image_time  video_count  last_video_url
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "_0", "0", "0", "0", ""])
+            # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
             print_error_msg("存档文件：" + self.save_data_path + "不存在，程序结束！")
@@ -239,16 +239,19 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
-        account_name = self.account_info[1]
+        if len(self.account_info) >= 6:
+            account_name = self.account_info[5]
+        else:
+            account_name = self.account_info[0]
 
         try:
             print_step_msg(account_name + " 开始")
 
             # 初始化数据
-            last_image_time = int(self.account_info[3])
-            self.account_info[3] = "0"  # 置空，存放此次的最后图片上传时间
-            last_video_url = self.account_info[5]
-            self.account_info[5] = ""  # 置空，存放此次的的最后一个视频地址
+            last_image_time = int(self.account_info[2])
+            self.account_info[2] = "0"  # 置空，存放此次的最后图片上传时间
+            last_video_url = self.account_info[4]
+            self.account_info[4] = ""  # 置空，存放此次的的最后一个视频地址
             page_count = 1
             image_count = 1
             video_count = 1
@@ -306,8 +309,8 @@ class Download(threading.Thread):
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
                 trace(account_name + "视频列表：" + video_album_url + "中的全部视频：" + str(video_page_url_list))
                 for video_page_url in video_page_url_list:
-                    if self.account_info[5] == "":
-                        self.account_info[5] = video_page_url
+                    if self.account_info[4] == "":
+                        self.account_info[4] = video_page_url
                     # 检查是否是上一次的最后视频
                     if last_video_url == video_page_url:
                         is_over = True
@@ -345,8 +348,8 @@ class Download(threading.Thread):
                 print_error_msg(account_name + " 视频数量异常")
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[5] == "" and last_video_url != "":
-                self.account_info[5] = last_video_url
+            if self.account_info[4] == "" and last_video_url != "":
+                self.account_info[4] = last_video_url
 
             # 图片
             is_over = False
@@ -385,8 +388,8 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 在JSON数据：" + str(image_info) + " 中没有找到'timestamp'字段")
                         continue
                     # 将第一张image的时间戳保存到新id list中
-                    if self.account_info[3] == "0":
-                        self.account_info[3] = str(image_info["timestamp"])
+                    if self.account_info[2] == "0":
+                        self.account_info[2] = str(image_info["timestamp"])
                     # 检查是否图片时间小于上次的记录
                     if 0 < last_image_time >= image_info["timestamp"]:
                         is_over = True
@@ -445,8 +448,8 @@ class Download(threading.Thread):
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[3] == "0" and last_image_time != 0:
-                self.account_info[3] = str(last_image_time)
+            if self.account_info[2] == "0" and last_image_time != 0:
+                self.account_info[2] = str(last_image_time)
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
 
@@ -454,21 +457,21 @@ class Download(threading.Thread):
             if IS_SORT == 1:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_name + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[4]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
                         print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
-            self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
-            self.account_info[4] = str(int(self.account_info[4]) + video_count - 1)
+            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+            self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
 
             # 保存最后的信息
             threadLock.acquire()
