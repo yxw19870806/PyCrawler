@@ -13,11 +13,10 @@ from common import BeautifulSoup
 import os
 import time
 
+ALL_SIGN = '_____'
+
 
 class Fkoji(robot.Robot):
-
-    ALL_SIGN = '_____'
-
     def __init__(self):
         super(Fkoji, self).__init__()
 
@@ -49,10 +48,10 @@ class Fkoji(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
 
         # 这个key的内容为总数据
-        if self.ALL_SIGN in account_list:
-            image_start_index = int(account_list[self.ALL_SIGN][1])
-            last_image_url = account_list[self.ALL_SIGN][2]
-            account_list.pop(self.ALL_SIGN)
+        if ALL_SIGN in account_list:
+            image_start_index = int(account_list[ALL_SIGN][1])
+            last_image_url = account_list[ALL_SIGN][2]
+            account_list.pop(ALL_SIGN)
         else:
             last_image_url = ""
             image_start_index = 0
@@ -154,7 +153,9 @@ class Fkoji(robot.Robot):
 
                 # 所有
                 image_start_index += 1
-                tool.copy_files(image_path, os.path.join(self.image_download_path, "all", str("%05d" % image_start_index) + "_" + account_id + "." + file_type))
+                destination_file_name = str("%05d" % image_start_index) + "_" + account_id + "." + file_type
+                destination_path = os.path.join(self.image_download_path, "all", destination_file_name)
+                tool.copy_files(image_path, destination_path)
 
                 # 单个
                 each_account_path = os.path.join(self.image_download_path, "single", account_id)
@@ -166,7 +167,9 @@ class Fkoji(robot.Robot):
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1
                 else:
                     account_list[account_id] = [account_id, 1]
-                tool.copy_files(image_path, os.path.join(each_account_path, str("%05d" % account_list[account_id][1]) + "." + file_type))
+                destination_file_name = str("%05d" % account_list[account_id][1]) + "." + file_type
+                destination_path = os.path.join(each_account_path, destination_file_name)
+                tool.copy_files(image_path, destination_path)
 
             log.step("图片从下载目录移动到保存目录成功")
 
@@ -176,7 +179,7 @@ class Fkoji(robot.Robot):
         # 保存新的存档文件
         temp_list = [account_list[key] for key in sorted(account_list.keys())]
         # 把总数据插入列表头
-        temp_list.insert(0, [self.ALL_SIGN, str(image_start_index), new_last_image_url])
+        temp_list.insert(0, [ALL_SIGN, str(image_start_index), new_last_image_url])
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
 
         duration_time = int(time.time() - start_time)
