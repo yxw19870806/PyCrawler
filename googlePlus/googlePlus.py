@@ -90,7 +90,8 @@ class GooglePlus(robot.Robot):
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "_0", "0", "", "", ""])
+            # account_id  image_count  last_post_id  (account_name)  (file_path)
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
             print_error_msg("存档文件: " + self.save_data_path + "不存在，程序结束！")
@@ -158,14 +159,21 @@ class Download(threading.Thread):
         global TOTAL_IMAGE_COUNT
 
         account_id = self.account_info[0]
-        account_name = self.account_info[1]
+        if len(self.account_info) >= 4 and self.account_info[3]:
+            account_name = self.account_info[3]
+        else:
+            account_name = self.account_info[0]
+        if len(self.account_info) >= 5 and self.account_info[4]:
+            account_file_path = self.account_info[4]
+        else:
+            account_file_path = ''
 
         print_step_msg(account_name + " 开始")
 
         try:
             # 初始化数据
-            last_message_url = self.account_info[3]
-            self.account_info[3] = ""  # 置空，存放此次的最后URL
+            last_message_url = self.account_info[2]
+            self.account_info[2] = ""  # 置空，存放此次的最后URL
             # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
             # 第一次下载，不用限制
             if last_message_url == "":
@@ -177,7 +185,7 @@ class Download(threading.Thread):
                     limit_download_count = 0
                 else:
                     # 历史总数的10%，下限50、上限1000
-                    limit_download_count = min(max(50, int(self.account_info[2]) / 100 * 10), 1000)
+                    limit_download_count = min(max(50, int(self.account_info[1]) / 100 * 10), 1000)
             image_count = 1
             message_url_list = []
             image_url_list = []
@@ -193,7 +201,7 @@ class Download(threading.Thread):
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             else:
-                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_info[4], account_name)
+                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
 
             # 图片下载
             photo_album_url = "https://plus.google.com/_/photos/pc/read/"
@@ -225,8 +233,8 @@ class Download(threading.Thread):
                     message_url_list.append(real_message_url)
 
                     # 将第一张image的URL保存到新id list中
-                    if self.account_info[3] == "":
-                        self.account_info[3] = real_message_url
+                    if self.account_info[2] == "":
+                        self.account_info[2] = real_message_url
 
                     # 检查是否已下载到前一次的图片
                     if real_message_url == last_message_url:
@@ -305,21 +313,21 @@ class Download(threading.Thread):
                     break
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[3] == "" and last_message_url != "":
-                self.account_info[3] = last_message_url
+            if self.account_info[2] == "" and last_message_url != "":
+                self.account_info[2] = last_message_url
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
             if IS_SORT == 1 and image_count > 1:
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_info[4], account_name)
-                if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
+                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
+                if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                 else:
                     print_error_msg(account_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
-            self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
+            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
 
             if is_error:
                 print_error_msg(account_name + " 图片数量异常，请手动检查")
