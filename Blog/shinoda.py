@@ -16,7 +16,6 @@ import time
 
 
 class Shinoda(robot.Robot):
-
     def __init__(self):
         super(Shinoda, self).__init__()
 
@@ -24,12 +23,6 @@ class Shinoda(robot.Robot):
 
     def main(self):
         start_time = time.time()
-
-        # 图片保存目录
-        log.step("创建图片根目录：" + self.image_download_path)
-        if not tool.make_dir(self.image_download_path, 0):
-            log.error("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
-            tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort == 1:
@@ -97,15 +90,12 @@ class Shinoda(robot.Robot):
         
         # 排序复制到保存目录
         if self.is_sort == 1:
-            for fileName in sorted(os.listdir(self.image_temp_path), reverse=True):
-                image_start_index += 1
-                image_path = os.path.join(self.image_temp_path, fileName)
-                file_type = fileName.split(".")[-1]
-                tool.copy_files(image_path, os.path.join(self.image_download_path, str("%05d" % image_start_index) + "." + file_type))
-            log.step("图片从下载目录移动到保存目录成功")
-            # 删除下载临时目录中的图片
-            shutil.rmtree(self.image_temp_path, True)
-            
+            if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
+                log.step(" 图片从下载目录移动到保存目录成功")
+            else:
+                log.error(" 创建图片保存目录：" + self.image_download_path + " 失败，程序结束！")
+                tool.process_exit()
+
         # 保存新的存档文件
         new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
         log.step("保存新存档文件: " + new_save_file_path)
