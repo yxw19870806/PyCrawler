@@ -98,8 +98,7 @@ def http_request(url, post_data=None):
                 response = urllib2.urlopen(request)
             else:
                 response = urllib2.urlopen(request, timeout=5)
-
-            return [1, response.read(), response.info()]
+            return [1, response.read(), response]
         except Exception, e:
             # 代理无法访问
             if str(e).find("[Errno 10061]") != -1:
@@ -391,15 +390,11 @@ def make_dir(dir_path, create_mode):
                 is_delete = False
                 while not is_delete:
                     input_str = raw_input(get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
-                    try:
-                        input_str = input_str.lower()
-                        if input_str in ["y", "yes"]:
-                            is_delete = True
-                        elif input_str in ["n", "no"]:
-                            process_exit()
-                    except Exception, e:
-                        print_error_msg(str(e))
-                        pass
+                    input_str = input_str.lower()
+                    if input_str in ["y", "yes"]:
+                        is_delete = True
+                    elif input_str in ["n", "no"]:
+                        process_exit()
 
         # 删除原本路劲
         # 文件

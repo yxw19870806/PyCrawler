@@ -239,12 +239,12 @@ class Download(threading.Thread):
                     image_url = str(image_url)
                     image_url_list.append(image_url)
 
-                    [image_return_code, image_response, image_response_info] = tool.http_request(image_url)
+                    [image_return_code, image_response_data, image_response] = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
                     if image_return_code == -404:
                         pass
                     elif image_return_code == 1:
-                        image_time = get_image_last_modified(image_response_info)
+                        image_time = get_image_last_modified(image_response)
                         # 将第一张image的URL保存到新id list中
                         if self.account_info[2] == "0":
                             self.account_info[2] = str(image_time)
@@ -266,7 +266,7 @@ class Download(threading.Thread):
                                 print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_download_dir = False
-                        save_image(image_response, file_path)
+                        save_image(image_response_data, file_path)
                         print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:
