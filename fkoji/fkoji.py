@@ -112,7 +112,7 @@ class Fkoji(robot.Robot):
                         file_type = image_url.split(".")[-1]
                         if file_type.find("/") != -1:
                             file_type = "jpg"
-                        file_path = image_path + "\\" + str("%05d" % image_count) + "_" + str(account_id) + "." + file_type
+                        file_path = os.path.join(image_path, str("%05d" % image_count) + "_" + account_id + "." + file_type)
                         log.step("开始下载第" + str(image_count) + "张图片：" + image_url)
                         if tool.save_image(image_url, file_path):
                             log.step("第" + str(image_count) + "张图片下载成功")
@@ -141,23 +141,23 @@ class Fkoji(robot.Robot):
                         tool.process_exit()
                 except:
                     pass
-            if not tool.make_dir(self.image_download_path + "\\all", 0):
-                log.error("创建目录：" + self.image_download_path + "\\all" + " 失败，程序结束！")
+            if not tool.make_dir(os.path.join(self.image_download_path, "all"), 0):
+                log.error("创建目录：" + os.path.join(self.image_download_path, "all") + " 失败，程序结束！")
                 tool.process_exit()
 
             file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
             for file_name in file_list:
-                image_path = self.image_temp_path + "\\" + file_name
+                image_path = os.path.join(self.image_temp_path, file_name)
                 file_name_list = file_name.split(".")
                 file_type = file_name_list[-1]
                 account_id = "_".join(".".join(file_name_list[:-1]).split("_")[1:])
 
                 # 所有
                 image_start_index += 1
-                tool.copy_files(image_path, self.image_download_path + "\\all\\" + str("%05d" % image_start_index) + "_" + account_id + "." + file_type)
+                tool.copy_files(image_path, os.path.join(self.image_download_path, "all", str("%05d" % image_start_index) + "_" + account_id + "." + file_type))
 
                 # 单个
-                each_account_path = self.image_download_path + "\\single\\" + account_id
+                each_account_path = os.path.join(self.image_download_path, "single", account_id)
                 if not os.path.exists(each_account_path):
                     if not tool.make_dir(each_account_path, 0):
                         log.error("创建目录：" + each_account_path + " 失败，程序结束！")
@@ -166,7 +166,7 @@ class Fkoji(robot.Robot):
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1
                 else:
                     account_list[account_id] = [account_id, 1]
-                tool.copy_files(image_path, each_account_path + "\\" + str("%05d" % account_list[account_id][1]) + "." + file_type)
+                tool.copy_files(image_path, os.path.join(each_account_path, str("%05d" % account_list[account_id][1]) + "." + file_type))
 
             log.step("图片从下载目录移动到保存目录成功")
 
