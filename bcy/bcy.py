@@ -81,6 +81,21 @@ class Bcy(robot.Robot):
             print_error_msg("导入浏览器cookies失败，程序结束！")
             tool.process_exit()
 
+        home_page_url = "http://bcy.net/home/user/index"
+        home_page_return = tool.http_request(home_page_url)
+        if home_page_return[0] == 1:
+            real_url = home_page_return[2].geturl()
+            if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
+                is_check_ok = False
+                while not is_check_ok:
+                    # 等待手动检测所有图片结束
+                    input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否下一步操作？ (Y)es or (N)o: ")
+                    input_str = input_str.lower()
+                    if input_str in ["y", "yes"]:
+                        is_check_ok = True
+                    elif input_str in ["n", "no"]:
+                        tool.process_exit()
+
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
@@ -241,9 +256,9 @@ class Download(threading.Thread):
 
                             print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                             if tool.save_image(image_url, file_path):
-                                print_step_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片下载成功")
+                                print_step_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片下载成功")
                             else:
-                                print_error_msg(cn + ":" + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                                print_error_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
                             image_index = rp_page_response.find("src='", image_index + 1)
 
