@@ -239,7 +239,7 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
-        if len(self.account_info) >= 6:
+        if len(self.account_info) >= 6 and self.account_info[5]:
             account_name = self.account_info[5]
         else:
             account_name = self.account_info[0]
