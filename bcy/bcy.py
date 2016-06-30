@@ -99,7 +99,8 @@ class Bcy(robot.Robot):
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0"])
+            # account_id  last_rp_id
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
             ACCOUNTS = account_list.keys()
         else:
             print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
@@ -156,13 +157,16 @@ class Download(threading.Thread):
         global TOTAL_IMAGE_COUNT
 
         coser_id = self.account_info[0]
-        cn = self.account_info[1]
+        if len(self.account_info) >= 3:
+            cn = self.account_info[2]
+        else:
+            cn = self.account_info[0]
 
         try:
             print_step_msg(cn + " 开始")
 
-            last_rp_id = self.account_info[2]
-            self.account_info[2] = ""  # 置空，存放此次的最后rp id
+            last_rp_id = self.account_info[1]
+            self.account_info[1] = ""  # 置空，存放此次的最后rp id
             this_cn_total_image_count = 0
             page_count = 1
             max_page_count = -1
@@ -196,8 +200,8 @@ class Download(threading.Thread):
                     rp_id = data[1]
                     rp_id_list.append(rp_id)
 
-                    if self.account_info[2] == "":
-                        self.account_info[2] = rp_id
+                    if self.account_info[1] == "":
+                        self.account_info[1] = rp_id
                     # 检查是否已下载到前一次的图片
                     if int(rp_id) <= int(last_rp_id):
                         is_over = True
@@ -286,8 +290,8 @@ class Download(threading.Thread):
                 page_count += 1
 
             # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[2] == "" and last_rp_id != "0":
-                self.account_info[2] = str(last_rp_id)
+            if self.account_info[1] == "" and last_rp_id != "0":
+                self.account_info[1] = str(last_rp_id)
 
             print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
 
