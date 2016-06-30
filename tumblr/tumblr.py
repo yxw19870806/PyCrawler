@@ -20,11 +20,11 @@ ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ''
-IMAGE_DOWNLOAD_PATH = ''
-VIDEO_TEMP_PATH = ''
-VIDEO_DOWNLOAD_PATH = ''
-NEW_SAVE_DATA_PATH = ''
+IMAGE_TEMP_PATH = ""
+IMAGE_DOWNLOAD_PATH = ""
+VIDEO_TEMP_PATH = ""
+VIDEO_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
 IS_SORT = 1
 IS_DOWNLOAD_IMAGE = 1
 IS_DOWNLOAD_VIDEO = 1
@@ -270,9 +270,7 @@ class Download(threading.Thread):
                             video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
                             [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
                             if video_page_return_code == 1:
-                                video_list = re.findall(
-                                    'src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"',
-                                    video_page)
+                                video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
                                 if len(video_list) == 0:
                                     print_error_msg(account_id + " 视频页：" + video_page_url + "中没有找到视频")
                                 else:

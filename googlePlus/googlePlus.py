@@ -19,11 +19,11 @@ ACCOUNTS = []
 GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
 TOTAL_IMAGE_COUNT = 0
 GET_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ''
-IMAGE_DOWNLOAD_PATH = ''
-VIDEO_TEMP_PATH = ''
-VIDEO_DOWNLOAD_PATH = ''
-NEW_SAVE_DATA_PATH = ''
+IMAGE_TEMP_PATH = ""
+IMAGE_DOWNLOAD_PATH = ""
+VIDEO_TEMP_PATH = ""
+VIDEO_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
 IS_SORT = 1
 IS_DOWNLOAD_IMAGE = 1
 
@@ -166,7 +166,7 @@ class Download(threading.Thread):
         if len(self.account_info) >= 5 and self.account_info[4]:
             account_file_path = self.account_info[4]
         else:
-            account_file_path = ''
+            account_file_path = ""
 
         print_step_msg(account_name + " 开始")
 
@@ -212,7 +212,7 @@ class Download(threading.Thread):
                 [index_page_return_code, index_page_response] = tool.http_request(photo_album_url, post_data)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(account_name + " 无法获取相册首页: " + photo_album_url + ', key = ' + key)
+                    print_error_msg(account_name + " 无法获取相册首页: " + photo_album_url + ", key = " + key)
                     break
 
                 # 相册也中全部的信息页

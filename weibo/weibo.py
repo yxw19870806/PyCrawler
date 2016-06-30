@@ -25,11 +25,11 @@ IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ''
-IMAGE_DOWNLOAD_PATH = ''
-VIDEO_TEMP_PATH = ''
-VIDEO_DOWNLOAD_PATH = ''
-NEW_SAVE_DATA_PATH = ''
+IMAGE_TEMP_PATH = ""
+IMAGE_DOWNLOAD_PATH = ""
+VIDEO_TEMP_PATH = ""
+VIDEO_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
 IS_SORT = 1
 IS_DOWNLOAD_IMAGE = 1
 IS_DOWNLOAD_VIDEO = 1
@@ -157,7 +157,7 @@ class Weibo(robot.Robot):
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not tool.set_cookie(self.cookie_path, self.browser_version, ('weibo.com', '.sina.com.cn')):
+        if not tool.set_cookie(self.cookie_path, self.browser_version, ("weibo.com", ".sina.com.cn")):
             print_error_msg("导入浏览器cookies失败，程序结束！")
             tool.process_exit()
 
@@ -411,7 +411,7 @@ class Download(threading.Thread):
                         if image_return_code == 1:
                             # 处理获取的文件为weibo默认获取失败的图片
                             md5_digest = md5(image_response)
-                            if md5_digest in ['14f2559305a6c96608c474f4ca47e6b0']:
+                            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
                                 print_error_msg(account_name + " 图片" + image_url + " 已经在服务器上被删除，跳过")
                                 continue
                             if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
@@ -502,11 +502,11 @@ def find_real_video_url(video_page_url, account_name, video_count):
                     ssig_file_url = ssig_file_url[0]
                     ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
                     if ssig_file_page:
-                        ssig_list = re.findall('\s([^#]\S*)', ssig_file_page)
+                        ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
                         if len(ssig_list) >= 1:
                             video_source_url = []
                             for ssig in ssig_list:
-                                video_source_url.append('http://us.sinaimg.cn/' + ssig)
+                                video_source_url.append("http://us.sinaimg.cn/" + ssig)
                             return video_source_url
         print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
     # http://www.meipai.com/media/98089758
@@ -537,9 +537,9 @@ def find_real_video_url(video_page_url, account_name, video_count):
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
-                        if 'data' in video_info_page:
-                            if 'url' in video_info_page['data']:
-                                return [random.choice(video_info_page['data']['url'])]
+                        if "data" in video_info_page:
+                            if "url" in video_info_page["data"]:
+                                return [random.choice(video_info_page["data"]["url"])]
                     except:
                         pass
             print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")

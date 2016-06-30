@@ -19,9 +19,9 @@ import traceback
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-VIDEO_TEMP_PATH = ''
-VIDEO_DOWNLOAD_PATH = ''
-NEW_SAVE_DATA_PATH = ''
+VIDEO_TEMP_PATH = ""
+VIDEO_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
 IS_SORT = 1
 IS_DOWNLOAD_VIDEO = 1
 
@@ -89,7 +89,7 @@ class Miaopai(robot.Robot):
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not tool.set_cookie(self.cookie_path, self.browser_version, ('weibo.com', '.sina.com.cn')):
+        if not tool.set_cookie(self.cookie_path, self.browser_version, ("weibo.com", ".sina.com.cn")):
             print_error_msg("导入浏览器cookies失败，程序结束！")
             tool.process_exit()
 
@@ -209,14 +209,14 @@ class Download(threading.Thread):
                 except:
                     print_error_msg(account_id + " 返回的视频列表不是一个JSON数据")
                     break
-                if 'isall' not in media_page:
+                if "isall" not in media_page:
                     print_error_msg(account_id + " 在视频列表：" + str(media_page) + " 中没有找到'isall'字段")
                     break
                 if "msg" not in media_page:
                     print_error_msg(account_id + " 在视频列表：" + str(media_page) + " 中没有找到'msg'字段")
                     break
 
-                msg_data = media_page['msg']
+                msg_data = media_page["msg"]
                 scid_list = re.findall('data-scid="([^"]*)"', msg_data)
                 if len(scid_list) > 0:
                     for scid in scid_list:
@@ -242,7 +242,7 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 在视频列表：" + str(media_page) + " 中没有找到视频scid")
                     break
 
-                if media_page['isall']:
+                if media_page["isall"]:
                     break
 
                 page_count += 1
