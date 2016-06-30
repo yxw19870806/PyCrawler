@@ -7,6 +7,7 @@ Created on 2013-7-16
 
 import cookielib
 import cStringIO
+import mimetools
 import os
 import platform
 import random
@@ -134,12 +135,10 @@ def http_request(url, post_data=None, cookie=None):
             return [-1, None, None]
 
 
-def get_response_info(response, key):
-    try:
-        if key in response:
-            return response[key]
-    except:
-        pass
+def get_response_info(response_info, key):
+    if isinstance(response_info, mimetools.Message):
+        if key in response_info:
+            return response_info[key]
     return None
 
 
