@@ -57,7 +57,7 @@ def is_process_end():
 
 
 def restore_process_status():
-    for file_name in ['pause', 'stop', 'finish']:
+    for file_name in ["pause", "stop", "finish"]:
         file_path = os.path.join(os.path.abspath(".."), file_name)
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -167,7 +167,7 @@ def get_default_browser_cookie_path(browser_type):
 # browser_type=1: IE
 # browser_type=2: firefox
 # browser_type=3: chrome
-def set_cookie(file_path, browser_type=1, target_domains=''):
+def set_cookie(file_path, browser_type=1, target_domains=""):
     if sys.version.find("32 bit") != -1:
         from pysqlite2_win32 import dbapi2 as sqlite
     else:
@@ -326,10 +326,10 @@ def save_image(image_url, image_path):
 
 
 # 按照指定连接符合并二维数组生成字符串
-def list_to_string(source_lists, first_sign='\n', second_sign='\t'):
+def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
     temp_list = []
     for value in source_lists:
-        if second_sign != '':
+        if second_sign != "":
             temp_list.append(second_sign.join(map(str, value)))
         else:
             temp_list.append(str(value))
@@ -433,13 +433,13 @@ def copy_files(source_path, destination_path):
 # 生成指定长度的随机字符串
 # char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 3 - 数字，默认7(1+2+3)包括全部
 def generate_random_string(string_length, char_lib_type=7):
-    result = ''
+    result = ""
     char_lib = {
-        1: 'abcdefghijklmnopqrstuvwxyz',  # 小写字母
-        2: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',  # 大写字母
-        4: '0123456789',  # 数字
+        1: "abcdefghijklmnopqrstuvwxyz",  # 小写字母
+        2: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",  # 大写字母
+        4: "0123456789",  # 数字
     }
-    random_string = ''
+    random_string = ""
     for i in char_lib:
         if char_lib_type & i == i:
             for char in char_lib[i]:
@@ -462,6 +462,6 @@ def process_exit():
 
 def shutdown():
     if platform.system() == "Windows":
-        os.system('shutdown -s -f -t 3')
+        os.system("shutdown -s -f -t 3")
     else:
-        os.system('halt')
+        os.system("halt")

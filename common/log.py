@@ -10,9 +10,9 @@ from common import tool
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False
 IS_SHOW_TRACE = False
-ERROR_LOG_PATH = ''
-STEP_LOG_PATH = ''
-TRACE_LOG_PATH = ''
+ERROR_LOG_PATH = ""
+STEP_LOG_PATH = ""
+TRACE_LOG_PATH = ""
 
 
 def error(msg):
