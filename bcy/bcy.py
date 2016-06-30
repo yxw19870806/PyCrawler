@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 '''
 
 from common import log, robot, tool
+import cookielib
 import os
 import re
 import threading
@@ -40,6 +41,17 @@ def trace(msg):
     threadLock.acquire()
     log.trace(msg)
     threadLock.release()
+
+
+def login(email, password):
+    cookie = cookielib.CookieJar()
+    login_url = "http://bcy.net/public/dologin"
+    login_post = {"email": email, "password": password}
+    login_return_code = tool.http_request(login_url, login_post, cookie)[0]
+    if login_return_code == 0:
+        return True
+    else:
+        return False
 
 
 class Bcy(robot.Robot):
@@ -88,7 +100,6 @@ class Bcy(robot.Robot):
             if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
                 is_check_ok = False
                 while not is_check_ok:
-                    # 等待手动检测所有图片结束
                     input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否下一步操作？ (Y)es or (N)o: ")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
