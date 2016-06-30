@@ -8,7 +8,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 '''
 
-from common import log, robot, tool, json
+from common import log, robot, tool
+import json
 import os
 import re
 import threading
@@ -210,7 +211,7 @@ class Download(threading.Thread):
                     print_error_msg(account_name + " 无法获取媒体信息: " + media_page_url)
                     break
                 try:
-                    media_page = json.read(media_page_response)
+                    media_page = json.loads(media_page_response)
                 except:
                     print_error_msg(account_name + " 媒体信息：" + str(media_page_response) + " 不是一个JSON")
                     break
