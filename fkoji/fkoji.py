@@ -13,7 +13,7 @@ from common import BeautifulSoup
 import os
 import time
 
-ALL_SIGN = '_____'
+ALL_SIGN = "_____"
 
 
 class Fkoji(robot.Robot):

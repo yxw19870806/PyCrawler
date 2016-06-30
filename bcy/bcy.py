@@ -17,8 +17,8 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
-IMAGE_DOWNLOAD_PATH = ''
-NEW_SAVE_DATA_PATH = ''
+IMAGE_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = 1
 
 threadLock = threading.Lock()
@@ -77,7 +77,7 @@ class Bcy(robot.Robot):
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 设置系统cookies
-        if not tool.set_cookie(self.cookie_path, self.browser_version, 'bcy.net'):
+        if not tool.set_cookie(self.cookie_path, self.browser_version, "bcy.net"):
             print_error_msg("导入浏览器cookies失败，程序结束！")
             tool.process_exit()
 
