@@ -64,13 +64,13 @@ def restore_process_status():
 
 
 # http请求
-# 返回 【返回码，数据, 请求信息】
+# 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
-def http_request(url, post_data=None):
+def http_request(url, post_data=None, cookie=None):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
     if not (url.find("http://") == 0 or url.find("https://") == 0):
-        return [-100, None, []]
+        return [-100, None, None]
     count = 0
     while 1:
         while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
@@ -85,10 +85,10 @@ def http_request(url, post_data=None):
             # 设置头信息
             request.add_header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0")
 
-            # cookie
-            # cookie = cookielib.CookieJar()
-            # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
-            # urllib2.install_opener(opener)
+            # cookies
+            if isinstance(cookie, cookielib.CookieJar):
+                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
+                urllib2.install_opener(opener)
 
             # 设置访问超时
             if sys.version_info < (2, 7):
@@ -98,6 +98,7 @@ def http_request(url, post_data=None):
                 response = urllib2.urlopen(request)
             else:
                 response = urllib2.urlopen(request, timeout=5)
+                response.geturl()
             return [1, response.read(), response]
         except Exception, e:
             # 代理无法访问
@@ -116,13 +117,13 @@ def http_request(url, post_data=None):
                 print_msg("访问页面超时，重新连接请稍后")
             # 400
             elif str(e).lower().find("http error 400") != -1:
-                return [-400, None, []]
+                return [-400, None, None]
             # 403
             elif str(e).lower().find("http error 403") != -1:
-                return [-403, None, []]
+                return [-403, None, None]
             # 404
             elif str(e).lower().find("http error 404") != -1:
-                return [-404, None, []]
+                return [-404, None, None]
             else:
                 print_msg(str(e))
                 traceback.print_exc()
@@ -130,7 +131,7 @@ def http_request(url, post_data=None):
         count += 1
         if count > 500:
             print_msg("无法访问页面：" + url)
-            return [-1, None, []]
+            return [-1, None, None]
 
 
 def get_response_info(response, key):
