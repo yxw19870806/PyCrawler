@@ -55,6 +55,27 @@ def print_step_msg(msg):
     threadLock.release()
 
 
+def get_image_by(image_info):
+    if "pic_host" in image_info:
+        image_host = str(image_info["pic_host"])
+    else:
+        image_host = ""
+    for try_count in range(1, 6):
+        if image_host == "":
+            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
+        image_url = image_host + "/large/" + str(image_info["pic_name"])
+        [image_return_code, image_response] = tool.http_request(image_url)[:2]
+        if image_return_code == 1:
+            # 处理获取的文件为weibo默认获取失败的图片
+            md5_digest = md5(image_response)
+            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
+                return None
+            if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+                return image_response
+        image_host = ""
+    return None
+
+
 def save_image(image_byte, image_path):
     image_path = tool.change_path_encoding(image_path)
     image_file = open(image_path, "wb")
