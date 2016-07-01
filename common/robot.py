@@ -10,7 +10,6 @@ IS_INIT = False
 
 
 class Robot(object):
-
     def __init__(self):
         global IS_INIT
         config = analyze_config(os.path.join(os.path.abspath(""), "..\\common\\config.ini"))
@@ -210,3 +209,14 @@ def sort_save_data(save_data_path, sort_key_index=0):
 # 生成新存档的文件路径
 def get_new_save_file_path(old_save_file_path):
     return os.path.join(os.path.dirname(old_save_file_path), time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path))
+
+
+def check_sub_key(needles, haystack):
+    if not isinstance(needles, tuple):
+        needles = tuple(needles)
+    if isinstance(haystack, dict):
+        for needle in needles:
+            if needle not in haystack:
+                return False
+        return True
+    return False
