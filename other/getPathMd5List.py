@@ -12,12 +12,12 @@ import hashlib
 import os
 import time
 
-buff_size = 1024 * 1024 * 4 # 读取4MB
+buff_size = 1024 * 1024 * 4  # 读取4MB
 
 
 def md5(source_file_path):
     pos = 0
-    file_handle = open(source_file_path, 'rb')
+    file_handle = open(source_file_path, "rb")
     file_hash = hashlib.md5()
     while 1:
         # 从文件中读取一段内容
@@ -51,10 +51,11 @@ class GetPathMd5List():
             if os.path.isdir(file_path):
                 self._scan_path(file_path)
             else:
-                print 'start md5: ' + file_path
-                self.result[file_path.replace(self.root_path, '')] = md5(file_path)
+                print "start md5: " + file_path
+                self.result[file_path.replace(self.root_path, "")] = md5(file_path)
 
 
 if __name__ == "__main__":
-    path = 'C:\Users\Administrator\Documents\yxw19870806\BBS'
-    print GetPathMd5List(path).scan_path().get_result()
+    path = ""
+    result = GetPathMd5List(path).scan_path().get_result()
+    print result
