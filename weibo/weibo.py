@@ -433,33 +433,26 @@ class Download(threading.Thread):
                 trace(account_name + "相册地址：" + photo_page_url + "，返回JSON数据：" + str(photo_page_data))
                 try:
                     page = json.loads(photo_page_data)
-                except:
+                except AttributeError:
                     print_error_msg(account_name + " 返回的图片列表不是一个JSON数据")
                     break
 
-                # 总的图片数
-                try:
-                    total_image_count = page["data"]["total"]
-                except:
-                    print_error_msg(account_name + " 在图片列表：" + str(page) + " 中没有找到'total'字段")
+                if not robot.check_sub_key("data", page):
+                    print_error_msg(account_name + " 图片列表解析错误")
+                    break
+                if not robot.check_sub_key(("total", "photo_list"), page["data"]):
+                    print_error_msg(account_name + " 图片列表解析错误")
                     break
 
-                try:
-                    photo_list = page["data"]["photo_list"]
-                except:
-                    print_error_msg(account_name + " 在图片列表：" + str(page) + " 中没有找到'total'字段")
-                    break
+                # 总的图片数
+                total_image_count = page["data"]["total"]
+                # 图片详细列表
+                photo_list = page["data"]["photo_list"]
 
                 for image_info in photo_list:
-                    if not isinstance(image_info, dict):
-                        print_error_msg(account_name + " 'photo_list'：" + str(image_info) + " 不是一个字典")
-                        continue
-                    if "pic_name" not in image_info:
-                        print_error_msg(account_name + " 在JSON数据：" + str(image_info) + " 中没有找到'pic_name'字段")
-                        continue
-                    if "timestamp" not in image_info:
-                        print_error_msg(account_name + " 在JSON数据：" + str(image_info) + " 中没有找到'timestamp'字段")
-                        continue
+                    if not robot.check_sub_key(("pic_name", "timestamp"), image_info):
+                        print_error_msg(account_name + " 图片列表解析错误")
+                        break
                     # 将第一张image的时间戳保存到新id list中
                     if self.account_info[2] == "0":
                         self.account_info[2] = str(image_info["timestamp"])
