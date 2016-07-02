@@ -55,27 +55,6 @@ def print_step_msg(msg):
     threadLock.release()
 
 
-def get_image_by(image_info):
-    if "pic_host" in image_info:
-        image_host = str(image_info["pic_host"])
-    else:
-        image_host = ""
-    for try_count in range(1, 6):
-        if image_host == "":
-            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-        image_url = image_host + "/large/" + str(image_info["pic_name"])
-        [image_return_code, image_response] = tool.http_request(image_url)[:2]
-        if image_return_code == 1:
-            # 处理获取的文件为weibo默认获取失败的图片
-            md5_digest = md5(image_response)
-            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
-                return None
-            if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
-                return image_response
-        image_host = ""
-    return None
-
-
 def save_image(image_byte, image_path):
     image_path = tool.change_path_encoding(image_path)
     image_file = open(image_path, "wb")
@@ -205,6 +184,18 @@ def find_real_video_url(video_page_url, account_name, video_count):
         print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "，暂不支持的视频源")
 
     return []
+
+
+def get_image_byte(image_url):
+    [image_return_code, image_data] = tool.http_request(image_url)[:2]
+    if image_return_code == 1:
+        # 处理获取的文件为weibo默认获取失败的图片
+        md5_digest = md5(image_data)
+        if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
+            return None
+        if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+            return image_data
+    return None
 
 
 class Weibo(robot.Robot):
@@ -494,28 +485,22 @@ class Download(threading.Thread):
                             print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                         else:
                             print_step_msg(account_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
-                        [image_return_code, image_response] = tool.http_request(image_url)[:2]
-                        if image_return_code == 1:
-                            # 处理获取的文件为weibo默认获取失败的图片
-                            md5_digest = md5(image_response)
-                            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
-                                print_error_msg(account_name + " 图片" + image_url + " 已经在服务器上被删除，跳过")
-                                continue
-                            if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
-                                file_type = image_url.split(".")[-1]
-                                if file_type.find("/") != -1:
-                                    file_type = "jpg"
-                                file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                                # 第一张图片，创建目录
-                                if need_make_image_dir:
-                                    if not tool.make_dir(image_path, 0):
-                                        print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                                        tool.process_exit()
-                                    need_make_image_dir = False
-                                save_image(image_response, file_path)
-                                print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
-                                image_count += 1
-                                break
+                        image_byte = get_image_byte(image_url)
+                        if image_byte:
+                            file_type = image_url.split(".")[-1]
+                            if file_type.find("/") != -1:
+                                file_type = "jpg"
+                            file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                            # 第一张图片，创建目录
+                            if need_make_image_dir:
+                                if not tool.make_dir(image_path, 0):
+                                    print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                    tool.process_exit()
+                                need_make_image_dir = False
+                            save_image(image_byte, file_path)
+                            print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                            image_count += 1
+                            break
                         if try_count >= 5:
                             print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
                         image_host = ""
