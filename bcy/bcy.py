@@ -278,7 +278,7 @@ class Download(threading.Thread):
                             image_index = rp_page_response.find("src='", image_index + 1)
 
                         if image_count == 0:
-                            print_error_msg(cn + " " + rp_id + " 没有任何图片")
+                            print_error_msg(cn + " " + rp_id + " 没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品")
 
                         this_cn_total_image_count += image_count - 1
 
