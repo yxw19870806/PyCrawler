@@ -48,10 +48,32 @@ def login(email, password):
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
     login_return_code = tool.http_request(login_url, login_post, cookie)[0]
-    if login_return_code == 0:
+    if login_return_code == 1:
         return True
     else:
         return False
+
+
+def follow(account_id):
+    follow_url = "http://bcy.net/weibo/Operate/follow?"
+    follow_post_data = {"uid": account_id, "type": "dofollow"}
+    follow_return_code, follow_return_data = tool.http_request(follow_url, follow_post_data)[:2]
+    if follow_return_code == 1:
+        # 0 未登录，11 关注成功，12 已关注
+        if int(follow_return_data) == 12:
+            return True
+    return False
+
+
+def unfollow(account_id):
+    unfollow_url = "http://bcy.net/weibo/Operate/follow?"
+    unfollow_post_data = {"uid": account_id, "type": "unfollow"}
+    unfollow_return_code, unfollow_return_data = tool.http_request(unfollow_url, unfollow_post_data)[:2]
+    print unfollow_return_code
+    if unfollow_return_code == 1:
+        if int(unfollow_return_data) == 1:
+            return True
+    return False
 
 
 class Bcy(robot.Robot):
