@@ -451,10 +451,10 @@ class Download(threading.Thread):
                     break
 
                 if not robot.check_sub_key("data", page):
-                    print_error_msg(account_name + " 图片列表解析错误")
+                    print_error_msg(account_name + " 图片列表解析错误" + str(page))
                     break
                 if not robot.check_sub_key(("total", "photo_list"), page["data"]):
-                    print_error_msg(account_name + " 图片列表解析错误")
+                    print_error_msg(account_name + " 图片列表解析错误"  + str(page))
                     break
 
                 # 总的图片数
