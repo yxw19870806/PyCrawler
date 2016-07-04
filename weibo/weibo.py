@@ -129,6 +129,7 @@ def find_real_video_url(video_page_url, account_name, video_count):
         return ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
+        # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
         for i in range(0, 50):
             source_video_page = visit_weibo(video_page_url)
             if source_video_page:
@@ -166,14 +167,13 @@ def find_real_video_url(video_page_url, account_name, video_count):
             video_id = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
             if len(video_id) == 1:
                 video_page_id = video_page_url.split("/")[-1]
-                video_id = video_id[0]
-                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id, video_page_id)
+                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id[0], video_page_id)
                 [video_info_page_return_code, video_info_page] = tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
-                        if "data" in video_info_page:
-                            if "url" in video_info_page["data"]:
+                        if robot.check_sub_key(("data", ), video_info_page):
+                            if robot.check_sub_key(("url", ), video_info_page["data"]):
                                 return [random.choice(video_info_page["data"]["url"])]
                     except AttributeError:
                         pass
@@ -186,6 +186,7 @@ def find_real_video_url(video_page_url, account_name, video_count):
     return []
 
 
+# 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
 def get_image_byte(image_url):
     [image_return_code, image_data] = tool.http_request(image_url)[:2]
     if image_return_code == 1:
