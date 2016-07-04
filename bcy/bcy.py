@@ -275,13 +275,22 @@ class Download(threading.Thread):
                     [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
                     if rp_page_return_code == 1:
                         image_count = 0
-                        image_index = rp_page_response.find("src='")
-                        while image_index != -1:
-                            image_count += 1
+                        image_url_list = re.findall("src='([^']*)'", rp_page_response)
+                        if len(image_url_list) == 0:
+                            print_step_msg(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
+                            if follow(coser_id):
+                                # 重新获取下详细页面
+                                rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
+                                [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
+                                if rp_page_return_code == 1:
+                                    image_url_list = re.findall("src='([^']*)'", rp_page_response)
 
-                            image_start = rp_page_response.find("http", image_index)
-                            image_stop = rp_page_response.find("'", image_start)
-                            image_url = rp_page_response[image_start:image_stop]
+                        if len(image_url_list) == 0:
+                            print_error_msg(cn + " " + rp_id + " 没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品")
+                            continue
+
+                        for image_url in image_url_list:
+                            image_count += 1
                             # 禁用指定分辨率
                             image_url = "/".join(image_url.split("/")[0:-1])
 
@@ -296,11 +305,6 @@ class Download(threading.Thread):
                                 print_step_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片下载成功")
                             else:
                                 print_error_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-
-                            image_index = rp_page_response.find("src='", image_index + 1)
-
-                        if image_count == 0:
-                            print_error_msg(cn + " " + rp_id + " 没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品")
 
                         this_cn_total_image_count += image_count - 1
 
