@@ -364,12 +364,6 @@ class Download(threading.Thread):
             self.account_info[2] = "0"  # 置空，存放此次的最后图片上传时间
             last_video_url = self.account_info[4]
             self.account_info[4] = ""  # 置空，存放此次的的最后一个视频地址
-            page_count = 1
-            image_count = 1
-            video_count = 1
-            since_id = INIT_SINCE_ID
-            need_make_image_dir = True
-            need_make_video_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
@@ -380,9 +374,12 @@ class Download(threading.Thread):
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             # 视频
+            video_count = 1
             page_id = 0
             is_over = False
-            while IS_DOWNLOAD_VIDEO == 1:
+            need_make_video_dir = True
+            since_id = INIT_SINCE_ID
+            while (IS_DOWNLOAD_VIDEO == 1) and (not is_over):
                 if not page_id:
                     page_id = get_weibo_account_page_id(account_id)
                     if not page_id:
@@ -421,14 +418,12 @@ class Download(threading.Thread):
                         else:
                             print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + video_page_url + " 下载失败")
 
-                if is_over:
-                    break
-
-                since_id_data = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
-                if len(since_id_data) == 1:
-                    since_id = since_id_data[0]
-                else:
-                    break
+                if not is_over:
+                    since_id_data = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
+                    if len(since_id_data) == 1:
+                        since_id = since_id_data[0]
+                    else:
+                        break
 
             if video_count > 1 and last_video_url != "" and not is_over:
                 print_error_msg(account_name + " 视频数量异常")
@@ -438,8 +433,11 @@ class Download(threading.Thread):
                 self.account_info[4] = last_video_url
 
             # 图片
+            image_count = 1
+            page_count = 1
             is_over = False
-            while IS_DOWNLOAD_IMAGE == 1:
+            need_make_image_dir = True
+            while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
                 photo_page_url = "http://photo.weibo.com/photos/get_all"
                 photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
                 photo_page_data = visit_weibo(photo_page_url)
@@ -511,14 +509,12 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                if is_over:
-                    break
-
-                if (total_image_count / IMAGE_COUNT_PER_PAGE) > (page_count - 1):
-                    page_count += 1
-                else:
-                    # 全部图片下载完毕
-                    break
+                if not is_over:
+                    if (total_image_count / IMAGE_COUNT_PER_PAGE) > (page_count - 1):
+                        page_count += 1
+                    else:
+                        # 全部图片下载完毕
+                        break
 
             # 如果有错误且没有发现新的图片，复原旧数据
             if self.account_info[2] == "0" and last_image_time != 0:
