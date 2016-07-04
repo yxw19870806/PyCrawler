@@ -175,7 +175,7 @@ def find_real_video_url(video_page_url, account_name, video_count):
                         if "data" in video_info_page:
                             if "url" in video_info_page["data"]:
                                 return [random.choice(video_info_page["data"]["url"])]
-                    except:
+                    except AttributeError:
                         pass
             print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
         else:

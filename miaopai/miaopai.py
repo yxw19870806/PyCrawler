@@ -206,7 +206,7 @@ class Download(threading.Thread):
 
                 try:
                     media_page = json.loads(media_page)
-                except:
+                except AttributeError:
                     print_error_msg(account_id + " 返回的视频列表不是一个JSON数据")
                     break
                 if "isall" not in media_page:

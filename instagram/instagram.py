@@ -212,7 +212,7 @@ class Download(threading.Thread):
                     break
                 try:
                     media_page = json.loads(media_page_response)
-                except:
+                except AttributeError:
                     print_error_msg(account_name + " 媒体信息：" + str(media_page_response) + " 不是一个JSON")
                     break
                 if "media" not in media_page:
