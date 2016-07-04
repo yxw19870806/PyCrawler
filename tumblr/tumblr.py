@@ -216,121 +216,121 @@ class Download(threading.Thread):
                 if len(post_url_list) == 0:
                     # 下载完毕了
                     break
-                else:
-                    trace(account_id + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(post_url_list))
-                    post_url_list = filter_post_url(post_url_list)
-                    trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_url_list))
-                    for post_id in sorted(post_url_list.keys(), reverse=True):
-                        # 已经下载过了
-                        if post_id in post_id_list:
+
+                trace(account_id + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(post_url_list))
+                post_url_list = filter_post_url(post_url_list)
+                trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_url_list))
+                for post_id in sorted(post_url_list.keys(), reverse=True):
+                    # 已经下载过了
+                    if post_id in post_id_list:
+                        continue
+
+                    # 将第一张image的URL保存到新id list中
+                    if self.account_info[3] == "":
+                        self.account_info[3] = post_id
+
+                    # 检查是否已下载到前一次的图片
+                    if post_id <= last_post_id:
+                        is_over = True
+                        break
+
+                    post_url = "http://%s/post/%s" % (host_url, post_id)
+                    [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
+                    if post_page_return_code != 1:
+                        for postfix in post_url_list[post_id]:
+                            temp_post_url = post_url + "/" + urllib2.quote(postfix)
+                            [post_page_return_code, post_page_response] = tool.http_request(temp_post_url)[:2]
+                            if post_page_return_code == 1:
+                                break
+                        if not post_page_response:
+                            print_error_msg(account_id + " 无法获取信息页：" + post_url)
                             continue
 
-                        # 将第一张image的URL保存到新id list中
-                        if self.account_info[3] == "":
-                            self.account_info[3] = post_id
+                    # 截取html中的head标签内的内容
+                    post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_response)
+                    if len(post_page_head) == 1:
+                        post_page_head = post_page_head[0]
+                    else:
+                        print_error_msg(account_id + " 信息页：" + post_url + " 截取head标签异常")
+                        continue
 
-                        # 检查是否已下载到前一次的图片
-                        if post_id <= last_post_id:
-                            is_over = True
-                            break
+                    og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
+                    if len(og_type) != 1:
+                        print_error_msg(account_id + " 信息页：" + post_url + " ，'og:type'获取异常")
+                        continue
+                    og_type = og_type[0]
+                    post_id_list.append(post_id)
 
-                        post_url = "http://%s/post/%s" % (host_url, post_id)
-                        [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
-                        if post_page_return_code != 1:
-                            for postfix in post_url_list[post_id]:
-                                temp_post_url = post_url + "/" + urllib2.quote(postfix)
-                                [post_page_return_code, post_page_response] = tool.http_request(temp_post_url)[:2]
-                                if post_page_return_code == 1:
-                                    break
-                            if not post_page_response:
-                                print_error_msg(account_id + " 无法获取信息页：" + post_url)
-                                continue
+                    # 空
+                    if og_type == "tumblr-feed:entry":
+                        continue
 
-                        # 截取html中的head标签内的内容
-                        post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_response)
-                        if len(post_page_head) == 1:
-                            post_page_head = post_page_head[0]
-                        else:
-                            print_error_msg(account_id + " 信息页：" + post_url + " 截取head标签异常")
-                            continue
-
-                        og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
-                        if len(og_type) != 1:
-                            print_error_msg(account_id + " 信息页：" + post_url + " ，'og:type'获取异常")
-                            continue
-                        og_type = og_type[0]
-                        post_id_list.append(post_id)
-
-                        # 空
-                        if og_type == "tumblr-feed:entry":
-                            continue
-
-                        # 视频
-                        if IS_DOWNLOAD_IMAGE == 1 and og_type == "tumblr-feed:video":
-                            video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-                            [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
-                            if video_page_return_code == 1:
-                                video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
-                                if len(video_list) == 0:
-                                    print_error_msg(account_id + " 视频页：" + video_page_url + "中没有找到视频")
-                                else:
-                                    for video_url, video_type in video_list:
-                                        file_type = video_type.split("/")[-1]
-                                        video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
-
-                                        # 下载
-                                        print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + video_url)
-                                        # 第一个视频，创建目录
-                                        if need_make_video_dir:
-                                            if not tool.make_dir(video_path, 0):
-                                                print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
-                                                tool.process_exit()
-                                            need_make_video_dir = False
-                                        if tool.save_image(video_url, video_file_path):
-                                            print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
-                                            video_count += 1
-                                        else:
-                                            print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
+                    # 视频
+                    if IS_DOWNLOAD_IMAGE == 1 and og_type == "tumblr-feed:video":
+                        video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+                        [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
+                        if video_page_return_code == 1:
+                            video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
+                            if len(video_list) == 0:
+                                print_error_msg(account_id + " 视频页：" + video_page_url + "中没有找到视频")
                             else:
-                                print_error_msg(account_id + " 无法获取视频页：" + video_page_url)
+                                for video_url, video_type in video_list:
+                                    file_type = video_type.split("/")[-1]
+                                    video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
 
-                        # 图片
-                        if IS_DOWNLOAD_IMAGE == 1:
-                            page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-                            trace(account_id + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
-                            page_image_url_list = filter_different_resolution_images(page_image_url_list)
-                            trace(account_id + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
-                            if len(page_image_url_list) == 0:
-                                print_error_msg(account_id + " 信息页：" + post_url + " 中没有找到图片")
-                                continue
-                            for image_url in page_image_url_list:
-                                file_type = image_url.split(".")[-1]
-                                image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                                    # 下载
+                                    print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + video_url)
+                                    # 第一个视频，创建目录
+                                    if need_make_video_dir:
+                                        if not tool.make_dir(video_path, 0):
+                                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
+                                            tool.process_exit()
+                                        need_make_video_dir = False
+                                    if tool.save_image(video_url, video_file_path):
+                                        print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
+                                        video_count += 1
+                                    else:
+                                        print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
+                        else:
+                            print_error_msg(account_id + " 无法获取视频页：" + video_page_url)
 
-                                # 下载
-                                print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                                # 第一张图片，创建目录
-                                if need_make_image_dir:
-                                    if not tool.make_dir(image_path, 0):
-                                        print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                                        tool.process_exit()
-                                    need_make_image_dir = False
-                                if tool.save_image(image_url, image_file_path):
-                                    print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
-                                    image_count += 1
-                                else:
-                                    print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                    # 图片
+                    if IS_DOWNLOAD_IMAGE == 1:
+                        page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+                        trace(account_id + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
+                        page_image_url_list = filter_different_resolution_images(page_image_url_list)
+                        trace(account_id + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
+                        if len(page_image_url_list) == 0:
+                            print_error_msg(account_id + " 信息页：" + post_url + " 中没有找到图片")
+                            continue
+                        for image_url in page_image_url_list:
+                            file_type = image_url.split(".")[-1]
+                            image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
-                                # 达到配置文件中的下载数量，结束
-                                if 0 < GET_IMAGE_COUNT < image_count:
-                                    is_over = True
-                                    break
+                            # 下载
+                            print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                            # 第一张图片，创建目录
+                            if need_make_image_dir:
+                                if not tool.make_dir(image_path, 0):
+                                    print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                    tool.process_exit()
+                                need_make_image_dir = False
+                            if tool.save_image(image_url, image_file_path):
+                                print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
+                                image_count += 1
+                            else:
+                                print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                        if is_over:
-                            break
+                            # 达到配置文件中的下载数量，结束
+                            if 0 < GET_IMAGE_COUNT < image_count:
+                                is_over = True
+                                break
 
                     if is_over:
                         break
+
+                if is_over:
+                    break
 
                 page_count += 1
 
