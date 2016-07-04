@@ -63,6 +63,7 @@ class Robot(object):
 
         self.is_sort = get_config(config, "IS_SORT", 1, 2)
         self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 2)
+        self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 2)
 
         self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
 
