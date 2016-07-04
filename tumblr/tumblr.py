@@ -202,7 +202,7 @@ class Download(threading.Thread):
 
             host_url = "%s.tumblr.com" % account_id
             # 下载
-            while True:
+            while not is_over:
                 index_page_url = "http://%s/page/%s" % (host_url, page_count)
 
                 [index_page_return_code, index_page_response] = tool.http_request(index_page_url)[:2]
@@ -271,9 +271,7 @@ class Download(threading.Thread):
                         [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
                         if video_page_return_code == 1:
                             video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
-                            if len(video_list) == 0:
-                                print_error_msg(account_id + " 视频页：" + video_page_url + "中没有找到视频")
-                            else:
+                            if len(video_list) > 0:
                                 for video_url, video_type in video_list:
                                     file_type = video_type.split("/")[-1]
                                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
@@ -291,6 +289,8 @@ class Download(threading.Thread):
                                         video_count += 1
                                     else:
                                         print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
+                            else:
+                                print_error_msg(account_id + " 视频页：" + video_page_url + "中没有找到视频")
                         else:
                             print_error_msg(account_id + " 无法获取视频页：" + video_page_url)
 
@@ -301,36 +301,32 @@ class Download(threading.Thread):
                         page_image_url_list = filter_different_resolution_images(page_image_url_list)
                         trace(account_id + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
                         if len(page_image_url_list) == 0:
+                            for image_url in page_image_url_list:
+                                file_type = image_url.split(".")[-1]
+                                image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+
+                                # 下载
+                                print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                                # 第一张图片，创建目录
+                                if need_make_image_dir:
+                                    if not tool.make_dir(image_path, 0):
+                                        print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                        tool.process_exit()
+                                    need_make_image_dir = False
+                                if tool.save_image(image_url, image_file_path):
+                                    print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
+                                    image_count += 1
+                                else:
+                                    print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+
+                                # 达到配置文件中的下载数量，结束
+                                if 0 < GET_IMAGE_COUNT < image_count:
+                                    is_over = True
+                                    break
+                        else:
                             print_error_msg(account_id + " 信息页：" + post_url + " 中没有找到图片")
-                            continue
-                        for image_url in page_image_url_list:
-                            file_type = image_url.split(".")[-1]
-                            image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-
-                            # 下载
-                            print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
-                                    tool.process_exit()
-                                need_make_image_dir = False
-                            if tool.save_image(image_url, image_file_path):
-                                print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
-                                image_count += 1
-                            else:
-                                print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-
-                            # 达到配置文件中的下载数量，结束
-                            if 0 < GET_IMAGE_COUNT < image_count:
-                                is_over = True
-                                break
-
                     if is_over:
                         break
-
-                if is_over:
-                    break
 
                 page_count += 1
 
