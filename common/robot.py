@@ -199,6 +199,7 @@ def get_new_save_file_path(old_save_file_path):
     return os.path.join(os.path.dirname(old_save_file_path), time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path))
 
 
+# 判断类型是否为字典，并且检测是否存在指定的key
 def check_sub_key(needles, haystack):
     if not isinstance(needles, tuple):
         needles = tuple(needles)
