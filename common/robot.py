@@ -208,5 +208,3 @@ def check_sub_key(needles, haystack):
                 return False
         return True
     return False
-
-Robot()
