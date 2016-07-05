@@ -128,9 +128,6 @@ def get_config(config, key, default_value, mode, prefix=None, postfix=None):
         if value[0] == "\\":
             value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
         value = os.path.realpath(value)
-    # else:
-    #     tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
-    #     value = default_value
     return value
 
 
