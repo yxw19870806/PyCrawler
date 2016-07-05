@@ -1,6 +1,8 @@
 # -*- coding:UTF-8  -*-
 
 from common import log
+import codecs
+import ConfigParser
 import tool
 import os
 import time
@@ -12,10 +14,12 @@ IS_INIT = False
 class Robot(object):
     def __init__(self):
         global IS_INIT
-        config = analyze_config(os.path.join(os.path.abspath(""), "..\\common\\config.ini"))
+        config = ConfigParser.SafeConfigParser()
+        with codecs.open(os.path.join(os.path.abspath(""), r"..\\common\\config.ini"), encoding="utf-8-sig") as file_handle:
+            config.readfp(file_handle)
 
         # 日志
-        self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
+        self.is_show_error = get_config(config, "IS_SHOW_ERROR2", 1, 2)
         self.is_show_step = get_config(config, "IS_SHOW_STEP", 1, 2)
         self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 0, 2)
         self.error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
@@ -95,51 +99,33 @@ class Robot(object):
 # prefix: 前缀，只有在mode=1时有效
 # postfix: 后缀，只有在mode=1时有效
 def get_config(config, key, default_value, mode, prefix=None, postfix=None):
-    value = None
-    if key in config:
-        if mode == 0:
-            value = config[key]
-        elif mode == 1:
-            value = config[key]
-            if prefix is not None:
-                value = prefix + value
-            if postfix is not None:
-                value = value + postfix
-        elif mode == 2:
-            try:
-                value = int(config[key])
-            except:
-                tool.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
-                traceback.print_exc()
-                value = default_value
-        elif mode == 3:
-            value = config[key]
-            if value[0] == "\\":
-                value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
+    if config.has_option("setting", key):
+        value = config.get("setting", key)
     else:
         tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
+    if mode == 0:
+        pass
+    elif mode == 1:
+        if prefix is not None:
+            value = prefix + value
+        if postfix is not None:
+            value = value + postfix
+    elif mode == 2:
+        try:
+            value = int(value)
+        except:
+            tool.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+            traceback.print_exc()
+            value = default_value
+    elif mode == 3:
+        if value[0] == "\\":
+            value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
+        value = os.path.realpath(value)
+    # else:
+    #     tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+    #     value = default_value
     return value
-
-
-# 读取配置文件，并生成配置字典
-def analyze_config(config_path):
-    config_file = open(config_path, "r")
-    lines = config_file.readlines()
-    config_file.close()
-    config = {}
-    for line in lines:
-        if len(line) == 0:
-            continue
-        line = line.lstrip().rstrip().replace(" ", "")
-        if len(line) > 1 and line[0] != "#" and line.find("=") >= 0:
-            try:
-                line = line.split("=")
-                config[line[0]] = line[1]
-            except Exception, e:
-                tool.print_msg(str(e))
-                pass
-    return config
 
 
 # 将制定文件夹内的所有文件排序重命名并复制到其他文件夹中
@@ -221,3 +207,5 @@ def check_sub_key(needles, haystack):
                 return False
         return True
     return False
+
+Robot()
