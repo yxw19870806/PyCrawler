@@ -15,11 +15,11 @@ class Robot(object):
     def __init__(self):
         global IS_INIT
         config = ConfigParser.SafeConfigParser()
-        with codecs.open(os.path.join(os.path.abspath(""), r"..\\common\\config.ini"), encoding="utf-8-sig") as file_handle:
+        with codecs.open(os.path.join(os.path.abspath(""), "..\\common\\config.ini"), encoding="utf-8-sig") as file_handle:
             config.readfp(file_handle)
 
         # 日志
-        self.is_show_error = get_config(config, "IS_SHOW_ERROR2", 1, 2)
+        self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
         self.is_show_step = get_config(config, "IS_SHOW_STEP", 1, 2)
         self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 0, 2)
         self.error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
