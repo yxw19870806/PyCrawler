@@ -21,6 +21,7 @@ TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = 1
+IS_AUTO_FOLLOW = True
 
 threadLock = threading.Lock()
 
@@ -222,9 +223,9 @@ class Download(threading.Thread):
                     break
 
                 title_index = 0
-                for data in page_rp_id_list:
-                    cp_id = data[0]
-                    rp_id = data[1]
+                for cp_id, rp_id in page_rp_id_list:
+                    if rp_id in rp_id_list:
+                        continue
                     rp_id_list.append(rp_id)
 
                     if self.account_info[1] == "":
@@ -271,7 +272,7 @@ class Download(threading.Thread):
                         continue
 
                     image_url_list = re.findall("src='([^']*)'", rp_page_response)
-                    if len(image_url_list) == 0:
+                    if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
                         print_step_msg(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
                             # 重新获取下详细页面
