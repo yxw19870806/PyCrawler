@@ -92,11 +92,12 @@ def visit_weibo(url):
 
 # 获取账号对应的page_id
 def get_weibo_account_page_id(account_id):
-    index_url = "http://weibo.com/u/%s?is_all=1" % account_id
-    index_page = visit_weibo(index_url)
-    page_id = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
-    if len(page_id) == 1:
-        return page_id[0]
+    for i in range(0, 5):
+        index_url = "http://weibo.com/u/%s?is_all=1" % account_id
+        index_page = visit_weibo(index_url)
+        page_id = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
+        if len(page_id) == 1:
+            return page_id[0]
     return 0
 
 
