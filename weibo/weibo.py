@@ -90,6 +90,22 @@ def visit_weibo(url):
     return False
 
 
+def get_weibo_photo_page_data(account_id, page_count):
+    photo_page_url = "http://photo.weibo.com/photos/get_all"
+    photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
+    photo_page_data = visit_weibo(photo_page_url)
+    try:
+        page = json.loads(photo_page_data)
+    except AttributeError:
+        return None
+
+    if robot.check_sub_key(("data", ), page):
+        if robot.check_sub_key(("total", "photo_list"), page["data"]):
+            return page["data"]
+
+    return None
+
+
 # 获取账号对应的page_id
 def get_weibo_account_page_id(account_id):
     for i in range(0, 5):
@@ -443,27 +459,15 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
-                photo_page_url = "http://photo.weibo.com/photos/get_all"
-                photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
-                photo_page_data = visit_weibo(photo_page_url)
-                trace(account_name + "相册地址：" + photo_page_url + "，返回JSON数据：" + str(photo_page_data))
-                try:
-                    page = json.loads(photo_page_data)
-                except AttributeError:
-                    print_error_msg(account_name + " 返回的图片列表不是一个JSON数据")
-                    break
+                photo_page_data = get_weibo_photo_page_data(account_id, page_count)
 
-                if not robot.check_sub_key(("data", ), page):
-                    print_error_msg(account_name + " 图片列表解析错误" + str(page))
-                    break
-                if not robot.check_sub_key(("total", "photo_list"), page["data"]):
-                    print_error_msg(account_name + " 图片列表解析错误"  + str(page))
-                    break
-
+                if not photo_page_data:
+                    print_error_msg(account_name + " 图片列表解析错误")
+                    
                 # 总的图片数
-                total_image_count = page["data"]["total"]
+                total_image_count = photo_page_data["total"]
                 # 图片详细列表
-                photo_list = page["data"]["photo_list"]
+                photo_list = photo_page_data["photo_list"]
 
                 for image_info in photo_list:
                     if not robot.check_sub_key(("pic_name", "timestamp"), image_info):
