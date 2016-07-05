@@ -1,12 +1,9 @@
 # -*- coding:GBK  -*-
-'''
-Created on 2015-2-5
-
+"""
 @author: hikaru
-QQ: 286484545
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
-'''
+"""
 
 # 自动在sql文件中追加表名并生产新的sql文件 
 

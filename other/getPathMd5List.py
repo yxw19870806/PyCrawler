@@ -1,13 +1,9 @@
 # -*- coding:utf-8  -*-
-'''
-Created on 2013-4-8
-
+"""
 @author: hikaru
-QQ: 286484545
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
-'''
-
+"""
 import hashlib
 import os
 import time

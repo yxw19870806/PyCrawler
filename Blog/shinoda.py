@@ -1,17 +1,13 @@
 # -*- coding:UTF-8  -*-
-'''
-Created on 2013-5-6
-
+"""
+篠田麻里子博客图片爬虫
 @author: hikaru
-QQ: 286484545
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
-'''
-
+"""
 from common import log, robot, tool
 import os
 import re
-import shutil
 import time
 
 

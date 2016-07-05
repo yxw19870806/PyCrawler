@@ -1,12 +1,9 @@
 # -*- coding:UTF-8  -*-
-'''
-Created on 2015-5-19
-
+"""
 @author: hikaru
-
-输出目录和txt文件中图片数量不一致的成员名字
-'''
-
+email: hikaru870806@hotmail.com
+如有问题或建议请联系
+"""
 import os
 
 imageRootPath = "Z:\\G+\\fkoji\\"
