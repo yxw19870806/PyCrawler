@@ -90,6 +90,7 @@ def visit_weibo(url):
     return False
 
 
+# 获取一页的图片信息
 def get_weibo_photo_page_data(account_id, page_count):
     photo_page_url = "http://photo.weibo.com/photos/get_all"
     photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
@@ -117,7 +118,7 @@ def get_weibo_account_page_id(account_id):
     return 0
 
 
-# 获取一定数量的视频播放页面
+# 获取一页的视频信息
 def get_weibo_video_page_data(page_id, since_id):
     video_album_url = "http://weibo.com/p/aj/album/loading?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
     for i in range(0, 10):
@@ -136,11 +137,11 @@ def get_weibo_video_page_data(page_id, since_id):
 
 
 # 从视频播放页面中提取源地址
-def find_real_video_url(video_page_url, account_name, video_count):
+def find_real_video_url(video_page_url, account_name):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]
+        return [1, ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]]
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
@@ -157,8 +158,8 @@ def find_real_video_url(video_page_url, account_name, video_count):
                             video_source_url = []
                             for ssig in ssig_list:
                                 video_source_url.append("http://us.sinaimg.cn/" + ssig)
-                            return video_source_url
-        print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
+                            return [1, video_source_url]
+        return [-1, []]
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
@@ -166,14 +167,14 @@ def find_real_video_url(video_page_url, account_name, video_count):
             meta_list = re.findall('<meta content="([^"]*)" property="([^"]*)">', source_video_page)
             for meta_content, meta_property in meta_list:
                 if meta_property == "og:video:url":
-                    return [meta_content]
-            print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
+                    return [1, [meta_content]]
+            return [-1, []]
         else:
-            print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "无法访问")
+            return [-2, []]
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]
+        return [1, ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]]
     # http://www.weishi.com/t/2000546051794045
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
@@ -188,16 +189,14 @@ def find_real_video_url(video_page_url, account_name, video_count):
                         video_info_page = json.loads(video_info_page)
                         if robot.check_sub_key(("data", ), video_info_page):
                             if robot.check_sub_key(("url", ), video_info_page["data"]):
-                                return [random.choice(video_info_page["data"]["url"])]
+                                return [1, [random.choice(video_info_page["data"]["url"])]]
                     except AttributeError:
                         pass
-            print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "没有获取到源地址")
+            return [-1, []]
         else:
-            print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "无法访问")
+            return [-2, []]
     else:  # 其他视频，暂时不支持，收集看看有没有
-        print_error_msg(account_name + " 第" + video_count + "个视频：" + video_page_url + "，暂不支持的视频源")
-
-    return []
+        return [-3, []]
 
 
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
@@ -396,17 +395,20 @@ class Download(threading.Thread):
             need_make_video_dir = True
             since_id = INIT_SINCE_ID
             while (IS_DOWNLOAD_VIDEO == 1) and (not is_over):
+                # 获取page_id
                 if not page_id:
                     page_id = get_weibo_account_page_id(account_id)
                     if not page_id:
                         print_error_msg(account_name + " 微博主页没有获取到page_id")
                         break
 
+                # 获取指定时间点后的一页视频信息
                 video_page_data = get_weibo_video_page_data(page_id, since_id)
                 if not video_page_data:
                     print_error_msg(account_name + " 视频列表解析异常")
                     break
-                
+
+                # 匹配获取全部的视频页面
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
                 trace(account_name + "since_id：" + since_id + "中的全部视频：" + str(video_page_url_list))
                 for video_page_url in video_page_url_list:
@@ -416,7 +418,16 @@ class Download(threading.Thread):
                     if last_video_url == video_page_url:
                         is_over = True
                         break
-                    video_source_url_list = find_real_video_url(video_page_url, account_name, str(video_count))
+                    # 获取这个视频的视频源地址（下载地址）
+                    [return_code, video_source_url_list] = find_real_video_url(video_page_url, account_name)
+                    if return_code != 1:
+                        if return_code == -1:
+                            print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "没有获取到源地址")
+                        elif return_code == -2:
+                            print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "无法访问")
+                        elif return_code == -3:
+                            print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "，暂不支持的视频源")
+                        continue
                     # 下载
                     for video_source_url in video_source_url_list:
                         video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
@@ -463,7 +474,7 @@ class Download(threading.Thread):
 
                 if not photo_page_data:
                     print_error_msg(account_name + " 图片列表解析错误")
-                    
+
                 # 总的图片数
                 total_image_count = photo_page_data["total"]
                 # 图片详细列表
