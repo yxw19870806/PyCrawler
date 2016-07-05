@@ -76,7 +76,6 @@ class Twitter(robot.Robot):
         global IS_SORT
         global IS_DOWNLOAD_IMAGE
 
-        # multiprocessing.Process.__init__(self)
         robot.Robot.__init__(self)
 
         if save_data_path != "":
