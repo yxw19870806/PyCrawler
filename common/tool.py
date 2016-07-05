@@ -307,21 +307,21 @@ def change_path_encoding(path):
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
     if append_type == 1:
-        log_file = open(file_path, "a")
+        file_handle = open(file_path, "a")
     else:
-        log_file = open(file_path, "w")
-    log_file.write(msg + "\n")
-    log_file.close()
+        file_handle = open(file_path, "w")
+    file_handle.write(msg + "\n")
+    file_handle.close()
 
 
-# image_path 包括路径和文件名
-def save_image(image_url, image_path):
-    image_path = change_path_encoding(image_path)
-    [image_return_code, image_byte] = http_request(image_url)[:2]
-    if image_return_code == 1:
-        image_file = open(image_path, "wb")
-        image_file.write(image_byte)
-        image_file.close()
+# file_path 包括路径和文件名
+def save_net_file(file_url, file_path):
+    file_path = change_path_encoding(file_path)
+    [page_return_code, page_data] = http_request(file_url)[:2]
+    if page_return_code == 1:
+        file_handle = open(file_path, "wb")
+        file_handle.write(page_data)
+        file_handle.close()
         return True
     return False
 

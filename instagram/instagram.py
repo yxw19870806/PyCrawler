@@ -270,7 +270,7 @@ class Download(threading.Thread):
                                 print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_image_dir = False
-                        if tool.save_image(image_url, image_file_path):
+                        if tool.save_net_file(image_url, image_file_path):
                             print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
@@ -296,7 +296,7 @@ class Download(threading.Thread):
                                             print_error_msg(account_name + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
                                             tool.process_exit()
                                         need_make_video_dir = False
-                                    if tool.save_image(meta_content, video_file_path):
+                                    if tool.save_net_file(meta_content, video_file_path):
                                         print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
                                         video_count += 1
                                     else:

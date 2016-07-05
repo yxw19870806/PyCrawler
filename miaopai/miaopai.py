@@ -46,13 +46,6 @@ def print_step_msg(msg):
     threadLock.release()
 
 
-def save_image(image_byte, image_path):
-    image_path = tool.change_path_encoding(image_path)
-    image_file = open(image_path, "wb")
-    image_file.write(image_byte)
-    image_file.close()
-
-
 class Miaopai(robot.Robot):
     def __init__(self):
         global VIDEO_TEMP_PATH
@@ -233,7 +226,7 @@ class Download(threading.Thread):
                                 print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_download_dir = False
-                        if tool.save_image(video_url, file_path):
+                        if tool.save_net_file(video_url, file_path):
                             print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
                             video_count += 1
                         else:

@@ -76,7 +76,7 @@ class Shinoda(robot.Robot):
                     file_type = image_url.split(".")[-1].split(":")[0]
                     file_path = os.path.join(image_path, str("%05d" % image_count) + "." + file_type)
                     log.step("开始下载第 " + str(image_count) + "张图片：" + image_url)
-                    if tool.save_image(image_url, file_path):
+                    if tool.save_net_file(image_url, file_path):
                         log.step("第" + str(image_count) + "张图片下载成功")
                         image_count += 1
                     else:

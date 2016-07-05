@@ -414,7 +414,7 @@ class Download(threading.Thread):
                             need_make_video_dir = False
 
                         print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + video_page_url)
-                        if tool.save_image(video_source_url, video_file_path):
+                        if tool.save_net_file(video_source_url, video_file_path):
                             print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
                             video_count += 1
                         else:

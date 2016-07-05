@@ -303,7 +303,7 @@ class Download(threading.Thread):
                         file_path = os.path.join(rp_path, str("%03d" % image_count) + "." + file_type)
 
                         print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                        if tool.save_image(image_url, file_path):
+                        if tool.save_net_file(image_url, file_path):
                             image_count += 1
                             print_step_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片下载成功")
                         else:

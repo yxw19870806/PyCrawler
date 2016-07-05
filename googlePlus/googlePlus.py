@@ -281,7 +281,7 @@ class Download(threading.Thread):
                                 print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_download_dir = False
-                        if tool.save_image(image_url, file_path):
+                        if tool.save_net_file(image_url, file_path):
                             print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
                             image_count += 1
                         else:
