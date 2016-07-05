@@ -69,7 +69,6 @@ def unfollow(account_id):
     unfollow_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
     unfollow_return_code, unfollow_return_data = tool.http_request(unfollow_url, unfollow_post_data)[:2]
-    print unfollow_return_code
     if unfollow_return_code == 1:
         if int(unfollow_return_data) == 1:
             return True
@@ -206,13 +205,8 @@ class Download(threading.Thread):
             need_make_download_dir = True  # 是否需要创建cn目录
             rp_id_list = []
             is_over = False
-            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if last_rp_id != "0":
-                is_error = True
-            else:
-                is_error = False
 
-            while True:
+            while not is_over:
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
                 [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
                 if post_page_return_code != 1:
@@ -238,7 +232,6 @@ class Download(threading.Thread):
                     # 检查是否已下载到前一次的图片
                     if int(rp_id) <= int(last_rp_id):
                         is_over = True
-                        is_error = False
                         break
 
                     print_step_msg("rp: " + rp_id)
@@ -259,7 +252,7 @@ class Download(threading.Thread):
                         title = title.replace(filter_char, " ")
                     # 去除前后空格
                     title = title.strip()
-                    if title != "":
+                    if title:
                         rp_path = os.path.join(image_path, rp_id + " " + title)
                     else:
                         rp_path = os.path.join(image_path, rp_id)
@@ -313,30 +306,25 @@ class Download(threading.Thread):
 
                     title_index += 1
 
-                if is_over:
-                    break
+                if not is_over:
+                    # 看看总共有几页
+                    if max_page_count == -1:
+                        max_page_count_result = re.findall(r'<a href="/u/' + coser_id + '/post/cos\?&p=(\d*)">尾页</a>', post_page_response)
+                        if len(max_page_count_result) > 0:
+                            max_page_count = int(max_page_count_result[0])
+                        else:
+                            max_page_count = 1
 
-                # 看看总共有几页
-                if max_page_count == -1:
-                    max_page_count_result = re.findall(r'<a href="/u/' + coser_id + '/post/cos\?&p=(\d*)">尾页</a>', post_page_response)
-                    if len(max_page_count_result) > 0:
-                        max_page_count = int(max_page_count_result[0])
-                    else:
-                        max_page_count = 1
+                    if page_count >= max_page_count:
+                        break
 
-                if page_count >= max_page_count:
-                    break
-
-                page_count += 1
+                    page_count += 1
 
             # 如果有错误且没有发现新的图片，复原旧数据
             if self.account_info[1] == "" and last_rp_id != "0":
                 self.account_info[1] = str(last_rp_id)
 
             print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
-
-            if is_error:
-                print_error_msg(cn + " 图片数量异常，请手动检查")
 
             # 保存最后的信息
             threadLock.acquire()
