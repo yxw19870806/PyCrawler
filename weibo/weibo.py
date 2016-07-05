@@ -288,7 +288,7 @@ class Weibo(robot.Robot):
         new_save_data_file.close()
 
         # 先访问下页面，产生个cookies
-        visit_weibo("http://photo.weibo.com/photos/get_all?uid=1263970750&count=30&page=1&type=3")
+        visit_weibo("http://www.weibo.com/")
         time.sleep(2)
 
         # 启用线程监控是否需要暂停其他下载线程
