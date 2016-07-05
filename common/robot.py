@@ -22,8 +22,10 @@ class Robot(object):
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
         self.is_show_step = get_config(config, "IS_SHOW_STEP", 1, 2)
         self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 0, 2)
-        self.error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
+        error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
+        self.error_log_path = error_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
         error_log_dir = os.path.dirname(self.error_log_path)
+
         if not tool.make_dir(error_log_dir, 0):
             tool.print_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！", True)
             tool.process_exit()
@@ -31,7 +33,8 @@ class Robot(object):
         if is_log_step == 0:
             self.step_log_path = ""
         else:
-            self.step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
+            step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
+            self.step_log_path = step_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
@@ -41,7 +44,9 @@ class Robot(object):
         if is_log_trace == 0:
             self.trace_log_path = ""
         else:
-            self.trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
+            trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
+            self.trace_log_path = trace_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
+            # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
                 tool.print_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！", True)
