@@ -455,7 +455,7 @@ class Download(threading.Thread):
                     print_error_msg(account_name + " 返回的图片列表不是一个JSON数据")
                     break
 
-                if not robot.check_sub_key("data", page):
+                if not robot.check_sub_key(("data", ), page):
                     print_error_msg(account_name + " 图片列表解析错误" + str(page))
                     break
                 if not robot.check_sub_key(("total", "photo_list"), page["data"]):
