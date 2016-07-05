@@ -99,8 +99,9 @@ def http_request(url, post_data=None, cookie=None):
                 response = urllib2.urlopen(request)
             else:
                 response = urllib2.urlopen(request, timeout=5)
-                response.geturl()
-            return [1, response.read(), response]
+
+            if response:
+                return [1, response.read(), response]
         except Exception, e:
             # 代理无法访问
             if str(e).find("[Errno 10061]") != -1:
