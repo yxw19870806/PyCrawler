@@ -47,6 +47,22 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取一页的图片信息
+def get_twitter_media_page_data(account_id, data_tweet_id):
+    media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1" \
+                     "&include_entities=1&max_position=%s" % (account_id, data_tweet_id)
+    [media_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
+    if media_page_return_code == 1:
+        try:
+            media_page = json.loads(media_page_response)
+        except AttributeError:
+            pass
+        else:
+            if robot.check_sub_key(("has_more_items", "items_html", "min_position"), media_page):
+                return media_page
+    return None
+
+
 # 返回的是当前时区对应的时间
 def get_image_last_modified(response):
     if isinstance(response, urllib2.addinfourl):
@@ -205,24 +221,13 @@ class Download(threading.Thread):
 
             # 图片下载
             while not is_over:
-                media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1" \
-                                 "&include_entities=1&max_position=%s" % (account_id, data_tweet_id)
-
-                [media_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
-                if media_page_return_code != 1:
-                    print_error_msg(account_id + " 无法获取相册信息: " + media_page_url)
-                    break
-                try:
-                    media_page = json.loads(media_page_response)
-                except AttributeError:
-                    print_error_msg(account_id + " 返回信息：" + str(media_page_response) + " 不是一个JSON数据")
+                # 获取指定时间点后的一页图片信息
+                media_page = get_twitter_media_page_data(account_id, data_tweet_id)
+                if not media_page:
+                    print_error_msg(account_id + " 图片列表解析错误")
                     break
 
-                if not robot.check_sub_key(("has_more_items", "items_html", "min_position"), media_page):
-                    print_error_msg(account_id + " 图片列表解析错误" + str(media_page))
-                    break
-
-                # 正则表达，匹配data-image-url="XXX"
+                # 匹配获取全部的图片地址
                 this_page_image_url_list = re.findall('data-image-url="([^"]*)"', media_page["items_html"])
                 trace(account_id + " data_tweet_id：" + data_tweet_id + " 的全部图片列表" + str(this_page_image_url_list))
                 for image_url in this_page_image_url_list:
