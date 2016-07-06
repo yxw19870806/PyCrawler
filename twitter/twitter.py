@@ -190,10 +190,9 @@ class Download(threading.Thread):
             print_step_msg(account_id + " 开始")
 
             # 初始化数据
-            last_image_time = int(self.account_info[2])
-            self.account_info[2] = "0"  # 置空，存放此次的最后图片上传时间
             data_tweet_id = INIT_MAX_ID
             image_count = 1
+            first_image_time = "0"
             image_url_list = []
             is_over = False
             need_make_download_dir = True
@@ -237,11 +236,11 @@ class Download(threading.Thread):
                     elif image_return_code == 1:
                         image_time = get_image_last_modified(image_response)
                         # 将第一张image的URL保存到新id list中
-                        if self.account_info[2] == "0":
-                            self.account_info[2] = str(image_time)
+                        if first_image_time == "0":
+                            first_image_time = str(image_time)
 
                         # 检查是否已下载到前一次的图片
-                        if 0 < last_image_time >= image_time:
+                        if 0 < int(self.account_info[2]) >= image_time:
                             is_over = True
                             break
 
@@ -275,10 +274,6 @@ class Download(threading.Thread):
                     else:
                         break
 
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[2] == "0" and last_image_time != 0:
-                self.account_info[2] = str(last_image_time)
-
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
@@ -290,7 +285,9 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
-            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+            if first_image_time != "0":
+                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+                self.account_info[2] = first_image_time
 
             # 保存最后的信息
             threadLock.acquire()
