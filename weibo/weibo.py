@@ -98,12 +98,11 @@ def get_weibo_photo_page_data(account_id, page_count):
     try:
         page = json.loads(photo_page_data)
     except AttributeError:
-        return None
-
-    if robot.check_sub_key(("data", ), page):
-        if robot.check_sub_key(("total", "photo_list"), page["data"]):
-            return page["data"]
-
+        pass
+    else:
+        if robot.check_sub_key(("data", ), page):
+            if robot.check_sub_key(("total", "photo_list"), page["data"]):
+                return page["data"]
     return None
 
 
@@ -127,12 +126,11 @@ def get_weibo_video_page_data(page_id, since_id):
             try:
                 video_page = json.loads(video_page)
             except AttributeError:
-                continue
-            if not robot.check_sub_key(("code", "data"), video_page):
-                continue
-            if int(video_page["code"]) != 100000:
-                continue
-            return video_page[u"data"].encode("utf-8")
+                pass
+            else:
+                if robot.check_sub_key(("code", "data"), video_page):
+                    if int(video_page["code"]) == 100000:
+                        return video_page[u"data"].encode("utf-8")
     return None
 
 
@@ -187,11 +185,12 @@ def find_real_video_url(video_page_url, account_name):
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
+                    except AttributeError:
+                        pass
+                    else:
                         if robot.check_sub_key(("data", ), video_info_page):
                             if robot.check_sub_key(("url", ), video_info_page["data"]):
                                 return [1, [random.choice(video_info_page["data"]["url"])]]
-                    except AttributeError:
-                        pass
             return [-1, []]
         else:
             return [-2, []]
