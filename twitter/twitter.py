@@ -73,6 +73,7 @@ def get_image_last_modified(response):
     return 0
 
 
+# 将图片的二进制数据保存为本地文件
 def save_image(image_byte, image_path):
     image_path = tool.change_path_encoding(image_path)
     image_file = open(image_path, "wb")
@@ -205,14 +206,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
-            # 初始化数据
-            data_tweet_id = INIT_MAX_ID
-            image_count = 1
-            first_image_time = "0"
-            image_url_list = []
-            is_over = False
-            need_make_download_dir = True
-
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
@@ -220,6 +213,12 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
 
             # 图片下载
+            data_tweet_id = INIT_MAX_ID
+            image_count = 1
+            first_image_time = "0"
+            image_url_list = []
+            is_over = False
+            need_make_download_dir = True
             while not is_over:
                 # 获取指定时间点后的一页图片信息
                 media_page = get_twitter_media_page_data(account_id, data_tweet_id)
@@ -234,10 +233,12 @@ class Download(threading.Thread):
                     image_url = str(image_url)
                     image_url_list.append(image_url)
 
+                    print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    # todo 是否可以优化到一个方法中
                     [image_return_code, image_response_data, image_response] = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
                     if image_return_code == -404:
-                        pass
+                        print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")
                     elif image_return_code == 1:
                         image_time = get_image_last_modified(image_response)
                         # 将第一张image的URL保存到新id list中
@@ -253,8 +254,6 @@ class Download(threading.Thread):
                         file_type = image_url.split(".")[-1].split(":")[0]
                         file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
-                        # 保存图片
-                        print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
@@ -273,8 +272,8 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
+                    # 查找下一页的data_tweet_id
                     if media_page["has_more_items"]:
-                        # 设置最后一张的data-tweet-id
                         data_tweet_id = str(media_page["min_position"])
                     else:
                         break
@@ -290,6 +289,7 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
+            # 新的存档记录
             if first_image_time != "0":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_image_time
