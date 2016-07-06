@@ -47,6 +47,20 @@ def trace(msg):
     threadLock.release()
 
 
+def get_tumblr_post_page_data(post_url, postfix_list):
+    [post_page_return_code, post_page_data] = tool.http_request(post_url)[:2]
+    # 不带后缀的可以访问，则直接返回页面
+    if post_page_return_code == 1:
+        return post_page_data
+    # 不带后缀的无法范文，则依次访问带有后缀的页面
+    for postfix in postfix_list:
+        temp_post_url = post_url + "/" + urllib2.quote(postfix)
+        [post_page_return_code, post_page_data] = tool.http_request(temp_post_url)[:2]
+        if post_page_return_code == 1:
+            return post_page_data
+    return None
+
+
 class Tumblr(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
@@ -228,19 +242,13 @@ class Download(threading.Thread):
                         break
 
                     post_url = "http://%s/post/%s" % (host_url, post_id)
-                    [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
-                    if post_page_return_code != 1:
-                        for postfix in post_url_list[post_id]:
-                            temp_post_url = post_url + "/" + urllib2.quote(postfix)
-                            [post_page_return_code, post_page_response] = tool.http_request(temp_post_url)[:2]
-                            if post_page_return_code == 1:
-                                break
-                        if not post_page_response:
-                            print_error_msg(account_id + " 无法获取信息页：" + post_url)
-                            continue
+                    post_page_data = get_tumblr_post_page_data(post_url, post_url_list[post_id])
+                    if not post_page_data:
+                        print_error_msg(account_id + " 无法获取信息页：" + post_url)
+                        continue
 
                     # 截取html中的head标签内的内容
-                    post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_response)
+                    post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_data)
                     if len(post_page_head) == 1:
                         post_page_head = post_page_head[0]
                     else:
