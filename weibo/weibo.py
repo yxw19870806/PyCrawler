@@ -265,14 +265,14 @@ class Weibo(robot.Robot):
 
         start_time = time.time()
 
-        # 图片保存目录
+        # 创建图片保存目录
         if IS_DOWNLOAD_IMAGE == 1:
             print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
                 print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
                 tool.process_exit()
 
-        # 视频保存目录
+        # 创建视频保存目录
         if IS_DOWNLOAD_VIDEO == 1:
             print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
@@ -302,7 +302,7 @@ class Weibo(robot.Robot):
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
         new_save_data_file.close()
 
-        # 先访问下页面，产生个cookies
+        # 先访问下页面，产生cookies
         visit_weibo("http://www.weibo.com/")
         time.sleep(2)
 
@@ -374,12 +374,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_name + " 开始")
 
-            # 初始化数据
-            last_image_time = int(self.account_info[2])
-            self.account_info[2] = "0"  # 置空，存放此次的最后图片上传时间
-            last_video_url = self.account_info[4]
-            self.account_info[4] = ""  # 置空，存放此次的的最后一个视频地址
-
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
@@ -391,6 +385,7 @@ class Download(threading.Thread):
             # 视频
             video_count = 1
             page_id = 0
+            first_video_url = ""
             is_over = False
             need_make_video_dir = True
             since_id = INIT_SINCE_ID
@@ -412,10 +407,11 @@ class Download(threading.Thread):
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
                 trace(account_name + "since_id：" + since_id + "中的全部视频：" + str(video_page_url_list))
                 for video_page_url in video_page_url_list:
-                    if self.account_info[4] == "":
-                        self.account_info[4] = video_page_url
+                    # 将第一个视频的地址保存
+                    if first_video_url == "":
+                        first_video_url = video_page_url
                     # 检查是否是上一次的最后视频
-                    if last_video_url == video_page_url:
+                    if self.account_info[4] == video_page_url:
                         is_over = True
                         break
                     # 获取这个视频的视频源地址（下载地址）
@@ -451,25 +447,25 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
+                    # 获取下一页的since_id
                     since_id_data = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
                     if len(since_id_data) == 1:
                         since_id = since_id_data[0]
                     else:
                         break
 
-            if video_count > 1 and last_video_url != "" and not is_over:
-                print_error_msg(account_name + " 视频数量异常")
-
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[4] == "" and last_video_url != "":
-                self.account_info[4] = last_video_url
+            # 有历史记录，并且此次没有获得正常结束的标记，说明历史最后的视频已经被删除了
+            if video_count > 1 and first_video_url != "" and not is_over:
+                print_error_msg(account_name + " 没有找到上次下载的最后一个视频地址")
 
             # 图片
             image_count = 1
             page_count = 1
+            first_image_time = "0"
             is_over = False
             need_make_image_dir = True
             while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
+                # 获取指定一页图片的信息
                 photo_page_data = get_weibo_photo_page_data(account_id, page_count)
 
                 if not photo_page_data:
@@ -479,19 +475,20 @@ class Download(threading.Thread):
                 total_image_count = photo_page_data["total"]
                 # 图片详细列表
                 photo_list = photo_page_data["photo_list"]
-
                 for image_info in photo_list:
                     if not robot.check_sub_key(("pic_name", "timestamp"), image_info):
                         print_error_msg(account_name + " 图片列表解析错误")
                         break
-                    # 将第一张image的时间戳保存到新id list中
-                    if self.account_info[2] == "0":
-                        self.account_info[2] = str(image_info["timestamp"])
+                    # 将第一张图片的上传时间做为新的存档记录
+                    if first_image_time == "0":
+                        first_image_time = str(image_info["timestamp"])
                     # 检查是否图片时间小于上次的记录
-                    if 0 < last_image_time >= image_info["timestamp"]:
+                    if 0 < int(self.account_info[2]) >= int(image_info["timestamp"]):
                         is_over = True
                         break
 
+                    # 下载
+                    # todo 是否可以优化到一个方法中
                     if "pic_host" in image_info:
                         image_host = str(image_info["pic_host"])
                     else:
@@ -530,15 +527,12 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
+                    # 根据总的图片数量和每页显示的图片数量，计算是否还有下一页
                     if (total_image_count / IMAGE_COUNT_PER_PAGE) > (page_count - 1):
                         page_count += 1
                     else:
                         # 全部图片下载完毕
-                        break
-
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[2] == "0" and last_image_time != 0:
-                self.account_info[2] = str(last_image_time)
+                        is_over = True
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
 
@@ -559,8 +553,13 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
-            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-            self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
+            # 新的存档记录
+            if first_image_time != "0":
+                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+                self.account_info[2] = first_image_time
+            if first_video_url != "":
+                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
+                self.account_info[4] = first_video_url
 
             # 保存最后的信息
             threadLock.acquire()
