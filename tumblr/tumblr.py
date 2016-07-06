@@ -178,17 +178,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
-            # 初始化数据
-            last_post_id = self.account_info[3]
-            self.account_info[3] = ""  # 置空，存放此次的最后URL
-            page_count = 1
-            image_count = 1
-            video_count = 1
-            post_id_list = []
-            is_over = False
-            need_make_image_dir = True
-            need_make_video_dir = True
-
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
@@ -197,8 +186,15 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
 
+            first_post_id = ""
+            page_count = 1
+            image_count = 1
+            video_count = 1
+            post_id_list = []
+            is_over = False
+            need_make_image_dir = True
+            need_make_video_dir = True
             host_url = "%s.tumblr.com" % account_id
-            # 下载
             while not is_over:
                 index_page_url = "http://%s/page/%s" % (host_url, page_count)
 
@@ -223,11 +219,11 @@ class Download(threading.Thread):
                         continue
 
                     # 将第一张image的URL保存到新id list中
-                    if self.account_info[3] == "":
-                        self.account_info[3] = post_id
+                    if first_post_id == "":
+                        first_post_id = post_id
 
                     # 检查是否已下载到前一次的图片
-                    if post_id <= last_post_id:
+                    if post_id <= first_post_id:
                         is_over = True
                         break
 
@@ -262,7 +258,7 @@ class Download(threading.Thread):
                     if og_type == "tumblr-feed:entry":
                         continue
 
-                    # 视频
+                    # 视频下载
                     if IS_DOWNLOAD_IMAGE == 1 and og_type == "tumblr-feed:video":
                         video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
                         [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
@@ -291,7 +287,7 @@ class Download(threading.Thread):
                         else:
                             print_error_msg(account_id + " 无法获取视频页：" + video_page_url)
 
-                    # 图片
+                    # 图片下载
                     if IS_DOWNLOAD_IMAGE == 1:
                         page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
                         trace(account_id + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
@@ -327,10 +323,6 @@ class Download(threading.Thread):
 
                 page_count += 1
 
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[3] == "" and last_post_id != "":
-                self.account_info[3] = last_post_id
-
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片，" + str(video_count - 1) + "个视频")
 
             # 排序
@@ -350,8 +342,10 @@ class Download(threading.Thread):
                         print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
-            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-            self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
+            if first_post_id != "":
+                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
+                self.account_info[3] = first_post_id
 
             # 保存最后的信息
             threadLock.acquire()
