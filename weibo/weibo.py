@@ -466,10 +466,10 @@ class Download(threading.Thread):
             while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
                 # 获取指定一页图片的信息
                 photo_page_data = get_weibo_photo_page_data(account_id, page_count)
-
                 if not photo_page_data:
                     print_error_msg(account_name + " 图片列表解析错误")
 
+                trace(account_name + "第：" + str(page_count) + "页的全部图片信息：" + str(photo_page_data))
                 # 总的图片数
                 total_image_count = photo_page_data["total"]
                 # 图片详细列表
