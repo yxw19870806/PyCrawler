@@ -16,7 +16,7 @@ import urllib2
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-GET_IMAGE_COUNT = 0
+GET_PAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -63,7 +63,7 @@ def get_tumblr_post_page_data(post_url, postfix_list):
 
 class Tumblr(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
+        global GET_PAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -76,7 +76,7 @@ class Tumblr(robot.Robot):
         super(Tumblr, self).__init__()
 
         # 全局变量
-        GET_IMAGE_COUNT = self.get_image_count
+        GET_PAGE_COUNT = self.get_page_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
@@ -277,7 +277,6 @@ class Download(threading.Thread):
                                     file_type = video_type.split("/")[-1]
                                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
 
-                                    # 下载
                                     print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + video_url)
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
@@ -299,14 +298,14 @@ class Download(threading.Thread):
                     if IS_DOWNLOAD_IMAGE == 1:
                         page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
                         trace(account_id + " 信息页" + post_url + "获取的所有图片: " + str(page_image_url_list))
+                        # 过滤头像以及页面上找到不同分辨率的同一张图
                         page_image_url_list = filter_different_resolution_images(page_image_url_list)
                         trace(account_id + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
-                        if len(page_image_url_list) == 0:
+                        if len(page_image_url_list) > 0:
                             for image_url in page_image_url_list:
                                 file_type = image_url.split(".")[-1]
                                 image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
 
-                                # 下载
                                 print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
@@ -319,17 +318,15 @@ class Download(threading.Thread):
                                     image_count += 1
                                 else:
                                     print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-
-                                # 达到配置文件中的下载数量，结束
-                                if 0 < GET_IMAGE_COUNT < image_count:
-                                    is_over = True
-                                    break
                         else:
                             print_error_msg(account_id + " 信息页：" + post_url + " 中没有找到图片")
-                    if is_over:
-                        break
 
-                page_count += 1
+                # 达到配置文件中的下载数量，结束
+                if 0 < GET_PAGE_COUNT < page_count:
+                    is_over = True
+
+                if not is_over:
+                    page_count += 1
 
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片，" + str(video_count - 1) + "个视频")
 
@@ -369,7 +366,7 @@ class Download(threading.Thread):
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
-# 过滤页面上找到不同分辨率的同一张图，保留分辨率较大的那张
+# 过滤头像以及页面上找到不同分辨率的同一张图，保留分辨率较大的那张
 def filter_different_resolution_images(image_url_list):
     new_image_url_list = {}
     for image_url in image_url_list:
