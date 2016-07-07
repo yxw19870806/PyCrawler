@@ -262,7 +262,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_post_id:
+            if first_post_id != "":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_post_id
 
