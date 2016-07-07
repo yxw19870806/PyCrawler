@@ -246,16 +246,14 @@ class Download(threading.Thread):
             print_step_msg(account_id + " 下载完毕，总共获得" + str(video_count - 1) + "个视频")
 
             # 排序
-            if IS_SORT == 1:
-                if video_count > 1:
-                    destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[4]), 4):
-                        print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
-                    else:
-                        print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
-                        tool.process_exit()
+            if IS_SORT == 1 and video_count > 1:
+                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
+                if robot.sort_file(video_path, destination_path, int(self.account_info[4]), 4):
+                    print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
+                else:
+                    print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
+                    tool.process_exit()
 
-            self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
             if first_video_scid != "":
                 self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
                 self.account_info[2] = first_video_scid
