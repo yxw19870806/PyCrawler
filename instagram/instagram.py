@@ -208,8 +208,7 @@ class Download(threading.Thread):
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             # 初始化数据
-            last_created_time = int(self.account_info[4])
-            self.account_info[4] = "0"
+            first_created_time = "0"
             cursor = INIT_CURSOR
             image_count = 1
             video_count = 1
@@ -233,11 +232,11 @@ class Download(threading.Thread):
                         break
 
                     # 将第一张image的created_time保存到新id list中
-                    if self.account_info[4] == "0":
-                        self.account_info[4] = str(int(photo_info["date"]))
+                    if first_created_time == "0":
+                        first_created_time = str(int(photo_info["date"]))
 
                     # 检查是否已下载到前一次的图片
-                    if 0 < last_created_time >= int(photo_info["date"]):
+                    if 0 < self.account_info[4] >= int(photo_info["date"]):
                         is_over = True
                         break
 
@@ -325,8 +324,10 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
-            self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
-            self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
+            if first_created_time != "":
+                self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
+                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
+                self.account_info[4] = first_created_time
 
             # 保存最后的信息
             threadLock.acquire()
