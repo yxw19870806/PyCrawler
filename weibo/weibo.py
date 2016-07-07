@@ -86,7 +86,8 @@ def visit_weibo(url):
         #         print e
         #         pass
         # 返回页面
-        return str(page_response)
+        if page_response:
+            return str(page_response)
     return False
 
 
@@ -97,7 +98,7 @@ def get_weibo_photo_page_data(account_id, page_count):
     photo_page_data = visit_weibo(photo_page_url)
     try:
         page = json.loads(photo_page_data)
-    except AttributeError:
+    except ValueError:
         pass
     else:
         if robot.check_sub_key(("data", ), page):
@@ -125,7 +126,7 @@ def get_weibo_video_page_data(page_id, since_id):
         if video_page:
             try:
                 video_page = json.loads(video_page)
-            except AttributeError:
+            except ValueError:
                 pass
             else:
                 if robot.check_sub_key(("code", "data"), video_page):
@@ -185,7 +186,7 @@ def find_real_video_url(video_page_url, account_name):
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
-                    except AttributeError:
+                    except ValueError:
                         pass
                     else:
                         if robot.check_sub_key(("data", ), video_info_page):

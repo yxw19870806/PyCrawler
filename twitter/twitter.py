@@ -55,7 +55,7 @@ def get_twitter_media_page_data(account_id, data_tweet_id):
     if media_page_return_code == 1:
         try:
             media_page = json.loads(media_page_response)
-        except AttributeError:
+        except ValueError:
             pass
         else:
             if robot.check_sub_key(("has_more_items", "items_html", "min_position"), media_page):

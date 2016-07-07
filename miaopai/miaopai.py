@@ -61,7 +61,7 @@ def get_miaopai_video_page_data(suid, page_count):
     if media_page_return_code == 1:
         try:
             media_page = json.loads(media_page)
-        except AttributeError:
+        except ValueError:
             pass
         else:
             if robot.check_sub_key(("isall", "msg"), media_page):

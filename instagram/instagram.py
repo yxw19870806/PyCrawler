@@ -56,7 +56,7 @@ def get_instagram_media_page_data(account_id, cursor):
     if photo_page_return_code == 1:
         try:
             media_page = json.loads(media_page_response)
-        except AttributeError:
+        except ValueError:
             pass
         else:
             if robot.check_sub_key(("media", ), media_page):
