@@ -165,9 +165,10 @@ class Download(threading.Thread):
         else:
             account_file_path = ""
 
-        print_step_msg(account_name + " 开始")
-
         try:
+            print_step_msg(account_name + " 开始")
+
+            photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
@@ -175,11 +176,10 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
 
             # 图片下载
+            image_count = 1
+            key = ""
             first_message_url = ""
             first_album_id = "0"
-            image_count = 1
-            photo_album_url = "https://plus.google.com/_/photos/pc/read/"
-            key = ""
             is_over = False
             need_make_download_dir = True
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
@@ -221,7 +221,6 @@ class Download(threading.Thread):
                     # 将第一个信息页的地址做为新的存档记录
                     if first_message_url == "":
                         first_message_url = real_message_url
-
                     # 检查是否已下载到前一次的图片
                     if real_message_url == self.account_info[2]:
                         is_error = False

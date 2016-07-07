@@ -199,6 +199,7 @@ class Download(threading.Thread):
             page_count = 1
             video_count = 1
             first_video_scid = ""
+            unique_list = []
             is_over = False
             need_make_download_dir = True
             while suid != "" and (not is_over):
@@ -215,11 +216,16 @@ class Download(threading.Thread):
                     break
 
                 for scid in scid_list:
+                    # 新增视频导致的重复判断
+                    if scid in unique_list:
+                        continue
+                    else:
+                        unique_list.append(scid)
                     # 将第一个视频的id做为新的存档记录
                     if first_video_scid == "":
                         first_video_scid = scid
                     # 检查是否已下载到前一次的图片
-                    if self.account_info[2] == first_video_scid:
+                    if first_video_scid == self.account_info[2]:
                         is_over = True
                         break
 

@@ -213,10 +213,9 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
 
             # 图片下载
-            data_tweet_id = INIT_MAX_ID
             image_count = 1
+            data_tweet_id = INIT_MAX_ID
             first_image_time = "0"
-            image_url_list = []
             is_over = False
             need_make_download_dir = True
             while not is_over:
@@ -231,9 +230,8 @@ class Download(threading.Thread):
                 trace(account_id + " data_tweet_id：" + data_tweet_id + " 的全部图片列表" + str(this_page_image_url_list))
                 for image_url in this_page_image_url_list:
                     image_url = str(image_url)
-                    image_url_list.append(image_url)
-
                     print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+
                     # todo 是否可以优化到一个方法中
                     [image_return_code, image_response_data, image_response] = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
@@ -244,8 +242,8 @@ class Download(threading.Thread):
                         # 将第一张图片的上传时间做为新的存档记录
                         if first_image_time == "0":
                             first_image_time = str(image_time)
-                        # 检查是否已下载到前一次的图片
-                        if 0 < int(self.account_info[2]) >= image_time:
+                        # 检查是否图片时间小于上次的记录
+                        if image_time <= int(self.account_info[2]):
                             is_over = True
                             break
 

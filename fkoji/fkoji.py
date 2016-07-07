@@ -62,7 +62,7 @@ class Fkoji(robot.Robot):
         page_index = 1
         image_count = 1
         first_image_url = ""
-        image_url_list = []
+        unique_list = []
         is_over = False
         while not is_over:
             index_url = "http://jigadori.fkoji.com/?p=%s" % str(page_index)
@@ -92,15 +92,20 @@ class Fkoji(robot.Robot):
                     tag_attr = dict(tag.attrs)
                     if tag_attr.has_key("src") and tag_attr.has_key("alt"):
                         image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
+
+                        # 新增图片导致的重复判断
+                        if image_url in unique_list:
+                            continue
+                        else:
+                            unique_list.append(image_url)
+                        # 将第一张图片的地址做为新的存档记录
                         if first_image_url == "":
                             first_image_url = image_url
                         # 检查是否已下载到前一次的图片
                         if last_image_url == image_url:
                             is_over = True
                             break
-                        log.trace("id: " + account_id + "，地址: " + image_url)
-                        if image_url in image_url_list:
-                            continue
+
                         # 文件类型
                         file_type = image_url.split(".")[-1]
                         if file_type.find("/") != -1:

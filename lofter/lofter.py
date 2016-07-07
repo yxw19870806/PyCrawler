@@ -160,13 +160,7 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
-            # 初始化数据
-            page_count = 1
-            image_count = 1
-            first_post_id = ""
-            post_url_list = []
-            is_over = False
-            need_make_download_dir = True
+            host_url = "%s.lofter.com" % account_id
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
@@ -174,8 +168,13 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
 
-            host_url = "%s.lofter.com" % account_id
             # 图片下载
+            page_count = 1
+            image_count = 1
+            first_post_id = ""
+            unique_list = []
+            is_over = False
+            need_make_download_dir = True
             while not is_over:
                 index_page_url = "http://%s/?page=%s" % (host_url, page_count)
                 [index_page_return_code, index_page_response] = tool.http_request(index_page_url)[:2]
@@ -195,17 +194,16 @@ class Download(threading.Thread):
                 page_post_url_list = sorted(list(set(page_post_url_list)), reverse=True)
                 trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(page_post_url_list))
                 for post_url in page_post_url_list:
-                    if post_url in post_url_list:
-                        continue
-                    post_url_list.append(post_url)
-                    trace(account_id + " 信息页URL:" + post_url)
-
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
+                    # 新增信息页导致的重复判断
+                    if post_id in unique_list:
+                        continue
+                    else:
+                        unique_list.append(post_id)
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
-
                     # 检查是否已下载到前一次的图片
                     if post_id <= self.account_info[2]:
                         is_over = True

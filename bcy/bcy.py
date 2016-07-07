@@ -196,12 +196,12 @@ class Download(threading.Thread):
             print_step_msg(cn + " 开始")
 
             # 图片下载
-            first_rp_id = ""
             this_cn_total_image_count = 0
             page_count = 1
             max_page_count = -1
+            first_rp_id = ""
+            unique_list = []
             need_make_download_dir = True  # 是否需要创建cn目录
-            rp_id_list = []
             is_over = False
             while not is_over:
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
@@ -220,9 +220,10 @@ class Download(threading.Thread):
 
                 title_index = 0
                 for cp_id, rp_id in page_rp_id_list:
-                    if rp_id in rp_id_list:
+                    if rp_id in unique_list:
                         continue
-                    rp_id_list.append(rp_id)
+                    else:
+                        unique_list.append(rp_id)
 
                     # 将第一个作品的id做为新的存档记录
                     if first_rp_id == "":

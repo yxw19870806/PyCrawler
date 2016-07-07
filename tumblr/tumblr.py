@@ -193,6 +193,7 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
+            host_url = "%s.tumblr.com" % account_id
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
@@ -201,15 +202,14 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
 
-            first_post_id = ""
             page_count = 1
             image_count = 1
             video_count = 1
-            post_id_list = []
+            first_post_id = ""
+            unique_list = []
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
-            host_url = "%s.tumblr.com" % account_id
             while not is_over:
                 index_page_url = "http://%s/page/%s" % (host_url, page_count)
 
@@ -229,16 +229,16 @@ class Download(threading.Thread):
                 post_url_list = filter_post_url(post_url_list)
                 trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_url_list))
                 for post_id in sorted(post_url_list.keys(), reverse=True):
-                    # 已经下载过了
-                    if post_id in post_id_list:
+                    # 新增信息页导致的重复判断
+                    if post_id in unique_list:
                         continue
-
+                    else:
+                        unique_list.append(post_id)
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
-
-                    # 检查是否已下载到前一次的图片
-                    if post_id <= first_post_id:
+                    # 检查信息页id是否小于上次的记录
+                    if post_id <= self.account_info[3]:
                         is_over = True
                         break
 

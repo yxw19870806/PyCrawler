@@ -207,11 +207,10 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
-            # 初始化数据
-            first_created_time = "0"
-            cursor = INIT_CURSOR
             image_count = 1
             video_count = 1
+            cursor = INIT_CURSOR
+            first_created_time = "0"
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
@@ -234,9 +233,8 @@ class Download(threading.Thread):
                     # 将第一张图片的上传时间做为新的存档记录
                     if first_created_time == "0":
                         first_created_time = str(int(photo_info["date"]))
-
                     # 检查是否已下载到前一次的图片
-                    if 0 < self.account_info[4] >= int(photo_info["date"]):
+                    if int(photo_info["date"]) <= int(self.account_info[4]):
                         is_over = True
                         break
 

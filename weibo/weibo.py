@@ -461,6 +461,7 @@ class Download(threading.Thread):
             image_count = 1
             page_count = 1
             first_image_time = "0"
+            unique_list = []
             is_over = False
             need_make_image_dir = True
             while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
@@ -478,11 +479,17 @@ class Download(threading.Thread):
                     if not robot.check_sub_key(("pic_name", "timestamp"), image_info):
                         print_error_msg(account_name + " 图片列表解析错误")
                         break
+
+                    # 新增图片导致的重复判断
+                    if image_info["pic_name"] in unique_list:
+                        continue
+                    else:
+                        unique_list.append(image_info["pic_name"])
                     # 将第一张图片的上传时间做为新的存档记录
                     if first_image_time == "0":
                         first_image_time = str(image_info["timestamp"])
                     # 检查是否图片时间小于上次的记录
-                    if 0 < int(self.account_info[2]) >= int(image_info["timestamp"]):
+                    if int(image_info["timestamp"]) <= int(self.account_info[2]):
                         is_over = True
                         break
 
