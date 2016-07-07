@@ -215,6 +215,7 @@ class Download(threading.Thread):
                     break
 
                 for scid in scid_list:
+                    # 将第一个视频的id做为新的存档记录
                     if first_video_scid == "":
                         first_video_scid = scid
                     # 检查是否已下载到前一次的图片

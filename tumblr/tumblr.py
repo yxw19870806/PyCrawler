@@ -233,7 +233,7 @@ class Download(threading.Thread):
                     if post_id in post_id_list:
                         continue
 
-                    # 将第一张image的URL保存到新id list中
+                    # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
 

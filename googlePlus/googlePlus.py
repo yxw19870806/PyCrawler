@@ -229,7 +229,7 @@ class Download(threading.Thread):
                         continue
                     message_url_list.append(real_message_url)
 
-                    # 将第一张image的URL保存到新id list中
+                    # 将第一个信息页的地址做为新的存档记录
                     if self.account_info[2] == "":
                         self.account_info[2] = real_message_url
 

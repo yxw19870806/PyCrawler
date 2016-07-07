@@ -231,7 +231,7 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 视频code解析异常")
                         break
 
-                    # 将第一张image的created_time保存到新id list中
+                    # 将第一张图片的上传时间做为新的存档记录
                     if first_created_time == "0":
                         first_created_time = str(int(photo_info["date"]))
 

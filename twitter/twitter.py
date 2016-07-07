@@ -241,7 +241,7 @@ class Download(threading.Thread):
                         print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")
                     elif image_return_code == 1:
                         image_time = get_image_last_modified(image_response)
-                        # 将第一张image的URL保存到新id list中
+                        # 将第一张图片的上传时间做为新的存档记录
                         if first_image_time == "0":
                             first_image_time = str(image_time)
                         # 检查是否已下载到前一次的图片

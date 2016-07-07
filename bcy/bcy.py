@@ -225,6 +225,7 @@ class Download(threading.Thread):
                         continue
                     rp_id_list.append(rp_id)
 
+                    # 将第一个作品的id做为新的存档记录
                     if self.account_info[1] == "":
                         self.account_info[1] = rp_id
                     # 检查是否已下载到前一次的图片
@@ -243,7 +244,7 @@ class Download(threading.Thread):
                             tool.process_exit()
                         need_make_download_dir = False
 
-                    # 正片目录
+                    # 作品目录
                     title = page_title_list[title_index]
                     # 过滤一些windows文件名屏蔽的字符
                     for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
@@ -256,16 +257,16 @@ class Download(threading.Thread):
                         rp_path = os.path.join(image_path, rp_id)
                     if not tool.make_dir(rp_path, 0):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
-                        print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，尝试不使用title！")
+                        print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败，尝试不使用title！")
                         rp_path = os.path.join(image_path, rp_id)
                         if not tool.make_dir(rp_path, 0):
-                            print_error_msg(cn + " 创建正片目录： " + rp_path + " 失败，程序结束！")
+                            print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败，程序结束！")
                             tool.process_exit()
 
                     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
                     [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
                     if rp_page_return_code != 1:
-                        print_error_msg(cn + " 无法获取正片页面： " + rp_url)
+                        print_error_msg(cn + " 无法获取作品页面： " + rp_url)
                         continue
 
                     image_url_list = re.findall("src='([^']*)'", rp_page_response)

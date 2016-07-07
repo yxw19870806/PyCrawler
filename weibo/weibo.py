@@ -406,7 +406,7 @@ class Download(threading.Thread):
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
                 trace(account_name + "since_id：" + since_id + "中的全部视频：" + str(video_page_url_list))
                 for video_page_url in video_page_url_list:
-                    # 将第一个视频的地址保存
+                    # 将第一个视频的地址做为新的存档记录
                     if first_video_url == "":
                         first_video_url = video_page_url
                     # 检查是否是上一次的最后视频

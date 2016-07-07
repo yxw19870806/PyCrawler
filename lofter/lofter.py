@@ -202,7 +202,7 @@ class Download(threading.Thread):
 
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
-                    # 将第一张image的URL保存到新id list中
+                    # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
 
