@@ -48,6 +48,24 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取一页的媒体信息
+def get_instagram_media_page_data(account_id, cursor):
+    media_page_url = "https://www.instagram.com/query/"
+    media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor)
+    [photo_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
+    if photo_page_return_code == 1:
+        try:
+            media_page = json.loads(media_page_response)
+        except AttributeError:
+            pass
+        else:
+            if robot.check_sub_key(("media", ), media_page):
+                if robot.check_sub_key(("page_info", "nodes"), media_page["media"]):
+                    if robot.check_sub_key(("has_next_page", "end_cursor", ), media_page["media"]["page_info"]):
+                        return media_page["media"]
+    return None
+
+
 class Instagram(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
@@ -181,6 +199,14 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_name + " 开始")
 
+            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
+            if IS_SORT == 1:
+                image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+                video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
+            else:
+                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
+                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+
             # 初始化数据
             last_created_time = int(self.account_info[4])
             self.account_info[4] = "0"
@@ -190,60 +216,20 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
-
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT == 1:
-                image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-                video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-            else:
-                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-
             while True:
-                media_page_url = "https://www.instagram.com/query/"
-                media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor)
-
-                [photo_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
-                if photo_page_return_code != 1:
-                    print_error_msg(account_name + " 无法获取媒体信息: " + media_page_url)
-                    break
-                try:
-                    media_page = json.loads(media_page_response)
-                except AttributeError:
-                    print_error_msg(account_name + " 媒体信息：" + str(media_page_response) + " 不是一个JSON")
-                    break
-                if "media" not in media_page:
-                    print_error_msg(account_name + " 在JSON数据：" + str(media_page) + " 中没有找到'media'字段")
+                # 获取指定时间后的一页媒体信息
+                media_page_data = get_instagram_media_page_data(account_id, cursor)
+                if not media_page_data:
+                    print_error_msg(account_name + " 媒体列表解析异常")
                     break
 
-                media_data = media_page["media"]
-                if "page_info" not in media_data:
-                    print_error_msg(account_name + " 在media中：" + str(media_data) + " 中没有找到'page_info'字段")
-                    break
-                if "has_next_page" not in media_data["page_info"]:
-                    print_error_msg(account_name + " 在page_info中：" + str(media_data["page_info"]) + " 中没有找到'has_next_page'字段")
-                    break
-                if "end_cursor" not in media_data["page_info"]:
-                    print_error_msg(account_name + " 在page_info中：" + str(media_data["page_info"]) + " 中没有找到'end_cursor'字段")
-                    break
-                if "nodes" not in media_data:
-                    print_error_msg(account_name + " 在media中：" + str(media_data) + " 中没有找到'nodes'字段")
-                    break
-
-                nodes_data = media_data["nodes"]
+                nodes_data = media_page_data["nodes"]
                 for photo_info in nodes_data:
-                    if "is_video" not in photo_info:
-                        print_error_msg(account_name + " 在node中：" + str(nodes_data) + " 中没有找到'is_video'字段")
+                    if not robot.check_sub_key(("is_video", "display_src", "date"), photo_info):
+                        print_error_msg(account_name + " 媒体信息解析异常")
                         break
-                    if photo_info["is_video"]:
-                        if "code" not in photo_info:
-                            print_error_msg(account_name + " 在node中：" + str(nodes_data) + " 中没有找到'code'字段")
-                            break
-                    if "display_src" not in photo_info:
-                        print_error_msg(account_name + " 在node中：" + str(nodes_data) + " 中没有找到'display_src'字段")
-                        break
-                    if "date" not in photo_info:
-                        print_error_msg(account_name + " 在node中：" + str(nodes_data) + " 中没有找到'date'字段")
+                    if photo_info["is_video"] and not robot.check_sub_key(("code", ), photo_info):
+                        print_error_msg(account_name + " 视频code解析异常")
                         break
 
                     # 将第一张image的created_time保存到新id list中
@@ -313,8 +299,8 @@ class Download(threading.Thread):
                 if is_over:
                     break
 
-                if media_data["page_info"]["has_next_page"]:
-                    cursor = str(media_data["page_info"]["end_cursor"])
+                if media_page_data["page_info"]["has_next_page"]:
+                    cursor = str(media_page_data["page_info"]["end_cursor"])
                 else:
                     break
 
