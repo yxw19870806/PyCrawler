@@ -195,15 +195,14 @@ class Download(threading.Thread):
         try:
             print_step_msg(cn + " 开始")
 
-            last_rp_id = self.account_info[1]
-            self.account_info[1] = ""  # 置空，存放此次的最后rp id
+            # 图片下载
+            first_rp_id = ""
             this_cn_total_image_count = 0
             page_count = 1
             max_page_count = -1
             need_make_download_dir = True  # 是否需要创建cn目录
             rp_id_list = []
             is_over = False
-
             while not is_over:
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
                 [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
@@ -226,10 +225,10 @@ class Download(threading.Thread):
                     rp_id_list.append(rp_id)
 
                     # 将第一个作品的id做为新的存档记录
-                    if self.account_info[1] == "":
-                        self.account_info[1] = rp_id
+                    if first_rp_id == "":
+                        first_rp_id = rp_id
                     # 检查是否已下载到前一次的图片
-                    if int(rp_id) <= int(last_rp_id):
+                    if int(rp_id) <= int(self.account_info[1]):
                         is_over = True
                         break
 
@@ -313,17 +312,16 @@ class Download(threading.Thread):
                             max_page_count = int(max_page_count_result[0])
                         else:
                             max_page_count = 1
-
                     if page_count >= max_page_count:
-                        break
-
-                    page_count += 1
-
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[1] == "" and last_rp_id != "0":
-                self.account_info[1] = str(last_rp_id)
+                        is_over = True
+                    else:
+                        page_count += 1
 
             print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
+
+            # 新的存档记录
+            if first_rp_id != "":
+                self.account_info[1] = first_rp_id
 
             # 保存最后的信息
             threadLock.acquire()
