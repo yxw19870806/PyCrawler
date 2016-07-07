@@ -69,9 +69,9 @@ def visit_weibo(url):
     [page_return_code, page_response] = tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
-        redirect_url = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
-        if len(redirect_url) == 1:
-            return visit_weibo(redirect_url[0])
+        redirect_url_find = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
+        if len(redirect_url_find) == 1:
+            return visit_weibo(redirect_url_find[0])
         # 没有cookies无法访问的处理
         if page_response.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
@@ -111,9 +111,9 @@ def get_weibo_account_page_id(account_id):
     for i in range(0, 5):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
         index_page = visit_weibo(index_url)
-        page_id = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
-        if len(page_id) == 1:
-            return page_id[0]
+        page_id_find = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
+        if len(page_id_find) == 1:
+            return page_id_find[0]
     return 0
 
 
@@ -146,9 +146,9 @@ def find_real_video_url(video_page_url, account_name):
         for i in range(0, 50):
             source_video_page = visit_weibo(video_page_url)
             if source_video_page:
-                ssig_file_url = re.findall('flashvars=\\\\"file=([^"]*)\\\\"', source_video_page)
-                if len(ssig_file_url) == 1:
-                    ssig_file_url = ssig_file_url[0]
+                ssig_file_url_find = re.findall('flashvars=\\\\"file=([^"]*)\\\\"', source_video_page)
+                if len(ssig_file_url_find) == 1:
+                    ssig_file_url = ssig_file_url_find[0]
                     ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
                     if ssig_file_page:
                         ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
@@ -177,10 +177,10 @@ def find_real_video_url(video_page_url, account_name):
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
         [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
-            video_id = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
-            if len(video_id) == 1:
+            video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
+            if len(video_id_find) == 1:
                 video_page_id = video_page_url.split("/")[-1]
-                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id[0], video_page_id)
+                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_page_id)
                 [video_info_page_return_code, video_info_page] = tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
@@ -447,9 +447,9 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取下一页的since_id
-                    since_id_data = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
-                    if len(since_id_data) == 1:
-                        since_id = since_id_data[0]
+                    since_id_find = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
+                    if len(since_id_find) == 1:
+                        since_id = since_id_find[0]
                     else:
                         break
 

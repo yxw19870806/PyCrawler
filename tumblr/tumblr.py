@@ -229,11 +229,6 @@ class Download(threading.Thread):
                 post_url_list = filter_post_url(post_url_list)
                 trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_url_list))
                 for post_id in sorted(post_url_list.keys(), reverse=True):
-                    # 新增信息页导致的重复判断
-                    if post_id in unique_list:
-                        continue
-                    else:
-                        unique_list.append(post_id)
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
@@ -250,20 +245,25 @@ class Download(threading.Thread):
                         continue
 
                     # 截取html中的head标签内的内容
-                    post_page_head = re.findall("(<head[\S|\s]*</head>)", post_page_data)
-                    if len(post_page_head) == 1:
-                        post_page_head = post_page_head[0]
+                    post_page_head_find = re.findall("(<head[\S|\s]*</head>)", post_page_data)
+                    if len(post_page_head_find) == 1:
+                        post_page_head = post_page_head_find[0]
                     else:
                         print_error_msg(account_id + " 信息页：" + post_url + " 截取head标签异常")
                         continue
 
                     # 获取og_type（页面类型的是视频还是图片或其他）
-                    og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
-                    if len(og_type) != 1:
+                    og_type_find = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
+                    if len(og_type_find) != 1:
                         print_error_msg(account_id + " 信息页：" + post_url + " ，'og:type'获取异常")
                         continue
-                    og_type = og_type[0]
-                    post_id_list.append(post_id)
+                    og_type = og_type_find[0]
+
+                    # 新增信息页导致的重复判断
+                    if post_id in unique_list:
+                        continue
+                    else:
+                        unique_list.append(post_id)
 
                     # 空
                     if og_type == "tumblr-feed:entry":

@@ -184,16 +184,16 @@ class Download(threading.Thread):
                     break
 
                 # 相册页中全部的信息页
-                page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_response)
-                if len(page_post_url_list) == 0:
+                post_page_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_response)
+                if len(post_page_url_list) == 0:
                     # 下载完毕了
                     break
 
                 # 去重排序
-                trace(account_id + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(page_post_url_list))
-                page_post_url_list = sorted(list(set(page_post_url_list)), reverse=True)
-                trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(page_post_url_list))
-                for post_url in page_post_url_list:
+                trace(account_id + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(post_page_url_list))
+                post_page_url_list = sorted(list(set(post_page_url_list)), reverse=True)
+                trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_page_url_list))
+                for post_url in post_page_url_list:
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
                     # 新增信息页导致的重复判断

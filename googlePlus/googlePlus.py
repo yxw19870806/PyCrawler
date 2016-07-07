@@ -212,9 +212,9 @@ class Download(threading.Thread):
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     message_url = message_url.replace("\u003d", "=")
-                    temp = re.findall("(.*)\?.*(#.*)", message_url)
-                    if len(temp) == 1:
-                        real_message_url = temp[0][0] + temp[0][1]
+                    message_authkey_find = re.findall("(.*)\?.*(#.*)", message_url)
+                    if len(message_authkey_find) == 1:
+                        real_message_url = message_authkey_find[0][0] + message_authkey_find[0][1]
                     else:
                         real_message_url = message_url
 
@@ -227,13 +227,13 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                    [message_page_return_code, message_page_response] = tool.http_request(message_url)[:2]
+                    [message_page_return_code, message_page_data] = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
                         print_error_msg(account_name + " 无法获取信息页")
                         continue
 
                     # 查找信息页的album id
-                    album_id_find = re.findall("var _album = \{id:'([\d]*)'", message_page_response)
+                    album_id_find = re.findall("var _album = \{id:'([\d]*)'", message_page_data)
                     if len(album_id_find) == 1:
                         album_id = album_id_find[0]
                         print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
@@ -241,11 +241,11 @@ class Download(threading.Thread):
                             first_album_id = album_id
 
                     # 截取图片信息部分
-                    message_page_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page_response)
-                    if len(message_page_data) != 1:
+                    message_page_data_find = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page_data)
+                    if len(message_page_data_find) != 1:
                         print_error_msg(account_name + " 信息页：" + message_url + "中没有找到相关图片信息，第" + str(image_count) + "张图片")
                         continue
-                    message_page_data = message_page_data[0]
+                    message_page_data = message_page_data_find[0]
 
                     # 匹配查找所有的图片
                     page_image_url_list = re.findall('<img src="(\S*)">', message_page_data)
@@ -289,9 +289,9 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 查找下一页的token key
-                    finds = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_response)
-                    if len(finds[0]) > 80:
-                        key = finds[0]
+                    key_find = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_response)
+                    if len(key_find) > 0 and len(key_find[0]) > 80:
+                        key = key_find[0]
                     else:
                         # 不是第一次下载
                         if self.account_info[2] != "":
