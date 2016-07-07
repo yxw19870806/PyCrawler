@@ -176,6 +176,7 @@ class Download(threading.Thread):
 
             # 图片下载
             first_message_url = ""
+            first_album_id = "0"
             image_count = 1
             photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             key = ""
@@ -232,12 +233,22 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 无法获取信息页")
                         continue
 
+                    # 查找信息页的album id
+                    album_id_find = re.findall("var _album = \{id:'([\d]*)'", message_page_response)
+                    if len(album_id_find) == 1:
+                        album_id = album_id_find[0]
+                        print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
+                        if first_album_id == "0":
+                            first_album_id = album_id
+
+                    # 截取图片信息部分
                     message_page_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page_response)
                     if len(message_page_data) != 1:
-                        print_error_msg(account_name + " 信息页：" + message_url + " 中没有找到相关图片信息，第" + str(image_count) + "张图片")
+                        print_error_msg(account_name + " 信息页：" + message_url + "中没有找到相关图片信息，第" + str(image_count) + "张图片")
                         continue
                     message_page_data = message_page_data[0]
 
+                    # 匹配查找所有的图片
                     page_image_url_list = re.findall('<img src="(\S*)">', message_page_data)
                     trace(account_name + " 信息页" + message_url + " 获取的所有图片: " + str(page_image_url_list))
                     if len(page_image_url_list) == 0:
