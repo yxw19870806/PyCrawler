@@ -43,6 +43,16 @@ def print_step_msg(msg):
     threadLock.release()
 
 
+def get_miaopai_suid(account_id):
+    index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
+    [index_page_return_code, index_page] = tool.http_request(index_page_url)[:2]
+    if index_page_return_code == 1:
+        suid_find = re.findall('<button class="guanzhu gz" suid="([^"]*)" heade="1" token="">\+关注</button>', index_page)
+        if len(suid_find) == 1:
+            return suid_find[0]
+    return None
+
+
 class Miaopai(robot.Robot):
     def __init__(self):
         global VIDEO_TEMP_PATH
@@ -173,18 +183,9 @@ class Download(threading.Thread):
             else:
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
 
-            suid = ""
-            index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
-            [index_page_return_code, index_page] = tool.http_request(index_page_url)[:2]
-            if index_page_return_code == 1:
-                suid_find = re.findall('<button class="guanzhu gz" suid="([^"]*)" heade="1" token="">\+关注</button>', index_page)
-                if len(suid_find) == 1:
-                    suid = suid_find[0]
-                    trace(account_id + " suid: " + suid)
-                else:
-                    print_error_msg(account_id + " suid获取失败")
-            else:
-                print_error_msg(account_id + " 无法访问首页" + index_page_url)
+            suid = get_miaopai_suid(account_id)
+            if not suid:
+                print_error_msg(account_id + " suid获取失败")
 
             while suid != "" and IS_DOWNLOAD_VIDEO == 1:
                 media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
