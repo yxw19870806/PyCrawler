@@ -161,10 +161,9 @@ class Download(threading.Thread):
             print_step_msg(account_id + " 开始")
 
             # 初始化数据
-            last_post_id = self.account_info[2]
-            self.account_info[2] = ""  # 置空，存放此次的最后URL
             page_count = 1
             image_count = 1
+            first_post_id = ""
             post_url_list = []
             is_over = False
             need_make_download_dir = True
@@ -204,11 +203,11 @@ class Download(threading.Thread):
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
                     # 将第一张image的URL保存到新id list中
-                    if self.account_info[2] == "":
-                        self.account_info[2] = post_id
+                    if first_post_id == "":
+                        first_post_id = post_id
 
                     # 检查是否已下载到前一次的图片
-                    if post_id <= last_post_id:
+                    if post_id <= self.account_info[2]:
                         is_over = True
                         break
 
@@ -254,10 +253,6 @@ class Download(threading.Thread):
 
                 page_count += 1
 
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[2] == "" and last_post_id != "":
-                self.account_info[2] = last_post_id
-
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
@@ -269,7 +264,9 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
-            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+            if first_post_id:
+                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+                self.account_info[2] = first_post_id
 
             # 保存最后的信息
             threadLock.acquire()
