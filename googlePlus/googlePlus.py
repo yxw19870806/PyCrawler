@@ -169,29 +169,26 @@ class Download(threading.Thread):
 
         try:
             # 初始化数据
-            last_message_url = self.account_info[2]
-            self.account_info[2] = ""  # 置空，存放此次的最后URL
+            first_message_url = ""
             # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
             # 第一次下载，不用限制
-            if last_message_url == "":
+            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
+            if self.account_info[2] == "":
                 limit_download_count = 0
+                is_error = False
             else:
-                last_message_page_return_code = tool.http_request(last_message_url)[0]
+                last_message_page_return_code = tool.http_request(self.account_info[2])[0]
                 # 上次记录的信息首页还在，那么不要限制
                 if last_message_page_return_code == 1:
                     limit_download_count = 0
                 else:
                     # 历史总数的10%，下限50、上限1000
                     limit_download_count = min(max(50, int(self.account_info[1]) / 100 * 10), 1000)
+                is_error = True
             image_count = 1
             message_url_list = []
             image_url_list = []
             is_over = False
-            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if last_message_url.find("picasaweb.google.com/") != -1:
-                is_error = True
-            else:
-                is_error = False
             need_make_download_dir = True
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -230,11 +227,11 @@ class Download(threading.Thread):
                     message_url_list.append(real_message_url)
 
                     # 将第一个信息页的地址做为新的存档记录
-                    if self.account_info[2] == "":
-                        self.account_info[2] = real_message_url
+                    if first_message_url == "":
+                        first_message_url = real_message_url
 
                     # 检查是否已下载到前一次的图片
-                    if real_message_url == last_message_url:
+                    if real_message_url == self.account_info[2]:
                         is_error = False
                         is_over = True
                         break
@@ -304,14 +301,10 @@ class Download(threading.Thread):
                     trace(account_name + " 下一个信息首页token:" + key)
                 else:
                     # 不是第一次下载
-                    if last_message_url != "":
+                    if self.account_info[2] != "":
                         print_error_msg(account_name + " 没有找到下一页的token，将该页保存：")
                         print_error_msg(index_page_response)
                     break
-
-            # 如果有错误且没有发现新的图片，复原旧数据
-            if self.account_info[2] == "" and last_message_url != "":
-                self.account_info[2] = last_message_url
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
@@ -324,7 +317,10 @@ class Download(threading.Thread):
                     print_error_msg(account_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
-            self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+            # 新的存档记录
+            if first_message_url != "":
+                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+                self.account_info[2] = first_message_url
 
             if is_error:
                 print_error_msg(account_name + " 图片数量异常，请手动检查")
