@@ -168,29 +168,6 @@ class Download(threading.Thread):
         print_step_msg(account_name + " 开始")
 
         try:
-            # 初始化数据
-            first_message_url = ""
-            # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-            # 第一次下载，不用限制
-            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if self.account_info[2] == "":
-                limit_download_count = 0
-                is_error = False
-            else:
-                last_message_page_return_code = tool.http_request(self.account_info[2])[0]
-                # 上次记录的信息首页还在，那么不要限制
-                if last_message_page_return_code == 1:
-                    limit_download_count = 0
-                else:
-                    # 历史总数的10%，下限50、上限1000
-                    limit_download_count = min(max(50, int(self.account_info[1]) / 100 * 10), 1000)
-                is_error = True
-            image_count = 1
-            message_url_list = []
-            image_url_list = []
-            is_over = False
-            need_make_download_dir = True
-
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
@@ -198,10 +175,28 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
 
             # 图片下载
+            first_message_url = ""
+            image_count = 1
             photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             key = ""
-
-            while True:
+            is_over = False
+            need_make_download_dir = True
+            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
+            if self.account_info[2] == "":
+                is_error = False
+                limit_download_count = 0
+            else:
+                is_error = True
+                last_message_page_return_code = tool.http_request(self.account_info[2])[0]
+                # 上次记录的信息首页还在，那么不要限制
+                if last_message_page_return_code == 1:
+                    limit_download_count = 0
+                else:
+                    # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
+                    # 第一次下载，不用限制
+                    # 历史总数的10%，下限50、上限1000
+                    limit_download_count = min(max(50, int(self.account_info[1]) / 100 * 10), 1000)
+            while not is_over:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, key)
                 [index_page_return_code, index_page_response] = tool.http_request(photo_album_url, post_data)[:2]
                 # 无法获取信息首页
@@ -216,15 +211,11 @@ class Download(threading.Thread):
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     message_url = message_url.replace("\u003d", "=")
-                    try:
-                        temp = re.findall("(.*)\?.*(#.*)", message_url)
+                    temp = re.findall("(.*)\?.*(#.*)", message_url)
+                    if len(temp) == 1:
                         real_message_url = temp[0][0] + temp[0][1]
-                    except:
+                    else:
                         real_message_url = message_url
-                    # 判断是否重复
-                    if real_message_url in message_url_list:
-                        continue
-                    message_url_list.append(real_message_url)
 
                     # 将第一个信息页的地址做为新的存档记录
                     if first_message_url == "":
@@ -244,7 +235,6 @@ class Download(threading.Thread):
                     message_page_data = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page_response)
                     if len(message_page_data) != 1:
                         print_error_msg(account_name + " 信息页：" + message_url + " 中没有找到相关图片信息，第" + str(image_count) + "张图片")
-                        image_count += 1
                         continue
                     message_page_data = message_page_data[0]
 
@@ -255,10 +245,6 @@ class Download(threading.Thread):
                         continue
 
                     for image_url in page_image_url_list:
-                        if image_url in image_url_list:
-                            continue
-                        image_url_list.append(image_url)
-
                         image_url = generate_max_resolution_image_url(image_url)
                         # 文件类型
                         if image_url.rfind("/") < image_url.rfind("."):
@@ -291,20 +277,17 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
-                if is_over:
-                    break
-
-                # 查找下一页的token key
-                finds = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_response)
-                if len(finds[0]) > 80:
-                    key = finds[0]
-                    trace(account_name + " 下一个信息首页token:" + key)
-                else:
-                    # 不是第一次下载
-                    if self.account_info[2] != "":
-                        print_error_msg(account_name + " 没有找到下一页的token，将该页保存：")
-                        print_error_msg(index_page_response)
-                    break
+                if not is_over:
+                    # 查找下一页的token key
+                    finds = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_response)
+                    if len(finds[0]) > 80:
+                        key = finds[0]
+                    else:
+                        # 不是第一次下载
+                        if self.account_info[2] != "":
+                            print_error_msg(account_name + " 没有找到下一页的token，将该页保存：")
+                            print_error_msg(index_page_response)
+                        break
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
