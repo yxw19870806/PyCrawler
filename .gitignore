@@ -15,3 +15,5 @@ weibo/video/
 log/
 *-*_*_*.data
 main/main.py
+stop
+pause
