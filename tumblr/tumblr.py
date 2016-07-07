@@ -324,12 +324,12 @@ class Download(threading.Thread):
                         else:
                             print_error_msg(account_id + " 信息页：" + post_url + " 中没有找到图片")
 
-                # 达到配置文件中的下载数量，结束
-                if 0 < GET_PAGE_COUNT < page_count:
-                    is_over = True
-
                 if not is_over:
-                    page_count += 1
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_PAGE_COUNT < page_count:
+                        is_over = True
+                    else:
+                        page_count += 1
 
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片，" + str(video_count - 1) + "个视频")
 
