@@ -47,6 +47,7 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取一页的媒体信息
 def get_tumblr_post_page_data(post_url, postfix_list):
     [post_page_return_code, post_page_data] = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面
@@ -242,6 +243,7 @@ class Download(threading.Thread):
                         break
 
                     post_url = "http://%s/post/%s" % (host_url, post_id)
+                    # 获取指定一页的媒体信息
                     post_page_data = get_tumblr_post_page_data(post_url, post_url_list[post_id])
                     if not post_page_data:
                         print_error_msg(account_id + " 无法获取信息页：" + post_url)
@@ -255,6 +257,7 @@ class Download(threading.Thread):
                         print_error_msg(account_id + " 信息页：" + post_url + " 截取head标签异常")
                         continue
 
+                    # 获取og_type（页面类型的是视频还是图片或其他）
                     og_type = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
                     if len(og_type) != 1:
                         print_error_msg(account_id + " 信息页：" + post_url + " ，'og:type'获取异常")

@@ -202,6 +202,7 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True
             while suid != "" and (not is_over):
+                # 获取指定一页的视频信息
                 media_page = get_miaopai_video_page_data(suid, page_count)
                 if not media_page:
                     print_error_msg(account_id + " 视频列表解析错误")

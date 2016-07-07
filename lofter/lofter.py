@@ -184,7 +184,7 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 无法获取相册信息: " + index_page_url)
                     break
 
-                # 相册也中全部的信息页
+                # 相册页中全部的信息页
                 page_post_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_response)
                 if len(page_post_url_list) == 0:
                     # 下载完毕了
