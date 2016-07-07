@@ -244,16 +244,13 @@ class Download(threading.Thread):
                         # 将第一张image的URL保存到新id list中
                         if first_image_time == "0":
                             first_image_time = str(image_time)
-
                         # 检查是否已下载到前一次的图片
                         if 0 < int(self.account_info[2]) >= image_time:
                             is_over = True
                             break
 
-                        # 文件类型
                         file_type = image_url.split(".")[-1].split(":")[0]
                         file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):

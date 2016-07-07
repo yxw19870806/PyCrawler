@@ -274,10 +274,10 @@ class Download(threading.Thread):
                             video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
                             if len(video_list) > 0:
                                 for video_url, video_type in video_list:
+                                    print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + video_url)
+
                                     file_type = video_type.split("/")[-1]
                                     video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
-
-                                    print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + video_url)
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
                                         if not tool.make_dir(video_path, 0):
@@ -303,10 +303,10 @@ class Download(threading.Thread):
                         trace(account_id + " 信息页" + post_url + "过滤后的所有图片: " + str(page_image_url_list))
                         if len(page_image_url_list) > 0:
                             for image_url in page_image_url_list:
+                                print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+
                                 file_type = image_url.split(".")[-1]
                                 image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-
-                                print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
@@ -347,6 +347,7 @@ class Download(threading.Thread):
                         print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
+            # 新的存档记录
             if first_post_id != "":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)

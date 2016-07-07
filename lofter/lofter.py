@@ -224,13 +224,10 @@ class Download(threading.Thread):
                     for image_url in post_page_image_list:
                         if image_url.rfind("?") > image_url.rfind("."):
                             image_url = image_url.split("?", 2)[0]
+                        print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
 
-                        # 文件类型
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-
-                        # 下载
-                        print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
@@ -264,6 +261,7 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
+            # 新的存档记录
             if first_post_id:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_post_id

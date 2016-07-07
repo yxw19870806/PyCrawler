@@ -425,6 +425,8 @@ class Download(threading.Thread):
                         continue
                     # 下载
                     for video_source_url in video_source_url_list:
+                        print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + video_page_url)
+
                         video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
                         # 第一个视频，创建目录
                         if need_make_video_dir:
@@ -432,8 +434,6 @@ class Download(threading.Thread):
                                 print_error_msg(account_name + " 创建图片下载目录： " + video_path + " 失败，程序结束！")
                                 tool.process_exit()
                             need_make_video_dir = False
-
-                        print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + video_page_url)
                         if tool.save_net_file(video_source_url, video_file_path):
                             print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
                             video_count += 1

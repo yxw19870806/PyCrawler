@@ -220,15 +220,17 @@ class Download(threading.Thread):
                     if self.account_info[2] == first_video_scid:
                         is_over = True
                         break
+
+                    video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % str(scid)
+                    print_step_msg(account_id + " 开始下载第 " + str(video_count) + "个视频：" + video_url)
+
+                    file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
                             print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
                             tool.process_exit()
                         need_make_download_dir = False
-                    video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % str(scid)
-                    file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
-                    print_step_msg(account_id + " 开始下载第 " + str(video_count) + "个视频：" + video_url)
                     if tool.save_net_file(video_url, file_path):
                         print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
                         video_count += 1
@@ -252,6 +254,7 @@ class Download(threading.Thread):
                     print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                     tool.process_exit()
 
+            # 新的存档记录
             if first_video_scid != "":
                 self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
                 self.account_info[2] = first_video_scid
