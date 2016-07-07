@@ -170,13 +170,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
-            # 初始化数据
-            last_video_url = self.account_info[2]
-            self.account_info[2] = ""  # 置空，存放此次的最后视频地址
-            page_count = 1
-            video_count = 1
-            need_make_download_dir = True
-
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT == 1:
                 video_path = os.path.join(VIDEO_TEMP_PATH, account_id)
@@ -187,7 +180,12 @@ class Download(threading.Thread):
             if not suid:
                 print_error_msg(account_id + " suid获取失败")
 
-            while suid != "" and IS_DOWNLOAD_VIDEO == 1:
+            first_video_scid = ""
+            page_count = 1
+            video_count = 1
+            is_over = False
+            need_make_download_dir = True
+            while suid != "" and (not is_over):
                 media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
 
                 [media_page_return_code, media_page] = tool.http_request(media_page_url)[:2]
@@ -211,8 +209,15 @@ class Download(threading.Thread):
                 scid_list = re.findall('data-scid="([^"]*)"', msg_data)
                 if len(scid_list) > 0:
                     for scid in scid_list:
-                        video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % str(scid)
+                        if first_video_scid == "":
+                            first_video_scid = scid
 
+                        # 检查是否已下载到前一次的图片
+                        if self.account_info[2] == first_video_scid:
+                            is_over = True
+                            break
+
+                        video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % str(scid)
                         # 文件类型
                         file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
 
@@ -238,10 +243,6 @@ class Download(threading.Thread):
 
                 page_count += 1
 
-            # 如果有错误且没有发现新的视频，复原旧数据
-            if self.account_info[2] == "" and last_video_url != "":
-                self.account_info[2] = last_video_url
-
             print_step_msg(account_id + " 下载完毕，总共获得" + str(video_count - 1) + "个视频")
 
             # 排序
@@ -255,6 +256,9 @@ class Download(threading.Thread):
                         tool.process_exit()
 
             self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
+            if first_video_scid != "":
+                self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
+                self.account_info[2] = first_video_scid
 
             # 保存最后的信息
             threadLock.acquire()
