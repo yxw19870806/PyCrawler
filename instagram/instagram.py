@@ -215,7 +215,7 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
-            while True:
+            while not is_over:
                 # 获取指定时间后的一页媒体信息
                 media_page_data = get_instagram_media_page_data(account_id, cursor)
                 if not media_page_data:
@@ -243,9 +243,10 @@ class Download(threading.Thread):
                     # 图片
                     if IS_DOWNLOAD_IMAGE == 1:
                         image_url = str(photo_info["display_src"].split("?")[0])
+                        print_step_msg(account_name + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+
                         file_type = image_url.split(".")[-1]
                         image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                        print_step_msg(account_name + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
                         # 第一张图片，创建目录
                         if need_make_image_dir:
                             if not tool.make_dir(image_path, 0):
@@ -264,28 +265,29 @@ class Download(threading.Thread):
                         [post_page_return_code, post_page_response] = tool.http_request(post_page_url)[:2]
                         if post_page_return_code == 1:
                             meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_response)
-                            find_video = False
+                            video_url = None
                             for meta_property, meta_content in meta_list:
                                 if meta_property == "og:video:secure_url":
-                                    file_type = meta_content.split(".")[-1]
-                                    video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
-
-                                    # 下载
-                                    print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + meta_content)
-                                    # 第一个视频，创建目录
-                                    if need_make_video_dir:
-                                        if not tool.make_dir(video_path, 0):
-                                            print_error_msg(account_name + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
-                                            tool.process_exit()
-                                        need_make_video_dir = False
-                                    if tool.save_net_file(meta_content, video_file_path):
-                                        print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
-                                        video_count += 1
-                                    else:
-                                        print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + meta_content + " 下载失败")
-                                    find_video = True
+                                    video_url = meta_content
                                     break
-                            if not find_video:
+
+                            if video_url:
+                                print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + meta_content)
+
+                                file_type = meta_content.split(".")[-1]
+                                video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
+                                # 第一个视频，创建目录
+                                if need_make_video_dir:
+                                    if not tool.make_dir(video_path, 0):
+                                        print_error_msg(account_name + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
+                                        tool.process_exit()
+                                    need_make_video_dir = False
+                                if tool.save_net_file(meta_content, video_file_path):
+                                    print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
+                                    video_count += 1
+                                else:
+                                    print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + meta_content + " 下载失败")
+                            else:
                                 print_error_msg(account_name + " 视频：" + post_page_url + "没有获取到源地址")
                         else:
                             print_error_msg(account_name + " 信息页：" + post_page_url + " 访问失败")
@@ -295,19 +297,16 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                if is_over:
-                    break
-
-                if media_page_data["page_info"]["has_next_page"]:
-                    cursor = str(media_page_data["page_info"]["end_cursor"])
-                else:
-                    break
+                if not is_over:
+                    if media_page_data["page_info"]["has_next_page"]:
+                        cursor = str(media_page_data["page_info"]["end_cursor"])
+                    else:
+                        is_over = True
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片" + "和" + str(video_count - 1) + "个视频")
 
             # 排序
             if IS_SORT == 1:
-                # 判断排序目标文件夹是否存在
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
@@ -315,7 +314,6 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(account_name + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
-
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
@@ -324,6 +322,7 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
                         tool.process_exit()
 
+            # 新的存档记录
             if first_created_time != "":
                 self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
                 self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
