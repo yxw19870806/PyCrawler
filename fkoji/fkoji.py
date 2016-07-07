@@ -53,22 +53,19 @@ class Fkoji(robot.Robot):
             last_image_url = ""
             image_start_index = 0
 
-        page_index = 1
-        image_count = 1
-        new_last_image_url = ""
-        image_url_list = []
-        is_over = False
-
         if self.is_sort == 1:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
 
         # 下载
-        while True:
+        page_index = 1
+        image_count = 1
+        first_image_url = ""
+        image_url_list = []
+        is_over = False
+        while not is_over:
             index_url = "http://jigadori.fkoji.com/?p=%s" % str(page_index)
-            log.trace("网页地址：" + index_url)
-
             [index_page_return_code, index_page_response] = tool.http_request(index_url)[:2]
             if index_page_return_code != 1:
                 log.error("无法访问首页地址" + index_url)
@@ -95,8 +92,8 @@ class Fkoji(robot.Robot):
                     tag_attr = dict(tag.attrs)
                     if tag_attr.has_key("src") and tag_attr.has_key("alt"):
                         image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
-                        if new_last_image_url == "":
-                            new_last_image_url = image_url
+                        if first_image_url == "":
+                            first_image_url = image_url
                         # 检查是否已下载到前一次的图片
                         if last_image_url == image_url:
                             is_over = True
@@ -117,9 +114,9 @@ class Fkoji(robot.Robot):
                             log.error("第" + str(image_count) + "张图片 " + image_url + ", id: " + account_id + " 下载失败")
                 if is_over:
                     break
-            if is_over:
-                break
-            page_index += 1
+
+            if not is_over:
+                page_index += 1
 
         log.step("下载完毕")
 
@@ -174,7 +171,7 @@ class Fkoji(robot.Robot):
         # 保存新的存档文件
         temp_list = [account_list[key] for key in sorted(account_list.keys())]
         # 把总数据插入列表头
-        temp_list.insert(0, [ALL_SIGN, str(image_start_index), new_last_image_url])
+        temp_list.insert(0, [ALL_SIGN, str(image_start_index), first_image_url])
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
 
         duration_time = int(time.time() - start_time)
