@@ -14,6 +14,7 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
+GET_PAGE_COUNT = 0
 GET_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
@@ -46,6 +47,7 @@ def trace(msg):
 
 class Lofter(robot.Robot):
     def __init__(self):
+        global GET_PAGE_COUNT
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -56,6 +58,7 @@ class Lofter(robot.Robot):
         super(Lofter, self).__init__()
 
         # 全局变量
+        GET_PAGE_COUNT = self.get_page_count
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
@@ -247,7 +250,11 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    page_count += 1
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_PAGE_COUNT < page_count:
+                        is_over = True
+                    else:
+                        page_count += 1
 
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 

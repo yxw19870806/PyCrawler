@@ -15,6 +15,7 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
+GET_PAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = 1
@@ -75,6 +76,7 @@ def unfollow(account_id):
 
 class Bcy(robot.Robot):
     def __init__(self):
+        global GET_PAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_DOWNLOAD_IMAGE
@@ -82,6 +84,7 @@ class Bcy(robot.Robot):
         super(Bcy, self).__init__()
 
         # 全局变量
+        GET_PAGE_COUNT = self.get_page_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         IS_DOWNLOAD_IMAGE = self.is_download_image
@@ -199,6 +202,7 @@ class Download(threading.Thread):
             this_cn_total_image_count = 0
             page_count = 1
             max_page_count = -1
+            total_rp_count = 1
             first_rp_id = ""
             unique_list = []
             is_over = False
@@ -303,7 +307,12 @@ class Download(threading.Thread):
 
                     this_cn_total_image_count += image_count - 1
 
-                    title_index += 1
+                    if 0 < GET_PAGE_COUNT < total_rp_count:
+                        is_over = True
+                        break
+                    else:
+                        title_index += 1
+                        total_rp_count += 1
 
                 if not is_over:
                     # 看看总共有几页

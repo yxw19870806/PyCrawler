@@ -14,8 +14,8 @@ import time
 import traceback
 
 ACCOUNTS = []
-TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
+GET_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -71,6 +71,7 @@ def get_miaopai_video_page_data(suid, page_count):
 
 class Miaopai(robot.Robot):
     def __init__(self):
+        global GET_VIDEO_COUNT
         global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -79,6 +80,7 @@ class Miaopai(robot.Robot):
 
         robot.Robot.__init__(self)
 
+        GET_VIDEO_COUNT = self.get_video_count
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
 
@@ -178,7 +180,6 @@ class Download(threading.Thread):
         self.account_info = account_info
 
     def run(self):
-        global TOTAL_IMAGE_COUNT
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
@@ -244,6 +245,11 @@ class Download(threading.Thread):
                         video_count += 1
                     else:
                         print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_VIDEO_COUNT < video_count:
+                        is_over = True
+                        break
 
                 if not is_over:
                     if media_page["isall"]:
