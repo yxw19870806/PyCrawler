@@ -201,8 +201,8 @@ class Download(threading.Thread):
             max_page_count = -1
             first_rp_id = ""
             unique_list = []
-            need_make_download_dir = True  # 是否需要创建cn目录
             is_over = False
+            need_make_download_dir = True  # 是否需要创建cn目录
             while not is_over:
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
                 [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]

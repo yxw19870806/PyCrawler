@@ -271,7 +271,7 @@ class Download(threading.Thread):
                     if media_page["has_more_items"]:
                         data_tweet_id = str(media_page["min_position"])
                     else:
-                        break
+                        is_over = True
 
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 

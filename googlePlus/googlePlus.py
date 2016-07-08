@@ -286,6 +286,8 @@ class Download(threading.Thread):
                         if 0 < GET_IMAGE_COUNT < image_count:
                             is_over = True
                             break
+                    if is_over:
+                        break
 
                 if not is_over:
                     # 查找下一页的token key
@@ -297,7 +299,7 @@ class Download(threading.Thread):
                         if self.account_info[2] != "":
                             print_error_msg(account_name + " 没有找到下一页的token，将该页保存：")
                             print_error_msg(index_page_response)
-                        break
+                        is_over = True
 
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 

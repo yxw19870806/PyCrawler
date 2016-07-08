@@ -246,7 +246,8 @@ class Download(threading.Thread):
                     if is_over:
                         break
 
-                page_count += 1
+                if not is_over:
+                    page_count += 1
 
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
