@@ -6,7 +6,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, robot, tool
+import base64
 import cookielib
+import json
 import os
 import re
 import threading
@@ -42,7 +44,48 @@ def trace(msg):
     threadLock.release()
 
 
-def login(email, password):
+def get_account_info_from_console():
+    while True:
+        email = raw_input(tool.get_time() + " 请输入邮箱: ")
+        password = raw_input(tool.get_time() + " 请输入密码: ")
+        while True:
+            input_str = raw_input(tool.get_time() + " 是否使用这些信息（Y）或重新输入（N）: ")
+            input_str = input_str.lower()
+            if input_str in ["y", "yes"]:
+                return [email, password]
+            elif input_str in ["n", "no"]:
+                break
+            else:
+                pass
+
+
+def get_account_info_from_file():
+    if not os.path.exists("account.data"):
+        return False
+    file_handle = open("account.data", "r")
+    account_info = file_handle.read()
+    file_handle.close()
+    try:
+        account_info = json.loads(base64.b64decode(account_info))
+    except TypeError:
+        account_info = {}
+    except ValueError:
+        account_info = {}
+    if robot.check_sub_key(("email", "password"), account_info):
+        return [account_info["email"], account_info["password"]]
+    return [None, None]
+
+
+def login(from_where):
+    if from_where == 1:
+        email, password = get_account_info_from_file
+    else:
+        email, password = get_account_info_from_console()
+        account_info = base64.b64encode(json.dumps({"email": email, "password": password}))
+        file_handle = open("account.data", "w")
+        file_handle.write(account_info)
+        file_handle.close()
+
     cookie = cookielib.CookieJar()
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
