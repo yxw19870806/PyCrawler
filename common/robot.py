@@ -31,7 +31,7 @@ class Robot(object):
         error_log_dir = os.path.dirname(self.error_log_path)
 
         if not tool.make_dir(error_log_dir, 0):
-            tool.print_msg("创建错误日志目录：" + error_log_dir + " 失败，程序结束！", True)
+            tool.print_msg("创建错误日志目录：" + error_log_dir + " 失败", True)
             tool.process_exit()
         is_log_step = get_config(config, "IS_LOG_STEP", 1, 2)
         if is_log_step == 0:
@@ -42,7 +42,7 @@ class Robot(object):
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
-                tool.print_msg("创建步骤日志目录：" + step_log_dir + " 失败，程序结束！", True)
+                tool.print_msg("创建步骤日志目录：" + step_log_dir + " 失败", True)
                 tool.process_exit()
         is_log_trace = get_config(config, "IS_LOG_TRACE", 1, 2)
         if is_log_trace == 0:
@@ -53,7 +53,7 @@ class Robot(object):
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
-                tool.print_msg("创建调试日志目录：" + trace_log_dir + " 失败，程序结束！", True)
+                tool.print_msg("创建调试日志目录：" + trace_log_dir + " 失败", True)
                 tool.process_exit()
 
         if not IS_INIT:

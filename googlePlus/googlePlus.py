@@ -45,6 +45,20 @@ def trace(msg):
     threadLock.release()
 
 
+# 重组URL并使用最大分辨率
+# https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
+# ->
+# https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/s0-Ic42/16%252520-%2525201.jpg
+
+# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s128/24%2B-%2B1
+# ->
+# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s0/24%2B-%2B1
+def generate_max_resolution_image_url(image_url):
+    temp_list = image_url.split("/")
+    temp_list[-2] = "s0"
+    return "/".join(temp_list)
+
+
 class GooglePlus(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
@@ -77,7 +91,7 @@ class GooglePlus(robot.Robot):
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
             tool.process_exit()
 
         # 设置代理
@@ -91,7 +105,7 @@ class GooglePlus(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件: " + self.save_data_path + "不存在，程序结束！")
+            print_error_msg("存档文件: " + self.save_data_path + "不存在")
             tool.process_exit()
 
         # 创建临时存档文件
@@ -268,7 +282,7 @@ class Download(threading.Thread):
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
-                                print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
                                 tool.process_exit()
                             need_make_download_dir = False
                         if tool.save_net_file(image_url, file_path):
@@ -309,7 +323,7 @@ class Download(threading.Thread):
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_name + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                    print_error_msg(account_name + " 创建图片子目录： " + destination_path + " 失败")
                     tool.process_exit()
 
             # 新的存档记录
@@ -328,23 +342,11 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_name + " 完成")
+        except SystemExit:
+            print_error_msg(account_name + " 异常退出")
         except Exception, e:
-            print_step_msg(account_name + " 异常")
+            print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
-
-
-# 重组URL并使用最大分辨率
-# https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/Ic42/s128/16%252520-%2525201.jpg
-# ->
-# https://lh3.googleusercontent.com/-WWXEwS_4RlM/Vae0RRNEY_I/AAAAAAAA2j8/VaALVmc7N64/s0-Ic42/16%252520-%2525201.jpg
-
-# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s128/24%2B-%2B1
-# ->
-# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s0/24%2B-%2B1
-def generate_max_resolution_image_url(image_url):
-    temp_list = image_url.split("/")
-    temp_list[-2] = "s0"
-    return "/".join(temp_list)
 
 
 if __name__ == "__main__":

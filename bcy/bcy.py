@@ -146,7 +146,7 @@ class Bcy(robot.Robot):
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
             tool.process_exit()
 
         # 设置代理
@@ -155,7 +155,7 @@ class Bcy(robot.Robot):
 
         # 设置系统cookies
         if not tool.set_cookie(self.cookie_path, self.browser_version, "bcy.net"):
-            print_error_msg("导入浏览器cookies失败，程序结束！")
+            print_error_msg("导入浏览器cookies失败")
             tool.process_exit()
 
         home_page_url = "http://bcy.net/home/user/index"
@@ -179,7 +179,7 @@ class Bcy(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在，程序结束！")
+            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在")
             tool.process_exit()
 
         # 创建临时存档文件
@@ -287,7 +287,7 @@ class Download(threading.Thread):
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
-                            print_error_msg(cn + " 创建CN目录： " + image_path + " 失败，程序结束！")
+                            print_error_msg(cn + " 创建CN目录： " + image_path + " 失败")
                             tool.process_exit()
                         need_make_download_dir = False
 
@@ -307,7 +307,7 @@ class Download(threading.Thread):
                         print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败，尝试不使用title！")
                         rp_path = os.path.join(image_path, rp_id)
                         if not tool.make_dir(rp_path, 0):
-                            print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败，程序结束！")
+                            print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败")
                             tool.process_exit()
 
                     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
@@ -384,8 +384,10 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(cn + " 完成")
+        except SystemExit:
+            print_error_msg(cn + " 异常退出")
         except Exception, e:
-            print_step_msg(cn + " 异常")
+            print_step_msg(cn + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 

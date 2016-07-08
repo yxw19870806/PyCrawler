@@ -80,7 +80,7 @@ class Lofter(robot.Robot):
         # 图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
             tool.process_exit()
 
         # 设置代理
@@ -94,7 +94,7 @@ class Lofter(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件: " + self.save_data_path + "不存在，程序结束！")
+            print_error_msg("存档文件: " + self.save_data_path + "不存在")
             tool.process_exit()
 
         # 创建临时存档文件
@@ -232,7 +232,7 @@ class Download(threading.Thread):
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
-                                print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败")
                                 tool.process_exit()
                             need_make_download_dir = False
                         if tool.save_net_file(image_url, file_path):
@@ -264,7 +264,7 @@ class Download(threading.Thread):
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_id + " 图片从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败，程序结束！")
+                    print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败")
                     tool.process_exit()
 
             # 新的存档记录
@@ -280,8 +280,10 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
+        except SystemExit:
+            print_error_msg(account_id + " 异常退出")
         except Exception, e:
-            print_step_msg(account_id + " 异常")
+            print_step_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 

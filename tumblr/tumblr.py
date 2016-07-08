@@ -62,6 +62,42 @@ def get_tumblr_post_page_data(post_url, postfix_list):
     return None
 
 
+# 过滤头像以及页面上找到不同分辨率的同一张图，保留分辨率较大的那张
+def filter_different_resolution_images(image_url_list):
+    new_image_url_list = {}
+    for image_url in image_url_list:
+        if image_url.find("/avatar_") == -1:
+            image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("/")[0]
+
+            if image_id in new_image_url_list:
+                resolution = int(image_url.split("_")[-1].split(".")[0])
+                old_resolution = int(new_image_url_list[image_id].split("_")[-1].split(".")[0])
+                if resolution < old_resolution:
+                    continue
+            new_image_url_list[image_id] = image_url
+
+    return new_image_url_list.values()
+
+
+def filter_post_url(post_url_list):
+    new_post_url_list = {}
+    for post_url in post_url_list:
+        # 无效的信息页
+        post_url = post_url.replace("/embed", "")
+        temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
+        post_id = temp[0]
+        if post_id in new_post_url_list:
+            if len(temp) == 2:
+                new_post_url_list[post_id].append(temp[1])
+        else:
+            new_post_url_list[post_id] = []
+    # 去重排序
+    for post_id in new_post_url_list:
+        new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
+
+    return new_post_url_list
+
+
 class Tumblr(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -102,14 +138,14 @@ class Tumblr(robot.Robot):
         if IS_DOWNLOAD_IMAGE == 1:
             print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败，程序结束！")
+                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
                 tool.process_exit()
 
         # 视频保存目录
         if IS_DOWNLOAD_VIDEO == 1:
             print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
+                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
                 tool.process_exit()
 
         # 设置代理
@@ -123,7 +159,7 @@ class Tumblr(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件: " + self.save_data_path + "不存在，程序结束！")
+            print_error_msg("存档文件: " + self.save_data_path + "不存在")
             tool.process_exit()
 
         # 创建临时存档文件
@@ -284,7 +320,7 @@ class Download(threading.Thread):
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
                                         if not tool.make_dir(video_path, 0):
-                                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
+                                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败")
                                             tool.process_exit()
                                         need_make_video_dir = False
                                     if tool.save_net_file(video_url, video_file_path):
@@ -313,7 +349,7 @@ class Download(threading.Thread):
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
-                                        print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败，程序结束！")
+                                        print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败")
                                         tool.process_exit()
                                     need_make_image_dir = False
                                 if tool.save_net_file(image_url, image_file_path):
@@ -340,14 +376,14 @@ class Download(threading.Thread):
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_id + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_id + " 创建图片保存目录： " + destination_path + " 失败，程序结束！")
+                        print_error_msg(account_id + " 创建图片保存目录： " + destination_path + " 失败")
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
                         print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
+                        print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
                         tool.process_exit()
 
             # 新的存档记录
@@ -365,45 +401,11 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
+        except SystemExit:
+            print_error_msg(account_id + " 异常退出")
         except Exception, e:
-            print_step_msg(account_id + " 异常")
+            print_step_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
-
-
-# 过滤头像以及页面上找到不同分辨率的同一张图，保留分辨率较大的那张
-def filter_different_resolution_images(image_url_list):
-    new_image_url_list = {}
-    for image_url in image_url_list:
-        if image_url.find("/avatar_") == -1:
-            image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("/")[0]
-
-            if image_id in new_image_url_list:
-                resolution = int(image_url.split("_")[-1].split(".")[0])
-                old_resolution = int(new_image_url_list[image_id].split("_")[-1].split(".")[0])
-                if resolution < old_resolution:
-                    continue
-            new_image_url_list[image_id] = image_url
-
-    return new_image_url_list.values()
-
-
-def filter_post_url(post_url_list):
-    new_post_url_list = {}
-    for post_url in post_url_list:
-        # 无效的信息页
-        post_url = post_url.replace("/embed", "")
-        temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
-        post_id = temp[0]
-        if post_id in new_post_url_list:
-            if len(temp) == 2:
-                new_post_url_list[post_id].append(temp[1])
-        else:
-            new_post_url_list[post_id] = []
-    # 去重排序
-    for post_id in new_post_url_list:
-        new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
-
-    return new_post_url_list
 
 
 if __name__ == "__main__":

@@ -99,7 +99,7 @@ class Miaopai(robot.Robot):
         if IS_DOWNLOAD_VIDEO == 1:
             print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败，程序结束！")
+                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
                 tool.process_exit()
 
         # 设置代理
@@ -108,7 +108,7 @@ class Miaopai(robot.Robot):
 
         # 设置系统cookies
         if not tool.set_cookie(self.cookie_path, self.browser_version, ("weibo.com", ".sina.com.cn")):
-            print_error_msg("导入浏览器cookies失败，程序结束！")
+            print_error_msg("导入浏览器cookies失败")
             tool.process_exit()
 
         # 寻找存档，如果没有结束进程
@@ -118,7 +118,7 @@ class Miaopai(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件：" + self.save_data_path + "不存在，程序结束！")
+            print_error_msg("存档文件：" + self.save_data_path + "不存在")
             tool.process_exit()
 
         # 创建临时存档文件
@@ -237,7 +237,7 @@ class Download(threading.Thread):
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败，程序结束！")
+                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败")
                             tool.process_exit()
                         need_make_download_dir = False
                     if tool.save_net_file(video_url, file_path):
@@ -265,7 +265,7 @@ class Download(threading.Thread):
                 if robot.sort_file(video_path, destination_path, int(self.account_info[4]), 4):
                     print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败，程序结束！")
+                    print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
                     tool.process_exit()
 
             # 新的存档记录
@@ -281,8 +281,10 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
+        except SystemExit:
+            print_error_msg(account_id + " 异常退出")
         except Exception, e:
-            print_step_msg(account_id + " 异常")
+            print_step_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 

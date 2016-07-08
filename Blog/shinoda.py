@@ -24,7 +24,7 @@ class Shinoda(robot.Robot):
         if self.is_sort == 1:
             log.step("创建图片下载目录：" + self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
-                log.error("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
+                log.error("创建图片下载目录：" + self.image_temp_path + " 失败")
                 tool.process_exit()
 
         # 设置代理
@@ -89,7 +89,7 @@ class Shinoda(robot.Robot):
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
                 log.step(" 图片从下载目录移动到保存目录成功")
             else:
-                log.error(" 创建图片保存目录：" + self.image_download_path + " 失败，程序结束！")
+                log.error(" 创建图片保存目录：" + self.image_download_path + " 失败")
                 tool.process_exit()
 
         # 保存新的存档文件

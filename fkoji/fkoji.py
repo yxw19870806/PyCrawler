@@ -29,14 +29,14 @@ class Fkoji(robot.Robot):
         # 图片保存目录
         log.step("创建图片根目录：" + self.image_download_path)
         if not tool.make_dir(self.image_download_path, 0):
-            log.error("创建图片根目录：" + self.image_download_path + " 失败，程序结束！")
+            log.error("创建图片根目录：" + self.image_download_path + " 失败")
             tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort == 1:
             log.step("创建图片下载目录：" + self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
-                log.error("创建图片下载目录：" + self.image_temp_path + " 失败，程序结束！")
+                log.error("创建图片下载目录：" + self.image_temp_path + " 失败")
                 tool.process_exit()
 
         # 寻找fkoji.save
@@ -138,7 +138,7 @@ class Fkoji(robot.Robot):
                     tool.process_exit()
 
             if not tool.make_dir(os.path.join(self.image_download_path, "all"), 0):
-                log.error("创建目录：" + os.path.join(self.image_download_path, "all") + " 失败，程序结束！")
+                log.error("创建目录：" + os.path.join(self.image_download_path, "all") + " 失败")
                 tool.process_exit()
 
             file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
@@ -158,7 +158,7 @@ class Fkoji(robot.Robot):
                 each_account_path = os.path.join(self.image_download_path, "single", account_id)
                 if not os.path.exists(each_account_path):
                     if not tool.make_dir(each_account_path, 0):
-                        log.error("创建目录：" + each_account_path + " 失败，程序结束！")
+                        log.error("创建目录：" + each_account_path + " 失败")
                         tool.process_exit()
                 if account_list.has_key(account_id):
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1
