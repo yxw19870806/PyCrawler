@@ -240,7 +240,7 @@ class Download(threading.Thread):
                     post_url = "http://%s/post/%s" % (host_url, post_id)
                     # 获取指定一页的媒体信息
                     post_page_data = get_tumblr_post_page_data(post_url, post_url_list[post_id])
-                    if not post_page_data:
+                    if post_page_data is None:
                         print_error_msg(account_id + " 无法获取信息页：" + post_url)
                         continue
 

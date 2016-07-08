@@ -221,7 +221,7 @@ class Download(threading.Thread):
             while not is_over:
                 # 获取指定时间点后的一页图片信息
                 media_page = get_twitter_media_page_data(account_id, data_tweet_id)
-                if not media_page:
+                if media_page is None:
                     print_error_msg(account_id + " 图片列表解析错误")
                     break
 

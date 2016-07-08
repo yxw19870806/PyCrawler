@@ -110,13 +110,14 @@ def get_weibo_photo_page_data(account_id, page_count):
 
 # 获取账号对应的page_id
 def get_weibo_account_page_id(account_id):
-    for i in range(0, 5):
+    for i in range(0, 10):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
         index_page = visit_weibo(index_url)
-        page_id_find = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
-        if len(page_id_find) == 1:
-            return page_id_find[0]
-    return 0
+        if index_page:
+            page_id_find = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
+            if len(page_id_find) == 1:
+                return page_id_find[0]
+    return None
 
 
 # 获取一页的视频信息
@@ -385,22 +386,22 @@ class Download(threading.Thread):
 
             # 视频
             video_count = 1
-            page_id = 0
+            page_id = None
             first_video_url = ""
             is_over = False
             need_make_video_dir = True
             since_id = INIT_SINCE_ID
             while (IS_DOWNLOAD_VIDEO == 1) and (not is_over):
                 # 获取page_id
-                if not page_id:
+                if page_id is None:
                     page_id = get_weibo_account_page_id(account_id)
-                    if not page_id:
+                    if page_id is None:
                         print_error_msg(account_name + " 微博主页没有获取到page_id")
                         break
 
                 # 获取指定时间点后的一页视频信息
                 video_page_data = get_weibo_video_page_data(page_id, since_id)
-                if not video_page_data:
+                if video_page_data is None:
                     print_error_msg(account_name + " 视频列表解析异常")
                     break
 
@@ -469,7 +470,7 @@ class Download(threading.Thread):
             while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
                 # 获取指定一页图片的信息
                 photo_page_data = get_weibo_photo_page_data(account_id, page_count)
-                if not photo_page_data:
+                if photo_page_data is None:
                     print_error_msg(account_name + " 图片列表解析错误")
                     break
 
@@ -511,7 +512,7 @@ class Download(threading.Thread):
                         else:
                             print_step_msg(account_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
                         image_byte = get_image_byte(image_url)
-                        if image_byte:
+                        if image_byte is not None:
                             file_type = image_url.split(".")[-1]
                             if file_type.find("/") != -1:
                                 file_type = "jpg"

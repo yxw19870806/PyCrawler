@@ -217,7 +217,7 @@ class Download(threading.Thread):
             while not is_over:
                 # 获取指定时间后的一页媒体信息
                 media_page_data = get_instagram_media_page_data(account_id, cursor)
-                if not media_page_data:
+                if media_page_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
                     break
 

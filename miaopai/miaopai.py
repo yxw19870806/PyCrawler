@@ -194,7 +194,7 @@ class Download(threading.Thread):
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
 
             suid = get_miaopai_suid(account_id)
-            if not suid:
+            if suid is None:
                 print_error_msg(account_id + " suid获取失败")
 
             page_count = 1
@@ -206,7 +206,7 @@ class Download(threading.Thread):
             while suid != "" and (not is_over):
                 # 获取指定一页的视频信息
                 media_page = get_miaopai_video_page_data(suid, page_count)
-                if not media_page:
+                if media_page is None:
                     print_error_msg(account_id + " 视频列表解析错误")
                     break
 
