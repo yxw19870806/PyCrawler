@@ -204,15 +204,17 @@ def find_real_video_url(video_page_url, account_name):
 
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
 def get_image_byte(image_url):
-    [image_return_code, image_data] = tool.http_request(image_url)[:2]
-    if image_return_code == 1:
-        # 处理获取的文件为weibo默认获取失败的图片
-        md5_digest = md5(image_data)
-        if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
-            return None
-        if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
-            return image_data
-    return None
+    for i in range(0, 10):
+        [image_return_code, image_data] = tool.http_request(image_url)[:2]
+        if image_return_code == 1:
+            # 处理获取的文件为weibo默认获取失败的图片
+            md5_digest = md5(image_data)
+            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
+                return [-1, None] # 被系统自动删除的图片
+            # 不是暂时无法访问，否则重试
+            if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+                return [1, image_data]
+    return [-2, None]
 
 
 class Weibo(robot.Robot):
@@ -481,7 +483,7 @@ class Download(threading.Thread):
                 # 图片详细列表
                 photo_list = photo_page_data["photo_list"]
                 for image_info in photo_list:
-                    if not robot.check_sub_key(("pic_name", "timestamp"), image_info):
+                    if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
                         print_error_msg(account_name + " 图片列表解析错误")
                         break
 
@@ -499,38 +501,28 @@ class Download(threading.Thread):
                         break
 
                     # 下载
-                    # todo 是否可以优化到一个方法中
-                    if "pic_host" in image_info:
-                        image_host = str(image_info["pic_host"])
-                    else:
-                        image_host = ""
-                    for try_count in range(1, 6):
-                        if image_host == "":
-                            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                        image_url = image_host + "/large/" + str(image_info["pic_name"])
-                        if try_count == 1:
-                            print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                        else:
-                            print_step_msg(account_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
-                        image_byte = get_image_byte(image_url)
-                        if image_byte is not None:
-                            file_type = image_url.split(".")[-1]
-                            if file_type.find("/") != -1:
-                                file_type = "jpg"
-                            file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
-                                    tool.process_exit()
-                                need_make_image_dir = False
-                            save_image(image_byte, file_path)
-                            print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
-                            image_count += 1
-                            break
-                        if try_count >= 5:
-                            print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-                        image_host = ""
+                    image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
+                    print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                    image_status, image_byte = get_image_byte(image_url)
+                    if image_status == 1:
+                        # 第一张图片，创建目录
+                        if need_make_image_dir:
+                            if not tool.make_dir(image_path, 0):
+                                print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
+                                tool.process_exit()
+                            need_make_image_dir = False
+
+                        file_type = image_url.split(".")[-1]
+                        if file_type.find("/") != -1:
+                            file_type = "jpg"
+                        file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                        save_image(image_byte, file_path)
+                        print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                        image_count += 1
+                    elif image_status == -1:
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                    elif image_status == -2:
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 资源已被删除")
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
