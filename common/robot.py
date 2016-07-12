@@ -111,7 +111,7 @@ class Robot(object):
 # postfix: 后缀，只有在mode=1时有效
 def get_config(config, key, default_value, mode, prefix=None, postfix=None):
     if config.has_option("setting", key):
-        value = config.get("setting", key)
+        value = config.get("setting", key).encode("utf-8")
     else:
         tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
