@@ -32,6 +32,10 @@ class ProcessControl(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
+        for file_name in ["pause", "stop", "finish"]:
+            file_path = os.path.join(os.path.abspath(".."), file_name)
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
     def run(self):
         global PROCESS_STATUS
@@ -56,14 +60,6 @@ def is_process_end():
     elif PROCESS_STATUS == ProcessControl.PROCESS_FINISH:
         return 2
     return 0
-
-
-# 恢复进程状态设置
-def restore_process_status():
-    for file_name in ["pause", "stop", "finish"]:
-        file_path = os.path.join(os.path.abspath(".."), file_name)
-        if os.path.exists(file_path):
-            os.remove(file_path)
 
 
 # http请求

@@ -80,7 +80,6 @@ def weibo():
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         weibo.Weibo(save_file_path, image_download_path, image_temp_path, video_download_path, video_temp_path).main()
 
-tool.restore_process_status()
 bcy()
 fkoji()
 google_plus()
