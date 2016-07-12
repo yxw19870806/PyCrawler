@@ -15,7 +15,7 @@ def md5(source_file_path):
     pos = 0
     file_handle = open(source_file_path, "rb")
     file_hash = hashlib.md5()
-    while 1:
+    while True:
         # 从文件中读取一段内容
         file_handle.seek(pos)
         buff_byte = file_handle.read(buff_size)

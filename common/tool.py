@@ -39,7 +39,7 @@ class ProcessControl(threading.Thread):
 
     def run(self):
         global PROCESS_STATUS
-        while 1:
+        while True:
             if os.path.exists(os.path.join(os.path.abspath(""), "..\\pause")):
                 PROCESS_STATUS = self.PROCESS_PAUSE
             elif os.path.exists(os.path.join(os.path.abspath(""), "..\\stop")):
@@ -71,9 +71,11 @@ def http_request(url, post_data=None, cookie=None):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return [-100, None, None]
     count = 0
-    while 1:
+    while True:
         while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
             time.sleep(10)
+        if PROCESS_STATUS == ProcessControl.PROCESS_STOP:
+            process_exit(0)
         try:
             if post_data:
                 if isinstance(post_data, dict):
@@ -461,8 +463,9 @@ def generate_random_string(string_length, char_lib_type=7):
 
 
 # 结束进程
-def process_exit():
-    sys.exit()
+# exit_code 0: 正常结束, 1: 异常退出
+def process_exit(exit_code=1):
+    sys.exit(exit_code)
 
 
 # 定时关机
