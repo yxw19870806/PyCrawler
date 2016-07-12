@@ -55,7 +55,7 @@ class Shinoda(robot.Robot):
             image_path = self.image_download_path
         while not is_over:
             index_url = host + "page%s.html" % (page_index - 1)
-            [index_page_return_code, index_page] = tool.http_request(index_url)[:2]
+            index_page_return_code, index_page = tool.http_request(index_url)[:2]
             log.step("博客页面地址：" + index_url)
 
             if index_page_return_code == 1:

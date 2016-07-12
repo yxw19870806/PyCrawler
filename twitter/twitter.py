@@ -51,7 +51,7 @@ def trace(msg):
 def get_twitter_media_page_data(account_id, data_tweet_id):
     media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1" \
                      "&include_entities=1&max_position=%s" % (account_id, data_tweet_id)
-    [media_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
+    media_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
     if media_page_return_code == 1:
         try:
             media_page = json.loads(media_page_response)
@@ -233,7 +233,7 @@ class Download(threading.Thread):
                     print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
 
                     # todo 是否可以优化到一个方法中
-                    [image_return_code, image_response_data, image_response] = tool.http_request(image_url)
+                    image_return_code, image_response_data, image_response = tool.http_request(image_url)
                     # 404，不算做错误，图片已经被删掉了
                     if image_return_code == -404:
                         print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")

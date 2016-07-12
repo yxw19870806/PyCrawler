@@ -68,7 +68,7 @@ def md5(file_byte):
 
 # 访问微博域名网页，自动判断是否需要跳转
 def visit_weibo(url):
-    [page_return_code, page_response] = tool.http_request(url)[:2]
+    page_return_code, page_response = tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
         redirect_url_find = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
@@ -164,7 +164,7 @@ def find_real_video_url(video_page_url, account_name):
         return [-1, []]
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
-        [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
+        source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
             meta_list = re.findall('<meta content="([^"]*)" property="([^"]*)">', source_video_page)
             for meta_content, meta_property in meta_list:
@@ -179,13 +179,13 @@ def find_real_video_url(video_page_url, account_name):
         return [1, ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]]
     # http://www.weishi.com/t/2000546051794045
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
-        [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
+        source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
             if len(video_id_find) == 1:
                 video_page_id = video_page_url.split("/")[-1]
                 video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_page_id)
-                [video_info_page_return_code, video_info_page] = tool.http_request(video_info_url)[:2]
+                video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
@@ -205,7 +205,7 @@ def find_real_video_url(video_page_url, account_name):
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
 def get_image_byte(image_url):
     for i in range(0, 10):
-        [image_return_code, image_data] = tool.http_request(image_url)[:2]
+        image_return_code, image_data = tool.http_request(image_url)[:2]
         if image_return_code == 1:
             # 处理获取的文件为weibo默认获取失败的图片
             md5_digest = md5(image_data)
@@ -420,7 +420,7 @@ class Download(threading.Thread):
                         is_over = True
                         break
                     # 获取这个视频的视频源地址（下载地址）
-                    [return_code, video_source_url_list] = find_real_video_url(video_page_url, account_name)
+                    return_code, video_source_url_list = find_real_video_url(video_page_url, account_name)
                     if return_code != 1:
                         if return_code == -1:
                             print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "没有获取到源地址")

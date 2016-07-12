@@ -323,7 +323,7 @@ def write_file(msg, file_path, append_type=1):
 # file_path 包括路径和文件名
 def save_net_file(file_url, file_path):
     file_path = change_path_encoding(file_path)
-    [page_return_code, page_data] = http_request(file_url)[:2]
+    page_return_code, page_data = http_request(file_url)[:2]
     if page_return_code == 1:
         file_handle = open(file_path, "wb")
         file_handle.write(page_data)

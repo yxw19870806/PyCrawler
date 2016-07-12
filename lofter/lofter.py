@@ -180,7 +180,7 @@ class Download(threading.Thread):
             need_make_download_dir = True
             while not is_over:
                 index_page_url = "http://%s/?page=%s" % (host_url, page_count)
-                [index_page_return_code, index_page_response] = tool.http_request(index_page_url)[:2]
+                index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
                     print_error_msg(account_id + " 无法获取相册信息: " + index_page_url)
@@ -212,7 +212,7 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                    [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
+                    post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                     if post_page_return_code != 1:
                         print_error_msg(account_id + " 无法获取信息页：" + post_url)
                         continue

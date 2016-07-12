@@ -257,7 +257,7 @@ class Download(threading.Thread):
             need_make_download_dir = True  # 是否需要创建cn目录
             while not is_over:
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-                [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
+                post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                 if post_page_return_code != 1:
                     print_error_msg(cn + " 无法获取数据: " + post_url)
                     break
@@ -316,7 +316,7 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-                    [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
+                    rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
                     if rp_page_return_code != 1:
                         print_error_msg(cn + " 无法获取作品页面： " + rp_url)
                         continue
@@ -327,7 +327,7 @@ class Download(threading.Thread):
                         if follow(coser_id):
                             # 重新获取下详细页面
                             rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-                            [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
+                            rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
                             if rp_page_return_code == 1:
                                 image_url_list = re.findall("src='([^']*)'", rp_page_response)
 
