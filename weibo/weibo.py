@@ -486,8 +486,8 @@ class Download(threading.Thread):
                 photo_list = photo_page_data["photo_list"]
                 for image_info in photo_list:
                     if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
-                        print_error_msg(account_name + " 图片列表解析错误")
-                        break
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片信息解析错误 " + image_info)
+                        continue
 
                     # 新增图片导致的重复判断
                     if image_info["pic_name"] in unique_list:
