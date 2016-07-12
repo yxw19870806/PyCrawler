@@ -280,8 +280,11 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
-        except SystemExit:
-            print_error_msg(account_id + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                print_step_msg(account_id + " 提前退出")
+            else:
+                print_error_msg(account_id + " 异常退出")
         except Exception, e:
             print_step_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
