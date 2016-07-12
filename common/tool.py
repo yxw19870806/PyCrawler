@@ -23,6 +23,7 @@ IS_SET_TIMEOUT = False
 PROCESS_STATUS = 0
 
 
+# 进程监控
 class ProcessControl(threading.Thread):
     PROCESS_RUN = 0
     PROCESS_PAUSE = 1   # 进程暂停，知道状态变为0时才继续下载
@@ -57,6 +58,7 @@ def is_process_end():
     return 0
 
 
+# 恢复进程状态设置
 def restore_process_status():
     for file_name in ["pause", "stop", "finish"]:
         file_path = os.path.join(os.path.abspath(".."), file_name)
@@ -136,6 +138,7 @@ def http_request(url, post_data=None, cookie=None):
             return [-1, None, None]
 
 
+# 获取请求response中的指定信息
 def get_response_info(response_info, key):
     if isinstance(response_info, mimetools.Message):
         if key in response_info:
@@ -277,12 +280,14 @@ def set_proxy(ip, port, protocol):
     print_msg("设置代理成功")
 
 
+# 控制台输出
 def print_msg(msg, is_time=True):
     if is_time:
         msg = get_time() + " " + msg
     print msg
 
 
+# 获取时间
 def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
@@ -314,6 +319,7 @@ def write_file(msg, file_path, append_type=1):
     file_handle.close()
 
 
+# 保存网络文件
 # file_path 包括路径和文件名
 def save_net_file(file_url, file_path):
     file_path = change_path_encoding(file_path)
@@ -337,6 +343,7 @@ def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
     return first_sign.join(temp_list)
 
 
+# 获取指定目录的文件列表
 # order desc 降序
 # order asc  升序
 # order 其他 不需要排序
@@ -425,6 +432,7 @@ def make_dir(dir_path, create_mode):
     return False
 
 
+# 复制文件
 def copy_files(source_path, destination_path):
     source_path = change_path_encoding(source_path)
     destination_path = change_path_encoding(destination_path)
@@ -461,8 +469,9 @@ def process_exit():
     sys.exit()
 
 
-def shutdown():
+# 定时关机
+def shutdown(delay_time=30):
     if platform.system() == "Windows":
-        os.system("shutdown -s -f -t 3")
+        os.system("shutdown -s -f -t " + delay_time)
     else:
         os.system("halt")

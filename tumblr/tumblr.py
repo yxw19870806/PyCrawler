@@ -79,6 +79,7 @@ def filter_different_resolution_images(image_url_list):
     return new_image_url_list.values()
 
 
+# 根据post id将同样的信息页合并
 def filter_post_url(post_url_list):
     new_post_url_list = {}
     for post_url in post_url_list:

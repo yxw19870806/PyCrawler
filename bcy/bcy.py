@@ -44,6 +44,7 @@ def trace(msg):
     threadLock.release()
 
 
+# 从控制台输入获取账号信息
 def get_account_info_from_console():
     while True:
         email = raw_input(tool.get_time() + " 请输入邮箱: ")
@@ -59,6 +60,7 @@ def get_account_info_from_console():
                 pass
 
 
+# 从文件中获取账号信息
 def get_account_info_from_file():
     if not os.path.exists("account.data"):
         return False
@@ -76,6 +78,7 @@ def get_account_info_from_file():
     return [None, None]
 
 
+# 模拟登录
 def login(from_where):
     if from_where == 1:
         email, password = get_account_info_from_file
@@ -96,6 +99,7 @@ def login(from_where):
         return False
 
 
+# 关注指定账号
 def follow(account_id):
     follow_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
@@ -107,6 +111,7 @@ def follow(account_id):
     return False
 
 
+# 取消关注指定账号
 def unfollow(account_id):
     unfollow_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}

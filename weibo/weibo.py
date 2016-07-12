@@ -66,6 +66,7 @@ def md5(file_byte):
     return md5_obj.hexdigest()
 
 
+# 访问微博域名网页，自动判断是否需要跳转
 def visit_weibo(url):
     [page_return_code, page_response] = tool.http_request(url)[:2]
     if page_return_code == 1:
