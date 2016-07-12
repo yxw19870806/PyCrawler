@@ -23,6 +23,7 @@ IS_SET_TIMEOUT = False
 PROCESS_STATUS = 0
 
 
+# 进程监控
 class ProcessControl(threading.Thread):
     PROCESS_RUN = 0
     PROCESS_PAUSE = 1   # 进程暂停，知道状态变为0时才继续下载
@@ -31,10 +32,14 @@ class ProcessControl(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
+        for file_name in ["pause", "stop", "finish"]:
+            file_path = os.path.join(os.path.abspath(".."), file_name)
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
     def run(self):
         global PROCESS_STATUS
-        while 1:
+        while True:
             if os.path.exists(os.path.join(os.path.abspath(""), "..\\pause")):
                 PROCESS_STATUS = self.PROCESS_PAUSE
             elif os.path.exists(os.path.join(os.path.abspath(""), "..\\stop")):
@@ -57,13 +62,6 @@ def is_process_end():
     return 0
 
 
-def restore_process_status():
-    for file_name in ["pause", "stop", "finish"]:
-        file_path = os.path.join(os.path.abspath(".."), file_name)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-
 # http请求
 # 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
@@ -73,9 +71,11 @@ def http_request(url, post_data=None, cookie=None):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return [-100, None, None]
     count = 0
-    while 1:
+    while True:
         while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
             time.sleep(10)
+        if PROCESS_STATUS == ProcessControl.PROCESS_STOP:
+            process_exit(0)
         try:
             if post_data:
                 if isinstance(post_data, dict):
@@ -136,6 +136,7 @@ def http_request(url, post_data=None, cookie=None):
             return [-1, None, None]
 
 
+# 获取请求response中的指定信息
 def get_response_info(response_info, key):
     if isinstance(response_info, mimetools.Message):
         if key in response_info:
@@ -277,12 +278,14 @@ def set_proxy(ip, port, protocol):
     print_msg("设置代理成功")
 
 
+# 控制台输出
 def print_msg(msg, is_time=True):
     if is_time:
         msg = get_time() + " " + msg
     print msg
 
 
+# 获取时间
 def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
@@ -314,10 +317,11 @@ def write_file(msg, file_path, append_type=1):
     file_handle.close()
 
 
+# 保存网络文件
 # file_path 包括路径和文件名
 def save_net_file(file_url, file_path):
     file_path = change_path_encoding(file_path)
-    [page_return_code, page_data] = http_request(file_url)[:2]
+    page_return_code, page_data = http_request(file_url)[:2]
     if page_return_code == 1:
         file_handle = open(file_path, "wb")
         file_handle.write(page_data)
@@ -337,6 +341,7 @@ def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
     return first_sign.join(temp_list)
 
 
+# 获取指定目录的文件列表
 # order desc 降序
 # order asc  升序
 # order 其他 不需要排序
@@ -425,6 +430,7 @@ def make_dir(dir_path, create_mode):
     return False
 
 
+# 复制文件
 def copy_files(source_path, destination_path):
     source_path = change_path_encoding(source_path)
     destination_path = change_path_encoding(destination_path)
@@ -457,12 +463,14 @@ def generate_random_string(string_length, char_lib_type=7):
 
 
 # 结束进程
-def process_exit():
-    sys.exit()
+# exit_code 0: 正常结束, 1: 异常退出
+def process_exit(exit_code=1):
+    sys.exit(exit_code)
 
 
-def shutdown():
+# 定时关机
+def shutdown(delay_time=30):
     if platform.system() == "Windows":
-        os.system("shutdown -s -f -t 3")
+        os.system("shutdown -s -f -t " + delay_time)
     else:
         os.system("halt")

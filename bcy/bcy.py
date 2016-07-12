@@ -44,6 +44,7 @@ def trace(msg):
     threadLock.release()
 
 
+# 从控制台输入获取账号信息
 def get_account_info_from_console():
     while True:
         email = raw_input(tool.get_time() + " 请输入邮箱: ")
@@ -59,6 +60,7 @@ def get_account_info_from_console():
                 pass
 
 
+# 从文件中获取账号信息
 def get_account_info_from_file():
     if not os.path.exists("account.data"):
         return False
@@ -76,6 +78,7 @@ def get_account_info_from_file():
     return [None, None]
 
 
+# 模拟登录
 def login(from_where):
     if from_where == 1:
         email, password = get_account_info_from_file
@@ -96,6 +99,7 @@ def login(from_where):
         return False
 
 
+# 关注指定账号
 def follow(account_id):
     follow_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
@@ -107,6 +111,7 @@ def follow(account_id):
     return False
 
 
+# 取消关注指定账号
 def unfollow(account_id):
     unfollow_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
@@ -252,7 +257,7 @@ class Download(threading.Thread):
             need_make_download_dir = True  # 是否需要创建cn目录
             while not is_over:
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-                [post_page_return_code, post_page_response] = tool.http_request(post_url)[:2]
+                post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                 if post_page_return_code != 1:
                     print_error_msg(cn + " 无法获取数据: " + post_url)
                     break
@@ -311,7 +316,7 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-                    [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
+                    rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
                     if rp_page_return_code != 1:
                         print_error_msg(cn + " 无法获取作品页面： " + rp_url)
                         continue
@@ -322,7 +327,7 @@ class Download(threading.Thread):
                         if follow(coser_id):
                             # 重新获取下详细页面
                             rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-                            [rp_page_return_code, rp_page_response] = tool.http_request(rp_url)[:2]
+                            rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
                             if rp_page_return_code == 1:
                                 image_url_list = re.findall("src='([^']*)'", rp_page_response)
 
@@ -392,5 +397,4 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     Bcy().main()

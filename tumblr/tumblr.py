@@ -49,14 +49,14 @@ def trace(msg):
 
 # 获取一页的媒体信息
 def get_tumblr_post_page_data(post_url, postfix_list):
-    [post_page_return_code, post_page_data] = tool.http_request(post_url)[:2]
+    post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面
     if post_page_return_code == 1:
         return post_page_data
     # 不带后缀的无法范文，则依次访问带有后缀的页面
     for postfix in postfix_list:
         temp_post_url = post_url + "/" + urllib2.quote(postfix)
-        [post_page_return_code, post_page_data] = tool.http_request(temp_post_url)[:2]
+        post_page_return_code, post_page_data = tool.http_request(temp_post_url)[:2]
         if post_page_return_code == 1:
             return post_page_data
     return None
@@ -79,6 +79,7 @@ def filter_different_resolution_images(image_url_list):
     return new_image_url_list.values()
 
 
+# 根据post id将同样的信息页合并
 def filter_post_url(post_url_list):
     new_post_url_list = {}
     for post_url in post_url_list:
@@ -249,7 +250,7 @@ class Download(threading.Thread):
             while not is_over:
                 index_page_url = "http://%s/page/%s" % (host_url, page_count)
 
-                [index_page_return_code, index_page_response] = tool.http_request(index_page_url)[:2]
+                index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
                     print_error_msg(account_id + " 无法获取相册信息: " + index_page_url)
@@ -308,7 +309,7 @@ class Download(threading.Thread):
                     # 视频下载
                     if IS_DOWNLOAD_IMAGE == 1 and og_type == "tumblr-feed:video":
                         video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-                        [video_page_return_code, video_page] = tool.http_request(video_page_url)[:2]
+                        video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
                         if video_page_return_code == 1:
                             video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
                             if len(video_list) > 0:
@@ -401,13 +402,15 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
-        except SystemExit:
-            print_error_msg(account_id + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                print_step_msg(account_id + " 提前退出")
+            else:
+                print_error_msg(account_id + " 异常退出")
         except Exception, e:
             print_step_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     Tumblr().main()

@@ -213,7 +213,7 @@ class Download(threading.Thread):
                     limit_download_count = min(max(50, int(self.account_info[1]) / 100 * 10), 1000)
             while not is_over:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, key)
-                [index_page_return_code, index_page_response] = tool.http_request(photo_album_url, post_data)[:2]
+                index_page_return_code, index_page_response = tool.http_request(photo_album_url, post_data)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
                     print_error_msg(account_name + " 无法获取相册首页: " + photo_album_url + ", key = " + key)
@@ -241,7 +241,7 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                    [message_page_return_code, message_page_data] = tool.http_request(message_url)[:2]
+                    message_page_return_code, message_page_data = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
                         print_error_msg(account_name + " 无法获取信息页")
                         continue
@@ -342,13 +342,15 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_name + " 完成")
-        except SystemExit:
-            print_error_msg(account_name + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                print_step_msg(account_id + " 提前退出")
+            else:
+                print_error_msg(account_id + " 异常退出")
         except Exception, e:
             print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     GooglePlus().main()

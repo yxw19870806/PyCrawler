@@ -46,7 +46,7 @@ def print_step_msg(msg):
 # 获取用户的suid，作为查找指定用户的视频页的凭着
 def get_miaopai_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
-    [index_page_return_code, index_page] = tool.http_request(index_page_url)[:2]
+    index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
     if index_page_return_code == 1:
         suid_find = re.findall('<button class="guanzhu gz" suid="([^"]*)" heade="1" token="">\+关注</button>', index_page)
         if len(suid_find) == 1:
@@ -57,7 +57,7 @@ def get_miaopai_suid(account_id):
 # 获取一页的视频信息
 def get_miaopai_video_page_data(suid, page_count):
     media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
-    [media_page_return_code, media_page] = tool.http_request(media_page_url)[:2]
+    media_page_return_code, media_page = tool.http_request(media_page_url)[:2]
     if media_page_return_code == 1:
         try:
             media_page = json.loads(media_page)
@@ -281,13 +281,15 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_id + " 完成")
-        except SystemExit:
-            print_error_msg(account_id + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                print_step_msg(account_id + " 提前退出")
+            else:
+                print_error_msg(account_id + " 异常退出")
         except Exception, e:
             print_step_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     Miaopai().main()

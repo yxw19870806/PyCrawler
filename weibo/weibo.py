@@ -53,6 +53,7 @@ def print_step_msg(msg):
     threadLock.release()
 
 
+# 图片二进制字节保存为本地文件
 def save_image(image_byte, image_path):
     image_path = tool.change_path_encoding(image_path)
     image_file = open(image_path, "wb")
@@ -60,14 +61,16 @@ def save_image(image_byte, image_path):
     image_file.close()
 
 
+# 将二进制数据生成MD5的hash值
 def md5(file_byte):
     md5_obj = hashlib.md5()
     md5_obj.update(file_byte)
     return md5_obj.hexdigest()
 
 
+# 访问微博域名网页，自动判断是否需要跳转
 def visit_weibo(url):
-    [page_return_code, page_response] = tool.http_request(url)[:2]
+    page_return_code, page_response = tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
         redirect_url_find = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
@@ -163,7 +166,7 @@ def find_real_video_url(video_page_url, account_name):
         return [-1, []]
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
-        [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
+        source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
             meta_list = re.findall('<meta content="([^"]*)" property="([^"]*)">', source_video_page)
             for meta_content, meta_property in meta_list:
@@ -178,13 +181,13 @@ def find_real_video_url(video_page_url, account_name):
         return [1, ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]]
     # http://www.weishi.com/t/2000546051794045
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
-        [source_video_page_return_code, source_video_page] = tool.http_request(video_page_url)[:2]
+        source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
             if len(video_id_find) == 1:
                 video_page_id = video_page_url.split("/")[-1]
                 video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_page_id)
-                [video_info_page_return_code, video_info_page] = tool.http_request(video_info_url)[:2]
+                video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
@@ -203,15 +206,17 @@ def find_real_video_url(video_page_url, account_name):
 
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
 def get_image_byte(image_url):
-    [image_return_code, image_data] = tool.http_request(image_url)[:2]
-    if image_return_code == 1:
-        # 处理获取的文件为weibo默认获取失败的图片
-        md5_digest = md5(image_data)
-        if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
-            return None
-        if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
-            return image_data
-    return None
+    for i in range(0, 10):
+        image_return_code, image_data = tool.http_request(image_url)[:2]
+        if image_return_code == 1:
+            # 处理获取的文件为weibo默认获取失败的图片
+            md5_digest = md5(image_data)
+            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
+                return [-2, None] # 被系统自动删除的图片
+            # 不是暂时无法访问，否则重试
+            if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
+                return [1, image_data]
+    return [-1, None]
 
 
 class Weibo(robot.Robot):
@@ -417,7 +422,7 @@ class Download(threading.Thread):
                         is_over = True
                         break
                     # 获取这个视频的视频源地址（下载地址）
-                    [return_code, video_source_url_list] = find_real_video_url(video_page_url, account_name)
+                    return_code, video_source_url_list = find_real_video_url(video_page_url, account_name)
                     if return_code != 1:
                         if return_code == -1:
                             print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "没有获取到源地址")
@@ -480,9 +485,9 @@ class Download(threading.Thread):
                 # 图片详细列表
                 photo_list = photo_page_data["photo_list"]
                 for image_info in photo_list:
-                    if not robot.check_sub_key(("pic_name", "timestamp"), image_info):
-                        print_error_msg(account_name + " 图片列表解析错误")
-                        break
+                    if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片信息解析错误 " + image_info)
+                        continue
 
                     # 新增图片导致的重复判断
                     if image_info["pic_name"] in unique_list:
@@ -498,38 +503,31 @@ class Download(threading.Thread):
                         break
 
                     # 下载
-                    # todo 是否可以优化到一个方法中
-                    if "pic_host" in image_info:
-                        image_host = str(image_info["pic_host"])
-                    else:
-                        image_host = ""
-                    for try_count in range(1, 6):
-                        if image_host == "":
-                            image_host = "http://ww%s.sinaimg.cn" % str(random.randint(1, 4))
-                        image_url = image_host + "/large/" + str(image_info["pic_name"])
-                        if try_count == 1:
-                            print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
-                        else:
-                            print_step_msg(account_name + " 重试下载第" + str(image_count) + "张图片：" + image_url)
-                        image_byte = get_image_byte(image_url)
-                        if image_byte is not None:
-                            file_type = image_url.split(".")[-1]
-                            if file_type.find("/") != -1:
-                                file_type = "jpg"
-                            file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
-                                    tool.process_exit()
-                                need_make_image_dir = False
-                            save_image(image_byte, file_path)
-                            print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
-                            image_count += 1
-                            break
-                        if try_count >= 5:
+                    image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
+                    print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                    # 获取图片的二进制数据，并且判断这个图片是否是可用的
+                    image_status, image_byte = get_image_byte(image_url)
+                    if image_status != 1:
+                        if image_status == -1:
                             print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
-                        image_host = ""
+                        elif image_status == -2:
+                            print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 资源已被删除")
+                        continue
+
+                    # 第一张图片，创建目录
+                    if need_make_image_dir:
+                        if not tool.make_dir(image_path, 0):
+                            print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
+                            tool.process_exit()
+                        need_make_image_dir = False
+
+                    file_type = image_url.split(".")[-1]
+                    if file_type.find("/") != -1:
+                        file_type = "jpg"
+                    file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                    save_image(image_byte, file_path)
+                    print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                    image_count += 1
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
@@ -580,13 +578,15 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_name + " 完成")
-        except SystemExit:
-            print_error_msg(account_name + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                print_step_msg(account_name + " 提前退出")
+            else:
+                print_error_msg(account_name + " 异常退出")
         except Exception, e:
             print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     Weibo().main()

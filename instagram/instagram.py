@@ -52,7 +52,7 @@ def trace(msg):
 def get_instagram_media_page_data(account_id, cursor):
     media_page_url = "https://www.instagram.com/query/"
     media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor)
-    [photo_page_return_code, media_page_response] = tool.http_request(media_page_url)[:2]
+    photo_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
     if photo_page_return_code == 1:
         try:
             media_page = json.loads(media_page_response)
@@ -260,7 +260,7 @@ class Download(threading.Thread):
                     # 视频
                     if IS_DOWNLOAD_VIDEO == 1 and photo_info["is_video"]:
                         post_page_url = "https://www.instagram.com/p/%s/" % photo_info["code"]
-                        [post_page_return_code, post_page_response] = tool.http_request(post_page_url)[:2]
+                        post_page_return_code, post_page_response = tool.http_request(post_page_url)[:2]
                         if post_page_return_code == 1:
                             meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_response)
                             video_url = None
@@ -335,13 +335,15 @@ class Download(threading.Thread):
             threadLock.release()
 
             print_step_msg(account_name + " 完成")
-        except SystemExit:
-            print_error_msg(account_name + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                print_step_msg(account_id + " 提前退出")
+            else:
+                print_error_msg(account_id + " 异常退出")
         except Exception, e:
             print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     Instagram().main()

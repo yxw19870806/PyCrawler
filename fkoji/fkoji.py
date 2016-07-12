@@ -66,7 +66,7 @@ class Fkoji(robot.Robot):
         is_over = False
         while not is_over:
             index_url = "http://jigadori.fkoji.com/?p=%s" % str(page_index)
-            [index_page_return_code, index_page_response] = tool.http_request(index_url)[:2]
+            index_page_return_code, index_page_response = tool.http_request(index_url)[:2]
             if index_page_return_code != 1:
                 log.error("无法访问首页地址" + index_url)
                 tool.process_exit()
@@ -184,5 +184,4 @@ class Fkoji(robot.Robot):
 
 
 if __name__ == "__main__":
-    tool.restore_process_status()
     Fkoji().main()
