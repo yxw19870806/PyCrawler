@@ -18,9 +18,7 @@ IS_INIT = False
 class Robot(object):
     def __init__(self):
         global IS_INIT
-        config = ConfigParser.SafeConfigParser()
-        with codecs.open(os.path.join(os.path.abspath(""), "..\\common\\config.ini"), encoding="utf-8-sig") as file_handle:
-            config.readfp(file_handle)
+        config = read_config()
 
         # 日志
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
@@ -99,6 +97,14 @@ class Robot(object):
 
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 2)
+
+
+# 读取配置文件
+def read_config():
+    config = ConfigParser.SafeConfigParser()
+    with codecs.open(os.path.join(os.path.abspath(""), "..\\common\\config.ini"), encoding="utf-8-sig") as file_handle:
+        config.readfp(file_handle)
+    return config
 
 
 # 获取配置文件
