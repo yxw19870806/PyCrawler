@@ -16,6 +16,7 @@ import traceback
 ACCOUNTS = []
 INIT_CURSOR = "9999999999999999999"
 IMAGE_COUNT_PER_PAGE = 12
+USER_COUNT_PER_PAGE = 50
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
@@ -47,6 +48,47 @@ def trace(msg):
     threadLock.acquire()
     log.trace(msg)
     threadLock.release()
+
+
+# 获取指定账号的全部关注列表（需要登录）
+def get_instagram_follow_list(account_id):
+    cursor = None
+    follow_list = []
+    while True:
+        follow_page_data = get_instagram_follow_list_page_data(account_id, cursor)
+        if follow_page_data is not None:
+            print follow_page_data["nodes"]
+            for node in follow_page_data["nodes"]:
+                if robot.check_sub_key(("username", ), node):
+                    follow_list.append(node["username"])
+            if follow_page_data["page_info"]["has_next_page"]:
+                cursor = follow_page_data["page_info"]["end_cursor"]
+            else:
+                break
+        else:
+            break
+    return follow_list
+
+
+# 获取指定一页的关注列表
+def get_instagram_follow_list_page_data(account_id, cursor=None):
+    follow_list_url = "https://www.instagram.com/query/"
+    if cursor is None:
+        follow_list_url += "?q=ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)
+    else:
+        follow_list_url += "?q=ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)
+    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
+    if follow_list_return_code == 1:
+        try:
+            follow_list_data = json.loads(follow_list_data)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("follows", ), follow_list_data):
+                if robot.check_sub_key(("page_info", "nodes"), follow_list_data["follows"]):
+                    if robot.check_sub_key(("end_cursor", "has_next_page"), follow_list_data["follows"]["page_info"]):
+                        return follow_list_data["follows"]
+    return None
 
 
 # 获取一页的媒体信息

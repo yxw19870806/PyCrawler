@@ -47,7 +47,7 @@ def trace(msg):
     threadLock.release()
 
 
-# 获取指定账号的全部关注列表
+# 获取指定账号的全部关注列表（需要登录）
 def get_twitter_follow_list(account_id):
     position_id = "2000000000000000000"
     follow_list = []
