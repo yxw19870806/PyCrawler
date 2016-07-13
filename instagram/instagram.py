@@ -15,6 +15,7 @@ import traceback
 
 ACCOUNTS = []
 INIT_CURSOR = "9999999999999999999"
+IMAGE_COUNT_PER_PAGE = 12
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
@@ -51,7 +52,7 @@ def trace(msg):
 # 获取一页的媒体信息
 def get_instagram_media_page_data(account_id, cursor):
     media_page_url = "https://www.instagram.com/query/"
-    media_page_url += "?q=ig_user(%s){media.after(%s,12){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor)
+    media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, IMAGE_COUNT_PER_PAGE, cursor)
     photo_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
     if photo_page_return_code == 1:
         try:
