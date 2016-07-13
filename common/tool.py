@@ -278,6 +278,31 @@ def set_proxy(ip, port, protocol):
     print_msg("设置代理成功")
 
 
+# 快速设置cookie和代理
+# is_set_cookie     0:不设置, 1:设置
+# proxy_type        0:不设置, 1:http, 2:https
+def quickly_set(is_set_cookie, proxy_type):
+    import robot
+    config = robot.read_config()
+    if is_set_cookie == 1:
+        # 操作系统&浏览器
+        browser_type = robot.get_config(config, "BROWSER_VERSION", 2, 2)
+        # cookie
+        is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        if is_auto_get_cookie == 0:
+            cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
+        else:
+            cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+        set_cookie(cookie_path, browser_type)
+    if proxy_type > 0:
+        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        if proxy_type == 1:
+            set_proxy(proxy_ip, proxy_port, "http")
+        elif proxy_type == 2:
+            set_proxy(proxy_ip, proxy_port, "https")
+
+
 # 控制台输出
 def print_msg(msg, is_time=True):
     if is_time:
