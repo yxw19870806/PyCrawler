@@ -47,6 +47,40 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取指定账号的全部关注列表
+def get_twitter_follow_list(account_id):
+    position_id = "2000000000000000000"
+    follow_list = []
+    while True:
+        follow_page_data = get_twitter_follow_page_data(account_id, position_id)
+        if follow_page_data is not None:
+            profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_page_data["items_html"])
+            if len(profile_list) > 0:
+                follow_list += profile_list
+            if follow_page_data["has_more_items"]:
+                position_id = follow_page_data["min_position"]
+            else:
+                break
+        else:
+            break
+    return follow_list
+
+
+# 获取指定一页的关注列表
+def get_twitter_follow_page_data(account_id, position_id):
+    follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_id, position_id)
+    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
+    if follow_list_return_code == 1:
+        try:
+            follow_list_data = json.loads(follow_list_data)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_data):
+                return follow_list_data
+    return None
+
+
 # 获取一页的图片信息
 def get_twitter_media_page_data(account_id, data_tweet_id):
     media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1" \
