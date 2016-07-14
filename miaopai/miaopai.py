@@ -262,7 +262,7 @@ class Download(threading.Thread):
             # 排序
             if IS_SORT == 1 and video_count > 1:
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
-                if robot.sort_file(video_path, destination_path, int(self.account_info[4]), 4):
+                if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                 else:
                     print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
