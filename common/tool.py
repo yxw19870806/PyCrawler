@@ -165,6 +165,14 @@ def get_default_browser_cookie_path(browser_type):
     return None
 
 
+# 根据key和value创建一个cookie
+def create_cookie(name, value, domain="", path="/"):
+    return cookielib.Cookie(version=0, name=name, value=value, port=None, port_specified=False, domain=domain,
+                            domain_specified=False, domain_initial_dot=False, path=path, path_specified=True,
+                            secure=False, expires=None, discard=True, comment=None, comment_url=None,
+                            rest={'HttpOnly': None}, rfc2109=False)
+
+
 # 使用系统cookies
 # browser_type=1: IE
 # browser_type=2: firefox
