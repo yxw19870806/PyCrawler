@@ -392,15 +392,6 @@ class Download(threading.Thread):
                             if image_return_code == -404:
                                 print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")
                             elif image_return_code == 1:
-                                image_time = get_image_last_modified(image_response)
-                                # 将第一张图片的上传时间做为新的存档记录
-                                if first_image_time == "0":
-                                    first_image_time = str(image_time)
-                                # 检查是否图片时间小于上次的记录
-                                if image_time <= int(self.account_info[2]):
-                                    is_over = True
-                                    break
-
                                 file_type = image_url.split(".")[-1].split(":")[0]
                                 file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
                                 # 第一张图片，创建目录
