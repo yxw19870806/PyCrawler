@@ -524,8 +524,8 @@ class Download(threading.Thread):
                     file_type = image_url.split(".")[-1]
                     if file_type.find("/") != -1:
                         file_type = "jpg"
-                    file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                    save_image(image_byte, file_path)
+                    image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                    save_image(image_byte, image_file_path)
                     print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
                     image_count += 1
 
