@@ -86,8 +86,8 @@ def get_twitter_follow_page_data(account_id, position_id):
 
 # 获取一页的媒体信息
 def get_twitter_media_page_data(account_id, data_tweet_id):
-    media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline?include_available_features=1" \
-                     "&include_entities=1&max_position=%s" % (account_id, data_tweet_id)
+    media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_id
+    media_page_url += "?include_available_features=1&include_entities=1&max_position=%s" % data_tweet_id
     media_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
     if media_page_return_code == 1:
         try:
@@ -416,13 +416,21 @@ class Download(threading.Thread):
             print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
-            if IS_SORT == 1 and image_count > 1:
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
-                if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    print_step_msg(account_id + " 图片从下载目录移动到保存目录成功")
-                else:
-                    print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败")
-                    tool.process_exit()
+            if IS_SORT == 1:
+                if image_count > 1:
+                    destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
+                        print_step_msg(account_id + " 图片从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(account_id + " 创建图片子目录： " + destination_path + " 失败")
+                        tool.process_exit()
+                if video_count > 1:
+                    destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
+                        print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
+                        tool.process_exit()
 
             # 新的存档记录
             if first_image_time != "0":
