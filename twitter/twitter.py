@@ -100,18 +100,14 @@ def get_twitter_media_page_data(account_id, data_tweet_id):
     return None
 
 
-# 从媒体列表中查找所有有视频的tweet-id
-def get_video_tweet_id_list(media_page_items_html):
+# 从媒体列表中将不同的媒体信息拆分组
+def get_tweet_list(media_page_items_html):
     media_page_items_html = media_page_items_html.replace('\n', "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"')
     tweet_data_list = media_page_items_html.split("\n")
     tweet_id_list = []
     for tweet_data in tweet_data_list:
-        if len(tweet_data) < 100:
-            continue
-        if tweet_data.find("PlayableMedia--video") >= 0:
-            tweet_id_find = re.findall('data-tweet-id="([\d]*)"', tweet_data)
-            if len(tweet_id_find) == 1:
-                tweet_id_list.append(tweet_id_find[0])
+        if len(tweet_data) > 100:
+            tweet_id_list.append(tweet_data)
     return tweet_id_list
 
 
@@ -319,6 +315,7 @@ class Download(threading.Thread):
             video_count = 1
             data_tweet_id = INIT_MAX_ID
             first_image_time = "0"
+            first_tweet_id = "0"
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
@@ -326,85 +323,104 @@ class Download(threading.Thread):
                 # 获取指定时间点后的一页图片信息
                 media_page = get_twitter_media_page_data(account_id, data_tweet_id)
                 if media_page is None:
-                    print_error_msg(account_id + " 图片列表解析错误")
+                    print_error_msg(account_id + " 媒体列表解析异常")
                     break
 
-                # 视频
-                if IS_DOWNLOAD_VIDEO == 1:
-                    video_tweet_id_list = get_video_tweet_id_list(media_page["items_html"])
-                    for tweet_id in video_tweet_id_list:
-                        video_url_list = get_video_source_url(tweet_id)
-                        if len(video_url_list) == 0:
-                            print_error_msg(account_id + " 第" + str(video_count) + "个视频没有获取到源地址，tweet id：" + tweet_id)
-                            continue
+                tweet_list = get_tweet_list(media_page["items_html"])
+                if len(tweet_list) == 0:
+                    print_error_msg(account_id + " 媒体列表拆分异常")
+                    continue
 
-                        # 将域名拼加起来
-                        new_video_url_list = []
-                        for video_url in video_url_list:
-                            new_video_url_list.append("https://video.twimg.com" + video_url)
+                for tweet_data in tweet_list:
+                    tweet_id_find = re.findall('data-tweet-id="([\d]*)"', tweet_data)
+                    if len(tweet_id_find) != 1:
+                        print_error_msg(account_id + " tweet id解析异常，tweet数据：" + tweet_data)
+                        continue
 
-                        video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".ts")
-                        # 第一个视频，创建目录
-                        if need_make_video_dir:
-                            if not tool.make_dir(video_path, 0):
-                                print_error_msg(account_id + " 创建图片下载目录： " + video_path + " 失败")
-                                tool.process_exit()
-                            need_make_video_dir = False
-
-                        print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + str(new_video_url_list))
-                        if save_video(new_video_url_list, video_file_path):
-                            print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
-                            video_count += 1
-                        else:
-                            print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + str(new_video_url_list) + " 下载失败")
-
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_VIDEO_COUNT < video_count:
+                    tweet_id = tweet_id_find[0]
+                    # 将第一个tweet的id做为新的存档记录
+                    if first_tweet_id == "0":
+                        first_tweet_id = tweet_id_find[0]
+                    # 检查是否tweet的id小于上次的记录
+                        if int(tweet_id) <= int(self.account_info[3]):
                             is_over = True
                             break
 
-                # 图片
-                if IS_DOWNLOAD_IMAGE == 1:
-                    # 匹配获取全部的图片地址
-                    this_page_image_url_list = re.findall('data-image-url="([^"]*)"', media_page["items_html"])
-                    trace(account_id + " data_tweet_id：" + data_tweet_id + " 的全部图片列表" + str(this_page_image_url_list))
-                    for image_url in this_page_image_url_list:
-                        image_url = str(image_url)
-                        print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    # 视频
+                    if IS_DOWNLOAD_VIDEO == 1:
+                        # 这个tweet是否包含视频7
+                        if tweet_data.find("PlayableMedia--video") >= 0:
+                            video_url_list = get_video_source_url(tweet_id)
+                            if len(video_url_list) == 0:
+                                print_error_msg(account_id + " 第" + str(video_count) + "个视频没有获取到源地址，tweet id：" + tweet_id)
+                                continue
 
-                        # todo 是否可以优化到一个方法中
-                        image_return_code, image_response_data, image_response = tool.http_request(image_url)
-                        # 404，不算做错误，图片已经被删掉了
-                        if image_return_code == -404:
-                            print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")
-                        elif image_return_code == 1:
-                            image_time = get_image_last_modified(image_response)
-                            # 将第一张图片的上传时间做为新的存档记录
-                            if first_image_time == "0":
-                                first_image_time = str(image_time)
-                            # 检查是否图片时间小于上次的记录
-                            if image_time <= int(self.account_info[2]):
-                                is_over = True
-                                break
-
-                            file_type = image_url.split(".")[-1].split(":")[0]
-                            file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败")
+                            # 第一个视频，创建目录
+                            if need_make_video_dir:
+                                if not tool.make_dir(video_path, 0):
+                                    print_error_msg(account_id + " 创建图片下载目录： " + video_path + " 失败")
                                     tool.process_exit()
-                                need_make_image_dir = False
-                            save_image(image_response_data, file_path)
-                            print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
-                            image_count += 1
-                        else:
-                            print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
+                                need_make_video_dir = False
+
+                            # 将域名拼加起来
+                            new_video_url_list = []
+                            for video_url in video_url_list:
+                                new_video_url_list.append("https://video.twimg.com" + video_url)
+                            video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".ts")
+                            print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + str(new_video_url_list))
+                            if save_video(new_video_url_list, video_file_path):
+                                print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
+                                video_count += 1
+                            else:
+                                print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + str(new_video_url_list) + " 下载失败")
+
+                            # 达到配置文件中的下载数量，结束
+                            if 0 < GET_VIDEO_COUNT < video_count:
+                                is_over = True
+
+                    # 图片
+                    if IS_DOWNLOAD_IMAGE == 1:
+                        # 匹配获取全部的图片地址
+                        image_url_list = re.findall('data-image-url="([^"]*)"', media_page["items_html"])
+                        for image_url in image_url_list:
+                            image_url = str(image_url)
+                            print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+
+                            # todo 是否可以优化到一个方法中
+                            image_return_code, image_response_data, image_response = tool.http_request(image_url)
+                            # 404，不算做错误，图片已经被删掉了
+                            if image_return_code == -404:
+                                print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")
+                            elif image_return_code == 1:
+                                image_time = get_image_last_modified(image_response)
+                                # 将第一张图片的上传时间做为新的存档记录
+                                if first_image_time == "0":
+                                    first_image_time = str(image_time)
+                                # 检查是否图片时间小于上次的记录
+                                if image_time <= int(self.account_info[2]):
+                                    is_over = True
+                                    break
+
+                                file_type = image_url.split(".")[-1].split(":")[0]
+                                file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                                # 第一张图片，创建目录
+                                if need_make_image_dir:
+                                    if not tool.make_dir(image_path, 0):
+                                        print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败")
+                                        tool.process_exit()
+                                    need_make_image_dir = False
+                                save_image(image_response_data, file_path)
+                                print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
+                                image_count += 1
+                            else:
+                                print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
                             is_over = True
-                            break
+
+                    if is_over:
+                        break
 
                 if not is_over:
                     # 查找下一页的data_tweet_id
@@ -433,9 +449,10 @@ class Download(threading.Thread):
                         tool.process_exit()
 
             # 新的存档记录
-            if first_image_time != "0":
+            if first_tweet_id != "0":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = first_image_time
+                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
+                self.account_info[3] = first_tweet_id
 
             # 保存最后的信息
             threadLock.acquire()
