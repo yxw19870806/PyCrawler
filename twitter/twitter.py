@@ -186,6 +186,7 @@ class Twitter(robot.Robot):
             self.save_data_path = save_data_path
 
         GET_IMAGE_COUNT = self.get_image_count
+        GET_VIDEO_COUNT = self.get_video_count
         if this_image_temp_path != "":
             IMAGE_TEMP_PATH = this_image_temp_path
         else:
@@ -356,6 +357,11 @@ class Download(threading.Thread):
                             video_count += 1
                         else:
                             print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + str(new_video_url_list) + " 下载失败")
+
+                        # 达到配置文件中的下载数量，结束
+                        if 0 < GET_VIDEO_COUNT < video_count:
+                            is_over = True
+                            break
 
                 # 图片
                 if IS_DOWNLOAD_IMAGE == 1:
