@@ -314,7 +314,6 @@ class Download(threading.Thread):
             image_count = 1
             video_count = 1
             data_tweet_id = INIT_MAX_ID
-            first_image_time = "0"
             first_tweet_id = "0"
             is_over = False
             need_make_image_dir = True
@@ -337,10 +336,10 @@ class Download(threading.Thread):
                         print_error_msg(account_id + " tweet id解析异常，tweet数据：" + tweet_data)
                         continue
 
-                    tweet_id = tweet_id_find[0]
+                    tweet_id = str(tweet_id_find[0])
                     # 将第一个tweet的id做为新的存档记录
                     if first_tweet_id == "0":
-                        first_tweet_id = tweet_id_find[0]
+                        first_tweet_id = tweet_id
                     # 检查是否tweet的id小于上次的记录
                         if int(tweet_id) <= int(self.account_info[3]):
                             is_over = True
