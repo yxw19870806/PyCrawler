@@ -54,18 +54,20 @@ def trace(msg):
 def get_account_id(account_name):
     # index_url = "https://www.instagram.com/" + account_name
     search_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=" + account_name
-    search_return_code, search_data = tool.http_request(search_url)[:2]
-    if search_return_code == 1:
-        try:
-            search_data = json.loads(search_data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("users", ), search_data):
-                for user in search_data["users"]:
-                    if robot.check_sub_key(("user", ), user) and robot.check_sub_key(("username", "pk"), user["user"]):
-                        if account_name == str(user["user"]["username"]):
-                            return user["user"]["pk"]
+    for i in range(0, 10):
+        search_return_code, search_data = tool.http_request(search_url)[:2]
+        if search_return_code == 1:
+            try:
+                search_data = json.loads(search_data)
+            except ValueError:
+                pass
+            else:
+                if robot.check_sub_key(("users", ), search_data):
+                    for user in search_data["users"]:
+                        if robot.check_sub_key(("user", ), user) and robot.check_sub_key(("username", "pk"), user["user"]):
+                            if account_name == str(user["user"]["username"]):
+                                return user["user"]["pk"]
+        time.sleep(5)
     return None
 
 
