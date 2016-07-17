@@ -65,7 +65,7 @@ def get_account_id(account_name):
                 if robot.check_sub_key(("users", ), search_data):
                     for user in search_data["users"]:
                         if robot.check_sub_key(("user", ), user) and robot.check_sub_key(("username", "pk"), user["user"]):
-                            if account_name == str(user["user"]["username"]):
+                            if account_name.lower() == str(user["user"]["username"]).lower():
                                 return user["user"]["pk"]
         time.sleep(5)
     return None
