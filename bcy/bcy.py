@@ -393,7 +393,7 @@ class Download(threading.Thread):
             print_error_msg(cn + " 异常退出")
         except Exception, e:
             print_step_msg(cn + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.print_exc()))
+            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":
