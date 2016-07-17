@@ -106,7 +106,13 @@ def get_tweet_list(media_page_items_html):
     tweet_data_list = media_page_items_html.split("\n")
     tweet_id_list = []
     for tweet_data in tweet_data_list:
-        if len(tweet_data) > 100:
+        if len(tweet_data) < 50:
+            continue
+        tweet_data = tweet_data.encode("utf-8")
+        # 被圈出来的用户，追加到前面的页面中
+        if tweet_data.find('<span class="button-text following-text">') >= 0:
+            tweet_id_list[-1] += tweet_data
+        else:
             tweet_id_list.append(tweet_data)
     return tweet_id_list
 
