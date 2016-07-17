@@ -157,7 +157,7 @@ def get_instagram_follow_list_page_data(account_id, cursor=None):
 def get_instagram_media_page_data(account_id, cursor):
     media_page_url = "https://www.instagram.com/query/"
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
-    media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, IMAGE_COUNT_PER_PAGE, cursor)
+    media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)
     photo_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
     if photo_page_return_code == 1:
         try:
