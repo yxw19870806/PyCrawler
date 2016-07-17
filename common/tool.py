@@ -45,7 +45,7 @@ class ProcessControl(threading.Thread):
             elif os.path.exists(os.path.join(os.path.abspath(""), "..\\stop")):
                 PROCESS_STATUS = self.PROCESS_STOP
             elif os.path.exists(os.path.join(os.path.abspath(""), "..\\finish")):
-                PROCESS_STATUS = self.PROCESS_STOP
+                PROCESS_STATUS = self.PROCESS_FINISH
             else:
                 PROCESS_STATUS = self.PROCESS_RUN
             time.sleep(10)
