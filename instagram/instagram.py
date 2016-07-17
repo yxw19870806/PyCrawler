@@ -344,7 +344,7 @@ class Download(threading.Thread):
                     if first_created_time == "0":
                         first_created_time = str(int(photo_info["date"]))
                     # 检查是否已下载到前一次的图片
-                    if int(photo_info["date"]) <= int(self.account_info[4]):
+                    if int(photo_info["date"]) <= int(self.account_info[3]):
                         is_over = True
                         break
 
@@ -417,14 +417,14 @@ class Download(threading.Thread):
             if IS_SORT == 1:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_name + " 创建图片保存目录： " + destination_path + " 失败")
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
                         print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败")
@@ -432,9 +432,9 @@ class Download(threading.Thread):
 
             # 新的存档记录
             if first_created_time != "":
-                self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
-                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
-                self.account_info[4] = first_created_time
+                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
+                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
+                self.account_info[3] = first_created_time
 
             # 保存最后的信息
             threadLock.acquire()
