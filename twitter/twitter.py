@@ -333,8 +333,8 @@ class Download(threading.Thread):
 
                 tweet_list = get_tweet_list(media_page["items_html"])
                 if len(tweet_list) == 0:
-                    print_error_msg(account_id + " 媒体列表拆分异常")
-                    continue
+                    print_error_msg(account_id + " 媒体列表拆分异常，items_html：" + str(media_page["items_html"]))
+                    break
 
                 for tweet_data in tweet_list:
                     tweet_id_find = re.findall('data-tweet-id="([\d]*)"', tweet_data)
