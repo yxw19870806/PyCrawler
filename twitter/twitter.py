@@ -380,7 +380,7 @@ class Download(threading.Thread):
                     # 图片
                     if IS_DOWNLOAD_IMAGE == 1:
                         # 匹配获取全部的图片地址
-                        image_url_list = re.findall('data-image-url="([^"]*)"', media_page["items_html"])
+                        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
                         for image_url in image_url_list:
                             image_url = str(image_url)
                             print_step_msg(account_id + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
