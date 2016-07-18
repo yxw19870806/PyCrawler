@@ -126,15 +126,25 @@ def get_video_source_url(tweet_id):
         m3u8_file_find = re.findall("&quot;video_url&quot;:&quot;([^&]*)&quot;", video_page)
         if len(m3u8_file_find) == 1:
             m3u8_file_url = m3u8_file_find[0].replace("\\/", "/")
-            m3u8_file_return_code, m3u8_file_data = tool.http_request(m3u8_file_url)[:2]
-            if m3u8_file_return_code == 1:
-                new_m3u8_file_find = re.findall("(/[\S]*.m3u8)", m3u8_file_data)
-                if len(new_m3u8_file_find) == 1:
-                    new_m3u8_file_url = "https://video.twimg.com" + new_m3u8_file_find[0]
-                    new_m3u8_file_return_code, new_m3u8_file_data = tool.http_request(new_m3u8_file_url)[:2]
-                    if new_m3u8_file_return_code == 1:
-                        return re.findall("(/[\S]*.ts)", new_m3u8_file_data)
+            ts_file_list = []
+            deal_m3u8_file(m3u8_file_url, ts_file_list)
+            return ts_file_list
     return []
+
+
+# https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
+# 迭代从m3u8文件中获取真实的ts地址列表
+def deal_m3u8_file(file_url, ts_file_list):
+    file_return_code, file_data = tool.http_request(file_url)[:2]
+    if file_return_code == 1:
+        new_file_url_list = re.findall("(/ext_tw_video/[\S]*)", file_data)
+        print "find list" + str(new_file_url_list)
+        for new_file_url in new_file_url_list:
+            new_file_url = "https://video.twimg.com" + new_file_url
+            if new_file_url.split(".")[-1] == "m3u8":
+                deal_m3u8_file(new_file_url, ts_file_list)
+            elif new_file_url.split(".")[-1] == "ts":
+                ts_file_list.append(new_file_url)
 
 
 # 将多个ts文件的地址保存为本地视频文件
@@ -368,16 +378,13 @@ class Download(threading.Thread):
                                 need_make_video_dir = False
 
                             # 将域名拼加起来
-                            new_video_url_list = []
-                            for video_url in video_url_list:
-                                new_video_url_list.append("https://video.twimg.com" + video_url)
                             video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".ts")
-                            print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + str(new_video_url_list))
-                            if save_video(new_video_url_list, video_file_path):
+                            print_step_msg(account_id + " 开始下载第" + str(video_count) + "个视频：" + str(video_url_list))
+                            if save_video(video_url_list, video_file_path):
                                 print_step_msg(account_id + " 第" + str(video_count) + "个视频下载成功")
                                 video_count += 1
                             else:
-                                print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + str(new_video_url_list) + " 下载失败")
+                                print_error_msg(account_id + " 第" + str(video_count) + "个视频 " + str(video_url_list) + " 下载失败")
 
                             # 达到配置文件中的下载数量，结束
                             if 0 < GET_VIDEO_COUNT < video_count:
