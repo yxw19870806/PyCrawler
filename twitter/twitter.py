@@ -302,7 +302,7 @@ class Twitter(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张，视频" + str(TOTAL_VIDEO_COUNT) + "个")
 
 
 class Download(threading.Thread):
@@ -431,7 +431,7 @@ class Download(threading.Thread):
                     else:
                         is_over = True
 
-            print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
 
             # 排序
             if IS_SORT == 1:
@@ -444,7 +444,7 @@ class Download(threading.Thread):
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
                         print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
@@ -460,6 +460,7 @@ class Download(threading.Thread):
             threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += image_count - 1
+            TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
             threadLock.release()
 
