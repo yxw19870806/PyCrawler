@@ -43,6 +43,22 @@ def lofter():
     lofter.Lofter().main()
 
 
+# 美拍
+def meipai():
+    from meipai import meipai
+    meipai_path = os.path.join(os.path.abspath(".."), "meipai")
+    os.chdir(meipai_path)
+    meipai.Meipai().main()
+
+
+# 秒拍
+def miaopai():
+    from miaopai import miaopai
+    miaopai_path = os.path.join(os.path.abspath(".."), "miaopai")
+    os.chdir(miaopai_path)
+    miaopai.Miaopai().main()
+
+
 # tumblr
 def tumblr():
     from tumblr import tumblr
@@ -89,6 +105,8 @@ fkoji()
 google_plus()
 instagram()
 lofter()
+meipai()
+miaopai()
 tumblr()
 twitter()
 weibo()
