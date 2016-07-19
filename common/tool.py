@@ -504,6 +504,6 @@ def process_exit(exit_code=1):
 # 定时关机
 def shutdown(delay_time=30):
     if platform.system() == "Windows":
-        os.system("shutdown -s -f -t " + delay_time)
+        os.system("shutdown -s -f -t " + str(delay_time))
     else:
         os.system("halt")
