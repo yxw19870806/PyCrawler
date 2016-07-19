@@ -1,7 +1,7 @@
 .idea/
 *.pyc
-bcy/photo/
 Blog/photo/
+bcy/photo/
 fkoji/photo/
 googlePlus/photo/
 instagram/photo/
@@ -13,9 +13,9 @@ twitter/photo/
 weibo/photo/
 instagram/video/
 tumblr/video/
+twitter/video/
 weibo/video/
 log/
 *-*_*_*.data
-main/main.py
 stop
 pause
