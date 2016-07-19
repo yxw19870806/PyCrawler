@@ -113,20 +113,22 @@ def get_weibo_photo_page_data(account_id, page_count):
 
 # 获取账号对应的page_id
 def get_weibo_account_page_id(account_id):
-    for i in range(0, 10):
+    for i in range(0, 50):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
         index_page = visit_weibo(index_url)
         if index_page:
             page_id_find = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
             if len(page_id_find) == 1:
                 return page_id_find[0]
+        time.sleep(5)
     return None
 
 
 # 获取一页的视频信息
 def get_weibo_video_page_data(page_id, since_id):
-    video_album_url = "http://weibo.com/p/aj/album/loading?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
-    for i in range(0, 10):
+    video_album_url = "http://weibo.com/p/aj/album/loading"
+    video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
+    for i in range(0, 50):
         video_page = visit_weibo(video_album_url)
         if video_page:
             try:
@@ -137,6 +139,7 @@ def get_weibo_video_page_data(page_id, since_id):
                 if robot.check_sub_key(("code", "data"), video_page):
                     if int(video_page["code"]) == 100000:
                         return video_page[u"data"].encode("utf-8")
+        time.sleep(5)
     return None
 
 
@@ -163,6 +166,7 @@ def find_real_video_url(video_page_url, account_name):
                             for ssig in ssig_list:
                                 video_source_url.append("http://us.sinaimg.cn/" + ssig)
                             return [1, video_source_url]
+            time.sleep(5)
         return [-1, []]
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
@@ -216,6 +220,7 @@ def get_image_byte(image_url):
             # 不是暂时无法访问，否则重试
             if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
                 return [1, image_data]
+        time.sleep(5)
     return [-1, None]
 
 
