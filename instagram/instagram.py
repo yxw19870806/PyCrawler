@@ -272,8 +272,8 @@ class Instagram(robot.Robot):
         # 未完成的数据保存
         if len(ACCOUNTS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for account_id in ACCOUNTS:
-                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
+            for account_name in ACCOUNTS:
+                new_save_data_file.write("\t".join(account_list[account_name]) + "\n")
             new_save_data_file.close()
 
         # 删除临时文件夹
