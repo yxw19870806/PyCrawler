@@ -63,7 +63,13 @@ def get_authenticity_token():
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
-    pass
+    account_index_url = "https://twitter.com/" + account_name
+    account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
+    if account_index_return_code == 1:
+        account_id_find = re.findall('<div class="ProfileNav" role="navigation" data-user-id="([^"]*)">', account_index_page)
+        if len(account_id_find) == 1:
+            return account_id_find[0]
+    return None
 
 
 # 关注指定账号（无效）
