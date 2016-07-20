@@ -50,6 +50,44 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取当前cookies对应的authenticity_token
+def get_authenticity_token():
+    index_url = "https://twitter.com"
+    index_return_code, index_page = tool.http_request(index_url)[:2]
+    if index_return_code:
+        authenticity_token_find = re.findall('value="([^"]*)" name="authenticity_token"', index_page)
+        if len(authenticity_token_find) == 1:
+            return authenticity_token_find[0]
+    return None
+
+
+# 根据账号名字获得账号id（字母账号->数字账号)
+def get_account_id(account_name):
+    pass
+
+
+# 关注指定账号（无效）
+def follow_account(authenticity_token, account_id):
+    follow_url = "https://twitter.com/i/user/follow"
+    follow_data = {"authenticity_token": authenticity_token, "challenges_passed": False, "handles_challenges": 1,
+                   "user_id": account_id}
+    follow_return_code, follow_data = tool.http_request(follow_url, follow_data)[:2]
+    if follow_return_code == 1:
+        return True
+    return False
+
+
+# 取消关注指定账号（无效）
+def unfollow_account(authenticity_token, account_id):
+    unfollow_url = "https://twitter.com/i/user/follow"
+    unfollow_data = {"authenticity_token": authenticity_token, "challenges_passed": False, "handles_challenges": 1,
+                     "user_id": account_id}
+    unfollow_return_code, unfollow_data = tool.http_request(unfollow_url, unfollow_data)[:2]
+    if unfollow_return_code == 1:
+        return True
+    return False
+
+
 # 获取指定账号的全部关注列表（需要登录）
 def get_twitter_follow_list(account_id):
     position_id = "2000000000000000000"
