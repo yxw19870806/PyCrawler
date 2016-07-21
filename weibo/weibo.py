@@ -117,7 +117,7 @@ def get_weibo_account_page_id(account_id):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
         index_page = visit_weibo(index_url)
         if index_page:
-            page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'", 0)
+            page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'")
             if page_id:
                 return page_id
         time.sleep(5)
@@ -155,7 +155,7 @@ def find_real_video_url(video_page_url, account_name):
         for i in range(0, 50):
             source_video_page = visit_weibo(video_page_url)
             if source_video_page:
-                ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"', 0)
+                ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
                 if ssig_file_url:
                     ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
                     if ssig_file_page:
@@ -171,7 +171,7 @@ def find_real_video_url(video_page_url, account_name):
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
-            video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">', 0)
+            video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">')
             if video_url:
                 return [1, [video_url]]
             return [-1, []]
@@ -443,7 +443,7 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取下一页的since_id
-                    since_id = tool.find_sub_string(video_page_data, 'type=video&owner_uid=&since_id=', '">', 0)
+                    since_id = tool.find_sub_string(video_page_data, 'type=video&owner_uid=&since_id=', '">')
                     if not since_id:
                         break
 

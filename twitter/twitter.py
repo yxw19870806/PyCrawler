@@ -55,7 +55,7 @@ def get_authenticity_token():
     index_url = "https://twitter.com"
     index_return_code, index_page = tool.http_request(index_url)[:2]
     if index_return_code:
-        authenticity_token = tool.find_sub_string(index_page, 'value="', '" name="authenticity_token"', 0)
+        authenticity_token = tool.find_sub_string(index_page, 'value="', '" name="authenticity_token"')
         if authenticity_token:
             return authenticity_token
     return None
@@ -375,7 +375,7 @@ class Download(threading.Thread):
                     break
 
                 for tweet_data in tweet_list:
-                    tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"', 0)
+                    tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
                     if not tweet_id:
                         print_error_msg(account_name + " tweet id解析异常，tweet数据：" + tweet_data)
                         continue
