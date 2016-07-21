@@ -323,6 +323,28 @@ def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
+# 根据开始与结束的字符串，截取字符串
+# include_string是否包含查询条件的字符串，0 都不包含, 1 只包含start_string, 2 只包含end_string, 3 包含start_string和end_string
+def find_sub_string(string, start_string, end_string, include_string=3):
+    string = str(string)
+    start_string = str(start_string)
+    end_string = str(end_string)
+    include_string = int(include_string)
+    if 0 < include_string > 3:
+        include_string = 3
+
+    start_index = string.find(start_string)
+    if start_index >= 0:
+        if include_string & 1 == 0:
+            start_index += len(start_string)
+        stop_index = string.find(end_string, start_index)
+        if stop_index >= 0:
+            if include_string & 2 == 2:
+                stop_index += len(end_string)
+            return string[start_index:stop_index]
+    return ""
+
+
 # 文件路径编码转换
 def change_path_encoding(path):
     try:
