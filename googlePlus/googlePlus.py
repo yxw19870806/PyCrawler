@@ -247,19 +247,19 @@ class Download(threading.Thread):
                         continue
 
                     # 查找信息页的album id
-                    album_id_find = re.findall("var _album = \{id:'([\d]*)'", message_page_data)
-                    if len(album_id_find) == 1:
-                        album_id = album_id_find[0]
+                    album_id = tool.find_sub_string(message_page_data, "var _album = {id:'", "'")
+                    if album_id:
                         print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
                         if first_album_id == "0":
                             first_album_id = album_id
+                    else:
+                        print_error_msg(account_name + " 信息页：" + message_url + "没有找到album id")
 
                     # 截取图片信息部分
-                    message_page_data_find = re.findall('id="lhid_feedview">([\s|\S]*)<div id="lhid_content">', message_page_data)
-                    if len(message_page_data_find) != 1:
+                    message_page_data = tool.find_sub_string(message_page_data, 'id="lhid_feedview">', '<div id="lhid_content">')
+                    if not message_page_data:
                         print_error_msg(account_name + " 信息页：" + message_url + "中没有找到相关图片信息，第" + str(image_count) + "张图片")
                         continue
-                    message_page_data = message_page_data_find[0]
 
                     # 匹配查找所有的图片
                     page_image_url_list = re.findall('<img src="(\S*)">', message_page_data)
