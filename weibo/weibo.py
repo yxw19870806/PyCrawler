@@ -117,9 +117,9 @@ def get_weibo_account_page_id(account_id):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
         index_page = visit_weibo(index_url)
         if index_page:
-            page_id_find = re.findall("\$CONFIG\['page_id'\]='(\d*)'", index_page)
-            if len(page_id_find) == 1:
-                return page_id_find[0]
+            page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'", 0)
+            if page_id:
+                return page_id
         time.sleep(5)
     return None
 
@@ -155,9 +155,8 @@ def find_real_video_url(video_page_url, account_name):
         for i in range(0, 50):
             source_video_page = visit_weibo(video_page_url)
             if source_video_page:
-                ssig_file_url_find = re.findall('flashvars=\\\\"file=([^"]*)\\\\"', source_video_page)
-                if len(ssig_file_url_find) == 1:
-                    ssig_file_url = ssig_file_url_find[0]
+                ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"', 0)
+                if ssig_file_url:
                     ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
                     if ssig_file_page:
                         ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
@@ -172,10 +171,9 @@ def find_real_video_url(video_page_url, account_name):
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
-            meta_list = re.findall('<meta content="([^"]*)" property="([^"]*)">', source_video_page)
-            for meta_content, meta_property in meta_list:
-                if meta_property == "og:video:url":
-                    return [1, [meta_content]]
+            video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">', 0)
+            if video_url:
+                return [1, [video_url]]
             return [-1, []]
         else:
             return [-2, []]
@@ -445,10 +443,8 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取下一页的since_id
-                    since_id_find = re.findall('action-data="type=video&owner_uid=&since_id=([\d]*)">', video_page_data)
-                    if len(since_id_find) == 1:
-                        since_id = since_id_find[0]
-                    else:
+                    since_id = tool.find_sub_string(video_page_data, 'type=video&owner_uid=&since_id=', '">', 0)
+                    if not since_id:
                         break
 
             # 有历史记录，并且此次没有获得正常结束的标记，说明历史最后的视频已经被删除了
