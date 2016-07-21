@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 from common import log, robot, tool
 import json
 import os
-import re
 import threading
 import time
 import traceback
@@ -372,17 +371,11 @@ class Download(threading.Thread):
                         post_page_url = "https://www.instagram.com/p/%s/" % photo_info["code"]
                         post_page_return_code, post_page_response = tool.http_request(post_page_url)[:2]
                         if post_page_return_code == 1:
-                            meta_list = re.findall('<meta property="([^"]*)" content="([^"]*)" />', post_page_response)
-                            video_url = None
-                            for meta_property, meta_content in meta_list:
-                                if meta_property == "og:video:secure_url":
-                                    video_url = meta_content
-                                    break
-
+                            video_url = tool.find_sub_string(post_page_response, '<meta property="og:video:secure_url" content="', '" />')
                             if video_url:
-                                print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + meta_content)
+                                print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + video_url)
 
-                                file_type = meta_content.split(".")[-1]
+                                file_type = video_url.split(".")[-1]
                                 video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
                                 # 第一个视频，创建目录
                                 if need_make_video_dir:
@@ -390,11 +383,11 @@ class Download(threading.Thread):
                                         print_error_msg(account_name + " 创建视频下载目录： " + video_path + " 失败")
                                         tool.process_exit()
                                     need_make_video_dir = False
-                                if tool.save_net_file(meta_content, video_file_path):
+                                if tool.save_net_file(video_url, video_file_path):
                                     print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
                                     video_count += 1
                                 else:
-                                    print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + meta_content + " 下载失败")
+                                    print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
                             else:
                                 print_error_msg(account_name + " 视频：" + post_page_url + "没有获取到源地址")
                         else:
