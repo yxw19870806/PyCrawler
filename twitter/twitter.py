@@ -55,9 +55,9 @@ def get_authenticity_token():
     index_url = "https://twitter.com"
     index_return_code, index_page = tool.http_request(index_url)[:2]
     if index_return_code:
-        authenticity_token_find = re.findall('value="([^"]*)" name="authenticity_token"', index_page)
-        if len(authenticity_token_find) == 1:
-            return authenticity_token_find[0]
+        authenticity_token = tool.find_sub_string(index_page, 'value="', '" name="authenticity_token"', 0)
+        if authenticity_token:
+            return authenticity_token
     return None
 
 
@@ -66,9 +66,9 @@ def get_account_id(account_name):
     account_index_url = "https://twitter.com/" + account_name
     account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
     if account_index_return_code == 1:
-        account_id_find = re.findall('<div class="ProfileNav" role="navigation" data-user-id="([^"]*)">', account_index_page)
-        if len(account_id_find) == 1:
-            return account_id_find[0]
+        account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+        if account_id:
+            return account_id
     return None
 
 
@@ -167,9 +167,9 @@ def get_video_source_url(tweet_id):
     video_page_url = "https://twitter.com/i/videos/tweet/" + tweet_id
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
     if video_page_return_code == 1:
-        m3u8_file_find = re.findall("&quot;video_url&quot;:&quot;([^&]*)&quot;", video_page)
-        if len(m3u8_file_find) == 1:
-            m3u8_file_url = m3u8_file_find[0].replace("\\/", "/")
+        m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
+        if m3u8_file_url:
+            m3u8_file_url = m3u8_file_url.replace("\\/", "/")
             ts_file_list = []
             deal_m3u8_file(m3u8_file_url, ts_file_list)
             return ts_file_list
@@ -182,7 +182,6 @@ def deal_m3u8_file(file_url, ts_file_list):
     file_return_code, file_data = tool.http_request(file_url)[:2]
     if file_return_code == 1:
         new_file_url_list = re.findall("(/ext_tw_video/[\S]*)", file_data)
-        print "find list" + str(new_file_url_list)
         for new_file_url in new_file_url_list:
             new_file_url = "https://video.twimg.com" + new_file_url
             if new_file_url.split(".")[-1] == "m3u8":
@@ -376,12 +375,11 @@ class Download(threading.Thread):
                     break
 
                 for tweet_data in tweet_list:
-                    tweet_id_find = re.findall('data-tweet-id="([\d]*)"', tweet_data)
-                    if len(tweet_id_find) != 1:
+                    tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"', 0)
+                    if not tweet_id:
                         print_error_msg(account_name + " tweet id解析异常，tweet数据：" + tweet_data)
                         continue
 
-                    tweet_id = str(tweet_id_find[0])
                     # 将第一个tweet的id做为新的存档记录
                     if first_tweet_id == "0":
                         first_tweet_id = tweet_id
