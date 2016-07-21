@@ -48,9 +48,9 @@ def get_miaopai_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
     index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
     if index_page_return_code == 1:
-        suid_find = re.findall('<button class="guanzhu gz" suid="([^"]*)" heade="1" token="">\+关注</button>', index_page)
-        if len(suid_find) == 1:
-            return suid_find[0]
+        suid = tool.find_sub_string(index_page, '<button class="guanzhu gz" suid="', '" heade="1" token="">\+关注</button>')
+        if suid:
+            return suid
     return None
 
 
