@@ -131,7 +131,7 @@ class Bcy(robot.Robot):
 
         super(Bcy, self).__init__()
 
-        # 全局变量
+        # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)

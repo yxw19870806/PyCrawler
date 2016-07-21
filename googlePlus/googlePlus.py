@@ -70,7 +70,7 @@ class GooglePlus(robot.Robot):
 
         super(GooglePlus, self).__init__()
 
-        # 全局变量
+        # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path

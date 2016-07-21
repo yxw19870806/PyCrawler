@@ -71,10 +71,10 @@ class Meipai(robot.Robot):
 
         robot.Robot.__init__(self)
 
+        # 设置全局变量，供子线程调用
         GET_VIDEO_COUNT = self.get_video_count
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
-
         IS_SORT = self.is_sort
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
