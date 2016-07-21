@@ -16,9 +16,12 @@ IS_INIT = False
 
 
 class Robot(object):
-    def __init__(self):
+    def __init__(self, extra_config=None):
         global IS_INIT
         config = read_config()
+
+        if not isinstance(extra_config, dict):
+            extra_config = {}
 
         # 日志
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
@@ -68,10 +71,22 @@ class Robot(object):
         self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", 1, 2)
 
         # 存档
-        self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
-        self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
-        self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
-        self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
+        if 'image_download_path' in extra_config:
+            self.image_download_path = extra_config['image_download_path']
+        else:
+            self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
+        if 'image_temp_path' in extra_config:
+            self.image_temp_path = extra_config['image_temp_path']
+        else:
+            self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
+        if 'video_download_path' in extra_config:
+            self.video_download_path = extra_config['video_download_path']
+        else:
+            self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
+        if 'video_temp_path' in extra_config:
+            self.video_temp_path = extra_config['video_temp_path']
+        else:
+            self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
 
         self.is_sort = get_config(config, "IS_SORT", 1, 2)
         self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 2)
