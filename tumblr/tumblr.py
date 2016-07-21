@@ -282,19 +282,16 @@ class Download(threading.Thread):
                         continue
 
                     # 截取html中的head标签内的内容
-                    post_page_head_find = re.findall("(<head[\S|\s]*</head>)", post_page_data)
-                    if len(post_page_head_find) == 1:
-                        post_page_head = post_page_head_find[0]
-                    else:
+                    post_page_head = tool.find_sub_string(post_page_data, "<head", "</head>", 3)
+                    if not post_page_head:
                         print_error_msg(account_id + " 信息页：" + post_url + " 截取head标签异常")
                         continue
 
                     # 获取og_type（页面类型的是视频还是图片或其他）
-                    og_type_find = re.findall('<meta property="og:type" content="([^"]*)" />', post_page_head)
-                    if len(og_type_find) != 1:
+                    og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
+                    if not og_type:
                         print_error_msg(account_id + " 信息页：" + post_url + " ，'og:type'获取异常")
                         continue
-                    og_type = og_type_find[0]
 
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
