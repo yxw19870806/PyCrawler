@@ -71,20 +71,20 @@ class Robot(object):
         self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", 1, 2)
 
         # 存档
-        if 'image_download_path' in extra_config:
-            self.image_download_path = extra_config['image_download_path']
+        if "image_download_path" in extra_config:
+            self.image_download_path = extra_config["image_download_path"]
         else:
             self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
-        if 'image_temp_path' in extra_config:
-            self.image_temp_path = extra_config['image_temp_path']
+        if "image_temp_path" in extra_config:
+            self.image_temp_path = extra_config["image_temp_path"]
         else:
             self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
-        if 'video_download_path' in extra_config:
-            self.video_download_path = extra_config['video_download_path']
+        if "video_download_path" in extra_config:
+            self.video_download_path = extra_config["video_download_path"]
         else:
             self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
-        if 'video_temp_path' in extra_config:
-            self.video_temp_path = extra_config['video_temp_path']
+        if "video_temp_path" in extra_config:
+            self.video_temp_path = extra_config["video_temp_path"]
         else:
             self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
 
@@ -93,7 +93,10 @@ class Robot(object):
         self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 2)
         self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 2)
 
-        self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
+        if "save_data_path" in extra_config:
+            self.save_data_path = extra_config["save_data_path"]
+        else:
+            self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
 
         # 代理
         self.is_proxy = get_config(config, "IS_PROXY", 2, 2)

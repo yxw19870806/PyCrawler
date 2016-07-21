@@ -173,8 +173,7 @@ def get_instagram_media_page_data(account_id, cursor):
 
 
 class Instagram(robot.Robot):
-    def __init__(self, save_data_path="", this_image_download_path="", this_image_temp_path="",
-                 this_video_download_path="", this_video_temp_path=""):
+    def __init__(self, extra_config=None):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -185,26 +184,14 @@ class Instagram(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        super(Instagram, self).__init__()
+        robot.Robot.__init__(self, extra_config)
 
-        # 全局变量
+        # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
-        if this_image_temp_path != "":
-            IMAGE_TEMP_PATH = this_image_temp_path
-        else:
-            IMAGE_TEMP_PATH = self.image_temp_path
-        if this_image_download_path != "":
-            IMAGE_DOWNLOAD_PATH = this_image_download_path
-        else:
-            IMAGE_DOWNLOAD_PATH = self.image_download_path
-        if this_video_temp_path != "":
-            VIDEO_TEMP_PATH = this_video_temp_path
-        else:
-            VIDEO_TEMP_PATH = self.video_temp_path
-        if this_video_download_path != "":
-            VIDEO_DOWNLOAD_PATH = this_video_download_path
-        else:
-            VIDEO_DOWNLOAD_PATH = self.video_download_path
+        IMAGE_TEMP_PATH = self.image_temp_path
+        IMAGE_DOWNLOAD_PATH = self.image_download_path
+        VIDEO_TEMP_PATH = self.video_temp_path
+        VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
