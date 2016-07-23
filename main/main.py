@@ -35,14 +35,14 @@ def instagram():
     for i in range(1, 4):
         save_file_name = "info\\save_%s.data" % i
         image_download_dir_name = "photo\\instagram%s" % i
-        save_file_path = os.path.join(instagram_path, save_file_name)
+        save_data_path = os.path.join(instagram_path, save_file_name)
         image_download_path = os.path.join(instagram_path, image_download_dir_name)
         image_temp_path = os.path.join(image_download_path, "tempImage")
         video_download_dir_name = "video\\instagram%s" % i
         video_download_path = os.path.join(os.path.abspath(""), video_download_dir_name)
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
-            "save_file_path": save_file_path,
+            "save_data_path": save_data_path,
             "image_download_path": image_download_path,
             "image_temp_path": image_temp_path,
             "video_download_path": video_download_path,
@@ -91,14 +91,14 @@ def twitter():
     for i in range(1, 5):
         save_file_name = "info\\save_%s.data" % i
         image_download_dir_name = "photo\\twitter%s" % i
-        save_file_path = os.path.join(twitter_path, save_file_name)
+        save_data_path = os.path.join(twitter_path, save_file_name)
         image_download_path = os.path.join(twitter_path, image_download_dir_name)
         image_temp_path = os.path.join(image_download_path, "tempImage")
         video_download_dir_name = "video\\twitter%s" % i
         video_download_path = os.path.join(os.path.abspath(""), video_download_dir_name)
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
-            "save_file_path": save_file_path,
+            "save_data_path": save_data_path,
             "image_download_path": image_download_path,
             "image_temp_path": image_temp_path,
             "video_download_path": video_download_path,
@@ -115,14 +115,14 @@ def weibo():
     for save_file in ["ATF", "lunar", "save_1", "save_2", "snh48"]:
         save_file_name = "info\\%s.data" % save_file
         image_download_dir_name = "photo\\%s" % save_file
-        save_file_path = os.path.join(os.path.abspath(""), save_file_name)
+        save_data_path = os.path.join(os.path.abspath(""), save_file_name)
         image_download_path = os.path.join(os.path.abspath(""), image_download_dir_name)
         image_temp_path = os.path.join(image_download_path, "tempImage")
         video_download_dir_name = "video\\%s" % save_file
         video_download_path = os.path.join(os.path.abspath(""), video_download_dir_name)
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
-            "save_file_path": save_file_path,
+            "save_data_path": save_data_path,
             "image_download_path": image_download_path,
             "image_temp_path": image_temp_path,
             "video_download_path": video_download_path,
