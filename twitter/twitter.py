@@ -367,6 +367,7 @@ class Download(threading.Thread):
                 media_page = get_twitter_media_page_data(account_name, data_tweet_id)
                 if media_page is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
+                    tool.process_exit()
 
                 # 上一页正好获取了全部的媒体信息，所以这一页没有任何内容，完成了，直接退出
                 if media_page["new_latent_count"] == 0 and not media_page["has_more_items"]:
@@ -375,7 +376,11 @@ class Download(threading.Thread):
                 tweet_list = get_tweet_list(media_page["items_html"])
                 if len(tweet_list) == 0:
                     print_error_msg(account_name + " 媒体列表拆分异常，items_html：" + str(media_page["items_html"]))
-                    break
+                    tool.process_exit()
+
+                if media_page["new_latent_count"] != len(tweet_list):
+                    print_error_msg(account_name + " 解析的媒体数量不等于new_latent_count的数值")
+                    tool.process_exit()
 
                 for tweet_data in tweet_list:
                     tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
