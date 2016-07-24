@@ -448,7 +448,7 @@ class Download(threading.Thread):
                         break
 
             # 有历史记录，并且此次没有获得正常结束的标记，说明历史最后的视频已经被删除了
-            if video_count > 1 and first_video_url != "" and not is_over:
+            if self.account_info[4] != "" and video_count > 1 and not is_over :
                 print_error_msg(account_name + " 没有找到上次下载的最后一个视频地址")
 
             # 图片
