@@ -384,9 +384,9 @@ class Download(threading.Thread):
                     if first_tweet_id == "0":
                         first_tweet_id = tweet_id
                     # 检查是否tweet的id小于上次的记录
-                        if int(tweet_id) <= int(self.account_info[3]):
-                            is_over = True
-                            break
+                    if int(tweet_id) <= int(self.account_info[3]):
+                        is_over = True
+                        break
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO == 1:
