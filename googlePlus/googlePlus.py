@@ -101,8 +101,8 @@ class GooglePlus(robot.Robot):
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
-            # account_id  image_count  last_post_id  (account_name)  (file_path)
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
+            # account_id  image_count  album_id  (account_name)  (file_path)
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
             print_error_msg("存档文件: " + self.save_data_path + "不存在")
@@ -192,26 +192,10 @@ class Download(threading.Thread):
             # 图片下载
             image_count = 1
             key = ""
-            first_message_url = ""
             first_album_id = "0"
             unique_list = []
             is_over = False
             need_make_download_dir = True
-            # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
-            if self.account_info[2] == "":
-                is_error = False
-                limit_download_count = 0
-            else:
-                is_error = True
-                last_message_page_return_code = tool.http_request(self.account_info[2])[0]
-                # 上次记录的信息首页还在，那么不要限制
-                if last_message_page_return_code == 1:
-                    limit_download_count = 0
-                else:
-                    # 为防止前一次的记录图片被删除，根据历史图片总数给一个单次下载的数量限制
-                    # 第一次下载，不用限制
-                    # 历史总数的10%，下限50、上限1000
-                    limit_download_count = min(max(50, int(self.account_info[1]) / 100 * 10), 1000)
             while not is_over:
                 post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, key)
                 index_page_return_code, index_page_response = tool.http_request(photo_album_url, post_data)[:2]
@@ -227,12 +211,6 @@ class Download(threading.Thread):
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     message_url = message_url.replace("\u003d", "=")
-                    message_authkey_find = re.findall("(.*)\?.*(#.*)", message_url)
-                    if len(message_authkey_find) == 1:
-                        real_message_url = message_authkey_find[0][0] + message_authkey_find[0][1]
-                    else:
-                        real_message_url = message_url
-
                     message_page_return_code, message_page_data = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
                         print_error_msg(account_name + " 无法获取信息页")
@@ -240,24 +218,21 @@ class Download(threading.Thread):
 
                     # 查找信息页的album id
                     album_id = tool.find_sub_string(message_page_data, "var _album = {id:'", "'")
-                    if album_id:
-                        print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
-                        if first_album_id == "0":
-                            first_album_id = album_id
-                    else:
+                    if not album_id:
                         print_error_msg(account_name + " 信息页：" + message_url + "没有找到album id")
+                        continue
 
+                    print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
                     # 相同的album_id判断
                     if album_id in unique_list:
                         continue
                     else:
                         unique_list.append(album_id)
-                    # 将第一个信息页的地址做为新的存档记录
-                    if first_message_url == "":
-                        first_message_url = real_message_url
+                    # 将第一个album_id做为新的存档记录
+                    if first_album_id == "0":
+                        first_album_id = album_id
                     # 检查是否已下载到前一次的图片
-                    if real_message_url == self.account_info[2]:
-                        is_error = False
+                    if int(album_id) <= int(self.account_info[2]):
                         is_over = True
                         break
 
@@ -297,11 +272,6 @@ class Download(threading.Thread):
                         else:
                             print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
-                        # 达到下载数量限制，结束
-                        if 0 < limit_download_count < image_count:
-                            is_over = True
-                            break
-
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
                             is_over = True
@@ -333,13 +303,9 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_message_url != "":
+            if first_album_id != "":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = first_message_url
-                self.account_info.append(first_album_id)
-
-            if is_error:
-                print_error_msg(account_name + " 图片数量异常，请手动检查")
+                self.account_info[2] = first_album_id
 
             # 保存最后的信息
             threadLock.acquire()
