@@ -194,6 +194,7 @@ class Download(threading.Thread):
             key = ""
             first_message_url = ""
             first_album_id = "0"
+            unique_list = []
             is_over = False
             need_make_download_dir = True
             # 如果有存档记录，则直到找到与前一次一致的地址，否则都算有异常
@@ -232,15 +233,6 @@ class Download(threading.Thread):
                     else:
                         real_message_url = message_url
 
-                    # 将第一个信息页的地址做为新的存档记录
-                    if first_message_url == "":
-                        first_message_url = real_message_url
-                    # 检查是否已下载到前一次的图片
-                    if real_message_url == self.account_info[2]:
-                        is_error = False
-                        is_over = True
-                        break
-
                     message_page_return_code, message_page_data = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
                         print_error_msg(account_name + " 无法获取信息页")
@@ -254,6 +246,20 @@ class Download(threading.Thread):
                             first_album_id = album_id
                     else:
                         print_error_msg(account_name + " 信息页：" + message_url + "没有找到album id")
+
+                    # 相同的album_id判断
+                    if album_id in unique_list:
+                        continue
+                    else:
+                        unique_list.append(album_id)
+                    # 将第一个信息页的地址做为新的存档记录
+                    if first_message_url == "":
+                        first_message_url = real_message_url
+                    # 检查是否已下载到前一次的图片
+                    if real_message_url == self.account_info[2]:
+                        is_error = False
+                        is_over = True
+                        break
 
                     # 截取图片信息部分
                     message_page_data = tool.find_sub_string(message_page_data, 'id="lhid_feedview">', '<div id="lhid_content">')
@@ -330,6 +336,7 @@ class Download(threading.Thread):
             if first_message_url != "":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_message_url
+                self.account_info.append(first_album_id)
 
             if is_error:
                 print_error_msg(account_name + " 图片数量异常，请手动检查")
