@@ -139,7 +139,7 @@ def get_twitter_media_page_data(account_name, data_tweet_id):
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("has_more_items", "items_html", "min_position"), media_page):
+            if robot.check_sub_key(("has_more_items", "items_html", "new_latent_count", "min_position"), media_page):
                 return media_page
     return None
 
@@ -367,6 +367,9 @@ class Download(threading.Thread):
                 media_page = get_twitter_media_page_data(account_name, data_tweet_id)
                 if media_page is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
+
+                # 上一页正好获取了全部的媒体信息，所以这一页没有任何内容，完成了，直接退出
+                if media_page["new_latent_count"] == 0 and not media_page["has_more_items"]:
                     break
 
                 tweet_list = get_tweet_list(media_page["items_html"])
