@@ -254,7 +254,7 @@ class Download(threading.Thread):
                 # 无法获取信息首页
                 if index_page_return_code != 1:
                     print_error_msg(account_id + " 无法获取相册信息: " + index_page_url)
-                    break
+                    tool.process_exit()
 
                 # 相册也中全部的信息页
                 post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', index_page_response)
