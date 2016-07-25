@@ -463,6 +463,8 @@ class Download(threading.Thread):
                 photo_page_data = get_weibo_photo_page_data(account_id, page_count)
                 if photo_page_data is None:
                     print_error_msg(account_name + " 图片列表解析错误")
+                if (photo_page_data["total"] / IMAGE_COUNT_PER_PAGE) > (page_count - 1) and len(photo_page_data["photo_list"]) != IMAGE_COUNT_PER_PAGE:
+                    print_error_msg(account_name + " 实际获取的图片数量不等于请求的数值")
                     break
 
                 trace(account_name + "第：" + str(page_count) + "页的全部图片信息：" + str(photo_page_data))
