@@ -328,7 +328,7 @@ class Download(threading.Thread):
                 media_page_data = get_instagram_media_page_data(account_id, cursor)
                 if media_page_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
-                    break
+                    tool.process_exit()
 
                 nodes_data = media_page_data["nodes"]
                 for photo_info in nodes_data:
