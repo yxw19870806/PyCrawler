@@ -54,7 +54,7 @@ def ske():
     return_code, page = tool.http_request(index_url)[:2]
     if return_code == 1:
         for team_name in split_list:
-            team_page = page[page.find(split_list[team_name][0]):page.find(split_list[team_name][1])]
+            team_page = tool.find_sub_string(page, split_list[team_name][0], split_list[team_name][1])
             member_list = re.findall('<dl>([\s|\S]*?)</dl>', team_page)
             for member in member_list:
                 member = member.replace("<br />", "").replace("\n", "").replace("\r", "").replace("\t", "")
@@ -157,11 +157,44 @@ def hkt():
                 members_list.append([japanese_name, last_name + " " + first_name, team_name])
     return members_list
 
+
+def jkt():
+    members_list = []
+    index_url = "http://www.jkt48.com/member/list"
+    return_code, page = tool.http_request(index_url)[:2]
+    if return_code == 1:
+        page = tool.find_sub_string(page, '<div id="mainCol">', "<!--end #mainCol-->", 1)
+        start_index = 0
+        start_index_list = []
+        while start_index != -1:
+            start_index = page.find('<a name="', start_index + 1)
+            start_index_list.append(start_index)
+        for i in range(0, len(start_index_list) - 1):
+            start = start_index_list[i]
+            end = start_index_list[i + 1]
+            if end == -1:
+                end = len(page)
+            split_page = page[start: end]
+            team_name = tool.find_sub_string(split_page, "<h2>", "</h2>")
+            if team_name.find("Team") == -1:
+                team_name = "Team kenkyusei"
+            team_name = "JKT48 " + team_name
+            member_list = re.findall('<div class="profileWrap">([\s|\S]*?)</div><!--/loop-->',split_page)
+            for member in member_list:
+                member = member.replace("<br>", "").replace("\n", "").replace("\r", "").replace("\t", "")
+                japanese_name = english_name = tool.find_sub_string(member, 'alt="', '"')
+                members_list.append([japanese_name, english_name, team_name])
+    return members_list
+
+
+
+
 result = []
 result += akb()
 result += ske()
 result += nmb()
 result += hkt()
+result += jkt()
 file_handle = open('member.txt', 'w')
 for line in result:
     line_string = "\t".join(line)
