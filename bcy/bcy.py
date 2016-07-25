@@ -260,7 +260,7 @@ class Download(threading.Thread):
                 post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                 if post_page_return_code != 1:
                     print_error_msg(cn + " 无法获取数据: " + post_url)
-                    break
+                    tool.process_exit()
 
                 page_rp_id_list = re.findall('/coser/detail/(\d+)/(\d+)"', post_page_response)
                 page_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', post_page_response)
@@ -268,7 +268,7 @@ class Download(threading.Thread):
                     page_title_list.remove("${post.title}")
                 if len(page_rp_id_list) != len(page_title_list):
                     print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
-                    break
+                    tool.process_exit()
 
                 title_index = 0
                 for cp_id, rp_id in page_rp_id_list:
