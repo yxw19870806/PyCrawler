@@ -202,7 +202,7 @@ class Download(threading.Thread):
                 # 无法获取信息首页
                 if index_page_return_code != 1:
                     print_error_msg(account_name + " 无法获取相册首页: " + photo_album_url + ", key = " + key)
-                    break
+                    tool.process_exit()
 
                 # 相册也中全部的信息页
                 page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response)
@@ -213,13 +213,13 @@ class Download(threading.Thread):
                     message_url = message_url.replace("\u003d", "=")
                     message_page_return_code, message_page_data = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
-                        print_error_msg(account_name + " 无法获取信息页")
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，无法获取信息页：" + message_url)
                         continue
 
                     # 查找信息页的album id
                     album_id = tool.find_sub_string(message_page_data, "var _album = {id:'", "'")
                     if not album_id:
-                        print_error_msg(account_name + " 信息页：" + message_url + "没有找到album id")
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，信息页：" + message_url + "中没有找到album id")
                         continue
 
                     print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
@@ -239,14 +239,14 @@ class Download(threading.Thread):
                     # 截取图片信息部分
                     message_page_data = tool.find_sub_string(message_page_data, 'id="lhid_feedview">', '<div id="lhid_content">')
                     if not message_page_data:
-                        print_error_msg(account_name + " 信息页：" + message_url + "中没有找到相关图片信息，第" + str(image_count) + "张图片")
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，信息页：" + message_url + "中没有找到相关图片信息")
                         continue
 
                     # 匹配查找所有的图片
                     page_image_url_list = re.findall('<img src="(\S*)">', message_page_data)
                     trace(account_name + " 信息页" + message_url + " 获取的所有图片: " + str(page_image_url_list))
                     if len(page_image_url_list) == 0:
-                        print_error_msg(account_name + " 信息页：" + message_url + " 中没有找到标签'<img src='")
+                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，信息页：" + message_url + " 中没有找到标签'<img src='")
                         continue
 
                     for image_url in page_image_url_list:
