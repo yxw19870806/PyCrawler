@@ -396,6 +396,7 @@ class Download(threading.Thread):
                 video_page_data = get_weibo_video_page_data(page_id, since_id)
                 if video_page_data is None:
                     print_error_msg(account_name + " 视频列表解析异常")
+                    first_video_url = ""  # 存档恢复
                     break
 
                 # 匹配获取全部的视频页面
@@ -463,16 +464,15 @@ class Download(threading.Thread):
                 photo_page_data = get_weibo_photo_page_data(account_id, page_count)
                 if photo_page_data is None:
                     print_error_msg(account_name + " 图片列表解析错误")
+                    first_image_time = "0"  # 存档恢复
+                    break
                 if (photo_page_data["total"] / IMAGE_COUNT_PER_PAGE) > (page_count - 1) and len(photo_page_data["photo_list"]) != IMAGE_COUNT_PER_PAGE:
                     print_error_msg(account_name + " 实际获取的图片数量不等于请求的数值")
+                    first_image_time = "0"  # 存档恢复
                     break
 
                 trace(account_name + "第：" + str(page_count) + "页的全部图片信息：" + str(photo_page_data))
-                # 总的图片数
-                total_image_count = photo_page_data["total"]
-                # 图片详细列表
-                photo_list = photo_page_data["photo_list"]
-                for image_info in photo_list:
+                for image_info in photo_page_data["photo_list"]:
                     if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
                         print_error_msg(account_name + " 第" + str(image_count) + "张图片信息解析错误 " + image_info)
                         continue
@@ -524,7 +524,7 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 根据总的图片数量和每页显示的图片数量，计算是否还有下一页
-                    if (total_image_count / IMAGE_COUNT_PER_PAGE) > (page_count - 1):
+                    if (photo_page_data["total"] / IMAGE_COUNT_PER_PAGE) > (page_count - 1):
                         page_count += 1
                     else:
                         # 全部图片下载完毕
