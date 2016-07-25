@@ -208,13 +208,13 @@ class Download(threading.Thread):
                 media_page = get_miaopai_video_page_data(suid, page_count)
                 if media_page is None:
                     print_error_msg(account_id + " 视频列表解析错误")
-                    break
+                    tool.process_exit()
 
                 msg_data = media_page["msg"]
                 scid_list = re.findall('data-scid="([^"]*)"', msg_data)
                 if len(scid_list) == 0:
                     print_error_msg(account_id + " 在视频列表：" + str(media_page) + " 中没有找到视频scid")
-                    break
+                    tool.process_exit()
 
                 for scid in scid_list:
                     # 新增视频导致的重复判断
