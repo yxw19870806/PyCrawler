@@ -194,11 +194,11 @@ class Download(threading.Thread):
                 medias_data = get_meipai_video_page_data(account_id, page_count)
                 if medias_data is None:
                     print_error_msg(account_id + " 视频列表解析错误")
-                    break
+                    tool.process_exit()
 
                 for media in medias_data:
                     if not robot.check_sub_key(("video", "id"), media):
-                        print_error_msg(account_id + " 视频信息解析错误")
+                        print_error_msg(account_id + " 第" + str(video_count) + "个视频信息解析错误")
                         continue
 
                     video_id = str(media["id"])
