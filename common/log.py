@@ -23,7 +23,7 @@ def error(msg):
 
 
 def step(msg):
-    if IS_SHOW_STEP == 1:
+    if IS_SHOW_STEP:
         msg = tool.get_time() + " " + msg
         tool.print_msg(msg, False)
     if STEP_LOG_PATH != "":
@@ -31,7 +31,7 @@ def step(msg):
 
 
 def trace(msg):
-    if IS_SHOW_TRACE == 1:
+    if IS_SHOW_TRACE:
         msg = tool.get_time() + " " + msg
         tool.print_msg(msg, False)
     if TRACE_LOG_PATH != "":

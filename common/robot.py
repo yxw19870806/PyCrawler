@@ -24,9 +24,9 @@ class Robot(object):
             extra_config = {}
 
         # 日志
-        self.is_show_error = get_config(config, "IS_SHOW_ERROR", 1, 2)
-        self.is_show_step = get_config(config, "IS_SHOW_STEP", 1, 2)
-        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", 0, 2)
+        self.is_show_error = get_config(config, "IS_SHOW_ERROR", True, 4)
+        self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 4)
+        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 4)
         error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
         self.error_log_path = error_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
         error_log_dir = os.path.dirname(self.error_log_path)
@@ -34,8 +34,8 @@ class Robot(object):
         if not tool.make_dir(error_log_dir, 0):
             tool.print_msg("创建错误日志目录：" + error_log_dir + " 失败", True)
             tool.process_exit()
-        is_log_step = get_config(config, "IS_LOG_STEP", 1, 2)
-        if is_log_step == 0:
+        is_log_step = get_config(config, "IS_LOG_STEP", True, 4)
+        if not is_log_step:
             self.step_log_path = ""
         else:
             step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
@@ -45,8 +45,8 @@ class Robot(object):
             if not tool.make_dir(step_log_dir, 0):
                 tool.print_msg("创建步骤日志目录：" + step_log_dir + " 失败", True)
                 tool.process_exit()
-        is_log_trace = get_config(config, "IS_LOG_TRACE", 1, 2)
-        if is_log_trace == 0:
+        is_log_trace = get_config(config, "IS_LOG_TRACE", True, 4)
+        if not is_log_trace:
             self.trace_log_path = ""
         else:
             trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
@@ -131,6 +131,7 @@ def read_config():
 # mode=1 : 字符串拼接
 # mode=2 : 取整
 # mode=3 : 文件路径，以"\"开头的为当前目录下创建
+# mode=4 : 布尔值，非True的传值或者字符串"0"和"false"为False，其他值为True
 # prefix: 前缀，只有在mode=1时有效
 # postfix: 后缀，只有在mode=1时有效
 def get_config(config, key, default_value, mode, prefix=None, postfix=None):
@@ -157,6 +158,11 @@ def get_config(config, key, default_value, mode, prefix=None, postfix=None):
         if value[0] == "\\":
             value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
         value = os.path.realpath(value)
+    elif mode == 4:
+        if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
+            value = False
+        else:
+            value = True
     return value
 
 
