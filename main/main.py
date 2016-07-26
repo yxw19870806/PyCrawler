@@ -64,7 +64,7 @@ def meipai():
     from meipai import meipai
     meipai_path = os.path.join(os.path.abspath(".."), "meipai")
     os.chdir(meipai_path)
-    meipai.Meipai().main()
+    meipai.MeiPai().main()
 
 
 # 秒拍
@@ -72,7 +72,7 @@ def miaopai():
     from miaopai import miaopai
     miaopai_path = os.path.join(os.path.abspath(".."), "miaopai")
     os.chdir(miaopai_path)
-    miaopai.Miaopai().main()
+    miaopai.MiaoPai().main()
 
 
 # tumblr

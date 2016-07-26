@@ -69,7 +69,7 @@ def get_miaopai_video_page_data(suid, page_count):
     return None
 
 
-class Miaopai(robot.Robot):
+class MiaoPai(robot.Robot):
     def __init__(self):
         global GET_VIDEO_COUNT
         global VIDEO_TEMP_PATH
@@ -292,4 +292,4 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    Miaopai().main()
+    MiaoPai().main()

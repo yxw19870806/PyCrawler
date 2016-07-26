@@ -59,7 +59,7 @@ def get_meipai_video_page_data(account_id, page_count):
     return None
 
 
-class Meipai(robot.Robot):
+class MeiPai(robot.Robot):
     def __init__(self):
         global GET_VIDEO_COUNT
         global VIDEO_TEMP_PATH
@@ -277,4 +277,4 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    Meipai().main()
+    MeiPai().main()
