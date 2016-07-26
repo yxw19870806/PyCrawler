@@ -254,7 +254,7 @@ class Twitter(robot.Robot):
         global ACCOUNTS
         
         if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
-            print_error_msg("下载图片和视频都没开启，请检查配置！")
+            print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
 
         start_time = time.time()

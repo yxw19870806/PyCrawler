@@ -130,19 +130,19 @@ class Tumblr(robot.Robot):
         global ACCOUNTS
 
         if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
-            print_error_msg("下载图片和视频都没开启，请检查配置！")
+            print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
 
         start_time = time.time()
 
-        # 图片保存目录
+        # 创建图片保存目录
         if IS_DOWNLOAD_IMAGE == 1:
             print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
                 print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
                 tool.process_exit()
 
-        # 视频保存目录
+        # 创建视频保存目录
         if IS_DOWNLOAD_VIDEO == 1:
             print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
