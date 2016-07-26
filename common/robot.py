@@ -67,8 +67,8 @@ class Robot(object):
             IS_INIT = True
 
         # 是否下载
-        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", 1, 2)
-        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", 1, 2)
+        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", True, 4)
+        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 4)
 
         # 存档
         if "image_download_path" in extra_config:
@@ -88,7 +88,7 @@ class Robot(object):
         else:
             self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
 
-        self.is_sort = get_config(config, "IS_SORT", 1, 2)
+        self.is_sort = get_config(config, "IS_SORT", True, 4)
         self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 2)
         self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 2)
         self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 2)

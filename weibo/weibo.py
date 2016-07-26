@@ -28,9 +28,9 @@ IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = 1
-IS_DOWNLOAD_IMAGE = 1
-IS_DOWNLOAD_VIDEO = 1
+IS_SORT = True
+IS_DOWNLOAD_IMAGE = True
+IS_DOWNLOAD_VIDEO = True
 
 threadLock = threading.Lock()
 
@@ -254,21 +254,21 @@ class Weibo(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
+        if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
             print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
 
         start_time = time.time()
 
         # 创建图片保存目录
-        if IS_DOWNLOAD_IMAGE == 1:
+        if IS_DOWNLOAD_IMAGE:
             print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
                 print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
                 tool.process_exit()
 
         # 创建视频保存目录
-        if IS_DOWNLOAD_VIDEO == 1:
+        if IS_DOWNLOAD_VIDEO:
             print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
                 print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
@@ -370,7 +370,7 @@ class Download(threading.Thread):
             print_step_msg(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT == 1:
+            if IS_SORT:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
                 video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             else:
@@ -384,7 +384,7 @@ class Download(threading.Thread):
             is_over = False
             need_make_video_dir = True
             since_id = INIT_SINCE_ID
-            while (IS_DOWNLOAD_VIDEO == 1) and (not is_over):
+            while IS_DOWNLOAD_VIDEO and (not is_over):
                 # 获取page_id
                 if page_id is None:
                     page_id = get_weibo_account_page_id(account_id)
@@ -459,7 +459,7 @@ class Download(threading.Thread):
             unique_list = []
             is_over = False
             need_make_image_dir = True
-            while (IS_DOWNLOAD_IMAGE == 1) and (not is_over):
+            while IS_DOWNLOAD_IMAGE and (not is_over):
                 # 获取指定一页图片的信息
                 photo_page_data = get_weibo_photo_page_data(account_id, page_count)
                 if photo_page_data is None:
@@ -529,7 +529,7 @@ class Download(threading.Thread):
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
 
             # 排序
-            if IS_SORT == 1:
+            if IS_SORT:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):

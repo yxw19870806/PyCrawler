@@ -21,8 +21,7 @@ IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = 1
-IS_DOWNLOAD_IMAGE = 1
+IS_SORT = True
 
 threadLock = threading.Lock()
 
@@ -66,7 +65,6 @@ class GooglePlus(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
-        global IS_DOWNLOAD_IMAGE
 
         super(GooglePlus, self).__init__()
 
@@ -75,7 +73,6 @@ class GooglePlus(robot.Robot):
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
-        IS_DOWNLOAD_IMAGE = self.is_download_image
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
         tool.print_msg("配置文件读取完成")
@@ -85,7 +82,7 @@ class GooglePlus(robot.Robot):
 
         start_time = time.time()
 
-        if IS_DOWNLOAD_IMAGE == 0:
+        if not self.is_download_image:
             print_error_msg("下载图片没有开启，请检查配置！")
             tool.process_exit()
 
@@ -185,7 +182,7 @@ class Download(threading.Thread):
 
             photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT == 1:
+            if IS_SORT:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
@@ -295,7 +292,7 @@ class Download(threading.Thread):
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
 
             # 排序
-            if IS_SORT == 1 and image_count > 1:
+            if IS_SORT and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")

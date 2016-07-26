@@ -20,7 +20,6 @@ TOTAL_IMAGE_COUNT = 0
 GET_PAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_DOWNLOAD_IMAGE = 1
 IS_AUTO_FOLLOW = True
 
 threadLock = threading.Lock()
@@ -127,7 +126,6 @@ class Bcy(robot.Robot):
         global GET_PAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_DOWNLOAD_IMAGE
 
         super(Bcy, self).__init__()
 
@@ -135,7 +133,6 @@ class Bcy(robot.Robot):
         GET_PAGE_COUNT = self.get_page_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        IS_DOWNLOAD_IMAGE = self.is_download_image
 
         tool.print_msg("配置文件读取完成")
 
@@ -144,7 +141,7 @@ class Bcy(robot.Robot):
 
         start_time = time.time()
 
-        if IS_DOWNLOAD_IMAGE == 0:
+        if not self.is_download_image:
             print_error_msg("下载图片没有开启，请检查配置！")
             tool.process_exit()
 

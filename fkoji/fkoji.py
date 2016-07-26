@@ -33,7 +33,7 @@ class Fkoji(robot.Robot):
             tool.process_exit()
 
         # 图片下载临时目录
-        if self.is_sort == 1:
+        if self.is_sort:
             log.step("创建图片下载目录：" + self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
                 log.error("创建图片下载目录：" + self.image_temp_path + " 失败")
@@ -53,7 +53,7 @@ class Fkoji(robot.Robot):
             last_image_url = ""
             image_start_index = 0
 
-        if self.is_sort == 1:
+        if self.is_sort:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
@@ -126,7 +126,7 @@ class Fkoji(robot.Robot):
         log.step("下载完毕")
 
         # 排序复制到保存目录
-        if self.is_sort == 1:
+        if self.is_sort:
             is_check_ok = False
             while not is_check_ok:
                 # 等待手动检测所有图片结束

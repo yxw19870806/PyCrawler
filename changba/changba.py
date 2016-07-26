@@ -19,8 +19,6 @@ GET_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = 1
-IS_DOWNLOAD_VIDEO = 1
 
 threadLock = threading.Lock()
 
@@ -104,7 +102,6 @@ class ChangBa(robot.Robot):
         # 设置全局变量，供子线程调用
         GET_VIDEO_COUNT = self.get_video_count
         VIDEO_DOWNLOAD_PATH = self.video_download_path
-        IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
         tool.print_msg("配置文件读取完成")
@@ -114,7 +111,7 @@ class ChangBa(robot.Robot):
 
         start_time = time.time()
 
-        if IS_DOWNLOAD_VIDEO == 0:
+        if not self.is_download_video:
             print_error_msg("下载视频没有开启，请检查配置！")
             tool.process_exit()
 

@@ -24,9 +24,9 @@ IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = 1
-IS_DOWNLOAD_IMAGE = 1
-IS_DOWNLOAD_VIDEO = 1
+IS_SORT = True
+IS_DOWNLOAD_IMAGE = True
+IS_DOWNLOAD_VIDEO = True
 
 threadLock = threading.Lock()
 
@@ -203,19 +203,19 @@ class Instagram(robot.Robot):
 
         start_time = time.time()
 
-        if IS_DOWNLOAD_IMAGE == 0 and IS_DOWNLOAD_VIDEO == 0:
+        if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
             print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
 
         # 图片保存目录
-        if IS_DOWNLOAD_IMAGE == 1:
+        if IS_DOWNLOAD_IMAGE:
             print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
                 print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
                 tool.process_exit()
 
         # 视频保存目录
-        if IS_DOWNLOAD_VIDEO == 1:
+        if IS_DOWNLOAD_VIDEO:
             print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
                 print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
@@ -304,7 +304,7 @@ class Download(threading.Thread):
             print_step_msg(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT == 1:
+            if IS_SORT:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
                 video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             else:
@@ -348,7 +348,7 @@ class Download(threading.Thread):
                         break
 
                     # 图片
-                    if IS_DOWNLOAD_IMAGE == 1:
+                    if IS_DOWNLOAD_IMAGE:
                         image_url = str(photo_info["display_src"].split("?")[0])
                         print_step_msg(account_name + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
 
@@ -367,7 +367,7 @@ class Download(threading.Thread):
                             print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
 
                     # 视频
-                    if IS_DOWNLOAD_VIDEO == 1 and photo_info["is_video"]:
+                    if IS_DOWNLOAD_VIDEO and photo_info["is_video"]:
                         post_page_url = "https://www.instagram.com/p/%s/" % photo_info["code"]
                         post_page_return_code, post_page_response = tool.http_request(post_page_url)[:2]
                         if post_page_return_code == 1:
@@ -407,7 +407,7 @@ class Download(threading.Thread):
             print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片" + "和" + str(video_count - 1) + "个视频")
 
             # 排序
-            if IS_SORT == 1:
+            if IS_SORT:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):

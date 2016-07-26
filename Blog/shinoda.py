@@ -21,7 +21,7 @@ class Shinoda(robot.Robot):
         start_time = time.time()
 
         # 图片下载临时目录
-        if self.is_sort == 1:
+        if self.is_sort:
             log.step("创建图片下载目录：" + self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
                 log.error("创建图片下载目录：" + self.image_temp_path + " 失败")
@@ -49,7 +49,7 @@ class Shinoda(robot.Robot):
         is_over = False
         new_last_blog_id = ""
         host = "http://blog.mariko-shinoda.net/"
-        if self.is_sort == 1:
+        if self.is_sort:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
@@ -85,7 +85,7 @@ class Shinoda(robot.Robot):
         log.step("下载完毕")
         
         # 排序复制到保存目录
-        if self.is_sort == 1:
+        if self.is_sort:
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
                 log.step(" 图片从下载目录移动到保存目录成功")
             else:
