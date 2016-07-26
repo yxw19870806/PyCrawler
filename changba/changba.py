@@ -114,12 +114,15 @@ class ChangBa(robot.Robot):
 
         start_time = time.time()
 
-        # 视频保存目录
-        if IS_DOWNLOAD_VIDEO == 1:
-            print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
-            if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
-                tool.process_exit()
+        if IS_DOWNLOAD_VIDEO == 0:
+            print_error_msg("下载视频没有开启，请检查配置！")
+            tool.process_exit()
+
+        # 创建视频保存目录
+        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
+            tool.process_exit()
 
         # 设置代理
         if self.is_proxy == 1:
