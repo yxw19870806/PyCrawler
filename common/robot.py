@@ -24,9 +24,9 @@ class Robot(object):
             extra_config = {}
 
         # 日志
-        self.is_show_error = get_config(config, "IS_SHOW_ERROR", True, 4)
-        self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 4)
-        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 4)
+        self.is_show_error = get_config(config, "IS_SHOW_ERROR", True, 2)
+        self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 2)
+        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 2)
         error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
         self.error_log_path = error_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
         error_log_dir = os.path.dirname(self.error_log_path)
@@ -34,7 +34,7 @@ class Robot(object):
         if not tool.make_dir(error_log_dir, 0):
             tool.print_msg("创建错误日志目录：" + error_log_dir + " 失败", True)
             tool.process_exit()
-        is_log_step = get_config(config, "IS_LOG_STEP", True, 4)
+        is_log_step = get_config(config, "IS_LOG_STEP", True, 2)
         if not is_log_step:
             self.step_log_path = ""
         else:
@@ -45,7 +45,7 @@ class Robot(object):
             if not tool.make_dir(step_log_dir, 0):
                 tool.print_msg("创建步骤日志目录：" + step_log_dir + " 失败", True)
                 tool.process_exit()
-        is_log_trace = get_config(config, "IS_LOG_TRACE", True, 4)
+        is_log_trace = get_config(config, "IS_LOG_TRACE", True, 2)
         if not is_log_trace:
             self.trace_log_path = ""
         else:
@@ -67,8 +67,8 @@ class Robot(object):
             IS_INIT = True
 
         # 是否下载
-        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", True, 4)
-        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 4)
+        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", True, 2)
+        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 2)
 
         # 存档
         if "image_download_path" in extra_config:
@@ -88,10 +88,10 @@ class Robot(object):
         else:
             self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
 
-        self.is_sort = get_config(config, "IS_SORT", True, 4)
-        self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 2)
-        self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 2)
-        self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 2)
+        self.is_sort = get_config(config, "IS_SORT", True, 2)
+        self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 1)
+        self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 1)
+        self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 1)
 
         if "save_data_path" in extra_config:
             self.save_data_path = extra_config["save_data_path"]
@@ -99,22 +99,22 @@ class Robot(object):
             self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
 
         # 代理
-        self.is_proxy = get_config(config, "IS_PROXY", 2, 2)
+        self.is_proxy = get_config(config, "IS_PROXY", 2, 1)
         self.proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
         self.proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
 
         # 操作系统&浏览器
-        self.browser_version = get_config(config, "BROWSER_VERSION", 2, 2)
+        self.browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
 
         # cookie
-        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
+        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", 1, 1)
         if is_auto_get_cookie == 0:
             self.cookie_path = get_config(config, "COOKIE_PATH", "", 0)
         else:
             self.cookie_path = tool.get_default_browser_cookie_path(self.browser_version)
 
         # 线程数
-        self.thread_count = get_config(config, "THREAD_COUNT", 10, 2)
+        self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
 
 
 # 读取配置文件
@@ -128,13 +128,10 @@ def read_config():
 # 获取配置文件
 # config : 字典格式，如：{key1:value1, key2:value2}
 # mode=0 : 直接赋值
-# mode=1 : 字符串拼接
-# mode=2 : 取整
+# mode=1 : 取整
+# mode=2 : 布尔值，非True的传值或者字符串"0"和"false"为False，其他值为True
 # mode=3 : 文件路径，以"\"开头的为当前目录下创建
-# mode=4 : 布尔值，非True的传值或者字符串"0"和"false"为False，其他值为True
-# prefix: 前缀，只有在mode=1时有效
-# postfix: 后缀，只有在mode=1时有效
-def get_config(config, key, default_value, mode, prefix=None, postfix=None):
+def get_config(config, key, default_value, mode):
     if config.has_option("setting", key):
         value = config.get("setting", key).encode("utf-8")
     else:
@@ -143,26 +140,22 @@ def get_config(config, key, default_value, mode, prefix=None, postfix=None):
     if mode == 0:
         pass
     elif mode == 1:
-        if prefix is not None:
-            value = prefix + value
-        if postfix is not None:
-            value = value + postfix
+        if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
+            value = False
+        else:
+            value = True
     elif mode == 2:
-        try:
+        if isinstance(value, int):
+            pass
+        elif isinstance(value, str) and value.isdigit():
             value = int(value)
-        except:
+        else:
             tool.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
-            traceback.print_exc()
             value = default_value
     elif mode == 3:
         if value[0] == "\\":
             value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
         value = os.path.realpath(value)
-    elif mode == 4:
-        if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
-            value = False
-        else:
-            value = True
     return value
 
 
