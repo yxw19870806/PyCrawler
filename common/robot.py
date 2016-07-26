@@ -107,7 +107,7 @@ class Robot(object):
         self.browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
 
         # cookie
-        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
         if is_auto_get_cookie:
             self.cookie_path = tool.get_default_browser_cookie_path(self.browser_version)
         else:
@@ -140,11 +140,6 @@ def get_config(config, key, default_value, mode):
     if mode == 0:
         pass
     elif mode == 1:
-        if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
-            value = False
-        else:
-            value = True
-    elif mode == 2:
         if isinstance(value, int):
             pass
         elif isinstance(value, str) and value.isdigit():
@@ -152,6 +147,11 @@ def get_config(config, key, default_value, mode):
         else:
             tool.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
             value = default_value
+    elif mode == 2:
+        if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
+            value = False
+        else:
+            value = True
     elif mode == 3:
         if value[0] == "\\":
             value = os.path.join(os.path.abspath(""), value[1:])  # 第一个 \ 仅做标记使用，实际需要去除
