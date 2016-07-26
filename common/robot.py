@@ -107,11 +107,11 @@ class Robot(object):
         self.browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
 
         # cookie
-        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", 1, 1)
-        if is_auto_get_cookie == 0:
-            self.cookie_path = get_config(config, "COOKIE_PATH", "", 0)
-        else:
+        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+        if is_auto_get_cookie:
             self.cookie_path = tool.get_default_browser_cookie_path(self.browser_version)
+        else:
+            self.cookie_path = get_config(config, "COOKIE_PATH", "", 0)
 
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)

@@ -294,13 +294,13 @@ def quickly_set(is_set_cookie, proxy_type):
     config = robot.read_config()
     if is_set_cookie == 1:
         # 操作系统&浏览器
-        browser_type = robot.get_config(config, "BROWSER_VERSION", 2, 2)
+        browser_type = robot.get_config(config, "BROWSER_VERSION", 2, 1)
         # cookie
-        is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", 1, 2)
-        if is_auto_get_cookie == 0:
-            cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-        else:
+        is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+        if is_auto_get_cookie:
             cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+        else:
+            cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
         set_cookie(cookie_path, browser_type)
     if proxy_type > 0:
         proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
