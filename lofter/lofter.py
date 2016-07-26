@@ -71,13 +71,13 @@ class Lofter(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        if IS_DOWNLOAD_IMAGE == 0:
-            print_error_msg("下载图片没开启，请检查配置！")
-            tool.process_exit()
-
         start_time = time.time()
 
-        # 图片保存目录
+        if IS_DOWNLOAD_IMAGE == 0:
+            print_error_msg("下载图片没有开启，请检查配置！")
+            tool.process_exit()
+
+        # 创建图片保存目录
         print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
             print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
