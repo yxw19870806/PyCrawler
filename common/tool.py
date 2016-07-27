@@ -178,6 +178,8 @@ def create_cookie(name, value, domain="", path="/"):
 # browser_type=2: firefox
 # browser_type=3: chrome
 def set_cookie(file_path, browser_type=1, target_domains=""):
+    # 有些DB文件开启了WAL功能（SQL3.7引入，Python2.7的sqlite3的版本是3.6，所以需要pysqlite2.8）
+    # import sqlite3
     if sys.version.find("32 bit") != -1:
         from pysqlite2_win32 import dbapi2 as sqlite
     else:
