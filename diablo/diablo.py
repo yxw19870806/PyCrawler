@@ -42,6 +42,7 @@ item_list = {
     "daibo": "武杖",
     "mighty-weapon-2h": "双手重型武器",
     "flail2-2h": "双手连枷",
+    "legendarygem": "傳奇宝石",
 }
 
 item_attribute_list = {}
@@ -50,7 +51,10 @@ for item_path, item_position in item_list.items():
     page_count = 1
     item_attribute_list[item_path] = []
     while True:
-        item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
+        if item_position == "傳奇宝石":
+            item_index_url = base_host + "/tw/base/legendarygem/"
+        else:
+            item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
         return_code, item_index_page = tool.http_request(item_index_url)[:2]
         if return_code == 1:
             # item_index = item_index.decode("utf-8")
@@ -64,6 +68,7 @@ for item_path, item_position in item_list.items():
                     continue
                 item_url = tool.find_sub_string(item_info, '<a href="', '"')
                 item_name = tool.find_sub_string(item_info, 'class="diablo3tip">', '</a>')
+                item_name = item_name.replace("'", "’")
                 item_url = base_host + item_url
                 item_return_code, item_page = tool.http_request(item_url)[:2]
                 if item_return_code == 1:
@@ -74,11 +79,13 @@ for item_path, item_position in item_list.items():
                     if special_attribute:
                         special_attribute = special_attribute[special_attribute.find(">") + 1:]
                         special_attribute = special_attribute.replace("</span>", "").replace('<span class="d3-color-magic">', "").replace('<span class="value">', "")
+                        special_attribute = special_attribute.replace("'", "’")
                     item_introduction = tool.find_sub_string(item_detail, '<div class="item-flavor d3-color-orange serif">', "</div>").strip()
+                    item_introduction = item_introduction.replace("'", "’")
                     print item_position, item_name, special_attribute, item_introduction
                     item_attribute_list[item_path].append([item_name, special_attribute, item_introduction])
                 else:
-                    print "erro r get" + item_url
+                    print "error get" + item_url
         else:
             print "error get" + item_index_url
         pagination = tool.find_sub_string(item_index_page, '<ul class="ui-pagination">', '</ul>')
@@ -92,8 +99,10 @@ for item_path, item_position in item_list.items():
                 continue
         break
 
-file_handle = open("equip.txt", 'w')
+
+tool.make_dir("data", 0)
 for item_path in item_attribute_list:
-    file_handle.write(item_list[item_path] + "\n")
+    file_handle = open(tool.change_path_encoding("data\%s.txt" % item_list[item_path]), 'w')
     for item in item_attribute_list[item_path]:
         file_handle.write("\t".join(item) + "\n")
+    file_handle.close()
