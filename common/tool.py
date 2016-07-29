@@ -84,7 +84,7 @@ def http_request(url, post_data=None, cookie=None):
             else:
                 request = urllib2.Request(url)
             # 设置头信息
-            request.add_header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0")
+            request.add_header("User-Agent", random_user_agent())
 
             # cookies
             if isinstance(cookie, cookielib.CookieJar):
@@ -134,6 +134,29 @@ def http_request(url, post_data=None, cookie=None):
         if count > 500:
             print_msg("无法访问页面：" + url)
             return [-1, None, None]
+
+
+# 随机生成一个合法的user agent
+def random_user_agent():
+    # "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
+    # "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+    firefox_version_max = 46
+    chrome_version_list = ["40.0.2214", "41.0.2272", "42.0.2311", "43.0.2357", "44.0.2403",
+                           "45.0.2454", "46.0.2490", "47.0.2526", "48.0.2564", "49.0.2623",
+                           "50.0.2661", "51.0.2704", "52.0.2743", "53.0.2785", "54.0.2810"]
+    windows_version_list = ["6.1", "6.3", "10.0"]
+    browser_type = random.choice(["firefox", "chrome"])
+    os_type = random.choice(windows_version_list)
+    if browser_type == "firefox":
+        firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
+        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" \
+               % (os_type, firefox_version, firefox_version)
+    elif browser_type == "chrome":
+        sub_version = random.randint(1, 100)
+        chrome_version = random.choice(chrome_version_list)
+        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" \
+               % (os_type, chrome_version, sub_version)
+    return ""
 
 
 # 获取请求response中的指定信息
