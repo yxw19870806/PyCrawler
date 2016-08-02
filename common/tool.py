@@ -69,7 +69,7 @@ def http_request(url, post_data=None, cookie=None):
     global IS_SET_TIMEOUT
     global PROCESS_STATUS
     if not (url.find("http://") == 0 or url.find("https://") == 0):
-        return [-100, None, None]
+        return -100, None, None
     count = 0
     while True:
         while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
@@ -101,7 +101,7 @@ def http_request(url, post_data=None, cookie=None):
                 response = urllib2.urlopen(request, timeout=5)
 
             if response:
-                return [1, response.read(), response]
+                return 1, response.read(), response
         except Exception, e:
             # 代理无法访问
             if str(e).find("[Errno 10061]") != -1:
@@ -119,13 +119,13 @@ def http_request(url, post_data=None, cookie=None):
                 print_msg("访问页面超时，重新连接请稍后")
             # 400
             elif str(e).lower().find("http error 400") != -1:
-                return [-400, None, None]
+                return -400, None, None
             # 403
             elif str(e).lower().find("http error 403") != -1:
-                return [-403, None, None]
+                return -403, None, None
             # 404
             elif str(e).lower().find("http error 404") != -1:
-                return [-404, None, None]
+                return -404, None, None
             else:
                 print_msg(str(e))
                 traceback.print_exc()
@@ -133,7 +133,7 @@ def http_request(url, post_data=None, cookie=None):
         count += 1
         if count > 500:
             print_msg("无法访问页面：" + url)
-            return [-1, None, None]
+            return -1, None, None
 
 
 # 随机生成一个合法的user agent

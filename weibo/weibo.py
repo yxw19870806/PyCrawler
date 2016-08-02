@@ -148,7 +148,7 @@ def find_real_video_url(video_page_url, account_name):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return [1, ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]]
+        return 1, ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
@@ -164,23 +164,23 @@ def find_real_video_url(video_page_url, account_name):
                             video_source_url = []
                             for ssig in ssig_list:
                                 video_source_url.append("http://us.sinaimg.cn/" + ssig)
-                            return [1, video_source_url]
+                            return 1, video_source_url
             time.sleep(5)
-        return [-1, []]
+        return -1, []
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
             video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">')
             if video_url:
-                return [1, [video_url]]
-            return [-1, []]
+                return 1, [video_url]
+            return -1, []
         else:
-            return [-2, []]
+            return -2, []
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return [1, ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]]
+        return 1, ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]
     # http://www.weishi.com/t/2000546051794045
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
@@ -198,12 +198,12 @@ def find_real_video_url(video_page_url, account_name):
                     else:
                         if robot.check_sub_key(("data", ), video_info_page):
                             if robot.check_sub_key(("url", ), video_info_page["data"]):
-                                return [1, [random.choice(video_info_page["data"]["url"])]]
-            return [-1, []]
+                                return 1, [random.choice(video_info_page["data"]["url"])]
+            return -1, []
         else:
-            return [-2, []]
+            return -2, []
     else:  # 其他视频，暂时不支持，收集看看有没有
-        return [-3, []]
+        return -3, []
 
 
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
@@ -214,12 +214,12 @@ def get_image_byte(image_url):
             # 处理获取的文件为weibo默认获取失败的图片
             md5_digest = md5(image_data)
             if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
-                return [-2, None] # 被系统自动删除的图片
+                return -2, None  # 被系统自动删除的图片
             # 不是暂时无法访问，否则重试
             if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
-                return [1, image_data]
+                return 1, image_data
         time.sleep(5)
-    return [-1, None]
+    return -1, None
 
 
 class Weibo(robot.Robot):

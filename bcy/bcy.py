@@ -52,7 +52,7 @@ def get_account_info_from_console():
             input_str = raw_input(tool.get_time() + " 是否使用这些信息（Y）或重新输入（N）: ")
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
-                return [email, password]
+                return email, password
             elif input_str in ["n", "no"]:
                 break
             else:
@@ -73,8 +73,8 @@ def get_account_info_from_file():
     except ValueError:
         account_info = {}
     if robot.check_sub_key(("email", "password"), account_info):
-        return [account_info["email"], account_info["password"]]
-    return [None, None]
+        return account_info["email"], account_info["password"]
+    return None, None
 
 
 # 模拟登录
