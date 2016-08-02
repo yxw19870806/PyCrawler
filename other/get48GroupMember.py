@@ -146,7 +146,6 @@ def hkt(file_handle):
 
 
 def jkt(file_handle):
-    members_list = []
     index_url = "http://www.jkt48.com/member/list"
     return_code, page = tool.http_request(index_url)[:2]
     if return_code == 1:
@@ -174,7 +173,7 @@ def jkt(file_handle):
                 file_handle.write(japanese_name + "\t" + english_name + "\t" + team_name + "\n")
 
 
-def main():
+def GetAllMemberList():
     file_handle = open('member.txt', 'w')
     akb(file_handle)
     ske(file_handle)
@@ -184,4 +183,4 @@ def main():
     file_handle.close()
 
 if __name__ == "__main__":
-    main()
+    GetAllMemberList()
