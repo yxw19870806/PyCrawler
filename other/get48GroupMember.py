@@ -1,16 +1,9 @@
 # -*- coding:UTF-8  -*-
-"""
-fkoji图片爬虫
-@author: hikaru
-email: hikaru870806@hotmail.com
-如有问题或建议请联系
-"""
 from common import tool
 import re
 
 
-def akb():
-    members_list = []
+def akb(file_handle):
     for team_id in [1, 2, 3, 4, 12, 15]:
         index_url = "http://www.akb48.co.jp/about/members/?team_id=" + str(team_id)
         return_code, page = tool.http_request(index_url)[:2]
@@ -36,20 +29,19 @@ def akb():
                     japanese_name = japanese_name.replace(" ", "")
                     first_name, last_name = english_name.split(" ", 1)
                     team = team_find[0].strip().replace("  /", " / ")
-                    members_list.append([japanese_name, last_name + " " + first_name, team])
+
+                    file_handle.write(japanese_name + "\t" + last_name + " " + first_name + "\t" + team + "\n")
             else:
                 print "error member_list_page"
-    return members_list
 
 
-def ske():
+def ske(file_handle):
     split_list = {
         "SKE48 Team S": ("<!-- LIST - TEAM S -->", "<!-- //LIST - TEAM S -->"),
         "SKE48 Team KII": ("<!-- LIST - TEAM KII -->", "<!-- //LIST - TEAM KII -->"),
         "SKE48 Team E": ("<!-- LIST - TEAM E -->", "<!-- //LIST - TEAM E -->"),
         "SKE48 Team Kenkyusei": ("<!-- LIST - KENKYUSEI -->", "<!-- //LIST - KENKYUSEI -->")
     }
-    members_list = []
     index_url = "http://www.ske48.co.jp/profile/list.php"
     return_code, page = tool.http_request(index_url)[:2]
     if return_code == 1:
@@ -74,11 +66,11 @@ def ske():
                     team = team_name + " / " + plus_text.split("/")[-1].strip().replace("チーム", " Team ").replace("兼任", "")
                 else:
                     team = team_name
-                members_list.append([japanese_name, last_name + " " + first_name, team])
-    return members_list
+
+                file_handle.write(japanese_name + "\t" + last_name + " " + first_name + "\t" + team + "\n")
 
 
-def nmb():
+def nmb(file_handle):
     team_list = {
         "teamn": "NMB48 Team N",
         "teamm": "NMB48 Team M",
@@ -86,7 +78,6 @@ def nmb():
         "dkenkyusei": "NMB48 Team Kenkyusei",
         "kenkyusei": "NMB48 Team Kenkyusei",
     }
-    members_list = []
     index_url = "http://www.nmb48.com/member/"
     return_code, page = tool.http_request(index_url)[:2]
     if return_code == 1:
@@ -118,14 +109,13 @@ def nmb():
                             team += " / " + temp[1].split("/")[-1].strip()
                     japanese_name = japanese_name_find[0].replace("　", " ").replace(" ", "")
                     first_name, last_name = english_name_find[0].strip().title().split(" ", 1)
-                    members_list.append([japanese_name, last_name + " " + first_name, team])
+
+                    file_handle.write(japanese_name + "\t" + last_name + " " + first_name + "\t" + team + "\n")
             else:
                 print "error team_find"
-    return members_list
 
 
-def hkt():
-    members_list = []
+def hkt(file_handle):
     index_url = "http://www.hkt48.jp/profile/"
     return_code, page = tool.http_request(index_url)[:2]
     if return_code == 1:
@@ -151,11 +141,11 @@ def hkt():
                         team_name = team + " / " + team_plus_find[0].split("/")[-1].strip().replace("兼任", "")
                 japanese_name = japanese_name.replace(" ", "")
                 first_name, last_name = english_name.strip().title().split(" ", 1)
-                members_list.append([japanese_name, last_name + " " + first_name, team_name])
-    return members_list
+
+                file_handle.write(japanese_name + "\t" + last_name + " " + first_name + "\t" + team_name + "\n")
 
 
-def jkt():
+def jkt(file_handle):
     members_list = []
     index_url = "http://www.jkt48.com/member/list"
     return_code, page = tool.http_request(index_url)[:2]
@@ -180,19 +170,18 @@ def jkt():
             for member in member_list:
                 member = member.replace("<br>", "").replace("\n", "").replace("\r", "").replace("\t", "")
                 japanese_name = english_name = tool.find_sub_string(member, 'alt="', '"')
-                members_list.append([japanese_name, english_name, team_name])
-    return members_list
+
+                file_handle.write(japanese_name + "\t" + english_name + "\t" + team_name + "\n")
 
 
+def main():
+    file_handle = open('member.txt', 'w')
+    akb(file_handle)
+    ske(file_handle)
+    nmb(file_handle)
+    hkt(file_handle)
+    jkt(file_handle)
+    file_handle.close()
 
-
-result = []
-result += akb()
-result += ske()
-result += nmb()
-result += hkt()
-result += jkt()
-file_handle = open('member.txt', 'w')
-for line in result:
-    line_string = "\t".join(line)
-    file_handle.write(line_string + "\n")
+if __name__ == "__main__":
+    main()
