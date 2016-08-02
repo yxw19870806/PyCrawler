@@ -172,8 +172,17 @@ def get_video_source_url(tweet_id):
             m3u8_file_url = m3u8_file_url.replace("\\/", "/")
             ts_file_list = []
             deal_m3u8_file(m3u8_file_url, ts_file_list)
-            return ts_file_list
-    return []
+            return "ts", ts_file_list
+        vmap_file_url = tool.find_sub_string(video_page, "&quot;vmap_url&quot;:&quot;", "&quot;")
+        if vmap_file_url:
+            vmap_file_url = vmap_file_url.replace("\\/", "/")
+            vmap_file_return_code, vmap_file = tool.http_request(vmap_file_url)[:2]
+            if vmap_file_return_code:
+                media_file_url = tool.find_sub_string(vmap_file, "<![CDATA[", "]]>")
+                if media_file_url:
+                    file_type = media_file_url.split(".")[-1].split("?")[0]
+                    return file_type, media_file_url
+    return "", []
 
 
 # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
@@ -408,7 +417,7 @@ class Download(threading.Thread):
                     if IS_DOWNLOAD_VIDEO:
                         # 这个tweet是否包含视频7
                         if tweet_data.find("PlayableMedia--video") >= 0:
-                            video_url_list = get_video_source_url(tweet_id)
+                            video_file_type, video_url_list = get_video_source_url(tweet_id)
                             if len(video_url_list) == 0:
                                 print_error_msg(account_name + " 第" + str(video_count) + "个视频没有获取到源地址，tweet id：" + tweet_id)
                                 continue
@@ -421,7 +430,7 @@ class Download(threading.Thread):
                                 need_make_video_dir = False
 
                             # 将域名拼加起来
-                            video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".ts")
+                            video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + video_file_type)
                             print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + str(video_url_list))
                             if save_video(video_url_list, video_file_path):
                                 print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
