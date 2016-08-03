@@ -69,13 +69,13 @@ def md5(file_byte):
 
 
 # 访问微博域名网页，自动判断是否需要跳转
-def visit_weibo(url):
+def auto_redirect_visit(url):
     page_return_code, page_response = tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
         redirect_url_find = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
         if len(redirect_url_find) == 1:
-            return visit_weibo(redirect_url_find[0])
+            return auto_redirect_visit(redirect_url_find[0])
         # 没有cookies无法访问的处理
         if page_response.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
@@ -96,10 +96,10 @@ def visit_weibo(url):
 
 
 # 获取一页的图片信息
-def get_weibo_photo_page_data(account_id, page_count):
+def get_photo_page_data(account_id, page_count):
     photo_page_url = "http://photo.weibo.com/photos/get_all"
     photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
-    photo_page_data = visit_weibo(photo_page_url)
+    photo_page_data = auto_redirect_visit(photo_page_url)
     try:
         page = json.loads(photo_page_data)
     except ValueError:
@@ -112,10 +112,10 @@ def get_weibo_photo_page_data(account_id, page_count):
 
 
 # 获取账号对应的page_id
-def get_weibo_account_page_id(account_id):
+def get_account_page_id(account_id):
     for i in range(0, 50):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
-        index_page = visit_weibo(index_url)
+        index_page = auto_redirect_visit(index_url)
         if index_page:
             page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'")
             if page_id:
@@ -125,11 +125,11 @@ def get_weibo_account_page_id(account_id):
 
 
 # 获取一页的视频信息
-def get_weibo_video_page_data(page_id, since_id):
+def get_video_page_data(page_id, since_id):
     video_album_url = "http://weibo.com/p/aj/album/loading"
     video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
     for i in range(0, 50):
-        video_page = visit_weibo(video_album_url)
+        video_page = auto_redirect_visit(video_album_url)
         if video_page:
             try:
                 video_page = json.loads(video_page)
@@ -153,11 +153,11 @@ def find_real_video_url(video_page_url, account_name):
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
         for i in range(0, 50):
-            source_video_page = visit_weibo(video_page_url)
+            source_video_page = auto_redirect_visit(video_page_url)
             if source_video_page:
                 ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
                 if ssig_file_url:
-                    ssig_file_page = visit_weibo(urllib2.unquote(ssig_file_url))
+                    ssig_file_page = auto_redirect_visit(urllib2.unquote(ssig_file_url))
                     if ssig_file_page:
                         ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
                         if len(ssig_list) >= 1:
@@ -298,7 +298,7 @@ class Weibo(robot.Robot):
         new_save_data_file.close()
 
         # 先访问下页面，产生cookies
-        visit_weibo("http://www.weibo.com/")
+        auto_redirect_visit("http://www.weibo.com/")
         time.sleep(2)
 
         # 启用线程监控是否需要暂停其他下载线程
@@ -387,13 +387,13 @@ class Download(threading.Thread):
             while IS_DOWNLOAD_VIDEO and (not is_over):
                 # 获取page_id
                 if page_id is None:
-                    page_id = get_weibo_account_page_id(account_id)
+                    page_id = get_account_page_id(account_id)
                     if page_id is None:
                         print_error_msg(account_name + " 微博主页没有获取到page_id")
                         break
 
                 # 获取指定时间点后的一页视频信息
-                video_page_data = get_weibo_video_page_data(page_id, since_id)
+                video_page_data = get_video_page_data(page_id, since_id)
                 if video_page_data is None:
                     print_error_msg(account_name + " 视频列表解析异常")
                     first_video_url = ""  # 存档恢复
@@ -461,7 +461,7 @@ class Download(threading.Thread):
             need_make_image_dir = True
             while IS_DOWNLOAD_IMAGE and (not is_over):
                 # 获取指定一页图片的信息
-                photo_page_data = get_weibo_photo_page_data(account_id, page_count)
+                photo_page_data = get_photo_page_data(account_id, page_count)
                 if photo_page_data is None:
                     print_error_msg(account_name + " 图片列表解析错误")
                     first_image_time = "0"  # 存档恢复
