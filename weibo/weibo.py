@@ -348,7 +348,7 @@ class Weibo(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张，视频" + str(TOTAL_VIDEO_COUNT) + "个")
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (duration_time, TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
@@ -401,7 +401,7 @@ class Download(threading.Thread):
 
                 # 匹配获取全部的视频页面
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
-                trace(account_name + "since_id：" + since_id + "中的全部视频：" + str(video_page_url_list))
+                trace(account_name + "since_id %s中的全部视频：%s" % (since_id, video_page_url_list))
                 for video_page_url in video_page_url_list:
                     # 将第一个视频的地址做为新的存档记录
                     if first_video_url == "":
@@ -414,17 +414,17 @@ class Download(threading.Thread):
                     return_code, video_source_url_list = find_real_video_url(video_page_url, account_name)
                     if return_code != 1:
                         if return_code == -1:
-                            print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "没有获取到源地址")
+                            print_error_msg(account_name + " 第%s个视频 %s 没有获取到源地址" % (video_count, video_page_url))
                         elif return_code == -2:
-                            print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "无法访问")
+                            print_error_msg(account_name + " 第%s个视频 %s 无法访问" % (video_count, video_page_url))
                         elif return_code == -3:
-                            print_error_msg(account_name + " 第" + str(video_count) + "个视频：" + video_page_url + "，暂不支持的视频源")
+                            print_error_msg(account_name + " 第%s个视频 %s 暂不支持的视频源" % (video_count, video_page_url))
                         continue
                     # 下载
                     for video_source_url in video_source_url_list:
-                        print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + video_page_url)
+                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_page_url))
 
-                        video_file_path = os.path.join(video_path, str("%04d" % video_count) + ".mp4")
+                        video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                         # 第一个视频，创建目录
                         if need_make_video_dir:
                             if not tool.make_dir(video_path, 0):
@@ -432,10 +432,10 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_video_dir = False
                         if tool.save_net_file(video_source_url, video_file_path):
-                            print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
+                            print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
-                            print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + video_page_url + " 下载失败")
+                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_page_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -467,10 +467,10 @@ class Download(threading.Thread):
                     first_image_time = "0"  # 存档恢复
                     break
 
-                trace(account_name + "第：" + str(page_count) + "页的全部图片信息：" + str(photo_page_data))
+                trace(account_name + "第%s页的全部图片信息：%s" % (page_count, photo_page_data))
                 for image_info in photo_page_data["photo_list"]:
                     if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
-                        print_error_msg(account_name + " 第" + str(image_count) + "张图片信息解析错误 " + image_info)
+                        print_error_msg(account_name + " 第%s张图片信息解析错误 %s" % (image_count, image_info))
                         continue
 
                     # 新增图片导致的重复判断
@@ -487,15 +487,15 @@ class Download(threading.Thread):
                         break
 
                     # 下载
-                    image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
-                    print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                    image_url = "%s/large/%s" % (image_info["pic_host"], image_info["pic_name"])
+                    print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
                     # 获取图片的二进制数据，并且判断这个图片是否是可用的
                     image_status, image_byte = get_image_byte(image_url)
                     if image_status != 1:
                         if image_status == -1:
-                            print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
                         elif image_status == -2:
-                            print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 资源已被删除")
+                            print_error_msg(account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_count, image_url))
                         continue
 
                     # 第一张图片，创建目录
@@ -508,9 +508,9 @@ class Download(threading.Thread):
                     file_type = image_url.split(".")[-1]
                     if file_type.find("/") != -1:
                         file_type = "jpg"
-                    image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                    image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                     save_image(image_byte, image_file_path)
-                    print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                    print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                     image_count += 1
 
                     # 达到配置文件中的下载数量，结束
@@ -526,7 +526,7 @@ class Download(threading.Thread):
                         # 全部图片下载完毕
                         is_over = True
 
-            print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
+            print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
             if IS_SORT:

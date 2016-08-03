@@ -169,7 +169,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
         # 倒叙排列
         for file_name in image_list:
             start_count += 1
-            file_type = os.path.splitext(file_name)[1]
+            file_type = os.path.splitext(file_name)[1]  # 包括 .扩展名
             new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
             tool.copy_files(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
         # 删除临时文件夹

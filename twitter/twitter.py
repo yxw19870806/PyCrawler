@@ -347,7 +347,7 @@ class Twitter(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张，视频" + str(TOTAL_VIDEO_COUNT) + "个")
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (duration_time, TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
@@ -392,7 +392,7 @@ class Download(threading.Thread):
 
                 tweet_list = get_tweet_list(media_page["items_html"])
                 if len(tweet_list) == 0:
-                    print_error_msg(account_name + " 媒体列表拆分异常，items_html：" + str(media_page["items_html"]))
+                    print_error_msg(account_name + " 媒体列表拆分异常，items_html：%s" % media_page["items_html"])
                     tool.process_exit()
 
                 if media_page["new_latent_count"] != len(tweet_list):
@@ -419,7 +419,7 @@ class Download(threading.Thread):
                         if tweet_data.find("PlayableMedia--video") >= 0:
                             video_file_type, video_url_list = get_video_source_url(tweet_id)
                             if len(video_url_list) == 0:
-                                print_error_msg(account_name + " 第" + str(video_count) + "个视频没有获取到源地址，tweet id：" + tweet_id)
+                                print_error_msg(account_name + " 第%s个视频没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
                                 continue
 
                             # 第一个视频，创建目录
@@ -430,13 +430,13 @@ class Download(threading.Thread):
                                 need_make_video_dir = False
 
                             # 将域名拼加起来
-                            video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + video_file_type)
-                            print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + str(video_url_list))
+                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
+                            print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
                             if save_video(video_url_list, video_file_path):
-                                print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
+                                print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                                 video_count += 1
                             else:
-                                print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + str(video_url_list) + " 下载失败")
+                                print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
 
                             # 达到配置文件中的下载数量，结束
                             if 0 < GET_VIDEO_COUNT < video_count:
@@ -448,15 +448,15 @@ class Download(threading.Thread):
                         image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
                         for image_url in image_url_list:
                             image_url = str(image_url)
-                            print_step_msg(account_name + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                            print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                             image_return_code, image_byte = tool.http_request(image_url)[:2]
                             # 404，不算做错误，图片已经被删掉了
                             if image_return_code == -404:
-                                print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + "已被删除，跳过")
+                                print_error_msg(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
                             elif image_return_code == 1:
                                 file_type = image_url.split(".")[-1].split(":")[0]
-                                image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
@@ -464,10 +464,10 @@ class Download(threading.Thread):
                                         tool.process_exit()
                                     need_make_image_dir = False
                                 save_image(image_byte, image_file_path)
-                                print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                                print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
                             else:
-                                print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 获取失败")
+                                print_error_msg(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
@@ -483,7 +483,7 @@ class Download(threading.Thread):
                     else:
                         is_over = True
 
-            print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片和" + str(video_count - 1) + "个视频")
+            print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
             if IS_SORT:

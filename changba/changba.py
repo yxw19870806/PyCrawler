@@ -190,7 +190,7 @@ class ChangBa(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计视频" + str(TOTAL_VIDEO_COUNT) + "个")
+        print_step_msg("全部下载完毕，耗时%s秒，共计歌曲%s首" % (duration_time, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
@@ -244,7 +244,7 @@ class Download(threading.Thread):
 
                     audio_url = get_audio_source_url(audio_info[2])
 
-                    print_step_msg(account_id + " 开始下载第 " + str(video_count) + "首歌曲：" + audio_url)
+                    print_step_msg(account_id + " 开始下载第%s首歌曲 %s"  % (video_count, audio_url))
                     file_path = os.path.join(video_path, "%s - %s.mp4" % (audio_id, audio_info[1]))
                     # 第一个视频，创建目录
                     if need_make_download_dir:
@@ -253,10 +253,10 @@ class Download(threading.Thread):
                             tool.process_exit()
                         need_make_download_dir = False
                     if tool.save_net_file(audio_url, file_path):
-                        print_step_msg(account_id + " 第" + str(video_count) + "首歌曲下载成功")
+                        print_step_msg(account_id + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
                     else:
-                        print_error_msg(account_id + " 第" + str(video_count) + "首歌曲 " + audio_url + " 下载失败")
+                        print_error_msg(account_id + " 第%s首歌曲 %s 下载失败" % (video_count, audio_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -271,7 +271,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_id + " 下载完毕，总共获得" + str(video_count - 1) + "个视频")
+            print_step_msg(account_id + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
 
             # 新的存档记录
             if first_audio_id != "0":

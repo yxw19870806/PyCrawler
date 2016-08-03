@@ -144,7 +144,7 @@ class Lofter(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
@@ -190,9 +190,9 @@ class Download(threading.Thread):
                     break
 
                 # 去重排序
-                trace(account_id + " 相册第" + str(page_count) + "页获取的所有信息页: " + str(post_page_url_list))
+                trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_page_url_list))
                 post_page_url_list = sorted(list(set(post_page_url_list)), reverse=True)
-                trace(account_id + " 相册第" + str(page_count) + "页去重排序后的信息页: " + str(post_page_url_list))
+                trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_page_url_list))
                 for post_url in post_page_url_list:
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
@@ -211,21 +211,21 @@ class Download(threading.Thread):
 
                     post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                     if post_page_return_code != 1:
-                        print_error_msg(account_id + " 第" + str(image_count) + "张图片，无法获取信息页：" + post_url)
+                        print_error_msg(account_id + " 第%s张图片，无法获取信息页 %s" % (image_count, post_url))
                         continue
 
                     post_page_image_list = re.findall('bigimgsrc="([^"]*)"', post_page_response)
-                    trace(account_id + " 信息页" + post_url + "获取的所有图片: " + str(post_page_image_list))
+                    trace(account_id + " 信息页 %s 获取的所有图片：%s" % (post_url, post_page_image_list))
                     if len(post_page_image_list) == 0:
-                        print_error_msg(account_id + " 第" + str(image_count) + "张图片，信息页：" + post_url + " 中没有找到图片")
+                        print_error_msg(account_id + " 第%s张图片，信息页 %s 中没有找到图片" % (image_count, post_url))
                         continue
                     for image_url in post_page_image_list:
                         if image_url.rfind("?") > image_url.rfind("."):
                             image_url = image_url.split("?", 2)[0]
-                        print_step_msg(account_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                        print_step_msg(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
-                        file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
@@ -233,10 +233,10 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_download_dir = False
                         if tool.save_net_file(image_url, file_path):
-                            print_step_msg(account_id + " 第" + str(image_count) + "张图片下载成功")
+                            print_step_msg(account_id + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            print_error_msg(account_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            print_error_msg(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
@@ -253,7 +253,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_id + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            print_step_msg(account_id + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 排序
             if IS_SORT and image_count > 1:

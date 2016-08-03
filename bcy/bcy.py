@@ -223,7 +223,7 @@ class Bcy(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
@@ -264,7 +264,7 @@ class Download(threading.Thread):
                 if "${post.title}" in page_title_list:
                     page_title_list.remove("${post.title}")
                 if len(page_rp_id_list) != len(page_title_list):
-                    print_error_msg(cn + " 第" + str(page_count) + "页获取的rp_id和title数量不符")
+                    print_error_msg(cn + " %s 获取的rp_id和title数量不符" % post_url)
                     tool.process_exit()
 
                 title_index = 0
@@ -341,14 +341,14 @@ class Download(threading.Thread):
                             file_type = image_url.split(".")[-1]
                         else:
                             file_type = "jpg"
-                        file_path = os.path.join(rp_path, str("%03d" % image_count) + "." + file_type)
+                        file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
 
-                        print_step_msg(cn + ":" + rp_id + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                        print_step_msg(cn + ":" + rp_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
                         if tool.save_net_file(image_url, file_path):
                             image_count += 1
-                            print_step_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片下载成功")
+                            print_step_msg(cn + " " + rp_id + " 第%s张图片下载成功" % image_count)
                         else:
-                            print_error_msg(cn + " " + rp_id + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            print_error_msg(cn + " " + rp_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                     this_cn_total_image_count += image_count - 1
 
@@ -372,7 +372,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(cn + " 下载完毕，总共获得" + str(this_cn_total_image_count) + "张图片")
+            print_step_msg(cn + " 下载完毕，总共获得%s张图片" % this_cn_total_image_count)
 
             # 新的存档记录
             if first_rp_id != "":

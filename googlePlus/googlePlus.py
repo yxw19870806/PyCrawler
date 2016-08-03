@@ -156,7 +156,7 @@ class GooglePlus(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张")
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
@@ -204,23 +204,23 @@ class Download(threading.Thread):
 
                 # 相册也中全部的信息页
                 page_message_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response)
-                trace(account_name + " 相册获取的所有信息页: " + str(page_message_url_list))
+                trace(account_name + " 相册获取的所有信息页：%s" % page_message_url_list)
                 for message_url in page_message_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     message_url = message_url.replace("\u003d", "=")
                     message_page_return_code, message_page_data = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
-                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，无法获取信息页：" + message_url)
+                        print_error_msg(account_name + " 第%s张图片，无法获取信息页 %s" % (image_count, message_url))
                         continue
 
                     # 查找信息页的album id
                     album_id = tool.find_sub_string(message_page_data, "var _album = {id:'", "'")
                     if not album_id:
-                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，信息页：" + message_url + "中没有找到album id")
+                        print_error_msg(account_name + " 第%s张图片，信息页 %s 中没有找到album id" % (image_count, message_url))
                         continue
 
-                    print_step_msg(account_name + " 信息页：" + message_url + "的album id：" + album_id)
+                    print_step_msg(account_name + " 信息页 %s 的album id：%s" % (message_url, album_id))
                     # 相同的album_id判断
                     if album_id in unique_list:
                         continue
@@ -237,14 +237,14 @@ class Download(threading.Thread):
                     # 截取图片信息部分
                     message_page_data = tool.find_sub_string(message_page_data, 'id="lhid_feedview">', '<div id="lhid_content">')
                     if not message_page_data:
-                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，信息页：" + message_url + "中没有找到相关图片信息")
+                        print_error_msg(account_name + " 第%s张图片，信息页 %s 中没有找到相关图片信息" % (image_count, message_url))
                         continue
 
                     # 匹配查找所有的图片
                     page_image_url_list = re.findall('<img src="(\S*)">', message_page_data)
-                    trace(account_name + " 信息页" + message_url + " 获取的所有图片: " + str(page_image_url_list))
+                    trace(account_name + " 信息页 %s 获取的所有图片：%s" % (message_url, page_image_url_list))
                     if len(page_image_url_list) == 0:
-                        print_error_msg(account_name + " 第" + str(image_count) + "张图片，信息页：" + message_url + " 中没有找到标签'<img src='")
+                        print_error_msg(account_name + " 第%s张图片，信息页 %s 中没有找到标签'<img src='" % (image_count, message_url))
                         continue
 
                     for image_url in page_image_url_list:
@@ -254,10 +254,10 @@ class Download(threading.Thread):
                             file_type = image_url.split(".")[-1]
                         else:
                             file_type = "jpg"
-                        file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
 
                         # 下载
-                        print_step_msg(account_name + " 开始下载第" + str(image_count) + "张图片：" + image_url)
+                        print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
@@ -265,10 +265,10 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_download_dir = False
                         if tool.save_net_file(image_url, file_path):
-                            print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                            print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
@@ -289,7 +289,7 @@ class Download(threading.Thread):
                             print_error_msg(index_page_response)
                         is_over = True
 
-            print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片")
+            print_step_msg(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 排序
             if IS_SORT and image_count > 1:

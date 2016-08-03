@@ -70,16 +70,16 @@ class Shinoda(robot.Robot):
                     image_url = host + image_name
                     # 文件类型
                     file_type = image_url.split(".")[-1].split(":")[0]
-                    file_path = os.path.join(image_path, str("%05d" % image_count) + "." + file_type)
-                    log.step("开始下载第 " + str(image_count) + "张图片：" + image_url)
+                    file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
+                    log.step("开始下载第%s张图片 %s" % (image_count, image_url))
                     if tool.save_net_file(image_url, file_path):
-                        log.step("第" + str(image_count) + "张图片下载成功")
+                        log.step("第%s张图片下载成功" % image_count)
                         image_count += 1
                     else:
-                        log.step("第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                        log.step("第%s张图片 %s 下载失败" % (image_count, image_url))
                 page_index += 1
             else:
-                log.error("无法访问博客页面" + index_url)
+                log.error("无法访问博客页面 %s" % index_url)
                 is_over = True
 
         log.step("下载完毕")
@@ -100,7 +100,7 @@ class Shinoda(robot.Robot):
         new_save_file.close()
             
         duration_time = int(time.time() - start_time)
-        log.step("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, image_count - 1))
 
 if __name__ == "__main__":
     Shinoda().main()

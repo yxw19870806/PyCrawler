@@ -65,7 +65,7 @@ class Fkoji(robot.Robot):
         unique_list = []
         is_over = False
         while not is_over:
-            index_url = "http://jigadori.fkoji.com/?p=%s" % str(page_index)
+            index_url = "http://jigadori.fkoji.com/?p=%s" % page_index
             index_page_return_code, index_page_response = tool.http_request(index_url)[:2]
             if index_page_return_code != 1:
                 log.error("无法访问首页地址" + index_url)
@@ -110,13 +110,13 @@ class Fkoji(robot.Robot):
                         file_type = image_url.split(".")[-1]
                         if file_type.find("/") != -1:
                             file_type = "jpg"
-                        file_path = os.path.join(image_path, str("%05d" % image_count) + "_" + account_id + "." + file_type)
-                        log.step("开始下载第" + str(image_count) + "张图片：" + image_url)
+                        file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, account_id, file_type))
+                        log.step("开始下载第%s张图片 %s"  % (image_count, image_url))
                         if tool.save_net_file(image_url, file_path):
-                            log.step("第" + str(image_count) + "张图片下载成功")
+                            log.step("第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error("第" + str(image_count) + "张图片 " + image_url + ", id: " + account_id + " 下载失败")
+                            log.error("第%s张图片 %s，account_id：%s，下载失败" % (image_count, image_url, account_id))
                 if is_over:
                     break
 
@@ -150,7 +150,7 @@ class Fkoji(robot.Robot):
 
                 # 所有
                 image_start_index += 1
-                destination_file_name = str("%05d" % image_start_index) + "_" + account_id + "." + file_type
+                destination_file_name = "%05d_%s.%s" % (image_start_index, account_id, file_type)
                 destination_path = os.path.join(self.image_download_path, "all", destination_file_name)
                 tool.copy_files(image_path, destination_path)
 
@@ -164,7 +164,7 @@ class Fkoji(robot.Robot):
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1
                 else:
                     account_list[account_id] = [account_id, 1]
-                destination_file_name = str("%05d" % account_list[account_id][1]) + "." + file_type
+                destination_file_name = "%05d.%s" % (account_list[account_id][1], file_type)
                 destination_path = os.path.join(each_account_path, destination_file_name)
                 tool.copy_files(image_path, destination_path)
 
@@ -180,7 +180,7 @@ class Fkoji(robot.Robot):
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
 
         duration_time = int(time.time() - start_time)
-        log.step("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(image_count - 1) + "张")
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, image_count - 1))
 
 
 if __name__ == "__main__":

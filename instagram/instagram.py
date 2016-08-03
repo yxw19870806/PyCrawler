@@ -286,7 +286,7 @@ class Instagram(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时" + str(duration_time) + "秒，共计图片" + str(TOTAL_IMAGE_COUNT) + "张，视频" + str(TOTAL_VIDEO_COUNT) + "个")
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (duration_time, TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
@@ -350,10 +350,10 @@ class Download(threading.Thread):
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
                         image_url = str(photo_info["display_src"].split("?")[0])
-                        print_step_msg(account_name + " 开始下载第 " + str(image_count) + "张图片：" + image_url)
+                        print_step_msg(account_name + " 开始下载第%s张图片 %s" %(image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
-                        image_file_path = os.path.join(image_path, str("%04d" % image_count) + "." + file_type)
+                        image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         # 第一张图片，创建目录
                         if need_make_image_dir:
                             if not tool.make_dir(image_path, 0):
@@ -361,10 +361,10 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_image_dir = False
                         if tool.save_net_file(image_url, image_file_path):
-                            print_step_msg(account_name + " 第" + str(image_count) + "张图片下载成功")
+                            print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            print_error_msg(account_name + " 第" + str(image_count) + "张图片 " + image_url + " 下载失败")
+                            print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO and photo_info["is_video"]:
@@ -373,10 +373,10 @@ class Download(threading.Thread):
                         if post_page_return_code == 1:
                             video_url = tool.find_sub_string(post_page_response, '<meta property="og:video:secure_url" content="', '" />')
                             if video_url:
-                                print_step_msg(account_name + " 开始下载第" + str(video_count) + "个视频：" + video_url)
+                                print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                                 file_type = video_url.split(".")[-1]
-                                video_file_path = os.path.join(video_path, str("%04d" % video_count) + "." + file_type)
+                                video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
                                 # 第一个视频，创建目录
                                 if need_make_video_dir:
                                     if not tool.make_dir(video_path, 0):
@@ -384,14 +384,14 @@ class Download(threading.Thread):
                                         tool.process_exit()
                                     need_make_video_dir = False
                                 if tool.save_net_file(video_url, video_file_path):
-                                    print_step_msg(account_name + " 第" + str(video_count) + "个视频下载成功")
+                                    print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                                     video_count += 1
                                 else:
-                                    print_error_msg(account_name + " 第" + str(video_count) + "个视频 " + video_url + " 下载失败")
+                                    print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                             else:
-                                print_error_msg(account_name + " 视频：" + post_page_url + "没有获取到源地址")
+                                print_error_msg(account_name + " 视频页 %s 没有获取到源地址" % post_page_url)
                         else:
-                            print_error_msg(account_name + " 信息页：" + post_page_url + " 访问失败")
+                            print_error_msg(account_name + " 信息页 %s 访问失败" % post_page_url)
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
@@ -404,7 +404,7 @@ class Download(threading.Thread):
                     else:
                         is_over = True
 
-            print_step_msg(account_name + " 下载完毕，总共获得" + str(image_count - 1) + "张图片" + "和" + str(video_count - 1) + "个视频")
+            print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
             if IS_SORT:
