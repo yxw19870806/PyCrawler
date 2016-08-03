@@ -27,16 +27,16 @@ class Fkoji(robot.Robot):
             tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
 
         # 图片保存目录
-        log.step("创建图片根目录：" + self.image_download_path)
+        log.step("创建图片根目录 %s" % self.image_download_path)
         if not tool.make_dir(self.image_download_path, 0):
-            log.error("创建图片根目录：" + self.image_download_path + " 失败")
+            log.error("创建图片根目录 %s 失败" % self.image_download_path)
             tool.process_exit()
 
         # 图片下载临时目录
         if self.is_sort:
-            log.step("创建图片下载目录：" + self.image_temp_path)
+            log.step("创建图片下载目录 %s" % self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
-                log.error("创建图片下载目录：" + self.image_temp_path + " 失败")
+                log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
                 tool.process_exit()
 
         # 寻找fkoji.save
@@ -68,7 +68,7 @@ class Fkoji(robot.Robot):
             index_url = "http://jigadori.fkoji.com/?p=%s" % page_index
             index_page_return_code, index_page_response = tool.http_request(index_url)[:2]
             if index_page_return_code != 1:
-                log.error("无法访问首页地址" + index_url)
+                log.error("无法访问首页地址 %s" % index_url)
                 tool.process_exit()
 
             index_page = BeautifulSoup.BeautifulSoup(index_page_response)
@@ -137,8 +137,9 @@ class Fkoji(robot.Robot):
                 elif input_str in ["n", "no"]:
                     tool.process_exit()
 
-            if not tool.make_dir(os.path.join(self.image_download_path, "all"), 0):
-                log.error("创建目录：" + os.path.join(self.image_download_path, "all") + " 失败")
+            all_path = os.path.join(self.image_download_path, "all")
+            if not tool.make_dir(all_path, 0):
+                log.error("创建目录 %s 失败" % all_path)
                 tool.process_exit()
 
             file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
@@ -151,14 +152,14 @@ class Fkoji(robot.Robot):
                 # 所有
                 image_start_index += 1
                 destination_file_name = "%05d_%s.%s" % (image_start_index, account_id, file_type)
-                destination_path = os.path.join(self.image_download_path, "all", destination_file_name)
+                destination_path = os.path.join(all_path, destination_file_name)
                 tool.copy_files(image_path, destination_path)
 
                 # 单个
                 each_account_path = os.path.join(self.image_download_path, "single", account_id)
                 if not os.path.exists(each_account_path):
                     if not tool.make_dir(each_account_path, 0):
-                        log.error("创建目录：" + each_account_path + " 失败")
+                        log.error("创建目录 %s 失败" % each_account_path)
                         tool.process_exit()
                 if account_list.has_key(account_id):
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1

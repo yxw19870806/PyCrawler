@@ -22,9 +22,9 @@ class Shinoda(robot.Robot):
 
         # 图片下载临时目录
         if self.is_sort:
-            log.step("创建图片下载目录：" + self.image_temp_path)
+            log.step("创建图片下载目录 %s" % self.image_temp_path)
             if not tool.make_dir(self.image_temp_path, 0):
-                log.error("创建图片下载目录：" + self.image_temp_path + " 失败")
+                log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
                 tool.process_exit()
 
         # 设置代理
@@ -48,15 +48,13 @@ class Shinoda(robot.Robot):
         image_count = 1
         is_over = False
         new_last_blog_id = ""
-        host = "http://blog.mariko-shinoda.net/"
         if self.is_sort:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
         while not is_over:
-            index_url = host + "page%s.html" % (page_index - 1)
+            index_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_index - 1)
             index_page_return_code, index_page = tool.http_request(index_url)[:2]
-            log.step("博客页面地址：" + index_url)
 
             if index_page_return_code == 1:
                 image_name_list = re.findall('data-original="./([^"]*)"', index_page)
@@ -67,7 +65,7 @@ class Shinoda(robot.Robot):
                         break
                     if new_last_blog_id == "":
                         new_last_blog_id = blog_id
-                    image_url = host + image_name
+                    image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                     # 文件类型
                     file_type = image_url.split(".")[-1].split(":")[0]
                     file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
@@ -89,12 +87,12 @@ class Shinoda(robot.Robot):
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
                 log.step(" 图片从下载目录移动到保存目录成功")
             else:
-                log.error(" 创建图片保存目录：" + self.image_download_path + " 失败")
+                log.error(" 创建图片保存目录 %s 失败" % self.image_download_path)
                 tool.process_exit()
 
         # 保存新的存档文件
         new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
-        log.step("保存新存档文件: " + new_save_file_path)
+        log.step("保存新存档文件 %s" % new_save_file_path)
         new_save_file = open(new_save_file_path, "w")
         new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
         new_save_file.close()

@@ -146,9 +146,9 @@ class Bcy(robot.Robot):
             tool.process_exit()
 
         # 图片保存目录
-        print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+        print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
+            print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
             tool.process_exit()
 
         # 设置代理
@@ -181,7 +181,7 @@ class Bcy(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在")
+            print_error_msg("用户ID存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -256,7 +256,7 @@ class Download(threading.Thread):
                 post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
                 post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                 if post_page_return_code != 1:
-                    print_error_msg(cn + " 无法获取数据: " + post_url)
+                    print_error_msg(cn + " 无法获取信息页 %s" % post_url)
                     tool.process_exit()
 
                 page_rp_id_list = re.findall('/coser/detail/(\d+)/(\d+)"', post_page_response)
@@ -264,7 +264,7 @@ class Download(threading.Thread):
                 if "${post.title}" in page_title_list:
                     page_title_list.remove("${post.title}")
                 if len(page_rp_id_list) != len(page_title_list):
-                    print_error_msg(cn + " %s 获取的rp_id和title数量不符" % post_url)
+                    print_error_msg(cn + " 信息页 %s 获取的rp_id和title数量不符" % post_url)
                     tool.process_exit()
 
                 title_index = 0
@@ -289,7 +289,7 @@ class Download(threading.Thread):
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
-                            print_error_msg(cn + " 创建CN目录： " + image_path + " 失败")
+                            print_error_msg(cn + " 创建CN目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_download_dir = False
 
@@ -301,21 +301,21 @@ class Download(threading.Thread):
                     # 去除前后空格
                     title = title.strip()
                     if title:
-                        rp_path = os.path.join(image_path, rp_id + " " + title)
+                        rp_path = os.path.join(image_path, "%s %s" % (rp_id, title))
                     else:
                         rp_path = os.path.join(image_path, rp_id)
                     if not tool.make_dir(rp_path, 0):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
-                        print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败，尝试不使用title！")
+                        print_error_msg(cn + " 创建作品目录 %s 失败，尝试不使用title" % rp_path)
                         rp_path = os.path.join(image_path, rp_id)
                         if not tool.make_dir(rp_path, 0):
-                            print_error_msg(cn + " 创建作品目录： " + rp_path + " 失败")
+                            print_error_msg(cn + " 创建作品目录 %s 失败" % rp_path)
                             tool.process_exit()
 
                     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
                     rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
                     if rp_page_return_code != 1:
-                        print_error_msg(cn + " 无法获取作品页面： " + rp_url)
+                        print_error_msg(cn + " 无法获取作品页面 %s" % rp_url)
                         continue
 
                     image_url_list = re.findall("src='([^']*)'", rp_page_response)
@@ -329,7 +329,7 @@ class Download(threading.Thread):
                                 image_url_list = re.findall("src='([^']*)'", rp_page_response)
 
                     if len(image_url_list) == 0:
-                        print_error_msg(cn + " " + rp_id + " 没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品")
+                        print_error_msg(cn + " 作品页面 %s 没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % rp_url)
                         continue
 
                     image_count = 1
@@ -343,12 +343,12 @@ class Download(threading.Thread):
                             file_type = "jpg"
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
 
-                        print_step_msg(cn + ":" + rp_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                        print_step_msg(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
                         if tool.save_net_file(image_url, file_path):
                             image_count += 1
-                            print_step_msg(cn + " " + rp_id + " 第%s张图片下载成功" % image_count)
+                            print_step_msg(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
                         else:
-                            print_error_msg(cn + " " + rp_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            print_error_msg(cn + " %s 第%s张图片 %s 下载失败" % (rp_url, image_count, image_url))
 
                     this_cn_total_image_count += image_count - 1
 

@@ -52,7 +52,7 @@ def trace(msg):
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
     # index_url = "https://www.instagram.com/" + account_name
-    search_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=" + account_name
+    search_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
     for i in range(0, 10):
         search_return_code, search_data = tool.http_request(search_url)[:2]
         if search_return_code == 1:
@@ -209,16 +209,16 @@ class Instagram(robot.Robot):
 
         # 图片保存目录
         if IS_DOWNLOAD_IMAGE:
-            print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+            print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
+                print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
                 tool.process_exit()
 
         # 视频保存目录
         if IS_DOWNLOAD_VIDEO:
-            print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+            print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
+                print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
                 tool.process_exit()
 
         # 设置代理
@@ -232,7 +232,7 @@ class Instagram(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在")
+            print_error_msg("用户ID存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -357,7 +357,7 @@ class Download(threading.Thread):
                         # 第一张图片，创建目录
                         if need_make_image_dir:
                             if not tool.make_dir(image_path, 0):
-                                print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
+                                print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_image_dir = False
                         if tool.save_net_file(image_url, image_file_path):
@@ -380,7 +380,7 @@ class Download(threading.Thread):
                                 # 第一个视频，创建目录
                                 if need_make_video_dir:
                                     if not tool.make_dir(video_path, 0):
-                                        print_error_msg(account_name + " 创建视频下载目录： " + video_path + " 失败")
+                                        print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
                                         tool.process_exit()
                                     need_make_video_dir = False
                                 if tool.save_net_file(video_url, video_file_path):
@@ -413,14 +413,14 @@ class Download(threading.Thread):
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建图片保存目录： " + destination_path + " 失败")
+                        print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
                         print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败")
+                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
             # 新的存档记录

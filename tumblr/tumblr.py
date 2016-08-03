@@ -137,16 +137,16 @@ class Tumblr(robot.Robot):
 
         # 创建图片保存目录
         if IS_DOWNLOAD_IMAGE:
-            print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+            print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
+                print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
                 tool.process_exit()
 
         # 创建视频保存目录
         if IS_DOWNLOAD_VIDEO:
-            print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+            print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
+                print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
                 tool.process_exit()
 
         # 设置代理
@@ -160,7 +160,7 @@ class Tumblr(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件: " + self.save_data_path + "不存在")
+            print_error_msg("存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -253,7 +253,7 @@ class Download(threading.Thread):
                 index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(account_id + " 无法获取相册信息: " + index_page_url)
+                    print_error_msg(account_id + " 无法获取相册页 %s" % index_page_url)
                     tool.process_exit()
 
                 # 相册也中全部的信息页
@@ -278,19 +278,19 @@ class Download(threading.Thread):
                     # 获取指定一页的媒体信息
                     post_page_data = get_tumblr_post_page_data(post_url, post_url_list[post_id])
                     if post_page_data is None:
-                        print_error_msg(account_id + " 无法获取信息页：" + post_url)
+                        print_error_msg(account_id + " 无法获取信息页 %s" % post_url)
                         continue
 
                     # 截取html中的head标签内的内容
                     post_page_head = tool.find_sub_string(post_page_data, "<head", "</head>", 3)
                     if not post_page_head:
-                        print_error_msg(account_id + " 信息页：" + post_url + " 截取head标签异常")
+                        print_error_msg(account_id + " 信息页 %s 截取head标签异常" % post_url)
                         continue
 
                     # 获取og_type（页面类型的是视频还是图片或其他）
                     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
                     if not og_type:
-                        print_error_msg(account_id + " 信息页：" + post_url + " ，'og:type'获取异常")
+                        print_error_msg(account_id + " 信息页 %s，'og:type'获取异常" % post_url)
                         continue
 
                     # 新增信息页导致的重复判断
@@ -318,7 +318,7 @@ class Download(threading.Thread):
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
                                         if not tool.make_dir(video_path, 0):
-                                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败")
+                                            print_error_msg(account_id + " 创建视频下载目录 %s 失败" % video_path)
                                             tool.process_exit()
                                         need_make_video_dir = False
                                     if tool.save_net_file(video_url, video_file_path):
@@ -347,7 +347,7 @@ class Download(threading.Thread):
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
-                                        print_error_msg(account_id + " 创建图片下载目录： " + image_path + " 失败")
+                                        print_error_msg(account_id + " 创建图片下载目录 %s 失败" % image_path)
                                         tool.process_exit()
                                     need_make_image_dir = False
                                 if tool.save_net_file(image_url, image_file_path):
@@ -374,14 +374,14 @@ class Download(threading.Thread):
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_id + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_id + " 创建图片保存目录： " + destination_path + " 失败")
+                        print_error_msg(account_id + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
                         print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
+                        print_error_msg(account_id + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
             # 新的存档记录

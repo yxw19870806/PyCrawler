@@ -43,7 +43,7 @@ def print_step_msg(msg):
 
 # 根据account_id获取user_id
 def get_user_id(account_id):
-    index_url = "http://changba.com/u/" + account_id
+    index_url = "http://changba.com/u/%s" % account_id
     index_return_code, index_page = tool.http_request(index_url)[:2]
     if index_return_code == 1:
         user_id = tool.find_sub_string(index_page, "var userid = '", "'")
@@ -71,7 +71,7 @@ def get_changba_audio_list(user_id, page_count):
 
 # 获取歌曲的真实下载地址
 def get_audio_source_url(audio_en_word_id):
-    audio_index_url = "http://changba.com/s/" + audio_en_word_id
+    audio_index_url = "http://changba.com/s/%s" % audio_en_word_id
     audio_index_return_code, audio_index_page = tool.http_request(audio_index_url)[:2]
     if audio_index_return_code == 1:
         audio_source_url = tool.find_sub_string(audio_index_page, 'var a="', '"')
@@ -116,9 +116,9 @@ class ChangBa(robot.Robot):
             tool.process_exit()
 
         # 创建视频保存目录
-        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+        print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
         if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
+            print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
             tool.process_exit()
 
         # 设置代理
@@ -137,7 +137,7 @@ class ChangBa(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件：" + self.save_data_path + "不存在")
+            print_error_msg("存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -249,7 +249,7 @@ class Download(threading.Thread):
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败")
+                            print_error_msg(account_id + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
                     if tool.save_net_file(audio_url, file_path):

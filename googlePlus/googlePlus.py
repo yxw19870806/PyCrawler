@@ -87,9 +87,9 @@ class GooglePlus(robot.Robot):
             tool.process_exit()
 
         # 图片保存目录
-        print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+        print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-            print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
+            print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
             tool.process_exit()
 
         # 设置代理
@@ -103,7 +103,7 @@ class GooglePlus(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件: " + self.save_data_path + "不存在")
+            print_error_msg("存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -199,7 +199,7 @@ class Download(threading.Thread):
                 index_page_return_code, index_page_response = tool.http_request(photo_album_url, post_data)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(account_name + " 无法获取相册首页: " + photo_album_url + ", key = " + key)
+                    print_error_msg(account_name + " 无法获取相册首页 %s，key：%s" % (photo_album_url, key))
                     tool.process_exit()
 
                 # 相册也中全部的信息页
@@ -261,7 +261,7 @@ class Download(threading.Thread):
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
-                                print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
+                                print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_download_dir = False
                         if tool.save_net_file(image_url, file_path):
@@ -297,7 +297,7 @@ class Download(threading.Thread):
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_name + " 创建图片子目录： " + destination_path + " 失败")
+                    print_error_msg(account_name + " 创建图片子目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录

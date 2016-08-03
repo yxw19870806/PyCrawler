@@ -87,9 +87,9 @@ class MeiPai(robot.Robot):
             tool.process_exit()
 
         # 创建视频保存目录
-        print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+        print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
         if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-            print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
+            print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
             tool.process_exit()
 
         # 设置代理
@@ -108,7 +108,7 @@ class MeiPai(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("存档文件：" + self.save_data_path + "不存在")
+            print_error_msg("存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -221,7 +221,7 @@ class Download(threading.Thread):
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_id + " 创建视频下载目录： " + video_path + " 失败")
+                            print_error_msg(account_id + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
                     if tool.save_net_file(video_url, file_path):
@@ -250,7 +250,7 @@ class Download(threading.Thread):
                 if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
                     print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_id + " 创建视频保存目录： " + destination_path + " 失败")
+                    print_error_msg(account_id + " 创建视频保存目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录

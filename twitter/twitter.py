@@ -63,7 +63,7 @@ def get_authenticity_token():
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
-    account_index_url = "https://twitter.com/" + account_name
+    account_index_url = "https://twitter.com/%s" % account_name
     account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
     if account_index_return_code == 1:
         account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
@@ -164,7 +164,7 @@ def get_tweet_list(media_page_items_html):
 # 获取视频的真实下载地址（ts文件列表）
 def get_video_source_url(tweet_id):
     # video_page_url = "https://twitter.com/i/videos/tweet/%s?embed_source=clientlib&player_id=1&rpc_init=1&conviva_environment=test" % tweet_id
-    video_page_url = "https://twitter.com/i/videos/tweet/" + tweet_id
+    video_page_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
     if video_page_return_code == 1:
         m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
@@ -192,7 +192,7 @@ def deal_m3u8_file(file_url, ts_file_list):
     if file_return_code == 1:
         new_file_url_list = re.findall("(/ext_tw_video/[\S]*)", file_data)
         for new_file_url in new_file_url_list:
-            new_file_url = "https://video.twimg.com" + new_file_url
+            new_file_url = "https://video.twimg.com%s" % new_file_url
             if new_file_url.split(".")[-1] == "m3u8":
                 deal_m3u8_file(new_file_url, ts_file_list)
             elif new_file_url.split(".")[-1] == "ts":
@@ -270,16 +270,16 @@ class Twitter(robot.Robot):
 
         # 创建图片保存目录
         if IS_DOWNLOAD_IMAGE:
-            print_step_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH)
+            print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
             if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-                print_error_msg("创建图片根目录：" + IMAGE_DOWNLOAD_PATH + " 失败")
+                print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
                 tool.process_exit()
 
         # 创建视频保存目录
         if IS_DOWNLOAD_VIDEO:
-            print_step_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH)
+            print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录：" + VIDEO_DOWNLOAD_PATH + " 失败")
+                print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
                 tool.process_exit()
 
         # 设置代理
@@ -293,7 +293,7 @@ class Twitter(robot.Robot):
             account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
-            print_error_msg("用户ID存档文件: " + self.save_data_path + "不存在")
+            print_error_msg("用户ID存档文件 %s 不存在" % self.save_data_path)
             tool.process_exit()
 
         # 创建临时存档文件
@@ -402,7 +402,7 @@ class Download(threading.Thread):
                 for tweet_data in tweet_list:
                     tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
                     if not tweet_id:
-                        print_error_msg(account_name + " tweet id解析异常，tweet数据：" + tweet_data)
+                        print_error_msg(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
                         continue
 
                     # 将第一个tweet的id做为新的存档记录
@@ -425,7 +425,7 @@ class Download(threading.Thread):
                             # 第一个视频，创建目录
                             if need_make_video_dir:
                                 if not tool.make_dir(video_path, 0):
-                                    print_error_msg(account_name + " 创建图片下载目录： " + video_path + " 失败")
+                                    print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
                                     tool.process_exit()
                                 need_make_video_dir = False
 
@@ -460,7 +460,7 @@ class Download(threading.Thread):
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
-                                        print_error_msg(account_name + " 创建图片下载目录： " + image_path + " 失败")
+                                        print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                         tool.process_exit()
                                     need_make_image_dir = False
                                 save_image(image_byte, image_file_path)
@@ -492,14 +492,14 @@ class Download(threading.Thread):
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建图片子目录： " + destination_path + " 失败")
+                        print_error_msg(account_name + " 创建图片子目录 %s 失败" % destination_path)
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
                         print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建视频保存目录： " + destination_path + " 失败")
+                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
             # 新的存档记录
