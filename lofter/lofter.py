@@ -180,7 +180,7 @@ class Download(threading.Thread):
                 index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(account_id + " 无法获取相册信息页 %s" % index_page_url)
+                    print_error_msg(account_id + " 无法访问相册信息页 %s" % index_page_url)
                     tool.process_exit()
 
                 # 相册页中全部的信息页

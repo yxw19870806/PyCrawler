@@ -389,9 +389,9 @@ class Download(threading.Thread):
                                 else:
                                     print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                             else:
-                                print_error_msg(account_name + " 视频页 %s 没有获取到源地址" % post_page_url)
+                                print_error_msg(account_name + " 第%s个视频 视频页 %s 没有获取到源地址" % (video_count, post_page_url))
                         else:
-                            print_error_msg(account_name + " 信息页 %s 访问失败" % post_page_url)
+                            print_error_msg(account_name + " 第%s个视频 无法访问信息页 %s" % (video_count, post_page_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:

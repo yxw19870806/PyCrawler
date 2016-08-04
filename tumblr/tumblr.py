@@ -253,7 +253,7 @@ class Download(threading.Thread):
                 index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(account_id + " 无法获取相册页 %s" % index_page_url)
+                    print_error_msg(account_id + " 无法访问相册页 %s" % index_page_url)
                     tool.process_exit()
 
                 # 相册也中全部的信息页
@@ -278,7 +278,7 @@ class Download(threading.Thread):
                     # 获取指定一页的媒体信息
                     post_page_data = get_post_page_data(post_url, post_url_list[post_id])
                     if post_page_data is None:
-                        print_error_msg(account_id + " 无法获取信息页 %s" % post_url)
+                        print_error_msg(account_id + " 无法访问信息页 %s" % post_url)
                         continue
 
                     # 截取html中的head标签内的内容
@@ -327,9 +327,9 @@ class Download(threading.Thread):
                                     else:
                                         print_error_msg(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                             else:
-                                print_error_msg(account_id + " 视频页 %s 中没有找到视频" % video_page_url)
+                                print_error_msg(account_id + " 第%s个视频 视频页 %s 中没有找到视频" % (video_count, video_page_url))
                         else:
-                            print_error_msg(account_id + " 无法获取视频页 %s" % video_page_url)
+                            print_error_msg(account_id + " 第%s个视频 无法访问视频页 %s" % (video_count, video_page_url))
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE:
@@ -356,7 +356,7 @@ class Download(threading.Thread):
                                 else:
                                     print_error_msg(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
                         else:
-                            print_error_msg(account_id + " 信息页 %s 中没有找到图片" % post_url)
+                            print_error_msg(account_id + " 第%s张图片 信息页 %s 中没有找到图片" % (image_count, post_url))
 
                 if not is_over:
                     # 达到配置文件中的下载数量，结束

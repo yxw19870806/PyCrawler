@@ -409,7 +409,7 @@ class Download(threading.Thread):
                         if tweet_data.find("PlayableMedia--video") >= 0:
                             video_file_type, video_url_list = get_video_source_url(tweet_id)
                             if len(video_url_list) == 0:
-                                print_error_msg(account_name + " 第%s个视频没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
+                                print_error_msg(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
                                 continue
 
                             # 第一个视频，创建目录

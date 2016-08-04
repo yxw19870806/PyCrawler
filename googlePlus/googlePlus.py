@@ -199,7 +199,7 @@ class Download(threading.Thread):
                 index_page_return_code, index_page_response = tool.http_request(photo_album_url, post_data)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
-                    print_error_msg(account_name + " 无法获取相册首页 %s，key：%s" % (photo_album_url, key))
+                    print_error_msg(account_name + " 无法访问相册首页 %s，key：%s" % (photo_album_url, key))
                     tool.process_exit()
 
                 # 相册也中全部的信息页
@@ -211,7 +211,7 @@ class Download(threading.Thread):
                     message_url = message_url.replace("\u003d", "=")
                     message_page_return_code, message_page_data = tool.http_request(message_url)[:2]
                     if message_page_return_code != 1:
-                        print_error_msg(account_name + " 第%s张图片，无法获取信息页 %s" % (image_count, message_url))
+                        print_error_msg(account_name + " 第%s张图片，无法访问信息页 %s" % (image_count, message_url))
                         continue
 
                     # 查找信息页的album id
