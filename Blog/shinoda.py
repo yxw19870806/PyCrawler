@@ -100,5 +100,6 @@ class Shinoda(robot.Robot):
         duration_time = int(time.time() - start_time)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, image_count - 1))
 
+
 if __name__ == "__main__":
     Shinoda().main()

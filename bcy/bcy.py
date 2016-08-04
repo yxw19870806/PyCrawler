@@ -317,13 +317,11 @@ class Download(threading.Thread):
                     if rp_page_return_code != 1:
                         print_error_msg(cn + " 无法访问作品页面 %s" % rp_url)
                         continue
-
                     image_url_list = re.findall("src='([^']*)'", rp_page_response)
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
                         print_step_msg(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
                             # 重新获取下详细页面
-                            rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
                             rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
                             if rp_page_return_code == 1:
                                 image_url_list = re.findall("src='([^']*)'", rp_page_response)
