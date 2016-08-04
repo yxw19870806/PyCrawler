@@ -43,7 +43,7 @@ def print_step_msg(msg):
 
 
 # 获取用户的suid，作为查找指定用户的视频页的凭着
-def get_miaopai_suid(account_id):
+def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
     index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
     if index_page_return_code == 1:
@@ -54,7 +54,7 @@ def get_miaopai_suid(account_id):
 
 
 # 获取一页的视频信息
-def get_miaopai_video_page_data(suid, page_count):
+def get_video_page_data(suid, page_count):
     media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     media_page_return_code, media_page = tool.http_request(media_page_url)[:2]
     if media_page_return_code == 1:
@@ -193,7 +193,7 @@ class Download(threading.Thread):
             else:
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
 
-            suid = get_miaopai_suid(account_id)
+            suid = get_suid(account_id)
             if suid is None:
                 print_error_msg(account_id + " suid获取失败")
 
@@ -205,7 +205,7 @@ class Download(threading.Thread):
             need_make_download_dir = True
             while suid != "" and (not is_over):
                 # 获取指定一页的视频信息
-                media_page = get_miaopai_video_page_data(suid, page_count)
+                media_page = get_video_page_data(suid, page_count)
                 if media_page is None:
                     print_error_msg(account_id + " 视频列表解析错误")
                     tool.process_exit()

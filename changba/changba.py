@@ -53,7 +53,7 @@ def get_user_id(account_id):
 
 
 # 获取一页的歌曲信息
-def get_changba_audio_list(user_id, page_count):
+def get_audio_list(user_id, page_count):
     audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
     audio_album_return_code, audio_album_page = tool.http_request(audio_album_url)[:2]
     audio_list = []
@@ -221,7 +221,7 @@ class Download(threading.Thread):
             need_make_download_dir = True
             while not is_over:
                 # 获取指定一页的视频信息
-                audio_list = get_changba_audio_list(user_id, page_count)
+                audio_list = get_audio_list(user_id, page_count)
 
                 # 如果为空，表示已经取完了
                 if len(audio_list) == 0:

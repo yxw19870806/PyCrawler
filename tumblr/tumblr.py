@@ -48,7 +48,7 @@ def trace(msg):
 
 
 # 获取一页的媒体信息
-def get_tumblr_post_page_data(post_url, postfix_list):
+def get_post_page_data(post_url, postfix_list):
     post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面
     if post_page_return_code == 1:
@@ -276,7 +276,7 @@ class Download(threading.Thread):
 
                     post_url = "http://%s/post/%s" % (host_url, post_id)
                     # 获取指定一页的媒体信息
-                    post_page_data = get_tumblr_post_page_data(post_url, post_url_list[post_id])
+                    post_page_data = get_post_page_data(post_url, post_url_list[post_id])
                     if post_page_data is None:
                         print_error_msg(account_id + " 无法获取信息页 %s" % post_url)
                         continue

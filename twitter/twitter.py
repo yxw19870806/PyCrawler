@@ -95,11 +95,11 @@ def unfollow_account(authenticity_token, account_id):
 
 
 # 获取指定账号的全部关注列表（需要登录）
-def get_twitter_follow_list(account_name):
+def get_follow_list(account_name):
     position_id = "2000000000000000000"
     follow_list = []
     while True:
-        follow_page_data = get_twitter_follow_page_data(account_name, position_id)
+        follow_page_data = get_follow_page_data(account_name, position_id)
         if follow_page_data is not None:
             profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_page_data["items_html"])
             if len(profile_list) > 0:
@@ -114,7 +114,7 @@ def get_twitter_follow_list(account_name):
 
 
 # 获取指定一页的关注列表
-def get_twitter_follow_page_data(account_name, position_id):
+def get_follow_page_data(account_name, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
     follow_list_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
     if follow_list_return_code == 1:
@@ -129,7 +129,7 @@ def get_twitter_follow_page_data(account_name, position_id):
 
 
 # 获取一页的媒体信息
-def get_twitter_media_page_data(account_name, data_tweet_id):
+def get_media_page_data(account_name, data_tweet_id):
     media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     media_page_url += "?include_available_features=1&include_entities=1&max_position=%s" % data_tweet_id
     media_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
@@ -210,16 +210,6 @@ def save_video(ts_file_list, file_path):
             return False
     file_handle.close()
     return True
-
-
-# 返回的是当前时区对应的时间
-def get_image_last_modified(response):
-    if isinstance(response, urllib2.addinfourl):
-        info = response.info()
-        last_modified_time = tool.get_response_info(info, "last-modified")
-        last_modified_time = time.strptime(last_modified_time, "%a, %d %b %Y %H:%M:%S %Z")
-        return int(time.mktime(last_modified_time)) - time.timezone
-    return 0
 
 
 # 将图片的二进制数据保存为本地文件
@@ -381,7 +371,7 @@ class Download(threading.Thread):
             need_make_video_dir = True
             while not is_over:
                 # 获取指定时间点后的一页图片信息
-                media_page = get_twitter_media_page_data(account_name, data_tweet_id)
+                media_page = get_media_page_data(account_name, data_tweet_id)
                 if media_page is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
                     tool.process_exit()

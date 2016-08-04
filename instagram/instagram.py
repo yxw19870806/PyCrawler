@@ -71,11 +71,11 @@ def get_account_id(account_name):
 
 
 # 获取指定账号的全部粉丝列表（需要cookies）
-def get_instagram_follow_by_list(account_id):
+def get_follow_by_list(account_id):
     cursor = None
     follow_by_list = []
     while True:
-        follow_by_page_data = get_instagram_follow_by_list_page_data(account_id, cursor)
+        follow_by_page_data = get_follow_by_list_page_data(account_id, cursor)
         if follow_by_page_data is not None:
             for node in follow_by_page_data["nodes"]:
                 if robot.check_sub_key(("username", ), node):
@@ -90,7 +90,7 @@ def get_instagram_follow_by_list(account_id):
 
 
 # 获取指定一页的粉丝列表
-def get_instagram_follow_by_list_page_data(account_id, cursor=None):
+def get_follow_by_list_page_data(account_id, cursor=None):
     follow_by_list_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
     if cursor is None:
@@ -112,11 +112,11 @@ def get_instagram_follow_by_list_page_data(account_id, cursor=None):
 
 
 # 获取指定账号的全部关注列表（需要cookies）
-def get_instagram_follow_list(account_id):
+def get_follow_list(account_id):
     cursor = None
     follow_list = []
     while True:
-        follow_page_data = get_instagram_follow_list_page_data(account_id, cursor)
+        follow_page_data = get_follow_list_page_data(account_id, cursor)
         if follow_page_data is not None:
             for node in follow_page_data["nodes"]:
                 if robot.check_sub_key(("username", ), node):
@@ -131,7 +131,7 @@ def get_instagram_follow_list(account_id):
 
 
 # 获取指定一页的关注列表
-def get_instagram_follow_list_page_data(account_id, cursor=None):
+def get_follow_list_page_data(account_id, cursor=None):
     follow_list_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
     if cursor is None:
@@ -153,7 +153,7 @@ def get_instagram_follow_list_page_data(account_id, cursor=None):
 
 
 # 获取一页的媒体信息
-def get_instagram_media_page_data(account_id, cursor):
+def get_media_page_data(account_id, cursor):
     media_page_url = "https://www.instagram.com/query/"
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
     media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)
@@ -325,7 +325,7 @@ class Download(threading.Thread):
             need_make_video_dir = True
             while not is_over:
                 # 获取指定时间后的一页媒体信息
-                media_page_data = get_instagram_media_page_data(account_id, cursor)
+                media_page_data = get_media_page_data(account_id, cursor)
                 if media_page_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
                     tool.process_exit()

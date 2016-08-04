@@ -43,7 +43,7 @@ def print_step_msg(msg):
 
 
 # 获取一页的视频信息
-def get_meipai_video_page_data(account_id, page_count):
+def get_video_page_data(account_id, page_count):
     video_page_url = "http://www.meipai.com/users/user_timeline"
     video_page_url += "?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
@@ -191,7 +191,7 @@ class Download(threading.Thread):
             need_make_download_dir = True
             while not is_over:
                 # 获取指定一页的视频信息
-                medias_data = get_meipai_video_page_data(account_id, page_count)
+                medias_data = get_video_page_data(account_id, page_count)
                 if medias_data is None:
                     print_error_msg(account_id + " 视频列表解析错误")
                     tool.process_exit()
