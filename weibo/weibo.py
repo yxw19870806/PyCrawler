@@ -487,7 +487,7 @@ class Download(threading.Thread):
                         break
 
                     # 下载
-                    image_url = "%s/large/%s" % (image_info["pic_host"], image_info["pic_name"])
+                    image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
                     print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
                     # 获取图片的二进制数据，并且判断这个图片是否是可用的
                     image_status, image_byte = get_image_byte(image_url)
