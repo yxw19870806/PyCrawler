@@ -171,9 +171,10 @@ def find_real_video_url(video_page_url, account_name):
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
-            video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">')
-            if video_url:
-                return 1, [video_url]
+            # video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">')
+            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', source_video_page)
+            if len(video_url_find) == 1:
+                return 1, [video_url_find[0]]
             return -1, []
         else:
             return -2, []
