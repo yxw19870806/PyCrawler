@@ -86,7 +86,7 @@ def get_audio_source_url(audio_en_word_id):
                 g = int(special_find[0][3], 16) / e / e
                 if "a" == special_find[0][0] and g % 1000 == f:
                     return "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
-                return "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % (g)
+                return "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
     return None
 
 
@@ -95,7 +95,6 @@ class ChangBa(robot.Robot):
         global GET_VIDEO_COUNT
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_DOWNLOAD_VIDEO
 
         robot.Robot.__init__(self)
 

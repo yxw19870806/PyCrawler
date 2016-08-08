@@ -189,7 +189,8 @@ def find_real_video_url(video_page_url):
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
             if len(video_id_find) == 1:
                 video_page_id = video_page_url.split("/")[-1]
-                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_page_id)
+                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php"
+                video_info_url += "?vid=%s&device=1&id=%s" % (video_id_find[0], video_page_id)
                 video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
@@ -445,12 +446,12 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取下一页的since_id
-                    since_id = tool.find_sub_string(video_page_data, 'type=video&owner_uid=&since_id=', '">')
+                    since_id = tool.find_sub_string(video_page_data, "type=video&owner_uid=&since_id=", '">')
                     if not since_id:
                         break
 
             # 有历史记录，并且此次没有获得正常结束的标记，说明历史最后的视频已经被删除了
-            if self.account_info[4] != "" and video_count > 1 and not is_over :
+            if self.account_info[4] != "" and video_count > 1 and not is_over:
                 print_error_msg(account_name + " 没有找到上次下载的最后一个视频地址")
 
             # 图片

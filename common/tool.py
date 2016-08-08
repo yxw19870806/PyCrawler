@@ -193,7 +193,7 @@ def create_cookie(name, value, domain="", path="/"):
     return cookielib.Cookie(version=0, name=name, value=value, port=None, port_specified=False, domain=domain,
                             domain_specified=False, domain_initial_dot=False, path=path, path_specified=True,
                             secure=False, expires=None, discard=True, comment=None, comment_url=None,
-                            rest={'HttpOnly': None}, rfc2109=False)
+                            rest={"HttpOnly": None}, rfc2109=False)
 
 
 # 使用系统cookies
@@ -256,7 +256,7 @@ def set_cookie(file_path, browser_type=1, target_domains=""):
         try:
             import win32crypt
         except:
-            pass
+            return False
         con = sqlite.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")

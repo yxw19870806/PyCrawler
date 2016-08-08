@@ -12,7 +12,6 @@ import re
 import threading
 import time
 import traceback
-import urllib2
 
 ACCOUNTS = []
 INIT_MAX_ID = "999999999999999999"

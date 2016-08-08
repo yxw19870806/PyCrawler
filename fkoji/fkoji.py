@@ -90,7 +90,7 @@ class Fkoji(robot.Robot):
                 tags = photo_info.findAll("img")
                 for tag in tags:
                     tag_attr = dict(tag.attrs)
-                    if tag_attr.has_key("src") and tag_attr.has_key("alt"):
+                    if robot.check_sub_key(("src", "alt"), tag_attr):
                         image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
 
                         # 新增图片导致的重复判断
@@ -111,7 +111,7 @@ class Fkoji(robot.Robot):
                         if file_type.find("/") != -1:
                             file_type = "jpg"
                         file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, account_id, file_type))
-                        log.step("开始下载第%s张图片 %s"  % (image_count, image_url))
+                        log.step("开始下载第%s张图片 %s" % (image_count, image_url))
                         if tool.save_net_file(image_url, file_path):
                             log.step("第%s张图片下载成功" % image_count)
                             image_count += 1
@@ -161,7 +161,7 @@ class Fkoji(robot.Robot):
                     if not tool.make_dir(each_account_path, 0):
                         log.error("创建目录 %s 失败" % each_account_path)
                         tool.process_exit()
-                if account_list.has_key(account_id):
+                if account_id in account_id:
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1
                 else:
                     account_list[account_id] = [account_id, 1]

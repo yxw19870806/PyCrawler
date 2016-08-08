@@ -360,7 +360,7 @@ class Download(threading.Thread):
                 if not is_over:
                     # 看看总共有几页
                     if max_page_count == -1:
-                        max_page_count = tool.find_sub_string(post_page_response, '<a href="/u/' + coser_id + '/post/cos?&p=', '">尾页</a>')
+                        max_page_count = tool.find_sub_string(post_page_response, '<a href="/u/%s/post/cos?&p=' % coser_id, '">尾页</a>')
                         if max_page_count:
                             max_page_count = int(max_page_count)
                         else:

@@ -350,7 +350,7 @@ class Download(threading.Thread):
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
                         image_url = str(photo_info["display_src"].split("?")[0])
-                        print_step_msg(account_name + " 开始下载第%s张图片 %s" %(image_count, image_url))
+                        print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
                         image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
