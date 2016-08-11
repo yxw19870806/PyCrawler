@@ -27,10 +27,6 @@ class Shinoda(robot.Robot):
                 log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
                 tool.process_exit()
 
-        # 设置代理
-        if self.is_proxy == 1:
-            tool.set_proxy(self.proxy_ip, self.proxy_port)
-
         # 读取存档文件
         last_blog_id = ""
         image_start_index = 0

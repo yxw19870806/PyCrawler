@@ -237,7 +237,7 @@ class Weibo(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        robot.Robot.__init__(self, extra_config)
+        robot.Robot.__init__(self, False, extra_config)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -275,10 +275,6 @@ class Weibo(robot.Robot):
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
                 print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
                 tool.process_exit()
-
-        # 设置代理
-        if self.is_proxy == 1:
-            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 设置系统cookies
         if not tool.set_cookie(self.cookie_path, self.browser_version, ("weibo.com", ".sina.com.cn")):

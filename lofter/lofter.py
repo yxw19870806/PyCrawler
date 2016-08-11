@@ -80,10 +80,6 @@ class Lofter(robot.Robot):
             print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
             tool.process_exit()
 
-        # 设置代理
-        if self.is_proxy == 1:
-            tool.set_proxy(self.proxy_ip, self.proxy_port)
-
         # 寻找idlist，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):

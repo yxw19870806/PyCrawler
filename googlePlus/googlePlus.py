@@ -66,7 +66,7 @@ class GooglePlus(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
-        super(GooglePlus, self).__init__()
+        super(GooglePlus, self).__init__(True)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -91,10 +91,6 @@ class GooglePlus(robot.Robot):
         if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
             print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
             tool.process_exit()
-
-        # 设置代理
-        if self.is_proxy == 1 or self.is_proxy == 2:
-            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 寻找idlist，如果没有结束进程
         account_list = {}

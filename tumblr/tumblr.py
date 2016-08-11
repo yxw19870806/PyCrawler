@@ -111,7 +111,7 @@ class Tumblr(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        super(Tumblr, self).__init__()
+        super(Tumblr, self).__init__(True)
 
         # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
@@ -148,10 +148,6 @@ class Tumblr(robot.Robot):
             if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
                 print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
                 tool.process_exit()
-
-        # 设置代理
-        if self.is_proxy == 1 or self.is_proxy == 2:
-            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 寻找idlist，如果没有结束进程
         account_list = {}

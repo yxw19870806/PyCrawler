@@ -15,16 +15,12 @@ ALL_SIGN = "_____"
 
 class Fkoji(robot.Robot):
     def __init__(self):
-        super(Fkoji, self).__init__()
+        super(Fkoji, self).__init__(True)
 
         tool.print_msg("配置文件读取完成")
 
     def main(self):
         start_time = time.time()
-
-        # 设置代理
-        if self.is_proxy == 1 or self.is_proxy == 2:
-            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 图片保存目录
         log.step("创建图片根目录 %s" % self.image_download_path)

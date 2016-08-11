@@ -16,7 +16,7 @@ IS_INIT = False
 
 
 class Robot(object):
-    def __init__(self, extra_config=None):
+    def __init__(self, is_auto_proxy=False, extra_config=None):
         global IS_INIT
         config = read_config()
 
@@ -99,9 +99,11 @@ class Robot(object):
             self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
 
         # 代理
-        self.is_proxy = get_config(config, "IS_PROXY", 2, 1)
-        self.proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        self.proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
+        is_proxy = get_config(config, "IS_PROXY", 2, 1)
+        if is_proxy == 1 or (is_proxy == 2 and is_auto_proxy):
+            proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
+            proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
+            tool.set_proxy(proxy_ip, proxy_port)
 
         # 操作系统&浏览器
         self.browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
