@@ -82,7 +82,7 @@ class Lofter(robot.Robot):
 
         # 设置代理
         if self.is_proxy == 1:
-            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 寻找idlist，如果没有结束进程
         account_list = {}

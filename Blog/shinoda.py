@@ -29,7 +29,7 @@ class Shinoda(robot.Robot):
 
         # 设置代理
         if self.is_proxy == 1:
-            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 读取存档文件
         last_blog_id = ""

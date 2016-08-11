@@ -304,8 +304,9 @@ def _filter_domain(domain, target_domains):
 
 
 # 设置代理
-def set_proxy(ip, port, protocol):
-    proxy_handler = urllib2.ProxyHandler({protocol: "http://" + ip + ":" + port})
+def set_proxy(ip, port):
+    proxy_address = "http://%s:%s" % (ip, port)
+    proxy_handler = urllib2.ProxyHandler({"http": proxy_address, "https": proxy_address})
     opener = urllib2.build_opener(proxy_handler)
     urllib2.install_opener(opener)
     print_msg("设置代理成功")
@@ -327,13 +328,10 @@ def quickly_set(is_set_cookie, proxy_type):
         else:
             cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
         set_cookie(cookie_path, browser_type)
-    if proxy_type > 0:
+    if proxy_type == 1:
         proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
         proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
-        if proxy_type == 1:
-            set_proxy(proxy_ip, proxy_port, "http")
-        elif proxy_type == 2:
-            set_proxy(proxy_ip, proxy_port, "https")
+        set_proxy(proxy_ip, proxy_port)
 
 
 # 控制台输出

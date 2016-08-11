@@ -94,7 +94,7 @@ class MeiPai(robot.Robot):
 
         # 设置代理
         if self.is_proxy == 1:
-            tool.set_proxy(self.proxy_ip, self.proxy_port, "http")
+            tool.set_proxy(self.proxy_ip, self.proxy_port)
 
         # 设置系统cookies
         if not tool.set_cookie(self.cookie_path, self.browser_version, ("weibo.com", ".sina.com.cn")):
