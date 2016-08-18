@@ -147,8 +147,23 @@ def get_video_page_data(page_id, since_id):
 def find_real_video_url(video_page_url):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
-        video_id = video_page_url.split("/")[-1].split(".")[0]
-        return 1, ["http://wsqncdn.miaopai.com/stream/%s.mp4" % video_id]
+        video_id = tool.find_sub_string(video_page_url, "miaopai.com/show/", ".")
+        video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
+        video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
+        if video_info_page_return_code == 1:
+            try:
+                video_info_page = json.loads(video_info_page)
+            except ValueError:
+                pass
+            else:
+                if robot.check_sub_key(("status", "result"), video_info_page):
+                    if int(video_info_page["status"]) == 200:
+                        for result in video_info_page["result"]:
+                            if robot.check_sub_key(("path", "host", "scheme"), result):
+                                return 1, ["%s%s%s" % (result["scheme"], result["host"], result["path"])]
+            return -1, []
+        else:
+            return -2, []
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
@@ -202,8 +217,7 @@ def find_real_video_url(video_page_url):
                             if robot.check_sub_key(("url", ), video_info_page["data"]):
                                 return 1, [random.choice(video_info_page["data"]["url"])]
             return -1, []
-        else:
-            return -2, []
+        return -2, []
     else:  # 其他视频，暂时不支持，收集看看有没有
         return -3, []
 
