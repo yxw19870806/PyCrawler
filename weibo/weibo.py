@@ -229,7 +229,7 @@ def get_image_byte(image_url):
         if image_return_code == 1:
             # 处理获取的文件为weibo默认获取失败的图片
             md5_digest = md5(image_data)
-            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0"]:
+            if md5_digest in ["14f2559305a6c96608c474f4ca47e6b0", "37b9e6dec174b68a545c852c63d4645a"]:
                 return -2, None  # 被系统自动删除的图片
             # 不是暂时无法访问，否则重试
             if md5_digest not in ["d29352f3e0f276baaf97740d170467d7", "7bd88df2b5be33e1a79ac91e7d0376b5"]:
