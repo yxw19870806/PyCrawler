@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 from common import log, robot, tool
 import json
 import os
+import re
 import threading
 import time
 import traceback
@@ -40,6 +41,32 @@ def print_step_msg(msg):
     threadLock.acquire()
     log.step(msg)
     threadLock.release()
+
+
+# 获取指定账号的全部关注列表
+def get_follow_list(account_id):
+    max_page_count = 1
+    page_count = 1
+    follow_list = {}
+    while page_count <= max_page_count:
+        follow_list_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
+        follow_list_page_return_code, follow_list_page = tool.http_request(follow_list_url)[:2]
+        if follow_list_page_return_code == 1:
+            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_list_page)
+            for follow_info in follow_list_find:
+                follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()
+                follow_account_name = tool.find_sub_string(follow_info, 'title="', '"')
+                follow_list[follow_account_id] = follow_account_name
+            if max_page_count == 1:
+                page_info = tool.find_sub_string(follow_list_page, '<div class="paging-wrap">', '</div>')
+                if page_info:
+                    page_find = re.findall("friends\?p=(\d*)", page_info)
+                    page_find = [int(i) for i in page_find]
+                    max_page_count = max(page_find)
+            page_count += 1
+        else:
+            return None
+    return follow_list
 
 
 # 获取一页的视频信息
