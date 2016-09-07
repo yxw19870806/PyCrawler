@@ -240,7 +240,7 @@ class Download(threading.Thread):
                     audio_url = get_audio_source_url(audio_info[2])
 
                     print_step_msg(account_id + " 开始下载第%s首歌曲 %s"  % (video_count, audio_url))
-                    file_path = os.path.join(video_path, "%s - %s.mp4" % (audio_id, audio_info[1]))
+                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info[1]))
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
