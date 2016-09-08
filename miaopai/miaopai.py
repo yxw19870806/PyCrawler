@@ -42,6 +42,38 @@ def print_step_msg(msg):
     threadLock.release()
 
 
+# 获取指定账号的全部关注列表
+def get_follow_list(suid):
+    page_count = 1
+    follow_list = {}
+    while True:
+        follow_list_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
+        follow_list_page_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
+        if follow_list_page_return_code == 1:
+            try:
+                follow_list_data = json.loads(follow_list_data)
+            except ValueError:
+                pass
+            else:
+                if robot.check_sub_key(("msg", "stat"), follow_list_data):
+                    try:
+                        stat = int(follow_list_data["stat"])
+                    except ValueError:
+                        pass
+                    else:
+                        if stat == 1 or stat == 2:
+                            follow_list_find = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_list_data["msg"])
+                            print follow_list_find
+                            for account_name, account_id in follow_list_find:
+                                follow_list[account_id] = account_name
+                            if stat == 1:
+                                page_count += 1
+                            else:
+                                break
+
+    return follow_list
+
+
 # 获取用户的suid，作为查找指定用户的视频页的凭着
 def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
