@@ -63,7 +63,6 @@ def get_follow_list(suid):
                     else:
                         if stat == 1 or stat == 2:
                             follow_list_find = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_list_data["msg"])
-                            print follow_list_find
                             for account_name, account_id in follow_list_find:
                                 follow_list[account_id] = account_name
                             if stat == 1:
