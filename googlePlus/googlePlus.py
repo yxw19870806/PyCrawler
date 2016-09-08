@@ -45,13 +45,12 @@ def trace(msg):
 
 
 # 重组URL并使用最大分辨率
-# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s128/24%2B-%2B1
+# https://lh3.googleusercontent.com/uhGpzweN4P7b8KG042-XfksSgpDW6qKtDSIGo-HV1EhVgwQnh1u0DCWEERdlavj0NEusMwwn8OmJnRw=w165-h220-rw
 # ->
-# https://lh3.googleusercontent.com/-hHhAtsQ9m5g/Vxy_HVck36I/AAAAAAACqV0/O0H3OnEWa1wqVFMnidRySNJvF6v-P23UQCCo/s0/24%2B-%2B1
+# https://lh3.googleusercontent.com/uhGpzweN4P7b8KG042-XfksSgpDW6qKtDSIGo-HV1EhVgwQnh1u0DCWEERdlavj0NEusMwwn8OmJnRw=w9999-h9999
+# wXXXX-hXXXX 显示分辨率, -rw 使用webp格式
 def generate_max_resolution_image_url(image_url):
-    temp_list = image_url.split("/")
-    temp_list[-2] = "s0"
-    return "/".join(temp_list)
+    return image_url.split("=")[0] + "=w9999-h9999"
 
 
 class GooglePlus(robot.Robot):
