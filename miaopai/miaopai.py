@@ -47,7 +47,7 @@ def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
     index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
     if index_page_return_code == 1:
-        suid = tool.find_sub_string(index_page, '<button class="guanzhu gz" suid="', '" heade="1" token="">\+关注</button>')
+        suid = tool.find_sub_string(index_page, '<button class="guanzhu gz" suid="', '" heade="1" token="">+关注</button>')
         if suid:
             return suid
     return None
@@ -65,6 +65,24 @@ def get_video_page_data(suid, page_count):
         else:
             if robot.check_sub_key(("isall", "msg"), media_page):
                 return media_page
+    return None
+
+
+#  根据video id获取下载地址
+def get_video_url_by_video_id(video_id):
+    video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
+    video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
+    if video_info_page_return_code == 1:
+        try:
+            video_info_page = json.loads(video_info_page)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("status", "result"), video_info_page):
+                if int(video_info_page["status"]) == 200:
+                    for result in video_info_page["result"]:
+                        if robot.check_sub_key(("path", "host", "scheme"), result):
+                            return str(result["scheme"]) + str(result["host"]) + str(result["path"])
     return None
 
 
@@ -217,6 +235,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 for scid in scid_list:
+                    scid = str(scid)
                     # 新增视频导致的重复判断
                     if scid in unique_list:
                         continue
@@ -230,7 +249,11 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
-                    video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % scid
+                    video_url = get_video_url_by_video_id(scid)
+                    if video_url is None:
+                        print_error_msg(account_name + " 第%s个视频 %s 获取下载地址失败" % (video_count, scid))
+                        continue
+
                     print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
