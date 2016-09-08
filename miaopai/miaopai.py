@@ -179,19 +179,23 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
+        if len(self.account_info) >= 4 and self.account_info[3]:
+            account_name = self.account_info[3]
+        else:
+            account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_id + " 开始")
+            print_step_msg(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
-                video_path = os.path.join(VIDEO_TEMP_PATH, account_id)
+                video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             else:
-                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
+                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             suid = get_suid(account_id)
             if suid is None:
-                print_error_msg(account_id + " suid获取失败")
+                print_error_msg(account_name + " suid获取失败")
 
             page_count = 1
             video_count = 1
@@ -203,13 +207,13 @@ class Download(threading.Thread):
                 # 获取指定一页的视频信息
                 media_page = get_video_page_data(suid, page_count)
                 if media_page is None:
-                    print_error_msg(account_id + " 视频列表解析错误")
+                    print_error_msg(account_name + " 视频列表解析错误")
                     tool.process_exit()
 
                 msg_data = media_page["msg"]
                 scid_list = re.findall('data-scid="([^"]*)"', msg_data)
                 if len(scid_list) == 0:
-                    print_error_msg(account_id + " 在视频列表：%s 中没有找到视频scid" % media_page)
+                    print_error_msg(account_name + " 在视频列表：%s 中没有找到视频scid" % media_page)
                     tool.process_exit()
 
                 for scid in scid_list:
@@ -227,20 +231,20 @@ class Download(threading.Thread):
                         break
 
                     video_url = "http://wsqncdn.miaopai.com/stream/%s.mp4" % scid
-                    print_step_msg(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_id + " 创建视频下载目录 %s 失败" % video_path)
+                            print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
                     if tool.save_net_file(video_url, file_path):
-                        print_step_msg(account_id + " 第%s个视频下载成功" % video_count)
+                        print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
                     else:
-                        print_error_msg(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                        print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -253,15 +257,15 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_id + " 下载完毕，总共获得%s个视频" % (video_count - 1))
+            print_step_msg(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
 
             # 排序
             if IS_SORT and video_count > 1:
-                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
+                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
-                    print_step_msg(account_id + " 视频从下载目录移动到保存目录成功")
+                    print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_id + " 创建视频保存目录 %s 失败" % destination_path)
+                    print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录
@@ -276,14 +280,14 @@ class Download(threading.Thread):
             ACCOUNTS.remove(account_id)
             threadLock.release()
 
-            print_step_msg(account_id + " 完成")
+            print_step_msg(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_id + " 提前退出")
+                print_step_msg(account_name + " 提前退出")
             else:
-                print_error_msg(account_id + " 异常退出")
+                print_error_msg(account_name + " 异常退出")
         except Exception, e:
-            print_step_msg(account_id + " 未知异常")
+            print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
 
 
