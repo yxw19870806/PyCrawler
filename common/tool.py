@@ -22,6 +22,10 @@ import urllib2
 IS_SET_TIMEOUT = False
 PROCESS_STATUS = 0
 
+IS_EXECUTABLE = False
+if getattr(sys, 'frozen', False):
+    IS_EXECUTABLE = True
+
 
 # 进程监控
 class ProcessControl(threading.Thread):
@@ -343,7 +347,10 @@ def quickly_set(is_set_cookie, proxy_type):
 def print_msg(msg, is_time=True):
     if is_time:
         msg = get_time() + " " + msg
-    print msg
+    if IS_EXECUTABLE:
+        print msg.decode("utf-8").encode("GBK")
+    else:
+        print msg
 
 
 # 获取时间
