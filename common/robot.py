@@ -4,10 +4,9 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log
+from common import log, tool
 import codecs
 import ConfigParser
-import tool
 import os
 import sys
 import time
