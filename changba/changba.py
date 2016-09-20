@@ -197,15 +197,19 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            account_name = self.account_info[2]
+        else:
+            account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_id + " 开始")
+            print_step_msg(account_name + " 开始")
 
-            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
+            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             user_id = get_user_id(account_id)
             if user_id is None:
-                print_error_msg(account_id + " userid获取失败")
+                print_error_msg(account_name + " userid获取失败")
                 tool.process_exit()
 
             page_count = 0
@@ -239,19 +243,19 @@ class Download(threading.Thread):
 
                     audio_url = get_audio_source_url(audio_info[2])
 
-                    print_step_msg(account_id + " 开始下载第%s首歌曲 %s"  % (video_count, audio_url))
+                    print_step_msg(account_name + " 开始下载第%s首歌曲 %s"  % (video_count, audio_url))
                     file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info[1]))
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_id + " 创建视频下载目录 %s 失败" % video_path)
+                            print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
                     if tool.save_net_file(audio_url, file_path):
-                        print_step_msg(account_id + " 第%s首歌曲下载成功" % video_count)
+                        print_step_msg(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
                     else:
-                        print_error_msg(account_id + " 第%s首歌曲 %s 下载失败" % (video_count, audio_url))
+                        print_error_msg(account_name + " 第%s首歌曲 %s 下载失败" % (video_count, audio_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -266,7 +270,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_id + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
+            print_step_msg(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
 
             # 新的存档记录
             if first_audio_id != "0":
@@ -279,14 +283,14 @@ class Download(threading.Thread):
             ACCOUNTS.remove(account_id)
             threadLock.release()
 
-            print_step_msg(account_id + " 完成")
+            print_step_msg(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_id + " 提前退出")
+                print_step_msg(account_name + " 提前退出")
             else:
-                print_error_msg(account_id + " 异常退出")
+                print_error_msg(account_name + " 异常退出")
         except Exception, e:
-            print_step_msg(account_id + " 未知异常")
+            print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
 
 
