@@ -9,8 +9,8 @@ import codecs
 import ConfigParser
 import tool
 import os
+import sys
 import time
-import traceback
 
 IS_INIT = False
 
@@ -18,7 +18,16 @@ IS_INIT = False
 class Robot(object):
     def __init__(self, is_auto_proxy=False, extra_config=None):
         global IS_INIT
-        config = read_config()
+
+        # exe程序
+        if tool.IS_EXECUTABLE:
+            application_path = os.path.dirname(sys.executable)
+            os.chdir(application_path)
+            config_path = os.path.join(os.getcwd(), "config.ini")
+        else:
+            config_path = os.path.join(os.getcwd(), "..\\common\\config.ini")
+
+        config = read_config(config_path)
 
         if not isinstance(extra_config, dict):
             extra_config = {}
@@ -120,9 +129,9 @@ class Robot(object):
 
 
 # 读取配置文件
-def read_config():
+def read_config(config_path):
     config = ConfigParser.SafeConfigParser()
-    with codecs.open(os.path.join(os.path.abspath(""), "..\\common\\config.ini"), encoding="utf-8-sig") as file_handle:
+    with codecs.open(config_path, encoding="utf-8-sig") as file_handle:
         config.readfp(file_handle)
     return config
 
