@@ -22,7 +22,7 @@ class Robot(object):
         if tool.IS_EXECUTABLE:
             application_path = os.path.dirname(sys.executable)
             os.chdir(application_path)
-            config_path = os.path.join(os.getcwd(), "config.ini")
+            config_path = os.path.join(os.getcwd(), "data\\config.ini")
         else:
             config_path = os.path.join(os.getcwd(), "..\\common\\config.ini")
 
