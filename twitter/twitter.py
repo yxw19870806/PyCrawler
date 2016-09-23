@@ -200,7 +200,7 @@ def deal_m3u8_file(file_url, ts_file_list):
 
 # 将多个ts文件的地址保存为本地视频文件
 def save_video(ts_file_list, file_path):
-    file_handle = open(file_path, 'wb')
+    file_handle = open(file_path, "wb")
     for ts_file_url in ts_file_list:
         ts_file_return_code, ts_file_data = tool.http_request(ts_file_url)[:2]
         if ts_file_return_code == 1:
