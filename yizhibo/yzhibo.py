@@ -6,23 +6,25 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, robot, tool
-import hashlib
 import json
 import os
-import random
 import re
 import threading
 import time
 import traceback
-import urllib2
 
 ACCOUNTS = []
+TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
+GET_IMAGE_COUNT = 0
 GET_VIDEO_COUNT = 0
+IMAGE_TEMP_PATH = ""
+IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
+IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 threadLock = threading.Lock()
@@ -51,6 +53,14 @@ def get_video_id_list(account_id):
     index_return_code, index_page = tool.http_request(video_list_url)[:2]
     if index_return_code == 1:
         return re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', index_page)
+    return None
+
+
+def get_image_list(account_id):
+    video_list_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
+    index_return_code, index_page = tool.http_request(video_list_url)[:2]
+    if index_return_code == 1:
+        return re.findall('<img src="([^"]*)" alt="" class="index_img_main">', index_page)
     return None
 
 
@@ -85,9 +95,17 @@ def get_video_download_list(link_url):
         return None
 
 
+# 将图片的二进制数据保存为本地文件
+def save_image(image_byte, image_path):
+    image_path = tool.change_path_encoding(image_path)
+    image_file = open(image_path, "wb")
+    image_file.write(image_byte)
+    image_file.close()
+
+
 # 将多个ts文件的地址保存为本地视频文件
 def save_video(ts_file_list, file_path):
-    file_handle = open(file_path, 'wb')
+    file_handle = open(file_path, "wb")
     for ts_file_url in ts_file_list:
         ts_file_return_code, ts_file_data = tool.http_request(ts_file_url)[:2]
         if ts_file_return_code == 1:
@@ -100,20 +118,28 @@ def save_video(ts_file_list, file_path):
 
 class YiZhiBo(robot.Robot):
     def __init__(self, extra_config=None):
+        global GET_IMAGE_COUNT
         global GET_VIDEO_COUNT
+        global IMAGE_TEMP_PATH
+        global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
+        global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
         robot.Robot.__init__(self, False, extra_config)
 
         # 设置全局变量，供子线程调用
+        GET_IMAGE_COUNT = self.get_image_count
         GET_VIDEO_COUNT = self.get_video_count
+        IMAGE_TEMP_PATH = self.image_temp_path
+        IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
+        IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -122,23 +148,31 @@ class YiZhiBo(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        if not self.is_download_video:
-            print_error_msg("下载视频没有开启，请检查配置！")
+        if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
+            print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
 
         start_time = time.time()
 
+        # 创建图片保存目录
+        if IS_DOWNLOAD_IMAGE:
+            print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
+            if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
+                print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
+                tool.process_exit()
+
         # 创建视频保存目录
-        print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
-        if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-            print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
-            tool.process_exit()
+        if IS_DOWNLOAD_VIDEO:
+            print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
+            if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
+                print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
+                tool.process_exit()
 
         # 寻找存档，如果没有结束进程
         account_list = {}
         if os.path.exists(self.save_data_path):
-            # account_id  video_count last_video_time (account_name)
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+            # account_id  video_count  last_video_time  image_count  last_image_time(account_name)
+            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
             ACCOUNTS = account_list.keys()
         else:
             print_error_msg("存档文件 %s 不存在" % self.save_data_path)
@@ -206,6 +240,7 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
+        account_id = "55497258"
         if len(self.account_info) >= 3 and self.account_info[2]:
             account_name = self.account_info[2]
         else:
@@ -216,13 +251,54 @@ class Download(threading.Thread):
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
+                image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
                 video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             else:
+                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+
+            image_count = 1
+            first_image_time = "0"
+            need_make_image_dir = True
+            if IS_DOWNLOAD_IMAGE:
+                image_url_list = get_image_list(account_id)
+                if image_url_list is not None:
+                    for image_url in image_url_list:
+                        # 不使用缩略图
+                        image_url = image_url.split("@")[0]
+                        image_return_code, image_byte, image_response = tool.http_request(image_url)
+                        if image_return_code == 1:
+                            image_created_time = tool.get_response_info(image_response, "Last-Modified")
+                            # 字符串转换为时间戳
+
+                            # 检查是否已下载到前一次的图片
+                            if int(image_created_time) <= int(self.account_info[3]):
+                                break
+
+                            # 将第一张图片的上传时间做为新的存档记录
+                            if first_image_time == "0":
+                                first_image_time = str(image_created_time)
+
+                            # 第一张图片，创建目录
+                            if need_make_image_dir:
+                                if not tool.make_dir(image_path, 0):
+                                    print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                    tool.process_exit()
+                                need_make_image_dir = False
+
+                            file_type = image_url.split(".")[-1].split(":")[0]
+                            image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                            # 保存图片文件
+                            print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                            save_image(image_byte, image_file_path)
+                            print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                            image_count += 1
+                else:
+                    print_error_msg(account_name + " 图片列表解析错误")
 
             # 视频
             video_count = 1
-            first_created_time = "0"
+            first_video_time = "0"
             need_make_video_dir = True
             if IS_DOWNLOAD_VIDEO:
                 video_id_list = get_video_id_list(account_id)
@@ -231,17 +307,21 @@ class Download(threading.Thread):
                         # 获取视频的时间和下载地址
                         video_info = get_video_info(video_id)
                         if video_info is None:
-                            print_error_msg(account_name + " 视频 %s 信息获取失败" % video_id)
-                            break
-                        # 检查是否已下载到前一次的图片
+                            print_error_msg(account_name + " 第%s个视频 %s 信息获取失败" % (video_count, video_id))
+                            continue
+
+                        # 检查是否已下载到前一次的视频
                         if int(video_info["data"]["createtime"]) <= int(self.account_info[1]):
                             break
-                        if first_created_time == "0":
-                            first_created_time = str(video_info["data"]["createtime"])
+
+                        # 将第一个视频的上传时间做为新的存档记录
+                        if first_video_time == "0":
+                            first_video_time = str(video_info["data"]["createtime"])
+
                         # 视频的真实下载地址列表
                         ts_file_list = get_video_download_list(str(video_info["data"]["linkurl"]))
                         if ts_file_list is None:
-                            print_error_msg(account_name + " 视频下载地址列表 %s 获取失败" % video_info["data"]["linkurl"])
+                            print_error_msg(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, video_info["data"]["linkurl"]))
                             continue
 
                         # 第一个视频，创建目录
@@ -261,8 +341,6 @@ class Download(threading.Thread):
                 else:
                     print_error_msg(account_name + " 视频列表解析错误")
 
-            image_count = 1
-
             print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
@@ -274,10 +352,21 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
+                if image_count > 1:
+                    destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
+                        print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
+                        tool.process_exit()
 
-            if first_created_time != "0":
-                self.account_info[1] = first_created_time
-                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
+            if first_video_time != "0":
+                self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
+                self.account_info[2] = first_video_time
+
+            if first_image_time != "0":
+                self.account_info[3] = str(int(self.account_info[3]) + image_count - 1)
+                self.account_info[4] = first_image_time
 
             # 保存最后的信息
             threadLock.acquire()
