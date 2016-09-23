@@ -390,13 +390,13 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
                         continue
 
-                    # 将第一个tweet的id做为新的存档记录
-                    if first_tweet_id == "0":
-                        first_tweet_id = tweet_id
                     # 检查是否tweet的id小于上次的记录
                     if int(tweet_id) <= int(self.account_info[3]):
                         is_over = True
                         break
+                    # 将第一个tweet的id做为新的存档记录
+                    if first_tweet_id == "0":
+                        first_tweet_id = tweet_id
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO:

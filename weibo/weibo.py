@@ -415,13 +415,15 @@ class Download(threading.Thread):
                 video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
                 trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_page_url_list))
                 for video_page_url in video_page_url_list:
-                    # 将第一个视频的地址做为新的存档记录
-                    if first_video_url == "":
-                        first_video_url = video_page_url
                     # 检查是否是上一次的最后视频
                     if self.account_info[4] == video_page_url:
                         is_over = True
                         break
+
+                    # 将第一个视频的地址做为新的存档记录
+                    if first_video_url == "":
+                        first_video_url = video_page_url
+
                     # 获取这个视频的视频源地址（下载地址）
                     return_code, video_source_url_list = find_real_video_url(video_page_url)
                     if return_code != 1:
@@ -485,6 +487,11 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 第%s张图片信息解析错误 %s" % (image_count, image_info))
                         continue
 
+                    # 检查是否图片时间小于上次的记录
+                    if int(image_info["timestamp"]) <= int(self.account_info[2]):
+                        is_over = True
+                        break
+
                     # 新增图片导致的重复判断
                     if image_info["pic_name"] in unique_list:
                         continue
@@ -493,10 +500,6 @@ class Download(threading.Thread):
                     # 将第一张图片的上传时间做为新的存档记录
                     if first_image_time == "0":
                         first_image_time = str(image_info["timestamp"])
-                    # 检查是否图片时间小于上次的记录
-                    if int(image_info["timestamp"]) <= int(self.account_info[2]):
-                        is_over = True
-                        break
 
                     # 下载
                     image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])

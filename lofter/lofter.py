@@ -192,6 +192,11 @@ class Download(threading.Thread):
                 for post_url in post_page_url_list:
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
+                    # 检查是否已下载到前一次的图片
+                    if post_id <= self.account_info[2]:
+                        is_over = True
+                        break
+
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
                         continue
@@ -200,10 +205,6 @@ class Download(threading.Thread):
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
-                    # 检查是否已下载到前一次的图片
-                    if post_id <= self.account_info[2]:
-                        is_over = True
-                        break
 
                     post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
                     if post_page_return_code != 1:

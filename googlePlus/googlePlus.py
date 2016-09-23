@@ -214,6 +214,12 @@ class Download(threading.Thread):
                         continue
 
                     print_step_msg(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
+
+                    # 检查是否已下载到前一次的图片
+                    if int(album_id) <= int(self.account_info[2]):
+                        is_over = True
+                        break
+
                     # # 相同的album_id判断
                     if album_id in unique_list:
                         continue
@@ -222,10 +228,6 @@ class Download(threading.Thread):
                     # 将第一个album_id做为新的存档记录
                     if first_album_id == "0":
                         first_album_id = album_id
-                    # 检查是否已下载到前一次的图片
-                    if int(album_id) <= int(self.account_info[2]):
-                        is_over = True
-                        break
 
                     # 截取图片信息部分
                     album_archive_url = "https://get.google.com/albumarchive/pwaf/%s/album/%s?source=pwa" % (account_id, album_id)

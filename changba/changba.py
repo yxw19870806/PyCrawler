@@ -228,6 +228,12 @@ class Download(threading.Thread):
 
                 for audio_info in audio_list:
                     audio_id = audio_info[0]
+
+                    # 检查是否歌曲id小于上次的记录
+                    if int(audio_id) <= int(self.account_info[1]):
+                        is_over = True
+                        break
+
                     # 新增歌曲导致的重复判断
                     if audio_id in unique_list:
                         continue
@@ -236,10 +242,6 @@ class Download(threading.Thread):
                     # 将第一首歌曲id做为新的存档记录
                     if first_audio_id == "0":
                         first_audio_id = str(audio_id)
-                    # 检查是否歌曲id小于上次的记录
-                    if int(audio_id) <= int(self.account_info[1]):
-                        is_over = True
-                        break
 
                     audio_url = get_audio_source_url(audio_info[2])
 

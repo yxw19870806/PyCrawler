@@ -265,18 +265,19 @@ class Download(threading.Thread):
 
                 title_index = 0
                 for cp_id, rp_id in page_rp_id_list:
-                    if rp_id in unique_list:
-                        continue
-                    else:
-                        unique_list.append(rp_id)
-
-                    # 将第一个作品的id做为新的存档记录
-                    if first_rp_id == "":
-                        first_rp_id = rp_id
                     # 检查是否已下载到前一次的图片
                     if int(rp_id) <= int(self.account_info[1]):
                         is_over = True
                         break
+
+                    # 新增正片导致的重复判断
+                    if rp_id in unique_list:
+                        continue
+                    else:
+                        unique_list.append(rp_id)
+                    # 将第一个作品的id做为新的存档记录
+                    if first_rp_id == "":
+                        first_rp_id = rp_id
 
                     print_step_msg("rp: " + rp_id)
 

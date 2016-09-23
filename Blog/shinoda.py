@@ -56,11 +56,16 @@ class Shinoda(robot.Robot):
                 image_name_list = re.findall('data-original="./([^"]*)"', index_page)
                 for image_name in image_name_list:
                     blog_id = image_name.split("-")[0]
+
+                    # 检查是否已下载到前一次的图片
                     if blog_id == last_blog_id:
                         is_over = True
                         break
+
+                    # 将第一个博客的id做为新的存档记录
                     if new_last_blog_id == "":
                         new_last_blog_id = blog_id
+
                     image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                     # 文件类型
                     file_type = image_url.split(".")[-1].split(":")[0]

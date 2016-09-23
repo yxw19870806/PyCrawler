@@ -245,7 +245,6 @@ class Download(threading.Thread):
             need_make_video_dir = True
             while not is_over:
                 index_page_url = "http://%s/page/%s" % (host_url, page_count)
-
                 index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
                 # 无法获取信息首页
                 if index_page_return_code != 1:
@@ -262,13 +261,14 @@ class Download(threading.Thread):
                 post_url_list = filter_post_url(post_url_list)
                 trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list))
                 for post_id in sorted(post_url_list.keys(), reverse=True):
-                    # 将第一个信息页的id做为新的存档记录
-                    if first_post_id == "":
-                        first_post_id = post_id
                     # 检查信息页id是否小于上次的记录
                     if post_id <= self.account_info[3]:
                         is_over = True
                         break
+
+                    # 将第一个信息页的id做为新的存档记录
+                    if first_post_id == "":
+                        first_post_id = post_id
 
                     post_url = "http://%s/post/%s" % (host_url, post_id)
                     # 获取指定一页的媒体信息

@@ -89,6 +89,11 @@ class Fkoji(robot.Robot):
                     if robot.check_sub_key(("src", "alt"), tag_attr):
                         image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
 
+                        # 检查是否已下载到前一次的图片
+                        if last_image_url == image_url:
+                            is_over = True
+                            break
+
                         # 新增图片导致的重复判断
                         if image_url in unique_list:
                             continue
@@ -97,10 +102,6 @@ class Fkoji(robot.Robot):
                         # 将第一张图片的地址做为新的存档记录
                         if first_image_url == "":
                             first_image_url = image_url
-                        # 检查是否已下载到前一次的图片
-                        if last_image_url == image_url:
-                            is_over = True
-                            break
 
                         # 文件类型
                         file_type = image_url.split(".")[-1]

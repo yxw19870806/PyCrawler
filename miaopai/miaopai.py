@@ -267,6 +267,12 @@ class Download(threading.Thread):
 
                 for scid in scid_list:
                     scid = str(scid)
+
+                    # 检查是否已下载到前一次的图片
+                    if first_video_scid == self.account_info[2]:
+                        is_over = True
+                        break
+
                     # 新增视频导致的重复判断
                     if scid in unique_list:
                         continue
@@ -275,10 +281,6 @@ class Download(threading.Thread):
                     # 将第一个视频的id做为新的存档记录
                     if first_video_scid == "":
                         first_video_scid = scid
-                    # 检查是否已下载到前一次的图片
-                    if first_video_scid == self.account_info[2]:
-                        is_over = True
-                        break
 
                     video_url = get_video_url_by_video_id(scid)
                     if video_url is None:

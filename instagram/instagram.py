@@ -335,13 +335,14 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 视频code解析异常")
                         break
 
-                    # 将第一张图片的上传时间做为新的存档记录
-                    if first_created_time == "0":
-                        first_created_time = str(int(photo_info["date"]))
                     # 检查是否已下载到前一次的图片
                     if int(photo_info["date"]) <= int(self.account_info[3]):
                         is_over = True
                         break
+
+                    # 将第一张图片的上传时间做为新的存档记录
+                    if first_created_time == "0":
+                        first_created_time = str(int(photo_info["date"]))
 
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
