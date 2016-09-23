@@ -323,7 +323,7 @@ def set_proxy(ip, port):
 # proxy_type        0:不设置, 1:http, 2:https
 def quickly_set(is_set_cookie, proxy_type):
     import robot
-    config = robot.read_config()
+    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     if is_set_cookie == 1:
         # 操作系统&浏览器
         browser_type = robot.get_config(config, "BROWSER_VERSION", 2, 1)
