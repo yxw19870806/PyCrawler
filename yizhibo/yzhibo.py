@@ -268,8 +268,9 @@ class Download(threading.Thread):
                         image_url = image_url.split("@")[0]
                         image_return_code, image_byte, image_response = tool.http_request(image_url)
                         if image_return_code == 1:
-                            image_created_time = tool.get_response_info(image_response, "Last-Modified")
+                            response_last_modified_time = tool.get_response_info(image_response.info(), "Last-Modified")
                             # 字符串转换为时间戳
+                            image_created_time = response_last_modified_time
 
                             # 检查是否已下载到前一次的图片
                             if int(image_created_time) <= int(self.account_info[3]):

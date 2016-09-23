@@ -355,6 +355,12 @@ def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
+# http请求返回的时间字符串转换为时间戳
+def response_time_to_timestamp(time_string):
+    last_modified_time = time.strptime(time_string, "%a, %d %b %Y %H:%M:%S %Z")
+    return int(time.mktime(last_modified_time)) - time.timezone
+
+
 # 根据开始与结束的字符串，截取字符串
 # include_string是否包含查询条件的字符串，0 都不包含, 1 只包含start_string, 2 只包含end_string, 3 包含start_string和end_string
 def find_sub_string(string, start_string, end_string, include_string=0):
