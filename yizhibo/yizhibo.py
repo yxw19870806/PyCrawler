@@ -48,6 +48,7 @@ def print_step_msg(msg):
     threadLock.release()
 
 
+# 获取指定账号的全部视频ID列表
 def get_video_id_list(account_id):
     video_list_url = "http://www.yizhibo.com/member/personel/user_works?memberid=%s" % account_id
     index_return_code, index_page = tool.http_request(video_list_url)[:2]
@@ -56,6 +57,7 @@ def get_video_id_list(account_id):
     return None
 
 
+# 获取指定账号的全部图片地址列表
 def get_image_list(account_id):
     video_list_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
     index_return_code, index_page = tool.http_request(video_list_url)[:2]
@@ -64,6 +66,7 @@ def get_image_list(account_id):
     return None
 
 
+# 获取指定视频的详细信息（上传时间、视频列表的下载地址等）
 def get_video_info(video_id):
     video_info_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
     video_info_return_code, video_info_data = tool.http_request(video_info_url)[:2]
@@ -240,7 +243,6 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
-        account_id = "55497258"
         if len(self.account_info) >= 3 and self.account_info[2]:
             account_name = self.account_info[2]
         else:
@@ -346,13 +348,6 @@ class Download(threading.Thread):
 
             # 排序
             if IS_SORT:
-                if video_count > 1:
-                    destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
-                        print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
-                    else:
-                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
-                        tool.process_exit()
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
@@ -360,14 +355,21 @@ class Download(threading.Thread):
                     else:
                         print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
-
-            if first_video_time != "0":
-                self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
-                self.account_info[2] = first_video_time
+                if video_count > 1:
+                    destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
+                        print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
+                    else:
+                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
+                        tool.process_exit()
 
             if first_image_time != "0":
                 self.account_info[3] = str(int(self.account_info[3]) + image_count - 1)
                 self.account_info[4] = first_image_time
+
+            if first_video_time != "0":
+                self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
+                self.account_info[2] = first_video_time
 
             # 保存最后的信息
             threadLock.acquire()
