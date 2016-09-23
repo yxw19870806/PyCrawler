@@ -130,7 +130,9 @@ c:\python27\Scripts\pip.exe install XXX.whl
 19.package
 pywin32	https://sourceforge.net/projects/pywin32/files/pywin32/
 
-
+20 list内元素 强制转化为str
+a = [1, 2, 3, 4, 5, "6", "a"]
+map(str, a)
 
 
 
