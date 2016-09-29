@@ -232,7 +232,7 @@ class YiZhiBo(robot.Robot):
         os.remove(NEW_SAVE_DATA_PATH)
 
         duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时%s秒，共计视频%s个" % (duration_time, TOTAL_VIDEO_COUNT))
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (duration_time, TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
@@ -241,6 +241,7 @@ class Download(threading.Thread):
         self.account_info = account_info
 
     def run(self):
+        global TOTAL_IMAGE_COUNT
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
@@ -297,6 +298,12 @@ class Download(threading.Thread):
                             save_image(image_byte, image_file_path)
                             print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
+                        else:
+                            print_step_msg(account_name + " 第%s张图片下载失败" % image_count)
+
+                        # 达到配置文件中的下载数量，结束
+                        if 0 < GET_IMAGE_COUNT < image_count:
+                            break
                 else:
                     print_error_msg(account_name + " 图片列表解析错误")
 
@@ -342,6 +349,10 @@ class Download(threading.Thread):
                             video_count += 1
                         else:
                             print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_file_list))
+
+                        # 达到配置文件中的下载数量，结束
+                        if 0 < GET_VIDEO_COUNT < video_count:
+                            break
                 else:
                     print_error_msg(account_name + " 视频列表解析错误")
 
@@ -375,6 +386,7 @@ class Download(threading.Thread):
             # 保存最后的信息
             threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
             threadLock.release()
