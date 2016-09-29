@@ -274,7 +274,7 @@ class Download(threading.Thread):
                         if image_return_code == 1:
                             response_last_modified_time = tool.get_response_info(image_response.info(), "Last-Modified")
                             # 字符串转换为时间戳
-                            image_created_time = response_last_modified_time
+                            image_created_time = tool.response_time_to_timestamp(response_last_modified_time)
 
                             # 检查是否已下载到前一次的图片
                             if int(image_created_time) <= int(self.account_info[3]):
