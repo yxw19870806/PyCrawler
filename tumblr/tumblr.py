@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 tumblr图片和视频爬虫
+http://www.tumblr.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

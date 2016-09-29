@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 半次元图片爬虫
+http://bcy.net
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

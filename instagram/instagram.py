@@ -1,6 +1,7 @@
 # -*- coding:utf-8  -*-
 """
 Instagram图片&视频爬虫
+https://www.instagram.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

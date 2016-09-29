@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 美拍视频爬虫
+http://www.meipai.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

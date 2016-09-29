@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 微博图片&视频爬虫
+http://www.weibo.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
