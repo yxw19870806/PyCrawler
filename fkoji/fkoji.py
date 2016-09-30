@@ -159,7 +159,7 @@ class Fkoji(robot.Robot):
                     if not tool.make_dir(each_account_path, 0):
                         log.error("创建目录 %s 失败" % each_account_path)
                         tool.process_exit()
-                if account_id in account_id:
+                if account_id in account_list:
                     account_list[account_id][1] = int(account_list[account_id][1]) + 1
                 else:
                     account_list[account_id] = [account_id, 1]
