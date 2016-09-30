@@ -171,16 +171,19 @@ def find_real_video_url(video_page_url):
         for i in range(0, 50):
             source_video_page = auto_redirect_visit(video_page_url)
             if source_video_page:
-                ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
-                if ssig_file_url:
-                    ssig_file_page = auto_redirect_visit(urllib2.unquote(ssig_file_url))
-                    if ssig_file_page:
-                        ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
-                        if len(ssig_list) >= 1:
-                            video_source_url = []
-                            for ssig in ssig_list:
-                                video_source_url.append("http://us.sinaimg.cn/%s" % ssig)
-                            return 1, video_source_url
+                video_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
+                if video_url:
+                    return 1, [urllib2.unquote(video_url)]
+                # ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
+                # if ssig_file_url:
+                #     ssig_file_page = auto_redirect_visit(urllib2.unquote(ssig_file_url))
+                #     if ssig_file_page:
+                #         ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
+                #         if len(ssig_list) >= 1:
+                #             video_source_url = []
+                #             for ssig in ssig_list:
+                #                 video_source_url.append("http://us.sinaimg.cn/%s" % ssig)
+                #             return 1, video_source_url
             time.sleep(5)
         return -1, []
     # http://www.meipai.com/media/98089758
