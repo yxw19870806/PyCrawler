@@ -136,6 +136,7 @@ def http_request(url, post_data=None, cookie=None):
             elif str(e).lower().find("http error 404") != -1:
                 return -404, None, None
             else:
+                print_msg(url)
                 print_msg(str(e))
                 traceback.print_exc()
 
