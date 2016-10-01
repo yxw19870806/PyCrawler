@@ -122,7 +122,7 @@ def save_video(ts_file_list, file_path):
 
 
 class YiZhiBo(robot.Robot):
-    def __init__(self, extra_config=None):
+    def __init__(self):
         global GET_IMAGE_COUNT
         global GET_VIDEO_COUNT
         global IMAGE_TEMP_PATH
@@ -134,7 +134,7 @@ class YiZhiBo(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        robot.Robot.__init__(self, False, extra_config)
+        robot.Robot.__init__(self)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
