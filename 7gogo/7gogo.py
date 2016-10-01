@@ -64,7 +64,7 @@ def get_message_page_data(account_name, target_id):
 
 
 class SevenGoGo(robot.Robot):
-    def __init__(self, extra_config=None):
+    def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -75,7 +75,7 @@ class SevenGoGo(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        robot.Robot.__init__(self, True, extra_config)
+        robot.Robot.__init__(self)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -84,7 +84,7 @@ class SevenGoGo(robot.Robot):
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
-        IS_DOWNLOAD_IMAGE = False #self.is_download_image
+        IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
