@@ -211,74 +211,90 @@ class Download(threading.Thread):
                 message_page_data = get_message_page_data(account_name, target_id)
                 if message_page_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
+                    break
 
                 # 没有了
                 if len(message_page_data) == 0:
                     break
 
                 for message_info in message_page_data:
-                    if robot.check_sub_key(("post", ), message_info) and robot.check_sub_key(("body", "postId"), message_info["post"]):
-                        target_id = message_info["post"]["postId"]
-                        # 检查是否已下载到前一次的记录
-                        if int(target_id) <= int(self.account_info[2]):
-                            is_over = True
-                            break
+                    if not robot.check_sub_key(("post", ), message_info):
+                        print_error_msg(account_name + " 媒体信息解析异常 %s" % message_info)
+                        continue
+                    if not robot.check_sub_key(("body", "postId"), message_info["post"]):
+                        print_error_msg(account_name + " 媒体信息解析异常 %s" % message_info)
+                        continue
 
-                        # 将第一个媒体的postId做为新的存档记录
-                        if first_post_id == "0":
-                            first_post_id = str(target_id)
+                    target_id = message_info["post"]["postId"]
+                    # 检查是否已下载到前一次的记录
+                    if int(target_id) <= int(self.account_info[2]):
+                        is_over = True
+                        break
 
-                        for media_info in message_info["post"]["body"]:
-                            # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
-                            if robot.check_sub_key(("bodyType", ), media_info):
-                                # image
-                                if int(media_info["bodyType"]) == 3:
-                                    if IS_DOWNLOAD_IMAGE:
-                                        if not robot.check_sub_key(("image", ), media_info):
-                                            print_error_msg(account_name + " 第%s张图片解析异常%s" % (image_count, media_info))
-                                            continue
+                    # 将第一个媒体的postId做为新的存档记录
+                    if first_post_id == "0":
+                        first_post_id = str(target_id)
 
-                                        image_url = str(media_info["image"])
-                                        print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                    for media_info in message_info["post"]["body"]:
+                        if not robot.check_sub_key(("bodyType", ), media_info):
+                            print_error_msg(account_name + " 媒体列表bodyType解析异常")
+                            continue
+                        # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
+                        body_type = int(media_info["bodyType"])
+                        # image
+                        if body_type == 1:  # 文本
+                            pass
+                        elif body_type == 2:  # 表情
+                            pass
+                        elif body_type == 3:  # 图片
+                            if IS_DOWNLOAD_IMAGE:
+                                if not robot.check_sub_key(("image", ), media_info):
+                                    print_error_msg(account_name + " 第%s张图片解析异常%s" % (image_count, media_info))
+                                    continue
 
-                                        file_type = image_url.split(".")[-1]
-                                        image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                        # 第一张图片，创建目录
-                                        if need_make_image_dir:
-                                            if not tool.make_dir(image_path, 0):
-                                                print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                                tool.process_exit()
-                                            need_make_image_dir = False
-                                        if tool.save_net_file(image_url, image_file_path):
-                                            print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
-                                            image_count += 1
-                                        else:
-                                            print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
-                                # video
-                                elif int(media_info["bodyType"]) == 8:
-                                    if IS_DOWNLOAD_VIDEO:
-                                        if not robot.check_sub_key(("movieUrlHq", ), media_info):
-                                            print_error_msg(account_name + " 第%s个视频解析异常%s" % (video_count, media_info))
-                                            continue
+                                image_url = str(media_info["image"])
+                                print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                                        video_url = str(media_info["movieUrlHq"])
-                                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                                file_type = image_url.split(".")[-1]
+                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                                # 第一张图片，创建目录
+                                if need_make_image_dir:
+                                    if not tool.make_dir(image_path, 0):
+                                        print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                        tool.process_exit()
+                                    need_make_image_dir = False
+                                if tool.save_net_file(image_url, image_file_path):
+                                    print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                                    image_count += 1
+                                else:
+                                    print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                        # video
+                        elif body_type == 8:
+                            if IS_DOWNLOAD_VIDEO:
+                                if not robot.check_sub_key(("movieUrlHq", ), media_info):
+                                    print_error_msg(account_name + " 第%s个视频解析异常%s" % (video_count, media_info))
+                                    continue
 
-                                        file_type = video_url.split(".")[-1]
-                                        video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                        # 第一个视频，创建目录
-                                        if need_make_video_dir:
-                                            if not tool.make_dir(video_path, 0):
-                                                print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
-                                                tool.process_exit()
-                                            need_make_video_dir = False
-                                        if tool.save_net_file(video_url, video_file_path):
-                                            print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
-                                            video_count += 1
-                                        else:
-                                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
-                                elif int(media_info["bodyType"]) != 1:
-                                    print_error_msg(account_name + " 第%s张图片、第%s个视频，未知bodytype: %s" % (image_count, video_count, media_info))
+                                video_url = str(media_info["movieUrlHq"])
+                                print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+
+                                file_type = video_url.split(".")[-1]
+                                video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
+                                # 第一个视频，创建目录
+                                if need_make_video_dir:
+                                    if not tool.make_dir(video_path, 0):
+                                        print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
+                                        tool.process_exit()
+                                    need_make_video_dir = False
+                                if tool.save_net_file(video_url, video_file_path):
+                                    print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                                    video_count += 1
+                                else:
+                                    print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                        elif body_type == 7:  # 转发
+                            pass
+                        else:
+                            print_error_msg(account_name + " 第%s张图片、第%s个视频，未知bodytype %s, %s" % (image_count, video_count, body_type, media_info))
 
             # 排序
             if IS_SORT:
