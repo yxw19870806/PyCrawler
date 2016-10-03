@@ -227,7 +227,7 @@ class Download(threading.Thread):
 
                     target_id = message_info["post"]["postId"]
                     # 检查是否已下载到前一次的记录
-                    if int(target_id) <= int(self.account_info[2]):
+                    if int(target_id) <= int(self.account_info[3]):
                         is_over = True
                         break
 
