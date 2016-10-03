@@ -278,7 +278,7 @@ class Download(threading.Thread):
                             image_created_time = tool.response_time_to_timestamp(response_last_modified_time)
 
                             # 检查是否已下载到前一次的图片
-                            if int(image_created_time) <= int(self.account_info[3]):
+                            if int(image_created_time) <= int(self.account_info[4]):
                                 break
 
                             # 将第一张图片的上传时间做为新的存档记录
@@ -323,7 +323,7 @@ class Download(threading.Thread):
                             continue
 
                         # 检查是否已下载到前一次的视频
-                        if int(video_info["data"]["createtime"]) <= int(self.account_info[1]):
+                        if int(video_info["data"]["createtime"]) <= int(self.account_info[2]):
                             break
 
                         # 将第一个视频的上传时间做为新的存档记录
@@ -363,14 +363,14 @@ class Download(threading.Thread):
             if IS_SORT:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[3]), 4):
                         print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
                         print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
                         print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
