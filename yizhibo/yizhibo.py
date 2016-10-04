@@ -89,7 +89,7 @@ def get_video_info(video_id):
 def get_video_download_list(link_url):
     video_link_return_code, video_link_data = tool.http_request(link_url)[:2]
     if video_link_return_code == 1:
-        ts_id_list = re.findall("([\d]*.ts)", video_link_data)
+        ts_id_list = re.findall("([\S]*.ts)", video_link_data)
         prefix_url = link_url[:link_url.rfind("/") + 1]
         ts_file_list = []
         for ts_id in ts_id_list:
