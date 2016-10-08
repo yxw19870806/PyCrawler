@@ -211,13 +211,19 @@ class Download(threading.Thread):
 
                     trace(account_name + " 日志id %s" % diary_id)
 
-                    diary_info = tool.find_sub_string(diary_info, '<div class="box-article">', "</div>")
+                    diary_info = tool.find_sub_string(diary_info, '<div class="box-article">', '<div class="box-bottom">')
                     # 日志中所有的图片
-                    image_list = re.findall('<img src="([^"]*)" />', diary_info)
-                    for image_info in image_list:
-                        image_url = "http://www.keyakizaka46.com/%s" % image_info
-                        print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                    image_list = re.findall('<img src="([^"]*)"', diary_info)
+                    for image_url in image_list:
+                        if image_url[:7] != "http://" and image_url[:8] != "https://":
+                            # 直接使用当前域名下的资源
+                            if image_url[0] == "/":
+                                image_url = "http://www.keyakizaka46.com%s" % image_url
+                            else:
+                                image_url = "http://www.keyakizaka46.com/%s" % image_url
 
+                        print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                        
                         # 第一张图片，创建目录
                         if need_make_image_dir:
                             if not tool.make_dir(image_path, 0):
