@@ -49,7 +49,7 @@ def get_diary_page_data(account_id, page_count):
     diary_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
     diary_page_url += "?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
     diary_return_code, diary_page = tool.http_request(diary_page_url)[:2]
-    if diary_return_code:
+    if diary_return_code == 1:
         diary_data = tool.find_sub_string(diary_page, '<div class="box-main">', '<div class="box-sideMember">')
         if diary_data:
             return re.findall("<article>([\s|\S]*?)</article>", diary_page)
