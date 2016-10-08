@@ -214,7 +214,7 @@ class Download(threading.Thread):
 
                     diary_info = tool.find_sub_string(diary_info, '<div class="box-article">', '<div class="box-bottom">')
                     # 日志中所有的图片
-                    image_list = re.findall('<img src="([^"]*)"', diary_info)
+                    image_list = re.findall('<img[\S|\s]*?src="([^"]+)"', diary_info)
                     for image_url in image_list:
                         # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
                         if image_url[:7] != "http://" and image_url[:8] != "https://":
