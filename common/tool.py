@@ -441,6 +441,8 @@ def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
 # order 其他 不需要排序
 def get_dir_files_name(path, order=None):
     path = change_path_encoding(path)
+    if not os.path.exists(path):
+        return []
     files_list = os.listdir(path)
     # 升序
     if order == "asc":
