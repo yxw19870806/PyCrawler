@@ -21,9 +21,9 @@ def get_member_list():
             for member_info in member_list_find:
                 ct = tool.find_sub_string(member_info, "&ct=", '">')
                 name = tool.find_sub_string(member_info, '<p class="name">', '</p>').strip().replace(" ", "")
-                print "%s\t\t\t%s" % (ct, name)
+                tool.print_msg("%s\t\t\t%s" % (ct, name))
             if len(member_list_find) > 0:
-                print "复制以上内容到save.data中，删除不需要的行，即可开始运行"
+                tool.print_msg("复制以上内容到save.data中，删除不需要的行，即可开始运行")
     return None
 
 if __name__ == "__main__":
