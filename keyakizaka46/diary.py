@@ -185,8 +185,9 @@ class Download(threading.Thread):
             image_count = 1
             page_count = 1
             first_diary_id = "0"
+            is_over = False
             need_make_image_dir = True
-            while True:
+            while not is_over:
                 # 获取指定时间点后的一页图片信息
                 diary_list = get_diary_page_data(account_id, page_count)
                 if diary_list is None:
@@ -235,10 +236,11 @@ class Download(threading.Thread):
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
+                        is_over = True
                         break
 
-                # 页数+1
-                page_count += 1
+                if not is_over:
+                    page_count += 1
 
             print_step_msg(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
