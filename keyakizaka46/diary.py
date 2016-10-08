@@ -45,6 +45,7 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取一页的日志列表
 def get_diary_page_data(account_id, page_count):
     diary_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
     diary_page_url += "?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
@@ -215,8 +216,8 @@ class Download(threading.Thread):
                     # 日志中所有的图片
                     image_list = re.findall('<img src="([^"]*)"', diary_info)
                     for image_url in image_list:
+                        # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
                         if image_url[:7] != "http://" and image_url[:8] != "https://":
-                            # 直接使用当前域名下的资源
                             if image_url[0] == "/":
                                 image_url = "http://www.keyakizaka46.com%s" % image_url
                             else:
@@ -233,7 +234,6 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-
                         if tool.save_net_file(image_url, file_path):
                             print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
