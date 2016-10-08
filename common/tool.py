@@ -458,6 +458,8 @@ def get_dir_files_name(path, order=None):
 # only_files 是否仅仅删除目录下文件而保留目录
 def remove_dir(dir_path, only_files=False):
     dir_path = change_path_encoding(dir_path)
+    if not os.path.exists(dir_path):
+        return True
     if only_files:
         for file_name in os.listdir(dir_path):
             target_file = os.path.join(dir_path, file_name)
