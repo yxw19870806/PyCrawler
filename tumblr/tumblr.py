@@ -57,19 +57,21 @@ def get_one_page_post_url_list(account_id, page_count):
     return None
 
 
-# 获取信息页
-def get_post_page(post_url, postfix_list):
+# 获取日志页面的head标签下的内容
+def get_post_page_head(post_url, postfix_list):
     post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面
-    if post_page_return_code == 1:
-        return post_page_data
-    # 不带后缀的无法范文，则依次访问带有后缀的页面
-    for postfix in postfix_list:
-        temp_post_url = post_url + "/" + urllib2.quote(postfix)
-        post_page_return_code, post_page_data = tool.http_request(temp_post_url)[:2]
-        if post_page_return_code == 1:
-            return post_page_data
-    return None
+    # 如果无法访问，则依次访问带有后缀的页面
+    if post_page_return_code != 1:
+        for postfix in postfix_list:
+            temp_post_url = post_url + "/" + urllib2.quote(postfix)
+            post_page_return_code, post_page_data = tool.http_request(temp_post_url)[:2]
+            if post_page_return_code == 1:
+                break
+    if post_page_data is not None:
+        return tool.find_sub_string(post_page_data, "<head", "</head>", 3)
+    else:
+        return None
 
 
 # 过滤头像以及页面上找到不同分辨率的同一张图，保留分辨率较大的那张
@@ -274,16 +276,13 @@ class Download(threading.Thread):
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
-                    
+
+                    # 获取信息页并截取head标签内的内容
                     post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-                    # 获取信息页
-                    post_page_data = get_post_page(post_url, post_url_list_group_by_post_id[post_id])
-                    if post_page_data is None:
+                    post_page_head = get_post_page_head(post_url, post_url_list_group_by_post_id[post_id])
+                    if post_page_head is None:
                         print_error_msg(account_id + " 无法访问信息页 %s" % post_url)
                         continue
-
-                    # 截取html中的head标签内的内容
-                    post_page_head = tool.find_sub_string(post_page_data, "<head", "</head>", 3)
                     if not post_page_head:
                         print_error_msg(account_id + " 信息页 %s 截取head标签异常" % post_url)
                         continue
