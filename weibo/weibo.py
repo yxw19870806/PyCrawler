@@ -144,6 +144,11 @@ def get_video_page_data(page_id, since_id):
     return None
 
 
+# 从视频信息中解析出全部的视频列表
+def get_video_list(video_page):
+    return re.findall('<a target="_blank" href="([^"]*)"><div ', video_page)
+
+
 # 从视频播放页面中提取源地址
 def find_real_video_url(video_page_url):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
@@ -416,7 +421,7 @@ class Download(threading.Thread):
                     break
 
                 # 匹配获取全部的视频页面
-                video_page_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', video_page_data)
+                video_page_url_list = get_video_list(video_page_data)
                 trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_page_url_list))
                 for video_page_url in video_page_url_list:
                     # 检查是否是上一次的最后视频
