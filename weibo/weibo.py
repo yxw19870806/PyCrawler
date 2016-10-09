@@ -81,15 +81,6 @@ def auto_redirect_visit(url):
         if page_response.find("用户名或密码错误") != -1:
             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
             tool.process_exit()
-        # else:
-        #     try:
-        #         temp_page_response = page_response.decode("GBK")
-        #         if temp_page_response.find("用户名或密码错误") != -1:
-        #             print_error_msg("登陆状态异常，请在浏览器中重新登陆微博账号")
-        #             tool.process_exit()
-        #     except Exception,e:
-        #         print e
-        #         pass
         # 返回页面
         if page_response:
             return str(page_response)
@@ -179,23 +170,12 @@ def get_video_download_url(video_page_url):
                 video_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
                 if video_url:
                     return 1, urllib2.unquote(video_url)
-                # ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
-                # if ssig_file_url:
-                #     ssig_file_page = auto_redirect_visit(urllib2.unquote(ssig_file_url))
-                #     if ssig_file_page:
-                #         ssig_list = re.findall("\s([^#]\S*)", ssig_file_page)
-                #         if len(ssig_list) >= 1:
-                #             video_source_url = []
-                #             for ssig in ssig_list:
-                #                 video_source_url.append("http://us.sinaimg.cn/%s" % ssig)
-                #             return 1, video_source_url
             time.sleep(5)
         return -1, None
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
         if source_video_page_return_code == 1:
-            # video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">')
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', source_video_page)
             if len(video_url_find) == 1:
                 return 1, video_url_find[0]
@@ -443,7 +423,6 @@ class Download(threading.Thread):
                         elif return_code == -3:
                             print_error_msg(account_name + " 第%s个视频 %s 暂不支持的视频源" % (video_count, video_play_url))
                         continue
-                    # 下载
                     print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_play_url))
 
                     video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
@@ -509,9 +488,9 @@ class Download(threading.Thread):
                     if first_image_time == "0":
                         first_image_time = str(image_info["timestamp"])
 
-                    # 下载
                     image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
                     print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+
                     # 获取图片的二进制数据，并且判断这个图片是否是可用的
                     image_status, image_byte = get_image_byte(image_url)
                     if image_status != 1:
@@ -520,14 +499,13 @@ class Download(threading.Thread):
                         elif image_status == -2:
                             print_error_msg(account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_count, image_url))
                         continue
-
                     # 第一张图片，创建目录
                     if need_make_image_dir:
                         if not tool.make_dir(image_path, 0):
                             print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_image_dir = False
-
+                    # 文件类型
                     file_type = image_url.split(".")[-1]
                     if file_type.find("/") != -1:
                         file_type = "jpg"
