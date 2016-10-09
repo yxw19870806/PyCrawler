@@ -48,8 +48,17 @@ def trace(msg):
     threadLock.release()
 
 
-# 获取一页的媒体信息
-def get_post_page_data(post_url, postfix_list):
+# 获取一页的日志地址列表
+def get_one_page_post_url_list(account_id, page_count):
+    index_page_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
+    index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
+    if index_page_return_code == 1:
+        return re.findall('"(http[s]?://' + account_id + '.tumblr.com/post/[^"|^#]*)["|#]', index_page_response)
+    return None
+
+
+# 获取信息页
+def get_post_page(post_url, postfix_list):
     post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面
     if post_page_return_code == 1:
@@ -227,7 +236,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
-            host_url = "%s.tumblr.com" % account_id
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
@@ -245,23 +253,19 @@ class Download(threading.Thread):
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
-                index_page_url = "http://%s/page/%s" % (host_url, page_count)
-                index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
-                # 无法获取信息首页
-                if index_page_return_code != 1:
-                    print_error_msg(account_id + " 无法访问相册页 %s" % index_page_url)
+                post_url_list = get_one_page_post_url_list(account_id, page_count)
+                if post_url_list is None:
+                    print_error_msg(account_id + " 无法访问第%s页相册页" % page_count)
                     tool.process_exit()
 
-                # 相册也中全部的信息页
-                post_url_list = re.findall('"(http[s]?://' + host_url + '/post/[^"|^#]*)["|#]', index_page_response)
                 if len(post_url_list) == 0:
                     # 下载完毕了
                     break
 
                 trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_url_list))
-                post_url_list = filter_post_url(post_url_list)
+                post_url_list_group_by_post_id = filter_post_url(post_url_list)
                 trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list))
-                for post_id in sorted(post_url_list.keys(), reverse=True):
+                for post_id in sorted(post_url_list_group_by_post_id.keys(), reverse=True):
                     # 检查信息页id是否小于上次的记录
                     if post_id <= self.account_info[3]:
                         is_over = True
@@ -270,10 +274,10 @@ class Download(threading.Thread):
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "":
                         first_post_id = post_id
-
-                    post_url = "http://%s/post/%s" % (host_url, post_id)
-                    # 获取指定一页的媒体信息
-                    post_page_data = get_post_page_data(post_url, post_url_list[post_id])
+                    
+                    post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
+                    # 获取信息页
+                    post_page_data = get_post_page(post_url, post_url_list_group_by_post_id[post_id])
                     if post_page_data is None:
                         print_error_msg(account_id + " 无法访问信息页 %s" % post_url)
                         continue
@@ -290,15 +294,15 @@ class Download(threading.Thread):
                         print_error_msg(account_id + " 信息页 %s，'og:type'获取异常" % post_url)
                         continue
 
+                    # 空
+                    if og_type == "tumblr-feed:entry":
+                        continue
+
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
                         continue
                     else:
                         unique_list.append(post_id)
-
-                    # 空
-                    if og_type == "tumblr-feed:entry":
-                        continue
 
                     # 视频下载
                     if IS_DOWNLOAD_VIDEO and og_type == "tumblr-feed:video":
