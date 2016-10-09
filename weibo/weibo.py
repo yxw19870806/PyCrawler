@@ -141,7 +141,7 @@ def get_video_play_url_list(video_page):
 
 
 # 从视频播放页面中提取下载地址
-def get_video_download_url(video_page_url):
+def get_video_url(video_page_url):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = tool.find_sub_string(video_page_url, "miaopai.com/show/", ".")
@@ -414,7 +414,7 @@ class Download(threading.Thread):
                         first_video_url = video_play_url
 
                     # 获取这个视频的下载地址
-                    return_code, video_url = get_video_download_url(video_play_url)
+                    return_code, video_url = get_video_url(video_play_url)
                     if return_code != 1:
                         if return_code == -1:
                             print_error_msg(account_name + " 第%s个视频 %s 没有获取到源地址" % (video_count, video_play_url))
