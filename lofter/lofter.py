@@ -54,6 +54,11 @@ def get_one_page_post_url_list(account_id, page_count):
     return None
 
 
+# 从日志页获取全部图片地址列表
+def get_image_url_list(post_page):
+    return re.findall('bigimgsrc="([^"]*)"', post_page)
+
+
 class Lofter(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -211,29 +216,29 @@ class Download(threading.Thread):
                     if first_post_id == "":
                         first_post_id = post_id
 
-                    post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
+                    post_page_return_code, post_page = tool.http_request(post_url)[:2]
                     if post_page_return_code != 1:
                         print_error_msg(account_id + " 第%s张图片，无法获取信息页 %s" % (image_count, post_url))
                         continue
 
-                    post_page_image_list = re.findall('bigimgsrc="([^"]*)"', post_page_response)
-                    trace(account_id + " 信息页 %s 获取的所有图片：%s" % (post_url, post_page_image_list))
-                    if len(post_page_image_list) == 0:
+                    image_url_list = get_image_url_list(post_page)
+                    trace(account_id + " 信息页 %s 获取的所有图片：%s" % (post_url, image_url_list))
+                    if len(image_url_list) == 0:
                         print_error_msg(account_id + " 第%s张图片，信息页 %s 中没有找到图片" % (image_count, post_url))
                         continue
-                    for image_url in post_page_image_list:
+                    for image_url in image_url_list:
                         if image_url.rfind("?") > image_url.rfind("."):
-                            image_url = image_url.split("?", 2)[0]
+                            image_url = image_url.split("?")[0]
                         print_step_msg(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                        file_type = image_url.split(".")[-1]
-                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
                                 print_error_msg(account_id + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_download_dir = False
+                        file_type = image_url.split(".")[-1]
+                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, file_path):
                             print_step_msg(account_id + " 第%s张图片下载成功" % image_count)
                             image_count += 1
