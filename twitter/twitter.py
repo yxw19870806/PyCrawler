@@ -161,9 +161,13 @@ def get_tweet_list(media_page_items_html):
     return tweet_id_list
 
 
+# 检查tweet中是否包含视频
+def check_has_video(tweet_data):
+    return tweet_data.find("PlayableMedia--video") >= 0
+
+
 # 获取视频的真实下载地址（ts文件列表）
-def get_video_source_url(tweet_id):
-    # video_page_url = "https://twitter.com/i/videos/tweet/%s?embed_source=clientlib&player_id=1&rpc_init=1&conviva_environment=test" % tweet_id
+def get_video_url_list(tweet_id):
     video_page_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
     if video_page_return_code == 1:
@@ -183,6 +187,11 @@ def get_video_source_url(tweet_id):
                     file_type = media_file_url.split(".")[-1].split("?")[0]
                     return file_type, media_file_url
     return "", []
+
+
+# 获取tweet中的全部图片下载地址
+def get_image_url_list(tweet_data):
+    return re.findall('data-image-url="([^"]*)"', tweet_data)
 
 
 # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
@@ -401,28 +410,26 @@ class Download(threading.Thread):
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO:
-                        # 这个tweet是否包含视频7
-                        if tweet_data.find("PlayableMedia--video") >= 0:
-                            video_file_type, video_url_list = get_video_source_url(tweet_id)
-                            if len(video_url_list) == 0:
-                                print_error_msg(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
-                                continue
+                        # 这个tweet是否包含视频
+                        if check_has_video(tweet_data):
+                            video_file_type, video_url_list = get_video_url_list(tweet_id)
+                            if len(video_url_list) > 0:
+                                print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
 
-                            # 第一个视频，创建目录
-                            if need_make_video_dir:
-                                if not tool.make_dir(video_path, 0):
-                                    print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                                    tool.process_exit()
-                                need_make_video_dir = False
-
-                            # 将域名拼加起来
-                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
-                            print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
-                            if save_video(video_url_list, video_file_path):
-                                print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
-                                video_count += 1
+                                # 第一个视频，创建目录
+                                if need_make_video_dir:
+                                    if not tool.make_dir(video_path, 0):
+                                        print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                                        tool.process_exit()
+                                    need_make_video_dir = False
+                                video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
+                                if save_video(video_url_list, video_file_path):
+                                    print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                                    video_count += 1
+                                else:
+                                    print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
                             else:
-                                print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
+                                print_error_msg(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
 
                             # 达到配置文件中的下载数量，结束
                             if 0 < GET_VIDEO_COUNT < video_count:
@@ -431,7 +438,7 @@ class Download(threading.Thread):
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
                         # 匹配获取全部的图片地址
-                        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
+                        image_url_list = get_image_url_list(tweet_data)
                         for image_url in image_url_list:
                             image_url = str(image_url)
                             print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
@@ -441,14 +448,15 @@ class Download(threading.Thread):
                             if image_return_code == -404:
                                 print_error_msg(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
                             elif image_return_code == 1:
-                                file_type = image_url.split(".")[-1].split(":")[0]
-                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
                                         print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                         tool.process_exit()
                                     need_make_image_dir = False
+                                # 文件类型
+                                file_type = image_url.split(".")[-1].split(":")[0]
+                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 save_image(image_byte, image_file_path)
                                 print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
