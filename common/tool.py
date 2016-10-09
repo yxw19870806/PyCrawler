@@ -536,7 +536,7 @@ def copy_files(source_path, destination_path):
 
 
 # 生成指定长度的随机字符串
-# char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 3 - 数字，默认7(1+2+3)包括全部
+# char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
 def generate_random_string(string_length, char_lib_type=7):
     result = ""
     char_lib = {
