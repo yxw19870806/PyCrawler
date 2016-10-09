@@ -74,7 +74,7 @@ def get_follow_list(suid):
     return follow_list
 
 
-# 获取用户的suid，作为查找指定用户的视频页的凭着
+# 获取用户的suid，作为查找指定用户的视频页的凭证
 def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
     index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
@@ -86,7 +86,7 @@ def get_suid(account_id):
 
 
 # 获取一页的视频信息
-def get_video_page_data(suid, page_count):
+def get_one_page_video_data(suid, page_count):
     media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     media_page_return_code, media_page = tool.http_request(media_page_url)[:2]
     if media_page_return_code == 1:
@@ -100,7 +100,12 @@ def get_video_page_data(suid, page_count):
     return None
 
 
-#  根据video id获取下载地址
+# 获取scid列表
+def get_scid_list(msg_data):
+    return re.findall('data-scid="([^"]*)"', msg_data)
+
+
+# 根据video id获取下载地址
 def get_video_url_by_video_id(video_id):
     video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
     video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
@@ -255,15 +260,15 @@ class Download(threading.Thread):
             need_make_download_dir = True
             while suid != "" and (not is_over):
                 # 获取指定一页的视频信息
-                media_page = get_video_page_data(suid, page_count)
+                media_page = get_one_page_video_data(suid, page_count)
                 if media_page is None:
                     print_error_msg(account_name + " 视频列表解析错误")
                     tool.process_exit()
 
-                msg_data = media_page["msg"]
-                scid_list = re.findall('data-scid="([^"]*)"', msg_data)
+                # 获取视频scid列表
+                scid_list = get_scid_list(media_page["msg"])
                 if len(scid_list) == 0:
-                    print_error_msg(account_name + " 在视频列表：%s 中没有找到视频scid" % media_page)
+                    print_error_msg(account_name + " 在视频列表：%s 中没有找到视频scid" % media_page["msg"])
                     tool.process_exit()
 
                 for scid in scid_list:
@@ -283,6 +288,7 @@ class Download(threading.Thread):
                     if first_video_scid == "":
                         first_video_scid = scid
 
+                    # 获取视频下载地址
                     video_url = get_video_url_by_video_id(scid)
                     if video_url is None:
                         print_error_msg(account_name + " 第%s个视频 %s 获取下载地址失败" % (video_count, scid))
@@ -290,13 +296,13 @@ class Download(threading.Thread):
 
                     print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
-                    file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
                             print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
+                    file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     if tool.save_net_file(video_url, file_path):
                         print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
