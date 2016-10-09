@@ -45,6 +45,15 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取指定一页的全部日志地址列表
+def get_one_page_post_url_list(account_id, page_count):
+    index_page_url = "http://%s.lofter.com/?page=%s" % (account_id, page_count)
+    index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
+    if index_page_return_code == 1:
+        return re.findall('"(http://' + account_id + '.lofter.com/post/[^"]*)"', index_page)
+    return None
+
+
 class Lofter(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -157,8 +166,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_id + " 开始")
 
-            host_url = "%s.lofter.com" % account_id
-
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
@@ -173,24 +180,21 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True
             while not is_over:
-                index_page_url = "http://%s/?page=%s" % (host_url, page_count)
-                index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
+                post_url_list = get_one_page_post_url_list(account_id, page_count)
                 # 无法获取信息首页
-                if index_page_return_code != 1:
-                    print_error_msg(account_id + " 无法访问相册信息页 %s" % index_page_url)
+                if post_url_list is None:
+                    print_error_msg(account_id + " 无法访问第%s页相册页" % page_count)
                     tool.process_exit()
 
-                # 相册页中全部的信息页
-                post_page_url_list = re.findall('"(http://' + host_url + '/post/[^"]*)"', index_page_response)
-                if len(post_page_url_list) == 0:
+                if len(post_url_list) == 0:
                     # 下载完毕了
                     break
 
                 # 去重排序
-                trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_page_url_list))
-                post_page_url_list = sorted(list(set(post_page_url_list)), reverse=True)
-                trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_page_url_list))
-                for post_url in post_page_url_list:
+                trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_url_list))
+                post_url_list = sorted(list(set(post_url_list)), reverse=True)
+                trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list))
+                for post_url in post_url_list:
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
                     # 检查是否已下载到前一次的图片
