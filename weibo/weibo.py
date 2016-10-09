@@ -88,7 +88,7 @@ def auto_redirect_visit(url):
 
 
 # 获取一页的图片信息
-def get_photo_page_data(account_id, page_count):
+def get_one_page_photo_data(account_id, page_count):
     photo_page_url = "http://photo.weibo.com/photos/get_all"
     photo_page_url += "?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
     photo_page_data = auto_redirect_visit(photo_page_url)
@@ -109,17 +109,17 @@ def get_account_page_id(account_id):
         index_url = "http://weibo.com/u/%s?is_all=1" % account_id
         index_page = auto_redirect_visit(index_url)
         if index_page:
-            page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'")
-            if page_id:
-                return page_id
+            account_page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'")
+            if account_page_id:
+                return account_page_id
         time.sleep(5)
     return None
 
 
 # 获取一页的视频信息
-def get_video_page_data(page_id, since_id):
+def get_one_page_video_data(account_page_id, since_id):
     video_album_url = "http://weibo.com/p/aj/album/loading"
-    video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, page_id)
+    video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, account_page_id)
     for i in range(0, 50):
         video_page = auto_redirect_visit(video_album_url)
         if video_page:
@@ -141,10 +141,10 @@ def get_video_play_url_list(video_page):
 
 
 # 从视频播放页面中提取下载地址
-def get_video_url(video_page_url):
+def get_video_url(video_play_url):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
-    if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
-        video_id = tool.find_sub_string(video_page_url, "miaopai.com/show/", ".")
+    if video_play_url.find("miaopai.com/show/") >= 0:  # 秒拍
+        video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".")
         video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
         video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
         if video_info_page_return_code == 1:
@@ -162,39 +162,39 @@ def get_video_url(video_page_url):
         else:
             return -2, None
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
-    elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
+    elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
         for i in range(0, 50):
-            source_video_page = auto_redirect_visit(video_page_url)
-            if source_video_page:
-                video_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
+            video_play_page = auto_redirect_visit(video_play_url)
+            if video_play_page:
+                video_url = tool.find_sub_string(video_play_page, 'flashvars=\\"file=', '\\"')
                 if video_url:
                     return 1, urllib2.unquote(video_url)
             time.sleep(5)
         return -1, None
     # http://www.meipai.com/media/98089758
-    elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
-        source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
-        if source_video_page_return_code == 1:
-            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', source_video_page)
+    elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
+        video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
+        if video_play_page_return_code == 1:
+            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_page)
             if len(video_url_find) == 1:
                 return 1, video_url_find[0]
             return -1, None
         else:
             return -2, None
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
-    elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
-        video_id = video_page_url.split("/")[-1].split(".")[0]
+    elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
+        video_id = video_play_url.split("/")[-1].split(".")[0]
         return 1, "http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id
     # http://www.weishi.com/t/2000546051794045
-    elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
-        source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
-        if source_video_page_return_code == 1:
-            video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', source_video_page)
+    elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
+        video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
+        if video_play_page_return_code == 1:
+            video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_page)
             if len(video_id_find) == 1:
-                video_page_id = video_page_url.split("/")[-1]
+                video_id = video_play_url.split("/")[-1]
                 video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php"
-                video_info_url += "?vid=%s&device=1&id=%s" % (video_id_find[0], video_page_id)
+                video_info_url += "?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
                 video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
@@ -380,21 +380,21 @@ class Download(threading.Thread):
 
             # 视频
             video_count = 1
-            page_id = None
+            account_page_id = None
             first_video_url = ""
             is_over = False
             need_make_video_dir = True
             since_id = INIT_SINCE_ID
             while IS_DOWNLOAD_VIDEO and (not is_over):
                 # 获取page_id
-                if page_id is None:
-                    page_id = get_account_page_id(account_id)
-                    if page_id is None:
+                if account_page_id is None:
+                    account_page_id = get_account_page_id(account_id)
+                    if account_page_id is None:
                         print_error_msg(account_name + " 微博主页没有获取到page_id")
                         break
 
                 # 获取指定时间点后的一页视频信息
-                video_page_data = get_video_page_data(page_id, since_id)
+                video_page_data = get_one_page_video_data(account_page_id, since_id)
                 if video_page_data is None:
                     print_error_msg(account_name + " 视频列表解析异常")
                     first_video_url = ""  # 存档恢复
@@ -462,7 +462,7 @@ class Download(threading.Thread):
             need_make_image_dir = True
             while IS_DOWNLOAD_IMAGE and (not is_over):
                 # 获取指定一页图片的信息
-                photo_page_data = get_photo_page_data(account_id, page_count)
+                photo_page_data = get_one_page_photo_data(account_id, page_count)
                 if photo_page_data is None:
                     print_error_msg(account_name + " 图片列表解析错误")
                     first_image_time = "0"  # 存档恢复
