@@ -57,6 +57,26 @@ def get_one_page_post_url_list(account_id, page_count):
     return None
 
 
+# 根据post id将同样的信息页合并
+def filter_post_url(post_url_list):
+    new_post_url_list = {}
+    for post_url in post_url_list:
+        # 无效的信息页
+        post_url = post_url.replace("/embed", "")
+        temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
+        post_id = temp[0]
+        if post_id in new_post_url_list:
+            if len(temp) == 2:
+                new_post_url_list[post_id].append(temp[1])
+        else:
+            new_post_url_list[post_id] = []
+    # 去重排序
+    for post_id in new_post_url_list:
+        new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
+
+    return new_post_url_list
+
+
 # 获取日志页面的head标签下的内容
 def get_post_page_head(post_url, postfix_list):
     post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
@@ -78,37 +98,20 @@ def get_post_page_head(post_url, postfix_list):
 def filter_different_resolution_images(image_url_list):
     new_image_url_list = {}
     for image_url in image_url_list:
-        if image_url.find("/avatar_") == -1:
-            image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("/")[0]
+        # 头像，跳过
+        if image_url.find("/avatar_") != -1:
+            continue
 
-            if image_id in new_image_url_list:
-                resolution = int(image_url.split("_")[-1].split(".")[0])
-                old_resolution = int(new_image_url_list[image_id].split("_")[-1].split(".")[0])
-                if resolution < old_resolution:
-                    continue
-            new_image_url_list[image_id] = image_url
+        image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("/")[0]
+        # 判断是否有分辨率更小的相同图片
+        if image_id in new_image_url_list:
+            resolution = int(image_url.split("_")[-1].split(".")[0])
+            old_resolution = int(new_image_url_list[image_id].split("_")[-1].split(".")[0])
+            if resolution < old_resolution:
+                continue
+        new_image_url_list[image_id] = image_url
 
     return new_image_url_list.values()
-
-
-# 根据post id将同样的信息页合并
-def filter_post_url(post_url_list):
-    new_post_url_list = {}
-    for post_url in post_url_list:
-        # 无效的信息页
-        post_url = post_url.replace("/embed", "")
-        temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
-        post_id = temp[0]
-        if post_id in new_post_url_list:
-            if len(temp) == 2:
-                new_post_url_list[post_id].append(temp[1])
-        else:
-            new_post_url_list[post_id] = []
-    # 去重排序
-    for post_id in new_post_url_list:
-        new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
-
-    return new_post_url_list
 
 
 class Tumblr(robot.Robot):
@@ -266,7 +269,7 @@ class Download(threading.Thread):
 
                 trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_url_list))
                 post_url_list_group_by_post_id = filter_post_url(post_url_list)
-                trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list))
+                trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list_group_by_post_id))
                 for post_id in sorted(post_url_list_group_by_post_id.keys(), reverse=True):
                     # 检查信息页id是否小于上次的记录
                     if post_id <= self.account_info[3]:
