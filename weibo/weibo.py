@@ -145,12 +145,12 @@ def get_video_page_data(page_id, since_id):
 
 
 # 从视频信息中解析出全部的视频列表
-def get_video_list(video_page):
+def get_video_play_url_list(video_page):
     return re.findall('<a target="_blank" href="([^"]*)"><div ', video_page)
 
 
-# 从视频播放页面中提取源地址
-def find_real_video_url(video_page_url):
+# 从视频播放页面中提取下载地址
+def get_video_download_url(video_page_url):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = tool.find_sub_string(video_page_url, "miaopai.com/show/", ".")
@@ -166,10 +166,10 @@ def find_real_video_url(video_page_url):
                     if int(video_info_page["status"]) == 200:
                         for result in video_info_page["result"]:
                             if robot.check_sub_key(("path", "host", "scheme"), result):
-                                return 1, ["%s%s%s" % (result["scheme"], result["host"], result["path"])]
-            return -1, []
+                                return 1, "%s%s%s" % (result["scheme"], result["host"], result["path"])
+            return -1, None
         else:
-            return -2, []
+            return -2, None
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
@@ -178,7 +178,7 @@ def find_real_video_url(video_page_url):
             if source_video_page:
                 video_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
                 if video_url:
-                    return 1, [urllib2.unquote(video_url)]
+                    return 1, urllib2.unquote(video_url)
                 # ssig_file_url = tool.find_sub_string(source_video_page, 'flashvars=\\"file=', '\\"')
                 # if ssig_file_url:
                 #     ssig_file_page = auto_redirect_visit(urllib2.unquote(ssig_file_url))
@@ -190,7 +190,7 @@ def find_real_video_url(video_page_url):
                 #                 video_source_url.append("http://us.sinaimg.cn/%s" % ssig)
                 #             return 1, video_source_url
             time.sleep(5)
-        return -1, []
+        return -1, None
     # http://www.meipai.com/media/98089758
     elif video_page_url.find("www.meipai.com/media") >= 0:  # 美拍
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
@@ -198,14 +198,14 @@ def find_real_video_url(video_page_url):
             # video_url = tool.find_sub_string(source_video_page, '<meta content="og:video:url" property="', '">')
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', source_video_page)
             if len(video_url_find) == 1:
-                return 1, [video_url_find[0]]
-            return -1, []
+                return 1, video_url_find[0]
+            return -1, None
         else:
-            return -2, []
+            return -2, None
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_page_url.split("/")[-1].split(".")[0]
-        return 1, ["http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id]
+        return 1, "http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id
     # http://www.weishi.com/t/2000546051794045
     elif video_page_url.find("www.weishi.com/t/") >= 0:  # 微视
         source_video_page_return_code, source_video_page = tool.http_request(video_page_url)[:2]
@@ -224,11 +224,11 @@ def find_real_video_url(video_page_url):
                     else:
                         if robot.check_sub_key(("data", ), video_info_page):
                             if robot.check_sub_key(("url", ), video_info_page["data"]):
-                                return 1, [random.choice(video_info_page["data"]["url"])]
-            return -1, []
-        return -2, []
+                                return 1, random.choice(video_info_page["data"]["url"])
+            return -1, None
+        return -2, None
     else:  # 其他视频，暂时不支持，收集看看有没有
-        return -3, []
+        return -3, None
 
 
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
@@ -421,44 +421,43 @@ class Download(threading.Thread):
                     break
 
                 # 匹配获取全部的视频页面
-                video_page_url_list = get_video_list(video_page_data)
-                trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_page_url_list))
-                for video_page_url in video_page_url_list:
+                video_play_url_list = get_video_play_url_list(video_page_data)
+                trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_play_url_list))
+                for video_play_url in video_play_url_list:
                     # 检查是否是上一次的最后视频
-                    if self.account_info[4] == video_page_url:
+                    if self.account_info[4] == video_play_url:
                         is_over = True
                         break
 
                     # 将第一个视频的地址做为新的存档记录
                     if first_video_url == "":
-                        first_video_url = video_page_url
+                        first_video_url = video_play_url
 
-                    # 获取这个视频的视频源地址（下载地址）
-                    return_code, video_source_url_list = find_real_video_url(video_page_url)
+                    # 获取这个视频的下载地址
+                    return_code, video_url = get_video_download_url(video_play_url)
                     if return_code != 1:
                         if return_code == -1:
-                            print_error_msg(account_name + " 第%s个视频 %s 没有获取到源地址" % (video_count, video_page_url))
+                            print_error_msg(account_name + " 第%s个视频 %s 没有获取到源地址" % (video_count, video_play_url))
                         elif return_code == -2:
-                            print_error_msg(account_name + " 第%s个视频 %s 无法访问" % (video_count, video_page_url))
+                            print_error_msg(account_name + " 第%s个视频 %s 无法访问" % (video_count, video_play_url))
                         elif return_code == -3:
-                            print_error_msg(account_name + " 第%s个视频 %s 暂不支持的视频源" % (video_count, video_page_url))
+                            print_error_msg(account_name + " 第%s个视频 %s 暂不支持的视频源" % (video_count, video_play_url))
                         continue
                     # 下载
-                    for video_source_url in video_source_url_list:
-                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_page_url))
+                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_play_url))
 
-                        video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
-                        # 第一个视频，创建目录
-                        if need_make_video_dir:
-                            if not tool.make_dir(video_path, 0):
-                                print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                                tool.process_exit()
-                            need_make_video_dir = False
-                        if tool.save_net_file(video_source_url, video_file_path):
-                            print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
-                            video_count += 1
-                        else:
-                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_page_url))
+                    video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
+                    # 第一个视频，创建目录
+                    if need_make_video_dir:
+                        if not tool.make_dir(video_path, 0):
+                            print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                            tool.process_exit()
+                        need_make_video_dir = False
+                    if tool.save_net_file(video_url, video_file_path):
+                        print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                        video_count += 1
+                    else:
+                        print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_play_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
