@@ -55,6 +55,16 @@ def get_one_page_picasaweb_url_list(account_id, token):
     return None
 
 
+# 获取picasaweb页的album id
+def get_picasaweb_page_album_id(account_id, picasaweb_url):
+    message_page_return_code, message_page = tool.http_request(picasaweb_url)[:2]
+    if message_page_return_code == 1:
+        # 查找picasaweb页的album id
+        album_archive_url = "https://get.google.com/albumarchive/pwa/%s/album/" % account_id
+        return tool.find_sub_string(message_page, 'href="%s' % album_archive_url, '"')
+    return None
+
+
 # 重组URL并使用最大分辨率
 # https://lh3.googleusercontent.com/uhGpzweN4P7b8KG042-XfksSgpDW6qKtDSIGo-HV1EhVgwQnh1u0DCWEERdlavj0NEusMwwn8OmJnRw=w165-h220-rw
 # ->
@@ -207,20 +217,16 @@ class Download(threading.Thread):
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     picasaweb_url = picasaweb_url.replace("\u003d", "=")
-                    message_page_return_code, message_page_data = tool.http_request(picasaweb_url)[:2]
-                    if message_page_return_code != 1:
+
+                    # 获取picasaweb页的album id
+                    album_id = get_picasaweb_page_album_id(account_id, picasaweb_url)
+                    if album_id is None:
                         print_error_msg(account_name + " 第%s张图片，无法访问picasaweb页 %s" % (image_count, picasaweb_url))
                         continue
-
-                    # 查找picasaweb页的album id
-                    album_archive_url = "https://get.google.com/albumarchive/pwa/%s/album/" % account_id
-                    album_id = tool.find_sub_string(message_page_data, 'href="%s' % album_archive_url, '"')
-
                     if not album_id:
-                        print_error_msg(account_name + " 第%s张图片，picasaweb页 %s 中没有找到album id" % (image_count, picasaweb_url))
+                        print_error_msg(account_name + " 第%s张图片，picasaweb页 %s 获取album id失败" % (image_count, picasaweb_url))
                         continue
-
-                    print_step_msg(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
+                    trace(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
 
                     # 检查是否已下载到前一次的图片
                     if int(album_id) <= int(self.account_info[2]):
