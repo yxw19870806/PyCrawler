@@ -46,15 +46,22 @@ def trace(msg):
 
 
 # 获取一页的日志列表
-def get_diary_page_data(account_id, page_count):
+def get_one_page_diary_data(account_id, page_count):
     diary_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
     diary_page_url += "?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
     diary_return_code, diary_page = tool.http_request(diary_page_url)[:2]
     if diary_return_code == 1:
-        diary_data = tool.find_sub_string(diary_page, '<div class="box-main">', '<div class="box-sideMember">')
-        if diary_data:
+        diary_page = tool.find_sub_string(diary_page, '<div class="box-main">', '<div class="box-sideMember">')
+        if diary_page:
             return re.findall("<article>([\s|\S]*?)</article>", diary_page)
     return None
+
+
+# 获取日志中的全部图片地址列表
+def get_image_url_list(diary_info):
+    diary_info = tool.find_sub_string(diary_info, '<div class="box-article">', '<div class="box-bottom">')
+    # 日志中所有的图片
+    return re.findall('<img[\S|\s]*?src="([^"]+)"', diary_info)
 
 
 class Diary(robot.Robot):
@@ -189,8 +196,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             while not is_over:
-                # 获取指定时间点后的一页图片信息
-                diary_list = get_diary_page_data(account_id, page_count)
+                # 获取一页博客信息
+                diary_list = get_one_page_diary_data(account_id, page_count)
                 if diary_list is None:
                     print_error_msg(account_name + " 第%s页日志列表解析异常" % page_count)
                     tool.process_exit()
@@ -212,10 +219,9 @@ class Download(threading.Thread):
 
                     trace(account_name + " 日志id %s" % diary_id)
 
-                    diary_info = tool.find_sub_string(diary_info, '<div class="box-article">', '<div class="box-bottom">')
-                    # 日志中所有的图片
-                    image_list = re.findall('<img[\S|\s]*?src="([^"]+)"', diary_info)
-                    for image_url in image_list:
+                    # 获取这个日志中的全部图片地址列表
+                    image_url_list = get_image_url_list(diary_info)
+                    for image_url in image_url_list:
                         # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
                         if image_url[:7] != "http://" and image_url[:8] != "https://":
                             if image_url[0] == "/":
