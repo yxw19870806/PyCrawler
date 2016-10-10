@@ -45,6 +45,16 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取一页相册中图片所在的picasweb地址列表
+def get_one_page_picasaweb_url_list(account_id, token):
+    index_url = "https://plus.google.com/_/photos/pc/read/"
+    post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, token)
+    index_page_return_code, index_page = tool.http_request(index_url, post_data)[:2]
+    if index_page_return_code == 1:
+        return re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page)
+    return None
+
+
 # 重组URL并使用最大分辨率
 # https://lh3.googleusercontent.com/uhGpzweN4P7b8KG042-XfksSgpDW6qKtDSIGo-HV1EhVgwQnh1u0DCWEERdlavj0NEusMwwn8OmJnRw=w165-h220-rw
 # ->
@@ -172,7 +182,6 @@ class Download(threading.Thread):
         try:
             print_step_msg(account_name + " 开始")
 
-            photo_album_url = "https://plus.google.com/_/photos/pc/read/"
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
                 image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
@@ -187,17 +196,14 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True
             while not is_over:
-                post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, key)
-                index_page_return_code, index_page_response = tool.http_request(photo_album_url, post_data)[:2]
-                # 无法获取信息首页
-                if index_page_return_code != 1:
-                    print_error_msg(account_name + " 无法访问相册首页 %s，key：%s" % (photo_album_url, key))
+                # 获取一页相册中图片所在的picasweb地址列表
+                picasaweb_url_list = get_one_page_picasaweb_url_list(account_id, key)
+                if picasaweb_url_list is None:
+                    print_error_msg(account_name + " 无法访问相册页，token：%s" % key)
                     tool.process_exit()
 
-                # 相册页中全部的picasaweb页
-                page_picasaweb_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response)
-                trace(account_name + " 相册获取的所有picasaweb页：%s" % page_picasaweb_url_list)
-                for picasaweb_url in page_picasaweb_url_list:
+                trace(account_name + " 相册获取的所有picasaweb页：%s" % picasaweb_url_list)
+                for picasaweb_url in picasaweb_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     picasaweb_url = picasaweb_url.replace("\u003d", "=")
