@@ -76,7 +76,7 @@ def get_follow_by_list(account_id):
     cursor = None
     follow_by_list = []
     while True:
-        follow_by_page_data = get_follow_by_list_page_data(account_id, cursor)
+        follow_by_page_data = get_one_page_follow_by_list(account_id, cursor)
         if follow_by_page_data is not None:
             for node in follow_by_page_data["nodes"]:
                 if robot.check_sub_key(("username", ), node):
@@ -91,7 +91,7 @@ def get_follow_by_list(account_id):
 
 
 # 获取指定一页的粉丝列表
-def get_follow_by_list_page_data(account_id, cursor=None):
+def get_one_page_follow_by_list(account_id, cursor=None):
     follow_by_list_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
     if cursor is None:
@@ -117,7 +117,7 @@ def get_follow_list(account_id):
     cursor = None
     follow_list = []
     while True:
-        follow_page_data = get_follow_list_page_data(account_id, cursor)
+        follow_page_data = get_one_page_follow_list(account_id, cursor)
         if follow_page_data is not None:
             for node in follow_page_data["nodes"]:
                 if robot.check_sub_key(("username", ), node):
@@ -132,7 +132,7 @@ def get_follow_list(account_id):
 
 
 # 获取指定一页的关注列表
-def get_follow_list_page_data(account_id, cursor=None):
+def get_one_page_follow_list(account_id, cursor=None):
     follow_list_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
     if cursor is None:
@@ -154,7 +154,7 @@ def get_follow_list_page_data(account_id, cursor=None):
 
 
 # 获取一页的媒体信息
-def get_media_page_data(account_id, cursor):
+def get_one_page_media_data(account_id, cursor):
     media_page_url = "https://www.instagram.com/query/"
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
     media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)
@@ -322,12 +322,12 @@ class Download(threading.Thread):
             need_make_video_dir = True
             while not is_over:
                 # 获取指定时间后的一页媒体信息
-                media_page_data = get_media_page_data(account_id, cursor)
-                if media_page_data is None:
+                media_data = get_one_page_media_data(account_id, cursor)
+                if media_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
                     tool.process_exit()
 
-                nodes_data = media_page_data["nodes"]
+                nodes_data = media_data["nodes"]
                 for photo_info in nodes_data:
                     if not robot.check_sub_key(("is_video", "display_src", "date"), photo_info):
                         print_error_msg(account_name + " 媒体信息解析异常")
@@ -350,14 +350,14 @@ class Download(threading.Thread):
                         image_url = str(photo_info["display_src"].split("?")[0])
                         print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                        file_type = image_url.split(".")[-1]
-                        image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         # 第一张图片，创建目录
                         if need_make_image_dir:
                             if not tool.make_dir(image_path, 0):
                                 print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_image_dir = False
+                        file_type = image_url.split(".")[-1]
+                        image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, image_file_path):
                             print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
@@ -397,8 +397,8 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if media_page_data["page_info"]["has_next_page"]:
-                        cursor = str(media_page_data["page_info"]["end_cursor"])
+                    if media_data["page_info"]["has_next_page"]:
+                        cursor = str(media_data["page_info"]["end_cursor"])
                     else:
                         is_over = True
 
