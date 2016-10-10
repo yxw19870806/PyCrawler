@@ -54,7 +54,9 @@ def get_user_id(account_id):
 
 
 # 获取一页的歌曲信息
+# user_id -> 4306405
 def get_one_page_audio_list(user_id, page_count):
+    # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
     audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
     audio_album_return_code, audio_album_page = tool.http_request(audio_album_url)[:2]
     audio_list = []
@@ -71,6 +73,7 @@ def get_one_page_audio_list(user_id, page_count):
 
 
 # 获取歌曲的下载地址
+# audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_url(audio_en_word_id):
     audio_index_url = "http://changba.com/s/%s" % audio_en_word_id
     audio_index_return_code, audio_index_page = tool.http_request(audio_index_url)[:2]

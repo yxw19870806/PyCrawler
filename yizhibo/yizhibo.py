@@ -67,8 +67,10 @@ def get_image_list(account_id):
     return None
 
 
-# 获取指定视频的详细信息（上传时间、视频列表的下载地址等）
+# 根据video id获取指定视频的详细信息（上传时间、视频列表的下载地址等）
+# video_id -> qxonW5XeZru03nUB
 def get_video_info(video_id):
+    # http://api.xiaoka.tv/live/web/get_play_live?scid=qxonW5XeZru03nUB
     video_info_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
     video_info_return_code, video_info_data = tool.http_request(video_info_url)[:2]
     if video_info_return_code == 1:
@@ -80,13 +82,12 @@ def get_video_info(video_id):
             if robot.check_sub_key(("result", "data"), video_info_data) and int(video_info_data["result"]) == 1:
                 if robot.check_sub_key(("createtime", "linkurl"), video_info_data["data"]):
                     return video_info_data
-        print video_info_data
     return None
 
 
-# 根据mindex.m3u8获取所有ts文件的下载地址
-# http://alcdn.hls.xiaoka.tv/2016920/fb8/3b0/YJs4SLbXVC0msjWo/index.m3u8
-def get_video_download_list(link_url):
+# 根据视频对应index.m3u8地址获取所有ts文件的下载地址
+# link_url -> http://alcdn.hls.xiaoka.tv/2016103/a32/11d/qxonW5XeZru03nUB/index.m3u8
+def get_ts_url_list(link_url):
     video_link_return_code, video_link_data = tool.http_request(link_url)[:2]
     if video_link_return_code == 1:
         ts_id_list = re.findall("([\S]*.ts)", video_link_data)
@@ -331,8 +332,8 @@ class Download(threading.Thread):
                             first_video_time = str(video_info["data"]["createtime"])
 
                         # 视频的真实下载地址列表
-                        ts_file_list = get_video_download_list(str(video_info["data"]["linkurl"]))
-                        if ts_file_list is None:
+                        ts_url_list = get_ts_url_list(str(video_info["data"]["linkurl"]))
+                        if ts_url_list is None:
                             print_error_msg(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, video_info["data"]["linkurl"]))
                             continue
 
@@ -344,12 +345,12 @@ class Download(threading.Thread):
                             need_make_video_dir = False
 
                         video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
-                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_file_list))
-                        if save_video(ts_file_list, video_file_path):
+                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
+                        if save_video(ts_url_list, video_file_path):
                             print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
-                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_file_list))
+                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_url_list))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_VIDEO_COUNT < video_count:

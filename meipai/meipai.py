@@ -72,6 +72,7 @@ def get_follow_list(account_id):
 
 # 获取一页的视频信息
 def get_one_page_video_data(account_id, page_count):
+    # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
     video_page_url = "http://www.meipai.com/users/user_timeline"
     video_page_url += "?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]

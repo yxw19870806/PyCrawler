@@ -52,7 +52,6 @@ def trace(msg):
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
-    # index_url = "https://www.instagram.com/" + account_name
     search_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
     for i in range(0, 10):
         search_return_code, search_data = tool.http_request(search_url)[:2]
@@ -154,7 +153,9 @@ def get_one_page_follow_list(account_id, cursor=None):
 
 
 # 获取一页的媒体信息
+# account_id -> 490060609
 def get_one_page_media_data(account_id, cursor):
+    # https://www.instagram.com/query/?q=ig_user(490060609){media.after(9999999999999999999,12){nodes{code,date,display_src,is_video},page_info}}
     media_page_url = "https://www.instagram.com/query/"
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
     media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)
@@ -173,6 +174,7 @@ def get_one_page_media_data(account_id, cursor):
 
 
 # 根据日志ID，获取视频下载地址
+# post_id -> BKdvRtJBGou
 def get_video_url(post_id):
     post_page_url = "https://www.instagram.com/p/%s/" % post_id
     post_page_return_code, post_page = tool.http_request(post_page_url)[:2]

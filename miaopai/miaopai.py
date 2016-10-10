@@ -75,6 +75,7 @@ def get_follow_list(suid):
 
 
 # 获取用户的suid，作为查找指定用户的视频页的凭证
+# account_id -> mi9wmdhhof
 def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
     index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
@@ -86,7 +87,9 @@ def get_suid(account_id):
 
 
 # 获取一页的视频信息
+# suid -> 0r9ewgQ0v7UoDptu
 def get_one_page_video_data(suid, page_count):
+    # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
     media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     media_page_return_code, media_page = tool.http_request(media_page_url)[:2]
     if media_page_return_code == 1:
@@ -106,6 +109,7 @@ def get_scid_list(msg_data):
 
 
 # 根据video id获取下载地址
+# video_id -> 9oUkvbHMnrliNyKX3VSDNw__
 def get_video_url_by_video_id(video_id):
     video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
     video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]

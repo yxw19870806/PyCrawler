@@ -47,6 +47,7 @@ def trace(msg):
 
 # 获取指定一页的全部日志地址列表
 def get_one_page_post_url_list(account_id, page_count):
+    # http://moexia.lofter.com/?page=1
     index_page_url = "http://%s.lofter.com/?page=%s" % (account_id, page_count)
     index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
     if index_page_return_code == 1:

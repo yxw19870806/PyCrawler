@@ -77,7 +77,7 @@ def filter_post_url(post_url_list):
     return new_post_url_list
 
 
-# 获取日志页面的head标签下的内容
+# 根据日志地址以及可能的后缀，获取日志页面的head标签下的内容
 def get_post_page_head(post_url, postfix_list):
     post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面

@@ -166,7 +166,7 @@ def check_has_video(tweet_data):
     return tweet_data.find("PlayableMedia--video") >= 0
 
 
-# 获取视频的真实下载地址（ts文件列表）
+# 根据视频所在推特的ID，获取视频的下载地址
 def get_video_url_list(tweet_id):
     video_page_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
@@ -174,9 +174,9 @@ def get_video_url_list(tweet_id):
         m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
         if m3u8_file_url:
             m3u8_file_url = m3u8_file_url.replace("\\/", "/")
-            ts_file_list = []
-            deal_m3u8_file(m3u8_file_url, ts_file_list)
-            return "ts", ts_file_list
+            ts_url_list = []
+            get_ts_url_list(m3u8_file_url, ts_url_list)
+            return "ts", ts_url_list
         vmap_file_url = tool.find_sub_string(video_page, "&quot;vmap_url&quot;:&quot;", "&quot;")
         if vmap_file_url:
             vmap_file_url = vmap_file_url.replace("\\/", "/")
@@ -189,21 +189,21 @@ def get_video_url_list(tweet_id):
     return "", []
 
 
-# 获取tweet中的全部图片下载地址
+# 获取推特中的全部图片下载地址
 def get_image_url_list(tweet_data):
     return re.findall('data-image-url="([^"]*)"', tweet_data)
 
 
 # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
 # 迭代从m3u8文件中获取真实的ts地址列表
-def deal_m3u8_file(file_url, ts_file_list):
+def get_ts_url_list(file_url, ts_file_list):
     file_return_code, file_data = tool.http_request(file_url)[:2]
     if file_return_code == 1:
         new_file_url_list = re.findall("(/ext_tw_video/[\S]*)", file_data)
         for new_file_url in new_file_url_list:
             new_file_url = "https://video.twimg.com%s" % new_file_url
             if new_file_url.split(".")[-1] == "m3u8":
-                deal_m3u8_file(new_file_url, ts_file_list)
+                get_ts_url_list(new_file_url, ts_file_list)
             elif new_file_url.split(".")[-1] == "ts":
                 ts_file_list.append(new_file_url)
 
