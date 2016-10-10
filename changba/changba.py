@@ -54,7 +54,7 @@ def get_user_id(account_id):
 
 
 # 获取一页的歌曲信息
-def get_audio_list(user_id, page_count):
+def get_one_page_audio_list(user_id, page_count):
     audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
     audio_album_return_code, audio_album_page = tool.http_request(audio_album_url)[:2]
     audio_list = []
@@ -70,8 +70,8 @@ def get_audio_list(user_id, page_count):
     return audio_list
 
 
-# 获取歌曲的真实下载地址
-def get_audio_source_url(audio_en_word_id):
+# 获取歌曲的下载地址
+def get_audio_url(audio_en_word_id):
     audio_index_url = "http://changba.com/s/%s" % audio_en_word_id
     audio_index_return_code, audio_index_page = tool.http_request(audio_index_url)[:2]
     if audio_index_return_code == 1:
@@ -221,7 +221,7 @@ class Download(threading.Thread):
             need_make_download_dir = True
             while not is_over:
                 # 获取指定一页的视频信息
-                audio_list = get_audio_list(user_id, page_count)
+                audio_list = get_one_page_audio_list(user_id, page_count)
 
                 # 如果为空，表示已经取完了
                 if len(audio_list) == 0:
@@ -244,16 +244,17 @@ class Download(threading.Thread):
                     if first_audio_id == "0":
                         first_audio_id = str(audio_id)
 
-                    audio_url = get_audio_source_url(audio_info[2])
-
+                    # 获取歌曲的下载地址
+                    audio_url = get_audio_url(audio_info[2])
                     print_step_msg(account_name + " 开始下载第%s首歌曲 %s"  % (video_count, audio_url))
-                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info[1]))
+
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
                             print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
+                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info[1]))
                     if tool.save_net_file(audio_url, file_path):
                         print_step_msg(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
