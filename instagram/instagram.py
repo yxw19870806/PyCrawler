@@ -172,6 +172,15 @@ def get_one_page_media_data(account_id, cursor):
     return None
 
 
+# 根据日志ID，获取视频下载地址
+def get_video_url(post_id):
+    post_page_url = "https://www.instagram.com/p/%s/" % post_id
+    post_page_return_code, post_page = tool.http_request(post_page_url)[:2]
+    if post_page_return_code == 1:
+        return tool.find_sub_string(post_page, '<meta property="og:video:secure_url" content="', '" />')
+    return None
+
+
 class Instagram(robot.Robot):
     def __init__(self, extra_config=None):
         global GET_IMAGE_COUNT
@@ -366,30 +375,30 @@ class Download(threading.Thread):
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO and photo_info["is_video"]:
-                        post_page_url = "https://www.instagram.com/p/%s/" % photo_info["code"]
-                        post_page_return_code, post_page_response = tool.http_request(post_page_url)[:2]
-                        if post_page_return_code == 1:
-                            video_url = tool.find_sub_string(post_page_response, '<meta property="og:video:secure_url" content="', '" />')
-                            if video_url:
-                                print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                        # 根据日志ID获取视频下载地址
+                        video_url = get_video_url(photo_info["code"])
+                        if video_url is None:
+                            print_error_msg(account_name + " 第%s个视频code：%s 无法访问" % (video_count, photo_info["code"]))
+                            continue
+                        if not video_url:
+                            print_error_msg(account_name + " 第%s个视频code：%s 没有获取到下载地址" % (video_count, photo_info["code"]))
+                            continue
 
-                                file_type = video_url.split(".")[-1]
-                                video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                # 第一个视频，创建目录
-                                if need_make_video_dir:
-                                    if not tool.make_dir(video_path, 0):
-                                        print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
-                                        tool.process_exit()
-                                    need_make_video_dir = False
-                                if tool.save_net_file(video_url, video_file_path):
-                                    print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
-                                    video_count += 1
-                                else:
-                                    print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
-                            else:
-                                print_error_msg(account_name + " 第%s个视频 视频页 %s 没有获取到源地址" % (video_count, post_page_url))
+                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+
+                        # 第一个视频，创建目录
+                        if need_make_video_dir:
+                            if not tool.make_dir(video_path, 0):
+                                print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
+                                tool.process_exit()
+                            need_make_video_dir = False
+                        file_type = video_url.split(".")[-1]
+                        video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
+                        if tool.save_net_file(video_url, video_file_path):
+                            print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                            video_count += 1
                         else:
-                            print_error_msg(account_name + " 第%s个视频 无法访问信息页 %s" % (video_count, post_page_url))
+                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
