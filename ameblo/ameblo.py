@@ -66,15 +66,15 @@ def get_blog_time(blog_page):
 
 
 # 从日志列表中获取全部的图片，并过滤掉表情
-def get_blog_image_list(blog_page):
+def get_image_url_list(blog_page):
     blog_page = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
-    image_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', blog_page)
-    image_list = []
-    for image_url in image_list_find:
+    image_url_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', blog_page)
+    image_url_list = []
+    for image_url in image_url_list_find:
         # 过滤表情
         if image_url.find(".ameba.jp/blog/ucs/") == -1:
-            image_list.append(image_url)
-    return image_list
+            image_url_list.append(image_url)
+    return image_url_list
 
 
 class Ameblo(robot.Robot):
@@ -226,8 +226,8 @@ class Download(threading.Thread):
                     first_blog_time = blog_time
 
                 # 从日志列表中获取全部的图片
-                image_list = get_blog_image_list(blog_data)
-                for image_url in image_list:
+                image_url_list = get_image_url_list(blog_data)
+                for image_url in image_url_list:
                     # 使用默认图片的分辨率
                     image_url = image_url.split("?")[0]
                     print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
