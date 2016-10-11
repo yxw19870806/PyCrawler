@@ -171,13 +171,13 @@ def get_config(config, key, default_value, mode):
 
 # 将制定文件夹内的所有文件排序重命名并复制到其他文件夹中
 def sort_file(source_path, destination_path, start_count, file_name_length):
-    image_list = tool.get_dir_files_name(source_path, "desc")
+    file_list = tool.get_dir_files_name(source_path, "desc")
     # 判断排序目标文件夹是否存在
-    if len(image_list) >= 1:
+    if len(file_list) >= 1:
         if not tool.make_dir(destination_path, 0):
             return False
         # 倒叙排列
-        for file_name in image_list:
+        for file_name in file_list:
             start_count += 1
             file_type = os.path.splitext(file_name)[1]  # 包括 .扩展名
             new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
