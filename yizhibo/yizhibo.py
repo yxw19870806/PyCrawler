@@ -59,7 +59,7 @@ def get_video_id_list(account_id):
 
 
 # 获取指定账号的全部图片地址列表
-def get_image_list(account_id):
+def get_image_url_list(account_id):
     video_list_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
     index_return_code, index_page = tool.http_request(video_list_url)[:2]
     if index_return_code == 1:
@@ -267,7 +267,7 @@ class Download(threading.Thread):
             first_image_time = "0"
             need_make_image_dir = True
             if IS_DOWNLOAD_IMAGE:
-                image_url_list = get_image_list(account_id)
+                image_url_list = get_image_url_list(account_id)
                 if image_url_list is not None:
                     for image_url in image_url_list:
                         # 不使用缩略图
