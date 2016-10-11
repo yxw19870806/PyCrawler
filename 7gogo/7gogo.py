@@ -49,6 +49,7 @@ def trace(msg):
     threadLock.release()
 
 
+# 获取一页日志信息
 def get_message_page_data(account_name, target_id):
     image_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
     image_page_return_code, image_page_data = tool.http_request(image_page_url)[:2]
@@ -208,11 +209,11 @@ class Download(threading.Thread):
             need_make_video_dir = True
 
             while not is_over:
+                # 获取一页日志信息
                 message_page_data = get_message_page_data(account_name, target_id)
                 if message_page_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
                     break
-
                 # 没有了
                 if len(message_page_data) == 0:
                     break
@@ -239,9 +240,9 @@ class Download(threading.Thread):
                         if not robot.check_sub_key(("bodyType", ), media_info):
                             print_error_msg(account_name + " 媒体列表bodyType解析异常")
                             continue
+
                         # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
                         body_type = int(media_info["bodyType"])
-                        # image
                         if body_type == 1:  # 文本
                             pass
                         elif body_type == 2:  # 表情
@@ -268,8 +269,7 @@ class Download(threading.Thread):
                                     image_count += 1
                                 else:
                                     print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
-                        # video
-                        elif body_type == 8:
+                        elif body_type == 8:  # video
                             if IS_DOWNLOAD_VIDEO:
                                 if not robot.check_sub_key(("movieUrlHq", ), media_info):
                                     print_error_msg(account_name + " 第%s个视频解析异常%s" % (video_count, media_info))
