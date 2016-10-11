@@ -45,7 +45,7 @@ def trace(msg):
     threadLock.release()
 
 
-# 获取指定页数的日志页面
+# 获取指定页数的日志信息
 def get_blog_page_data(account_name, page_count):
     blog_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
     blog_return_code, blog_page, info = tool.http_request(blog_url)
@@ -205,11 +205,13 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             while not is_over:
+                # 获取一页日志
                 blog_data = get_blog_page_data(account_name, page_count)
                 if blog_data is None:
                     print_error_msg(account_name + " 第%s页日志无法获取" % page_count)
                     tool.process_exit()
 
+                # 解析日志发布时间
                 blog_time = get_blog_time(blog_data)
                 if blog_time is None:
                     print_error_msg(account_name + " 第%s页日志无法解析日志时间" % page_count)
@@ -223,6 +225,7 @@ class Download(threading.Thread):
                 if first_blog_time == "0":
                     first_blog_time = blog_time
 
+                # 从日志列表中获取全部的图片
                 image_list = get_blog_image_list(blog_data)
                 for image_url in image_list:
                     # 使用默认图片的分辨率
@@ -235,10 +238,8 @@ class Download(threading.Thread):
                             print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_image_dir = False
-
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-
                     if tool.save_net_file(image_url, file_path):
                         print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
                         image_count += 1
