@@ -163,6 +163,18 @@ def get_rp_list(post_page):
     return cp_id, rp_list
 
 
+# 获取正片页面内的所有图片地址列表
+# cp_id -> 9299
+# rp_id -> 36484
+def get_image_url_list(cp_id, rp_id):
+    # http://bcy.net/coser/detail/9299/36484
+    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
+    rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
+    if rp_page_return_code == 1:
+        return re.findall("src='([^']*)'", rp_page_response)
+    return None
+
+
 # 根据当前作品页面，获取作品页数上限
 def get_max_page_count(coser_id, post_page):
     max_page_count = tool.find_sub_string(post_page, '<a href="/u/%s/post/cos?&p=' % coser_id, '">尾页</a>')
@@ -343,36 +355,33 @@ class Download(threading.Thread):
                             print_error_msg(cn + " 创建作品目录 %s 失败" % rp_path)
                             tool.process_exit()
 
-                    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-                    rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
-                    if rp_page_return_code != 1:
-                        print_error_msg(cn + " 无法访问作品页面 %s" % rp_url)
+                    # 获取正片页面内的所有图片地址列表
+                    image_url_list = get_image_url_list(cp_id, rp_id)
+                    if image_url_list is None:
+                        print_error_msg(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
                         continue
-                    image_url_list = re.findall("src='([^']*)'", rp_page_response)
+
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
                         print_step_msg(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
-                            # 重新获取下详细页面
-                            rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
-                            if rp_page_return_code == 1:
-                                image_url_list = re.findall("src='([^']*)'", rp_page_response)
+                            # 重新获取下正片页面内的所有图片地址列表
+                            image_url_list = get_image_url_list(cp_id, rp_id)
 
                     if len(image_url_list) == 0:
-                        print_error_msg(cn + " 作品页面 %s 没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % rp_url)
+                        print_error_msg(cn + " 正片：%s没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品，cp_id：%s" % (rp_id, cp_id))
                         continue
 
                     image_count = 1
                     for image_url in image_url_list:
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
+                        print_step_msg(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
                         else:
                             file_type = "jpg"
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
-
-                        print_step_msg(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
                         if tool.save_net_file(image_url, file_path):
                             image_count += 1
                             print_step_msg(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
