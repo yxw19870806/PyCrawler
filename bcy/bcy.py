@@ -139,6 +139,40 @@ def check_login():
                     tool.process_exit()
 
 
+# 获取一页的作品信息
+def get_one_page_post(coser_id, page_count):
+    # http://bcy.net/u/50220/post/cos?&p=1
+    post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
+    post_page_return_code, post_page = tool.http_request(post_url)[:2]
+    if post_page_return_code == 1:
+        return post_page
+    return None
+
+
+# 解析作品信息，获取所有的正片信息
+def get_rp_list(post_page):
+    cp_and_rp_id_list = re.findall('/coser/detail/(\d+)/(\d+)"', post_page)
+    title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', post_page)
+    if "${post.title}" in title_list:
+        title_list.remove("${post.title}")
+    cp_id = None
+    rp_list = {}
+    if len(cp_and_rp_id_list) == len(title_list):
+        for cp_id, rp_id in cp_and_rp_id_list:
+            rp_list[rp_id] = title_list.pop(0)
+    return cp_id, rp_list
+
+
+# 根据当前作品页面，获取作品页数上限
+def get_max_page_count(coser_id, post_page):
+    max_page_count = tool.find_sub_string(post_page, '<a href="/u/%s/post/cos?&p=' % coser_id, '">尾页</a>')
+    if max_page_count:
+        max_page_count = int(max_page_count)
+    else:
+        max_page_count = 1
+    return max_page_count
+
+
 class Bcy(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -247,32 +281,30 @@ class Download(threading.Thread):
         try:
             print_step_msg(cn + " 开始")
 
+            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, cn)
+
             # 图片下载
             this_cn_total_image_count = 0
             page_count = 1
-            max_page_count = -1
             total_rp_count = 1
             first_rp_id = ""
             unique_list = []
             is_over = False
             need_make_download_dir = True  # 是否需要创建cn目录
             while not is_over:
-                post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-                post_page_return_code, post_page_response = tool.http_request(post_url)[:2]
-                if post_page_return_code != 1:
-                    print_error_msg(cn + " 无法访问信息页 %s" % post_url)
+                # 获取一页的作品信息
+                post_page = get_one_page_post(coser_id, page_count)
+                if post_page is None:
+                    print_error_msg(cn + " 无法访问第%s页作品" % page_count)
                     tool.process_exit()
 
-                page_rp_id_list = re.findall('/coser/detail/(\d+)/(\d+)"', post_page_response)
-                page_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', post_page_response)
-                if "${post.title}" in page_title_list:
-                    page_title_list.remove("${post.title}")
-                if len(page_rp_id_list) != len(page_title_list):
-                    print_error_msg(cn + " 信息页 %s 获取的rp_id和title数量不符" % post_url)
+                # 解析作品信息，获取所有的正片信息
+                cp_id, rp_list = get_rp_list(post_page)
+                if cp_id is None:
+                    print_error_msg(cn + " 第%s页作品解析异常" % page_count)
                     tool.process_exit()
 
-                title_index = 0
-                for cp_id, rp_id in page_rp_id_list:
+                for rp_id, title in rp_list.iteritems():
                     # 检查是否已下载到前一次的图片
                     if int(rp_id) <= int(self.account_info[1]):
                         is_over = True
@@ -289,22 +321,16 @@ class Download(threading.Thread):
 
                     print_step_msg("rp: " + rp_id)
 
-                    # CN目录
-                    image_path = os.path.join(IMAGE_DOWNLOAD_PATH, cn)
-
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
                             print_error_msg(cn + " 创建CN目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_download_dir = False
 
-                    # 作品目录
-                    title = page_title_list[title_index]
-                    # 过滤一些windows文件名屏蔽的字符
+                    # 标题处理
                     for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
-                        title = title.replace(filter_char, " ")
-                    # 去除前后空格
-                    title = title.strip()
+                        title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
+                    title = title.strip()  # 去除前后空格
                     if title:
                         rp_path = os.path.join(image_path, "%s %s" % (rp_id, title))
                     else:
@@ -359,18 +385,10 @@ class Download(threading.Thread):
                         is_over = True
                         break
                     else:
-                        title_index += 1
                         total_rp_count += 1
 
                 if not is_over:
-                    # 看看总共有几页
-                    if max_page_count == -1:
-                        max_page_count = tool.find_sub_string(post_page_response, '<a href="/u/%s/post/cos?&p=' % coser_id, '">尾页</a>')
-                        if max_page_count:
-                            max_page_count = int(max_page_count)
-                        else:
-                            max_page_count = 1
-                    if page_count >= max_page_count:
+                    if page_count >= get_max_page_count(coser_id, post_page):
                         is_over = True
                     else:
                         page_count += 1
