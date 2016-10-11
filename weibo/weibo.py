@@ -185,7 +185,7 @@ def get_video_url(video_play_url):
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
-        return 1, "http://bsyqncdn.miaopai.com/stream/%s.mp4" % video_id
+        return 1, "http://gslb.miaopai.com/stream/%s.mp4" % video_id
     # http://www.weishi.com/t/2000546051794045
     elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
         video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
