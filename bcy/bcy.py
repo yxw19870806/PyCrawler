@@ -122,6 +122,23 @@ def unfollow(account_id):
     return False
 
 
+# 检测登录状态
+def check_login():
+    home_page_url = "http://bcy.net/home/user/index"
+    home_page_return = tool.http_request(home_page_url)
+    if home_page_return[0] == 1:
+        real_url = home_page_return[2].geturl()
+        if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
+            is_check_ok = False
+            while not is_check_ok:
+                input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否下一步操作？ (Y)es or (N)o: ")
+                input_str = input_str.lower()
+                if input_str in ["y", "yes"]:
+                    is_check_ok = True
+                elif input_str in ["n", "no"]:
+                    tool.process_exit()
+
+
 class Bcy(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -157,19 +174,9 @@ class Bcy(robot.Robot):
             print_error_msg("导入浏览器cookies失败")
             tool.process_exit()
 
-        home_page_url = "http://bcy.net/home/user/index"
-        home_page_return = tool.http_request(home_page_url)
-        if home_page_return[0] == 1:
-            real_url = home_page_return[2].geturl()
-            if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
-                is_check_ok = False
-                while not is_check_ok:
-                    input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否下一步操作？ (Y)es or (N)o: ")
-                    input_str = input_str.lower()
-                    if input_str in ["y", "yes"]:
-                        is_check_ok = True
-                    elif input_str in ["n", "no"]:
-                        tool.process_exit()
+        # 检测登录状态
+        # 未登录时提示可能无法获取粉丝指定的作品
+        check_login()
 
         # 寻找idlist，如果没有结束进程
         account_list = {}
