@@ -117,6 +117,7 @@ def get_account_page_id(account_id):
 
 
 # 获取一页的视频信息
+# page_id -> 1005052535836307
 def get_one_page_video_data(account_page_id, since_id):
     video_album_url = "http://weibo.com/p/aj/album/loading"
     video_album_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, account_page_id)
