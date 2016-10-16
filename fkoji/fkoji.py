@@ -64,11 +64,9 @@ class Fkoji(robot.Robot):
         # 这个key的内容为总数据
         if ALL_SIGN in account_list:
             image_start_index = int(account_list[ALL_SIGN][1])
-            last_image_url = account_list[ALL_SIGN][2]
             account_list.pop(ALL_SIGN)
             save_data_image_time = 0
         else:
-            last_image_url = ""
             image_start_index = 0
             save_data_image_time = 0
 
@@ -126,12 +124,6 @@ class Fkoji(robot.Robot):
                     tag_attr = dict(tag.attrs)
                     if robot.check_sub_key(("src", "alt"), tag_attr):
                         image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
-
-                        # 检查是否已下载到前一次的图片
-                        if last_image_url == image_url:
-                            is_over = True
-                            break
-
                         # 新增图片导致的重复判断
                         if image_url in unique_list:
                             continue
@@ -141,12 +133,12 @@ class Fkoji(robot.Robot):
                         if first_image_url == "":
                             first_image_url = image_url
 
-                        # 文件类型
+                        log.step("开始下载第%s张图片 %s" % (image_count, image_url))
+
                         file_type = image_url.split(".")[-1]
                         if file_type.find("/") != -1:
                             file_type = "jpg"
                         file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, account_id, file_type))
-                        log.step("开始下载第%s张图片 %s" % (image_count, image_url))
                         if tool.save_net_file(image_url, file_path):
                             log.step("第%s张图片下载成功" % image_count)
                             image_count += 1
