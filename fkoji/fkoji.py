@@ -14,6 +14,15 @@ import time
 ALL_SIGN = "_____"
 
 
+# 从图片页面中解析获取推特发布时间的时间戳
+def get_tweet_created_time(photo_info):
+    tweet_created_time_find = photo_info.findAll("div", "tweet-created-at")
+    if len(tweet_created_time_find) == 1:
+        tweet_created_time_string = tweet_created_time_find[0].text
+        return int(time.mktime(time.strptime(tweet_created_time_string, "%Y-%m-%d %H:%M:%S")))
+    return None
+
+
 # 从图片页面中解析获取推特发布账号
 def get_tweet_account_id(photo_info):
     span_tags = photo_info.findAll("span")
@@ -57,9 +66,11 @@ class Fkoji(robot.Robot):
             image_start_index = int(account_list[ALL_SIGN][1])
             last_image_url = account_list[ALL_SIGN][2]
             account_list.pop(ALL_SIGN)
+            save_data_image_time = 0
         else:
             last_image_url = ""
             image_start_index = 0
+            save_data_image_time = 0
 
         if self.is_sort:
             image_path = self.image_temp_path
@@ -70,6 +81,7 @@ class Fkoji(robot.Robot):
         page_index = 1
         image_count = 1
         first_image_url = ""
+        first_image_time = 0
         unique_list = []
         is_over = False
         while not is_over:
@@ -87,6 +99,21 @@ class Fkoji(robot.Robot):
             for photo_info in photo_list:
                 if isinstance(photo_info, BeautifulSoup.NavigableString):
                     continue
+
+                # 从图片页面中解析获取推特发布时间的时间戳
+                tweet_created_time = get_tweet_created_time(photo_info)
+                if tweet_created_time is None:
+                    log.error("第%s张图片，解析tweet-created-at失败" % image_count)
+                    continue
+
+                # 下载完毕
+                if tweet_created_time <= save_data_image_time:
+                    break
+
+                # 将第一张图片的上传时间做为新的存档记录
+                if first_image_time == 0:
+                    first_image_time = tweet_created_time
+
                 # 从图片页面中解析获取推特发布账号
                 account_id = get_tweet_account_id(photo_info)
                 if account_id is None:
@@ -185,7 +212,7 @@ class Fkoji(robot.Robot):
         # 保存新的存档文件
         temp_list = [account_list[key] for key in sorted(account_list.keys())]
         # 把总数据插入列表头
-        temp_list.insert(0, [ALL_SIGN, str(image_start_index), first_image_url])
+        temp_list.insert(0, [ALL_SIGN, str(image_start_index), str(first_image_time)])
         tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
 
         duration_time = int(time.time() - start_time)
