@@ -14,6 +14,17 @@ import time
 ALL_SIGN = "_____"
 
 
+# 从图片页面中解析获取推特发布账号
+def get_tweet_account_id(photo_info):
+    span_tags = photo_info.findAll("span")
+    for tag in span_tags:
+        sub_tag = tag.next.next
+        if isinstance(sub_tag, BeautifulSoup.NavigableString):
+            if sub_tag.find("@") == 0:
+                return sub_tag[1:].encode("GBK")
+    return None
+
+
 class Fkoji(robot.Robot):
     def __init__(self):
         super(Fkoji, self).__init__(True)
@@ -76,16 +87,15 @@ class Fkoji(robot.Robot):
             for photo_info in photo_list:
                 if isinstance(photo_info, BeautifulSoup.NavigableString):
                     continue
-                tags = photo_info.findAll("span")
-                # 找account_id
-                for tag in tags:
-                    sub_tag = tag.next.next
-                    if isinstance(sub_tag, BeautifulSoup.NavigableString):
-                        if sub_tag.find("@") == 0:
-                            account_id = sub_tag[1:].encode("GBK")
+                # 从图片页面中解析获取推特发布账号
+                account_id = get_tweet_account_id(photo_info)
+                if account_id is None:
+                    log.error("第%s张图片，解析tweet账号失败" % image_count)
+                    continue
+
                 # 找图片
-                tags = photo_info.findAll("img")
-                for tag in tags:
+                img_tags = photo_info.findAll("img")
+                for tag in img_tags:
                     tag_attr = dict(tag.attrs)
                     if robot.check_sub_key(("src", "alt"), tag_attr):
                         image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
