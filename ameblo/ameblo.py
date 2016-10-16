@@ -218,12 +218,12 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 检查是否是上一次的最后blog
-                if int(blog_time) <= int(self.account_info[2]):
+                if blog_time <= int(self.account_info[2]):
                     break
 
                 # 将第一个日志的时间做为新的存档记录
                 if first_blog_time == "0":
-                    first_blog_time = blog_time
+                    first_blog_time = str(blog_time)
 
                 # 从日志列表中获取全部的图片
                 image_url_list = get_image_url_list(blog_data)
