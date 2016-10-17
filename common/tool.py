@@ -34,13 +34,13 @@ PROCESS_CONTROL_PORT = 0
 if not IS_INIT:
     if getattr(sys, "frozen", False):
         IS_EXECUTABLE = True
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    while True:
-        port = random.randint(10000, 65536)
-        print port
-        s.connect((PROCESS_CONTROL_IP, port))
-        s.shutdown(2)
-        PROCESS_CONTROL_PORT = port
+    PROCESS_CONTROL_PORT = random.randint(10000, 65536)
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # while True:
+    #     port = random.randint(10000, 65536)
+    #     s.connect((PROCESS_CONTROL_IP, port))
+    #     s.shutdown(2)
+    #     PROCESS_CONTROL_PORT = port
     IS_INIT = True
 
 
