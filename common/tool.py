@@ -340,7 +340,7 @@ def set_proxy(ip, port):
 
 # 快速设置cookie和代理
 # is_set_cookie     0:不设置, 1:设置
-# proxy_type        0:不设置, 1:http, 2:https
+# proxy_type        0:不设置, 1:设置
 def quickly_set(is_set_cookie, proxy_type):
     import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
