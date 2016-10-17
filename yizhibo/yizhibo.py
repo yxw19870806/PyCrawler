@@ -266,97 +266,107 @@ class Download(threading.Thread):
             image_count = 1
             first_image_time = "0"
             need_make_image_dir = True
-            if IS_DOWNLOAD_IMAGE:
+            while IS_DOWNLOAD_IMAGE:
+                # 获取全部图片地址列表
                 image_url_list = get_image_url_list(account_id)
-                if image_url_list is not None:
-                    for image_url in image_url_list:
-                        # 不使用缩略图
-                        image_url = image_url.split("@")[0]
-                        image_return_code, image_byte, image_response = tool.http_request(image_url)
-                        if image_return_code == 1:
-                            response_last_modified_time = tool.get_response_info(image_response.info(), "Last-Modified")
-                            # 字符串转换为时间戳
-                            image_created_time = tool.response_time_to_timestamp(response_last_modified_time)
-
-                            # 检查是否已下载到前一次的图片
-                            if int(image_created_time) <= int(self.account_info[4]):
-                                break
-
-                            # 将第一张图片的上传时间做为新的存档记录
-                            if first_image_time == "0":
-                                first_image_time = str(image_created_time)
-
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                    tool.process_exit()
-                                need_make_image_dir = False
-
-                            file_type = image_url.split(".")[-1].split(":")[0]
-                            image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                            # 保存图片文件
-                            print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-                            save_image(image_byte, image_file_path)
-                            print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
-                            image_count += 1
-                        else:
-                            print_step_msg(account_name + " 第%s张图片下载失败" % image_count)
-
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_IMAGE_COUNT < image_count:
-                            break
-                else:
+                if image_url_list is None:
                     print_error_msg(account_name + " 图片列表解析错误")
+                    break
+
+                for image_url in list(image_url_list):
+                    # 不使用缩略图
+                    image_url = image_url.split("@")[0]
+                    image_return_code, image_byte, image_response = tool.http_request(image_url)
+                    if image_return_code != 1:
+                        print_step_msg(account_name + " 第%s张图片下载失败" % image_count)
+                        continue
+
+                    # 获取图片的上传时间（字符串）
+                    response_last_modified_time = tool.get_response_info(image_response.info(), "Last-Modified")
+                    # 字符串转换为时间戳
+                    image_created_time = tool.response_time_to_timestamp(response_last_modified_time)
+
+                    # 检查是否已下载到前一次的图片
+                    if int(image_created_time) <= int(self.account_info[4]):
+                        break
+
+                    # 将第一张图片的上传时间做为新的存档记录
+                    if first_image_time == "0":
+                        first_image_time = str(image_created_time)
+
+                    # 第一张图片，创建目录
+                    if need_make_image_dir:
+                        if not tool.make_dir(image_path, 0):
+                            print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                            tool.process_exit()
+                        need_make_image_dir = False
+
+                    print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+
+                    file_type = image_url.split(".")[-1].split(":")[0]
+                    image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                    save_image(image_byte, image_file_path)
+                    print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                    image_count += 1
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_IMAGE_COUNT < image_count:
+                        break
+                break
 
             # 视频
             video_count = 1
             first_video_time = "0"
             need_make_video_dir = True
-            if IS_DOWNLOAD_VIDEO:
+            while IS_DOWNLOAD_VIDEO:
+                # 获取全部视频ID列表
                 video_id_list = get_video_id_list(account_id)
-                if video_id_list is not None:
-                    for video_id in video_id_list:
-                        # 获取视频的时间和下载地址
-                        video_info = get_video_info(video_id)
-                        if video_info is None:
-                            print_error_msg(account_name + " 第%s个视频 %s 信息获取失败" % (video_count, video_id))
-                            continue
-
-                        # 检查是否已下载到前一次的视频
-                        if int(video_info["data"]["createtime"]) <= int(self.account_info[2]):
-                            break
-
-                        # 将第一个视频的上传时间做为新的存档记录
-                        if first_video_time == "0":
-                            first_video_time = str(video_info["data"]["createtime"])
-
-                        # 视频的真实下载地址列表
-                        ts_url_list = get_ts_url_list(str(video_info["data"]["linkurl"]))
-                        if ts_url_list is None:
-                            print_error_msg(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, video_info["data"]["linkurl"]))
-                            continue
-
-                        # 第一个视频，创建目录
-                        if need_make_video_dir:
-                            if not tool.make_dir(video_path, 0):
-                                print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                                tool.process_exit()
-                            need_make_video_dir = False
-
-                        video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
-                        print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
-                        if save_video(ts_url_list, video_file_path):
-                            print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
-                            video_count += 1
-                        else:
-                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_url_list))
-
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_VIDEO_COUNT < video_count:
-                            break
-                else:
+                if video_id_list is None:
                     print_error_msg(account_name + " 视频列表解析错误")
+                    break
+
+                for video_id in list(video_id_list):
+                    # 获取视频的时间和下载地址
+                    video_info = get_video_info(video_id)
+                    if video_info is None:
+                        print_error_msg(account_name + " 第%s个视频 %s 信息获取失败" % (video_count, video_id))
+                        continue
+
+                    # 检查是否已下载到前一次的视频
+                    if int(video_info["data"]["createtime"]) <= int(self.account_info[2]):
+                        break
+
+                    # 将第一个视频的上传时间做为新的存档记录
+                    if first_video_time == "0":
+                        first_video_time = str(video_info["data"]["createtime"])
+
+                    # m3u8文件的地址
+                    link_url = str(video_info["data"]["linkurl"])
+                    # 视频的真实下载地址列表
+                    ts_url_list = get_ts_url_list(link_url)
+                    if ts_url_list is None:
+                        print_error_msg(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, link_url))
+                        continue
+
+                    # 第一个视频，创建目录
+                    if need_make_video_dir:
+                        if not tool.make_dir(video_path, 0):
+                            print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                            tool.process_exit()
+                        need_make_video_dir = False
+
+                    video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
+                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
+                    if save_video(ts_url_list, video_file_path):
+                        print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                        video_count += 1
+                    else:
+                        print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_url_list))
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_VIDEO_COUNT < video_count:
+                            break
+                break
 
             print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
