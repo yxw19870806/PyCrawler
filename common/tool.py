@@ -61,7 +61,6 @@ class ProcessControl(threading.Thread):
     def run(self):
         global PROCESS_STATUS
         listener = Listener((self.ip, self.port))
-        print listener
         while True:
             try:
                 conn = listener.accept()
