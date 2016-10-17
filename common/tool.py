@@ -5,6 +5,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
+from multiprocessing.connection import Listener
 import cookielib
 import cStringIO
 import mimetools
@@ -12,6 +13,7 @@ import os
 import platform
 import random
 import shutil
+import socket
 import sys
 import time
 import threading
@@ -20,40 +22,57 @@ import urllib
 import urllib2
 import zipfile
 
+
+IS_INIT = False
+IS_EXECUTABLE = False
 IS_SET_TIMEOUT = False
 PROCESS_STATUS = 0
+PROCESS_CONTROL_IP = "localhost"
+PROCESS_CONTROL_PORT = 0
 
-IS_EXECUTABLE = False
-if getattr(sys, "frozen", False):
-    IS_EXECUTABLE = True
+# 初始化操作
+if not IS_INIT:
+    if getattr(sys, "frozen", False):
+        IS_EXECUTABLE = True
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    while True:
+        port = random.randint(10000, 65536)
+        print port
+        s.connect((PROCESS_CONTROL_IP, port))
+        s.shutdown(2)
+        PROCESS_CONTROL_PORT = port
+    IS_INIT = True
 
 
 # 进程监控
 class ProcessControl(threading.Thread):
-    PROCESS_RUN = 0
+    PROCESS_RUN = 0  # 进程运行中
     PROCESS_PAUSE = 1  # 进程暂停，知道状态变为0时才继续下载
     PROCESS_STOP = 2  # 进程立刻停止，删除还未完成的数据
     PROCESS_FINISH = 3  # 进程等待现有任务完成后停止
+    ip = None
+    port = None
 
-    def __init__(self):
+    def __init__(self, ip=PROCESS_CONTROL_IP, port=PROCESS_CONTROL_PORT):
         threading.Thread.__init__(self)
-        for file_name in ["pause", "stop", "finish"]:
-            file_path = os.path.join(os.path.abspath(".."), file_name)
-            if os.path.exists(file_path):
-                os.remove(file_path)
+        self.ip = str(ip)
+        self.port = int(port)
 
     def run(self):
         global PROCESS_STATUS
+        listener = Listener((self.ip, self.port))
+        print listener
         while True:
-            if os.path.exists(os.path.join(os.path.abspath(""), "..\\pause")):
-                PROCESS_STATUS = self.PROCESS_PAUSE
-            elif os.path.exists(os.path.join(os.path.abspath(""), "..\\stop")):
-                PROCESS_STATUS = self.PROCESS_STOP
-            elif os.path.exists(os.path.join(os.path.abspath(""), "..\\finish")):
-                PROCESS_STATUS = self.PROCESS_FINISH
-            else:
-                PROCESS_STATUS = self.PROCESS_RUN
-            time.sleep(10)
+            try:
+                conn = listener.accept()
+                new_status = int(conn.recv())
+                if new_status in [self.PROCESS_RUN, self.PROCESS_PAUSE, self.PROCESS_STOP, self.PROCESS_FINISH]:
+                    PROCESS_STATUS = new_status
+            except IOError:
+                pass
+            finally:
+                conn.close()
+        listener.close()
 
 
 # 进程是否需要结束

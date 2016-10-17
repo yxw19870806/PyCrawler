@@ -4,7 +4,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-import os
+from common import process, tool
 
-root_path = os.path.abspath("..")
-open(os.path.join(root_path, "pause"), "w").close()
+process.set_process_status(tool.ProcessControl.PROCESS_PAUSE)
