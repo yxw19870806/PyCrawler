@@ -44,34 +44,41 @@ def print_step_msg(msg):
 
 
 # 获取指定账号的全部关注列表
+# suid -> 0r9ewgQ0v7UoDptu
 def get_follow_list(suid):
     page_count = 1
     follow_list = {}
     while True:
-        follow_list_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
-        follow_list_page_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
-        if follow_list_page_return_code == 1:
-            try:
-                follow_list_data = json.loads(follow_list_data)
-            except ValueError:
-                pass
+        one_page_follow_data = get_one_page_follow_data(suid, page_count)
+        if one_page_follow_data is None:
+            break
+        print one_page_follow_data
+        stat = int(one_page_follow_data["stat"])
+        if stat == 1 or stat == 2:
+            one_page_follow_list = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', one_page_follow_data["msg"])
+            for account_name, account_id in one_page_follow_list:
+                follow_list[account_id] = account_name
+            if stat == 1:
+                page_count += 1
             else:
-                if robot.check_sub_key(("msg", "stat"), follow_list_data):
-                    try:
-                        stat = int(follow_list_data["stat"])
-                    except ValueError:
-                        pass
-                    else:
-                        if stat == 1 or stat == 2:
-                            follow_list_find = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_list_data["msg"])
-                            for account_name, account_id in follow_list_find:
-                                follow_list[account_id] = account_name
-                            if stat == 1:
-                                page_count += 1
-                            else:
-                                break
+                return follow_list
+    return None
 
-    return follow_list
+
+# 获取指定账号一页的关注列表
+# suid -> 0r9ewgQ0v7UoDptu
+def get_one_page_follow_data(suid, page_count):
+    follow_list_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
+    follow_list_page_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
+    if follow_list_page_return_code == 1:
+        try:
+            follow_list_data = json.loads(follow_list_data)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("msg", "stat"), follow_list_data) and follow_list_data["stat"].isdigit():
+                return follow_list_data
+    return None
 
 
 # 获取用户的suid，作为查找指定用户的视频页的凭证
