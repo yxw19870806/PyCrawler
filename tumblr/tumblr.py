@@ -94,6 +94,15 @@ def get_post_page_head(post_url, postfix_list):
         return None
 
 
+# 根据日志id获取页面中的全部视频信息（视频地址、视频）
+def get_video_list(account_id, post_id):
+    video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+    video_page_return_code, video_page = tool.http_request(video_play_url)[:2]
+    if video_page_return_code == 1:
+        return re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
+    return None
+
+
 # 过滤头像以及页面上找到不同分辨率的同一张图，保留分辨率较大的那张
 def filter_different_resolution_images(image_url_list):
     new_image_url_list = {}
@@ -308,12 +317,12 @@ class Download(threading.Thread):
 
                     # 视频下载
                     if IS_DOWNLOAD_VIDEO and og_type == "tumblr-feed:video":
-                        video_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-                        video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
-                        if video_page_return_code == 1:
-                            video_list = re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
+                        video_list = get_video_list(account_id, post_id)
+                        if video_list is None:
+                            print_error_msg(account_id + " 第%s个视频 日志id：%s无法访问播放页" % (video_count, post_id))
+                        else:
                             if len(video_list) > 0:
-                                for video_url, video_type in video_list:
+                                for video_url, video_type in list(video_list):
                                     print_step_msg(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                                     file_type = video_type.split("/")[-1]
@@ -330,9 +339,7 @@ class Download(threading.Thread):
                                     else:
                                         print_error_msg(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                             else:
-                                print_error_msg(account_id + " 第%s个视频 视频页 %s 中没有找到视频" % (video_count, video_page_url))
-                        else:
-                            print_error_msg(account_id + " 第%s个视频 无法访问视频页 %s" % (video_count, video_page_url))
+                                print_error_msg(account_id + " 第%s个视频 日志id：%s 中没有找到视频" % (video_count, post_id))
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE:
