@@ -260,7 +260,7 @@ class Twitter(robot.Robot):
 
     def main(self):
         global ACCOUNTS
-        
+
         if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
             print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
@@ -431,10 +431,6 @@ class Download(threading.Thread):
                             else:
                                 print_error_msg(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
 
-                            # 达到配置文件中的下载数量，结束
-                            if 0 < GET_VIDEO_COUNT < video_count:
-                                is_over = True
-
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
                         # 匹配获取全部的图片地址
@@ -463,11 +459,8 @@ class Download(threading.Thread):
                             else:
                                 print_error_msg(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
 
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_IMAGE_COUNT < image_count:
-                            is_over = True
-
-                    if is_over:
+                    # 达到配置文件中的下载数量，结束
+                    if (0 < GET_VIDEO_COUNT < video_count) or (0 < GET_IMAGE_COUNT < image_count):
                         break
 
                 if not is_over:

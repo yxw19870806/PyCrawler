@@ -102,7 +102,7 @@ class Ameblo(robot.Robot):
 
     def main(self):
         global ACCOUNTS
-        
+
         if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
             print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
@@ -231,7 +231,7 @@ class Download(threading.Thread):
                     # 使用默认图片的分辨率
                     image_url = image_url.split("?")[0]
                     print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-                        
+
                     # 第一张图片，创建目录
                     if need_make_image_dir:
                         if not tool.make_dir(image_path, 0):

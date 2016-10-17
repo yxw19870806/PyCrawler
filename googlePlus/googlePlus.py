@@ -290,7 +290,7 @@ class Download(threading.Thread):
                             image_count += 1
                         else:
                             print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
-                            
+
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
                             is_over = True

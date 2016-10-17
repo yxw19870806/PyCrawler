@@ -365,7 +365,7 @@ class Download(threading.Thread):
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
-                            break
+                        break
                 break
 
             print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))

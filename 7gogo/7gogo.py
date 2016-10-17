@@ -51,7 +51,8 @@ def trace(msg):
 
 # 获取一页日志信息
 def get_message_page_data(account_name, target_id):
-    image_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
+    image_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
+    image_page_url += "?targetId=%s&limit=%s&direction=PREV" % (target_id, MESSAGE_COUNT_PER_PAGE)
     image_page_return_code, image_page_data = tool.http_request(image_page_url)[:2]
     if image_page_return_code == 1:
         try:
@@ -59,7 +60,7 @@ def get_message_page_data(account_name, target_id):
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("data", ), image_page_data):
+            if robot.check_sub_key(("data",), image_page_data):
                 return image_page_data["data"]
     return None
 
@@ -219,7 +220,7 @@ class Download(threading.Thread):
                     break
 
                 for message_info in message_page_data:
-                    if not robot.check_sub_key(("post", ), message_info):
+                    if not robot.check_sub_key(("post",), message_info):
                         print_error_msg(account_name + " 媒体信息解析异常 %s" % message_info)
                         continue
                     if not robot.check_sub_key(("body", "postId"), message_info["post"]):
@@ -237,7 +238,7 @@ class Download(threading.Thread):
                         first_post_id = str(target_id)
 
                     for media_info in message_info["post"]["body"]:
-                        if not robot.check_sub_key(("bodyType", ), media_info):
+                        if not robot.check_sub_key(("bodyType",), media_info):
                             print_error_msg(account_name + " 媒体列表bodyType解析异常")
                             continue
 
@@ -249,7 +250,7 @@ class Download(threading.Thread):
                             pass
                         elif body_type == 3:  # 图片
                             if IS_DOWNLOAD_IMAGE:
-                                if not robot.check_sub_key(("image", ), media_info):
+                                if not robot.check_sub_key(("image",), media_info):
                                     print_error_msg(account_name + " 第%s张图片解析异常%s" % (image_count, media_info))
                                     continue
 
@@ -271,7 +272,7 @@ class Download(threading.Thread):
                                     print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
                         elif body_type == 8:  # video
                             if IS_DOWNLOAD_VIDEO:
-                                if not robot.check_sub_key(("movieUrlHq", ), media_info):
+                                if not robot.check_sub_key(("movieUrlHq",), media_info):
                                     print_error_msg(account_name + " 第%s个视频解析异常%s" % (video_count, media_info))
                                     continue
 

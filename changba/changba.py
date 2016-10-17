@@ -249,7 +249,7 @@ class Download(threading.Thread):
 
                     # 获取歌曲的下载地址
                     audio_url = get_audio_url(audio_info[2])
-                    print_step_msg(account_name + " 开始下载第%s首歌曲 %s"  % (video_count, audio_url))
+                    print_step_msg(account_name + " 开始下载第%s首歌曲 %s" % (video_count, audio_url))
 
                     # 第一个视频，创建目录
                     if need_make_download_dir:

@@ -386,7 +386,7 @@ class Download(threading.Thread):
                             image_count += 1
                             print_step_msg(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
                         else:
-                            print_error_msg(cn + " %s 第%s张图片 %s 下载失败" % (rp_url, image_count, image_url))
+                            print_error_msg(cn + " %s 第%s张图片 %s 下载失败" % (rp_id, image_count, image_url))
 
                     this_cn_total_image_count += image_count - 1
 

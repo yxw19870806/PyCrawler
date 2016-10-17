@@ -83,7 +83,7 @@ class Shinoda(robot.Robot):
                 is_over = True
 
         log.step("下载完毕")
-        
+
         # 排序复制到保存目录
         if self.is_sort:
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
@@ -98,7 +98,7 @@ class Shinoda(robot.Robot):
         new_save_file = open(new_save_file_path, "w")
         new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
         new_save_file.close()
-            
+
         duration_time = int(time.time() - start_time)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, image_count - 1))
 

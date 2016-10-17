@@ -200,7 +200,7 @@ class Fkoji(robot.Robot):
 
             # 删除临时文件夹
             tool.remove_dir(self.image_temp_path)
-            
+
         # 保存新的存档文件
         temp_list = [account_list[key] for key in sorted(account_list.keys())]
         # 把总数据插入列表头
