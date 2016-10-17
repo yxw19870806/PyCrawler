@@ -9,11 +9,11 @@ import os
 imageRootPath = "Z:\\G+\\fkoji\\"
 
 def getCount(path):
-    tempFile = open(path, 'r')
+    tempFile = open(path, "r")
     lines = tempFile.readlines()
     tempFile.close()
     for line in lines:
-        if line.find('http') != -1:
+        if line.find("http") != -1:
             continue
         line = line.split("\t")
         imagePath = imageRootPath + line[0].replace("\n", "")

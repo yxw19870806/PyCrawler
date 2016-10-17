@@ -6,5 +6,5 @@ email: hikaru870806@hotmail.com
 """
 import os
 
-root_path = os.path.abspath('..')
-os.remove(os.path.join(root_path, 'pause'))
+root_path = os.path.abspath("..")
+os.remove(os.path.join(root_path, "pause"))

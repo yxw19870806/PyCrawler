@@ -8,7 +8,7 @@ import os
 
 
 def getCount(idPath, imageRootPath):
-    tempFile = open(idPath, 'r')
+    tempFile = open(idPath, "r")
     lines = tempFile.readlines()
     tempFile.close()
     for line in lines:
@@ -18,7 +18,7 @@ def getCount(idPath, imageRootPath):
         if os.path.exists(imagePath):
             all_file = os.listdir(imagePath)
             count1 = len(all_file)
-            max_count = int(max(all_file).split('.')[0])
+            max_count = int(max(all_file).split(".")[0])
         else:
             count1 = 0
             max_count = 0

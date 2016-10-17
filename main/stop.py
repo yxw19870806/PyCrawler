@@ -6,5 +6,5 @@ email: hikaru870806@hotmail.com
 """
 import os
 
-root_path = os.path.abspath('..')
-open(os.path.join(root_path, 'stop'), 'w').close()
+root_path = os.path.abspath("..")
+open(os.path.join(root_path, "stop"), "w").close()
