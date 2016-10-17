@@ -99,7 +99,7 @@ def get_video_list(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_page_return_code, video_page = tool.http_request(video_play_url)[:2]
     if video_page_return_code == 1:
-        return re.findall('src="(http[s]?://www.tumblr.com/video_file/' + post_id + '/[^"]*)" type="([^"]*)"', video_page)
+        return re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="([^"]*)"', video_page)
     return None
 
 
