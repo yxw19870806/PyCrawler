@@ -159,10 +159,7 @@ class Diary(robot.Robot):
         tool.remove_dir(IMAGE_TEMP_PATH)
 
         # 重新排序保存存档文件
-        account_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
-        temp_list = [account_list[key] for key in sorted(account_list.keys())]
-        tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
-        os.remove(NEW_SAVE_DATA_PATH)
+        robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
         duration_time = int(time.time() - start_time)
         print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, TOTAL_IMAGE_COUNT))

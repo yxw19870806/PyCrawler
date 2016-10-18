@@ -197,7 +197,7 @@ def read_save_data(save_data_path, key_index, default_value_list):
         save_data_file.close()
         for single_save_data in save_list:
             single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
-            if len(single_save_data) < 1:
+            if len(single_save_data) == 0:
                 continue
             single_save_list = single_save_data.split("\t")
 
@@ -214,6 +214,15 @@ def read_save_data(save_data_path, key_index, default_value_list):
                 index += 1
             result_list[single_save_list[key_index]] = single_save_list
     return result_list
+
+
+# 将临时存档文件按照主键排序后写入原始存档文件
+# 只支持一行一条记录，每条记录格式相同的存档文件
+def rewrite_save_file(temp_save_data_path, save_data_path):
+    account_list = read_save_data(temp_save_data_path, 0, [])
+    temp_list = [account_list[key] for key in sorted(account_list.keys())]
+    tool.write_file(tool.list_to_string(temp_list), save_data_path, 2)
+    os.remove(temp_save_data_path)
 
 
 # 对存档文件夹按照指定列重新排序
