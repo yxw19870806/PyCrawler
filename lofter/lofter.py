@@ -84,8 +84,6 @@ class Lofter(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        start_time = time.time()
-
         if not self.is_download_image:
             print_error_msg("下载图片没有开启，请检查配置！")
             tool.process_exit()
@@ -152,8 +150,7 @@ class Lofter(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, TOTAL_IMAGE_COUNT))
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):

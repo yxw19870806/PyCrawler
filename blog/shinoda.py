@@ -19,8 +19,6 @@ class Shinoda(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        start_time = time.time()
-
         # 图片下载临时目录
         if self.is_sort:
             log.step("创建图片下载目录 %s" % self.image_temp_path)
@@ -99,8 +97,7 @@ class Shinoda(robot.Robot):
         new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
         new_save_file.close()
 
-        duration_time = int(time.time() - start_time)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (duration_time, image_count - 1))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ IS_INIT = False
 class Robot(object):
     def __init__(self, is_auto_proxy=False, extra_config=None):
         global IS_INIT
+        self.start_time = time.time()
 
         # exe程序
         if tool.IS_EXECUTABLE:
@@ -125,6 +126,10 @@ class Robot(object):
 
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
+
+    # 获取程序已运行时间（seconds）
+    def get_run_time(self):
+        return time.time() - self.start_time
 
 
 # 读取配置文件

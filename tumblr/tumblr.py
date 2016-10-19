@@ -157,8 +157,6 @@ class Tumblr(robot.Robot):
             print_error_msg("下载图片和视频都没有开启，请检查配置！")
             tool.process_exit()
 
-        start_time = time.time()
-
         # 创建图片保存目录
         if IS_DOWNLOAD_IMAGE:
             print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
@@ -229,8 +227,7 @@ class Tumblr(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        duration_time = int(time.time() - start_time)
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (duration_time, TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
