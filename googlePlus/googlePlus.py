@@ -330,9 +330,9 @@ class Download(threading.Thread):
             print_step_msg(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_id + " 提前退出")
+                print_step_msg(account_name + " 提前退出")
             else:
-                print_error_msg(account_id + " 异常退出")
+                print_error_msg(account_name + " 异常退出")
         except Exception, e:
             print_step_msg(account_name + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
