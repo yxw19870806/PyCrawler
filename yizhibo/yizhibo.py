@@ -135,7 +135,7 @@ class YiZhiBo(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        robot.Robot.__init__(self)
+        robot.Robot.__init__(self, True, True)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -154,33 +154,10 @@ class YiZhiBo(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
-            print_error_msg("下载图片和视频都没有开启，请检查配置！")
-            tool.process_exit()
-
-        # 创建图片保存目录
-        if IS_DOWNLOAD_IMAGE:
-            print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
-            if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-                print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
-                tool.process_exit()
-
-        # 创建视频保存目录
-        if IS_DOWNLOAD_VIDEO:
-            print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
-            if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
-                tool.process_exit()
-
-        # 寻找存档，如果没有结束进程
-        account_list = {}
-        if os.path.exists(self.save_data_path):
-            # account_id  video_count  last_video_time  image_count  last_image_time(account_name)
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
-            ACCOUNTS = account_list.keys()
-        else:
-            print_error_msg("存档文件 %s 不存在" % self.save_data_path)
-            tool.process_exit()
+        # 解析存档文件
+        # account_id  video_count  last_video_time  image_count  last_image_time(account_name)
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
+        ACCOUNTS = account_list.keys()
 
         # 创建临时存档文件
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")

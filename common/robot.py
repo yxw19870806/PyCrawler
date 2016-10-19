@@ -15,9 +15,13 @@ IS_INIT = False
 
 
 class Robot(object):
-    def __init__(self, is_auto_proxy=False, extra_config=None):
+    # 程序全局变量的设置
+    # is_download_image 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
+    # is_download_video 程序是否支持下载视频功能（会判断配置中是否需要下载视频，如全部是则创建视频下载目录）
+    def __init__(self, is_download_image=False, is_download_video=False, is_auto_proxy=False, extra_config=None):
         global IS_INIT
         self.start_time = time.time()
+        self.error_msg = ""
 
         # exe程序
         if tool.IS_EXECUTABLE:
@@ -76,36 +80,84 @@ class Robot(object):
             IS_INIT = True
 
         # 是否下载
-        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", True, 2)
-        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 2)
+        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", True, 2) and is_download_image
+        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 2) and is_download_video
 
-        # 存档
-        if "image_download_path" in extra_config:
-            self.image_download_path = extra_config["image_download_path"]
-        else:
-            self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
-        if "image_temp_path" in extra_config:
-            self.image_temp_path = extra_config["image_temp_path"]
-        else:
-            self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
-        if "video_download_path" in extra_config:
-            self.video_download_path = extra_config["video_download_path"]
-        else:
-            self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
-        if "video_temp_path" in extra_config:
-            self.video_temp_path = extra_config["video_temp_path"]
-        else:
-            self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
+        if not self.is_download_image and not self.is_download_video:
+            # 下载图片和视频都没有开启，请检查配置
+            if not is_download_image and not is_download_video:
+                self.error_msg = "下载图片和视频都没有开启，请检查配置！"
+            elif not is_download_image:
+                self.error_msg = "下载图片没有开启，请检查配置！"
+            elif not is_download_video:
+                self.error_msg = "下载视频没有开启，请检查配置！"
+            return
 
+        # 是否需要下载图片
+        if self.is_download_image:
+            # 图片保存目录
+            if "image_download_path" in extra_config:
+                self.image_download_path = extra_config["image_download_path"]
+            else:
+                self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
+            if not tool.make_dir(self.image_download_path, 0):
+                # 图片保存目录创建失败
+                self.error_msg = "图片保存目录%s创建失败！" % self.image_download_path
+                return
+            # 图片临时下载目录
+            if "image_temp_path" in extra_config:
+                self.image_temp_path = extra_config["image_temp_path"]
+            else:
+                self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
+            if not tool.make_dir(self.image_temp_path, 0):
+                # 图片临时下载目录创建失败
+                self.error_msg = "图片临时下载目录%s创建失败！" % self.image_temp_path
+                return
+            # 图片下载数量，0为下载全部可用资源
+            self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 1)
+        else:
+            self.image_download_path = None
+            self.image_temp_path = None
+            self.get_image_count = 0
+        # 是否需要下载视频
+        if self.is_download_video:
+            # 视频保存目录
+            if "video_download_path" in extra_config:
+                self.video_download_path = extra_config["video_download_path"]
+            else:
+                self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
+            if not tool.make_dir(self.video_download_path, 0):
+                # 视频保存目录创建失败
+                self.error_msg = "视频保存目录%s创建失败！" % self.video_download_path
+                return
+            # 视频下载临时目录
+            if "video_temp_path" in extra_config:
+                self.video_temp_path = extra_config["video_temp_path"]
+            else:
+                self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
+            if not tool.make_dir(self.video_temp_path, 0):
+                # 视频下载临时目录创建失败
+                self.error_msg = "视频临时下载目录%s创建失败！" % self.video_temp_path
+                return
+            # 视频下载数量，0为下载全部可用资源
+            self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 1)
+        else:
+            self.video_download_path = None
+            self.video_temp_path = None
+            self.get_video_count = 0
+        # 是否需要重新排序图片
         self.is_sort = get_config(config, "IS_SORT", True, 2)
-        self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 1)
-        self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 1)
         self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 1)
 
+        # 存档
         if "save_data_path" in extra_config:
             self.save_data_path = extra_config["save_data_path"]
         else:
             self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
+        if not os.path.exists(self.save_data_path):
+            # 存档文件不存在
+            self.error_msg = "视频临时下载目录%s创建失败！" % self.video_temp_path
+            return
 
         # 代理
         is_proxy = get_config(config, "IS_PROXY", 2, 1)
@@ -130,6 +182,12 @@ class Robot(object):
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
         return time.time() - self.start_time
+
+    # 初始化，根据传值创建对应目录，判断一些设置是否正确
+    # is_download_image 继承的类是否有下载图片功能
+    # is_download_video 继承的类是否有下载视频功能
+    def init(self, is_download_image, is_download_video):
+        pass
 
 
 # 读取配置文件
