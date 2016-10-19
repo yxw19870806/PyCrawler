@@ -14,19 +14,13 @@ import time
 
 class Shinoda(robot.Robot):
     def __init__(self):
-        super(Shinoda, self).__init__()
+        robot.Robot.__init__(self, True)
 
-        tool.print_msg("配置文件读取完成")
+        self.init_result(log.error, log.step)
 
     def main(self):
-        # 图片下载临时目录
-        if self.is_sort:
-            log.step("创建图片下载目录 %s" % self.image_temp_path)
-            if not tool.make_dir(self.image_temp_path, 0):
-                log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
-                tool.process_exit()
-
-        # 读取存档文件
+        # TODO 可以没有存档
+        # 解析存档文件
         last_blog_id = ""
         image_start_index = 0
         if os.path.exists(self.save_data_path):

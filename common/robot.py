@@ -183,11 +183,14 @@ class Robot(object):
     def get_run_time(self):
         return time.time() - self.start_time
 
-    # 初始化，根据传值创建对应目录，判断一些设置是否正确
-    # is_download_image 继承的类是否有下载图片功能
-    # is_download_video 继承的类是否有下载视频功能
-    def init(self, is_download_image, is_download_video):
-        pass
+    # 输出是否有初始化异常
+    def init_result(self, print_error_function, print_step_function):
+        if self.error_msg:
+            print_error_function(self.error_msg)
+            tool.process_exit()
+            return True
+        print_step_function("配置文件读取完成")
+        return False
 
 
 # 读取配置文件

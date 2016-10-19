@@ -36,28 +36,15 @@ def get_tweet_account_id(photo_info):
 
 class Fkoji(robot.Robot):
     def __init__(self):
-        super(Fkoji, self).__init__(True)
+        robot.Robot.__init__(self, True)
 
-        tool.print_msg("配置文件读取完成")
+        self.init_result(log.error, log.step)
 
     def main(self):
-        # 图片保存目录
-        log.step("创建图片根目录 %s" % self.image_download_path)
-        if not tool.make_dir(self.image_download_path, 0):
-            log.error("创建图片根目录 %s 失败" % self.image_download_path)
-            tool.process_exit()
-
-        # 图片下载临时目录
-        if self.is_sort:
-            log.step("创建图片下载目录 %s" % self.image_temp_path)
-            if not tool.make_dir(self.image_temp_path, 0):
-                log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
-                tool.process_exit()
-
+        # TODO 可以没有存档
+        # 解析存档文件
         # 寻找fkoji.save
-        account_list = {}
-        if os.path.exists(self.save_data_path):
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
 
         # 这个key的内容为总数据
         if ALL_SIGN in account_list:
