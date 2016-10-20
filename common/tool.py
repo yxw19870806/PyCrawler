@@ -22,26 +22,15 @@ import urllib
 import urllib2
 import zipfile
 
-
-IS_INIT = False
-IS_EXECUTABLE = False
+# 初始化操作
 IS_SET_TIMEOUT = False
 PROCESS_STATUS = 0
 PROCESS_CONTROL_IP = "localhost"
-PROCESS_CONTROL_PORT = 0
-
-# 初始化操作
-if not IS_INIT:
-    if getattr(sys, "frozen", False):
-        IS_EXECUTABLE = True
-    PROCESS_CONTROL_PORT = random.randint(10000, 65536)
-    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # while True:
-    #     port = random.randint(10000, 65536)
-    #     s.connect((PROCESS_CONTROL_IP, port))
-    #     s.shutdown(2)
-    #     PROCESS_CONTROL_PORT = port
-    IS_INIT = True
+PROCESS_CONTROL_PORT = 54321
+if getattr(sys, "frozen", False):
+    IS_EXECUTABLE = True
+else:
+    IS_EXECUTABLE = False
 
 
 # 进程监控
