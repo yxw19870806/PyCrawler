@@ -272,10 +272,6 @@ class Weibo(robot.Robot):
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
         ACCOUNTS = account_list.keys()
 
-        # 创建临时存档文件
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
-        new_save_data_file.close()
-
         # 先访问下页面，产生cookies
         auto_redirect_visit("http://www.weibo.com/")
         time.sleep(2)

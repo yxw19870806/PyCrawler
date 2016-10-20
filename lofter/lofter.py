@@ -90,10 +90,6 @@ class Lofter(robot.Robot):
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
         ACCOUNTS = account_list.keys()
 
-        # 创建临时存档文件
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
-        new_save_data_file.close()
-
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = tool.ProcessControl()
         process_control_thread.setDaemon(True)
