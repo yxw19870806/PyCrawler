@@ -62,7 +62,13 @@ class Template(robot.Robot):
         global IS_DOWNLOAD_VIDEO
 
         # todo 是否需要代理
-        robot.Robot.__init__(self)
+        sys_config = [
+            robot.SYS_DOWNLOAD_IMAGE,
+            robot.SYS_DOWNLOAD_VIDEO,
+            robot.SYS_SET_PROXY,
+            robot.SYS_NOT_CHECK_SAVE_DATA,
+        ]
+        robot.Robot.__init__(self, sys_config)
         # robot.Robot.__init__(self, True)
 
         # 设置全局变量，供子线程调用
@@ -83,45 +89,17 @@ class Template(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        # todo 是否需要下载图片或视频
-        if not IS_DOWNLOAD_IMAGE and not IS_DOWNLOAD_VIDEO:
-            print_error_msg("下载图片和视频都没有开启，请检查配置！")
-            tool.process_exit()
-
-        start_time = time.time()
-
-        # todo 是否需要下载图片
-        # 创建图片保存目录
-        if IS_DOWNLOAD_IMAGE:
-            print_step_msg("创建图片根目录 %s" % IMAGE_DOWNLOAD_PATH)
-            if not tool.make_dir(IMAGE_DOWNLOAD_PATH, 0):
-                print_error_msg("创建图片根目录 %s 失败" % IMAGE_DOWNLOAD_PATH)
-                tool.process_exit()
-
-        # todo 是否需要下载视频
-        # 创建视频保存目录
-        if IS_DOWNLOAD_VIDEO:
-            print_step_msg("创建视频根目录 %s" % VIDEO_DOWNLOAD_PATH)
-            if not tool.make_dir(VIDEO_DOWNLOAD_PATH, 0):
-                print_error_msg("创建视频根目录 %s 失败" % VIDEO_DOWNLOAD_PATH)
-                tool.process_exit()
-
         # todo 是否需要设置cookies
         # 设置系统cookies
         if not tool.set_cookie(self.cookie_path, self.browser_version, ()):
             print_error_msg("导入浏览器cookies失败")
             tool.process_exit()
 
-        # 寻找存档，如果没有结束进程
-        account_list = {}
-        if os.path.exists(self.save_data_path):
-            # todo 存档文件格式
-            # account_id
-            account_list = robot.read_save_data(self.save_data_path, 0, ["", ])
-            ACCOUNTS = account_list.keys()
-        else:
-            print_error_msg("存档文件 %s 不存在" % self.save_data_path)
-            tool.process_exit()
+        # todo 存档文件格式
+        # 解析存档文件
+        # account_id
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", ])
+        ACCOUNTS = account_list.keys()
 
         # 创建临时存档文件
         new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
@@ -169,14 +147,10 @@ class Template(robot.Robot):
         tool.remove_dir(VIDEO_TEMP_PATH)
 
         # 重新排序保存存档文件
-        account_list = robot.read_save_data(NEW_SAVE_DATA_PATH, 0, [])
-        temp_list = [account_list[key] for key in sorted(account_list.keys())]
-        tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
-        os.remove(NEW_SAVE_DATA_PATH)
+        robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        duration_time = int(time.time() - start_time)
         # todo 是否需要下载图片或视频
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (duration_time, TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
+        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
