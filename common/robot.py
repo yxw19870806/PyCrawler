@@ -149,11 +149,6 @@ class Robot(object):
                 self.image_temp_path = extra_config["image_temp_path"]
             else:
                 self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
-            if not tool.make_dir(self.image_temp_path, 0):
-                # 图片临时下载目录创建失败
-                self.print_msg("图片临时下载目录%s创建失败！" % self.image_temp_path)
-                tool.process_exit()
-                return
             # 图片下载数量，0为下载全部可用资源
             self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 1)
         else:
@@ -177,11 +172,6 @@ class Robot(object):
                 self.video_temp_path = extra_config["video_temp_path"]
             else:
                 self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
-            if not tool.make_dir(self.video_temp_path, 0):
-                # 视频下载临时目录创建失败
-                self.print_msg("视频临时下载目录%s创建失败！" % self.video_temp_path)
-                tool.process_exit()
-                return
             # 视频下载数量，0为下载全部可用资源
             self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 1)
         else:
