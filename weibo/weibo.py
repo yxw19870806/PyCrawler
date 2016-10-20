@@ -276,11 +276,6 @@ class Weibo(robot.Robot):
         auto_redirect_visit("http://www.weibo.com/")
         time.sleep(2)
 
-        # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = tool.ProcessControl()
-        process_control_thread.setDaemon(True)
-        process_control_thread.start()
-
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_id in sorted(account_list.keys()):

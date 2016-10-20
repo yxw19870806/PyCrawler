@@ -102,11 +102,6 @@ class SevenGoGo(robot.Robot):
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
         ACCOUNTS = account_list.keys()
 
-        # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = tool.ProcessControl()
-        process_control_thread.setDaemon(True)
-        process_control_thread.start()
-
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_name in sorted(account_list.keys()):

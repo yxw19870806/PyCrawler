@@ -212,6 +212,11 @@ class Robot(object):
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
 
+        # 启用线程监控是否需要暂停其他下载线程
+        process_control_thread = tool.ProcessControl()
+        process_control_thread.setDaemon(True)
+        process_control_thread.start()
+
         self.print_msg("初始化完成")
 
     # 获取程序已运行时间（seconds）
