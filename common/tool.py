@@ -478,12 +478,17 @@ def remove_dir(dir_path):
         return True
     shutil.rmtree(dir_path, True)
 
+
+# 删除指定目录下的全部空文件夹
+def delete_null_dir(dir_path):
+    if os.path.isdir(dir_path):
         for file_name in os.listdir(dir_path):
-            target_file = os.path.join(dir_path, file_name)
-            if os.path.isfile(target_file):
-                os.remove(target_file)
-    else:
-        shutil.rmtree(dir_path, True)
+            sub_path = os.path.join(dir_path, file_name)
+            if os.path.isdir(sub_path):
+                delete_null_dir(sub_path)
+        if len(os.listdir(dir_path)) == 0:
+            print dir_path
+            os.rmdir(dir_path)
 
 
 # 创建目录
