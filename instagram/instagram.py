@@ -195,7 +195,12 @@ class Instagram(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        robot.Robot.__init__(self, True, True, True, extra_config)
+        sys_config = [
+            robot.SYS_DOWNLOAD_IMAGE,
+            robot.SYS_DOWNLOAD_VIDEO,
+            robot.SYS_SET_PROXY,
+        ]
+        robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -207,8 +212,6 @@ class Instagram(robot.Robot):
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-
-        self.init_result(print_error_msg, print_step_msg)
 
     def main(self):
         global ACCOUNTS

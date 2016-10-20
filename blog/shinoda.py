@@ -14,12 +14,13 @@ import time
 
 class Shinoda(robot.Robot):
     def __init__(self):
-        robot.Robot.__init__(self, True)
-
-        self.init_result(log.error, log.step)
+        sys_config = [
+            robot.SYS_DOWNLOAD_IMAGE,
+            robot.SYS_NOT_CHECK_SAVE_DATA,
+        ]
+        robot.Robot.__init__(self, sys_config)
 
     def main(self):
-        # TODO 可以没有存档
         # 解析存档文件
         last_blog_id = ""
         image_start_index = 0

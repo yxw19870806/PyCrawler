@@ -36,12 +36,14 @@ def get_tweet_account_id(photo_info):
 
 class Fkoji(robot.Robot):
     def __init__(self):
-        robot.Robot.__init__(self, True)
-
-        self.init_result(log.error, log.step)
+        sys_config = [
+            robot.SYS_DOWNLOAD_IMAGE,
+            robot.SYS_SET_PROXY,
+            robot.SYS_NOT_CHECK_SAVE_DATA,
+        ]
+        robot.Robot.__init__(self, sys_config)
 
     def main(self):
-        # TODO 可以没有存档
         # 解析存档文件
         # 寻找fkoji.save
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])

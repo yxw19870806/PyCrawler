@@ -69,7 +69,10 @@ class Lofter(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
-        robot.Robot.__init__(self, True)
+        sys_config = [
+            robot.SYS_DOWNLOAD_IMAGE,
+        ]
+        robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
@@ -78,8 +81,6 @@ class Lofter(robot.Robot):
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-
-        self.init_result(print_error_msg, print_step_msg)
 
     def main(self):
         global ACCOUNTS

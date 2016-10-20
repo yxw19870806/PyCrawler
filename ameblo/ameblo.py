@@ -21,8 +21,6 @@ IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
-IS_DOWNLOAD_IMAGE = True
-IS_DOWNLOAD_VIDEO = True
 
 threadLock = threading.Lock()
 
@@ -84,21 +82,18 @@ class Ameblo(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
-        global IS_DOWNLOAD_IMAGE
-        global IS_DOWNLOAD_VIDEO
 
-        robot.Robot.__init__(self, True)
+        sys_config = [
+            robot.SYS_DOWNLOAD_IMAGE,
+        ]
+        robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
-        IS_DOWNLOAD_IMAGE = self.is_download_image
-        IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-
-        self.init_result(print_error_msg, print_step_msg)
 
     def main(self):
         global ACCOUNTS

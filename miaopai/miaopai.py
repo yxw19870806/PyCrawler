@@ -142,7 +142,10 @@ class MiaoPai(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
-        robot.Robot.__init__(self, False, True)
+        sys_config = [
+            robot.SYS_DOWNLOAD_VIDEO,
+        ]
+        robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         GET_VIDEO_COUNT = self.get_video_count
@@ -150,8 +153,6 @@ class MiaoPai(robot.Robot):
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-
-        self.init_result(print_error_msg, print_step_msg)
 
     def main(self):
         global ACCOUNTS
