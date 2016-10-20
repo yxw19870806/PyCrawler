@@ -471,13 +471,13 @@ def get_dir_files_name(path, order=None):
         return files_list
 
 
-# 删除目录下所有文件
-# only_files 是否仅仅删除目录下文件而保留目录
-def remove_dir(dir_path, only_files=False):
+# 删除整个目录以及目录下所有文件
+def remove_dir(dir_path):
     dir_path = change_path_encoding(dir_path)
     if not os.path.exists(dir_path):
         return True
-    if only_files:
+    shutil.rmtree(dir_path, True)
+
         for file_name in os.listdir(dir_path):
             target_file = os.path.join(dir_path, file_name)
             if os.path.isfile(target_file):
