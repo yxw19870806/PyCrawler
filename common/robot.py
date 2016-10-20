@@ -40,6 +40,7 @@ class Robot(object):
         # 程序启动配置
         if not isinstance(sys_config, list):
             self.print_msg("程序启动配置不存在，请检查代码！")
+            tool.process_exit()
             return
         sys_download_image = SYS_DOWNLOAD_IMAGE in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
@@ -69,6 +70,7 @@ class Robot(object):
 
         if not tool.make_dir(error_log_dir, 0):
             self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
+            tool.process_exit()
             return
         is_log_step = get_config(config, "IS_LOG_STEP", True, 2)
         if not is_log_step:
@@ -80,6 +82,7 @@ class Robot(object):
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
                 self.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
+                tool.process_exit()
                 return
         is_log_trace = get_config(config, "IS_LOG_TRACE", True, 2)
         if not is_log_trace:
@@ -91,6 +94,7 @@ class Robot(object):
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
                 self.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
+                tool.process_exit()
                 return
 
         if not IS_INIT:
@@ -114,6 +118,18 @@ class Robot(object):
                 self.print_msg("下载图片没有开启，请检查配置！")
             elif not self.is_download_video and sys_download_video:
                 self.print_msg("下载视频没有开启，请检查配置！")
+            tool.process_exit()
+            return
+
+        # 存档
+        if "save_data_path" in extra_config:
+            self.save_data_path = extra_config["save_data_path"]
+        else:
+            self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
+        if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
+            # 存档文件不存在
+            self.print_msg("存档文件%s不存在！" % self.save_data_path)
+            tool.process_exit()
             return
 
         # 是否需要下载图片
@@ -126,6 +142,7 @@ class Robot(object):
             if not tool.make_dir(self.image_download_path, 0):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
+                tool.process_exit()
                 return
             # 图片临时下载目录
             if "image_temp_path" in extra_config:
@@ -135,12 +152,13 @@ class Robot(object):
             if not tool.make_dir(self.image_temp_path, 0):
                 # 图片临时下载目录创建失败
                 self.print_msg("图片临时下载目录%s创建失败！" % self.image_temp_path)
+                tool.process_exit()
                 return
             # 图片下载数量，0为下载全部可用资源
             self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 1)
         else:
-            self.image_download_path = None
-            self.image_temp_path = None
+            self.image_download_path = ""
+            self.image_temp_path = ""
             self.get_image_count = 0
         # 是否需要下载视频
         if self.is_download_video:
@@ -152,6 +170,7 @@ class Robot(object):
             if not tool.make_dir(self.video_download_path, 0):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
+                tool.process_exit()
                 return
             # 视频下载临时目录
             if "video_temp_path" in extra_config:
@@ -161,26 +180,17 @@ class Robot(object):
             if not tool.make_dir(self.video_temp_path, 0):
                 # 视频下载临时目录创建失败
                 self.print_msg("视频临时下载目录%s创建失败！" % self.video_temp_path)
+                tool.process_exit()
                 return
             # 视频下载数量，0为下载全部可用资源
             self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 1)
         else:
-            self.video_download_path = None
-            self.video_temp_path = None
+            self.video_download_path = ""
+            self.video_temp_path = ""
             self.get_video_count = 0
         # 是否需要重新排序图片
         self.is_sort = get_config(config, "IS_SORT", True, 2)
         self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 1)
-
-        # 存档
-        if "save_data_path" in extra_config:
-            self.save_data_path = extra_config["save_data_path"]
-        else:
-            self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
-        if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
-            # 存档文件不存在
-            self.print_msg("视频临时下载目录%s创建失败！" % self.video_temp_path)
-            return
 
         # 代理
         is_proxy = get_config(config, "IS_PROXY", 2, 1)
