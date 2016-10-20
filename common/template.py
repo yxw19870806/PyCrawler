@@ -69,7 +69,6 @@ class Template(robot.Robot):
             robot.SYS_NOT_CHECK_SAVE_DATA,
         ]
         robot.Robot.__init__(self, sys_config)
-        # robot.Robot.__init__(self, True)
 
         # 设置全局变量，供子线程调用
         # todo 是否需要下载图片或视频
@@ -100,15 +99,6 @@ class Template(robot.Robot):
         # account_id
         account_list = robot.read_save_data(self.save_data_path, 0, ["", ])
         ACCOUNTS = account_list.keys()
-
-        # 创建临时存档文件
-        new_save_data_file = open(NEW_SAVE_DATA_PATH, "w")
-        new_save_data_file.close()
-
-        # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = tool.ProcessControl()
-        process_control_thread.setDaemon(True)
-        process_control_thread.start()
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
