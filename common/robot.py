@@ -68,7 +68,7 @@ class Robot(object):
         self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 2)
         self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 2)
         error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
-        self.error_log_path = self.replace_path(error_log_path)
+        self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
         if not tool.make_dir(error_log_dir, 0):
@@ -80,7 +80,7 @@ class Robot(object):
             self.step_log_path = ""
         else:
             step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
-            self.step_log_path = self.replace_path(step_log_path)
+            self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
@@ -92,7 +92,7 @@ class Robot(object):
             self.trace_log_path = ""
         else:
             trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
-            self.trace_log_path = self.replace_path(trace_log_path)
+            self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
@@ -220,11 +220,6 @@ class Robot(object):
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
         return time.time() - self.start_time
-
-    # 替换目录中的指定字符串
-    @staticmethod
-    def replace_path(path):
-        return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
 
     # 下载逻辑完成后手动调用，进行一些收尾工作
     def finish_task(self):
@@ -361,6 +356,11 @@ def sort_save_data(save_data_path, sort_key_index=0):
 # 生成新存档的文件路径
 def get_new_save_file_path(old_save_file_path):
     return os.path.join(os.path.dirname(old_save_file_path), time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path))
+
+
+# 替换目录中的指定字符串
+def replace_path(path):
+    return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
 
 
 # 判断类型是否为字典，并且检测是否存在指定的key
