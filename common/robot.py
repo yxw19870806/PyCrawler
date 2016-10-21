@@ -38,7 +38,7 @@ class Robot(object):
         self.start_time = time.time()
 
         # 程序启动配置
-        if not isinstance(sys_config, list):
+        if not isinstance(sys_config, dict):
             self.print_msg("程序启动配置不存在，请检查代码！")
             tool.process_exit()
             return

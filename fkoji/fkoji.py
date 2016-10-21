@@ -36,11 +36,11 @@ def get_tweet_account_id(photo_info):
 
 class Fkoji(robot.Robot):
     def __init__(self):
-        sys_config = [
-            robot.SYS_DOWNLOAD_IMAGE,
-            robot.SYS_SET_PROXY,
-            robot.SYS_NOT_CHECK_SAVE_DATA,
-        ]
+        sys_config = {
+            robot.SYS_DOWNLOAD_IMAGE: True,
+            robot.SYS_SET_PROXY: True,
+            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+        }
         robot.Robot.__init__(self, sys_config)
 
     def main(self):

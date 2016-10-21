@@ -195,11 +195,11 @@ class Instagram(robot.Robot):
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
-        sys_config = [
-            robot.SYS_DOWNLOAD_IMAGE,
-            robot.SYS_DOWNLOAD_VIDEO,
-            robot.SYS_SET_PROXY,
-        ]
+        sys_config = {
+            robot.SYS_DOWNLOAD_IMAGE: True,
+            robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_SET_PROXY: True,
+        }
         robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用

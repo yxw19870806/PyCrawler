@@ -69,9 +69,9 @@ class Lofter(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
-        sys_config = [
-            robot.SYS_DOWNLOAD_IMAGE,
-        ]
+        sys_config = {
+            robot.SYS_DOWNLOAD_IMAGE: True,
+        }
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用

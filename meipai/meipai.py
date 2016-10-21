@@ -95,9 +95,9 @@ class MeiPai(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_SORT
 
-        sys_config = [
-            robot.SYS_DOWNLOAD_VIDEO,
-        ]
+        sys_config = {
+            robot.SYS_DOWNLOAD_VIDEO: True,
+        }
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
