@@ -370,7 +370,7 @@ def response_time_to_timestamp(time_string):
     return int(time.mktime(last_modified_time)) - time.timezone
 
 
-def find_sub_string(string, start_string, end_string, include_string=0):
+def find_sub_string(string, start_string=None, end_string=None, include_string=0):
     # 根据开始与结束的字符串，截取字符串
     # include_string是否包含查询条件的字符串，0 都不包含, 1 只包含start_string, 2 只包含end_string, 3 包含start_string和end_string
     # 参数验证
@@ -388,7 +388,7 @@ def find_sub_string(string, start_string, end_string, include_string=0):
     else:
         start_index = string.find(start_string)
     if start_index >= 0:
-        if include_string & 1 == 0:
+        if start_string is not None and include_string & 1 == 0:
             start_index += len(start_string)
         if end_string is None:
             stop_index = len(string)
