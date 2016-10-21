@@ -65,7 +65,7 @@ class Robot(object):
         self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 2)
         self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 2)
         error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
-        self.error_log_path = error_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
+        self.error_log_path = self.replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
         if not tool.make_dir(error_log_dir, 0):
@@ -77,7 +77,7 @@ class Robot(object):
             self.step_log_path = ""
         else:
             step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
-            self.step_log_path = step_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
+            self.step_log_path = self.replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not tool.make_dir(step_log_dir, 0):
@@ -89,7 +89,7 @@ class Robot(object):
             self.trace_log_path = ""
         else:
             trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
-            self.trace_log_path = trace_log_path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
+            self.trace_log_path = self.replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not tool.make_dir(trace_log_dir, 0):
@@ -112,7 +112,7 @@ class Robot(object):
 
         if not self.is_download_image and not self.is_download_video:
             # 下载图片和视频都没有开启，请检查配置
-            if (not self.is_download_image and sys_download_image) and (not self.is_download_video and sys_download_video):
+            if not self.is_download_image and sys_download_image and not self.is_download_video and sys_download_video:
                 self.print_msg("下载图片和视频都没有开启，请检查配置！")
             elif not self.is_download_image and sys_download_image:
                 self.print_msg("下载图片没有开启，请检查配置！")
@@ -213,6 +213,11 @@ class Robot(object):
     def get_run_time(self):
         return time.time() - self.start_time
 
+    # 替换目录中的指定字符串
+    @staticmethod
+    def replace_path(path):
+        return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
+
     # 下载逻辑完成后手动调用，进行一些收尾工作
     def finish_task(self):
         if self.image_temp_path:
@@ -227,7 +232,6 @@ class Robot(object):
                 tool.remove_dir(self.video_temp_path)
             else:
                 self.print_msg("视频临时下载目录%s中存在文件" % self.video_temp_path)
-
 
 
 # 读取配置文件
