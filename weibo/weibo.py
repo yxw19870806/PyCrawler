@@ -244,6 +244,7 @@ class Weibo(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_SET_COOKIE: ("weibo.com", ".sina.com.cn"),
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
@@ -261,11 +262,6 @@ class Weibo(robot.Robot):
 
     def main(self):
         global ACCOUNTS
-
-        # 设置系统cookies
-        if not tool.set_cookie(self.cookie_path, self.browser_version, ("weibo.com", ".sina.com.cn")):
-            print_error_msg("导入浏览器cookies失败")
-            tool.process_exit()
 
         # 解析存档文件
         # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)

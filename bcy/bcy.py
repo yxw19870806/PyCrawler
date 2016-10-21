@@ -193,6 +193,7 @@ class Bcy(robot.Robot):
 
         sys_config = {
              robot.SYS_DOWNLOAD_IMAGE: True,
+             robot.SYS_SET_COOKIE: ("bcy.net",),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -203,11 +204,6 @@ class Bcy(robot.Robot):
 
     def main(self):
         global ACCOUNTS
-
-        # 设置系统cookies
-        if not tool.set_cookie(self.cookie_path, self.browser_version, "bcy.net"):
-            print_error_msg("导入浏览器cookies失败")
-            tool.process_exit()
 
         # 检测登录状态
         # 未登录时提示可能无法获取粉丝指定的作品

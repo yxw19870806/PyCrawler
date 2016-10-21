@@ -20,6 +20,8 @@ SYS_DOWNLOAD_VIDEO = 'download_video'
 SYS_SET_PROXY = 'set_proxy'
 # 程序是否支持不需要存档文件就可以开始运行
 SYS_NOT_CHECK_SAVE_DATA = 'no_save_data'
+# 程序是否需要设置cookie
+SYS_SET_COOKIE = 'set_cookie'
 
 
 class Robot(object):
@@ -45,6 +47,7 @@ class Robot(object):
         sys_download_image = SYS_DOWNLOAD_IMAGE in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
         sys_set_proxy = SYS_SET_PROXY in sys_config
+        sys_set_cookie = SYS_SET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
 
         # exe程序
@@ -189,15 +192,20 @@ class Robot(object):
             proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
             tool.set_proxy(proxy_ip, proxy_port)
 
-        # 操作系统&浏览器
-        self.browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
-
-        # cookie
-        is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
-        if is_auto_get_cookie:
-            self.cookie_path = tool.get_default_browser_cookie_path(self.browser_version)
-        else:
-            self.cookie_path = get_config(config, "COOKIE_PATH", "", 0)
+        # 浏览器cookies
+        if sys_set_cookie:
+            # 操作系统&浏览器
+            browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
+            # cookie
+            is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
+            if is_auto_get_cookie:
+                cookie_path = tool.get_default_browser_cookie_path(browser_version)
+            else:
+                cookie_path = get_config(config, "COOKIE_PATH", "", 0)
+            if not tool.set_cookie(cookie_path, browser_version, ("weibo.com", ".sina.com.cn")):
+                self.print_msg("导入浏览器cookies失败")
+                tool.process_exit()
+                return
 
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
