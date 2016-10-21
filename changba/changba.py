@@ -53,7 +53,7 @@ def get_user_id(account_id):
     return None
 
 
-# 获取一页的歌曲信息
+# 获取一页的歌曲信息，单条歌曲信息的格式：[歌曲id，歌曲名字，歌曲下载地址]
 # user_id -> 4306405
 def get_one_page_audio_list(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
