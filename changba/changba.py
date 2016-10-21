@@ -81,7 +81,7 @@ def get_audio_url(audio_en_word_id):
         audio_source_url = tool.find_sub_string(audio_index_page, 'var a="', '"')
         if audio_source_url:
             # 从JS处解析的规则
-            special_find = re.findall("userwork\/([abc])(\d+)\/(\w+)\/(\w+)\.mp3", audio_source_url)
+            special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
             if len(special_find) == 0:
                 return audio_source_url
             elif len(special_find) == 1:
