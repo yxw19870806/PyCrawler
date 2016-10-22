@@ -219,7 +219,7 @@ class Robot(object):
 
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
-        return time.time() - self.start_time
+        return int(time.time() - self.start_time)
 
     # 下载逻辑完成后手动调用，进行一些收尾工作
     def finish_task(self):
