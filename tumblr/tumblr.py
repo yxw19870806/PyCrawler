@@ -379,7 +379,7 @@ class Download(threading.Thread):
             else:
                 print_error_msg(account_id + " 异常退出")
         except Exception, e:
-            print_step_msg(account_id + " 未知异常")
+            print_error_msg(account_id + " 未知异常")
             print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
 
 
