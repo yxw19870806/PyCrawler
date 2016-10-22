@@ -65,7 +65,7 @@ def get_message_page_data(account_name, target_id):
     return None
 
 
-class SevenGoGo(robot.Robot):
+class NanaGoGo(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -304,4 +304,4 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    SevenGoGo().main()
+    NanaGoGo().main()
