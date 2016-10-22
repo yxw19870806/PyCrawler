@@ -11,6 +11,7 @@ def bcy():
     os.chdir(bcy_path)
     bcy.Bcy().main()
 
+
 # fkoji
 def fkoji():
     from fkoji import fkoji
@@ -51,6 +52,14 @@ def instagram():
         instagram.Instagram(extra_config).main()
 
 
+# 欅坂46公式Blog
+def keyakizaka46_diary():
+    from keyakizaka46 import diary
+    keyakizaka46_diary_path = os.path.join(os.path.abspath(".."), "keyakizaka46")
+    os.chdir(keyakizaka46_diary_path)
+    diary.Diary().main()
+
+
 # Lofter
 def lofter():
     from lofter import lofter
@@ -73,6 +82,14 @@ def miaopai():
     miaopai_path = os.path.join(os.path.abspath(".."), "miaopai")
     os.chdir(miaopai_path)
     miaopai.MiaoPai().main()
+
+
+# 7gogo
+def nana_go_go():
+    from nanaGoGo import nanaGoGo
+    nana_go_go_path = os.path.join(os.path.abspath(".."), "nanaGoGo")
+    os.chdir(nana_go_go_path)
+    nanaGoGo.NanaGoGo().main()
 
 
 # tumblr
@@ -130,14 +147,26 @@ def weibo():
         }
         weibo.Weibo(extra_config).main()
 
+
+# 一直播
+def yizhibo():
+    from yizhibo import yizhibo
+    yizhibo_path = os.path.join(os.path.abspath(".."), "yizhibo")
+    os.chdir(yizhibo_path)
+    yizhibo.YiZhiBo().main()
+
+
 bcy()
-fkoji()
 google_plus()
 instagram()
+keyakizaka46_diary()
 lofter()
 meipai()
 miaopai()
+nana_go_go()
 tumblr()
 twitter()
 weibo()
+yizhibo()
+fkoji()
 # tool.shutdown()
