@@ -202,7 +202,7 @@ class Robot(object):
                 cookie_path = tool.get_default_browser_cookie_path(browser_version)
             else:
                 cookie_path = get_config(config, "COOKIE_PATH", "", 0)
-            if not tool.set_cookie(cookie_path, browser_version, ("weibo.com", ".sina.com.cn")):
+            if not tool.set_cookie(cookie_path, browser_version, sys_config[SYS_SET_COOKIE]):
                 self.print_msg("导入浏览器cookies失败")
                 tool.process_exit()
                 return
