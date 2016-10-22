@@ -314,7 +314,7 @@ class Download(threading.Thread):
                     # 标题处理
                     for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
                         title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
-                    title = title.strip()  # 去除前后空格
+                    title = title.strip().rstrip(".")  # 去除前后空格以及后缀的.
                     if title:
                         rp_path = os.path.join(image_path, "%s %s" % (rp_id, title))
                     else:
