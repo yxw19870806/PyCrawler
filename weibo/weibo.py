@@ -158,7 +158,7 @@ def get_video_url(video_play_url):
                     if int(video_info_page["status"]) == 200:
                         for result in video_info_page["result"]:
                             if robot.check_sub_key(("path", "host", "scheme"), result):
-                                return 1, "%s%s%s" % (result["scheme"], result["host"], result["path"])
+                                return 1, ["%s%s%s" % (result["scheme"], result["host"], result["path"])]
             return -1, None
         else:
             return -2, None
@@ -174,8 +174,11 @@ def get_video_url(video_play_url):
                     m3u8_file_data = auto_redirect_visit(m3u8_file_url)
                     if m3u8_file_data:
                         video_url_find = re.findall("[\n]([^#][\S]*)[\n]", m3u8_file_data)
-                        if len(video_url_find) == 1:
-                            return 1, "http://us.sinaimg.cn/%s" % video_url_find[0]
+                        if len(video_url_find) > 0:
+                            video_url_list = []
+                            for video_url in video_url_find:
+                                video_url_list.append("http://us.sinaimg.cn/%s" % video_url)
+                            return 1, video_url_list
                         else:
                             return -1, None
             time.sleep(5)
@@ -186,14 +189,14 @@ def get_video_url(video_play_url):
         if video_play_page_return_code == 1:
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_page)
             if len(video_url_find) == 1:
-                return 1, video_url_find[0]
+                return 1, [video_url_find[0]]
             return -1, None
         else:
             return -2, None
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
-        return 1, "http://gslb.miaopai.com/stream/%s.mp4" % video_id
+        return 1, ["http://gslb.miaopai.com/stream/%s.mp4" % video_id]
     # http://www.weishi.com/t/2000546051794045
     elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
         video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
@@ -212,7 +215,7 @@ def get_video_url(video_play_url):
                     else:
                         if robot.check_sub_key(("data", ), video_info_page):
                             if robot.check_sub_key(("url", ), video_info_page["data"]):
-                                return 1, random.choice(video_info_page["data"]["url"])
+                                return 1, [random.choice(video_info_page["data"]["url"])]
             return -1, None
         return -2, None
     else:  # 其他视频，暂时不支持，收集看看有没有
@@ -382,7 +385,7 @@ class Download(threading.Thread):
                         first_video_url = video_play_url
 
                     # 获取这个视频的下载地址
-                    return_code, video_url = get_video_url(video_play_url)
+                    return_code, video_url_list = get_video_url(video_play_url)
                     if return_code != 1:
                         if return_code == -1:
                             print_error_msg(account_name + " 第%s个视频 %s 没有获取到源地址" % (video_count, video_play_url))
@@ -400,11 +403,13 @@ class Download(threading.Thread):
                             print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_video_dir = False
-                    if tool.save_net_file(video_url, video_file_path):
-                        print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
-                        video_count += 1
-                    else:
-                        print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_play_url))
+
+                    for video_url in video_url_list:
+                        if tool.save_net_file(video_url, video_file_path):
+                            print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                            video_count += 1
+                        else:
+                            print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
