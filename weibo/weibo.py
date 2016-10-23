@@ -168,11 +168,18 @@ def get_video_url(video_play_url):
         for i in range(0, 50):
             video_play_page = auto_redirect_visit(video_play_url)
             if video_play_page:
-                video_url = tool.find_sub_string(video_play_page, 'flashvars=\\"file=', '\\"')
-                if video_url:
-                    return 1, urllib2.unquote(video_url)
+                m3u8_file_url = tool.find_sub_string(video_play_page, 'flashvars=\\"file=', '\\"')
+                if m3u8_file_url:
+                    m3u8_file_url = urllib2.unquote(m3u8_file_url)
+                    m3u8_file_data = auto_redirect_visit(m3u8_file_url)
+                    if m3u8_file_data:
+                        video_url_find = re.findall("[\n]([^#][\S]*)[\n]", m3u8_file_data)
+                        if len(video_url_find) == 1:
+                            return 1, "http://us.sinaimg.cn/%s" % video_url_find[0]
+                        else:
+                            return -1, None
             time.sleep(5)
-        return -1, None
+        return -2, None
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
         video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
