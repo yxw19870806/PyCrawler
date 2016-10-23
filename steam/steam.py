@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 from common import tool
 import json
 import math
-
+import re
 
 def get_owned_app_list(user_id):
     tool.quickly_set(1, 0)
@@ -44,15 +44,18 @@ def get_discount_list():
         items = items_page.split("\n")
         for item in items:
             app_id = tool.find_sub_string(item, 'data-ds-appid="', '"')
-            discount_info = tool.find_sub_string(item, '<div class="col search_discount responsive_secondrow">', "</div>")
-            discount = tool.find_sub_string(discount_info, "<span>", "</span>").replace("-", "").replace("%", "")
-            price_info = tool.find_sub_string(item, '<div class="col search_price discounted responsive_secondrow">', "</div>")
-            old_price = tool.find_sub_string(price_info, '<strike>', '</strike>').replace("¥", "").strip()
-            new_price = tool.find_sub_string(price_info, '<br>', '</div>').replace("¥", "").strip()
+            discount_data = tool.find_sub_string(item, '<div class="col search_discount responsive_secondrow">', "</div>")
+            discount = tool.find_sub_string(discount_data, "<span>", "</span>").replace("-", "").replace("%", "")
+            price_data = tool.find_sub_string(item, '<div class="col search_price discounted responsive_secondrow">', "</div>")
+            old_price = tool.find_sub_string(price_data, '<strike>', '</strike>').replace("¥", "").strip()
+            new_price = tool.find_sub_string(price_data, '<br>', '</div>').replace("¥", "").strip()
             discount_list.append("%s\t%s\t%s\t%s" % (app_id, discount, old_price, new_price))
         if total_page_count == 99:
-            pagination_page = tool.find_sub_string(index_page, '<div class="search_pagination_left">', "</div>")
-            total_item_count = int(tool.find_sub_string(pagination_page, "of", None).strip())
-            total_page_count = math.ceil(total_item_count / 25)
+            pagination_page = tool.find_sub_string(index_page, '<div class="search_pagination">', None)
+            page_find = re.findall('return false;">([\d]*)</a>', pagination_page)
+            if len(page_find) > 0:
+                total_page_count = 0
+                for page_id in page_find:
+                    total_page_count = max(total_page_count, int(page_id))
         page_count += 1
     return discount_list
