@@ -59,17 +59,21 @@ def get_one_page_audio_list(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
     audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
     audio_album_return_code, audio_album_page = tool.http_request(audio_album_url)[:2]
-    audio_list = []
     if audio_album_return_code == 1:
         try:
             audio_album_page = json.loads(audio_album_page)
         except ValueError:
             pass
         else:
+            audio_list = []
             for audio_info in audio_album_page:
                 if robot.check_sub_key(("songname", "workid", "enworkid"), audio_info):
-                    audio_list.append([str(audio_info["workid"]), audio_info["songname"].encode("utf-8"), str(audio_info["enworkid"])])
-    return audio_list
+                    audio_id = str(audio_info["workid"])
+                    audio_name = audio_info["songname"].encode("utf-8")
+                    audio_url = str(audio_info["enworkid"])
+                    audio_list.append([audio_id, audio_name, audio_url])
+            return audio_list
+    return None
 
 
 # 获取歌曲的下载地址
@@ -192,11 +196,16 @@ class Download(threading.Thread):
                 # 获取指定一页的视频信息
                 audio_list = get_one_page_audio_list(user_id, page_count)
 
+                if audio_list is None:
+                    print_step_msg(account_name + " 第%s页歌曲列表获取失败" % page_count)
+                    first_audio_id = "0"
+                    break  # 存档恢复
+
                 # 如果为空，表示已经取完了
                 if len(audio_list) == 0:
                     break
 
-                for audio_info in audio_list:
+                for audio_info in list(audio_list):
                     audio_id = audio_info[0]
 
                     # 检查是否歌曲id小于上次的记录
