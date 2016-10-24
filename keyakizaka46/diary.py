@@ -177,8 +177,13 @@ class Download(threading.Thread):
                 if len(diary_list) == 0:
                     break
 
-                for diary_info in diary_list:
+                for diary_info in list(diary_list):
+                    # 日志id
                     diary_id = tool.find_sub_string(diary_info, "id=", "&")
+                    if not diary_id:
+                        print_error_msg(account_name + " 日志id解析异常，日志信息：%s" % diary_info)
+                        continue
+
                     # 检查是否是上一次的最后视频
                     if int(diary_id) <= int(self.account_info[2]):
                         is_over = True
