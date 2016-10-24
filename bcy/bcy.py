@@ -131,7 +131,7 @@ def check_login():
         if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
             is_check_ok = False
             while not is_check_ok:
-                input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否下一步操作？ (Y)es or (N)o: ")
+                input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否继续下一步操作？ (Y)es or (N)o: ")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     is_check_ok = True
@@ -344,7 +344,7 @@ class Download(threading.Thread):
                         continue
 
                     image_count = 1
-                    for image_url in image_url_list:
+                    for image_url in list(image_url_list):
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
                         print_step_msg(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
