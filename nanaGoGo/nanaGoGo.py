@@ -178,7 +178,7 @@ class Download(threading.Thread):
                 message_page_data = get_message_page_data(account_name, target_id)
                 if message_page_data is None:
                     print_error_msg(account_name + " 媒体列表解析异常")
-                    break
+                    tool.process_exit()
                 # 没有了
                 if len(message_page_data) == 0:
                     break
