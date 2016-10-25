@@ -10,7 +10,6 @@ from common import tool
 import re
 
 
-# 获取当前cookies对应的authenticity_token
 def get_member_list():
     index_url = "http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member"
     index_return_code, index_page = tool.http_request(index_url)[:2]
@@ -21,9 +20,9 @@ def get_member_list():
             for member_info in member_list_find:
                 ct = tool.find_sub_string(member_info, "&ct=", '">')
                 name = tool.find_sub_string(member_info, '<p class="name">', '</p>').strip().replace(" ", "")
-                tool.print_msg("%s\t\t\t%s" % (ct, name))
+                tool.print_msg("%s\t\t\t%s" % (ct, name), False)
             if len(member_list_find) > 0:
-                tool.print_msg("复制以上内容到save.data中，删除不需要的行，即可开始运行")
+                tool.print_msg("复制以上内容到save.data中，删除不需要的行，即可开始运行", False)
     return None
 
 if __name__ == "__main__":
