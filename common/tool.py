@@ -318,6 +318,13 @@ def _filter_domain(domain, target_domains):
         return False
 
 
+# 设置空的cookies，后续所有请求会携带cookies访问资源
+def set_empty_cookie():
+    cookie_jar = cookielib.MozillaCookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
+    urllib2.install_opener(opener)
+
+
 # 设置代理
 def set_proxy(ip, port):
     proxy_address = "http://%s:%s" % (ip, port)
