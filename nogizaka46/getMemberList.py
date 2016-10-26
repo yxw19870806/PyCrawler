@@ -16,7 +16,7 @@ def get_member_list():
     if index_return_code:
         member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_page)
         for member_info in member_list_find:
-            tool.print_msg("%s\t\t\t%s" % (member_info[0], member_info[1]), False)
+            tool.print_msg("%s\t\t\t%s" % (member_info[0], member_info[1].replace(" ", "")), False)
         if len(member_list_find) > 0:
             tool.print_msg("复制以上内容到save.data中，删除不需要的行，即可开始运行", False)
     return None
