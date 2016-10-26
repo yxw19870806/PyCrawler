@@ -393,7 +393,7 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
         if end_string is None:
             stop_index = len(string)
         else:
-            stop_index = string.find(end_string, start_index)
+            stop_index = string.find(end_string, start_index + 1)
         if stop_index >= 0:
             if include_string & 2 == 2:
                 stop_index += len(end_string)
