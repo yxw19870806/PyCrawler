@@ -20,7 +20,7 @@ SYS_DOWNLOAD_VIDEO = 'download_video'
 SYS_SET_PROXY = 'set_proxy'
 # 程序是否支持不需要存档文件就可以开始运行
 SYS_NOT_CHECK_SAVE_DATA = 'no_save_data'
-# 程序是否需要设置cookie
+# 程序是否需要开启cookie, value不为为空()时，从浏览器中加载相关域名的cookies，否则仅仅添加一个空的cookie对象
 SYS_SET_COOKIE = 'set_cookie'
 
 
@@ -192,20 +192,23 @@ class Robot(object):
             proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
             tool.set_proxy(proxy_ip, proxy_port)
 
-        # 浏览器cookies
+        # cookies
         if sys_set_cookie:
-            # 操作系统&浏览器
-            browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
-            # cookie
-            is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
-            if is_auto_get_cookie:
-                cookie_path = tool.get_default_browser_cookie_path(browser_version)
-            else:
-                cookie_path = get_config(config, "COOKIE_PATH", "", 0)
-            if not tool.set_cookie_from_browser(cookie_path, browser_version, sys_config[SYS_SET_COOKIE]):
-                self.print_msg("导入浏览器cookies失败")
-                tool.process_exit()
-                return
+            if sys_config[SYS_SET_COOKIE]:  # 加载浏览器cookie
+                # 操作系统&浏览器
+                browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
+                # cookie
+                is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
+                if is_auto_get_cookie:
+                    cookie_path = tool.get_default_browser_cookie_path(browser_version)
+                else:
+                    cookie_path = get_config(config, "COOKIE_PATH", "", 0)
+                if not tool.set_cookie_from_browser(cookie_path, browser_version, sys_config[SYS_SET_COOKIE]):
+                    self.print_msg("导入浏览器cookies失败")
+                    tool.process_exit()
+                    return
+            else:  # 使用空cookie
+                tool.set_empty_cookie()
 
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
