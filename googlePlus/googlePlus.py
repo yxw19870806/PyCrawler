@@ -246,12 +246,14 @@ class Download(threading.Thread):
 
                         # 下载
                         print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
                                 print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_download_dir = False
+
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
                         else:

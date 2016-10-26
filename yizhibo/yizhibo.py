@@ -258,14 +258,14 @@ class Download(threading.Thread):
                     if first_image_time == "0":
                         first_image_time = str(image_created_time)
 
+                    print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+
                     # 第一张图片，创建目录
                     if need_make_image_dir:
                         if not tool.make_dir(image_path, 0):
                             print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_image_dir = False
-
-                    print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                     file_type = image_url.split(".")[-1].split(":")[0]
                     image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
@@ -312,6 +312,8 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, link_url))
                         continue
 
+                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
+
                     # 第一个视频，创建目录
                     if need_make_video_dir:
                         if not tool.make_dir(video_path, 0):
@@ -320,7 +322,6 @@ class Download(threading.Thread):
                         need_make_video_dir = False
 
                     video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
-                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
                     if save_video(ts_url_list, video_file_path):
                         print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1

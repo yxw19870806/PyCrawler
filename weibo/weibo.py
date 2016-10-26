@@ -396,7 +396,6 @@ class Download(threading.Thread):
                         continue
                     print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_play_url))
 
-                    video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     # 第一个视频，创建目录
                     if need_make_video_dir:
                         if not tool.make_dir(video_path, 0):
@@ -404,6 +403,7 @@ class Download(threading.Thread):
                             tool.process_exit()
                         need_make_video_dir = False
 
+                    video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     for video_url in video_url_list:
                         if tool.save_net_file(video_url, video_file_path):
                             print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
@@ -472,13 +472,14 @@ class Download(threading.Thread):
                         elif image_status == -2:
                             print_error_msg(account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_count, image_url))
                         continue
+
                     # 第一张图片，创建目录
                     if need_make_image_dir:
                         if not tool.make_dir(image_path, 0):
                             print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_image_dir = False
-                    # 文件类型
+
                     file_type = image_url.split(".")[-1]
                     if file_type.find("/") != -1:
                         file_type = "jpg"

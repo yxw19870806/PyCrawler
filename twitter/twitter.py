@@ -387,6 +387,7 @@ class Download(threading.Thread):
                                         print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
                                         tool.process_exit()
                                     need_make_video_dir = False
+
                                 video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
                                 if save_video(video_url_list, video_file_path):
                                     print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
@@ -415,7 +416,7 @@ class Download(threading.Thread):
                                         print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                         tool.process_exit()
                                     need_make_image_dir = False
-                                # 文件类型
+
                                 file_type = image_url.split(".")[-1].split(":")[0]
                                 image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 save_image(image_byte, image_file_path)

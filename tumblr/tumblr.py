@@ -289,14 +289,15 @@ class Download(threading.Thread):
                                 for video_url, video_type in list(video_list):
                                     print_step_msg(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
-                                    file_type = video_type.split("/")[-1]
-                                    video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
                                         if not tool.make_dir(video_path, 0):
                                             print_error_msg(account_id + " 创建视频下载目录 %s 失败" % video_path)
                                             tool.process_exit()
                                         need_make_video_dir = False
+
+                                    file_type = video_type.split("/")[-1]
+                                    video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
                                     if tool.save_net_file(video_url, video_file_path):
                                         print_step_msg(account_id + " 第%s个视频下载成功" % video_count)
                                         video_count += 1
@@ -316,14 +317,15 @@ class Download(threading.Thread):
                             for image_url in page_image_url_list:
                                 print_step_msg(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                                file_type = image_url.split(".")[-1]
-                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
                                         print_error_msg(account_id + " 创建图片下载目录 %s 失败" % image_path)
                                         tool.process_exit()
                                     need_make_image_dir = False
+
+                                file_type = image_url.split(".")[-1]
+                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 if tool.save_net_file(image_url, image_file_path):
                                     print_step_msg(account_id + " 第%s张图片下载成功" % image_count)
                                     image_count += 1

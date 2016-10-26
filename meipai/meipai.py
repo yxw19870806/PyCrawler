@@ -221,6 +221,7 @@ class Download(threading.Thread):
                             print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
+                        
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     if tool.save_net_file(video_url, file_path):
                         print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
