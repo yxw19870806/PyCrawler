@@ -100,13 +100,13 @@ class Template(robot.Robot):
         for account_id in sorted(account_list.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
-                if tool.is_process_end() == 0:
+                if robot.is_process_end() == 0:
                     time.sleep(10)
                 else:
                     break
 
             # 提前结束
-            if tool.is_process_end() > 0:
+            if robot.is_process_end() > 0:
                 break
 
             # 开始下载

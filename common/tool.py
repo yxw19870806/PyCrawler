@@ -4,8 +4,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-
-from multiprocessing.connection import Listener
+from common import process
 import cookielib
 import cStringIO
 import mimetools
@@ -13,10 +12,8 @@ import os
 import platform
 import random
 import shutil
-import socket
 import sys
 import time
-import threading
 import traceback
 import urllib
 import urllib2
@@ -24,54 +21,10 @@ import zipfile
 
 # 初始化操作
 IS_SET_TIMEOUT = False
-PROCESS_STATUS = 0
-PROCESS_CONTROL_IP = "localhost"
-PROCESS_CONTROL_PORT = 54321
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
     IS_EXECUTABLE = False
-
-
-# 进程监控
-class ProcessControl(threading.Thread):
-    PROCESS_RUN = 0  # 进程运行中
-    PROCESS_PAUSE = 1  # 进程暂停，知道状态变为0时才继续下载
-    PROCESS_STOP = 2  # 进程立刻停止，删除还未完成的数据
-    PROCESS_FINISH = 3  # 进程等待现有任务完成后停止
-    ip = None
-    port = None
-
-    def __init__(self, ip=PROCESS_CONTROL_IP, port=PROCESS_CONTROL_PORT):
-        threading.Thread.__init__(self)
-        self.ip = str(ip)
-        self.port = int(port)
-
-    def run(self):
-        global PROCESS_STATUS
-        listener = Listener((self.ip, self.port))
-        while True:
-            try:
-                conn = listener.accept()
-                new_status = int(conn.recv())
-                if new_status in [self.PROCESS_RUN, self.PROCESS_PAUSE, self.PROCESS_STOP, self.PROCESS_FINISH]:
-                    PROCESS_STATUS = new_status
-            except IOError:
-                pass
-            finally:
-                conn.close()
-        listener.close()
-
-
-# 进程是否需要结束
-# 返回码 0: 正常运行; 1 立刻结束; 2 等待现有任务完成后结束
-def is_process_end():
-    global PROCESS_STATUS
-    if PROCESS_STATUS == ProcessControl.PROCESS_STOP:
-        return 1
-    elif PROCESS_STATUS == ProcessControl.PROCESS_FINISH:
-        return 2
-    return 0
 
 
 # http请求
@@ -79,14 +32,13 @@ def is_process_end():
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
 def http_request(url, post_data=None, cookie=None):
     global IS_SET_TIMEOUT
-    global PROCESS_STATUS
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return -100, None, None
     count = 0
     while True:
-        while PROCESS_STATUS == ProcessControl.PROCESS_PAUSE:
+        while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
             time.sleep(10)
-        if PROCESS_STATUS == ProcessControl.PROCESS_STOP:
+        if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
             process_exit(0)
         try:
             if post_data:

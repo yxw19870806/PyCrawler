@@ -4,7 +4,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, tool
+from common import log, process, tool
 import codecs
 import ConfigParser
 import os
@@ -214,7 +214,7 @@ class Robot(object):
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
 
         # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = tool.ProcessControl()
+        process_control_thread = process.ProcessControl()
         process_control_thread.setDaemon(True)
         process_control_thread.start()
 
@@ -376,3 +376,13 @@ def check_sub_key(needles, haystack):
                 return False
         return True
     return False
+
+
+# 进程是否需要结束
+# 返回码 0: 正常运行; 1 立刻结束; 2 等待现有任务完成后结束
+def is_process_end():
+    if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
+        return 1
+    elif process.PROCESS_STATUS == process.PROCESS_STATUS_FINISH:
+        return 2
+    return 0
