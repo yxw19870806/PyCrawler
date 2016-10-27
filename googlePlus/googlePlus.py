@@ -222,7 +222,7 @@ class Download(threading.Thread):
                         continue
 
                     log.trace(account_name + " album id：%s 的相册存档页获取的所有图片：%s" % (album_id, image_url_list))
-                    for image_url in image_url_list:
+                    for image_url in list(image_url_list):
                         image_url = generate_max_resolution_image_url(image_url)
 
                         # 下载

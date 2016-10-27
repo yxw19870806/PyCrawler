@@ -39,13 +39,12 @@ def get_account_id(account_name):
             try:
                 search_data = json.loads(search_data)
             except ValueError:
-                pass
-            else:
-                if robot.check_sub_key(("users", ), search_data):
-                    for user in search_data["users"]:
-                        if robot.check_sub_key(("user", ), user) and robot.check_sub_key(("username", "pk"), user["user"]):
-                            if account_name.lower() == str(user["user"]["username"]).lower():
-                                return user["user"]["pk"]
+                continue
+            if robot.check_sub_key(("users",), search_data):
+                for user in search_data["users"]:
+                    if robot.check_sub_key(("user",), user) and robot.check_sub_key(("username", "pk"), user["user"]):
+                        if account_name.lower() == str(user["user"]["username"]).lower():
+                            return user["user"]["pk"]
         time.sleep(5)
     return None
 
@@ -71,12 +70,12 @@ def get_follow_by_list(account_id):
 
 # 获取指定一页的粉丝列表
 def get_one_page_follow_by_list(account_id, cursor=None):
-    follow_by_list_url = "https://www.instagram.com/query/"
+    follow_by_list_url = "https://www.instagram.com/query/?q=ig_user(%s)" % account_id
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
     if cursor is None:
-        follow_by_list_url += "?q=ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)
+        follow_by_list_url += "{followed_by.first(%s){nodes{username},page_info}}" % USER_COUNT_PER_PAGE
     else:
-        follow_by_list_url += "?q=ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)
+        follow_by_list_url += "{followed_by.after(%s,%s){nodes{username},page_info}}" % (cursor, USER_COUNT_PER_PAGE)
     follow_by_list_return_code, follow_by_list_data = tool.http_request(follow_by_list_url)[:2]
     if follow_by_list_return_code == 1:
         try:
@@ -84,10 +83,11 @@ def get_one_page_follow_by_list(account_id, cursor=None):
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("followed_by", ), follow_by_list_data):
-                if robot.check_sub_key(("page_info", "nodes"), follow_by_list_data["followed_by"]):
-                    if robot.check_sub_key(("end_cursor", "has_next_page"), follow_by_list_data["followed_by"]["page_info"]):
-                        return follow_by_list_data["followed_by"]
+            if robot.check_sub_key(("followed_by",), follow_by_list_data):
+                followed_by_data = follow_by_list_data["followed_by"]
+                if robot.check_sub_key(("page_info", "nodes"), followed_by_data):
+                    if robot.check_sub_key(("end_cursor", "has_next_page"), followed_by_data["page_info"]):
+                        return followed_by_data
     return None
 
 
@@ -112,12 +112,12 @@ def get_follow_list(account_id):
 
 # 获取指定一页的关注列表
 def get_one_page_follow_list(account_id, cursor=None):
-    follow_list_url = "https://www.instagram.com/query/"
+    follow_list_url = "https://www.instagram.com/query/?q=ig_user(%s)" % account_id
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
     if cursor is None:
-        follow_list_url += "?q=ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)
+        follow_list_url += "{follows.first(%s){nodes{username},page_info}}" % USER_COUNT_PER_PAGE
     else:
-        follow_list_url += "?q=ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)
+        follow_list_url += "{follows.after(%s,%s){nodes{username},page_info}}" % (cursor, USER_COUNT_PER_PAGE)
     follow_list_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
     if follow_list_return_code == 1:
         try:
@@ -136,9 +136,10 @@ def get_one_page_follow_list(account_id, cursor=None):
 # account_id -> 490060609
 def get_one_page_media_data(account_id, cursor):
     # https://www.instagram.com/query/?q=ig_user(490060609){media.after(9999999999999999999,12){nodes{code,date,display_src,is_video},page_info}}
-    media_page_url = "https://www.instagram.com/query/"
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
-    media_page_url += "?q=ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)
+    modes_data = "code,date,display_src,is_video"
+    media_page_url = "https://www.instagram.com/query/?q=ig_user(%s)" % account_id
+    media_page_url += "{media.after(%s,%s){nodes{%s},page_info}}" % (cursor, IMAGE_COUNT_PER_PAGE, modes_data)
     photo_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
     if photo_page_return_code == 1:
         try:
