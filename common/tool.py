@@ -22,6 +22,7 @@ import zipfile
 
 # 初始化操作
 IS_SET_TIMEOUT = False
+HTTP_CONNECTION_TIMEOUT = 10
 thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
@@ -60,11 +61,11 @@ def http_request(url, post_data=None, cookie=None):
             # 设置访问超时
             if sys.version_info < (2, 7):
                 if not IS_SET_TIMEOUT:
-                    urllib2.socket.setdefaulttimeout(5)
+                    urllib2.socket.setdefaulttimeout(HTTP_CONNECTION_TIMEOUT)
                     IS_SET_TIMEOUT = True
                 response = urllib2.urlopen(request)
             else:
-                response = urllib2.urlopen(request, timeout=5)
+                response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
 
             if response:
                 return 1, response.read(), response
@@ -81,7 +82,7 @@ def http_request(url, post_data=None, cookie=None):
                             elif input_str in ["n", "no"]:
                                 sys.exit()
                             break
-            # 连接被关闭，等待1分钟后再尝试
+            # 连接被关闭，等待30秒后再尝试
             elif str(e).find("[Errno 10053] ") != -1:
                 print_msg("访问页面超时，重新连接请稍后")
                 time.sleep(30)
@@ -112,10 +113,10 @@ def http_request(url, post_data=None, cookie=None):
 def random_user_agent():
     # "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
     # "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
-    firefox_version_max = 46
-    chrome_version_list = ["40.0.2214", "41.0.2272", "42.0.2311", "43.0.2357", "44.0.2403",
-                           "45.0.2454", "46.0.2490", "47.0.2526", "48.0.2564", "49.0.2623",
-                           "50.0.2661", "51.0.2704", "52.0.2743", "53.0.2785", "54.0.2810"]
+    firefox_version_max = 49
+    # https://zh.wikipedia.org/zh-cn/Google_Chrome
+    chrome_version_list = ["45.0.2454", "46.0.2490", "47.0.2526", "48.0.2564", "49.0.2623",
+                           "50.0.2661", "51.0.2704", "52.0.2743", "53.0.2785", "54.0.2840"]
     windows_version_list = ["6.1", "6.3", "10.0"]
     browser_type = random.choice(["firefox", "chrome"])
     os_type = random.choice(windows_version_list)
