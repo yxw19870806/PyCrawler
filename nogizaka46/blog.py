@@ -286,7 +286,6 @@ class Download(threading.Thread):
                         print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
-            # todo 是否需要下载图片或视频
             # 新的存档记录
             if first_blog_id != "0":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
