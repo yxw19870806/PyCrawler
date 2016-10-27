@@ -279,7 +279,7 @@ class Download(threading.Thread):
                         key = key_find[0]
                     else:
                         # 不是第一次下载
-                        if self.account_info[2] != "":
+                        if self.account_info[2] != "0":
                             print_error_msg(account_name + " 没有找到下一页的token，将该页保存：")
                             print_error_msg(album_page)
                         is_over = True
