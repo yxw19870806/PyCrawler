@@ -46,7 +46,7 @@ def get_discount_list():
             app_id = tool.find_sub_string(item, 'data-ds-appid="', '"')
             discount_data = tool.find_sub_string(item, '<div class="col search_discount responsive_secondrow">', "</div>")
             discount = tool.find_sub_string(discount_data, "<span>", "</span>").replace("-", "").replace("%", "")
-            price_data = tool.find_sub_string(item, '<div class="col search_price discounted responsive_secondrow">', "</div>")
+            price_data = tool.find_sub_string(item, '<div class="col search_price discounted responsive_secondrow">', "</div>", 2)
             old_price = tool.find_sub_string(price_data, '<strike>', '</strike>').replace("¥", "").strip()
             new_price = tool.find_sub_string(price_data, '<br>', '</div>').replace("¥", "").strip()
             discount_list.append("%s\t%s\t%s\t%s" % (app_id, discount, old_price, new_price))
