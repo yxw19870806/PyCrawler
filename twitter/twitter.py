@@ -264,7 +264,7 @@ class Twitter(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_name], self.threadLock)
+            thread = Download(account_list[account_name], self.thread_Lock)
             thread.start()
 
             time.sleep(1)
@@ -291,10 +291,10 @@ class Twitter(robot.Robot):
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info, threadLock):
+    def __init__(self, account_info, thread_Lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
-        self.threadLock = threadLock
+        self.thread_Lock = thread_Lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -444,11 +444,11 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            self.threadLock.acquire()
+            self.thread_Lock.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_name)
-            self.threadLock.release()
+            self.thread_Lock.release()
 
             log.step(account_name + " 完成")
         except SystemExit, se:

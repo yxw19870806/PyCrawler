@@ -27,26 +27,6 @@ IS_SORT = True
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
-threadLock = threading.Lock()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
 
 class Template(robot.Robot):
     def __init__(self):
@@ -110,7 +90,7 @@ class Template(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -135,13 +115,14 @@ class Template(robot.Robot):
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
         # todo 是否需要下载图片或视频
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -152,7 +133,7 @@ class Download(threading.Thread):
         account_name = account_id
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             # todo 是否需要下载图片或视频
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
@@ -179,7 +160,7 @@ class Download(threading.Thread):
             if IS_DOWNLOAD_VIDEO:
                 pass
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
             if IS_SORT:
@@ -187,17 +168,17 @@ class Download(threading.Thread):
                 if first_image_time != "0":
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                        print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
+                        log.step(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
+                        log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
                 # todo 是否需要下载视频
                 if first_video_time != "0":
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
-                        print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
+                        log.step(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
+                        log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
             # todo 是否需要下载图片或视频
@@ -210,23 +191,23 @@ class Download(threading.Thread):
                 self.account_info[4] = first_video_time
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             # todo 是否需要下载图片或视频
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":
