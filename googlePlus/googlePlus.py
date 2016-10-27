@@ -24,26 +24,6 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
-threadLock = threading.Lock()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
 
 # 获取一页相册中图片所在的picasweb地址列表
 def get_one_page_album(account_id, token):
@@ -132,7 +112,7 @@ class GooglePlus(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -154,13 +134,14 @@ class GooglePlus(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -176,7 +157,7 @@ class Download(threading.Thread):
             account_file_path = ""
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
@@ -195,13 +176,13 @@ class Download(threading.Thread):
                 # 获取一页相册
                 album_page = get_one_page_album(account_id, key)
                 if album_page is None:
-                    print_error_msg(account_name + " 无法访问相册页，token：%s" % key)
+                    log.error(account_name + " 无法访问相册页，token：%s" % key)
                     tool.process_exit()
 
                 # 获取相册页中的所有picasweb地址列表
                 picasaweb_url_list = get_picasaweb_url_list(album_page)
 
-                trace(account_name + " 相册获取的所有picasaweb页：%s" % picasaweb_url_list)
+                log.trace(account_name + " 相册获取的所有picasaweb页：%s" % picasaweb_url_list)
                 for picasaweb_url in picasaweb_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
@@ -210,12 +191,12 @@ class Download(threading.Thread):
                     # 获取picasaweb页的album id
                     album_id = get_picasaweb_page_album_id(account_id, picasaweb_url)
                     if album_id is None:
-                        print_error_msg(account_name + " 第%s张图片，无法访问picasaweb页 %s" % (image_count, picasaweb_url))
+                        log.error(account_name + " 第%s张图片，无法访问picasaweb页 %s" % (image_count, picasaweb_url))
                         continue
                     if not album_id:
-                        print_error_msg(account_name + " 第%s张图片，picasaweb页 %s 获取album id失败" % (image_count, picasaweb_url))
+                        log.error(account_name + " 第%s张图片，picasaweb页 %s 获取album id失败" % (image_count, picasaweb_url))
                         continue
-                    trace(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
+                    log.trace(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
 
                     # 检查是否已下载到前一次的图片
                     if int(album_id) <= int(self.account_info[2]):
@@ -234,23 +215,23 @@ class Download(threading.Thread):
                     # 获取album id对应相册存档页的全部图片地址列表
                     image_url_list = get_image_url_list(account_id, album_id)
                     if image_url_list is None:
-                        print_error_msg(account_name + " 第%s张图片，无法访问album id：%s 的相册存档页" % (image_count, album_id))
+                        log.error(account_name + " 第%s张图片，无法访问album id：%s 的相册存档页" % (image_count, album_id))
                         continue
                     if len(image_url_list) == 0:
-                        print_error_msg(account_name + " 第%s张图片，album id：%s 的相册存档页没有解析到图片" % (image_count, album_id))
+                        log.error(account_name + " 第%s张图片，album id：%s 的相册存档页没有解析到图片" % (image_count, album_id))
                         continue
 
-                    trace(account_name + " album id：%s 的相册存档页获取的所有图片：%s" % (album_id, image_url_list))
+                    log.trace(account_name + " album id：%s 的相册存档页获取的所有图片：%s" % (album_id, image_url_list))
                     for image_url in image_url_list:
                         image_url = generate_max_resolution_image_url(image_url)
 
                         # 下载
-                        print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
-                                print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_download_dir = False
 
@@ -260,10 +241,10 @@ class Download(threading.Thread):
                             file_type = "jpg"
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, file_path):
-                            print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                            log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            print_error_msg(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
@@ -280,19 +261,19 @@ class Download(threading.Thread):
                     else:
                         # 不是第一次下载
                         if self.account_info[2] != "0":
-                            print_error_msg(account_name + " 没有找到下一页的token，将该页保存：")
-                            print_error_msg(album_page)
+                            log.error(account_name + " 没有找到下一页的token，将该页保存：")
+                            log.error(album_page)
                         is_over = True
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 排序
             if IS_SORT and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_file_path, account_name)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
+                    log.step(account_name + " 图片从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_name + " 创建图片子目录 %s 失败" % destination_path)
+                    log.error(account_name + " 创建图片子目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录
@@ -301,21 +282,21 @@ class Download(threading.Thread):
                 self.account_info[2] = first_album_id
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             ACCOUNTS.remove(account_id)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

@@ -21,26 +21,6 @@ VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
-threadLock = threading.Lock()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
 
 # 根据account_id获取user_id
 def get_user_id(account_id):
@@ -137,7 +117,7 @@ class ChangBa(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -159,13 +139,14 @@ class ChangBa(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_VIDEO_COUNT
@@ -177,13 +158,13 @@ class Download(threading.Thread):
             account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             user_id = get_user_id(account_id)
             if user_id is None:
-                print_error_msg(account_name + " userid获取失败")
+                log.error(account_name + " userid获取失败")
                 tool.process_exit()
 
             page_count = 0
@@ -197,7 +178,7 @@ class Download(threading.Thread):
                 audio_list = get_one_page_audio_list(user_id, page_count)
 
                 if audio_list is None:
-                    print_step_msg(account_name + " 第%s页歌曲列表获取失败" % page_count)
+                    log.step(account_name + " 第%s页歌曲列表获取失败" % page_count)
                     first_audio_id = "0"
                     break  # 存档恢复
 
@@ -224,21 +205,21 @@ class Download(threading.Thread):
 
                     # 获取歌曲的下载地址
                     audio_url = get_audio_url(audio_info[2])
-                    print_step_msg(account_name + " 开始下载第%s首歌曲 %s" % (video_count, audio_url))
+                    log.step(account_name + " 开始下载第%s首歌曲 %s" % (video_count, audio_url))
 
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
+                            log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info[1]))
                     if tool.save_net_file(audio_url, file_path):
-                        print_step_msg(account_name + " 第%s首歌曲下载成功" % video_count)
+                        log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
                     else:
-                        print_error_msg(account_name + " 第%s首歌曲 %s 下载失败" % (video_count, audio_url))
+                        log.error(account_name + " 第%s首歌曲 %s 下载失败" % (video_count, audio_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -253,28 +234,28 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
 
             # 新的存档记录
             if first_audio_id != "0":
                 self.account_info[1] = first_audio_id
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

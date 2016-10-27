@@ -23,26 +23,6 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
 
-threadLock = threading.Lock()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
 
 # 从控制台输入获取账号信息
 def get_account_info_from_console():
@@ -229,7 +209,7 @@ class Bcy(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -248,13 +228,14 @@ class Bcy(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.error("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -266,7 +247,7 @@ class Download(threading.Thread):
             cn = self.account_info[0]
 
         try:
-            print_step_msg(cn + " 开始")
+            log.error(cn + " 开始")
 
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, cn)
 
@@ -282,13 +263,13 @@ class Download(threading.Thread):
                 # 获取一页的作品信息
                 post_page = get_one_page_post(coser_id, page_count)
                 if post_page is None:
-                    print_error_msg(cn + " 无法访问第%s页作品" % page_count)
+                    log.error(cn + " 无法访问第%s页作品" % page_count)
                     tool.process_exit()
 
                 # 解析作品信息，获取所有的正片信息
                 cp_id, rp_list = get_rp_list(post_page)
                 if cp_id is None:
-                    print_error_msg(cn + " 第%s页作品解析异常" % page_count)
+                    log.error(cn + " 第%s页作品解析异常" % page_count)
                     tool.process_exit()
 
                 for rp_id, title in rp_list.iteritems():
@@ -306,11 +287,11 @@ class Download(threading.Thread):
                     if first_rp_id == "":
                         first_rp_id = rp_id
 
-                    print_step_msg("rp: " + rp_id)
+                    log.error("rp: " + rp_id)
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
-                            print_error_msg(cn + " 创建CN目录 %s 失败" % image_path)
+                            log.error(cn + " 创建CN目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_download_dir = False
 
@@ -324,33 +305,33 @@ class Download(threading.Thread):
                         rp_path = os.path.join(image_path, rp_id)
                     if not tool.make_dir(rp_path, 0):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
-                        print_error_msg(cn + " 创建作品目录 %s 失败，尝试不使用title" % rp_path)
+                        log.error(cn + " 创建作品目录 %s 失败，尝试不使用title" % rp_path)
                         rp_path = os.path.join(image_path, rp_id)
                         if not tool.make_dir(rp_path, 0):
-                            print_error_msg(cn + " 创建作品目录 %s 失败" % rp_path)
+                            log.error(cn + " 创建作品目录 %s 失败" % rp_path)
                             tool.process_exit()
 
                     # 获取正片页面内的所有图片地址列表
                     image_url_list = get_image_url_list(cp_id, rp_id)
                     if image_url_list is None:
-                        print_error_msg(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
+                        log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
                         continue
 
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
-                        print_step_msg(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
+                        log.error(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
                             # 重新获取下正片页面内的所有图片地址列表
                             image_url_list = get_image_url_list(cp_id, rp_id)
 
                     if len(image_url_list) == 0:
-                        print_error_msg(cn + " 正片：%s没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品，cp_id：%s" % (rp_id, cp_id))
+                        log.error(cn + " 正片：%s没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品，cp_id：%s" % (rp_id, cp_id))
                         continue
 
                     image_count = 1
                     for image_url in list(image_url_list):
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        print_step_msg(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
+                        log.error(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
@@ -359,9 +340,9 @@ class Download(threading.Thread):
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, file_path):
                             image_count += 1
-                            print_step_msg(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
+                            log.error(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
                         else:
-                            print_error_msg(cn + " %s 第%s张图片 %s 下载失败" % (rp_id, image_count, image_url))
+                            log.error(cn + " %s 第%s张图片 %s 下载失败" % (rp_id, image_count, image_url))
 
                     this_cn_total_image_count += image_count - 1
 
@@ -377,25 +358,25 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(cn + " 下载完毕，总共获得%s张图片" % this_cn_total_image_count)
+            log.error(cn + " 下载完毕，总共获得%s张图片" % this_cn_total_image_count)
 
             # 新的存档记录
             if first_rp_id != "":
                 self.account_info[1] = first_rp_id
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             TOTAL_IMAGE_COUNT += this_cn_total_image_count
             ACCOUNTS.remove(coser_id)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(cn + " 完成")
+            log.error(cn + " 完成")
         except SystemExit:
-            print_error_msg(cn + " 异常退出")
+            log.error(cn + " 异常退出")
         except Exception, e:
-            print_error_msg(cn + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(cn + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

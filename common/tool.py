@@ -14,6 +14,7 @@ import random
 import shutil
 import sys
 import time
+import threading
 import traceback
 import urllib
 import urllib2
@@ -21,6 +22,7 @@ import zipfile
 
 # 初始化操作
 IS_SET_TIMEOUT = False
+thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
@@ -312,10 +314,12 @@ def quickly_set(is_set_cookie, proxy_type):
 def print_msg(msg, is_time=True):
     if is_time:
         msg = get_time() + " " + msg
+    thread_lock.acquire()
     if IS_EXECUTABLE:
         print msg.decode("utf-8").encode("GBK")
     else:
         print msg
+    thread_lock.release()
 
 
 # 获取时间
@@ -379,12 +383,14 @@ def change_path_encoding(path):
 # type=1: 追加
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
+    thread_lock.acquire()
     if append_type == 1:
         file_handle = open(file_path, "a")
     else:
         file_handle = open(file_path, "w")
     file_handle.write(msg + "\n")
     file_handle.close()
+    thread_lock.release()
 
 
 # 保存网络文件

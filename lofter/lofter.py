@@ -24,26 +24,6 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
-threadLock = threading.Lock()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
 
 # 获取指定一页的全部日志地址列表
 def get_one_page_post_url_list(account_id, page_count):
@@ -105,7 +85,7 @@ class Lofter(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -127,13 +107,14 @@ class Lofter(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -141,7 +122,7 @@ class Download(threading.Thread):
         account_id = self.account_info[0]
 
         try:
-            print_step_msg(account_id + " 开始")
+            log.step(account_id + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
@@ -160,7 +141,7 @@ class Download(threading.Thread):
                 post_url_list = get_one_page_post_url_list(account_id, page_count)
                 # 无法获取信息首页
                 if post_url_list is None:
-                    print_error_msg(account_id + " 无法访问第%s页相册页" % page_count)
+                    log.error(account_id + " 无法访问第%s页相册页" % page_count)
                     tool.process_exit()
 
                 if len(post_url_list) == 0:
@@ -168,9 +149,9 @@ class Download(threading.Thread):
                     break
 
                 # 去重排序
-                trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_url_list))
+                log.trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_url_list))
                 post_url_list = sorted(list(set(post_url_list)), reverse=True)
-                trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list))
+                log.trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list))
                 for post_url in post_url_list:
                     post_id = post_url.split("/")[-1].split("_")[-1]
 
@@ -190,33 +171,33 @@ class Download(threading.Thread):
 
                     post_page_return_code, post_page = tool.http_request(post_url)[:2]
                     if post_page_return_code != 1:
-                        print_error_msg(account_id + " 第%s张图片，无法获取信息页 %s" % (image_count, post_url))
+                        log.error(account_id + " 第%s张图片，无法获取信息页 %s" % (image_count, post_url))
                         continue
 
                     image_url_list = get_image_url_list(post_page)
-                    trace(account_id + " 信息页 %s 获取的所有图片：%s" % (post_url, image_url_list))
+                    log.trace(account_id + " 信息页 %s 获取的所有图片：%s" % (post_url, image_url_list))
                     if len(image_url_list) == 0:
-                        print_error_msg(account_id + " 第%s张图片，信息页 %s 中没有找到图片" % (image_count, post_url))
+                        log.error(account_id + " 第%s张图片，信息页 %s 中没有找到图片" % (image_count, post_url))
                         continue
                     for image_url in image_url_list:
                         if image_url.rfind("?") > image_url.rfind("."):
                             image_url = image_url.split("?")[0]
-                        print_step_msg(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                        log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(image_path, 0):
-                                print_error_msg(account_id + " 创建图片下载目录 %s 失败" % image_path)
+                                log.error(account_id + " 创建图片下载目录 %s 失败" % image_path)
                                 tool.process_exit()
                             need_make_download_dir = False
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, file_path):
-                            print_step_msg(account_id + " 第%s张图片下载成功" % image_count)
+                            log.step(account_id + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            print_error_msg(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            log.error(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
@@ -233,15 +214,15 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_id + " 下载完毕，总共获得%s张图片" % (image_count - 1))
+            log.step(account_id + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 排序
             if IS_SORT and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    print_step_msg(account_id + " 图片从下载目录移动到保存目录成功")
+                    log.step(account_id + " 图片从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_id + " 创建图片子目录 %s 失败" % destination_path)
+                    log.error(account_id + " 创建图片子目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录
@@ -250,21 +231,21 @@ class Download(threading.Thread):
                 self.account_info[2] = first_post_id
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             ACCOUNTS.remove(account_id)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(account_id + " 完成")
+            log.step(account_id + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_id + " 提前退出")
+                log.step(account_id + " 提前退出")
             else:
-                print_error_msg(account_id + " 异常退出")
+                log.error(account_id + " 异常退出")
         except Exception, e:
-            print_error_msg(account_id + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_id + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

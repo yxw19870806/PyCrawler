@@ -28,26 +28,6 @@ IS_SORT = True
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
-threadLock = threading.Lock()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
 
 # 获取指定账号的全部视频ID列表
 def get_video_id_list(account_id):
@@ -176,7 +156,7 @@ class YiZhiBo(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_count)
             thread.start()
 
             time.sleep(1)
@@ -198,13 +178,14 @@ class YiZhiBo(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_count):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_count = thread_count
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -217,7 +198,7 @@ class Download(threading.Thread):
             account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
@@ -234,7 +215,7 @@ class Download(threading.Thread):
                 # 获取全部图片地址列表
                 image_url_list = get_image_url_list(account_id)
                 if image_url_list is None:
-                    print_error_msg(account_name + " 图片列表解析错误")
+                    log.error(account_name + " 图片列表解析错误")
                     break
 
                 for image_url in list(image_url_list):
@@ -242,7 +223,7 @@ class Download(threading.Thread):
                     image_url = image_url.split("@")[0]
                     image_return_code, image_byte, image_response = tool.http_request(image_url)
                     if image_return_code != 1:
-                        print_step_msg(account_name + " 第%s张图片下载失败" % image_count)
+                        log.step(account_name + " 第%s张图片下载失败" % image_count)
                         continue
 
                     # 获取图片的上传时间（字符串）
@@ -258,19 +239,19 @@ class Download(threading.Thread):
                     if first_image_time == "0":
                         first_image_time = str(image_created_time)
 
-                    print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                     # 第一张图片，创建目录
                     if need_make_image_dir:
                         if not tool.make_dir(image_path, 0):
-                            print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_image_dir = False
 
                     file_type = image_url.split(".")[-1].split(":")[0]
                     image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                     save_image(image_byte, image_file_path)
-                    print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                    log.step(account_name + " 第%s张图片下载成功" % image_count)
                     image_count += 1
 
                     # 达到配置文件中的下载数量，结束
@@ -286,14 +267,14 @@ class Download(threading.Thread):
                 # 获取全部视频ID列表
                 video_id_list = get_video_id_list(account_id)
                 if video_id_list is None:
-                    print_error_msg(account_name + " 视频列表解析错误")
+                    log.error(account_name + " 视频列表解析错误")
                     break
 
                 for video_id in list(video_id_list):
                     # 获取视频的时间和下载地址
                     video_info = get_video_info(video_id)
                     if video_info is None:
-                        print_error_msg(account_name + " 第%s个视频 %s 信息获取失败" % (video_count, video_id))
+                        log.error(account_name + " 第%s个视频 %s 信息获取失败" % (video_count, video_id))
                         continue
 
                     # 检查是否已下载到前一次的视频
@@ -309,47 +290,47 @@ class Download(threading.Thread):
                     # 视频的真实下载地址列表
                     ts_url_list = get_ts_url_list(link_url)
                     if ts_url_list is None:
-                        print_error_msg(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, link_url))
+                        log.error(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, link_url))
                         continue
 
-                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
+                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))
 
                     # 第一个视频，创建目录
                     if need_make_video_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                            log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_video_dir = False
 
                     video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
                     if save_video(ts_url_list, video_file_path):
-                        print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                        log.step(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
                     else:
-                        print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_url_list))
+                        log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, ts_url_list))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
                         break
                 break
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
             if IS_SORT:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[3]), 4):
-                        print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
+                        log.step(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建图片保存目录 %s 失败" % destination_path)
+                        log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
-                        print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
+                        log.step(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
+                        log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
             if first_image_time != "0":
@@ -361,22 +342,22 @@ class Download(threading.Thread):
                 self.account_info[2] = first_video_time
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_count.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
-            threadLock.release()
+            self.thread_count.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

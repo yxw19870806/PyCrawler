@@ -22,26 +22,6 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
-threadLock = threading.Lock()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
 
 # 获取指定账号的全部关注列表
 # suid -> 0r9ewgQ0v7UoDptu
@@ -177,7 +157,7 @@ class MiaoPai(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id])
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -199,13 +179,14 @@ class MiaoPai(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_VIDEO_COUNT
@@ -217,7 +198,7 @@ class Download(threading.Thread):
             account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
@@ -227,7 +208,7 @@ class Download(threading.Thread):
 
             suid = get_suid(account_id)
             if suid is None:
-                print_error_msg(account_name + " suid获取失败")
+                log.error(account_name + " suid获取失败")
 
             page_count = 1
             video_count = 1
@@ -239,13 +220,13 @@ class Download(threading.Thread):
                 # 获取指定一页的视频信息
                 media_page = get_one_page_video_data(suid, page_count)
                 if media_page is None:
-                    print_error_msg(account_name + " 视频列表解析错误")
+                    log.error(account_name + " 视频列表解析错误")
                     tool.process_exit()
 
                 # 获取视频scid列表
                 scid_list = get_scid_list(media_page["msg"])
                 if len(scid_list) == 0:
-                    print_error_msg(account_name + " 在视频列表：%s 中没有找到视频scid" % media_page["msg"])
+                    log.error(account_name + " 在视频列表：%s 中没有找到视频scid" % media_page["msg"])
                     tool.process_exit()
 
                 for scid in scid_list:
@@ -268,24 +249,24 @@ class Download(threading.Thread):
                     # 获取视频下载地址
                     video_url = get_video_url_by_video_id(scid)
                     if video_url is None:
-                        print_error_msg(account_name + " 第%s个视频 %s 获取下载地址失败" % (video_count, scid))
+                        log.error(account_name + " 第%s个视频 %s 获取下载地址失败" % (video_count, scid))
                         continue
 
-                    print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     # 第一个视频，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            print_error_msg(account_name + " 创建视频下载目录 %s 失败" % video_path)
+                            log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     if tool.save_net_file(video_url, file_path):
-                        print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                        log.step(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
                     else:
-                        print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                        log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -298,15 +279,15 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
 
             # 排序
             if IS_SORT and video_count > 1:
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
-                    print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
+                    log.step(account_name + " 视频从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
+                    log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录
@@ -315,21 +296,21 @@ class Download(threading.Thread):
                 self.account_info[2] = first_video_scid
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

@@ -29,26 +29,6 @@ IS_SORT = True
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
-threadLock = threading.Lock()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
 
 # 获取当前cookies对应的authenticity_token
 def get_authenticity_token():
@@ -284,7 +264,7 @@ class Twitter(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_name])
+            thread = Download(account_list[account_name], self.threadLock)
             thread.start()
 
             time.sleep(1)
@@ -307,13 +287,14 @@ class Twitter(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), TOTAL_IMAGE_COUNT, TOTAL_VIDEO_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, threadLock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.threadLock = threadLock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -322,7 +303,7 @@ class Download(threading.Thread):
         account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
@@ -343,7 +324,7 @@ class Download(threading.Thread):
                 # 获取指定时间点后的一页图片信息
                 media_page = get_media_page_data(account_name, data_tweet_id)
                 if media_page is None:
-                    print_error_msg(account_name + " 媒体列表解析异常")
+                    log.error(account_name + " 媒体列表解析异常")
                     tool.process_exit()
 
                 # 上一页正好获取了全部的媒体信息，所以这一页没有任何内容，完成了，直接退出
@@ -352,17 +333,17 @@ class Download(threading.Thread):
 
                 tweet_list = get_tweet_list(media_page["items_html"])
                 if len(tweet_list) == 0:
-                    print_error_msg(account_name + " 媒体列表拆分异常，items_html：%s" % media_page["items_html"])
+                    log.error(account_name + " 媒体列表拆分异常，items_html：%s" % media_page["items_html"])
                     tool.process_exit()
 
                 if media_page["new_latent_count"] != len(tweet_list):
-                    print_error_msg(account_name + " 解析的媒体数量不等于new_latent_count的数值")
-                    tool.process_exit()
+                    log.error(account_name + " 解析的媒体数量不等于new_latent_count的数值")
+                    # tool.process_exit()
 
                 for tweet_data in tweet_list:
                     tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
                     if not tweet_id:
-                        print_error_msg(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
+                        log.error(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
                         continue
 
                     # 检查是否tweet的id小于上次的记录
@@ -379,23 +360,23 @@ class Download(threading.Thread):
                         if check_has_video(tweet_data):
                             video_file_type, video_url_list = get_video_url_list(tweet_id)
                             if len(video_url_list) > 0:
-                                print_step_msg(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
+                                log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
 
                                 # 第一个视频，创建目录
                                 if need_make_video_dir:
                                     if not tool.make_dir(video_path, 0):
-                                        print_error_msg(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                                        log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
                                         tool.process_exit()
                                     need_make_video_dir = False
 
                                 video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
                                 if save_video(video_url_list, video_file_path):
-                                    print_step_msg(account_name + " 第%s个视频下载成功" % video_count)
+                                    log.step(account_name + " 第%s个视频下载成功" % video_count)
                                     video_count += 1
                                 else:
-                                    print_error_msg(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
+                                    log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
                             else:
-                                print_error_msg(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
+                                log.error(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
 
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
@@ -403,27 +384,27 @@ class Download(threading.Thread):
                         image_url_list = get_image_url_list(tweet_data)
                         for image_url in image_url_list:
                             image_url = str(image_url)
-                            print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                            log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                             image_return_code, image_byte = tool.http_request(image_url)[:2]
                             # 404，不算做错误，图片已经被删掉了
                             if image_return_code == -404:
-                                print_error_msg(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
+                                log.error(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
                             elif image_return_code == 1:
                                 # 第一张图片，创建目录
                                 if need_make_image_dir:
                                     if not tool.make_dir(image_path, 0):
-                                        print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                        log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                         tool.process_exit()
                                     need_make_image_dir = False
 
                                 file_type = image_url.split(".")[-1].split(":")[0]
                                 image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                                 save_image(image_byte, image_file_path)
-                                print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                                log.step(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
                             else:
-                                print_error_msg(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
+                                log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
 
                     # 达到配置文件中的下载数量，结束
                     if (0 < GET_VIDEO_COUNT < video_count) or (0 < GET_IMAGE_COUNT < image_count):
@@ -436,23 +417,23 @@ class Download(threading.Thread):
                     else:
                         is_over = True
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
             if IS_SORT:
                 if image_count > 1:
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                        print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
+                        log.step(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建图片子目录 %s 失败" % destination_path)
+                        log.error(account_name + " 创建图片子目录 %s 失败" % destination_path)
                         tool.process_exit()
                 if video_count > 1:
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
-                        print_step_msg(account_name + " 视频从下载目录移动到保存目录成功")
+                        log.step(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
-                        print_error_msg(account_name + " 创建视频保存目录 %s 失败" % destination_path)
+                        log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                         tool.process_exit()
 
             # 新的存档记录
@@ -462,22 +443,22 @@ class Download(threading.Thread):
                 self.account_info[3] = first_tweet_id
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.threadLock.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_name)
-            threadLock.release()
+            self.threadLock.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":

@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 from common import log, robot, tool
 import os
 import re
-import time
 
 
 class Shinoda(robot.Robot):

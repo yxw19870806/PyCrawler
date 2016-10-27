@@ -22,26 +22,6 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
-threadLock = threading.Lock()
-
-
-def print_error_msg(msg):
-    threadLock.acquire()
-    log.error(msg)
-    threadLock.release()
-
-
-def print_step_msg(msg):
-    threadLock.acquire()
-    log.step(msg)
-    threadLock.release()
-
-
-def trace(msg):
-    threadLock.acquire()
-    log.trace(msg)
-    threadLock.release()
-
 
 # 获取指定页数的日志信息
 def get_blog_page_data(account_name, page_count):
@@ -118,7 +98,7 @@ class Ameblo(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_name])
+            thread = Download(account_list[account_name], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -141,13 +121,14 @@ class Ameblo(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        print_step_msg("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -155,7 +136,7 @@ class Download(threading.Thread):
         account_name = self.account_info[0]
 
         try:
-            print_step_msg(account_name + " 开始")
+            log.step(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             if IS_SORT:
@@ -172,13 +153,13 @@ class Download(threading.Thread):
                 # 获取一页日志
                 blog_data = get_blog_page_data(account_name, page_count)
                 if blog_data is None:
-                    print_error_msg(account_name + " 第%s页日志无法获取" % page_count)
+                    log.error(account_name + " 第%s页日志无法获取" % page_count)
                     tool.process_exit()
 
                 # 解析日志发布时间
                 blog_time = get_blog_time(blog_data)
                 if blog_time is None:
-                    print_error_msg(account_name + " 第%s页日志无法解析日志时间" % page_count)
+                    log.error(account_name + " 第%s页日志无法解析日志时间" % page_count)
                     tool.process_exit()
 
                 # 检查是否是上一次的最后blog
@@ -194,22 +175,22 @@ class Download(threading.Thread):
                 for image_url in image_url_list:
                     # 使用默认图片的分辨率
                     image_url = image_url.split("?")[0]
-                    print_step_msg(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                     # 第一张图片，创建目录
                     if need_make_image_dir:
                         if not tool.make_dir(image_path, 0):
-                            print_error_msg(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
                             tool.process_exit()
                         need_make_image_dir = False
                         
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                     if tool.save_net_file(image_url, file_path):
-                        print_step_msg(account_name + " 第%s张图片下载成功" % image_count)
+                        log.step(account_name + " 第%s张图片下载成功" % image_count)
                         image_count += 1
                     else:
-                        print_error_msg(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
+                        log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
 
                 # 达到配置文件中的下载数量，结束
                 if 0 < GET_IMAGE_COUNT < image_count:
@@ -218,15 +199,15 @@ class Download(threading.Thread):
                 if not is_over:
                     page_count += 1
 
-            print_step_msg(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
+            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 排序
             if IS_SORT and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    print_step_msg(account_name + " 图片从下载目录移动到保存目录成功")
+                    log.step(account_name + " 图片从下载目录移动到保存目录成功")
                 else:
-                    print_error_msg(account_name + " 创建图片子目录 %s 失败" % destination_path)
+                    log.error(account_name + " 创建图片子目录 %s 失败" % destination_path)
                     tool.process_exit()
 
             # 新的存档记录
@@ -235,21 +216,21 @@ class Download(threading.Thread):
                 self.account_info[2] = first_blog_time
 
             # 保存最后的信息
-            threadLock.acquire()
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            self.thread_lock.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             ACCOUNTS.remove(account_name)
-            threadLock.release()
+            self.thread_lock.release()
 
-            print_step_msg(account_name + " 完成")
+            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
-                print_step_msg(account_name + " 提前退出")
+                log.step(account_name + " 提前退出")
             else:
-                print_error_msg(account_name + " 异常退出")
+                log.error(account_name + " 异常退出")
         except Exception, e:
-            print_error_msg(account_name + " 未知异常")
-            print_error_msg(str(e) + "\n" + str(traceback.format_exc()))
+            log.error(account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
 
 if __name__ == "__main__":
