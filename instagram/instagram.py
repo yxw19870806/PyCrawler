@@ -382,7 +382,7 @@ class Download(threading.Thread):
                         tool.process_exit()
 
             # 新的存档记录
-            if first_created_time != "":
+            if first_created_time != "0":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
                 self.account_info[3] = first_created_time
