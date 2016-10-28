@@ -115,6 +115,13 @@ def get_article_id(article_url):
     return None
 
 
+# 根据文章页面，获取文章顶部的图片地址
+def get_article_top_picture_url(article_page):
+    article_top_picture = tool.find_sub_string(article_page, '<div class="main_toppic">', '<div class="main_editor')
+    if article_top_picture:
+        return tool.find_sub_string(article_top_picture, 'src="', '" />')
+
+
 # 根据文章页面，获取正文中的所有图片地址列表
 def get_article_image_url_list(article_page):
     article_body = tool.find_sub_string(article_page, '<div class="WB_editor_iframe', '<div class="artical_add_box"')
@@ -299,9 +306,8 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     # 文章顶部图片
-                    article_top_picture = tool.find_sub_string(article_page, '<div class="main_toppic">', '<div class="main_editor')
-                    if article_top_picture:
-                        top_picture_url = tool.find_sub_string(article_top_picture, 'src="', '" />')
+                    top_picture_url = get_article_top_picture_url(article_page)
+                    if top_picture_url:
                         log.step(account_name + " %s 开始下载顶部图片 %s" % (title, top_picture_url))
 
                         file_type = top_picture_url.split(".")[-1]
