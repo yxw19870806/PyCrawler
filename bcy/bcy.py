@@ -247,7 +247,7 @@ class Download(threading.Thread):
             cn = self.account_info[0]
 
         try:
-            log.error(cn + " 开始")
+            log.step(cn + " 开始")
 
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, cn)
 
@@ -287,7 +287,7 @@ class Download(threading.Thread):
                     if first_rp_id == "":
                         first_rp_id = rp_id
 
-                    log.error("rp: " + rp_id)
+                    log.trace("rp: " + rp_id)
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
@@ -318,7 +318,7 @@ class Download(threading.Thread):
                         continue
 
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
-                        log.error(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
+                        log.step(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
                             # 重新获取下正片页面内的所有图片地址列表
                             image_url_list = get_image_url_list(cp_id, rp_id)
@@ -331,7 +331,7 @@ class Download(threading.Thread):
                     for image_url in list(image_url_list):
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        log.error(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
+                        log.step(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
@@ -340,7 +340,7 @@ class Download(threading.Thread):
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, file_path):
                             image_count += 1
-                            log.error(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
+                            log.step(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
                         else:
                             log.error(cn + " %s 第%s张图片 %s 下载失败" % (rp_id, image_count, image_url))
 
@@ -358,7 +358,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            log.error(cn + " 下载完毕，总共获得%s张图片" % this_cn_total_image_count)
+            log.step(cn + " 下载完毕，总共获得%s张图片" % this_cn_total_image_count)
 
             # 新的存档记录
             if first_rp_id != "":
