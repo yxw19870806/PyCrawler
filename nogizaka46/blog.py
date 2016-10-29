@@ -220,8 +220,7 @@ class Download(threading.Thread):
                     # 获取该页日志的全部图片地址列表
                     image_url_list = get_image_url_list(blog_data)
                     if len(image_url_list) == 0:
-                        log.error(account_name + " 第%s页日志获取失败" % page_count)
-                        tool.process_exit()
+                        continue
 
                     # 获取日志页面中存在的所有大图显示地址，以及对应的小图地址
                     big_2_small_list = get_big_image_url_list(blog_data)
