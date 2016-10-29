@@ -336,6 +336,8 @@ class Download(threading.Thread):
 
                     image_count = 1
                     for image_url in list(image_url_list):
+                        if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("e.weibo.com") >= 0:
+                            continue
                         log.step(account_name + " %s 开始下载第%s张图片 %s" % (title, image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
