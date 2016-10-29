@@ -1,6 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 乃木坂46 OFFICIAL BLOG图片爬虫
+http://blog.nogizaka46.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -97,6 +98,7 @@ class Template(robot.Robot):
             robot.SYS_SET_COOKIE: (),
         }
         robot.Robot.__init__(self, sys_config)
+        self.thread_count = 1
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
