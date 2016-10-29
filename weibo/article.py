@@ -95,7 +95,6 @@ def get_article_url(preview_article_data):
 # 根据文章预览页面，获取文章总页数
 def get_max_page_count(preview_article_data):
     page_count_find = re.findall('Pl_Core_ArticleList__63\\\\">([\d]+)<\\\\/a>', preview_article_data)
-    print page_count_find
     return max(map(int, page_count_find))
 
 
@@ -123,8 +122,14 @@ def get_article_top_picture_url(article_page):
 
 
 # 根据文章页面，获取正文中的所有图片地址列表
-def get_article_image_url_list(article_page):
-    article_body = tool.find_sub_string(article_page, '<div class="WB_editor_iframe', '<div class="artical_add_box"')
+def get_article_image_url_list(article_page, article_type):
+    if article_type == "t":
+        article_body = tool.find_sub_string(article_page, '<div class="WB_editor_iframe', '<div class="artical_add_box"')
+    elif article_type == "p":
+        article_body = tool.find_sub_string(article_page, '{"ns":"pl.content.longFeed.index"', "</script>")
+        article_body = article_body.replace("\\", "")
+    else:
+        return None
     if article_body:
         return re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
     return None
@@ -319,7 +324,7 @@ class Download(threading.Thread):
                             log.error(account_name + " %s 顶部图片 %s 下载失败" % (title, top_picture_url))
 
                     # 获取文章正文的图片地址列表
-                    image_url_list = get_article_image_url_list(article_page)
+                    image_url_list = get_article_image_url_list(article_page, article_id[0])
                     if image_url_list is None:
                         log.error(account_name + " 文章 %s 正文解析失败" % article_url)
                         continue
