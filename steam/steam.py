@@ -46,9 +46,15 @@ def get_discount_list():
             app_id = tool.find_sub_string(item, 'data-ds-appid="', '"')
             discount_data = tool.find_sub_string(item, '<div class="col search_discount responsive_secondrow">', "</div>")
             discount = tool.find_sub_string(discount_data, "<span>", "</span>").replace("-", "").replace("%", "")
+            if not discount:
+                discount = 0
             price_data = tool.find_sub_string(item, '<div class="col search_price discounted responsive_secondrow">', "</div>", 2)
             old_price = tool.find_sub_string(price_data, '<strike>', '</strike>').replace("¥", "").strip()
+            if not old_price:
+                old_price = 0
             new_price = tool.find_sub_string(price_data, '<br>', '</div>').replace("¥", "").strip()
+            if not new_price:
+                new_price = 0
             discount_list.append("%s\t%s\t%s\t%s" % (app_id, discount, old_price, new_price))
         if total_page_count == 99:
             pagination_page = tool.find_sub_string(index_page, '<div class="search_pagination">', None)
