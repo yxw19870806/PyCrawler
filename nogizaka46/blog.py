@@ -65,7 +65,7 @@ def get_image_url_list(blog_data):
 
 # 获取日志中存在的所有大图显示地址，以及对应的小图地址
 def get_big_image_url_list(blog_data):
-    big_image_list_find = re.findall('<a href="([^"]*)"><img src="([^"]*)"', blog_data)
+    big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
     big_2_small_list = {}
     for big_image_url, small_image_url in big_image_list_find:
         big_2_small_list[small_image_url] = big_image_url
