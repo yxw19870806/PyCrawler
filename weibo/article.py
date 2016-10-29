@@ -238,12 +238,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT:
-                image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            else:
-                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-
             # 获取账号对应的page_id
             account_page_id = get_account_page_id(account_id)
             if account_page_id is None:
@@ -254,6 +248,7 @@ class Download(threading.Thread):
             this_account_total_image = 0
             first_article_time = "0"
             is_over = False
+            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 # 获取一页文章预览页面
                 preview_article_page = get_one_page_preview_article_data(account_page_id, page_count)
