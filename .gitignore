@@ -1,7 +1,6 @@
 .idea/
 *.pyc
-7gogo/photo/
-7gogo/video/
+ameblo/photo/
 bcy/photo/
 blog/photo/
 changba/video/
@@ -13,6 +12,9 @@ keyakizaka46/photo/
 lofter/photo/
 meipai/video/
 miaopai/video/
+nanaGoGo/photo/
+nanaGoGo/video/
+nogizaka46/photo/
 tumblr/photo/
 tumblr/video/
 twitter/photo/
@@ -23,6 +25,3 @@ yizhibo/photo/
 yizhibo/video/
 log/
 *-*_*_*.data
-stop
-pause
-ameblo/photo/
