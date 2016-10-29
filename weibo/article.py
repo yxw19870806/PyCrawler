@@ -114,6 +114,16 @@ def get_article_id(article_url):
     return None
 
 
+# 根据文章页面，获取文章标题
+def get_article_title(article_page, article_type):
+    if article_type == "t":
+        return tool.find_sub_string(article_page, '<div class="title" node-type="articleTitle">', "</div>")
+    elif article_type == "p":
+        return tool.find_sub_string(article_page, '<h1 class=\\"title\\">', "<\\/h1>")
+    else:
+        return None
+
+
 # 根据文章页面，获取文章顶部的图片地址
 def get_article_top_picture_url(article_page):
     article_top_picture = tool.find_sub_string(article_page, '<div class="main_toppic">', '<div class="main_editor')
@@ -293,7 +303,7 @@ class Download(threading.Thread):
                         continue
 
                     # 文章标题
-                    title = tool.find_sub_string(article_page, '<div class="title" node-type="articleTitle">', "</div>")
+                    title = get_article_title(article_page, article_id[0])
                     # 标题处理
                     for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
                         title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
