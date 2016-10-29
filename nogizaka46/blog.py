@@ -80,8 +80,10 @@ def check_big_image(image_url, big_2_small_list):
         if big_image_display_page_return_code == 1:
             temp_image_url = tool.find_sub_string(big_image_display_page, '<img src="', '"')
             if temp_image_url != "/img/expired.gif":
-                return temp_image_url
-    return image_url
+                return temp_image_url, False
+            else:
+                return image_url, True  # 如果有发现一个已经过期的图片，那么再往前的图片也是过期的，不用再检查了
+    return image_url, False
 
 
 class Template(robot.Robot):
@@ -188,6 +190,7 @@ class Download(threading.Thread):
             first_blog_id = "0"
             need_make_image_dir = True
             is_over = False
+            is_big_image_over = False
             while not is_over:
                 # 获取一页日志信息
                 blog_page = get_one_page_blog(account_id, page_count)
@@ -230,7 +233,8 @@ class Download(threading.Thread):
                     # 下载图片
                     for image_url in image_url_list:
                         # 检查是否存在大图可以下载
-                        image_url = check_big_image(image_url, big_2_small_list)
+                        if not is_big_image_over:
+                            image_url, is_big_image_over = check_big_image(image_url, big_2_small_list)
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
