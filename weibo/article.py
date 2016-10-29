@@ -146,7 +146,7 @@ def get_article_image_url_list(article_page, article_type):
 
 
 class Article(robot.Robot):
-    def __init__(self, extra_config=None):
+    def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -157,6 +157,9 @@ class Article(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_SET_COOKIE: ("weibo.com", ".sina.com.cn"),
+        }
+        extra_config = {
+            "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data",)
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
