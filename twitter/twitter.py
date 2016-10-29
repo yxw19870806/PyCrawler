@@ -134,7 +134,7 @@ def get_tweet_list(media_page_items_html):
             continue
         tweet_data = tweet_data.encode("utf-8")
         # 被圈出来的用户，追加到前面的页面中
-        if tweet_data.find('<span class="button-text following-text">') >= 0:
+        if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
             tweet_id_list[-1] += tweet_data
         else:
             tweet_id_list.append(tweet_data)
