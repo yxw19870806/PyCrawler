@@ -363,16 +363,6 @@ class Download(threading.Thread):
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image)
 
-            # 排序
-            if IS_SORT:
-                if first_article_time != "0":
-                    destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                        log.step(account_name + " 图片从下载目录移动到保存目录成功")
-                    else:
-                        log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
-                        tool.process_exit()
-
             # 新的存档记录
             if first_article_time != "0":
                 self.account_info[1] = first_article_time
