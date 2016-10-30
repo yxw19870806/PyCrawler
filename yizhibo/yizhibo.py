@@ -156,7 +156,7 @@ class YiZhiBo(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id], self.thread_count)
+            thread = Download(account_list[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -182,10 +182,10 @@ class YiZhiBo(robot.Robot):
 
 
 class Download(threading.Thread):
-    def __init__(self, account_info, thread_count):
+    def __init__(self, account_info, thread_lock):
         threading.Thread.__init__(self)
         self.account_info = account_info
-        self.thread_count = thread_count
+        self.thread_lock = thread_lock
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -343,11 +343,11 @@ class Download(threading.Thread):
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            self.thread_count.acquire()
+            self.thread_lock.acquire()
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
-            self.thread_count.release()
+            self.thread_lock.release()
 
             log.step(account_name + " 完成")
         except SystemExit, se:
