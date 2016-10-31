@@ -4,7 +4,7 @@ import re
 
 
 def akb(file_handle):
-    for team_id in [1, 2, 3, 4, 12, 15]:
+    for team_id in [1, 2, 3, 4, 12]:
         index_url = "http://www.akb48.co.jp/about/members/?team_id=" + str(team_id)
         return_code, page = tool.http_request(index_url)[:2]
         if return_code == 1:
