@@ -418,14 +418,14 @@ class Download(threading.Thread):
                 # 获取指定一页图片的信息
                 photo_page_data = get_one_page_photo_data(account_id, page_count)
                 if photo_page_data is None:
-                    log.error(account_name + " 图片列表解析错误")
+                    log.error(account_name + " 图片列表获取失败")
                     first_image_time = "0"  # 存档恢复
                     break
 
                 log.trace(account_name + "第%s页的全部图片信息：%s" % (page_count, photo_page_data))
                 for image_info in photo_page_data["photo_list"]:
                     if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
-                        log.error(account_name + " 第%s张图片信息解析错误 %s" % (image_count, image_info))
+                        log.error(account_name + " 第%s张图片信息解析失败 %s" % (image_count, image_info))
                         continue
 
                     # 检查是否图片时间小于上次的记录

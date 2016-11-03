@@ -215,7 +215,7 @@ class Download(threading.Thread):
                 # 获取全部图片地址列表
                 image_url_list = get_image_url_list(account_id)
                 if image_url_list is None:
-                    log.error(account_name + " 图片列表解析错误")
+                    log.error(account_name + " 图片列表获取失败")
                     break
 
                 for image_url in list(image_url_list):
@@ -267,7 +267,7 @@ class Download(threading.Thread):
                 # 获取全部视频ID列表
                 video_id_list = get_video_id_list(account_id)
                 if video_id_list is None:
-                    log.error(account_name + " 视频列表解析错误")
+                    log.error(account_name + " 视频列表获取失败")
                     break
 
                 for video_id in list(video_id_list):

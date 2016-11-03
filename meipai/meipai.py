@@ -169,12 +169,12 @@ class Download(threading.Thread):
                 # 获取指定一页的视频信息
                 medias_data = get_one_page_video_data(account_id, page_count)
                 if medias_data is None:
-                    log.error(account_name + " 视频列表解析错误")
+                    log.error(account_name + " 视频列表获取失败")
                     tool.process_exit()
 
                 for media in medias_data:
                     if not robot.check_sub_key(("video", "id"), media):
-                        log.error(account_name + " 第%s个视频信：%s解析错误" % (video_count, media))
+                        log.error(account_name + " 第%s个视频信：%s解析失败" % (video_count, media))
                         continue
 
                     video_id = str(media["id"])

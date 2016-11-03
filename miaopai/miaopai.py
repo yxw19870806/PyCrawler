@@ -220,7 +220,7 @@ class Download(threading.Thread):
                 # 获取指定一页的视频信息
                 media_page = get_one_page_video_data(suid, page_count)
                 if media_page is None:
-                    log.error(account_name + " 视频列表解析错误")
+                    log.error(account_name + " 视频列表获取失败")
                     tool.process_exit()
 
                 # 获取视频scid列表
