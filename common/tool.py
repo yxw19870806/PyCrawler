@@ -33,7 +33,7 @@ else:
 # http请求
 # 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
-def http_request(url, post_data=None, cookie=None):
+def http_request(url, post_data=None, header_list=None, cookie=None):
     global IS_SET_TIMEOUT
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return -100, None, None
@@ -52,6 +52,9 @@ def http_request(url, post_data=None, cookie=None):
                 request = urllib2.Request(url)
             # 设置头信息
             request.add_header("User-Agent", random_user_agent())
+            if isinstance(header_list, dict):
+                for header_name, header_value in header_list.iteritems():
+                    request.add_header(header_name, header_value)
 
             # cookies
             if isinstance(cookie, cookielib.CookieJar):
