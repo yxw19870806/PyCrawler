@@ -92,6 +92,14 @@ def nana_go_go():
     nanaGoGo.NanaGoGo().main()
 
 
+# 乃木坂46公式Blog
+def nogizaka46_blog():
+    from nogizaka46 import blog
+    nogizaka46_log_path = os.path.join(os.path.abspath(".."), "nogizaka46")
+    os.chdir(nogizaka46_log_path)
+    blog.Blog().main()
+
+
 # tumblr
 def tumblr():
     from tumblr import tumblr
@@ -164,6 +172,7 @@ lofter()
 meipai()
 miaopai()
 nana_go_go()
+nogizaka46_blog()
 tumblr()
 twitter()
 weibo()
