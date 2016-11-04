@@ -3,6 +3,13 @@
 from common import tool
 import os
 
+# ameblo
+def ameblo():
+    from ameblo import ameblo
+    ameblo_path = os.path.join(os.path.abspath(".."), "ameblo")
+    os.chdir(ameblo_path)
+    ameblo.Ameblo().main()
+
 
 # 半次元
 def bcy():
@@ -10,6 +17,14 @@ def bcy():
     bcy_path = os.path.join(os.path.abspath(".."), "bcy")
     os.chdir(bcy_path)
     bcy.Bcy().main()
+
+
+# 唱吧
+def chang_ba():
+    from changba import changba
+    chang_ba_path = os.path.join(os.path.abspath(".."), "chang_ba")
+    os.chdir(chang_ba_path)
+    changba.ChangBa().main()
 
 
 # fkoji
@@ -132,7 +147,7 @@ def twitter():
         twitter.Twitter(extra_config).main()
 
 
-# # Weibo
+# # 微博
 def weibo():
     from weibo import weibo
     weibo_path = os.path.join(os.path.abspath(".."), "weibo")
@@ -164,8 +179,10 @@ def yizhibo():
     yizhibo.YiZhiBo().main()
 
 
+ameblo()
 bcy()
 google_plus()
+chang_ba()
 instagram()
 keyakizaka46_diary()
 lofter()
