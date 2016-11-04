@@ -86,7 +86,7 @@ def check_big_image(image_url, big_2_small_list):
     return image_url, False
 
 
-class Template(robot.Robot):
+class Blog(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
@@ -296,4 +296,4 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    Template().main()
+    Blog().main()
