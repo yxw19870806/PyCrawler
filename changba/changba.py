@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-唱吧视频爬虫
+唱吧歌曲爬虫
 http://changba.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
@@ -174,7 +174,7 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True
             while not is_over:
-                # 获取指定一页的视频信息
+                # 获取指定一页的歌曲信息
                 audio_list = get_one_page_audio_list(user_id, page_count)
 
                 if audio_list is None:
@@ -207,10 +207,10 @@ class Download(threading.Thread):
                     audio_url = get_audio_url(audio_info[2])
                     log.step(account_name + " 开始下载第%s首歌曲 %s" % (video_count, audio_url))
 
-                    # 第一个视频，创建目录
+                    # 第一首歌曲，创建目录
                     if need_make_download_dir:
                         if not tool.make_dir(video_path, 0):
-                            log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
+                            log.error(account_name + " 创建歌曲下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
 
