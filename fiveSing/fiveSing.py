@@ -35,8 +35,21 @@ def get_one_page_audio_list(account_id, page_type, page_count):
 
 
 # 根据歌曲类型和歌曲id获取歌曲下载地址
-def get_audio_url(audio_id):
-    return ""
+def get_audio_url(audio_id, song_type):
+    audio_info_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
+    audio_info_return_code, audio_info = tool.http_request(audio_info_url)[:2]
+    if audio_info_return_code == 1:
+        try:
+            audio_info = json.loads(audio_info)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("success", "data"), audio_info):
+                if audio_info["success"] and robot.check_sub_key(("fileName",), audio_info["data"]):
+                    return str(audio_info["data"]["fileName"])
+                elif not audio_info["success"]:
+                    return ""
+    return None
 
 
 class FiveSing(robot.Robot):
@@ -47,6 +60,7 @@ class FiveSing(robot.Robot):
 
         sys_config = {
              robot.SYS_DOWNLOAD_VIDEO: True,
+             robot.SYS_SET_COOKIE: (".kugou.com",),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -164,7 +178,14 @@ class Download(threading.Thread):
                             first_audio_id = str(audio_id)
 
                         # 获取歌曲的下载地址
-                        audio_url = get_audio_url(audio_id)
+                        audio_url = get_audio_url(audio_id, audio_type_to_index[audio_type])
+                        if audio_url is None:
+                            log.step(account_name + " %s歌曲ID %s，下载地址获取失败" % (audio_type, audio_id))
+                            continue
+                        if not audio_url:
+                            log.step(account_name + " %s歌曲ID %s，暂不提供下载地址" % (audio_type, audio_id))
+                            continue
+
                         log.step(account_name + " 开始下载第%s首歌曲 %s" % (video_count, audio_url))
 
                         # 第一个视频，创建目录
