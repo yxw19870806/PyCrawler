@@ -162,6 +162,9 @@ class Download(threading.Thread):
                     for audio_info in list(audio_list):
                         audio_id = audio_info[0]
                         audio_title = audio_info[1]
+                        for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
+                            audio_title = audio_title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
+                        audio_title = audio_title.strip().rstrip(".")  # 去除前后空格以及后缀的.
 
                         # 检查是否歌曲id小于上次的记录
                         if int(audio_id) <= int(self.account_info[audio_type_to_index[audio_type]]):
