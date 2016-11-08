@@ -64,8 +64,6 @@ class Template(robot.Robot):
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
-        tool.print_msg("配置文件读取完成")
-
     def main(self):
         global ACCOUNTS
 
