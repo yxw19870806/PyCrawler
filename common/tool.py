@@ -409,7 +409,8 @@ def save_net_file(file_url, file_path):
             file_handle.write(page_data)
             file_handle.close()
             # 判断文件下载后的大小和response中的Content-Length是否一致
-            if int(get_response_info(page_response.info(), "Content-Length")) == os.path.getsize(file_path):
+            content_length = get_response_info(page_response.info(), "Content-Length")
+            if (content_length is None) or (int(content_length) == os.path.getsize(file_path)):
                 return True
     return False
 
