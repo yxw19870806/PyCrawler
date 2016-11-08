@@ -14,7 +14,6 @@ import time
 import traceback
 
 ACCOUNTS = []
-IMAGE_COUNT_PER_PAGE = 20
 TOTAL_IMAGE_COUNT = 0
 GET_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""

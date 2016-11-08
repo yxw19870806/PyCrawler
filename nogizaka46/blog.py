@@ -20,7 +20,6 @@ IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
-IS_DOWNLOAD_IMAGE = True
 
 
 # 获取成员指定页数的一页日志信息
@@ -93,7 +92,6 @@ class Blog(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
-        global IS_DOWNLOAD_IMAGE
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
@@ -107,7 +105,6 @@ class Blog(robot.Robot):
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
-        IS_DOWNLOAD_IMAGE = self.is_download_image
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
         tool.print_msg("配置文件读取完成")
