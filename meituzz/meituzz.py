@@ -55,8 +55,11 @@ class MeiTuZZ(robot.Robot):
                 break
 
             if len(image_url_list) != int(total_photo_count_find[0]):
-                log.error("第%s页解析获取的图片数量不符" % album_id)
-                break
+                if album_page.find('<div class="payWindow_content" id="payWindow">') >= 0:
+                    log.error("第%s页解析有%s张收费图片" % (album_id, (int(total_photo_count_find[0]) - len(image_url_list))))
+                else:
+                    log.error("第%s页解析获取的图片数量不符" % album_id)
+                    break
 
             image_path = os.path.join(self.image_download_path, str(album_id))
             if not tool.make_dir(image_path, 0):
@@ -68,7 +71,6 @@ class MeiTuZZ(robot.Robot):
                 log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
 
                 file_path = os.path.join(image_path, "%04d.jpg" % image_count)
-
                 try:
                     if tool.save_net_file(image_url, file_path, True):
                         log.step("第%s页第%s张图片下载成功" % (album_id, image_count))
