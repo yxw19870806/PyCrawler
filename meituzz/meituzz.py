@@ -31,6 +31,7 @@ class MeiTuZZ(robot.Robot):
             album_id = int(save_info.strip())
 
         total_image_count = 0
+        error_count = 0
         is_over = False
         while not is_over:
             album_url = "http://meituzz.com/album/browse?albumID=%s" % album_id
@@ -43,6 +44,17 @@ class MeiTuZZ(robot.Robot):
             if album_page_return_code != 1:
                 log.error("第%s页图片获取失败" % album_id)
                 break
+
+            if album_page.find("<title>相册已被删除</title>") >= 0:
+                error_count += 1
+                if error_count >= 10:
+                    log.error("连续10页相册没有图片，退出程序")
+                    album_id += error_count - 1
+                    break
+                else:
+                    log.error("第%s页相册已被删除" % album_id)
+                    album_id += 1
+                    continue
 
             total_photo_count_find = re.findall('<span id="photoNumTotal">(\d*)</span>', album_page)
             if len(total_photo_count_find) != 1:
@@ -60,6 +72,9 @@ class MeiTuZZ(robot.Robot):
                 else:
                     log.error("第%s页解析获取的图片数量不符" % album_id)
                     break
+
+            # 错误数量重置
+            error_count = 0
 
             image_path = os.path.join(self.image_download_path, str(album_id))
             if not tool.make_dir(image_path, 0):
