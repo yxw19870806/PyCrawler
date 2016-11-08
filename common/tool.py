@@ -398,12 +398,19 @@ def write_file(msg, file_path, append_type=1):
 
 
 # 保存网络文件
-# file_path 包括路径和文件名
-def save_net_file(file_url, file_path):
+# file_url 文件所在网址
+# file_path 文件所在本地路径，包括路径和文件名
+# need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
+def save_net_file(file_url, file_path, need_content_type=False):
     file_path = change_path_encoding(file_path)
     for i in range(0, 5):
         page_return_code, page_data, page_response = http_request(file_url)
         if page_return_code == 1:
+            # response中的Content-Type作为文件后缀名
+            if need_content_type:
+                content_type = get_response_info(page_response.info(), "Content-Type")
+                if content_type:
+                    file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
             file_handle = open(file_path, "wb")
             file_handle.write(page_data)
