@@ -76,7 +76,7 @@ class MeiTuZZ(robot.Robot):
             # 错误数量重置
             error_count = 0
 
-            image_path = os.path.join(self.image_download_path, str(album_id))
+            image_path = os.path.join(self.image_download_path, "%04d" % album_id)
             if not tool.make_dir(image_path, 0):
                 log.error("创建图片下载目录 %s 失败" % image_path)
                 break
