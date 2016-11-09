@@ -33,6 +33,7 @@ class MeiTuZZ(robot.Robot):
         total_image_count = 0
         error_count = 0
         is_over = False
+        fee_album_list = []
         while not is_over:
             album_url = "http://meituzz.com/album/browse?albumID=%s" % album_id
             try:
@@ -66,9 +67,11 @@ class MeiTuZZ(robot.Robot):
                 log.error("第%s页图片地址列表解析失败" % album_id)
                 break
 
+            is_fee = False
             if len(image_url_list) != int(total_photo_count_find[0]):
                 if album_page.find('<div class="payWindow_content" id="payWindow">') >= 0:
                     log.error("第%s页解析有%s张收费图片" % (album_id, (int(total_photo_count_find[0]) - len(image_url_list))))
+                    is_fee = True
                 else:
                     log.error("第%s页解析获取的图片数量不符" % album_id)
                     break
@@ -101,6 +104,9 @@ class MeiTuZZ(robot.Robot):
                     break
 
             if not is_over:
+                # 添加到收费数组
+                if is_fee:
+                    fee_album_list.append(str(album_id))
                 total_image_count += image_count - 1
                 album_id += 1
 
@@ -111,6 +117,11 @@ class MeiTuZZ(robot.Robot):
         save_file = open(self.save_data_path, "w")
         save_file.write(str(album_id))
         save_file.close()
+        # 收费相册
+        fee_save_data_path = os.path.join(save_data_dir, "fee.data")
+        fee_save_data_file = open(fee_save_data_path, "a")
+        fee_save_data_file.write(" ".join(fee_album_list) + " ")
+        fee_save_data_file.close()
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
