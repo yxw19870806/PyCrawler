@@ -83,6 +83,8 @@ class MeiTuZZ(robot.Robot):
 
             image_count = 1
             for image_url in image_url_list:
+                # 去除模糊效果
+                image_url = image_url.split("@")[0]
                 log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
 
                 file_path = os.path.join(image_path, "%04d.jpg" % image_count)
