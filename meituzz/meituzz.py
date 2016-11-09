@@ -49,7 +49,7 @@ class MeiTuZZ(robot.Robot):
                 error_count += 1
                 if error_count >= 10:
                     log.error("连续10页相册没有图片，退出程序")
-                    album_id += error_count - 1
+                    album_id -= error_count - 1
                     break
                 else:
                     log.error("第%s页相册已被删除" % album_id)
