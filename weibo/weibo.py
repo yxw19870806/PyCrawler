@@ -149,6 +149,8 @@ def get_video_url(video_play_url):
             video_play_page = auto_redirect_visit(video_play_url)
             if video_play_page:
                 m3u8_file_url = tool.find_sub_string(video_play_page, 'video_src=', '&')
+                if not m3u8_file_url:
+                    m3u8_file_url = tool.find_sub_string(video_play_page, 'flashvars=\\"file=', '\\"\/>')
                 if m3u8_file_url:
                     m3u8_file_url = urllib2.unquote(m3u8_file_url)
                     m3u8_file_data = auto_redirect_visit(m3u8_file_url)
