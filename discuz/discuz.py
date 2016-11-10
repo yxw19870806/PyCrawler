@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-获取所有的steam游戏ID
+discuz论坛解析爬虫
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系

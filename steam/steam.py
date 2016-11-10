@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-获取所有的steam游戏ID
+steam相关数据解析爬虫
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -10,6 +10,7 @@ import json
 import re
 
 
+# 读取cookies后获取指定账号的全部游戏列表
 def get_owned_app_list(user_id):
     tool.quickly_set(1, 0)
     game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
@@ -28,6 +29,7 @@ def get_owned_app_list(user_id):
             return app_id_list
 
 
+# 获取所有打折游戏列表
 def get_discount_list():
     page_count = 1
     total_page_count = 99
