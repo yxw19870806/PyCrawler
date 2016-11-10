@@ -7,8 +7,8 @@ email: hikaru870806@hotmail.com
 """
 from common import tool
 import json
-import math
 import re
+
 
 def get_owned_app_list(user_id):
     tool.quickly_set(1, 0)
