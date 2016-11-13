@@ -69,7 +69,7 @@ class MeiTuZZ(robot.Robot):
 
             is_fee = False
             if len(image_url_list) != int(total_photo_count_find[0]):
-                if album_page.find('<div class="payWindow_content" id="payWindow">') >= 0:
+                if len(image_url_list) == int(total_photo_count_find[0]) - 1:
                     log.error("第%s页解析有%s张收费图片" % (album_id, (int(total_photo_count_find[0]) - len(image_url_list))))
                     is_fee = True
                 else:
