@@ -118,10 +118,11 @@ class MeiTuZZ(robot.Robot):
         save_file.write(str(album_id))
         save_file.close()
         # 收费相册
-        fee_save_data_path = os.path.join(save_data_dir, "fee.data")
-        fee_save_data_file = open(fee_save_data_path, "a")
-        fee_save_data_file.write(" ".join(fee_album_list) + " ")
-        fee_save_data_file.close()
+        if len(fee_album_list) > 0:
+            fee_save_data_path = os.path.join(save_data_dir, "fee.data")
+            fee_save_data_file = open(fee_save_data_path, "a")
+            fee_save_data_file.write(" ".join(fee_album_list) + " ")
+            fee_save_data_file.close()
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
