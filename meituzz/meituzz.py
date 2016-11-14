@@ -69,10 +69,13 @@ class MeiTuZZ(robot.Robot):
 
             is_fee = False
             if len(image_url_list) != int(total_photo_count_find[0]):
-                if len(image_url_list) == int(total_photo_count_find[0]) - 1:
-                    log.error("第%s页解析有%s张收费图片" % (album_id, (int(total_photo_count_find[0]) - len(image_url_list))))
-                    is_fee = True
-                else:
+                album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page)
+                if len(album_reward_find) == 1:
+                    album_reward = int(album_reward_find[0])
+                    if album_reward > 0:
+                        is_fee = True
+                        log.error("第%s页解析有%s张收费图片" % (album_id, (int(total_photo_count_find[0]) - len(image_url_list))))
+                if not is_fee:
                     log.error("第%s页解析获取的图片数量不符" % album_id)
                     break
 
