@@ -16,6 +16,7 @@ import traceback
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 GET_IMAGE_COUNT = 0
+GET_PAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -88,6 +89,7 @@ def check_big_image(image_url, big_2_small_list):
 class Blog(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
+        global GET_PAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -102,6 +104,7 @@ class Blog(robot.Robot):
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
+        GET_PAGE_COUNT = self.get_page_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
@@ -249,11 +252,20 @@ class Download(threading.Thread):
                         else:
                             log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
-                # 判断当前页数是否大等于总页数
-                if not is_over and page_count >= get_max_page_count(blog_page):
-                    is_over = True
-                else:
-                    page_count += 1
+                        # 达到配置文件中的下载数量，结束
+                        if 0 < GET_IMAGE_COUNT < image_count:
+                            is_over = True
+                            break
+
+                if not is_over:
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_PAGE_COUNT <= page_count:
+                        is_over = True
+                    # 判断当前页数是否大等于总页数
+                    elif page_count >= get_max_page_count(blog_page):
+                        is_over = True
+                    else:
+                        page_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
