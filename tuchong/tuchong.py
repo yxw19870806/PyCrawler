@@ -226,12 +226,14 @@ class Download(threading.Thread):
                             log.error(account_name + " 相册%s 第%s张图片 %s 下载失败" % (post_info["post_id"], image_count, image_url))
                     this_account_total_image_count += image_count
 
-                    # 相册发布时间
-                    post_time = post_info["published_at"]
-
-                    post_count += 1
-                    if 0 < GET_PAGE_COUNT < post_count:
-                        is_over = True
+                    if not is_over:
+                        # 达到配置文件中的下载页数，结束
+                        if 0 < GET_PAGE_COUNT <= post_count:
+                            is_over = True
+                        else:
+                            # 相册发布时间
+                            post_time = post_info["published_at"]
+                            post_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 

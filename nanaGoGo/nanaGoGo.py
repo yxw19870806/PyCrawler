@@ -18,7 +18,6 @@ INIT_TARGET_ID = "99999"
 MESSAGE_COUNT_PER_PAGE = 30
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-GET_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -47,7 +46,6 @@ def get_message_page_data(account_name, target_id):
 
 class NanaGoGo(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -64,7 +62,6 @@ class NanaGoGo(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path

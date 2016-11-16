@@ -206,12 +206,14 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
+                    # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_data:
                         is_over = True
                         break
 
-                if not video_data["hasNext"]:
-                    is_over = True
+                if not is_over:
+                    if not video_data["hasNext"]:
+                        is_over = True
 
             log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
 

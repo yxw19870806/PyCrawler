@@ -352,6 +352,7 @@ class Download(threading.Thread):
                     if int(tweet_id) <= int(self.account_info[3]):
                         is_over = True
                         break
+
                     # 将第一个tweet的id做为新的存档记录
                     if first_tweet_id == "0":
                         first_tweet_id = tweet_id
