@@ -206,6 +206,10 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
+                    if 0 < GET_VIDEO_COUNT < video_data:
+                        is_over = True
+                        break
+
                 if not video_data["hasNext"]:
                     is_over = True
 
