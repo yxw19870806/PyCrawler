@@ -118,6 +118,7 @@ class Tumblr(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_SET_PROXY: True,
         }
         robot.Robot.__init__(self, sys_config)
 
