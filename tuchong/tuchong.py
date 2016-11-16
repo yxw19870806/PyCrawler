@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 from common import log, robot, tool
 import json
 import os
-import re
 import threading
 import time
 import traceback
@@ -17,7 +16,7 @@ import traceback
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 TOTAL_IMAGE_COUNT = 0
-GET_IMAGE_COUNT = 0
+GET_PAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -62,7 +61,7 @@ def generate_large_image_url(site_id, image_id):
 
 class TuChong(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
+        global GET_PAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -75,7 +74,7 @@ class TuChong(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
+        GET_PAGE_COUNT = self.get_page_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
@@ -164,6 +163,7 @@ class Download(threading.Thread):
                 tool.process_exit()
 
             this_account_total_image_count = 0
+            post_count = 0
             first_post_id = "0"
             post_time = "2016-11-16 14:12:00"
             is_over = False
@@ -228,6 +228,10 @@ class Download(threading.Thread):
 
                     # 相册发布时间
                     post_time = post_info["published_at"]
+
+                    post_count += 1
+                    if 0 < GET_PAGE_COUNT < post_count:
+                        is_over = True
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 
