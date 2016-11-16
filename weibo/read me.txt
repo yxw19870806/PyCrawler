@@ -13,3 +13,7 @@ save.data格式（每一行代表一条记录，每条记录包含以下内容�
 	2.如果是字母+数字，则对方开通了个性域名
 		点击账号已发布的任意一条微博（点击微博时间，比如xx分钟前，xx小时前，20xx年xx月xx日）
 		微博地址类似为http://weibo.com/[1234567890]/ABCDEFGHI?xxxxx，其中[]中的数字（实际不包括[]）就是账号的ID
+
+配置参数（config.ini）：
+	1.可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO
+	2.可配置下载指定数量的图片和视频后结束程序，参数：GET_IMAGE_COUNT、GET_VIDEO_COUNT
