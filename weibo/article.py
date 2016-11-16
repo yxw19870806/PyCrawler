@@ -242,7 +242,7 @@ class Download(threading.Thread):
                 tool.process_exit()
 
             page_count = 1
-            this_account_total_image = 0
+            this_account_total_image_count = 0
             first_article_time = "0"
             is_over = False
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
@@ -321,7 +321,7 @@ class Download(threading.Thread):
                         file_path = os.path.join(article_path, "0000.%s" % file_type)
                         if tool.save_net_file(top_picture_url, file_path):
                             log.step(account_name + " %s 顶部图片下载成功" % title)
-                            this_account_total_image += 1
+                            this_account_total_image_count += 1
                         else:
                             log.error(account_name + " %s 顶部图片 %s 下载失败" % (title, top_picture_url))
 
@@ -346,7 +346,7 @@ class Download(threading.Thread):
                             log.error(account_name + " %s 第%s张图片 %s 下载失败" % (title, image_count, image_url))
 
                     if image_count > 1:
-                        this_account_total_image += image_count - 1
+                        this_account_total_image_count += image_count - 1
 
                 if not is_over:
                     # 获取文章总页数
@@ -355,7 +355,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image)
+            log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 
             # 新的存档记录
             if first_article_time != "0":
@@ -364,7 +364,7 @@ class Download(threading.Thread):
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             self.thread_lock.acquire()
-            TOTAL_IMAGE_COUNT += this_account_total_image
+            TOTAL_IMAGE_COUNT += this_account_total_image_count
             ACCOUNTS.remove(account_id)
             self.thread_lock.release()
 
