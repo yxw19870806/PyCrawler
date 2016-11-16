@@ -318,6 +318,8 @@ class Download(threading.Thread):
             data_tweet_id = INIT_MAX_ID
             first_tweet_id = "0"
             is_over = False
+            is_download_image = IS_DOWNLOAD_IMAGE
+            is_download_video = IS_DOWNLOAD_VIDEO
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
@@ -355,7 +357,7 @@ class Download(threading.Thread):
                         first_tweet_id = tweet_id
 
                     # 视频
-                    if IS_DOWNLOAD_VIDEO:
+                    if is_download_image:
                         # 这个tweet是否包含视频
                         if check_has_video(tweet_data):
                             video_file_type, video_url_list = get_video_url_list(tweet_id)
@@ -378,8 +380,12 @@ class Download(threading.Thread):
                             else:
                                 log.error(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
 
+                        # 达到配置文件中的下载数量，结束图片下载
+                        if 0 < GET_IMAGE_COUNT < image_count:
+                            is_download_image = False
+
                     # 图片
-                    if IS_DOWNLOAD_IMAGE:
+                    if is_download_video:
                         # 匹配获取全部的图片地址
                         image_url_list = get_image_url_list(tweet_data)
                         for image_url in image_url_list:
@@ -406,8 +412,13 @@ class Download(threading.Thread):
                             else:
                                 log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
 
-                    # 达到配置文件中的下载数量，结束
-                    if (0 < GET_VIDEO_COUNT < video_count) or (0 < GET_IMAGE_COUNT < image_count):
+                        # 达到配置文件中的下载数量，结束视频下载
+                        if 0 < GET_VIDEO_COUNT < video_count:
+                            is_download_video = False
+
+                    # 全部达到配置文件中的下载数量，结束
+                    if not is_download_image and not is_download_video:
+                        is_over = True
                         break
 
                 if not is_over:
