@@ -15,8 +15,8 @@ import time
 import traceback
 
 ACCOUNTS = []
-TOTAL_VIDEO_COUNT = 0
 VIDEO_COUNT_PER_PAGE = 20  # 每次请求获取的视频数量
+TOTAL_VIDEO_COUNT = 0
 GET_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""

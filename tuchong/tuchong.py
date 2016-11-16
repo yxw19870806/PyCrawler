@@ -228,7 +228,7 @@ class Download(threading.Thread):
 
                     if not is_over:
                         # 达到配置文件中的下载页数，结束
-                        if 0 < GET_PAGE_COUNT <= post_count:
+                        if 0 < GET_PAGE_COUNT < post_count:
                             is_over = True
                         else:
                             # 相册发布时间

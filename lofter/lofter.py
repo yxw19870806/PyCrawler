@@ -207,7 +207,7 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 达到配置文件中的下载数量，结束
-                    if 0 < GET_PAGE_COUNT < page_count:
+                    if 0 < GET_PAGE_COUNT <= page_count:
                         is_over = True
                     else:
                         page_count += 1
