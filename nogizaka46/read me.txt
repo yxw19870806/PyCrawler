@@ -7,3 +7,7 @@ save.data格式（每一行代表一条记录，每条记录包含以下内容�
 	公式Blog首页http://blog.nogizaka46.com/
 	页面右端，点击任意成员头像，进入成员主页
 	地址类似为http://blog.nogizaka46.com/[abcde.fghij]/，比对[]中的内容（实际不包括[]）就是账号的ID
+
+配置参数（config.ini）：
+	1.可配置下载指定数量的图片后结束程序，参数：GET_IMAGE_COUNT
+	2.可配置下载指定页数的图片后结束程序，参数：GET_PAGE_COUNT
