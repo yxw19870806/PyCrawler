@@ -300,7 +300,7 @@ def quickly_set(is_set_cookie, is_set_proxy):
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     if is_set_cookie == 1:
         # 操作系统&浏览器
-        browser_type = robot.get_config(config, "BROWSER_VERSION", 2, 1)
+        browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
         # cookie
         is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
         if is_auto_get_cookie:

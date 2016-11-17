@@ -197,14 +197,14 @@ class Robot(object):
         if sys_set_cookie:
             if sys_config[SYS_SET_COOKIE]:  # 加载浏览器cookie
                 # 操作系统&浏览器
-                browser_version = get_config(config, "BROWSER_VERSION", 2, 1)
+                browser_type = get_config(config, "BROWSER_TYPE", 2, 1)
                 # cookie
                 is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
                 if is_auto_get_cookie:
-                    cookie_path = tool.get_default_browser_cookie_path(browser_version)
+                    cookie_path = tool.get_default_browser_cookie_path(browser_type)
                 else:
                     cookie_path = get_config(config, "COOKIE_PATH", "", 0)
-                if not tool.set_cookie_from_browser(cookie_path, browser_version, sys_config[SYS_SET_COOKIE]):
+                if not tool.set_cookie_from_browser(cookie_path, browser_type, sys_config[SYS_SET_COOKIE]):
                     self.print_msg("导入浏览器cookies失败")
                     tool.process_exit()
                     return
