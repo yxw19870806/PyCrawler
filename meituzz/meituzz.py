@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, robot, tool
+import json
 import os
 import re
 
@@ -62,7 +63,16 @@ class MeiTuZZ(robot.Robot):
                 log.error("第%s页图片数量解析失败" % album_id)
                 break
 
-            image_url_list = re.findall('data-src="([^"]*)"', album_page)
+            image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', ' />')
+            try:
+                image_url_list_find = json.loads(image_url_list_find)
+            except ValueError:
+                log.error("第%s页图片地址列表解析失败" % album_id)
+                break
+            image_url_list = []
+            for temp_image_list in image_url_list_find:
+                image_url_list += temp_image_list
+
             if len(image_url_list) == 0:
                 log.error("第%s页图片地址列表解析失败" % album_id)
                 break
@@ -89,7 +99,7 @@ class MeiTuZZ(robot.Robot):
             image_count = 1
             for image_url in image_url_list:
                 # 去除模糊效果
-                image_url = image_url.split("@")[0]
+                image_url = str(image_url).split("@")[0]
                 log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
 
                 file_path = os.path.join(image_path, "%04d.jpg" % image_count)
@@ -107,8 +117,8 @@ class MeiTuZZ(robot.Robot):
 
             if not is_over:
                 # 添加到收费数组
-                if is_fee:
-                    fee_album_list.append(str(album_id))
+                # if is_fee:
+                #     fee_album_list.append(str(album_id))
                 total_image_count += image_count - 1
                 album_id += 1
 
