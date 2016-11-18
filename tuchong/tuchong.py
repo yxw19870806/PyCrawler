@@ -37,9 +37,9 @@ def get_site_id(account_name):
 # account_name -> deer-vision
 # account_id -> 1186455
 # post_time -> 2016-11-11 11:11:11
-def get_one_page_post_info_list(account_name, site_id, post_time):
+def get_one_page_post_info_list(site_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
-    post_page_url = "https://%s.tuchong.com/rest/sites/%s/posts/" % (account_name, site_id)
+    post_page_url = "https://www.tuchong.com/rest/sites/%s/posts/" % site_id
     post_page_url += "%s?limit=%s" % (post_time, IMAGE_COUNT_PER_PAGE)
     post_page_return_code, post_page_data = tool.http_request(post_page_url)[:2]
     if post_page_return_code == 1:
@@ -152,8 +152,10 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
 
-            # 图片
-            site_id = get_site_id(account_name)
+            if account_name.isdigit():
+                site_id = account_name
+            else:
+                site_id = get_site_id(account_name)
             if site_id is None:
                 log.error(account_name + " 主页无法访问")
                 tool.process_exit()
@@ -169,7 +171,7 @@ class Download(threading.Thread):
             is_over = False
             while not is_over:
                 # 获取一页的相册信息列表
-                post_info_list = get_one_page_post_info_list(account_name, site_id, post_time)
+                post_info_list = get_one_page_post_info_list(site_id, post_time)
                 if post_info_list is None:
                     log.error(account_name + " 相册信息列表无法访问")
                     tool.process_exit()
