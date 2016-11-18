@@ -12,6 +12,19 @@ import os
 import re
 
 
+# 根据页面内容获取图片地址列表
+def get_image_url_list(album_page):
+    image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', ' />')
+    try:
+        image_url_list_find = json.loads(image_url_list_find)
+    except ValueError:
+        return None
+    image_url_list = []
+    for temp_image_list in image_url_list_find:
+        image_url_list += temp_image_list
+    return image_url_list
+
+
 class MeiTuZZ(robot.Robot):
     def __init__(self):
         sys_config = {
@@ -63,18 +76,14 @@ class MeiTuZZ(robot.Robot):
                 log.error("第%s页图片数量解析失败" % album_id)
                 break
 
-            image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', ' />')
-            try:
-                image_url_list_find = json.loads(image_url_list_find)
-            except ValueError:
+            #获取页面全部图片地址列表
+            image_url_list = get_image_url_list(album_page)
+            if image_url_list is None:
                 log.error("第%s页图片地址列表解析失败" % album_id)
                 break
-            image_url_list = []
-            for temp_image_list in image_url_list_find:
-                image_url_list += temp_image_list
 
             if len(image_url_list) == 0:
-                log.error("第%s页图片地址列表解析失败" % album_id)
+                log.error("第%s页没有获取到图片" % album_id)
                 break
 
             is_fee = False
