@@ -71,12 +71,13 @@ class MeiTuZZ(robot.Robot):
                     album_id += 1
                     continue
 
-            total_photo_count_find = re.findall('<span id="photoNumTotal">(\d*)</span>', album_page)
-            if len(total_photo_count_find) != 1:
+            total_photo_count = tool.find_sub_string(album_page, '<input type="hidden" id="totalPageNum" value=', ' />')
+            if not total_photo_count:
                 log.error("第%s页图片数量解析失败" % album_id)
                 break
+            total_photo_count = int(total_photo_count)
 
-            #获取页面全部图片地址列表
+            # 获取页面全部图片地址列表
             image_url_list = get_image_url_list(album_page)
             if image_url_list is None:
                 log.error("第%s页图片地址列表解析失败" % album_id)
@@ -87,11 +88,11 @@ class MeiTuZZ(robot.Robot):
                 break
 
             is_fee = False
-            if len(image_url_list) != int(total_photo_count_find[0]):
+            if len(image_url_list) != total_photo_count:
                 album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page)
                 if len(album_reward_find) == 1:
                     album_reward = int(album_reward_find[0])
-                    if album_reward > 0 and int(total_photo_count_find[0]) - len(image_url_list) <= 1:
+                    if album_reward > 0 and total_photo_count - len(image_url_list) <= 1:
                         is_fee = True
                 if not is_fee:
                     log.error("第%s页解析获取的图片数量不符" % album_id)
