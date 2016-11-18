@@ -62,6 +62,11 @@ class Fkoji(robot.Robot):
         else:
             image_path = self.image_download_path
 
+        if not tool.make_dir(image_path, 0):
+            # 图片保存目录创建失败
+            self.print_msg("图片下载目录%s创建失败！" % self.image_download_path)
+            tool.process_exit()
+
         # 下载
         page_index = 1
         image_count = 1
@@ -69,6 +74,7 @@ class Fkoji(robot.Robot):
         first_image_time = 0
         unique_list = []
         is_over = False
+
         while not is_over:
             index_url = "http://jigadori.fkoji.com/?p=%s" % page_index
             index_page_return_code, index_page_response = tool.http_request(index_url)[:2]
