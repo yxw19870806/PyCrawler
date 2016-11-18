@@ -146,12 +146,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT:
-                image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            else:
-                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-
             if account_name.isdigit():
                 site_id = account_name
             else:
@@ -163,6 +157,8 @@ class Download(threading.Thread):
             if not site_id:
                 log.error(account_name + " site id解析失败")
                 tool.process_exit()
+
+            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
 
             this_account_total_image_count = 0
             post_count = 0
