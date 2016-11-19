@@ -51,8 +51,8 @@ class Fkoji(robot.Robot):
         # 这个key的内容为总数据
         if ALL_SIGN in account_list:
             image_start_index = int(account_list[ALL_SIGN][1])
+            save_data_image_time = int(account_list[ALL_SIGN][2])
             account_list.pop(ALL_SIGN)
-            save_data_image_time = 0
         else:
             image_start_index = 0
             save_data_image_time = 0
@@ -70,7 +70,6 @@ class Fkoji(robot.Robot):
         # 下载
         page_index = 1
         image_count = 1
-        first_image_url = ""
         first_image_time = 0
         unique_list = []
         is_over = False
@@ -99,6 +98,7 @@ class Fkoji(robot.Robot):
 
                 # 下载完毕
                 if tweet_created_time <= save_data_image_time:
+                    is_over = True
                     break
 
                 # 将第一张图片的上传时间做为新的存档记录
@@ -116,15 +116,12 @@ class Fkoji(robot.Robot):
                 for tag in img_tags:
                     tag_attr = dict(tag.attrs)
                     if robot.check_sub_key(("src", "alt"), tag_attr):
-                        image_url = str(tag_attr["src"]).replace(" ", "").encode("GBK")
+                        image_url = str(tag_attr["src"]).replace(" ", "")
                         # 新增图片导致的重复判断
                         if image_url in unique_list:
                             continue
                         else:
                             unique_list.append(image_url)
-                        # 将第一张图片的地址做为新的存档记录
-                        if first_image_url == "":
-                            first_image_url = image_url
 
                         log.step("开始下载第%s张图片 %s" % (image_count, image_url))
 
