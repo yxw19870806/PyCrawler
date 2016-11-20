@@ -115,6 +115,14 @@ def nogizaka46_blog():
     blog.Blog().main()
 
 
+# 图虫
+def tuchong():
+    from tuchong import tuchong
+    tuchong_path = os.path.join(os.path.abspath(".."), "tuchong")
+    os.chdir(tuchong_path)
+    tuchong.TuChong().main()
+
+
 # tumblr
 def tumblr():
     from tumblr import tumblr
@@ -191,6 +199,7 @@ miaopai()
 nana_go_go()
 nogizaka46_blog()
 tumblr()
+tuchong()
 twitter()
 weibo()
 yizhibo()
