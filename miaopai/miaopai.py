@@ -226,7 +226,7 @@ class Download(threading.Thread):
                 # 获取视频scid列表
                 scid_list = get_scid_list(media_page["msg"])
                 if len(scid_list) == 0:
-                    log.error(account_name + " 在视频列表：%s 中没有找到视频scid" % media_page["msg"])
+                    log.error(account_name + " 在视频列表：%s 中没有找到视频scid" % str(media_page["msg"]))
                     tool.process_exit()
 
                 for scid in scid_list:
