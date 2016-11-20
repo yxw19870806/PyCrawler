@@ -23,6 +23,8 @@ def get_one_page_album_data(page_count):
         except ValueError:
             return None
         if robot.check_sub_key(("body",), album_data) and robot.check_sub_key(("blog",), album_data["body"]):
+            if not album_data["body"]["blog"]:
+                return {}
             album_body = album_data["body"]["blog"][0]
             if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
                 return album_body
@@ -58,8 +60,18 @@ class ZunGuang(robot.Robot):
                 log.error("第%s页相册访问失败" % page_count)
                 break
 
-            # 下载目录标题
+            if not album_data:
+                error_count += 1
+                if error_count >= 10:
+                    log.error("连续10页相册没有图片，退出程序")
+                    page_count -= error_count - 1
+                    break
+                else:
+                    log.error("第%s页相册已被删除" % page_count)
+                    page_count += 1
+                    continue
 
+            # 下载目录标题
             title = str(album_data["title"].encode("utf-8"))
             for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
                 title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
