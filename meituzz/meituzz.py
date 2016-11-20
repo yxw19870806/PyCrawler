@@ -12,6 +12,9 @@ import os
 import re
 
 
+ERROR_PAGE_COUNT_CHECK = 10
+
+
 # 根据页面内容获取图片地址列表
 def get_image_url_list(album_page):
     image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', ' />')
@@ -62,14 +65,16 @@ class MeiTuZZ(robot.Robot):
 
             if album_page.find("<title>相册已被删除</title>") >= 0:
                 error_count += 1
-                if error_count >= 10:
-                    log.error("连续10页相册没有图片，退出程序")
+                if error_count >= ERROR_PAGE_COUNT_CHECK:
+                    log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
                     album_id -= error_count - 1
                     break
                 else:
                     log.error("第%s页相册已被删除" % album_id)
                     album_id += 1
                     continue
+            # 错误数量重置
+            error_count = 0
 
             total_photo_count = tool.find_sub_string(album_page, '<input type="hidden" id="totalPageNum" value=', ' />')
             if not total_photo_count:
@@ -97,9 +102,6 @@ class MeiTuZZ(robot.Robot):
                 if not is_fee:
                     log.error("第%s页解析获取的图片数量不符" % album_id)
                     break
-
-            # 错误数量重置
-            error_count = 0
 
             image_path = os.path.join(self.image_download_path, "%04d" % album_id)
             if not tool.make_dir(image_path, 0):
