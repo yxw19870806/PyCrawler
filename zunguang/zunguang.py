@@ -21,14 +21,20 @@ def get_one_page_album_data(page_count):
         try:
             album_data = json.loads(album_data)
         except ValueError:
-            return None
+            return -2, None  # JSON decode error
         if robot.check_sub_key(("body",), album_data) and robot.check_sub_key(("blog",), album_data["body"]):
             if not album_data["body"]["blog"]:
-                return {}
-            album_body = album_data["body"]["blog"][0]
-            if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
-                return album_body
-    return None
+                return 2, None  # 相册已被已被删除
+            blog_type = int(album_data["body"]["blog"][0]["type"])
+            if blog_type == 2:
+                return 3, None  # 歌曲类型的相册
+            elif blog_type == 3:
+                album_body = album_data["body"]["blog"][0]
+                if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
+                    return 1, album_body
+            else:
+                return 4, blog_type
+    return -1, None
 
 
 class ZunGuang(robot.Robot):
@@ -54,13 +60,15 @@ class ZunGuang(robot.Robot):
         error_count = 0
         is_over = False
         while not is_over:
-            album_data = get_one_page_album_data(page_count)
+            album_status, album_data = get_one_page_album_data(page_count)
 
-            if album_data is None:
-                log.error("第%s页相册访问失败" % page_count)
+            if album_status == -1:
+                log.error("第%s页相册获取失败" % page_count)
                 break
-
-            if not album_data:
+            elif album_status == -2:
+                log.error("第%s页相册解析失败" % page_count)
+                break
+            elif album_status == 2:
                 error_count += 1
                 if error_count >= 10:
                     log.error("连续10页相册没有图片，退出程序")
@@ -70,6 +78,13 @@ class ZunGuang(robot.Robot):
                     log.error("第%s页相册已被删除" % page_count)
                     page_count += 1
                     continue
+            elif album_status == 3:
+                log.error("第%s页歌曲相册" % page_count)
+                page_count += 1
+                continue
+            elif album_status == 4:
+                log.error("第%s页相册未知相册类型%s" % (page_count, album_data))
+                break
 
             # 下载目录标题
             title = ""
