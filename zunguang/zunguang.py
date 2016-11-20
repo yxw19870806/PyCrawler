@@ -9,7 +9,9 @@ email: hikaru870806@hotmail.com
 from common import log, robot, tool
 import json
 import os
-import re
+
+
+ERROR_PAGE_COUNT_CHECK = 10
 
 
 # 根据页面内容获取图片地址列表
@@ -70,8 +72,8 @@ class ZunGuang(robot.Robot):
                 break
             elif album_status == 2:
                 error_count += 1
-                if error_count >= 10:
-                    log.error("连续10页相册没有图片，退出程序")
+                if error_count >= ERROR_PAGE_COUNT_CHECK:
+                    log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
                     page_count -= error_count - 1
                     break
                 else:
@@ -85,7 +87,9 @@ class ZunGuang(robot.Robot):
             elif album_status == 4:
                 log.error("第%s页相册未知相册类型%s" % (page_count, album_data))
                 break
-
+            # 错误数量重置
+            error_count = 0
+            
             # 下载目录标题
             title = ""
             if album_data["title"]:
