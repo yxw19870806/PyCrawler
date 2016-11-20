@@ -72,14 +72,16 @@ class ZunGuang(robot.Robot):
                     continue
 
             # 下载目录标题
-            title = str(album_data["title"].encode("utf-8"))
-            for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
-                title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
-            title = title.strip().rstrip(".")  # 去除前后空格以及后缀的
+            title = ""
+            if album_data["title"]:
+                title = str(album_data["title"].encode("utf-8"))
+                for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
+                    title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
+                title = title.strip().rstrip(".")  # 去除前后空格以及后缀的
             if title:
                 image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, title))
             else:
-                image_path = os.path.join(self.image_download_path, page_count)
+                image_path = os.path.join(self.image_download_path, "%04d" % page_count)
             if not tool.make_dir(image_path, 0):
                 # 目录出错，把title去掉后再试一次，如果还不行退出
                 log.error("第%s页创建相册目录 %s 失败，尝试不使用title" % (page_count, image_path))
