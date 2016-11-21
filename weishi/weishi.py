@@ -15,6 +15,7 @@ import time
 import traceback
 
 ACCOUNTS = []
+VIDEO_COUNT_PER_PAGE = 5
 TOTAL_VIDEO_COUNT = 0
 GET_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ""
@@ -25,7 +26,7 @@ IS_SORT = True
 
 # 获取账号指定一页的视频信息
 def get_one_page_video_data(account_id, page_time):
-    video_data_url = "http://wsm.qq.com/weishi/t/other.php?uid=%s&reqnum=5" % account_id
+    video_data_url = "http://wsm.qq.com/weishi/t/other.php?uid=%s&reqnum=%s" % (account_id, VIDEO_COUNT_PER_PAGE)
     if page_time > 0:
         video_data_url += "&pageflag=02&pagetime=%s" % page_time
     else:

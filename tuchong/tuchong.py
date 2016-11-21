@@ -58,7 +58,6 @@ def generate_large_image_url(site_id, image_id):
     return "https://photo.tuchong.com/%s/f/%s.jpg" % (site_id, image_id)
 
 
-
 class TuChong(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
