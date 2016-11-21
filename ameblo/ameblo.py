@@ -37,6 +37,9 @@ def get_blog_time(blog_page):
     blog_time_info = tool.find_sub_string(blog_page, '<span class="articleTime">', "</span>")
     if blog_time_info:
         blog_time_string = tool.find_sub_string(blog_page, 'pubdate="pubdate">', "</time>").strip()
+    else:
+        blog_time_string = tool.find_sub_string(blog_page, '<span class="date">', "</span>").strip()
+    if blog_time_string:
         blog_timestamp = time.strptime(blog_time_string, "%Y-%m-%d %H:%M:%S")
         # 显示时间对应的时间戳，服务器的时区（日本），不对本地时间做转换
         return int(time.mktime(blog_timestamp))
@@ -45,8 +48,10 @@ def get_blog_time(blog_page):
 
 # 从日志列表中获取全部的图片，并过滤掉表情
 def get_image_url_list(blog_page):
-    blog_page = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
-    image_url_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', blog_page)
+    article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
+    if not article_data:
+        article_data = tool.find_sub_string(blog_page, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
+    image_url_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', article_data)
     image_url_list = []
     for image_url in image_url_list_find:
         # 过滤表情
@@ -161,7 +166,7 @@ class Download(threading.Thread):
                 # 解析日志发布时间
                 blog_time = get_blog_time(blog_data)
                 if blog_time is None:
-                    log.error(account_name + " 第%s页日志无法解析日志时间" % page_count)
+                    log.error(account_name + " 第%s页解析日志时间失败" % page_count)
                     tool.process_exit()
 
                 # 检查是否是上一次的最后blog
