@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
-美图赚赚图片爬虫
-http://meituzz.com/
+尊光图片爬虫
+http://zunguang.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
