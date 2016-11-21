@@ -182,6 +182,9 @@ class Download(threading.Thread):
                 for image_url in image_url_list:
                     # 使用默认图片的分辨率
                     image_url = image_url.split("?")[0]
+                    # 过滤表情
+                    if image_url.find("http://emoji.ameba.jp") >= 0:
+                        continue
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                     # 第一张图片，创建目录
