@@ -380,6 +380,19 @@ def check_sub_key(needles, haystack):
     return False
 
 
+# 过滤文本中的字符，以符合windows支持的路径字符集
+def filter_text(text):
+    for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
+        text = text.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
+    while True:
+        new_text = text.strip().rstrip(".")  # 去除前后空格以及后缀的点
+        # 如果前后没有区别则直接返回
+        if text == new_text:
+            return text
+        else:
+            text = new_text
+
+
 # 进程是否需要结束
 # 返回码 0: 正常运行; 1 立刻结束; 2 等待现有任务完成后结束
 def is_process_end():
