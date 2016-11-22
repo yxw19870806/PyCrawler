@@ -191,10 +191,8 @@ class Download(threading.Thread):
                     if first_post_id == "0":
                         first_post_id = post_id
 
-                    title = post_info["title"]
-                    for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
-                        title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
-                    title = title.strip().rstrip(".")  # 去除前后空格以及后缀的
+                    # 过滤标题中不支持的字符
+                    title = robot.filter_text(post_info["title"])
                     if title:
                         post_path = os.path.join(image_path, "%s %s" % (post_id, title))
                     else:

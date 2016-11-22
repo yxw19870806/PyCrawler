@@ -296,10 +296,8 @@ class Download(threading.Thread):
 
                     # 文章标题
                     title = get_article_title(article_page, article_id[0])
-                    # 标题处理
-                    for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
-                        title = title.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
-                    title = title.strip().rstrip(".")  # 去除前后空格以及后缀的.
+                    # 过滤标题中不支持的字符
+                    title = robot.filter_text(title)
                     if title:
                         article_path = os.path.join(image_path, "%s %s" % (article_id, title))
                     else:
