@@ -157,7 +157,9 @@ class Article(robot.Robot):
             robot.SYS_SET_COOKIE: ("weibo.com", ".sina.com.cn"),
         }
         extra_config = {
-            "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data",)
+            "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data",),
+            "image_download_path": os.path.join(os.path.abspath(""), "photo\\article",),
+            "image_temp_path": os.path.join(os.path.abspath(""), "photo\\article\\tempImage",),
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
