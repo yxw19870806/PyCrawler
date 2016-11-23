@@ -50,11 +50,17 @@ def http_request(url, post_data=None, header_list=None, cookie=None):
                 request = urllib2.Request(url, post_data)
             else:
                 request = urllib2.Request(url)
-            # 设置头信息
+
+            # 设置User-Agent
             request.add_header("User-Agent", random_user_agent())
             if isinstance(header_list, dict):
                 for header_name, header_value in header_list.iteritems():
                     request.add_header(header_name, header_value)
+
+            # 设置一个随机IP
+            random_ip = random_ip_address()
+            request.add_header("X-Forwarded-For", random_ip)
+            request.add_header("x-Real-Ip", random_ip)
 
             # cookies
             if isinstance(cookie, cookielib.CookieJar):
@@ -133,6 +139,11 @@ def random_user_agent():
         return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" \
                % (os_type, chrome_version, sub_version)
     return ""
+
+
+# 生成一个随机的IP地址
+def random_ip_address():
+    return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
 # 获取请求response中的指定信息
