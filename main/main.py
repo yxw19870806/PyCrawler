@@ -27,6 +27,14 @@ def chang_ba():
     changba.ChangBa().main()
 
 
+# 5sing
+def fiveSing():
+    from fiveSing import fiveSing
+    five_sing_path = os.path.join(os.path.abspath(".."), "fiveSing")
+    os.chdir(five_sing_path)
+    fiveSing.FiveSing().main()
+
+
 # fkoji
 def fkoji():
     from fkoji import fkoji
@@ -91,6 +99,14 @@ def meipai():
     meipai.MeiPai().main()
 
 
+# 美图赚赚
+def meituzz():
+    from meituzz import meituzz
+    meituzz_path = os.path.join(os.path.abspath(".."), "meituzz")
+    os.chdir(meituzz_path)
+    meituzz.MeiTuZZ().main()
+
+
 # 秒拍
 def miaopai():
     from miaopai import miaopai
@@ -105,6 +121,14 @@ def nana_go_go():
     nana_go_go_path = os.path.join(os.path.abspath(".."), "nanaGoGo")
     os.chdir(nana_go_go_path)
     nanaGoGo.NanaGoGo().main()
+
+
+# nico nico
+def nico_nico():
+    from nicoNico import nicoNico
+    nico_nico_path = os.path.join(os.path.abspath(".."), "nicoNico")
+    os.chdir(nico_nico_path)
+    nicoNico.NicoNico().main()
 
 
 # 乃木坂46公式Blog
@@ -179,6 +203,14 @@ def weibo():
         weibo.Weibo(extra_config).main()
 
 
+# 微视
+def weishi():
+    from weishi import weishi
+    weishi_path = os.path.join(os.path.abspath(".."), "weishi")
+    os.chdir(weishi_path)
+    weishi.WeiShi().main()
+
+
 # 一直播
 def yizhibo():
     from yizhibo import yizhibo
@@ -187,21 +219,34 @@ def yizhibo():
     yizhibo.YiZhiBo().main()
 
 
+# 尊光
+def zunguang():
+    from zunguang import zunguang
+    zunguang_path = os.path.join(os.path.abspath(".."), "zunguang")
+    os.chdir(zunguang_path)
+    zunguang.ZunGuang().main()
+
+
 ameblo()
 bcy()
-google_plus()
 chang_ba()
+fiveSing()
+google_plus()
 instagram()
 keyakizaka46_diary()
 lofter()
 meipai()
+meituzz()
 miaopai()
 nana_go_go()
+nico_nico()
 nogizaka46_blog()
-tumblr()
 tuchong()
+tumblr()
 twitter()
 weibo()
+weishi()
 yizhibo()
 fkoji()
+zunguang()
 # tool.shutdown()
