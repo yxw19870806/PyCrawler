@@ -79,7 +79,7 @@ def http_request(url, post_data=None, header_list=None, cookie=None):
             if response:
                 return 1, response.read(), response
         except Exception, e:
-            # 代理无法访问
+            # Connection refused（代理无法访问）
             if str(e).find("[Errno 10061]") != -1:
                 # 判断是否设置了代理
                 if urllib2._opener.handlers is not None:
@@ -91,13 +91,15 @@ def http_request(url, post_data=None, header_list=None, cookie=None):
                             elif input_str in ["n", "no"]:
                                 sys.exit()
                             break
-            # 连接被关闭，等待30秒后再尝试
-            elif str(e).find("[Errno 10053] ") != -1:
+            # 10053 Software caused connection abort
+            # 10054 Connection reset by peer
+            elif str(e).find("[Errno 10053] ") != -1 or str(e).find("[Errno 10054] ") != -1:
                 print_msg("访问页面超时，重新连接请稍后")
                 time.sleep(30)
             # 超时
             elif str(e).find("timed out") != -1:
                 print_msg("访问页面超时，重新连接请稍后")
+                time.sleep(10)
             # 400
             elif str(e).lower().find("http error 400") != -1:
                 return -400, None, None
