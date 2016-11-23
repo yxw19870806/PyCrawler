@@ -83,7 +83,6 @@ class TuChong(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        # todo 存档文件格式
         # 解析存档文件
         # account_id  last_post_id
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
@@ -120,14 +119,12 @@ class TuChong(robot.Robot):
                 new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
-        # todo 是否需要下载图片或视频
         # 删除临时文件夹
-        tool.remove_dir(IMAGE_TEMP_PATH)
+        self.finish_task()
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        # todo 是否需要下载图片或视频
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 

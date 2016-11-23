@@ -173,7 +173,7 @@ class YiZhiBo(robot.Robot):
             new_save_data_file.close()
 
         # 删除临时文件夹
-        tool.remove_dir(VIDEO_TEMP_PATH)
+        self.finish_task()
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
