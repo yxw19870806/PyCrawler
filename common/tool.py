@@ -23,6 +23,7 @@ import zipfile
 # 初始化操作
 IS_SET_TIMEOUT = False
 HTTP_CONNECTION_TIMEOUT = 10
+HTTP_REQUEST_RETRY_COUNT = 500
 thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
@@ -116,7 +117,7 @@ def http_request(url, post_data=None, header_list=None, cookie=None):
                 traceback.print_exc()
 
         count += 1
-        if count > 500:
+        if count > HTTP_REQUEST_RETRY_COUNT:
             print_msg("无法访问页面：" + url)
             return -1, None, None
 
@@ -351,6 +352,7 @@ def response_time_to_timestamp(time_string):
     return int(time.mktime(last_modified_time)) - time.timezone
 
 
+# 根据收尾字符，进行字符串截取
 def find_sub_string(string, start_string=None, end_string=None, include_string=0):
     # 根据开始与结束的字符串，截取字符串
     # include_string是否包含查询条件的字符串，0 都不包含, 1 只包含start_string, 2 只包含end_string, 3 包含start_string和end_string
