@@ -230,15 +230,11 @@ class Robot(object):
     def finish_task(self):
         if self.image_temp_path:
             tool.delete_null_dir(self.image_temp_path)
-            if len(tool.get_dir_files_name(self.image_temp_path)) == 0:
-                tool.remove_dir(self.image_temp_path)
-            else:
+            if os.path.exists(self.image_temp_path):
                 self.print_msg("图片临时下载目录%s中存在文件" % self.image_temp_path)
         if self.video_temp_path:
             tool.delete_null_dir(self.video_temp_path)
-            if len(tool.get_dir_files_name(self.video_temp_path)) == 0:
-                tool.remove_dir(self.video_temp_path)
-            else:
+            if os.path.exists(self.video_temp_path):
                 self.print_msg("视频临时下载目录%s中存在文件" % self.video_temp_path)
 
 
