@@ -203,6 +203,14 @@ def weibo():
         weibo.Weibo(extra_config).main()
 
 
+# 微博文章
+def weibo_article():
+    from weibo import article
+    weibo_article_path = os.path.join(os.path.abspath(".."), "weibo")
+    os.chdir(weibo_article_path)
+    article.Article().main()
+
+
 # 微视
 def weishi():
     from weishi import weishi
@@ -245,6 +253,7 @@ tuchong()
 tumblr()
 twitter()
 weibo()
+weibo_article()
 weishi()
 yizhibo()
 fkoji()
