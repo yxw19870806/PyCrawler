@@ -45,11 +45,11 @@ def filter_post_url(post_url_list):
         post_url = post_url.replace("/embed", "")
         temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
         post_id = temp[0]
-        if post_id in new_post_url_list:
-            if len(temp) == 2:
-                new_post_url_list[post_id].append(temp[1])
-        else:
+        if post_id not in new_post_url_list:
             new_post_url_list[post_id] = []
+        if len(temp) == 2:
+            new_post_url_list[post_id].append(temp[1])
+
     # 去重排序
     for post_id in new_post_url_list:
         new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
