@@ -32,9 +32,12 @@ else:
 
 
 # http请求
+# header_list   http header信息，e.g. {"Host":“www.example.com"}
+# cookie        cookielib.CookieJar
+# is_random_ip  是否使用伪造IP
 # 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
-def http_request(url, post_data=None, header_list=None, cookie=None):
+def http_request(url, post_data=None, header_list=None, cookie=None, is_random_ip=True):
     global IS_SET_TIMEOUT
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return -100, None, None
@@ -54,14 +57,17 @@ def http_request(url, post_data=None, header_list=None, cookie=None):
 
             # 设置User-Agent
             request.add_header("User-Agent", random_user_agent())
+
+            # 设置一个随机IP
+            if is_random_ip:
+                random_ip = random_ip_address()
+                request.add_header("X-Forwarded-For", random_ip)
+                request.add_header("x-Real-Ip", random_ip)
+
+            # 自定义header
             if isinstance(header_list, dict):
                 for header_name, header_value in header_list.iteritems():
                     request.add_header(header_name, header_value)
-
-            # 设置一个随机IP
-            random_ip = random_ip_address()
-            request.add_header("X-Forwarded-For", random_ip)
-            request.add_header("x-Real-Ip", random_ip)
 
             # cookies
             if isinstance(cookie, cookielib.CookieJar):
