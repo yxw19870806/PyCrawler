@@ -93,7 +93,8 @@ def http_request(url, post_data=None, header_list=None, cookie=None):
                             break
             # 10053 Software caused connection abort
             # 10054 Connection reset by peer
-            elif str(e).find("[Errno 10053] ") != -1 or str(e).find("[Errno 10054] ") != -1:
+            elif str(e).find("[Errno 10053] ") != -1 or str(e).find("[Errno 10054] ") != -1 or \
+                    str(e).find("HTTP Error 502: Server dropped connection") != -1:
                 print_msg("访问页面超时，重新连接请稍后")
                 time.sleep(30)
             # 超时
