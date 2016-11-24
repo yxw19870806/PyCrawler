@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 from common import tool
 import json
+import os
 import re
 
 
@@ -66,4 +67,23 @@ def get_discount_list():
                 for page_id in page_find:
                     total_page_count = max(total_page_count, int(page_id))
         page_count += 1
+    return discount_list
+
+
+# 打折游戏列表保存到文件
+def save_discount_list(discount_list):
+    tool.write_file(tool.list_to_string(discount_list, "\n", ""), "discount.txt", 2)
+
+
+# 获取文件中的打折列表
+def load_discount_list():
+    file_path = os.path.join("discount.txt")
+    if not os.path.exists(file_path):
+        return []
+    file_handle = open("discount.txt", "r")
+    lines = file_handle.readlines()
+    file_handle.close()
+    discount_list = []
+    for line in lines:
+        discount_list.append(line.replace("\n", ""))
     return discount_list
