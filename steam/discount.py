@@ -13,7 +13,10 @@ if __name__ == "__main__":
     min_discount_percent = 90  # 折扣
     min_discount_price = 1  # 打完折后当前价格
     owned_list = steam.get_owned_app_list(user_id)
-    discount_list = steam.get_discount_list()
+    discount_list = steam.load_discount_list()
+    if not discount_list:
+        discount_list = steam.get_discount_list()
+        steam.save_discount_list(discount_list)
 
     for discount_info in discount_list:
         discount_info = discount_info.replace("\n", "")
