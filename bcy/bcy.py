@@ -228,7 +228,7 @@ class Bcy(robot.Robot):
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
-        log.error("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
@@ -369,7 +369,7 @@ class Download(threading.Thread):
             ACCOUNTS.remove(coser_id)
             self.thread_lock.release()
 
-            log.error(cn + " 完成")
+            log.step(cn + " 完成")
         except SystemExit:
             log.error(cn + " 异常退出")
         except Exception, e:
