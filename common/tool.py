@@ -439,8 +439,11 @@ def save_net_file(file_url, file_path, need_content_type=False):
             file_handle.close()
             # 判断文件下载后的大小和response中的Content-Length是否一致
             content_length = get_response_info(page_response.info(), "Content-Length")
-            if (content_length is None) or (int(content_length) == os.path.getsize(file_path)):
+            file_size = os.path.getsize(file_path)
+            if (content_length is None) or (int(content_length) == file_size):
                 return True
+            else:
+                print_msg("下载文件大小%s和网络文件大小%s不一致" % (content_length, file_size))
     return False
 
 
