@@ -23,5 +23,8 @@ if __name__ == "__main__":
         if len(discount_info) > 0:
             discount_info = discount_info.split("\t")
             if discount_info[0] not in owned_list:
-                if int(discount_info[1].replace("-", "").replace("%", "")) >= min_discount_percent or int(discount_info[3] <= min_discount_percent):
+
+                if int(discount_info[1].replace("-", "").replace("%", "")) >= min_discount_percent \
+                        or int(discount_info[3]) <= round(int(discount_info[2]) * (100 - min_discount_percent) / 100) \
+                        or int(discount_info[3] <= min_discount_percent):
                     print "http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info[0], discount_info[1], discount_info[2], discount_info[3])

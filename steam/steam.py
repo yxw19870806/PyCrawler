@@ -35,6 +35,7 @@ def get_discount_list():
     page_count = 1
     total_page_count = 99
     discount_list = []
+    app_id_list = []
     while page_count <= total_page_count:
         index_url = "http://store.steampowered.com/search/results"
         index_url += "?sort_by=Price_ASC&category1=998&os=win&specials=1&page=%s" % page_count
@@ -56,9 +57,11 @@ def get_discount_list():
             if not old_price:
                 old_price = 0
             new_price = tool.find_sub_string(price_data, '<br>', '</div>').replace("¥", "").strip()
-            if not new_price:
+            if not new_price or not new_price.isdigit():
                 new_price = 0
-            discount_list.append("%s\t%s\t%s\t%s" % (app_id, discount, old_price, new_price))
+            if app_id not in app_id_list:
+                discount_list.append("%s\t%s\t%s\t%s" % (app_id, discount, old_price, new_price))
+                app_id_list.append(app_id)
         if total_page_count == 99:
             pagination_page = tool.find_sub_string(index_page, '<div class="search_pagination">', None)
             page_find = re.findall('return false;">([\d]*)</a>', pagination_page)
