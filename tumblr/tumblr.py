@@ -252,17 +252,9 @@ class Download(threading.Thread):
                         log.error(account_id + " 信息页 %s，'og:type'获取异常" % post_url)
                         continue
 
-                    # # 空
-                    # if og_type == "tumblr-feed:entry":
-                    #     continue
-                    #
-                    # # 音频
-                    # if og_type == "tumblr-feed:audio":
-                    #     continue
-                    #
-                    # # 引用
-                    # if og_type == "tumblr-feed:quote":
-                    #     continue
+                    # 空、音频、引用，跳过
+                    if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote"]:
+                        continue
 
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
