@@ -295,14 +295,13 @@ class Download(threading.Thread):
                             page_image_url_list = []
                             video_image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
                             if video_image_url:
-                                page_image_url_list.append(page_image_url_list)
+                                page_image_url_list.append(video_image_url)
                         else:
                             page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-
-                        log.trace(account_id + " 信息页 %s 获取的所有图片：%s" % (post_url, page_image_url_list))
-                        # 过滤头像以及页面上找到不同分辨率的同一张图
-                        page_image_url_list = filter_different_resolution_images(page_image_url_list)
-                        log.trace(account_id + " 信息页 %s 过滤后的所有图片：%s" % (post_url, page_image_url_list))
+                            log.trace(account_id + " 信息页 %s 过滤前的所有图片：%s" % (post_url, page_image_url_list))
+                            # 过滤头像以及页面上找到不同分辨率的同一张图
+                            page_image_url_list = filter_different_resolution_images(page_image_url_list)
+                        log.trace(account_id + " 信息页 %s 获取的的所有图片：%s" % (post_url, page_image_url_list))
                         if len(page_image_url_list) > 0:
                             for image_url in page_image_url_list:
                                 log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
