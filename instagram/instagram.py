@@ -49,6 +49,20 @@ def get_account_id(account_name):
     return None
 
 
+# 获取该次访问的csr_token和session_id，后续需要设置header才能进行访问数据
+def get_token_and_session(account_name):
+    index_url = "https://www.instagram.com/%s/" % account_name
+    index_page_response = tool.http_request(index_url)
+    if index_page_response[0] == 1:
+        set_cookie_info = tool.get_response_info(index_page_response[2].info(), 'Set-Cookie')
+        if set_cookie_info is not None:
+            csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
+            session_id = tool.find_sub_string(set_cookie_info, "sessionid=", ";")
+            if csrf_token and session_id:
+                return {"csrf_token": csrf_token, "session_id": session_id}
+    return None
+
+
 # 获取指定账号的全部粉丝列表（需要cookies）
 def get_follow_by_list(account_id):
     cursor = None
@@ -134,23 +148,28 @@ def get_one_page_follow_list(account_id, cursor=None):
 
 # 获取一页的媒体信息
 # account_id -> 490060609
-def get_one_page_media_data(account_id, cursor):
+def get_one_page_media_data(account_id, cursor, csrf_token, session_id):
     # https://www.instagram.com/query/?q=ig_user(490060609){media.after(9999999999999999999,12){nodes{code,date,display_src,is_video},page_info}}
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
-    modes_data = "code,date,display_src,is_video"
-    media_page_url = "https://www.instagram.com/query/?q=ig_user(%s)" % account_id
-    media_page_url += "{media.after(%s,%s){nodes{%s},page_info}}" % (cursor, IMAGE_COUNT_PER_PAGE, modes_data)
-    photo_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
-    if photo_page_return_code == 1:
+    media_page_url = "https://www.instagram.com/query/"
+    param_data = "nodes{code,date,display_src,is_video},page_info"
+    post_data = "q=ig_user(%s){media.after(%s,%s){%s}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE, param_data)
+    header_list = {
+        "Referer": "https://www.instagram.com/",
+        "X-CSRFToken": csrf_token,
+        "Cookie": "csrftoken=%s; sessionid=%s;" % (csrf_token, session_id),
+    }
+    media_data_return_code, media_data,  = tool.http_request(media_page_url, post_data, header_list)[:2]
+    if media_data_return_code == 1:
         try:
-            media_page = json.loads(media_page_response)
+            media_data = json.loads(media_data)
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("media", ), media_page):
-                if robot.check_sub_key(("page_info", "nodes"), media_page["media"]):
-                    if robot.check_sub_key(("has_next_page", "end_cursor", ), media_page["media"]["page_info"]):
-                        return media_page["media"]
+            if robot.check_sub_key(("media", ), media_data):
+                if robot.check_sub_key(("page_info", "nodes"), media_data["media"]):
+                    if robot.check_sub_key(("has_next_page", "end_cursor", ), media_data["media"]["page_info"]):
+                        return media_data["media"]
     return None
 
 
@@ -270,16 +289,23 @@ class Download(threading.Thread):
                 log.error(account_name + " account id 查找失败")
                 tool.process_exit()
 
+            token_and_session_info = get_token_and_session(account_name)
+            if token_and_session_info is None:
+                log.error(account_name + " token 和 session获取查找失败")
+                tool.process_exit()
+
             image_count = 1
             video_count = 1
             cursor = INIT_CURSOR
             first_created_time = "0"
+            csrf_token = token_and_session_info["csrf_token"]
+            session_id = token_and_session_info["session_id"]
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
                 # 获取指定时间后的一页媒体信息
-                media_data = get_one_page_media_data(account_id, cursor)
+                media_data = get_one_page_media_data(account_id, cursor, csrf_token, session_id)
                 if media_data is None:
                     log.error(account_name + " 媒体列表解析异常")
                     tool.process_exit()
