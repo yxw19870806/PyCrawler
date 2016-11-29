@@ -70,6 +70,7 @@ def get_account_id(account_name):
 
 
 # 获取指定账号的全部粉丝列表（需要cookies）
+# account_id -> 490060609
 def get_follow_by_list(account_id):
     cursor = None
     follow_by_list = []
@@ -89,14 +90,23 @@ def get_follow_by_list(account_id):
 
 
 # 获取指定一页的粉丝列表
+# account_id -> 490060609
 def get_one_page_follow_by_list(account_id, cursor=None):
-    follow_by_list_url = "https://www.instagram.com/query/?q=ig_user(%s)" % account_id
+    query_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
+    params = "nodes{username},page_info"
     if cursor is None:
-        follow_by_list_url += "{followed_by.first(%s){nodes{username},page_info}}" % USER_COUNT_PER_PAGE
+        post_data = "q=ig_user(%s){followed_by.first(%s){%s}}" % (account_id, USER_COUNT_PER_PAGE, params)
     else:
-        follow_by_list_url += "{followed_by.after(%s,%s){nodes{username},page_info}}" % (cursor, USER_COUNT_PER_PAGE)
-    follow_by_list_return_code, follow_by_list_data = tool.http_request(follow_by_list_url)[:2]
+        post_data = "q=ig_user(%s){followed_by.after(%s,%s){%s}}" % (account_id, cursor, USER_COUNT_PER_PAGE, params)
+    # todo session id error
+    # IGSCdaccb7f76627fa16a0d418f32a733030cb4cdeefaaddc5464a3da52eb8acfe06%3AID8fxYoOH96eMPpf4kEWwIhLA9ihMLuO%3A%7B%22_token_ver%22%3A2%2C%22_auth_user_id%22%3A3539660450%2C%22_token%22%3A%223539660450%3Amm50iieIxyG0NWWxuFifs0j23vhA5WpR%3Afd860ccd5c16e35eadf3e0946c00178b50fce7b45a9d09c62498dbbffdc8fa2b%22%2C%22asns%22%3A%7B%2247.89.39.193%22%3A45102%2C%22time%22%3A1480388199%7D%2C%22_auth_user_backend%22%3A%22accounts.backends.CaseInsensitiveModelBackend%22%2C%22last_refreshed%22%3A1480392303.831638%2C%22_platform%22%3A4%2C%22_auth_user_hash%22%3A%22%22%7D
+    header_list = {
+        "Referer": "https://www.instagram.com/",
+        "X-CSRFToken": CSRF_TOKEN,
+        "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
+    }
+    follow_by_list_return_code, follow_by_list_data = tool.http_request(query_url, post_data, header_list)[:2]
     if follow_by_list_return_code == 1:
         try:
             follow_by_list_data = json.loads(follow_by_list_data)
@@ -112,6 +122,7 @@ def get_one_page_follow_by_list(account_id, cursor=None):
 
 
 # 获取指定账号的全部关注列表（需要cookies）
+# account_id -> 490060609
 def get_follow_list(account_id):
     cursor = None
     follow_list = []
@@ -131,14 +142,23 @@ def get_follow_list(account_id):
 
 
 # 获取指定一页的关注列表
+# account_id -> 490060609
 def get_one_page_follow_list(account_id, cursor=None):
-    follow_list_url = "https://www.instagram.com/query/?q=ig_user(%s)" % account_id
+    query_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
+    params = "nodes{username},page_info"
     if cursor is None:
-        follow_list_url += "{follows.first(%s){nodes{username},page_info}}" % USER_COUNT_PER_PAGE
+        post_data = "q=ig_user(%s){follows.first(%s){%s}}" % (account_id, USER_COUNT_PER_PAGE, params)
     else:
-        follow_list_url += "{follows.after(%s,%s){nodes{username},page_info}}" % (cursor, USER_COUNT_PER_PAGE)
-    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
+        post_data = "q=ig_user(%s){follows.after(%s,%s){%s}}" % (account_id, cursor, USER_COUNT_PER_PAGE, params)
+    # todo session id error
+    # IGSCdaccb7f76627fa16a0d418f32a733030cb4cdeefaaddc5464a3da52eb8acfe06%3AID8fxYoOH96eMPpf4kEWwIhLA9ihMLuO%3A%7B%22_token_ver%22%3A2%2C%22_auth_user_id%22%3A3539660450%2C%22_token%22%3A%223539660450%3Amm50iieIxyG0NWWxuFifs0j23vhA5WpR%3Afd860ccd5c16e35eadf3e0946c00178b50fce7b45a9d09c62498dbbffdc8fa2b%22%2C%22asns%22%3A%7B%2247.89.39.193%22%3A45102%2C%22time%22%3A1480388199%7D%2C%22_auth_user_backend%22%3A%22accounts.backends.CaseInsensitiveModelBackend%22%2C%22last_refreshed%22%3A1480392303.831638%2C%22_platform%22%3A4%2C%22_auth_user_hash%22%3A%22%22%7D
+    header_list = {
+        "Referer": "https://www.instagram.com/",
+        "X-CSRFToken": CSRF_TOKEN,
+        "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
+    }
+    follow_list_return_code, follow_list_data = tool.http_request(query_url, post_data, header_list)[:2]
     if follow_list_return_code == 1:
         try:
             follow_list_data = json.loads(follow_list_data)
@@ -154,16 +174,16 @@ def get_one_page_follow_list(account_id, cursor=None):
 
 # 获取一页的媒体信息
 # account_id -> 490060609
-def get_one_page_media_data(account_id, cursor, csrf_token, session_id):
+def get_one_page_media_data(account_id, cursor):
     # https://www.instagram.com/query/?q=ig_user(490060609){media.after(9999999999999999999,12){nodes{code,date,display_src,is_video},page_info}}
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
     media_page_url = "https://www.instagram.com/query/"
-    param_data = "nodes{code,date,display_src,is_video},page_info"
-    post_data = "q=ig_user(%s){media.after(%s,%s){%s}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE, param_data)
+    params = "nodes{code,date,display_src,is_video},page_info"
+    post_data = "q=ig_user(%s){media.after(%s,%s){%s}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE, params)
     header_list = {
         "Referer": "https://www.instagram.com/",
-        "X-CSRFToken": csrf_token,
-        "Cookie": "csrftoken=%s; sessionid=%s;" % (csrf_token, session_id),
+        "X-CSRFToken": CSRF_TOKEN,
+        "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
     }
     media_data_return_code, media_data,  = tool.http_request(media_page_url, post_data, header_list)[:2]
     if media_data_return_code == 1:
