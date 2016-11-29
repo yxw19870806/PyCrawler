@@ -15,6 +15,8 @@ import traceback
 
 ACCOUNTS = []
 INIT_CURSOR = "9999999999999999999"
+CSRF_TOKEN = ""
+SESSION_ID = ""
 IMAGE_COUNT_PER_PAGE = 12
 USER_COUNT_PER_PAGE = 50
 TOTAL_IMAGE_COUNT = 0
@@ -28,6 +30,24 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
+
+
+# 获取csr_token和session_id并设置全局变量，后续需要设置header才能进行访问数据
+def set_token_and_session():
+    global CSRF_TOKEN
+    global SESSION_ID
+    index_url = "https://www.instagram.com/instagram"
+    index_page_response = tool.http_request(index_url)
+    if index_page_response[0] == 1:
+        set_cookie_info = tool.get_response_info(index_page_response[2].info(), 'Set-Cookie')
+        if set_cookie_info is not None:
+            csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
+            session_id = tool.find_sub_string(set_cookie_info, "sessionid=", ";")
+            if csrf_token and session_id:
+                CSRF_TOKEN = csrf_token
+                SESSION_ID = session_id
+                return True
+    return False
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
@@ -46,20 +66,6 @@ def get_account_id(account_name):
                         if account_name.lower() == str(user["user"]["username"]).lower():
                             return user["user"]["pk"]
         time.sleep(5)
-    return None
-
-
-# 获取该次访问的csr_token和session_id，后续需要设置header才能进行访问数据
-def get_token_and_session(account_name):
-    index_url = "https://www.instagram.com/%s/" % account_name
-    index_page_response = tool.http_request(index_url)
-    if index_page_response[0] == 1:
-        set_cookie_info = tool.get_response_info(index_page_response[2].info(), 'Set-Cookie')
-        if set_cookie_info is not None:
-            csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
-            session_id = tool.find_sub_string(set_cookie_info, "sessionid=", ";")
-            if csrf_token and session_id:
-                return {"csrf_token": csrf_token, "session_id": session_id}
     return None
 
 
@@ -221,6 +227,10 @@ class Instagram(robot.Robot):
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
         ACCOUNTS = account_list.keys()
 
+        if not set_token_and_session():
+            log.error("token和session获取查找失败")
+            tool.process_exit()
+
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_name in sorted(account_list.keys()):
@@ -289,23 +299,16 @@ class Download(threading.Thread):
                 log.error(account_name + " account id 查找失败")
                 tool.process_exit()
 
-            token_and_session_info = get_token_and_session(account_name)
-            if token_and_session_info is None:
-                log.error(account_name + " token 和 session获取查找失败")
-                tool.process_exit()
-
             image_count = 1
             video_count = 1
             cursor = INIT_CURSOR
             first_created_time = "0"
-            csrf_token = token_and_session_info["csrf_token"]
-            session_id = token_and_session_info["session_id"]
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
                 # 获取指定时间后的一页媒体信息
-                media_data = get_one_page_media_data(account_id, cursor, csrf_token, session_id)
+                media_data = get_one_page_media_data(account_id, cursor)
                 if media_data is None:
                     log.error(account_name + " 媒体列表解析异常")
                     tool.process_exit()
