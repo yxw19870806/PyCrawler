@@ -30,6 +30,21 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
+# 从cookie中获取auth_token
+def get_auth_token():
+    from common import robot
+    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    # 操作系统&浏览器
+    browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
+    # cookie
+    is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+    if is_auto_get_cookie:
+        cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+    else:
+        cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
+    return tool.get_cookie_value_from_browser("auth_token", cookie_path, browser_type, (".twitter.com",))
+
+
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
@@ -41,7 +56,8 @@ def get_account_id(account_name):
     return None
 
 
-# 关注指定账号
+# 关注指定账号（需要cookies）
+# account_id -> 103436496
 def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
     follow_data = {"user_id": account_id}
@@ -58,7 +74,8 @@ def follow_account(auth_token, account_id):
     return False
 
 
-# 取消关注指定账号
+# 取消关注指定账号（需要cookies）
+# account_id -> 103436496
 def unfollow_account(auth_token, account_id):
     unfollow_url = "https://twitter.com/i/user/unfollow"
     unfollow_data = {"user_id": account_id}
@@ -70,7 +87,7 @@ def unfollow_account(auth_token, account_id):
     return False
 
 
-# 获取指定账号的全部关注列表（需要登录并设置浏览器类型）
+# 获取指定账号的全部关注列表（需要cookies）
 def get_follow_list(account_name):
     position_id = "2000000000000000000"
     follow_list = []
@@ -93,27 +110,10 @@ def get_follow_list(account_name):
     return follow_list
 
 
-# 从cookie中获取auth_token
-def get_auth_token():
-    from common import robot
-    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
-    # 操作系统&浏览器
-    browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
-    # cookie
-    is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
-    if is_auto_get_cookie:
-        cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
-    else:
-        cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-    return tool.get_cookie_value_from_browser("auth_token", cookie_path, browser_type, (".twitter.com",))
-
-
 # 获取指定一页的关注列表
 def get_follow_page_data(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
-    header_list = {
-        "Cookie": 'auth_token=%s;' % auth_token,
-    }
+    header_list = {"Cookie": 'auth_token=%s;' % auth_token}
     follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, None, header_list)[:2]
     if follow_list_return_code == 1:
         try:

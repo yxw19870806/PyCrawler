@@ -89,7 +89,7 @@ def get_follow_by_list(account_id):
     return follow_by_list
 
 
-# 获取指定一页的粉丝列表
+# 获取指定一页的粉丝列表（需要cookies）
 # account_id -> 490060609
 def get_one_page_follow_by_list(account_id, cursor=None):
     query_url = "https://www.instagram.com/query/"
@@ -141,7 +141,7 @@ def get_follow_list(account_id):
     return follow_list
 
 
-# 获取指定一页的关注列表
+# 获取指定一页的关注列表（需要cookies）
 # account_id -> 490060609
 def get_one_page_follow_list(account_id, cursor=None):
     query_url = "https://www.instagram.com/query/"
