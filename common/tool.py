@@ -369,12 +369,12 @@ def set_proxy(ip, port):
 
 
 # 快速设置cookie和代理
-# is_set_cookie     0:不设置, 1:设置
-# is_set_proxy      0:不设置, 1:设置
+# is_set_cookie True / False
+# is_set_proxy True / False
 def quickly_set(is_set_cookie, is_set_proxy):
     import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
-    if is_set_cookie == 1:
+    if is_set_cookie:
         # 操作系统&浏览器
         browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
         # cookie
@@ -384,7 +384,7 @@ def quickly_set(is_set_cookie, is_set_proxy):
         else:
             cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
         set_cookie_from_browser(cookie_path, browser_type)
-    if is_set_proxy == 1:
+    if is_set_proxy:
         proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
         proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
         set_proxy(proxy_ip, proxy_port)
