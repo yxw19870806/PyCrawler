@@ -74,12 +74,16 @@ def unfollow_account(authenticity_token, account_id):
     return False
 
 
-# 获取指定账号的全部关注列表（需要登录）
+# 获取指定账号的全部关注列表（需要登录并设置浏览器类型）
 def get_follow_list(account_name):
     position_id = "2000000000000000000"
     follow_list = []
+    # 从cookies中获取auth_token
+    auth_token = get_auth_token()
+    if auth_token is None:
+        return None
     while True:
-        follow_page_data = get_follow_page_data(account_name, position_id)
+        follow_page_data = get_follow_page_data(account_name, auth_token, position_id)
         if follow_page_data is not None:
             profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_page_data["items_html"])
             if len(profile_list) > 0:
@@ -93,10 +97,28 @@ def get_follow_list(account_name):
     return follow_list
 
 
+# 从cookie中获取auth_token
+def get_auth_token():
+    from common import robot
+    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    # 操作系统&浏览器
+    browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
+    # cookie
+    is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+    if is_auto_get_cookie:
+        cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+    else:
+        cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
+    return tool.get_cookie_value_from_browser("auth_token", cookie_path, browser_type, (".twitter.com",))
+
+
 # 获取指定一页的关注列表
-def get_follow_page_data(account_name, position_id):
+def get_follow_page_data(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
-    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
+    header_list = {
+        "Cookie": 'auth_token=%s;' % auth_token,
+    }
+    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, None, header_list)[:2]
     if follow_list_return_code == 1:
         try:
             follow_list_data = json.loads(follow_list_data)
