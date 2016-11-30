@@ -30,17 +30,6 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取当前cookies对应的authenticity_token
-def get_authenticity_token():
-    index_url = "https://twitter.com"
-    index_return_code, index_page = tool.http_request(index_url)[:2]
-    if index_return_code:
-        authenticity_token = tool.find_sub_string(index_page, 'value="', '" name="authenticity_token"')
-        if authenticity_token:
-            return authenticity_token
-    return None
-
-
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
@@ -52,25 +41,32 @@ def get_account_id(account_name):
     return None
 
 
-# 关注指定账号（无效）
-def follow_account(authenticity_token, account_id):
+# 关注指定账号
+def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
-    follow_data = {"authenticity_token": authenticity_token, "challenges_passed": False, "handles_challenges": 1,
-                   "user_id": account_id}
-    follow_return_code, follow_data = tool.http_request(follow_url, follow_data)[:2]
+    follow_data = {"user_id": account_id}
+    header_list = {"Cookie": 'auth_token=%s;' % auth_token, "Referer": "https://twitter.com/"}
+    follow_return_code, follow_data = tool.http_request(follow_url, follow_data, header_list)[:2]
     if follow_return_code == 1:
-        return True
+        try:
+            follow_data = json.loads(follow_data)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("new_state",), follow_data) and follow_data["new_state"] == "following":
+                return True
     return False
 
 
-# 取消关注指定账号（无效）
-def unfollow_account(authenticity_token, account_id):
-    unfollow_url = "https://twitter.com/i/user/follow"
-    unfollow_data = {"authenticity_token": authenticity_token, "challenges_passed": False, "handles_challenges": 1,
-                     "user_id": account_id}
-    unfollow_return_code, unfollow_data = tool.http_request(unfollow_url, unfollow_data)[:2]
+# 取消关注指定账号
+def unfollow_account(auth_token, account_id):
+    unfollow_url = "https://twitter.com/i/user/unfollow"
+    unfollow_data = {"user_id": account_id}
+    header_list = {"Cookie": 'auth_token=%s;' % auth_token, "Referer": "https://twitter.com/"}
+    unfollow_return_code, unfollow_data = tool.http_request(unfollow_url, unfollow_data, header_list)[:2]
     if unfollow_return_code == 1:
-        return True
+        if robot.check_sub_key(("new_state",), unfollow_data) and unfollow_data["new_state"] == "not-following":
+            return True
     return False
 
 
