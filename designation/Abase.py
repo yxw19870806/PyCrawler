@@ -60,10 +60,8 @@ class ABase(robot.Robot):
         # 多线程下载类型
         # 1 同时开始N个下载线程
         # 2 对一页中的所有图片开启多线程下载，下完一页中的所有图片后开始下一页
-        thread_type = 1
+        thread_type = 2
         while True:
-            if page_count >= 2700:
-                break
             # 获取一页页面
             page_data = get_one_page_data(page_count)
             if page_data is None:
@@ -142,7 +140,7 @@ class Download(threading.Thread):
                     else:
                         os.remove(self.file_temp_path)
         else:
-            log.step("%s的封面图片 %s 下载成功" % (self.title, self.file_url))
+            log.error("%s的封面图片 %s 下载失败" % (self.title, self.file_url))
 
 
 if __name__ == "__main__":
