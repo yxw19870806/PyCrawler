@@ -413,10 +413,13 @@ def response_time_to_timestamp(time_string):
     return int(time.mktime(last_modified_time)) - time.timezone
 
 
-# 根据收尾字符，进行字符串截取
+# 根据开始与结束的字符串，截取字符串
+# include_string是否包含查询条件的字符串
+#   0 都不包含
+#   1 只包含start_string
+#   2 只包含end_string
+#   3 包含start_string和end_string
 def find_sub_string(string, start_string=None, end_string=None, include_string=0):
-    # 根据开始与结束的字符串，截取字符串
-    # include_string是否包含查询条件的字符串，0 都不包含, 1 只包含start_string, 2 只包含end_string, 3 包含start_string和end_string
     # 参数验证
     string = str(string)
     if start_string is not None:
@@ -452,7 +455,7 @@ def change_path_encoding(path):
             path = path.encode("GBK")
         else:
             path = path.decode("UTF-8").encode("GBK")
-    except:
+    except UnicodeDecodeError:
         if isinstance(path, unicode):
             path = path.encode("UTF-8")
         else:
@@ -498,7 +501,7 @@ def save_net_file(file_url, file_path, need_content_type=False):
             if (content_length is None) or (int(content_length) == file_size):
                 return True
             else:
-                print_msg("下载文件大小%s和网络文件大小%s不一致" % (content_length, file_size))
+                print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
     return False
 
 
