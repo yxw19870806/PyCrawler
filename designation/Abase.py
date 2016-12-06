@@ -12,6 +12,9 @@ import time
 import threading
 
 
+TOTAL_IMAGE_COUNT = 0
+
+
 # 获取一页页面内容
 def get_one_page_data(page_count):
     index_url = "http://www.abase.me/movies.php?page=%s" % page_count
@@ -96,7 +99,7 @@ class ABase(robot.Robot):
                 file_temp_path = os.path.join(self.image_download_path, "%s_temp.%s" % (title, file_type))
 
                 # 开始下载
-                thread = Download(title, file_path, file_temp_path, image_url)
+                thread = Download(self.thread_lock, title, file_path, file_temp_path, image_url)
                 thread.start()
                 time.sleep(0.1)
 
@@ -106,18 +109,21 @@ class ABase(robot.Robot):
 
             page_count += 1
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
 
 
 class Download(threading.Thread):
-    def __init__(self, title, file_path, file_temp_path, file_url):
+    def __init__(self, thread_lock, title, file_path, file_temp_path, file_url):
         threading.Thread.__init__(self)
+        self.thread_lock = thread_lock
         self.title = title
         self.file_path = file_path
         self.file_temp_path = file_temp_path
         self.file_url = file_url
 
     def run(self):
+        global TOTAL_IMAGE_COUNT
+
         # 如果文件已经存在，则使用临时文件名保存
         if os.path.exists(self.file_path):
             is_exist = True
