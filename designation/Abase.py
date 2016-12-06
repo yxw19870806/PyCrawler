@@ -145,6 +145,10 @@ class Download(threading.Thread):
                         os.rename(self.file_temp_path, self.file_path)
                     else:
                         os.remove(self.file_temp_path)
+
+                self.thread_lock.acquire()
+                TOTAL_IMAGE_COUNT += 1
+                self.thread_lock.release()
         else:
             log.error("%s的封面图片 %s 下载失败" % (self.title, self.file_url))
 
