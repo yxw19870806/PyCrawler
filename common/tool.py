@@ -117,6 +117,9 @@ def http_request(url, post_data=None, header_list=None, cookie=None, is_random_i
             # 404
             elif str(e).lower().find("http error 404") != -1:
                 return -404, None, None
+            # 500
+            elif str(e).lower().find("http error 500") != -1:
+                return -500, None, None
             else:
                 print_msg(url)
                 print_msg(str(e))
