@@ -59,7 +59,11 @@ class MeiTuZZ(robot.Robot):
                 log.step("提前退出")
                 break
 
-            if album_page_return_code != 1:
+            if album_page_return_code == -500:
+                log.error("第%s页相册内部错误" % album_id)
+                album_id += 1
+                continue
+            elif album_page_return_code != 1:
                 log.error("第%s页图片获取失败" % album_id)
                 break
 
