@@ -253,7 +253,7 @@ class Download(threading.Thread):
                         continue
 
                     # 空、音频、引用，跳过
-                    if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote"]:
+                    if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote", "tumblr-feed:link"]:
                         continue
 
                     # 新增信息页导致的重复判断
