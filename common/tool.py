@@ -23,7 +23,7 @@ import zipfile
 # 初始化操作
 IS_SET_TIMEOUT = False
 HTTP_CONNECTION_TIMEOUT = 10
-HTTP_REQUEST_RETRY_COUNT = 500
+HTTP_REQUEST_RETRY_COUNT = 100
 thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True

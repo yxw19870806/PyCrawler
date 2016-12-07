@@ -211,6 +211,10 @@ class Robot(object):
             else:  # 使用空cookie
                 tool.set_empty_cookie()
 
+        # Http Setting
+        tool.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
+        tool.HTTP_REQUEST_RETRY_COUNT = get_config(config, "HTTP_REQUEST_RETRY_COUNT", 100, 1)
+
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
         self.thread_lock = threading.Lock()
