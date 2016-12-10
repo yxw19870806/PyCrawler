@@ -554,7 +554,6 @@ def delete_null_dir(dir_path):
             if os.path.isdir(sub_path):
                 delete_null_dir(sub_path)
         if len(os.listdir(dir_path)) == 0:
-            print dir_path
             os.rmdir(dir_path)
 
 
