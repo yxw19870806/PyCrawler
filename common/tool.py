@@ -252,7 +252,7 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
     elif browser_type == 3:
         try:
             import win32crypt
-        except:
+        except ImportError:
             return False
         con = sqlite.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
