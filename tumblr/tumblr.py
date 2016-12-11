@@ -91,7 +91,7 @@ def filter_different_resolution_images(image_url_list):
         if image_url.find("/avatar_") != -1:
             continue
 
-        image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("/")[0]
+        image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
         # 判断是否有分辨率更小的相同图片
         if image_id in new_image_url_list:
             resolution = int(image_url.split("_")[-1].split(".")[0])
