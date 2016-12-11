@@ -94,8 +94,16 @@ def filter_different_resolution_images(image_url_list):
         image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
         # 判断是否有分辨率更小的相同图片
         if image_id in new_image_url_list:
-            resolution = int(image_url.split("_")[-1].split(".")[0])
-            old_resolution = int(new_image_url_list[image_id].split("_")[-1].split(".")[0])
+            resolution = image_url.split("_")[-1].split(".")[0]
+            if resolution[-1] == "h":
+                resolution = int(resolution[:-1])
+            else:
+                resolution = int(resolution)
+            old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
+            if old_resolution[-1] == "h":
+                old_resolution = int(old_resolution[:-1])
+            else:
+                old_resolution = int(old_resolution)
             if resolution < old_resolution:
                 continue
         new_image_url_list[image_id] = image_url
