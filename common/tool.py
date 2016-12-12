@@ -222,7 +222,7 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
                 if len(cookie_list) < 8:
                     continue
                 domain = cookie_list[2].split("/")[0]
-                if _filter_domain(domain, target_domains):
+                if __filter_domain(domain, target_domains):
                     continue
                 domain_specified = ftstr[cookie_list[2].startswith(".")]
                 path = cookie_list[2].replace(domain, "")
@@ -237,7 +237,7 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             domain_specified = ftstr[cookie_info[0].startswith(".")]
             path = cookie_info[1]
@@ -259,7 +259,7 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             domain_specified = ftstr[cookie_info[0].startswith(".")]
             path = cookie_info[1]
@@ -303,7 +303,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
                 if len(cookie_list) < 8:
                     continue
                 domain = cookie_list[2].split("/")[0]
-                if _filter_domain(domain, target_domains):
+                if __filter_domain(domain, target_domains):
                     continue
                 if cookie_list[0] == cookie_key:
                     return cookie_list[1]
@@ -313,7 +313,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             if cookie_info[4] == cookie_key:
                 return cookie_info[5]
@@ -327,7 +327,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             if cookie_info[4] == cookie_key:
                 try:
@@ -341,7 +341,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
 # 是否需要过滤这个域的cookie
 # return True - 过滤，不需要加载
 # return False - 不过滤，需要加载
-def _filter_domain(domain, target_domains):
+def __filter_domain(domain, target_domains):
     if target_domains:
         if isinstance(target_domains, str):
             if domain.find(target_domains) > 0:
