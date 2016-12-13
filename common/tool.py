@@ -23,7 +23,6 @@ import zipfile
 
 
 # 初始化操作
-IS_SET_TIMEOUT = False
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_REQUEST_RETRY_COUNT = 100
 thread_lock = threading.Lock()
@@ -40,7 +39,6 @@ else:
 # 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
 def http_request(url, post_data=None, header_list=None, cookie=None, is_random_ip=True):
-    global IS_SET_TIMEOUT
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return -100, None, None
     count = 0
@@ -77,13 +75,7 @@ def http_request(url, post_data=None, header_list=None, cookie=None, is_random_i
                 urllib2.install_opener(opener)
 
             # 设置访问超时
-            if sys.version_info < (2, 7):
-                if not IS_SET_TIMEOUT:
-                    urllib2.socket.setdefaulttimeout(HTTP_CONNECTION_TIMEOUT)
-                    IS_SET_TIMEOUT = True
-                response = urllib2.urlopen(request)
-            else:
-                response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
+            response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
 
             if response:
                 return 1, response.read(), response
