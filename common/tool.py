@@ -12,6 +12,7 @@ import os
 import platform
 import random
 import shutil
+import sqlite3
 import sys
 import time
 import threading
@@ -19,6 +20,7 @@ import traceback
 import urllib
 import urllib2
 import zipfile
+
 
 # 初始化操作
 IS_SET_TIMEOUT = False
@@ -201,9 +203,6 @@ def create_cookie(name, value, domain="", path="/"):
 # browser_type=2: firefox
 # browser_type=3: chrome
 def set_cookie_from_browser(file_path, browser_type, target_domains=""):
-    # 有些DB文件开启了WAL功能（SQL3.7引入，Python2.7的sqlite3的版本是3.6，所以需要pysqlite2.8）
-    # import sqlite3
-    from pysqlite2 import dbapi2 as sqlite
     if not os.path.exists(file_path):
         print_msg("cookie目录：" + file_path + " 不存在")
         return False
@@ -232,7 +231,8 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
                 value = cookie_list[1]
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
     elif browser_type == 2:
-        con = sqlite.connect(os.path.join(file_path, "cookies.sqlite"))
+        # DB文件开启了WAL功能（SQL3.7引入，旧版本Python2.7.5的sqlite3的版本是3.6，可能无法访问，需要升级python版本）
+        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
@@ -254,7 +254,7 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
             import win32crypt
         except ImportError:
             return False
-        con = sqlite.connect(os.path.join(file_path, "Cookies"))
+        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
@@ -285,9 +285,6 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
 
 # 从浏览器保存的cookies中获取指定key的cookie value
 def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_domains=""):
-    # 有些DB文件开启了WAL功能（SQL3.7引入，Python2.7的sqlite3的版本是3.6，所以需要pysqlite2.8）
-    # import sqlite3
-    from pysqlite2 import dbapi2 as sqlite
     if not os.path.exists(file_path):
         print_msg("cookie目录：" + file_path + " 不存在")
         return None
@@ -308,7 +305,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
                 if cookie_list[0] == cookie_key:
                     return cookie_list[1]
     elif browser_type == 2:
-        con = sqlite.connect(os.path.join(file_path, "cookies.sqlite"))
+        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
@@ -322,7 +319,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
             import win32crypt
         except:
             return None
-        con = sqlite.connect(os.path.join(file_path, "Cookies"))
+        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
