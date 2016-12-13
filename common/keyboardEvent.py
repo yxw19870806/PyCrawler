@@ -15,7 +15,7 @@ class KeyboardEvent(threading.Thread):
         threading.Thread.__init__(self)
         # 按键 => 回调方法名
         filter_event_list = {}
-        for key, function in event_list:
+        for key, function in event_list.iteritems():
             key = key.capitalize()
             # 判断是否在支持的按键里
             if key in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
@@ -32,13 +32,9 @@ class KeyboardEvent(threading.Thread):
         if event.Key in self.event_key_list:
             self.event_key_list[event.Key]()
 
-    # 绑定键盘按下事件
+    # 监听所有键盘事件
     def run(self):
-        # 创建一个“钩子”管理对象
         hook_manager = pyHook.HookManager()
-        # 监听所有键盘事件
         hook_manager.KeyDown = self.on_keyboard_event
-        # 设置键盘“钩子”
         hook_manager.HookKeyboard()
-        # 进入循环，如不手动关闭，程序将一直处于监听状态
         pythoncom.PumpMessages()

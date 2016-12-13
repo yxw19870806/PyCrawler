@@ -51,3 +51,11 @@ def set_process_status(process_status):
         process_status = PROCESS_STATUS_RUN
     conn = Client((PROCESS_SERVER_IP, PROCESS_SERVER_PORT))
     conn.send(process_status)
+
+
+def pause_process():
+    set_process_status(PROCESS_STATUS_PAUSE)
+
+
+def continue_process():
+    set_process_status(PROCESS_STATUS_RUN)
