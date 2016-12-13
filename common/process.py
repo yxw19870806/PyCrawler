@@ -43,7 +43,6 @@ class ProcessControl(threading.Thread):
 
 # 设置进程状态
 def set_process_status(process_status):
-    process_status = int(process_status)
     try:
         process_status = int(process_status)
     except ValueError:
