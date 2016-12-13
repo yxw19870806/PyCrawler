@@ -12,6 +12,7 @@ import os
 import platform
 import random
 import shutil
+import sqlite3
 import sys
 import time
 import threading
@@ -20,8 +21,12 @@ import urllib
 import urllib2
 import zipfile
 
+
 # 初始化操作
-IS_SET_TIMEOUT = False
+if sys.version_info < (2, 7, 12):
+    raise Exception("python版本过低，请访问官网 https://www.python.org/downloads/ 更新")
+elif sys.version_info >= (3,):
+    raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_REQUEST_RETRY_COUNT = 100
 thread_lock = threading.Lock()
@@ -38,7 +43,6 @@ else:
 # 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
 def http_request(url, post_data=None, header_list=None, cookie=None, is_random_ip=True):
-    global IS_SET_TIMEOUT
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return -100, None, None
     count = 0
@@ -75,13 +79,7 @@ def http_request(url, post_data=None, header_list=None, cookie=None, is_random_i
                 urllib2.install_opener(opener)
 
             # 设置访问超时
-            if sys.version_info < (2, 7):
-                if not IS_SET_TIMEOUT:
-                    urllib2.socket.setdefaulttimeout(HTTP_CONNECTION_TIMEOUT)
-                    IS_SET_TIMEOUT = True
-                response = urllib2.urlopen(request)
-            else:
-                response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
+            response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
 
             if response:
                 return 1, response.read(), response
@@ -201,9 +199,6 @@ def create_cookie(name, value, domain="", path="/"):
 # browser_type=2: firefox
 # browser_type=3: chrome
 def set_cookie_from_browser(file_path, browser_type, target_domains=""):
-    # 有些DB文件开启了WAL功能（SQL3.7引入，Python2.7的sqlite3的版本是3.6，所以需要pysqlite2.8）
-    # import sqlite3
-    from pysqlite2 import dbapi2 as sqlite
     if not os.path.exists(file_path):
         print_msg("cookie目录：" + file_path + " 不存在")
         return False
@@ -222,7 +217,7 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
                 if len(cookie_list) < 8:
                     continue
                 domain = cookie_list[2].split("/")[0]
-                if _filter_domain(domain, target_domains):
+                if __filter_domain(domain, target_domains):
                     continue
                 domain_specified = ftstr[cookie_list[2].startswith(".")]
                 path = cookie_list[2].replace(domain, "")
@@ -232,12 +227,13 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
                 value = cookie_list[1]
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
     elif browser_type == 2:
-        con = sqlite.connect(os.path.join(file_path, "cookies.sqlite"))
+        # DB文件开启了WAL功能（SQL3.7引入，旧版本Python2.7.5的sqlite3的版本是3.6，可能无法访问，需要升级python版本）
+        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             domain_specified = ftstr[cookie_info[0].startswith(".")]
             path = cookie_info[1]
@@ -254,12 +250,12 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
             import win32crypt
         except ImportError:
             return False
-        con = sqlite.connect(os.path.join(file_path, "Cookies"))
+        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             domain_specified = ftstr[cookie_info[0].startswith(".")]
             path = cookie_info[1]
@@ -285,9 +281,6 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
 
 # 从浏览器保存的cookies中获取指定key的cookie value
 def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_domains=""):
-    # 有些DB文件开启了WAL功能（SQL3.7引入，Python2.7的sqlite3的版本是3.6，所以需要pysqlite2.8）
-    # import sqlite3
-    from pysqlite2 import dbapi2 as sqlite
     if not os.path.exists(file_path):
         print_msg("cookie目录：" + file_path + " 不存在")
         return None
@@ -303,17 +296,17 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
                 if len(cookie_list) < 8:
                     continue
                 domain = cookie_list[2].split("/")[0]
-                if _filter_domain(domain, target_domains):
+                if __filter_domain(domain, target_domains):
                     continue
                 if cookie_list[0] == cookie_key:
                     return cookie_list[1]
     elif browser_type == 2:
-        con = sqlite.connect(os.path.join(file_path, "cookies.sqlite"))
+        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
         cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             if cookie_info[4] == cookie_key:
                 return cookie_info[5]
@@ -322,12 +315,12 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
             import win32crypt
         except:
             return None
-        con = sqlite.connect(os.path.join(file_path, "Cookies"))
+        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
-            if _filter_domain(domain, target_domains):
+            if __filter_domain(domain, target_domains):
                 continue
             if cookie_info[4] == cookie_key:
                 try:
@@ -341,7 +334,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
 # 是否需要过滤这个域的cookie
 # return True - 过滤，不需要加载
 # return False - 不过滤，需要加载
-def _filter_domain(domain, target_domains):
+def __filter_domain(domain, target_domains):
     if target_domains:
         if isinstance(target_domains, str):
             if domain.find(target_domains) > 0:
@@ -374,7 +367,7 @@ def set_proxy(ip, port):
 # 快速设置cookie和代理
 # is_set_cookie True / False
 # is_set_proxy True / False
-def quickly_set(is_set_cookie, is_set_proxy):
+def quickly_set(is_set_cookie=True, is_set_proxy=True):
     import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     if is_set_cookie:

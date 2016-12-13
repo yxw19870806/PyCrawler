@@ -1,10 +1,11 @@
 # -*- coding:UTF-8  -*-
 """
+爬虫父类
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, process, tool
+from common import keyboardEvent, log, process, tool
 import codecs
 import ConfigParser
 import os
@@ -218,6 +219,20 @@ class Robot(object):
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
         self.thread_lock = threading.Lock()
+
+        # 键盘监控线程
+        if get_config(config, "IS_KEYBOARD_EVENT", True, 2):
+            keyboard_event_bind = {}
+            pause_process_key = get_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9", 0)
+            if pause_process_key:
+                keyboard_event_bind[pause_process_key] = process.pause_process
+            continue_process_key = get_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10", 0)
+            if continue_process_key:
+                keyboard_event_bind[continue_process_key] = process.continue_process
+            if keyboard_event_bind:
+                keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
+                keyboard_control_thread.setDaemon(True)
+                keyboard_control_thread.start()
 
         # 启用线程监控是否需要暂停其他下载线程
         process_control_thread = process.ProcessControl()
