@@ -367,7 +367,7 @@ def set_proxy(ip, port):
 # 快速设置cookie和代理
 # is_set_cookie True / False
 # is_set_proxy True / False
-def quickly_set(is_set_cookie, is_set_proxy):
+def quickly_set(is_set_cookie=True, is_set_proxy=True):
     import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     if is_set_cookie:
