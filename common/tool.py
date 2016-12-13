@@ -23,6 +23,10 @@ import zipfile
 
 
 # 初始化操作
+if sys.version_info < (2, 7, 12):
+    raise Exception("python版本过低，请访问官网 https://www.python.org/downloads/ 更新")
+elif sys.version_info >= (3,):
+    raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_REQUEST_RETRY_COUNT = 100
 thread_lock = threading.Lock()
