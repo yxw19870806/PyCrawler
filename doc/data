@@ -134,7 +134,17 @@ pywin32	https://sourceforge.net/projects/pywin32/files/pywin32/
 a = [1, 2, 3, 4, 5, "6", "a"]
 map(str, a)
 
-
+21.模拟鼠标点击屏幕任意坐标
+#第一种
+def click1(x,y):
+    win32api.SetCursorPos((x,y))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
+#第二种
+def click2(x,y):
+    ctypes.windll.user32.SetCursorPos(x,y)
+    ctypes.windll.user32.mouse_event(2,0,0,0,0)
+    ctypes.windll.user32.mouse_event(4,0,0,0,0)
 
 
 
