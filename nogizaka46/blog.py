@@ -45,7 +45,7 @@ def get_blog_data_list(blog_page):
 
 # 解析日志页面，获取日志最大页数
 def get_max_page_count(blog_page):
-    paginate_data = tool.find_sub_string(blog_page, '<div class="paginate">', '</div>')
+    paginate_data = tool.find_sub_string(blog_page, '<div class="paginate">', "</div>")
     page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
     return max(map(int, page_count_find))
 

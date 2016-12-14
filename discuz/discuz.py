@@ -41,8 +41,8 @@ def get_thread_author_post(thread_url):
     thread_return_code, thread_page, thread_response = tool.http_request(thread_url)
     if thread_return_code == 1:
         content_type = tool.get_response_info(thread_response.info(), "Content-Type")
-        charset = tool.find_sub_string(content_type, 'charset=')
+        charset = tool.find_sub_string(content_type, "charset=")
         post_message = tool.find_sub_string(thread_page, '<td class="t_f" id="postmessage_', '<div id="comment_')
-        post_message = post_message[post_message.find('">') + 2: post_message.rfind('</td>')]
+        post_message = post_message[post_message.find('">') + 2: post_message.rfind("</td>")]
         return post_message.decode(charset)
     return None

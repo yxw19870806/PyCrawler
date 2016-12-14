@@ -39,7 +39,7 @@ def set_token_and_session():
     index_url = "https://www.instagram.com/instagram"
     index_page_response = tool.http_request(index_url)
     if index_page_response[0] == 1:
-        set_cookie_info = tool.get_response_info(index_page_response[2].info(), 'Set-Cookie')
+        set_cookie_info = tool.get_response_info(index_page_response[2].info(), "Set-Cookie")
         if set_cookie_info is not None:
             csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
             session_id = tool.find_sub_string(set_cookie_info, "sessionid=", ";")

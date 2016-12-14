@@ -15,15 +15,15 @@ import time
 
 IS_INIT = False
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
-SYS_DOWNLOAD_IMAGE = 'download_image'
+SYS_DOWNLOAD_IMAGE = "download_image"
 # 程序是否支持下载视频功能（会判断配置中是否需要下载视频，如全部是则创建视频下载目录）
-SYS_DOWNLOAD_VIDEO = 'download_video'
+SYS_DOWNLOAD_VIDEO = "download_video"
 # 程序是否默认需要设置代理
-SYS_SET_PROXY = 'set_proxy'
+SYS_SET_PROXY = "set_proxy"
 # 程序是否支持不需要存档文件就可以开始运行
-SYS_NOT_CHECK_SAVE_DATA = 'no_save_data'
+SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
 # 程序是否需要开启cookie, value不为为空()时，从浏览器中加载相关域名的cookies，否则仅仅添加一个空的cookie对象
-SYS_SET_COOKIE = 'set_cookie'
+SYS_SET_COOKIE = "set_cookie"
 
 
 class Robot(object):

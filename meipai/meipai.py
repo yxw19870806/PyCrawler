@@ -39,7 +39,7 @@ def get_follow_list(account_id):
                 follow_account_name = tool.find_sub_string(follow_info, 'title="', '"')
                 follow_list[follow_account_id] = follow_account_name
             if max_page_count == 1:
-                page_info = tool.find_sub_string(follow_list_page, '<div class="paging-wrap">', '</div>')
+                page_info = tool.find_sub_string(follow_list_page, '<div class="paging-wrap">', "</div>")
                 if page_info:
                     page_find = re.findall("friends\?p=(\d*)", page_info)
                     page_find = [int(i) for i in page_find]

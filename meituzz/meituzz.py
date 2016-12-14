@@ -17,7 +17,7 @@ ERROR_PAGE_COUNT_CHECK = 10
 
 # 根据页面内容获取图片下载地址列表
 def get_image_url_list(album_page):
-    image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', ' />')
+    image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', " />")
     try:
         image_url_list_find = json.loads(image_url_list_find)
     except ValueError:
@@ -89,7 +89,7 @@ class MeiTuZZ(robot.Robot):
 
             # 图片下载
             if self.is_download_image and album_page.find('<input type="hidden" id="imageList"') >= 0:
-                total_photo_count = tool.find_sub_string(album_page, '<input type="hidden" id="totalPageNum" value=', ' />')
+                total_photo_count = tool.find_sub_string(album_page, '<input type="hidden" id="totalPageNum" value=', " />")
                 if not total_photo_count:
                     log.error("第%s页图片数量解析失败" % album_id)
                     break

@@ -61,7 +61,7 @@ def get_account_id(account_name):
 def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
     follow_data = {"user_id": account_id}
-    header_list = {"Cookie": 'auth_token=%s;' % auth_token, "Referer": "https://twitter.com/"}
+    header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
     follow_return_code, follow_data = tool.http_request(follow_url, follow_data, header_list)[:2]
     if follow_return_code == 1:
         try:
@@ -79,7 +79,7 @@ def follow_account(auth_token, account_id):
 def unfollow_account(auth_token, account_id):
     unfollow_url = "https://twitter.com/i/user/unfollow"
     unfollow_data = {"user_id": account_id}
-    header_list = {"Cookie": 'auth_token=%s;' % auth_token, "Referer": "https://twitter.com/"}
+    header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
     unfollow_return_code, unfollow_data = tool.http_request(unfollow_url, unfollow_data, header_list)[:2]
     if unfollow_return_code == 1:
         if robot.check_sub_key(("new_state",), unfollow_data) and unfollow_data["new_state"] == "not-following":
@@ -113,7 +113,7 @@ def get_follow_list(account_name):
 # 获取指定一页的关注列表
 def get_follow_page_data(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
-    header_list = {"Cookie": 'auth_token=%s;' % auth_token}
+    header_list = {"Cookie": "auth_token=%s;" % auth_token}
     follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, None, header_list)[:2]
     if follow_list_return_code == 1:
         try:
@@ -144,7 +144,7 @@ def get_media_page_data(account_name, data_tweet_id):
 
 # 从媒体列表中将不同的媒体信息拆分组
 def get_tweet_list(media_page_items_html):
-    media_page_items_html = media_page_items_html.replace('\n', "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"')
+    media_page_items_html = media_page_items_html.replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"')
     tweet_data_list = media_page_items_html.split("\n")
     tweet_id_list = []
     for tweet_data in tweet_data_list:

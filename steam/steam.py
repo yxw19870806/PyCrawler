@@ -53,10 +53,10 @@ def get_discount_list():
             if not discount:
                 discount = 0
             price_data = tool.find_sub_string(item, '<div class="col search_price discounted responsive_secondrow">', "</div>", 2)
-            old_price = tool.find_sub_string(price_data, '<strike>', '</strike>').replace("¥", "").strip()
+            old_price = tool.find_sub_string(price_data, "<strike>", "</strike>").replace("¥", "").strip()
             if not old_price:
                 old_price = 0
-            new_price = tool.find_sub_string(price_data, '<br>', '</div>').replace("¥", "").strip()
+            new_price = tool.find_sub_string(price_data, "<br>", "</div>").replace("¥", "").strip()
             if not new_price or not new_price.isdigit():
                 new_price = 0
             if app_id not in app_id_list:

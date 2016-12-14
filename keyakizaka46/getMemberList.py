@@ -19,7 +19,7 @@ def get_member_list():
             member_list_find = re.findall("<li ([\S|\s]*?)</li>", member_list_data)
             for member_info in member_list_find:
                 ct = tool.find_sub_string(member_info, "&ct=", '">')
-                name = tool.find_sub_string(member_info, '<p class="name">', '</p>').strip().replace(" ", "")
+                name = tool.find_sub_string(member_info, '<p class="name">', "</p>").strip().replace(" ", "")
                 tool.print_msg("%s\t\t\t%s" % (ct, name), False)
             if len(member_list_find) > 0:
                 tool.print_msg("复制以上内容到save.data中，删除不需要的行，即可开始运行", False)
