@@ -79,7 +79,7 @@ class ABase(robot.Robot):
                 break
 
             # 获取页面中的所有图片信息列表
-            image_info_list = re.findall('<img src="" data-original="([^"]*)" class="lazy img" title="([^"]*)">', page_data)
+            image_info_list = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', page_data)
             # 获取页面中的影片数量
             page_data_count = page_data.count('<div class="item pull-left">')
 
@@ -96,7 +96,7 @@ class ABase(robot.Robot):
                 title = robot.filter_text(str(title)).upper()
                 image_url = get_large_image_url(small_image_url)
                 if image_url is None:
-                    log.trace("%s的封面图片大图地址获取失败" % title)
+                    log.error("%s的封面图片 %s 大图地址获取失败" % (small_image_url, title))
                     continue
 
                 log.step("开始下载%s的封面图片 %s" % (title, image_url))
