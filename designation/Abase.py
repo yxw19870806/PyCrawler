@@ -25,12 +25,19 @@ def get_one_page_data(page_count):
 
 
 # 获取图片原图的下载地址
-# http://pics.dmm.co.jp//digital/video/daqu00001/daqu00001ps.jpg
+# 1.http://pics.dmm.co.jp//digital/video/daqu00001/daqu00001ps.jpg
 # ->
 # http://pics.dmm.co.jp//digital/video/daqu00001/daqu00001pl.jpg
+# 2.http://images.abase.me/00/86/MK/MKBD-S86_1.jpg
+# ->
+# http://images.abase.me/00/86/MK/MKBD-S86_2.jpg
 def get_large_image_url(image_url):
-    if image_url.find("ps.") >= 0 and image_url.count("ps.") == 1:
-        return image_url.replace("ps.", "pl.")
+    if image_url.find("http://images.abase.me") >= 0:
+        if image_url.find("_1.") >= 0:
+            return image_url.replace("_1.", "_2.")
+    elif image_url.find("http://pics.dmm.co.jp") >= 0:
+        if image_url.find("ps.") >= 0 and image_url.count("ps.") == 1:
+            return image_url.replace("ps.", "pl.")
     return None
 
 
