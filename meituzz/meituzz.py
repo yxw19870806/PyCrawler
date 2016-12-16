@@ -11,7 +11,6 @@ import json
 import os
 import re
 
-
 ERROR_PAGE_COUNT_CHECK = 10
 
 

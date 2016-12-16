@@ -172,8 +172,8 @@ class Bcy(robot.Robot):
         global NEW_SAVE_DATA_PATH
 
         sys_config = {
-             robot.SYS_DOWNLOAD_IMAGE: True,
-             robot.SYS_SET_COOKIE: ("bcy.net",),
+            robot.SYS_DOWNLOAD_IMAGE: True,
+            robot.SYS_SET_COOKIE: ("bcy.net",),
         }
         robot.Robot.__init__(self, sys_config)
 

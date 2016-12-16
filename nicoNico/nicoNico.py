@@ -151,7 +151,7 @@ class Download(threading.Thread):
             need_make_video_dir = True
             for video_info in video_info_list:
                 if not robot.check_sub_key(("item_data",), video_info) or \
-                       not robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
+                        not robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
                     log.error(account_name + " 视频信息%s解析失败" % video_info)
                     tool.process_exit()
 

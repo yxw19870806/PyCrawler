@@ -13,7 +13,6 @@ import threading
 import time
 import traceback
 
-
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 2
 TOTAL_IMAGE_COUNT = 0

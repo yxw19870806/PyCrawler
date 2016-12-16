@@ -184,7 +184,7 @@ class Download(threading.Thread):
                                 image_url = "http://www.keyakizaka46.com/%s" % image_url
 
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-                        
+
                         # 第一张图片，创建目录
                         if need_make_image_dir:
                             if not tool.make_dir(image_path, 0):

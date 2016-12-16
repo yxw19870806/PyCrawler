@@ -62,7 +62,7 @@ def get_one_page_video_data(account_id, page_count):
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("medias", ), video_page):
+            if robot.check_sub_key(("medias",), video_page):
                 return video_page["medias"]
     return None
 
@@ -202,7 +202,7 @@ class Download(threading.Thread):
                             log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
                             tool.process_exit()
                         need_make_download_dir = False
-                        
+
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     if tool.save_net_file(video_url, file_path):
                         log.step(account_name + " 第%s个视频下载成功" % video_count)

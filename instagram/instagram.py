@@ -78,7 +78,7 @@ def get_follow_by_list(account_id):
         follow_by_page_data = get_one_page_follow_by_list(account_id, cursor)
         if follow_by_page_data is not None:
             for node in follow_by_page_data["nodes"]:
-                if robot.check_sub_key(("username", ), node):
+                if robot.check_sub_key(("username",), node):
                     follow_by_list.append(node["username"])
             if follow_by_page_data["page_info"]["has_next_page"]:
                 cursor = follow_by_page_data["page_info"]["end_cursor"]
@@ -130,7 +130,7 @@ def get_follow_list(account_id):
         follow_page_data = get_one_page_follow_list(account_id, cursor)
         if follow_page_data is not None:
             for node in follow_page_data["nodes"]:
-                if robot.check_sub_key(("username", ), node):
+                if robot.check_sub_key(("username",), node):
                     follow_list.append(node["username"])
             if follow_page_data["page_info"]["has_next_page"]:
                 cursor = follow_page_data["page_info"]["end_cursor"]
@@ -165,7 +165,7 @@ def get_one_page_follow_list(account_id, cursor=None):
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("follows", ), follow_list_data):
+            if robot.check_sub_key(("follows",), follow_list_data):
                 if robot.check_sub_key(("page_info", "nodes"), follow_list_data["follows"]):
                     if robot.check_sub_key(("end_cursor", "has_next_page"), follow_list_data["follows"]["page_info"]):
                         return follow_list_data["follows"]
@@ -185,16 +185,16 @@ def get_one_page_media_data(account_id, cursor):
         "X-CSRFToken": CSRF_TOKEN,
         "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
     }
-    media_data_return_code, media_data,  = tool.http_request(media_page_url, post_data, header_list)[:2]
+    media_data_return_code, media_data = tool.http_request(media_page_url, post_data, header_list)[:2]
     if media_data_return_code == 1:
         try:
             media_data = json.loads(media_data)
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("media", ), media_data):
+            if robot.check_sub_key(("media",), media_data):
                 if robot.check_sub_key(("page_info", "nodes"), media_data["media"]):
-                    if robot.check_sub_key(("has_next_page", "end_cursor", ), media_data["media"]["page_info"]):
+                    if robot.check_sub_key(("has_next_page", "end_cursor"), media_data["media"]["page_info"]):
                         return media_data["media"]
     return None
 
@@ -338,7 +338,7 @@ class Download(threading.Thread):
                     if not robot.check_sub_key(("is_video", "display_src", "date"), photo_info):
                         log.error(account_name + " 媒体信息解析异常")
                         break
-                    if photo_info["is_video"] and not robot.check_sub_key(("code", ), photo_info):
+                    if photo_info["is_video"] and not robot.check_sub_key(("code",), photo_info):
                         log.error(account_name + " 视频code解析异常")
                         break
 

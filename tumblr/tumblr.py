@@ -274,7 +274,7 @@ class Download(threading.Thread):
                     if IS_DOWNLOAD_VIDEO and og_type == "tumblr-feed:video":
                         video_list = get_video_list(account_id, post_id)
                         if video_list is None:
-                            log.error(account_id + " 第%s个视频 日志id：%s无法访问播放页" % (video_count, post_id))
+                            log.error(account_id + " 第%s个视频 信息页 %s 无法获取视频播放页" % (video_count, post_url))
                         else:
                             if len(video_list) > 0:
                                 for video_url, video_type in list(video_list):
@@ -295,7 +295,7 @@ class Download(threading.Thread):
                                     else:
                                         log.error(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                             else:
-                                log.error(account_id + " 第%s个视频 日志id：%s 中没有找到视频" % (video_count, post_id))
+                                log.error(account_id + " 第%s个视频 信息页 %s 中没有找到视频" % (video_count, post_url))
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE:

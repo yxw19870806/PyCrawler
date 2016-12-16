@@ -85,7 +85,7 @@ class ChangBa(robot.Robot):
         global NEW_SAVE_DATA_PATH
 
         sys_config = {
-             robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_DOWNLOAD_VIDEO: True,
         }
         robot.Robot.__init__(self, sys_config)
 

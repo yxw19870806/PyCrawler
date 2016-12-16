@@ -10,7 +10,6 @@ import win32api
 import win32con
 import win32gui
 
-
 windows_title = "Clicker Heroes"
 pos_x = 100
 pos_y = 370
@@ -23,6 +22,7 @@ def auto_upgrade():
     win32gui.SendMessage(handle, win32con.WM_ACTIVATE, win32con.WA_ACTIVE, 0)
     win32gui.SendMessage(handle, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, tmp)
     win32gui.SendMessage(handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
+
 
 if __name__ == "__main__":
     while True:

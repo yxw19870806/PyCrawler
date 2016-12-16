@@ -13,6 +13,7 @@ import time
 def set_system_time(year, month, day, hour, minute, second):
     win32api.SetSystemTime(year, month, datetime.date(year, month, day).weekday(), day, hour, minute, second, 0)
 
+
 if __name__ == "__main__":
     while True:
         set_system_time(2005, 1, 1, 0, 0, 0)
