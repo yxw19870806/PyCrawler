@@ -32,22 +32,37 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取csr_token和session_id并设置全局变量，后续需要设置header才能进行访问数据
-def set_token_and_session():
+# 获取csr_token并设置全局变量，后续需要设置header才能进行访问数据
+def set_csrf_token():
     global CSRF_TOKEN
-    global SESSION_ID
     index_url = "https://www.instagram.com/instagram"
     index_page_response = tool.http_request(index_url)
     if index_page_response[0] == 1:
         set_cookie_info = tool.get_response_info(index_page_response[2].info(), "Set-Cookie")
         if set_cookie_info is not None:
             csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
-            session_id = tool.find_sub_string(set_cookie_info, "sessionid=", ";")
-            if csrf_token and session_id:
+            if csrf_token:
                 CSRF_TOKEN = csrf_token
-                SESSION_ID = session_id
                 return True
     return False
+
+
+# 从cookie中获取登录的sessionid
+def set_session_id():
+    global SESSION_ID
+    from common import robot
+    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    # 操作系统&浏览器
+    browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
+    # cookie
+    is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+    if is_auto_get_cookie:
+        cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+    else:
+        cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
+    session_id = tool.get_cookie_value_from_browser("sessionid", cookie_path, browser_type, ("instagram.com",))
+    if session_id:
+        SESSION_ID = session_id
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
@@ -72,6 +87,12 @@ def get_account_id(account_name):
 # 获取指定账号的全部粉丝列表（需要cookies）
 # account_id -> 490060609
 def get_follow_by_list(account_id):
+    # 从cookies中获取session id的值
+    set_session_id()
+    # 从页面中获取csrf token的值
+    if CSRF_TOKEN is None:
+        set_csrf_token()
+
     cursor = None
     follow_by_list = []
     while True:
@@ -124,6 +145,12 @@ def get_one_page_follow_by_list(account_id, cursor=None):
 # 获取指定账号的全部关注列表（需要cookies）
 # account_id -> 490060609
 def get_follow_list(account_id):
+    # 从cookies中获取session id的值
+    set_session_id()
+    # 从页面中获取csrf token的值
+    if CSRF_TOKEN is None:
+        set_csrf_token()
+
     cursor = None
     follow_list = []
     while True:
@@ -183,7 +210,7 @@ def get_one_page_media_data(account_id, cursor):
     header_list = {
         "Referer": "https://www.instagram.com/",
         "X-CSRFToken": CSRF_TOKEN,
-        "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
+        "Cookie": "csrftoken=%s" % CSRF_TOKEN,
     }
     media_data_return_code, media_data = tool.http_request(media_page_url, post_data, header_list)[:2]
     if media_data_return_code == 1:
@@ -247,7 +274,7 @@ class Instagram(robot.Robot):
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
         ACCOUNTS = account_list.keys()
 
-        if not set_token_and_session():
+        if not set_csrf_token():
             log.error("token和session获取查找失败")
             tool.process_exit()
 
