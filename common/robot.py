@@ -376,7 +376,8 @@ def sort_save_data(save_data_path, sort_key_index=0):
 
 # 生成新存档的文件路径
 def get_new_save_file_path(old_save_file_path):
-    return os.path.join(os.path.dirname(old_save_file_path), time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path))
+    file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path)
+    return os.path.join(os.path.dirname(old_save_file_path), file_name)
 
 
 # 替换目录中的指定字符串

@@ -77,7 +77,7 @@ def get_one_page_photo_data(account_id, page_count):
     except ValueError:
         pass
     else:
-        if robot.check_sub_key(("data", ), page):
+        if robot.check_sub_key(("data",), page):
             if robot.check_sub_key(("total", "photo_list"), page["data"]):
                 return page["data"]
     return None
@@ -195,8 +195,8 @@ def get_video_url(video_play_url):
                     except ValueError:
                         pass
                     else:
-                        if robot.check_sub_key(("data", ), video_info_page):
-                            if robot.check_sub_key(("url", ), video_info_page["data"]):
+                        if robot.check_sub_key(("data",), video_info_page):
+                            if robot.check_sub_key(("url",), video_info_page["data"]):
                                 return 1, [random.choice(video_info_page["data"]["url"])]
             return -1, None
         return -2, None

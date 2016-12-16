@@ -133,7 +133,7 @@ def get_article_top_picture_url(article_page):
 # 根据文章页面，获取正文中的所有图片地址列表
 def get_article_image_url_list(article_page, article_type):
     if article_type == "t":
-        article_body = tool.find_sub_string(article_page, '<div class="WB_editor_iframe', '<div class="artical_add_box"')
+        article_body = tool.find_sub_string(article_page, '<div class="WB_editor_iframe', '<div class="artical_add_box')
     elif article_type == "p":
         article_body = tool.find_sub_string(article_page, '{"ns":"pl.content.longFeed.index"', "</script>")
         article_body = article_body.replace("\\", "")
@@ -157,9 +157,9 @@ class Article(robot.Robot):
             robot.SYS_SET_COOKIE: ("weibo.com", ".sina.com.cn"),
         }
         extra_config = {
-            "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data",),
-            "image_download_path": os.path.join(os.path.abspath(""), "photo\\article",),
-            "image_temp_path": os.path.join(os.path.abspath(""), "photo\\article\\tempImage",),
+            "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data"),
+            "image_download_path": os.path.join(os.path.abspath(""), "photo\\article"),
+            "image_temp_path": os.path.join(os.path.abspath(""), "photo\\article\\tempImage"),
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 

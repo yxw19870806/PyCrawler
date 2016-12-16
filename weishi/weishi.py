@@ -55,8 +55,8 @@ def get_video_url(video_vid, video_id):
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("data", ), video_info_page):
-                if robot.check_sub_key(("url", ), video_info_page["data"]):
+            if robot.check_sub_key(("data",), video_info_page):
+                if robot.check_sub_key(("url",), video_info_page["data"]):
                     return str(random.choice(video_info_page["data"]["url"]))
     return None
 

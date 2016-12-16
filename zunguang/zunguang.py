@@ -10,7 +10,6 @@ from common import log, robot, tool
 import json
 import os
 
-
 ERROR_PAGE_COUNT_CHECK = 10
 
 
@@ -19,24 +18,24 @@ def get_one_page_album_data(page_count):
     album_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
     album_return_code, album_data = tool.http_request(album_url, post_data, None, None, False)[:2]
-    if album_return_code == 1:
-        try:
-            album_data = json.loads(album_data)
-        except ValueError:
-            return -2, None  # JSON decode error
-        if robot.check_sub_key(("body",), album_data) and robot.check_sub_key(("blog",), album_data["body"]):
-            if not album_data["body"]["blog"]:
-                return 2, None  # 相册已被已被删除
-            blog_type = int(album_data["body"]["blog"][0]["type"])
-            if blog_type == 2:
-                return 3, None  # 歌曲类型的相册
-            elif blog_type == 3:
-                album_body = album_data["body"]["blog"][0]
-                if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
-                    return 1, album_body
-            else:
-                return 4, blog_type
-    return -1, None
+    if album_return_code != 1:
+        return -1, None
+    try:
+        album_data = json.loads(album_data)
+    except ValueError:
+        return -2, None  # JSON decode error
+    if robot.check_sub_key(("body",), album_data) and robot.check_sub_key(("blog",), album_data["body"]):
+        if not album_data["body"]["blog"]:
+            return 2, None  # 相册已被已被删除
+        blog_type = int(album_data["body"]["blog"][0]["type"])
+        if blog_type == 2:
+            return 3, None  # 歌曲类型的相册
+        elif blog_type == 3:
+            album_body = album_data["body"]["blog"][0]
+            if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
+                return 1, album_body
+        else:
+            return 4, blog_type
 
 
 class ZunGuang(robot.Robot):
@@ -89,7 +88,7 @@ class ZunGuang(robot.Robot):
                 break
             # 错误数量重置
             error_count = 0
-            
+
             # 下载目录标题
             title = ""
             if album_data["title"]:
