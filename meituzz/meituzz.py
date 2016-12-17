@@ -30,7 +30,10 @@ def get_image_url_list(album_page):
 # 根据页面内容获取视频下载地址
 def get_video_url(album_page):
     video_url = tool.find_sub_string(album_page, '<input type="hidden" id="VideoUrl" value="', '">')
-    return "http://t.xiutuzz.com%s" % video_url
+    if video_url[0] == "/":
+        return "http://t.xiutuzz.com%s" % video_url
+    else:
+        return video_url
 
 
 class MeiTuZZ(robot.Robot):
