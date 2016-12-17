@@ -90,7 +90,7 @@ def get_account_page_id(account_id):
         index_page = auto_redirect_visit(index_url)
         if index_page:
             account_page_id = tool.find_sub_string(index_page, "$CONFIG['page_id']='", "'")
-            if account_page_id:
+            if account_page_id and account_page_id.isdigit():
                 return account_page_id
         time.sleep(5)
     return None
