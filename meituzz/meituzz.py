@@ -80,7 +80,7 @@ class MeiTuZZ(robot.Robot):
                     album_id -= error_count - 1
                     break
                 else:
-                    log.error("第%s页相册已被删除" % album_id)
+                    log.step("第%s页相册已被删除" % album_id)
                     album_id += 1
                     continue
             # 错误数量重置
