@@ -1,5 +1,5 @@
 @echo off
-cd %~dp0\win64
+cd /D %~dp0\win64
 
 echo update pip
 C:\Python27\python.exe -m pip install --upgrade pip
