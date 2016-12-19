@@ -159,8 +159,11 @@ def get_image_url_list(cp_id, rp_id):
     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
     rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
     if rp_page_return_code == 1:
-        return re.findall("src='([^']*)'", rp_page_response)
-    return None
+        if rp_page_response.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
+            return -1, []
+        else:
+            return 1, re.findall("src='([^']*)'", rp_page_response)
+    return 0, []
 
 
 # 根据当前作品页面，获取作品页数上限
@@ -333,16 +336,22 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     # 获取正片页面内的所有图片地址列表
-                    image_url_list = get_image_url_list(cp_id, rp_id)
-                    if image_url_list is None:
+                    image_url_status, image_url_list = get_image_url_list(cp_id, rp_id)
+                    if image_url_status == 0:
                         log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
+                        continue
+                    elif image_url_status == -1:
+                        log.error(cn + " 正片：%s，已被管理员锁定，cp_id：%s" % (rp_id, cp_id))
                         continue
 
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
                         log.step(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
                             # 重新获取下正片页面内的所有图片地址列表
-                            image_url_list = get_image_url_list(cp_id, rp_id)
+                            image_url_status, image_url_list = get_image_url_list(cp_id, rp_id)
+                            if image_url_status == 0:
+                                log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
+                                continue
 
                     if len(image_url_list) == 0:
                         log.error(cn + " 正片：%s没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品，cp_id：%s" % (rp_id, cp_id))
