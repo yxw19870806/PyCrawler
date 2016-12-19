@@ -22,6 +22,8 @@ GET_PAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
+NOT_LOGIN_CAN_RUN = False
+SAVE_ACCOUNT_INFO = True
 
 
 # 从控制台输入获取账号信息
@@ -43,12 +45,12 @@ def get_account_info_from_console():
 # 从文件中获取账号信息
 def get_account_info_from_file():
     if not os.path.exists("account.data"):
-        return False
+        return None, None
     file_handle = open("account.data", "r")
     account_info = file_handle.read()
     file_handle.close()
     try:
-        account_info = json.loads(base64.b64decode(account_info))
+        account_info = json.loads(base64.b64decode(account_info[1:]))
     except TypeError:
         account_info = {}
     except ValueError:
@@ -58,25 +60,48 @@ def get_account_info_from_file():
     return None, None
 
 
+# 保存账号信息到到文件中
+def set_account_info_to_file(email, password):
+    account_info = base64.b64encode(tool.generate_random_string(1) + json.dumps({"email": email, "password": password}))
+    file_handle = open("account.data", "w")
+    file_handle.write(account_info)
+    file_handle.close()
+
+
 # 模拟登录
+# from_where    1：从文件中读取
+#               2：控制台输入
 def login(from_where):
     if from_where == 1:
-        email, password = get_account_info_from_file
+        email, password = get_account_info_from_file()
+        if email is None or password is None:
+            return False
     else:
-        email, password = get_account_info_from_console()
-        account_info = base64.b64encode(json.dumps({"email": email, "password": password}))
-        file_handle = open("account.data", "w")
-        file_handle.write(account_info)
-        file_handle.close()
+         email, password = get_account_info_from_console()
 
     cookie = cookielib.CookieJar()
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
-    login_return_code = tool.http_request(login_url, login_post, cookie)[0]
-    if login_return_code == 1:
+    login_response = tool.http_request(login_url, login_post, cookie)
+    if login_response[0] == 1 and login_response[2].geturl() == "http://bcy.net/home/user/index":
+        if from_where == 2 and SAVE_ACCOUNT_INFO:
+            set_account_info_to_file(email, password)
         return True
     else:
         return False
+
+
+# 检测登录状态
+def check_login():
+    home_page_url = "http://bcy.net/home/user/index"
+    home_page_return = tool.http_request(home_page_url)
+    if home_page_return[0] == 1:
+        real_url = home_page_return[2].geturl()
+        if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
+            return False
+        else:
+            return True
+    return False
 
 
 # 关注指定账号
@@ -100,23 +125,6 @@ def unfollow(account_id):
         if int(unfollow_return_data) == 1:
             return True
     return False
-
-
-# 检测登录状态
-def check_login():
-    home_page_url = "http://bcy.net/home/user/index"
-    home_page_return = tool.http_request(home_page_url)
-    if home_page_return[0] == 1:
-        real_url = home_page_return[2].geturl()
-        if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
-            is_check_ok = False
-            while not is_check_ok:
-                input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否继续下一步操作？ (Y)es or (N)o: ")
-                input_str = input_str.lower()
-                if input_str in ["y", "yes"]:
-                    is_check_ok = True
-                elif input_str in ["n", "no"]:
-                    tool.process_exit()
 
 
 # 获取一页的作品信息
@@ -187,7 +195,22 @@ class Bcy(robot.Robot):
 
         # 检测登录状态
         # 未登录时提示可能无法获取粉丝指定的作品
-        check_login()
+        if not check_login():
+            # 尝试从文件中获取账号信息
+            if not login(1) and not NOT_LOGIN_CAN_RUN:
+                while True:
+                    input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否手动输入账号密码登录(Y)es？ 或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
+                    input_str = input_str.lower()
+                    if input_str in ["y", "yes"]:
+                        if not login(2):
+                            log.step("登录失败！")
+                        else:
+                            break
+                    elif input_str in ["e", "exit"]:
+                        tool.process_exit()
+                    elif input_str in ["c", "continue"]:
+                        break
+
 
         # 解析存档文件
         # account_id  last_rp_id
