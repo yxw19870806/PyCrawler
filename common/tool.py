@@ -20,7 +20,7 @@ import traceback
 import urllib
 import urllib2
 import zipfile
-
+import win32crypt
 
 # 初始化操作
 if sys.version_info < (2, 7, 12):
@@ -246,10 +246,6 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
             except:
                 pass
     elif browser_type == 3:
-        try:
-            import win32crypt
-        except ImportError:
-            return False
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
@@ -311,10 +307,6 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
             if cookie_info[4] == cookie_key:
                 return cookie_info[5]
     elif browser_type == 3:
-        try:
-            import win32crypt
-        except:
-            return None
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
