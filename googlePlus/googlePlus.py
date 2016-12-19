@@ -190,10 +190,10 @@ class Download(threading.Thread):
                     album_id = get_picasaweb_page_album_id(account_id, picasaweb_url)
                     if album_id is None:
                         log.error(account_name + " 第%s张图片，无法访问picasaweb页 %s" % (image_count, picasaweb_url))
-                        continue
+                        tool.process_exit()
                     if not album_id:
                         log.error(account_name + " 第%s张图片，picasaweb页 %s 获取album id失败" % (image_count, picasaweb_url))
-                        continue
+                        tool.process_exit()
                     log.trace(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
 
                     # 检查是否已下载到前一次的图片
@@ -214,10 +214,10 @@ class Download(threading.Thread):
                     image_url_list = get_image_url_list(account_id, album_id)
                     if image_url_list is None:
                         log.error(account_name + " 第%s张图片，无法访问album id：%s 的相册存档页" % (image_count, album_id))
-                        continue
+                        tool.process_exit()
                     if len(image_url_list) == 0:
                         log.error(account_name + " 第%s张图片，album id：%s 的相册存档页没有解析到图片" % (image_count, album_id))
-                        continue
+                        tool.process_exit()
 
                     log.trace(account_name + " album id：%s 的相册存档页获取的所有图片：%s" % (album_id, image_url_list))
                     for image_url in list(image_url_list):
