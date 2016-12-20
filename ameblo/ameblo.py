@@ -23,41 +23,49 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取指定页数的日志信息
-def get_blog_page_data(account_name, page_count):
-    blog_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    blog_return_code, blog_page, info = tool.http_request(blog_url)
-    if blog_return_code == 1:
-        return blog_page
+# 获取指定页数的日志页面
+def get_blog_page(account_name, page_count):
+    page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
+    page_return_code, page_data = tool.http_request(page_url)[:2]
+    if page_return_code == 1:
+        return page_data
     return None
 
 
-# 解析日志发布时间
-def get_blog_time(blog_page):
-    blog_time_info = tool.find_sub_string(blog_page, '<span class="articleTime">', "</span>")
-    if blog_time_info:
-        blog_time_string = tool.find_sub_string(blog_page, 'pubdate="pubdate">', "</time>").strip()
-    else:
-        blog_time_string = tool.find_sub_string(blog_page, '<span class="date">', "</span>").strip()
-    if blog_time_string:
-        blog_timestamp = time.strptime(blog_time_string, "%Y-%m-%d %H:%M:%S")
-        # 显示时间对应的时间戳，服务器的时区（日本），不对本地时间做转换
-        return int(time.mktime(blog_timestamp))
+# 根绝日志页面，获取日志总页数
+def get_max_page_count(page_data):
+    paging_data = tool.find_sub_string(page_data, '<div class="page topPaging">', "</div>")
+    if paging_data:
+        last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
+        if len(last_page) == 1:
+            return int(last_page[0])
+        page_count_find = re.findall('<a [^>]*?>(\d*)</a>', paging_data)
+        if len(page_count_find) > 0:
+            print page_count_find
+            page_count_find = map(int, page_count_find)
+            return max(page_count_find)
     return None
+
+
+# 获取页面内容获取全部的日志id列表
+def get_blog_id_list(page_data):
+    return re.findall('data-unique-entry-id="([\d]*)"', page_data)
 
 
 # 从日志列表中获取全部的图片，并过滤掉表情
-def get_image_url_list(blog_page):
-    article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
-    if not article_data:
+def get_image_url_list(account_name, blog_id):
+    blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
+    blog_return_code, blog_page = tool.http_request(blog_url)[:2]
+    if blog_return_code == 1:
         article_data = tool.find_sub_string(blog_page, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
-    image_url_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', article_data)
-    image_url_list = []
-    for image_url in image_url_list_find:
-        # 过滤表情
-        if image_url.find(".ameba.jp/blog/ucs/") == -1:
-            image_url_list.append(image_url)
-    return image_url_list
+        image_url_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', article_data)
+        image_url_list = []
+        for image_url in image_url_list_find:
+            # 过滤表情
+            if image_url.find(".ameba.jp/blog/ucs/") == -1:
+                image_url_list.append(image_url)
+        return image_url_list
+    return None
 
 
 class Ameblo(robot.Robot):
@@ -153,64 +161,79 @@ class Download(threading.Thread):
 
             image_count = 1
             page_count = 1
-            first_blog_time = "0"
+            first_blog_id = "0"
             is_over = False
             need_make_image_dir = True
             while not is_over:
-                # 获取一页日志
-                blog_data = get_blog_page_data(account_name, page_count)
-                if blog_data is None:
+                log.step(account_name + " 开始解析第%s页日志" % page_count)
+
+                # 获取一页日志页面
+                page_data = get_blog_page(account_name, page_count)
+                if page_data is None:
                     log.error(account_name + " 第%s页日志无法获取" % page_count)
                     tool.process_exit()
 
-                # 解析日志发布时间
-                blog_time = get_blog_time(blog_data)
-                if blog_time is None:
-                    log.error(account_name + " 第%s页解析日志时间失败" % page_count)
-                    tool.process_exit()
+                # 获取一页所有日志id列表
+                blog_id_list = get_blog_id_list(page_data)
 
-                # 检查是否是上一次的最后blog
-                if blog_time <= int(self.account_info[2]):
-                    break
+                for blog_id in list(blog_id_list):
+                    # 检查是否是上一次的最后blog
+                    if int(blog_id) <= int(self.account_info[2]):
+                        break
 
-                # 将第一个日志的时间做为新的存档记录
-                if first_blog_time == "0":
-                    first_blog_time = str(blog_time)
+                    # 将第一个日志的时间做为新的存档记录
+                    if first_blog_id == "0":
+                        first_blog_id = str(blog_id)
 
-                # 从日志列表中获取全部的图片
-                image_url_list = get_image_url_list(blog_data)
-                for image_url in image_url_list:
-                    # 使用默认图片的分辨率
-                    image_url = image_url.split("?")[0]
-                    # 过滤表情
-                    if image_url.find("http://emoji.ameba.jp") >= 0:
-                        continue
-                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                    log.trace(account_name + " 开始解析日志%s" % blog_id)
 
-                    # 第一张图片，创建目录
-                    if need_make_image_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_image_dir = False
+                    # 从日志页面中获取全部的图片地址列表
+                    image_url_list = get_image_url_list(account_name, blog_id)
+                    if image_url_list is None:
+                        log.error(account_name + " 日志%s无法获取" % blog_id)
+                        tool.process_exit()
 
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                    if tool.save_net_file(image_url, file_path):
-                        log.step(account_name + " 第%s张图片下载成功" % image_count)
-                        image_count += 1
-                    else:
-                        log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
+                    for image_url in list(image_url_list):
+                        # 使用默认图片的分辨率
+                        image_url = image_url.split("?")[0]
+                        # 过滤表情
+                        if image_url.find("http://emoji.ameba.jp") >= 0:
+                            continue
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                # 达到配置文件中的下载数量，结束
-                if 0 < GET_IMAGE_COUNT < image_count:
-                    is_over = True
+                        # 第一张图片，创建目录
+                        if need_make_image_dir:
+                            if not tool.make_dir(image_path, 0):
+                                log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                tool.process_exit()
+                            need_make_image_dir = False
+
+                        file_type = image_url.split(".")[-1]
+                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                        if tool.save_net_file(image_url, file_path):
+                            log.step(account_name + " 第%s张图片下载成功" % image_count)
+                            image_count += 1
+                        else:
+                            log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_IMAGE_COUNT < image_count:
+                        is_over = True
+                        break
 
                 if not is_over:
                     if 0 < GET_PAGE_COUNT < page_count:
                         is_over = True
                     else:
-                        page_count += 1
+                        # 获取总页数
+                        max_page_count = get_max_page_count(page_data)
+                        if max_page_count is None:
+                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                            tool.process_exit()
+                        if page_count >= max_page_count:
+                            is_over = True
+                        else:
+                            page_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
@@ -224,9 +247,9 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_blog_time != "0":
+            if first_blog_id != "0":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = first_blog_time
+                self.account_info[2] = first_blog_id
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
