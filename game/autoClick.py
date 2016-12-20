@@ -13,4 +13,4 @@ import clickerHeroesAutoClick
 if __name__ == "__main__":
     while True:
         clickerHeroesAutoClick.auto_click(865, 410)
-        time.sleep(0.1)
+        time.sleep(0.05)
