@@ -41,7 +41,6 @@ def get_max_page_count(page_data):
             return int(last_page[0])
         page_count_find = re.findall('<a [^>]*?>(\d*)</a>', paging_data)
         if len(page_count_find) > 0:
-            print page_count_find
             page_count_find = map(int, page_count_find)
             return max(page_count_find)
     return None
@@ -66,6 +65,30 @@ def get_image_url_list(account_name, blog_id):
                 image_url_list.append(image_url)
         return image_url_list
     return None
+
+
+# 获取原始图片下载地址
+# http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
+# ->
+# http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/o0800060011286009555.jpg
+def get_origin_image_url(image_url):
+    if image_url.find("http://stat.ameba.jp/user_images") == 0:
+        # 最新的image_url使用?caw=指定显示分辨率，去除
+        # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
+        image_url = image_url.split("?")[0]
+        temp_list = image_url.split("/")
+        image_name = temp_list[-1]
+        if image_name[0] != "o":
+            if image_name[0] == "t" and image_name.find("_") > 0:
+                temp_list[-1] = "o" + image_name.split("_", 1)[1]
+                image_url = "/".join(temp_list)
+            else:
+                # todo 检测包含其他格式
+                log.error("无法解析的图片地址 %s" % image_url)
+    else:
+        # todo 检测是否包含第三方图片
+        log.error("第三方图片地址 %s" % image_url)
+    return image_url
 
 
 class Ameblo(robot.Robot):
@@ -194,8 +217,8 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                     for image_url in list(image_url_list):
-                        # 使用默认图片的分辨率
-                        image_url = image_url.split("?")[0]
+                        # 获取原始图片下载地址
+                        image_url = get_origin_image_url(image_url)
                         # 过滤表情
                         if image_url.find("http://emoji.ameba.jp") >= 0:
                             continue
