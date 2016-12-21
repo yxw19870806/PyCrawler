@@ -192,6 +192,7 @@ class Download(threading.Thread):
             image_count = 1
             page_count = 1
             first_blog_id = "0"
+            unique_list = []
             is_over = False
             need_make_image_dir = True
             while not is_over:
@@ -214,6 +215,12 @@ class Download(threading.Thread):
                     # 将第一个日志的时间做为新的存档记录
                     if first_blog_id == "0":
                         first_blog_id = str(blog_id)
+
+                    # 新增日志导致的重复判断
+                    if blog_id in unique_list:
+                        continue
+                    else:
+                        unique_list.append(blog_id)
 
                     log.trace(account_name + " 开始解析日志%s" % blog_id)
 
