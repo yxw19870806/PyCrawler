@@ -72,7 +72,14 @@ def get_image_url_list(account_name, blog_id):
 # ->
 # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/o0800060011286009555.jpg
 def get_origin_image_url(image_url):
-    if image_url.find("http://stat.ameba.jp/user_images") == 0:
+    # 过滤表情
+    if image_url.find("http://emoji.ameba.jp") == 0:
+        return ""
+    # 图片上传时的异常本地文件路径
+    elif image_url.find("file:///") == 0:
+        return ""
+    # ameba上传图片
+    elif image_url.find("http://stat.ameba.jp/user_images") == 0:
         # 最新的image_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
         image_url = image_url.split("?")[0]
@@ -219,8 +226,8 @@ class Download(threading.Thread):
                     for image_url in list(image_url_list):
                         # 获取原始图片下载地址
                         image_url = get_origin_image_url(image_url)
-                        # 过滤表情
-                        if image_url.find("http://emoji.ameba.jp") >= 0:
+                        # 无效的图片，跳过
+                        if image_url == "":
                             continue
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
