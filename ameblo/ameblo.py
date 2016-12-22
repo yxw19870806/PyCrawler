@@ -71,12 +71,18 @@ def get_image_url_list(account_name, blog_id):
 # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
 # ->
 # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/o0800060011286009555.jpg
+# http://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
+# ->
+# http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_image_url(image_url):
     # 过滤表情
-    if image_url.find("http://emoji.ameba.jp") == 0:
+    if image_url.find("http://emoji.ameba.jp") == 0 or image_url.find("http://i.yimg.jp/images/mail/emoji") == 0:
         return ""
     # 图片上传时的异常本地文件路径
     elif image_url.find("file:///") == 0:
+        return ""
+    # 无效的地址
+    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0:
         return ""
     # ameba上传图片
     elif image_url.find("http://stat.ameba.jp/user_images") == 0:
@@ -86,8 +92,13 @@ def get_origin_image_url(image_url):
         temp_list = image_url.split("/")
         image_name = temp_list[-1]
         if image_name[0] != "o":
+            # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
             if image_name[0] == "t" and image_name.find("_") > 0:
                 temp_list[-1] = "o" + image_name.split("_", 1)[1]
+                image_url = "/".join(temp_list)
+            # http://stat.ameba.jp/user_images/4b/90/10112135346_s.jpg
+            elif image_name.split(".")[0][-2:] == "_s":
+                temp_list[-1] = image_name.replace("_s", "")
                 image_url = "/".join(temp_list)
             else:
                 # todo 检测包含其他格式
