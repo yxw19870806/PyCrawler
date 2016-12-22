@@ -76,13 +76,14 @@ def get_image_url_list(account_name, blog_id):
 # http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_image_url(image_url):
     # 过滤表情
-    if image_url.find("http://emoji.ameba.jp") == 0 or image_url.find("http://i.yimg.jp/images/mail/emoji") == 0:
+    if image_url.find("http://emoji.ameba.jp") == 0 or image_url.find("http://i.yimg.jp/images/mail/emoji") == 0 or \
+            image_url.find("http://blog.ameba.jp/ucs/img/char") == 0:
         return ""
     # 图片上传时的异常本地文件路径
     elif image_url.find("file:///") == 0:
         return ""
     # 无效的地址
-    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0:
+    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url[-9:] == "clear.gif":
         return ""
     # ameba上传图片
     elif image_url.find("http://stat.ameba.jp/user_images") == 0:
