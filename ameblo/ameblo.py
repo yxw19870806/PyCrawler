@@ -277,7 +277,7 @@ class Download(threading.Thread):
                         # 获取总页数
                         max_page_count = get_max_page_count(page_data)
                         if max_page_count is None:
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                            log.error(account_name + " 获取总页数失败")
                             tool.process_exit()
                         if page_count >= max_page_count:
                             is_over = True
