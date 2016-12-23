@@ -65,7 +65,9 @@ def get_image_url_list(account_name, blog_id):
     blog_return_code, blog_page = tool.http_request(blog_url)[:2]
     if blog_return_code == 1:
         article_data = tool.find_sub_string(blog_page, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
-        image_url_list_find = re.findall('<img [\S|\s]*?src="([^"]*)" [\S|\s]*?>', article_data)
+        if not article_data:
+            article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
+        image_url_list_find = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
         image_url_list = []
         for image_url in image_url_list_find:
             # 过滤表情
@@ -86,9 +88,6 @@ def get_origin_image_url(image_url):
     # 过滤表情
     if image_url.find("http://emoji.ameba.jp") == 0 or image_url.find("http://i.yimg.jp/images/mail/emoji") == 0 or \
             image_url.find("http://blog.ameba.jp/ucs/img/char") == 0:
-        return ""
-    # 图片上传时的异常本地文件路径
-    elif image_url.find("file:///") == 0:
         return ""
     # 无效的地址
     elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url[-9:] == "clear.gif":
