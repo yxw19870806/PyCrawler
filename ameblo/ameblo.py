@@ -33,17 +33,25 @@ def get_blog_page(account_name, page_count):
 
 
 # 根绝日志页面，获取日志总页数
-def get_max_page_count(page_data):
-    paging_data = tool.find_sub_string(page_data, '<div class="page topPaging">', "</div>")
-    if paging_data:
+def is_max_page_count(page_data, page_count):
+    # 有页数选择的页面样式
+    if page_data.find('<div class="page topPaging">') >= 0:
+        paging_data = tool.find_sub_string(page_data, '<div class="page topPaging">', "</div>")
         last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
         if len(last_page) == 1:
-            return int(last_page[0])
+            return int(last_page[0]) >= page_count
         page_count_find = re.findall('<a [^>]*?>(\d*)</a>', paging_data)
         if len(page_count_find) > 0:
             page_count_find = map(int, page_count_find)
-            return max(page_count_find)
-    return None
+            return max(page_count_find) >= page_count
+        return False
+    # 只有下一页和上一页按钮的样式
+    elif page_data.find('<a class="skinSimpleBtn pagingNext"') >= 0:
+        if page_data.find('<a class="skinSimpleBtn pagingNext"') >= 0:
+            return False
+        else:
+            return True
+    return False
 
 
 # 获取页面内容获取全部的日志id列表
@@ -275,11 +283,7 @@ class Download(threading.Thread):
                         is_over = True
                     else:
                         # 获取总页数
-                        max_page_count = get_max_page_count(page_data)
-                        if max_page_count is None:
-                            log.error(account_name + " 获取总页数失败")
-                            tool.process_exit()
-                        if page_count >= max_page_count:
+                        if is_max_page_count(page_data, page_count):
                             is_over = True
                         else:
                             page_count += 1
