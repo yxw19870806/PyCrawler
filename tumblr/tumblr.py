@@ -47,7 +47,8 @@ def filter_post_url(post_url_list):
         post_id = temp[0]
         if post_id not in new_post_url_list:
             new_post_url_list[post_id] = []
-        if len(temp) == 2:
+        # photoset_iframe 开头的地址，是相册的播放页，无效的
+        if post_url.find("photoset_iframe/") == -1 and len(temp) == 2:
             new_post_url_list[post_id].append(temp[1])
 
     # 去重排序
@@ -236,7 +237,7 @@ class Download(threading.Thread):
                 log.step(account_id + " 相册第%s页获取到%s页信息页" % (page_count, len(post_url_list_group_by_post_id)))
                 for post_id in sorted(post_url_list_group_by_post_id.keys(), reverse=True):
                     # 检查信息页id是否小于上次的记录
-                    if post_id <= self.account_info[3]:
+                    if int(post_id) <= int(self.account_info[3]):
                         is_over = True
                         break
 
@@ -246,6 +247,7 @@ class Download(threading.Thread):
 
                     # 获取信息页并截取head标签内的内容
                     post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
+                    log.trace(account_id + " 开始解析日志：%s" % post_url)
                     post_page_head = get_post_page_head(post_url, post_url_list_group_by_post_id[post_id])
                     if post_page_head is None:
                         log.error(account_id + " 无法访问信息页 %s" % post_url)
