@@ -76,7 +76,7 @@ def get_post_page_head(post_url, postfix_list):
 
 
 # 根据日志id获取页面中的全部视频信息（视频地址、视频）
-def get_video_list(account_id, post_id):
+def get_video_info_list(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_page_return_code, video_page = tool.http_request(video_play_url)[:2]
     if video_page_return_code == 1:
@@ -247,7 +247,7 @@ class Download(threading.Thread):
 
                     # 获取信息页并截取head标签内的内容
                     post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-                    log.trace(account_id + " 开始解析日志：%s" % post_url)
+                    log.step(account_id + " 开始解析日志：%s" % post_url)
                     post_page_head = get_post_page_head(post_url, post_url_list_group_by_post_id[post_id])
                     if post_page_head is None:
                         log.error(account_id + " 无法访问信息页 %s" % post_url)
@@ -274,12 +274,16 @@ class Download(threading.Thread):
 
                     # 视频下载
                     if IS_DOWNLOAD_VIDEO and og_type == "tumblr-feed:video":
-                        video_list = get_video_list(account_id, post_id)
+                        video_list = get_video_info_list(account_id, post_id)
                         if video_list is None:
                             log.error(account_id + " 第%s个视频 信息页 %s 无法获取视频播放页" % (video_count, post_url))
                         else:
                             if len(video_list) > 0:
                                 for video_url, video_type in list(video_list):
+                                    # 去除视频指定分辨率
+                                    temp_list = video_url.split("/")
+                                    if temp_list[-1].isdigit():
+                                        video_url = "/".join(temp_list[:-1])
                                     log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                                     # 第一个视频，创建目录
