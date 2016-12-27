@@ -241,7 +241,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(blog_id)
 
-                    log.trace(account_name + " 开始解析日志%s" % blog_id)
+                    log.step(account_name + " 开始解析日志：%s" % blog_id)
 
                     # 从日志页面中获取全部的图片地址列表
                     image_url_list = get_image_url_list(account_name, blog_id)
