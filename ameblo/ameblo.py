@@ -87,7 +87,7 @@ def get_image_url_list(account_name, blog_id):
 def get_origin_image_url(image_url):
     # 过滤表情
     if image_url.find("http://emoji.ameba.jp") == 0 or image_url.find("http://i.yimg.jp/images/mail/emoji") == 0 or \
-            image_url.find("http://blog.ameba.jp/ucs/img/char") == 0:
+            image_url.find("http://blog.ameba.jp/ucs/img/char") == 0 or image_url.find("https://mail.google.com/mail/e") == 0:
         return ""
     # 无效的地址
     elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url[-9:] == "clear.gif":
