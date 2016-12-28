@@ -19,6 +19,7 @@ import threading
 import traceback
 import urllib
 import urllib2
+import urllib3
 import zipfile
 import win32crypt
 
@@ -29,6 +30,8 @@ elif sys.version_info >= (3,):
     raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_REQUEST_RETRY_COUNT = 100
+urllib3.disable_warnings()
+HTTP_CONNECTION_POOL = None
 thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
@@ -686,3 +689,101 @@ def shutdown(delay_time=30):
         os.system("shutdown -s -f -t " + str(delay_time))
     else:
         os.system("halt")
+
+
+# 初始化urllib3的连接池
+def init_http_connection_pool():
+    global HTTP_CONNECTION_POOL
+    HTTP_CONNECTION_POOL = urllib3.PoolManager()
+
+
+# 设置代理，初始化带有代理的urllib3的连接池
+def set_proxy2(ip, port):
+    global HTTP_CONNECTION_POOL
+    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port))
+    print_msg("设置代理成功")
+
+
+# http请求(urlib3)
+# header_list   http header信息，e.g. {"Host":“www.example.com"}
+# is_random_ip  是否使用伪造IP
+# return        -1：无法访问；-100：URL格式不正确；其他>0：网页返回码（正常返回码为200）
+def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
+    if not (url.find("http://") == 0 or url.find("https://") == 0):
+        return None
+    if HTTP_CONNECTION_POOL is None:
+        raise Exception("not init urllib3.PoolManager")
+
+    retry_count = 0
+    while True:
+        while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
+            time.sleep(10)
+        if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
+            process_exit(0)
+
+        if header_list is None:
+            header_list = {}
+
+        # 设置User-Agent
+        header_list["User-Agent"] = random_user_agent()
+
+        # 设置一个随机IP
+        if is_random_ip:
+            random_ip = random_ip_address()
+            header_list["X-Forwarded-For"] = random_ip
+            header_list["x-Real-Ip"] = random_ip
+
+        try:
+            if post_data:
+                response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list,
+                                                        timeout=HTTP_CONNECTION_TIMEOUT)
+            else:
+                response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list, timeout=HTTP_CONNECTION_TIMEOUT)
+            return response
+        except urllib3.exceptions.MaxRetryError:
+            pass
+        except Exception, e:
+            print_msg(url)
+            print_msg(str(e))
+            traceback.print_exc()
+
+        retry_count += 1
+        if retry_count >= HTTP_REQUEST_RETRY_COUNT:
+            print_msg("无法访问页面：" + url)
+            return None
+
+
+# 保存网络文件
+# file_url 文件所在网址
+# file_path 文件所在本地路径，包括路径和文件名
+# need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
+def save_net_file2(file_url, file_path, need_content_type=False):
+    file_path = change_path_encoding(file_path)
+    for i in range(0, 5):
+        response = http_request2(file_url)
+        if response.status == 200:
+            # response中的Content-Type作为文件后缀名
+            if need_content_type:
+                content_type = get_response_info(response, "Content-Type")
+                if content_type:
+                    file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
+            # 下载
+            file_handle = open(file_path, "wb")
+            file_handle.write(response.data)
+            file_handle.close()
+            # 判断文件下载后的大小和response中的Content-Length是否一致
+            content_length = get_response_info(response, "Content-Length")
+            file_size = os.path.getsize(file_path)
+            if (content_length is None) or (int(content_length) == file_size):
+                return True
+            else:
+                print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
+    return False
+
+
+# 获取请求response中的指定信息(urlib3)
+def get_response_info2(response, key):
+    if isinstance(response, urllib3.HTTPResponse):
+        if key in response.headers:
+            return response.headers[key]
+    return None
