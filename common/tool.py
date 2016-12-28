@@ -480,7 +480,7 @@ def save_net_file(file_url, file_path, need_content_type=False):
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = get_response_info(page_response.info(), "Content-Type")
-                if content_type:
+                if content_type and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
             file_handle = open(file_path, "wb")
@@ -765,7 +765,7 @@ def save_net_file2(file_url, file_path, need_content_type=False):
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = get_response_info(response, "Content-Type")
-                if content_type:
+                if content_type and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
             file_handle = open(file_path, "wb")
