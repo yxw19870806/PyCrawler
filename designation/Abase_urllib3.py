@@ -18,9 +18,9 @@ TOTAL_IMAGE_COUNT = 0
 # 获取一页页面内容
 def get_one_page_data(page_count):
     index_url = "http://www.abase.me/movies.php?page=%s" % page_count
-    response = tool.http_request2(index_url)
-    if response.status == 200:
-        return response.data
+    index_page_response = tool.http_request2(index_url)
+    if index_page_response.status == 200:
+        return index_page_response.data
     return None
 
 

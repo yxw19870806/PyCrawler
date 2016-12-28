@@ -25,10 +25,10 @@ IS_SORT = True
 
 # 获取指定页数的日志页面
 def get_blog_page(account_name, page_count):
-    page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    response = tool.http_request2(page_url)
-    if response.status == 200:
-        return response.data
+    index_page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
+    index_page_response = tool.http_request2(index_page_url)
+    if index_page_response.status == 200:
+        return index_page_response.data
     return None
 
 
@@ -62,9 +62,9 @@ def get_blog_id_list(page_data):
 # 从日志列表中获取全部的图片，并过滤掉表情
 def get_image_url_list(account_name, blog_id):
     blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    response = tool.http_request2(blog_url)
-    if response.status == 200:
-        blog_page = response.data
+    blog_page_response = tool.http_request2(blog_url)
+    if blog_page_response.status == 200:
+        blog_page = blog_page_response.data
         article_data = tool.find_sub_string(blog_page, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
         if not article_data:
             article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
