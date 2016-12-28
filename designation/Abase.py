@@ -65,7 +65,6 @@ class ABase(robot.Robot):
 
     def main(self):
         page_count = 1
-        image_count = 0
         main_thread_count = threading.activeCount()
         # 多线程下载类型
         # 1 同时开始N个下载线程
