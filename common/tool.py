@@ -710,7 +710,7 @@ def set_proxy2(ip, port):
 # return        -1：无法访问；-100：URL格式不正确；其他>0：网页返回码（正常返回码为200）
 def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
-        return None
+        return ErrorResponse(-100)
     if HTTP_CONNECTION_POOL is None:
         raise Exception("not init urllib3.PoolManager")
 
@@ -740,8 +740,12 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
             else:
                 response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list, timeout=HTTP_CONNECTION_TIMEOUT)
             return response
-        except urllib3.exceptions.MaxRetryError:
-            pass
+        except urllib3.exceptions.MaxRetryError, e:
+            if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
+                return ErrorResponse(-1)
+            else:
+                print_msg(url)
+                print_msg(str(e))
         except Exception, e:
             print_msg(url)
             print_msg(str(e))
@@ -750,7 +754,14 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
         retry_count += 1
         if retry_count >= HTTP_REQUEST_RETRY_COUNT:
             print_msg("无法访问页面：" + url)
-            return None
+            return ErrorResponse(0)
+
+
+# 错误response的对象
+class ErrorResponse(object):
+    def __init__(self, status=-1):
+        self.status = status
+        self.data = None
 
 
 # 保存网络文件
