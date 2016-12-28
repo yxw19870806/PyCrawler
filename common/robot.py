@@ -193,6 +193,11 @@ class Robot(object):
             proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
             proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
             tool.set_proxy(proxy_ip, proxy_port)
+            # 使用代理的线程池
+            tool.set_proxy2(proxy_ip, proxy_port)
+        else:
+            # 初始化urllib3的线程池
+            tool.init_http_connection_pool()
 
         # cookies
         if sys_set_cookie:
