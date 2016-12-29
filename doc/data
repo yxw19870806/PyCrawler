@@ -127,14 +127,11 @@ binascii.b2a_hex(str) 16进制转为字符串
 windows下常用二进制python extension package文件
 c:\python27\Scripts\pip.exe install XXX.whl
 
-19.package
-pywin32	https://sourceforge.net/projects/pywin32/files/pywin32/
-
-20 list内元素 强制转化为str
+19.list内元素 强制转化为str
 a = [1, 2, 3, 4, 5, "6", "a"]
 map(str, a)
 
-21.模拟鼠标点击屏幕任意坐标
+20.模拟鼠标点击屏幕任意坐标
 #第一种
 def click1(x,y):
     win32api.SetCursorPos((x,y))
