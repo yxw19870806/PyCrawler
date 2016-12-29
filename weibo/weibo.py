@@ -434,14 +434,15 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
+                    # 将第一张图片的上传时间做为新的存档记录
+                    if first_image_time == "0":
+                        first_image_time = str(image_info["timestamp"])
+
                     # 新增图片导致的重复判断
                     if image_info["pic_name"] in unique_list:
                         continue
                     else:
                         unique_list.append(image_info["pic_name"])
-                    # 将第一张图片的上传时间做为新的存档记录
-                    if first_image_time == "0":
-                        first_image_time = str(image_info["timestamp"])
 
                     image_url = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))

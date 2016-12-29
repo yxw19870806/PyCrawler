@@ -173,14 +173,15 @@ class Download(threading.Thread):
                             is_over = True
                             break
 
+                        # 将第一首歌曲id做为新的存档记录
+                        if first_audio_id == "0":
+                            first_audio_id = str(audio_id)
+
                         # 新增歌曲导致的重复判断
                         if audio_id in unique_list:
                             continue
                         else:
                             unique_list.append(audio_id)
-                        # 将第一首歌曲id做为新的存档记录
-                        if first_audio_id == "0":
-                            first_audio_id = str(audio_id)
 
                         # 获取歌曲的下载地址
                         audio_url = get_audio_url(audio_id, audio_type_to_index[audio_type])

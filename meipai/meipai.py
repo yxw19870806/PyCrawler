@@ -184,14 +184,15 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
+                    # 将第一张图片的上传时间做为新的存档记录
+                    if first_video_id == "0":
+                        first_video_id = video_id
+
                     # 新增视频导致的重复判断
                     if video_id in unique_list:
                         continue
                     else:
                         unique_list.append(video_id)
-                    # 将第一张图片的上传时间做为新的存档记录
-                    if first_video_id == "0":
-                        first_video_id = video_id
 
                     video_url = str(media["video"])
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))

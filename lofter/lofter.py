@@ -158,14 +158,15 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
+                    # 将第一个信息页的id做为新的存档记录
+                    if first_post_id == "":
+                        first_post_id = post_id
+
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
                         continue
                     else:
                         unique_list.append(post_id)
-                    # 将第一个信息页的id做为新的存档记录
-                    if first_post_id == "":
-                        first_post_id = post_id
 
                     post_page_return_code, post_page = tool.http_request(post_url)[:2]
                     if post_page_return_code != 1:

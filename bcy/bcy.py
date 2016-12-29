@@ -304,14 +304,15 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
+                    # 将第一个作品的id做为新的存档记录
+                    if first_rp_id == "":
+                        first_rp_id = rp_id
+
                     # 新增正片导致的重复判断
                     if rp_id in unique_list:
                         continue
                     else:
                         unique_list.append(rp_id)
-                    # 将第一个作品的id做为新的存档记录
-                    if first_rp_id == "":
-                        first_rp_id = rp_id
 
                     log.trace("rp: " + rp_id)
 

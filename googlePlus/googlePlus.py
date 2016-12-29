@@ -201,14 +201,15 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
+                    # 将第一个album_id做为新的存档记录
+                    if first_album_id == "0":
+                        first_album_id = album_id
+
                     # # 相同的album_id判断
                     if album_id in unique_list:
                         continue
                     else:
                         unique_list.append(album_id)
-                    # 将第一个album_id做为新的存档记录
-                    if first_album_id == "0":
-                        first_album_id = album_id
 
                     # 获取album id对应相册存档页的全部图片地址列表
                     image_url_list = get_image_url_list(account_id, album_id)

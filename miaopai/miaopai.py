@@ -237,21 +237,21 @@ class Download(threading.Thread):
                         is_over = True
                         break
 
+                    # 将第一个视频的id做为新的存档记录
+                    if first_video_scid == "":
+                        first_video_scid = scid
+
                     # 新增视频导致的重复判断
                     if scid in unique_list:
                         continue
                     else:
                         unique_list.append(scid)
-                    # 将第一个视频的id做为新的存档记录
-                    if first_video_scid == "":
-                        first_video_scid = scid
 
                     # 获取视频下载地址
                     video_url = get_video_url_by_video_id(scid)
                     if video_url is None:
                         log.error(account_name + " 第%s个视频 %s 获取下载地址失败" % (video_count, scid))
                         continue
-
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     # 第一个视频，创建目录
