@@ -193,11 +193,15 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             while not is_over:
+                log.step(account_name + " 开始解析第%s页图片" % page_count)
+
                 # 获取一页图片信息
                 page_data = get_one_page_image_data(api_info["user_id"], page_count, api_info["site_key"], request_id)
                 if page_data is None:
                     log.error(account_name + " 第%s页图片信息获取失败" % page_count)
                     tool.process_exit()
+
+                log.trace(account_name + " 第%s页获取的所有图片：%s" % (page_count, page_data["photos"]["photo"]))
 
                 for photo_info in page_data["photos"]["photo"]:
                     if "dateupload" not in photo_info:

@@ -179,22 +179,23 @@ class Download(threading.Thread):
 
                 # 获取相册页中的所有picasweb地址列表
                 picasaweb_url_list = get_picasaweb_url_list(album_page)
-
                 log.trace(account_name + " 相册获取的所有picasaweb页：%s" % picasaweb_url_list)
+
                 for picasaweb_url in picasaweb_url_list:
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     picasaweb_url = picasaweb_url.replace("\u003d", "=")
+                    log.step(account_name + " 开始解析日志 %s 的" % picasaweb_url)
 
                     # 获取picasaweb页的album id
                     album_id = get_picasaweb_page_album_id(account_id, picasaweb_url)
                     if album_id is None:
-                        log.error(account_name + " 第%s张图片，无法访问picasaweb页 %s" % (image_count, picasaweb_url))
+                        log.error(account_name + " 无法访问日志 %s" % picasaweb_url)
                         tool.process_exit()
                     if not album_id:
-                        log.error(account_name + " 第%s张图片，picasaweb页 %s 获取album id失败" % (image_count, picasaweb_url))
+                        log.error(account_name + " 日志 %s 获取album id失败" % picasaweb_url)
                         tool.process_exit()
-                    log.trace(account_name + " picasaweb页 %s 的album id：%s" % (picasaweb_url, album_id))
+                    log.trace(account_name + " 日志 %s 的album id：%s" % (picasaweb_url, album_id))
 
                     # 检查是否已下载到前一次的图片
                     if int(album_id) <= int(self.account_info[2]):
@@ -205,7 +206,7 @@ class Download(threading.Thread):
                     if first_album_id == "0":
                         first_album_id = album_id
 
-                    # # 相同的album_id判断
+                    # 相同的album_id判断
                     if album_id in unique_list:
                         continue
                     else:
@@ -219,8 +220,8 @@ class Download(threading.Thread):
                     if len(image_url_list) == 0:
                         log.error(account_name + " 第%s张图片，album id：%s 的相册存档页没有解析到图片" % (image_count, album_id))
                         tool.process_exit()
+                    log.trace(account_name + " 相册存档页%s获取的所有图片：%s" % (album_id, image_url_list))
 
-                    log.trace(account_name + " album id：%s 的相册存档页获取的所有图片：%s" % (album_id, image_url_list))
                     for image_url in list(image_url_list):
                         image_url = generate_max_resolution_image_url(image_url)
 

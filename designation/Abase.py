@@ -71,6 +71,8 @@ class ABase(robot.Robot):
         # 2 对一页中的所有图片开启多线程下载，下完一页中的所有图片后开始下一页
         thread_type = 2
         while True:
+            log.trace("开始解析第%s页图片" % page_count)
+
             # 获取一页页面
             page_data = get_one_page_data(page_count)
             if page_data is None:
@@ -85,7 +87,8 @@ class ABase(robot.Robot):
             # 已经下载完毕了
             if page_data_count == 0:
                 break
-            log.step("第%s页，影片数量%s，获取到的封面图片数量%s" % (page_count, len(image_info_list), page_data_count))
+
+            log.trace("第%s页获取到影片%s个，封面图片%s张" % (page_count, len(image_info_list), page_data_count))
 
             for small_image_url, title in image_info_list:
                 # 达到线程上限，等待

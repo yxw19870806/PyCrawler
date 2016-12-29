@@ -42,11 +42,15 @@ class Shinoda(robot.Robot):
         else:
             image_path = self.image_download_path
         while not is_over:
+            log.step("开始解析第%s页日志" % page_index)
+
             index_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_index - 1)
             index_page_return_code, index_page = tool.http_request(index_url)[:2]
 
             if index_page_return_code == 1:
                 image_name_list = re.findall('data-original="./([^"]*)"', index_page)
+                log.trace("第%s页获取的全部图片：%s" % (page_index, image_name_list))
+
                 for image_name in image_name_list:
                     blog_id = image_name.split("-")[0]
 

@@ -61,6 +61,8 @@ class MeiTuZZ(robot.Robot):
         error_count = 0
         is_over = False
         while not is_over:
+            log.step("开始解析第%s页相册" % album_id)
+
             album_url = "http://meituzz.com/album/browse?albumID=%s" % album_id
             try:
                 album_page_return_code, album_page = tool.http_request(album_url)[:2]
@@ -102,10 +104,10 @@ class MeiTuZZ(robot.Robot):
                 if image_url_list is None:
                     log.error("第%s页图片地址列表解析失败" % album_id)
                     break
-
                 if len(image_url_list) == 0:
                     log.error("第%s页没有获取到图片" % album_id)
                     break
+                log.trace("第%s页获取的全部图片：%s" % (album_id, image_url_list))
 
                 is_fee = False
                 if len(image_url_list) != total_photo_count:

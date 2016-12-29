@@ -286,6 +286,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True  # 是否需要创建cn目录
             while not is_over:
+                log.step(cn + " 开始解析第%s页作品" % page_count)
+
                 # 获取一页的作品信息
                 post_page = get_one_page_post(coser_id, page_count)
                 if post_page is None:
@@ -297,6 +299,8 @@ class Download(threading.Thread):
                 if cp_id is None:
                     log.error(cn + " 第%s页作品解析异常" % page_count)
                     tool.process_exit()
+                log.trace(cn + " cp_id：%s" % cp_id)
+                log.trace(cn + " 第%s页获取的所有作品：%s" % (page_count, rp_list))
 
                 for rp_id, title in rp_list.iteritems():
                     # 检查是否已下载到前一次的图片
@@ -314,7 +318,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(rp_id)
 
-                    log.trace("rp: " + rp_id)
+                    log.step(cn + " 开始解析作品%s" % rp_id)
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):

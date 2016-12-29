@@ -346,6 +346,8 @@ class Download(threading.Thread):
                         log.error(account_name + " 微博主页没有获取到page_id")
                         break
 
+                log.step(account_name + " 开始解析%s后一页视频" % since_id)
+
                 # 获取指定时间点后的一页视频信息
                 video_page_data = get_one_page_video_data(account_page_id, since_id)
                 if video_page_data is None:
@@ -356,6 +358,7 @@ class Download(threading.Thread):
                 # 匹配获取全部的视频页面
                 video_play_url_list = get_video_play_url_list(video_page_data)
                 log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_play_url_list))
+
                 for video_play_url in video_play_url_list:
                     # 检查是否是上一次的最后视频
                     if self.account_info[4] == video_play_url:
@@ -416,6 +419,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             while IS_DOWNLOAD_IMAGE and (not is_over):
+                log.step(account_name + " 开始解析第%s页图片" % page_count)
+
                 # 获取指定一页图片的信息
                 photo_page_data = get_one_page_photo_data(account_id, page_count)
                 if photo_page_data is None:
@@ -423,7 +428,8 @@ class Download(threading.Thread):
                     first_image_time = "0"  # 存档恢复
                     break
 
-                log.trace(account_name + "第%s页的全部图片信息：%s" % (page_count, photo_page_data))
+                log.trace(account_name + "第%s页获取的全部图片信息：%s" % (page_count, photo_page_data))
+
                 for image_info in photo_page_data["photo_list"]:
                     if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):
                         log.error(account_name + " 第%s张图片信息解析失败 %s" % (image_count, image_info))

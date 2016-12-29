@@ -190,6 +190,8 @@ class Download(threading.Thread):
             is_over = False
             is_big_image_over = False
             while not is_over:
+                log.step(account_name + " 开始解析第%s页日志" % page_count)
+
                 # 获取一页日志信息
                 blog_page = get_one_page_blog(account_id, page_count)
                 if blog_page is None:
@@ -199,6 +201,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志解析失败" % page_count)
                     tool.process_exit()
 
+                # 将日志内容按日志分组
                 blog_data_list = get_blog_data_list(blog_page)
                 if len(blog_data_list) == 0:
                     log.error(account_name + " 第%s页日志分组失败" % page_count)
@@ -219,6 +222,8 @@ class Download(threading.Thread):
                     # 将第一个日志的ID做为新的存档记录
                     if first_blog_id == "0":
                         first_blog_id = str(blog_id)
+
+                    log.step(account_name + " 开始解析日志%s" % blog_id)
 
                     # 获取该页日志的全部图片地址列表
                     image_url_list = get_image_url_list(blog_data)

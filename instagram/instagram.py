@@ -354,6 +354,8 @@ class Download(threading.Thread):
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
+                log.step(account_name + " 开始解析cursor %s的媒体信息" % cursor)
+
                 # 获取指定时间后的一页媒体信息
                 media_data = get_one_page_media_data(account_id, cursor)
                 if media_data is None:
@@ -361,6 +363,8 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 nodes_data = media_data["nodes"]
+                log.trace(account_name + " cursor %s获取的所有媒体信息：%s" % (cursor, nodes_data))
+
                 for photo_info in nodes_data:
                     if not robot.check_sub_key(("is_video", "display_src", "date"), photo_info):
                         log.error(account_name + " 媒体信息解析异常")

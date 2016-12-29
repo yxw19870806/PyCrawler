@@ -341,6 +341,8 @@ class Download(threading.Thread):
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
+                log.step(account_name + " 开始解析%s后的一页媒体列表" % data_tweet_id)
+
                 # 获取指定时间点后的一页图片信息
                 media_page = get_media_page_data(account_name, data_tweet_id)
                 if media_page is None:
@@ -361,10 +363,13 @@ class Download(threading.Thread):
                     # tool.process_exit()
 
                 for tweet_data in tweet_list:
+                    # 获取tweet_id
                     tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
                     if not tweet_id:
                         log.error(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
                         continue
+
+                    log.step(account_name + " 开始解析tweet" % tweet_id)
 
                     # 检查是否tweet的id小于上次的记录
                     if int(tweet_id) <= int(self.account_info[3]):

@@ -174,9 +174,10 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True
             while not is_over:
+                log.step(account_name + " 开始解析第%s页歌曲" % page_count)
+
                 # 获取指定一页的歌曲信息
                 audio_list = get_one_page_audio_list(user_id, page_count)
-
                 if audio_list is None:
                     log.step(account_name + " 第%s页歌曲列表获取失败" % page_count)
                     first_audio_id = "0"
@@ -185,6 +186,8 @@ class Download(threading.Thread):
                 # 如果为空，表示已经取完了
                 if len(audio_list) == 0:
                     break
+
+                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_list))
 
                 for audio_info in list(audio_list):
                     audio_id = audio_info[0]

@@ -73,8 +73,9 @@ class Fkoji(robot.Robot):
         first_image_time = 0
         unique_list = []
         is_over = False
-
         while not is_over:
+            log.step("开始解析第%s页图片" % page_index)
+
             index_url = "http://jigadori.fkoji.com/?p=%s" % page_index
             index_page_return_code, index_page_response = tool.http_request(index_url)[:2]
             if index_page_return_code != 1:
@@ -86,6 +87,7 @@ class Fkoji(robot.Robot):
             # 已经下载到最后一页
             if not photo_list:
                 break
+
             for photo_info in photo_list:
                 if isinstance(photo_info, BeautifulSoup.NavigableString):
                     continue
@@ -117,6 +119,7 @@ class Fkoji(robot.Robot):
                     tag_attr = dict(tag.attrs)
                     if robot.check_sub_key(("src", "alt"), tag_attr):
                         image_url = str(tag_attr["src"]).replace(" ", "")
+
                         # 新增图片导致的重复判断
                         if image_url in unique_list:
                             continue

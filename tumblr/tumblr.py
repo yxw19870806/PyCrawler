@@ -59,7 +59,8 @@ def filter_post_url(post_url_list):
 
 
 # 根据日志地址以及可能的后缀，获取日志页面的head标签下的内容
-def get_post_page_head(post_url, postfix_list):
+def get_post_page_head(account_id, post_id, postfix_list):
+    post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
     post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
     # 不带后缀的可以访问，则直接返回页面
     # 如果无法访问，则依次访问带有后缀的页面
@@ -222,19 +223,22 @@ class Download(threading.Thread):
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
+                log.step(account_id + " 开始解析第%s页相册" % page_count)
+
+                # 获取一页的日志地址
                 post_url_list = get_one_page_post_url_list(account_id, page_count)
                 if post_url_list is None:
-                    log.error(account_id + " 无法访问第%s页相册页" % page_count)
+                    log.error(account_id + " 无法访问第%s页相册" % page_count)
                     tool.process_exit()
 
+                # 如果为空，表示已经取完了
                 if len(post_url_list) == 0:
-                    # 下载完毕了
                     break
 
-                log.trace(account_id + " 相册第%s页获取的所有信息页：%s" % (page_count, post_url_list))
+                log.trace(account_id + " 相册第%s页获取的所有日志：%s" % (page_count, post_url_list))
                 post_url_list_group_by_post_id = filter_post_url(post_url_list)
-                log.trace(account_id + " 相册第%s页去重排序后的信息页：%s" % (page_count, post_url_list_group_by_post_id))
-                log.step(account_id + " 相册第%s页获取到%s页信息页" % (page_count, len(post_url_list_group_by_post_id)))
+                log.trace(account_id + " 相册第%s页去重排序后的所有日志：%s" % (page_count, post_url_list_group_by_post_id))
+
                 for post_id in sorted(post_url_list_group_by_post_id.keys(), reverse=True):
                     # 检查信息页id是否小于上次的记录
                     if int(post_id) <= int(self.account_info[3]):
@@ -245,21 +249,21 @@ class Download(threading.Thread):
                     if first_post_id == "":
                         first_post_id = post_id
 
+                    log.step(account_id + " 开始解析日志%s" % post_id)
+
                     # 获取信息页并截取head标签内的内容
-                    post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-                    log.step(account_id + " 开始解析日志：%s" % post_url)
-                    post_page_head = get_post_page_head(post_url, post_url_list_group_by_post_id[post_id])
+                    post_page_head = get_post_page_head(account_id, post_id, post_url_list_group_by_post_id[post_id])
                     if post_page_head is None:
-                        log.error(account_id + " 无法访问信息页 %s" % post_url)
+                        log.error(account_id + " 无法访问日志%s" % post_id)
                         continue
                     if not post_page_head:
-                        log.error(account_id + " 信息页 %s 截取head标签异常" % post_url)
+                        log.error(account_id + " 日志%s截取head标签异常" % post_id)
                         continue
 
                     # 获取og_type（页面类型的是视频还是图片或其他）
                     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
                     if not og_type:
-                        log.error(account_id + " 信息页 %s，'og:type'获取异常" % post_url)
+                        log.error(account_id + " 日志%s，'og:type'获取异常" % post_id)
                         continue
 
                     # 空、音频、引用，跳过
@@ -276,7 +280,7 @@ class Download(threading.Thread):
                     if IS_DOWNLOAD_VIDEO and og_type == "tumblr-feed:video":
                         video_list = get_video_info_list(account_id, post_id)
                         if video_list is None:
-                            log.error(account_id + " 第%s个视频 信息页 %s 无法获取视频播放页" % (video_count, post_url))
+                            log.error(account_id + " 第%s个视频 日志%s无法获取视频播放页" % (video_count, post_id))
                         else:
                             if len(video_list) > 0:
                                 for video_url, video_type in list(video_list):
@@ -301,7 +305,7 @@ class Download(threading.Thread):
                                     else:
                                         log.error(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                             else:
-                                log.error(account_id + " 第%s个视频 信息页 %s 中没有找到视频" % (video_count, post_url))
+                                log.error(account_id + " 第%s个视频 日志%s中没有找到视频" % (video_count, post_id))
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE:
@@ -312,10 +316,10 @@ class Download(threading.Thread):
                                 page_image_url_list.append(video_image_url)
                         else:
                             page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-                            log.trace(account_id + " 信息页 %s 过滤前的所有图片：%s" % (post_url, page_image_url_list))
+                            log.trace(account_id + " 日志%s过滤前的所有图片：%s" % (post_id, page_image_url_list))
                             # 过滤头像以及页面上找到不同分辨率的同一张图
                             page_image_url_list = filter_different_resolution_images(page_image_url_list)
-                        log.trace(account_id + " 信息页 %s 获取的的所有图片：%s" % (post_url, page_image_url_list))
+                        log.trace(account_id + " 日志%s获取的的所有图片：%s" % (post_id, page_image_url_list))
                         if len(page_image_url_list) > 0:
                             for image_url in page_image_url_list:
                                 log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
@@ -335,7 +339,7 @@ class Download(threading.Thread):
                                 else:
                                     log.error(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
                         else:
-                            log.error(account_id + " 第%s张图片 信息页 %s 中没有找到图片" % (image_count, post_url))
+                            log.error(account_id + " 第%s张图片 日志%s中没有找到图片" % (image_count, post_id))
 
                 if not is_over:
                     # 达到配置文件中的下载数量，结束

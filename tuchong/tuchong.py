@@ -162,6 +162,8 @@ class Download(threading.Thread):
             post_time = "2016-11-16 14:12:00"
             is_over = False
             while not is_over:
+                log.step(account_name + " 开始解析%s后的一页相册" % post_time)
+                
                 # 获取一页的相册信息列表
                 post_info_list = get_one_page_post_info_list(site_id, post_time)
                 if post_info_list is None:
@@ -171,6 +173,8 @@ class Download(threading.Thread):
                 # 如果为空，表示已经取完了
                 if len(post_info_list) == 0:
                     break
+
+                log.trace(account_name + " %s后获取的一页相册：%s" % (post_time, post_info_list))
 
                 for post_info in post_info_list:
                     if not robot.check_sub_key(("title", "post_id", "published_at", "images"), post_info):
@@ -187,6 +191,8 @@ class Download(threading.Thread):
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "0":
                         first_post_id = post_id
+
+                    log.step(account_name + " 开始解析相册%s" % post_id)
 
                     # 过滤标题中不支持的字符
                     title = robot.filter_text(post_info["title"])

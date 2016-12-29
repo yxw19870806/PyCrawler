@@ -61,8 +61,10 @@ class ZunGuang(robot.Robot):
         error_count = 0
         is_over = False
         while not is_over:
-            album_status, album_data = get_one_page_album_data(page_count)
+            log.step("开始解析第%s页图片" % page_count)
 
+            # 根据取图片地址列表
+            album_status, album_data = get_one_page_album_data(page_count)
             if album_status == -1:
                 log.error("第%s页相册获取失败" % page_count)
                 break

@@ -151,12 +151,15 @@ class Download(threading.Thread):
             need_make_video_dir = True
 
             while not is_over:
+                log.step(account_name + " 开始解析%s后的一页视频" % target_id)
+
                 # 获取一页日志信息
                 message_page_data = get_message_page_data(account_name, target_id)
                 if message_page_data is None:
                     log.error(account_name + " 媒体列表解析异常")
                     tool.process_exit()
-                # 没有了
+
+                # 如果为空，表示已经取完了
                 if len(message_page_data) == 0:
                     break
 
@@ -169,6 +172,7 @@ class Download(threading.Thread):
                         continue
 
                     target_id = message_info["post"]["postId"]
+
                     # 检查是否已下载到前一次的记录
                     if int(target_id) <= int(self.account_info[3]):
                         is_over = True
@@ -177,6 +181,8 @@ class Download(threading.Thread):
                     # 将第一个媒体的postId做为新的存档记录
                     if first_post_id == "0":
                         first_post_id = str(target_id)
+
+                    log.step(account_name + " 开始解析日志%s" % target_id)
 
                     for media_info in message_info["post"]["body"]:
                         if not robot.check_sub_key(("bodyType",), media_info):

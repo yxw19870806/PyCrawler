@@ -159,6 +159,8 @@ class Download(threading.Thread):
             need_make_video_dir = True
             is_over = False
             while not is_over:
+                log.step(account_name + " 开始解析第%s页视频" % video_count)
+
                 # 获取一页视频信息
                 video_data = get_one_page_video_data(account_id, page_time)
                 if video_data is None:

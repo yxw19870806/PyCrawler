@@ -145,6 +145,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             while not is_over:
+                log.step(account_name + " 开始解析第%s页日志" % page_count)
+
                 # 获取一页博客信息
                 diary_list = get_one_page_diary_data(account_id, page_count)
                 if diary_list is None:
@@ -171,10 +173,12 @@ class Download(threading.Thread):
                     if first_diary_id == "0":
                         first_diary_id = diary_id
 
-                    log.trace(account_name + " 日志id %s" % diary_id)
+                    log.step(account_name + " 开始解析日志%s" % diary_id)
 
                     # 获取这个日志中的全部图片地址列表
                     image_url_list = get_image_url_list(diary_info)
+                    log.trace(account_name + " 日志%s获取的所有图片：%s" % (diary_id, image_url_list))
+
                     for image_url in image_url_list:
                         # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
                         if image_url[:7] != "http://" and image_url[:8] != "https://":

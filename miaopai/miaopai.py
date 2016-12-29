@@ -217,6 +217,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_download_dir = True
             while suid != "" and (not is_over):
+                log.step(account_name + " 开始解析第%s页视频" % page_count)
+
                 # 获取指定一页的视频信息
                 media_page = get_one_page_video_data(suid, page_count)
                 if media_page is None:
@@ -228,6 +230,8 @@ class Download(threading.Thread):
                 if len(scid_list) == 0:
                     log.error(account_name + " 在视频列表：%s 中没有找到视频scid" % str(media_page["msg"]))
                     tool.process_exit()
+
+                log.trace(account_name + " 第%s页获取的全部视频：%s" % (page_count, scid_list))
 
                 for scid in scid_list:
                     scid = str(scid)
