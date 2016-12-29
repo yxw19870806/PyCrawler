@@ -292,6 +292,7 @@ class Download(threading.Thread):
             # 排序
             if IS_SORT and image_count > 1:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
+                log.step(account_name + " 图片开始从下载目录移动到保存目录")
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     log.step(account_name + " 图片从下载目录移动到保存目录成功")
                 else:

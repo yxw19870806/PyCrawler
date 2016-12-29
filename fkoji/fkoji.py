@@ -159,6 +159,8 @@ class Fkoji(robot.Robot):
                 log.error("创建目录 %s 失败" % all_path)
                 tool.process_exit()
 
+            log.step("图片开始从下载目录移动到保存目录")
+
             file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
             for file_name in file_list:
                 image_path = os.path.join(self.image_temp_path, file_name)

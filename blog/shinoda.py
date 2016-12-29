@@ -78,6 +78,7 @@ class Shinoda(robot.Robot):
 
         # 排序复制到保存目录
         if self.is_sort:
+            log.step("图片开始从下载目录移动到保存目录")
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
                 log.step(" 图片从下载目录移动到保存目录成功")
             else:

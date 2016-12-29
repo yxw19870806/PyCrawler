@@ -226,6 +226,7 @@ class Download(threading.Thread):
 
             # 排序
             if IS_SORT and video_count > 1:
+                log.step(account_name + " 视频开始从下载目录移动到保存目录")
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
                     log.step(account_name + " 视频从下载目录移动到保存目录成功")
