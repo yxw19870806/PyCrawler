@@ -46,11 +46,11 @@ def is_max_page_count(page_data, page_count):
             return max(page_count_find) >= page_count
         return False
     # 只有下一页和上一页按钮的样式
-    elif page_data.find('<a class="skinSimpleBtn pagingNext"') >= 0:
-        if page_data.find('<a class="skinSimpleBtn pagingNext"') >= 0:
-            return False
-        else:
+    elif page_data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
+        if page_data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
             return True
+        else:
+            return False
     return False
 
 
