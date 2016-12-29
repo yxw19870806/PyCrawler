@@ -41,11 +41,10 @@ else:
 
 # http请求
 # header_list   http header信息，e.g. {"Host":“www.example.com"}
-# cookie        cookielib.CookieJar
 # is_random_ip  是否使用伪造IP
 # 返回 【返回码，数据, response】
 # 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
-def http_request(url, post_data=None, header_list=None, cookie=None, is_random_ip=True):
+def http_request(url, post_data=None, header_list=None, is_random_ip=True):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return -100, None, None
     count = 0
@@ -75,11 +74,6 @@ def http_request(url, post_data=None, header_list=None, cookie=None, is_random_i
             if isinstance(header_list, dict):
                 for header_name, header_value in header_list.iteritems():
                     request.add_header(header_name, header_value)
-
-            # cookies
-            if isinstance(cookie, cookielib.CookieJar):
-                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
-                urllib2.install_opener(opener)
 
             # 设置访问超时
             response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)

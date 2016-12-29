@@ -15,6 +15,7 @@ import re
 import threading
 import time
 import traceback
+import urllib2
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
@@ -79,10 +80,14 @@ def login(from_where):
     else:
          email, password = get_account_info_from_console()
 
+    # 使用cookie
     cookie = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
+    urllib2.install_opener(opener)
+
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
-    login_response = tool.http_request(login_url, login_post, cookie)
+    login_response = tool.http_request(login_url, login_post)
     if login_response[0] == 1 and login_response[2].geturl() == "http://bcy.net/home/user/index":
         if from_where == 2 and SAVE_ACCOUNT_INFO:
             set_account_info_to_file(email, password)
