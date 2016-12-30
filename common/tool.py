@@ -734,6 +734,13 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
             else:
                 response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list)
             return response
+        except urllib3.exceptions.ProxyError:
+            notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
+            input_str = raw_input(notice).lower()
+            if input_str in ["c", "continue"]:
+                pass
+            elif input_str in ["s", "stop"]:
+                sys.exit()
         except urllib3.exceptions.MaxRetryError, e:
             if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
                 return ErrorResponse(-1)
