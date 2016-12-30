@@ -16,24 +16,24 @@ TRACE_LOG_PATH = ""
 
 
 def error(msg):
+    msg = tool.get_time() + " [Error] " + msg
     if IS_SHOW_ERROR:
-        msg = tool.get_time() + " [Error] " + msg
         tool.print_msg(msg, False)
     if ERROR_LOG_PATH != "":
         tool.write_file(msg, ERROR_LOG_PATH)
 
 
 def step(msg):
+    msg = tool.get_time() + " " + msg
     if IS_SHOW_STEP:
-        msg = tool.get_time() + " " + msg
         tool.print_msg(msg, False)
     if STEP_LOG_PATH != "":
         tool.write_file(msg, STEP_LOG_PATH)
 
 
 def trace(msg):
+    msg = tool.get_time() + " " + msg
     if IS_SHOW_TRACE:
-        msg = tool.get_time() + " " + msg
         tool.print_msg(msg, False)
     if TRACE_LOG_PATH != "":
         tool.write_file(msg, TRACE_LOG_PATH)
