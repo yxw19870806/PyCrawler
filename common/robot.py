@@ -37,7 +37,7 @@ class Robot(object):
             self.print_function(msg)
 
     # 程序全局变量的设置
-    def __init__(self, sys_config, extra_config=None):
+    def __init__(self, sys_config, extra_config=None, use_urllib3=False):
         global IS_INIT
         self.start_time = time.time()
 
@@ -192,15 +192,18 @@ class Robot(object):
         if is_proxy == 1 or (is_proxy == 2 and sys_set_proxy):
             proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
             proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
-            tool.set_proxy(proxy_ip, proxy_port)
-            # 使用代理的线程池
-            tool.set_proxy2(proxy_ip, proxy_port)
+            if use_urllib3:
+                # 使用代理的线程池
+                tool.set_proxy2(proxy_ip, proxy_port)
+            else:
+                tool.set_proxy(proxy_ip, proxy_port)
         else:
-            # 初始化urllib3的线程池
-            tool.init_http_connection_pool()
+            if use_urllib3:
+                # 初始化urllib3的线程池
+                tool.init_http_connection_pool()
 
         # cookies
-        if sys_set_cookie:
+        if sys_set_cookie and not use_urllib3:
             if sys_config[SYS_SET_COOKIE]:  # 加载浏览器cookie
                 # 操作系统&浏览器
                 browser_type = get_config(config, "BROWSER_TYPE", 2, 1)
@@ -214,7 +217,8 @@ class Robot(object):
                     self.print_msg("导入浏览器cookies失败")
                     tool.process_exit()
                     return
-            else:  # 使用空cookie
+            else:
+                # 使用空cookie
                 tool.set_empty_cookie()
 
         # Http Setting
