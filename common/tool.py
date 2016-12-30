@@ -87,10 +87,11 @@ def http_request(url, post_data=None, header_list=None, is_random_ip=True):
                 if urllib2._opener.handlers is not None:
                     for handler in urllib2._opener.handlers:
                         if isinstance(handler, urllib2.ProxyHandler):
-                            input_str = raw_input("无法访问代理服务器，请检查代理设置。是否需要继续程序？(Y)es or (N)o：").lower()
-                            if input_str in ["y", "yes"]:
+                            notice = "无法访问代理服务器，请检查代理设置。检查完成后输入[(C)ontinue]继续程序或者[(S)top]退出程序："
+                            input_str = raw_input(notice).lower()
+                            if input_str in ["c", "continue"]:
                                 pass
-                            elif input_str in ["n", "no"]:
+                            elif input_str in ["s", "stop"]:
                                 sys.exit()
                             break
             # 10053 Software caused connection abort
