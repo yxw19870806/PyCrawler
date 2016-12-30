@@ -688,13 +688,14 @@ def shutdown(delay_time=30):
 # 初始化urllib3的连接池
 def init_http_connection_pool():
     global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.PoolManager()
+    HTTP_CONNECTION_POOL = urllib3.PoolManager(timeout=HTTP_CONNECTION_TIMEOUT, retries=False)
 
 
 # 设置代理，初始化带有代理的urllib3的连接池
 def set_proxy2(ip, port):
     global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port))
+    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), timeout=HTTP_CONNECTION_TIMEOUT,
+                                                retries=False)
     print_msg("设置代理成功")
 
 
@@ -729,10 +730,9 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
 
         try:
             if post_data:
-                response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list,
-                                                        timeout=HTTP_CONNECTION_TIMEOUT)
+                response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list)
             else:
-                response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list, timeout=HTTP_CONNECTION_TIMEOUT)
+                response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list)
             return response
         except urllib3.exceptions.MaxRetryError, e:
             if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
