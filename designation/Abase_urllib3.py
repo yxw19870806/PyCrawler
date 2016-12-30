@@ -71,7 +71,7 @@ class ABase(robot.Robot):
         # 2 对一页中的所有图片开启多线程下载，下完一页中的所有图片后开始下一页
         thread_type = 2
         while True:
-            log.trace("开始解析第%s页图片" % page_count)
+            log.step("开始解析第%s页图片" % page_count)
 
             # 获取一页页面
             page_data = get_one_page_data(page_count)
