@@ -124,7 +124,7 @@ def check_image_invalid(file_path):
     file_type = os.path.splitext(file_path)[1]
     if file_type == ".gif":
         image = Image.open(file_path)
-        if image.size() == (20, 20):
+        if image.size == (20, 20):
             return True
     return False
 
