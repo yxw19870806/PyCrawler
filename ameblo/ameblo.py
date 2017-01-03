@@ -90,7 +90,8 @@ def get_origin_image_url(image_url):
             image_url.find("http://blog.ameba.jp/ucs/img/char") == 0 or image_url.find("https://mail.google.com/mail/e") == 0:
         return ""
     # 无效的地址
-    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url[-9:] == "clear.gif":
+    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url.find("https://mail.google.com/mail/u") == 0 \
+            or image_url[-9:] == "clear.gif":
         return ""
     # ameba上传图片
     elif image_url.find("http://stat.ameba.jp/user_images") == 0:
