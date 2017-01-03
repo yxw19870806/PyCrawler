@@ -130,7 +130,7 @@ class Tumblr(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
         }
-        robot.Robot.__init__(self, sys_config, None, True)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
