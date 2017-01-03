@@ -282,7 +282,7 @@ class Download(threading.Thread):
                         if tool.save_net_file(image_url, file_path):
                             if check_image_invalid(file_path):
                                 os.remove(file_path)
-                                log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, file_type))
+                                log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, file_path))
                             else:
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
