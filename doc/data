@@ -76,7 +76,7 @@
 		expression
 	for key in dictionary
 		expression
-	for key, value in dictionary.items()
+	for key, value in dictionary.iteritems()
 		expression
 	for char in string
 		expression
@@ -135,8 +135,7 @@ map(str, a)
 a = [1, 2, 3, 4, 5, 5, 4, 3, 2]
 list(set(a))
 
-
-20.模拟鼠标点击屏幕任意坐标
+21.模拟鼠标点击屏幕任意坐标
 #第一种
 def click1(x,y):
     win32api.SetCursorPos((x,y))
@@ -147,6 +146,12 @@ def click2(x,y):
     ctypes.windll.user32.SetCursorPos(x,y)
     ctypes.windll.user32.mouse_event(2,0,0,0,0)
     ctypes.windll.user32.mouse_event(4,0,0,0,0)
+
+22.常用路径方法
+filename = "c:\\aa.bb\\cc.dd"
+获取文件名: os.path.basename(filename) -> cc.dd
+获取路径名: os.path.dirname(filename) -> c:\aa.bb
+获取文件扩展名: os.path.splitext(filename)[1] -> dd
 
 
 
