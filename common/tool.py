@@ -488,6 +488,8 @@ def save_net_file(file_url, file_path, need_content_type=False):
                 return True
             else:
                 print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
+        elif page_return_code < 0:
+            return False
     return False
 
 
@@ -794,6 +796,8 @@ def save_net_file2(file_url, file_path, need_content_type=False):
                 return True
             else:
                 print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
+        elif response.status > 0:
+            return False
     return False
 
 
