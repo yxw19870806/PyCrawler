@@ -17,7 +17,7 @@ ERROR_PAGE_COUNT_CHECK = 10
 def get_one_page_album_data(page_count):
     album_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
-    album_return_code, album_data = tool.http_request(album_url, post_data, None, False)[:2]
+    album_return_code, album_data = tool.http_request(album_url, post_data, is_random_ip=False)[:2]
     if album_return_code != 1:
         return -1, None
     try:

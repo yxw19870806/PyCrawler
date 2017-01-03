@@ -114,7 +114,7 @@ def get_follow_list(account_name):
 def get_follow_page_data(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
     header_list = {"Cookie": "auth_token=%s;" % auth_token}
-    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, None, header_list)[:2]
+    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, header_list=header_list)[:2]
     if follow_list_return_code == 1:
         try:
             follow_list_data = json.loads(follow_list_data)
