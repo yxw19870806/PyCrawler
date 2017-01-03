@@ -469,6 +469,7 @@ def write_file(msg, file_path, append_type=1):
 # need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
 def save_net_file(file_url, file_path, need_content_type=False):
     file_path = change_path_encoding(file_path)
+    create_file = False
     for i in range(0, 5):
         page_return_code, page_data, page_response = http_request(file_url)
         if page_return_code == 1:
@@ -478,6 +479,7 @@ def save_net_file(file_url, file_path, need_content_type=False):
                 if content_type and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
+            create_file = True
             file_handle = open(file_path, "wb")
             file_handle.write(page_data)
             file_handle.close()
@@ -489,7 +491,11 @@ def save_net_file(file_url, file_path, need_content_type=False):
             else:
                 print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
         elif page_return_code < 0:
+            if create_file:
+                os.remove(file_path)
             return False
+    if create_file:
+        os.remove(file_path)
     return False
 
 
@@ -777,6 +783,7 @@ class ErrorResponse(object):
 # need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
 def save_net_file2(file_url, file_path, need_content_type=False):
     file_path = change_path_encoding(file_path)
+    create_file = False
     for i in range(0, 5):
         response = http_request2(file_url)
         if response.status == 200:
@@ -789,6 +796,7 @@ def save_net_file2(file_url, file_path, need_content_type=False):
             file_handle = open(file_path, "wb")
             file_handle.write(response.data)
             file_handle.close()
+            create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
             content_length = get_response_info(response, "Content-Length")
             file_size = os.path.getsize(file_path)
@@ -797,7 +805,11 @@ def save_net_file2(file_url, file_path, need_content_type=False):
             else:
                 print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
         elif response.status > 0:
+            if create_file:
+                os.remove(file_path)
             return False
+    if create_file:
+        os.remove(file_path)
     return False
 
 
