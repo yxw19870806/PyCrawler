@@ -759,6 +759,9 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
         except urllib3.exceptions.ConnectTimeoutError, e:
             print e
             print_msg(url + " 访问超时，稍后重试")
+        except urllib3.exceptions.ProtocolError, e:
+            print e
+            print_msg(url + " 访问超时，稍后重试")
         except Exception, e:
             print_msg(url)
             print_msg(str(e))
