@@ -778,6 +778,7 @@ class ErrorResponse(object):
     def __init__(self, status=-1):
         self.status = status
         self.data = None
+        self.headers = {}
 
 
 # 保存网络文件
