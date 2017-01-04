@@ -689,14 +689,14 @@ def shutdown(delay_time=30):
 # 初始化urllib3的连接池
 def init_http_connection_pool():
     global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.PoolManager(timeout=HTTP_CONNECTION_TIMEOUT, retries=False)
+    HTTP_CONNECTION_POOL = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(connect=HTTP_CONNECTION_TIMEOUT))
 
 
 # 设置代理，初始化带有代理的urllib3的连接池
 def set_proxy2(ip, port):
     global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), timeout=HTTP_CONNECTION_TIMEOUT,
-                                                retries=False)
+    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False,
+                                                timeout=urllib3.Timeout(connect=HTTP_CONNECTION_TIMEOUT))
     print_msg("设置代理成功")
 
 
