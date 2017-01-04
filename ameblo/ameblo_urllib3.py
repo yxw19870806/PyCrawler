@@ -120,13 +120,11 @@ def get_origin_image_url(image_url):
     return image_url
 
 
-# 检测图片是否有效（暂时过滤20x20）尺寸的表情
+# 检测图片是否有效（暂时过滤20x20尺寸的表情）
 def check_image_invalid(file_path):
-    file_type = os.path.splitext(file_path)[1]
-    if file_type == ".gif":
-        image = Image.open(file_path)
-        if image.size == (20, 20):
-            return True
+    image = Image.open(file_path)
+    if image.size == (20, 20):
+        return True
     return False
 
 
