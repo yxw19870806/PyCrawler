@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, robot, tool
+from PIL import Image
 import os
 import re
 import threading
@@ -90,7 +91,8 @@ def get_origin_image_url(image_url):
             image_url.find("http://blog.ameba.jp/ucs/img/char") == 0 or image_url.find("https://mail.google.com/mail/e") == 0:
         return ""
     # 无效的地址
-    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url[-9:] == "clear.gif":
+    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url.find("https://mail.google.com/mail/u") == 0 \
+            or image_url[-9:] == "clear.gif":
         return ""
     # ameba上传图片
     elif image_url.find("http://stat.ameba.jp/user_images") == 0:
@@ -115,6 +117,16 @@ def get_origin_image_url(image_url):
         # todo 检测是否包含第三方图片
         log.error("第三方图片地址 %s" % image_url)
     return image_url
+
+
+# 检测图片是否有效（暂时过滤20x20）尺寸的表情
+def check_image_invalid(file_path):
+    file_type = os.path.splitext(file_path)[1]
+    if file_type == ".gif":
+        image = Image.open(file_path)
+        if image.size == (20, 20):
+            return True
+    return False
 
 
 class Ameblo(robot.Robot):
@@ -268,8 +280,12 @@ class Download(threading.Thread):
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         if tool.save_net_file(image_url, file_path):
-                            log.step(account_name + " 第%s张图片下载成功" % image_count)
-                            image_count += 1
+                            if check_image_invalid(file_path):
+                                os.remove(file_path)
+                                log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, file_path))
+                            else:
+                                log.step(account_name + " 第%s张图片下载成功" % image_count)
+                                image_count += 1
                         else:
                             log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
 

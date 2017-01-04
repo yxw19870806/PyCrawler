@@ -32,7 +32,7 @@ def get_one_page_video_data(account_id, page_time):
     else:
         video_data_url += "&pageflag=0"
     header_list = {"Referer": "http://weishi.qq.com/"}
-    video_data_return_code, video_data = tool.http_request(video_data_url, None, header_list)[:2]
+    video_data_return_code, video_data = tool.http_request(video_data_url, header_list=header_list)[:2]
     if video_data_return_code == 1:
         try:
             video_data = json.loads(video_data)

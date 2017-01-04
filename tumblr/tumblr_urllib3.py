@@ -130,7 +130,7 @@ class Tumblr(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
         }
-        robot.Robot.__init__(self, sys_config, None, True)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
@@ -312,7 +312,7 @@ class Download(threading.Thread):
                         if og_type == "tumblr-feed:video":
                             page_image_url_list = []
                             video_image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
-                            if video_image_url:
+                            if video_image_url and video_image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
                                 page_image_url_list.append(video_image_url)
                         else:
                             page_image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
