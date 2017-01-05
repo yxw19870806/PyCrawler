@@ -229,6 +229,11 @@ class Robot(object):
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
         self.thread_lock = threading.Lock()
 
+        # 启用线程监控是否需要暂停其他下载线程
+        process_control_thread = process.ProcessControl()
+        process_control_thread.setDaemon(True)
+        process_control_thread.start()
+
         # 键盘监控线程
         if get_config(config, "IS_KEYBOARD_EVENT", True, 2):
             keyboard_event_bind = {}
@@ -242,11 +247,6 @@ class Robot(object):
                 keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
                 keyboard_control_thread.setDaemon(True)
                 keyboard_control_thread.start()
-
-        # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = process.ProcessControl()
-        process_control_thread.setDaemon(True)
-        process_control_thread.start()
 
         self.print_msg("初始化完成")
 
