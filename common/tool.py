@@ -13,6 +13,7 @@ import platform
 import random
 import shutil
 import sqlite3
+import ssl
 import sys
 import time
 import threading
@@ -30,7 +31,11 @@ elif sys.version_info >= (3,):
     raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_REQUEST_RETRY_COUNT = 100
+# https://www.python.org/dev/peps/pep-0476/
+# disable urllib3 HTTPS warning
 urllib3.disable_warnings()
+# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
+ssl._create_default_https_context = ssl._create_unverified_context
 HTTP_CONNECTION_POOL = None
 thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
