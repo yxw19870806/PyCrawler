@@ -185,7 +185,6 @@ class Download(threading.Thread):
                     # 有可能拿到带authkey的，需要去掉
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     picasaweb_url = picasaweb_url.replace("\u003d", "=")
-                    log.step(account_name + " 开始解析日志 %s" % picasaweb_url)
 
                     # 获取picasaweb页的album id
                     album_id = get_picasaweb_page_album_id(account_id, picasaweb_url)
@@ -212,6 +211,8 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(album_id)
 
+                    log.step(account_name + " 开始解析日志 %s" % picasaweb_url)
+                    
                     # 获取album id对应相册存档页的全部图片地址列表
                     for retry_count in range(0, 5):
                         image_url_list = get_image_url_list(account_id, album_id)
