@@ -119,13 +119,15 @@ def get_origin_image_url(image_url):
     return image_url
 
 
-# 检测图片是否有效（暂时过滤20x20）尺寸的表情
+# 检测图片是否有效
 def check_image_invalid(file_path):
-    file_type = os.path.splitext(file_path)[1]
-    if file_type == ".gif":
-        image = Image.open(file_path)
-        if image.size == (20, 20):
-            return True
+    # 文件大小小于1K
+    if os.path.getsize(file_path) < 1024:
+        return True
+    # 文件分辨率是20x20（常用表情的尺寸）
+    image = Image.open(file_path)
+    if image.size == (20, 20):
+        return True
     return False
 
 
