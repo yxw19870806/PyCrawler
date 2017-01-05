@@ -369,7 +369,7 @@ class Download(threading.Thread):
                         log.error(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
                         continue
 
-                    log.step(account_name + " 开始解析tweet" % tweet_id)
+                    log.step(account_name + " 开始解析tweet %s" % tweet_id)
 
                     # 检查是否tweet的id小于上次的记录
                     if int(tweet_id) <= int(self.account_info[3]):
