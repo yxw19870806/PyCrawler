@@ -213,13 +213,17 @@ class Download(threading.Thread):
                         unique_list.append(album_id)
 
                     # 获取album id对应相册存档页的全部图片地址列表
-                    image_url_list = get_image_url_list(account_id, album_id)
-                    if image_url_list is None:
-                        log.error(account_name + " 第%s张图片，无法访问album id：%s 的相册存档页" % (image_count, album_id))
-                        tool.process_exit()
+                    for retry_count in range(0, 5):
+                        image_url_list = get_image_url_list(account_id, album_id)
+                        if image_url_list is None:
+                            log.error(account_name + " 第%s张图片，无法访问album id：%s 的相册存档页" % (image_count, album_id))
+                            tool.process_exit()
+                        elif len(image_url_list) > 0:
+                            break
                     if len(image_url_list) == 0:
                         log.error(account_name + " 第%s张图片，album id：%s 的相册存档页没有解析到图片" % (image_count, album_id))
                         tool.process_exit()
+                        
                     log.trace(account_name + " 相册存档页%s获取的所有图片：%s" % (album_id, image_url_list))
 
                     for image_url in list(image_url_list):
