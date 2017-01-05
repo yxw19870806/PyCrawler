@@ -723,7 +723,7 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(-100)
     if HTTP_CONNECTION_POOL is None:
-        raise Exception("not init urllib3.PoolManager")
+        init_http_connection_pool()
 
     retry_count = 0
     while True:
