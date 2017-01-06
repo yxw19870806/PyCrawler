@@ -758,14 +758,19 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
             elif input_str in ["s", "stop"]:
                 sys.exit()
         except urllib3.exceptions.MaxRetryError, e:
+            # 无限重定向
             if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
                 return ErrorResponse(-1)
             else:
                 print_msg(url)
                 print_msg(str(e))
         except urllib3.exceptions.ConnectTimeoutError, e:
-            print_msg(str(e))
-            print_msg(url + " 访问超时，稍后重试")
+            # 域名无法解析
+            if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
+                return ErrorResponse(-2)
+            else:
+                print_msg(str(e))
+                print_msg(url + " 访问超时，稍后重试")
         except urllib3.exceptions.ProtocolError, e:
             print_msg(str(e))
             print_msg(url + " 访问超时，稍后重试")
