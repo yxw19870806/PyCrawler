@@ -121,12 +121,16 @@ def get_origin_image_url(image_url):
 
 # 检测图片是否有效
 def check_image_invalid(file_path):
-    # 文件大小小于1K
-    if os.path.getsize(file_path) < 1024:
+    file_size = os.path.getsize(file_path)
+    # 文件小于1K
+    if file_size < 1024:
         return True
-    # 文件分辨率是20x20（常用表情的尺寸）
     image = Image.open(file_path)
-    if image.size == (20, 20):
+    # 长或宽任意小于20像素的
+    if image.height <= 20 or image.width <= 20:
+        return True
+    # 文件小于 5K 并且 长或宽任意小于50像素的
+    if file_size < 5120 and (image.height <= 50 or image.width <= 50):
         return True
     return False
 
@@ -284,7 +288,7 @@ class Download(threading.Thread):
                         if tool.save_net_file(image_url, file_path):
                             if check_image_invalid(file_path):
                                 os.remove(file_path)
-                                log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, file_path))
+                                log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, image_url))
                             else:
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
