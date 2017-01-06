@@ -52,6 +52,12 @@ def is_max_page_count(page_data, page_count):
             return True
         else:
             return False
+    # 只有下一页和上一页按钮的样式
+    elif page_data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
+        if page_data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
+            return True
+        else:
+            return False
     return False
 
 
@@ -69,6 +75,8 @@ def get_image_url_list(account_name, blog_id):
         article_data = tool.find_sub_string(blog_page, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
         if not article_data:
             article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
+        if not article_data:
+            article_data = tool.find_sub_string(blog_page, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
         image_url_list_find = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
         image_url_list = []
         for image_url in image_url_list_find:
