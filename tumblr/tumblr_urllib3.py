@@ -113,6 +113,21 @@ def filter_different_resolution_images(image_url_list):
     return new_image_url_list.values()
 
 
+# 获取视频的真实下载地址
+# http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
+# ->
+# http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
+# urllib3跳转有些问题，跳转后的地址会带有#_=_，访问时会返回403错误，避免麻烦，这里就直接生产真实的下载地址了
+def get_video_url(video_url):
+    # 去除视频指定分辨率
+    temp_list = video_url.split("/")
+    if temp_list[-1].isdigit():
+        video_id = temp_list[-2]
+    else:
+        video_id = temp_list[-1]
+    return "http://vtt.tumblr.com/%s.mp4" % video_id
+
+
 class Tumblr(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -283,12 +298,14 @@ class Download(threading.Thread):
                             log.error(account_id + " 第%s个视频 日志%s无法获取视频播放页" % (video_count, post_id))
                         else:
                             if len(video_list) > 0:
-                                for video_url, video_type in list(video_list):
-                                    # 去除视频指定分辨率
-                                    temp_list = video_url.split("/")
-                                    if temp_list[-1].isdigit():
-                                        video_url = "/".join(temp_list[:-1])
-                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                                for video_play_url, video_type in list(video_list):
+                                    # 获取视频的真实下载地址
+                                    video_url = get_video_url(video_play_url)
+                                    # # 去除视频指定分辨率
+                                    # temp_list = video_url.split("/")
+                                    # if temp_list[-1].isdigit():
+                                    #     video_url = "/".join(temp_list[:-1])
+                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_play_url))
 
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
@@ -303,7 +320,7 @@ class Download(threading.Thread):
                                         log.step(account_id + " 第%s个视频下载成功" % video_count)
                                         video_count += 1
                                     else:
-                                        log.error(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                                        log.error(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_play_url))
                             else:
                                 log.error(account_id + " 第%s个视频 日志%s中没有找到视频" % (video_count, post_id))
 
