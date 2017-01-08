@@ -62,6 +62,7 @@ class Template(robot.Robot):
             image_path = IMAGE_TEMP_PATH
         else:
             image_path = IMAGE_DOWNLOAD_PATH
+        tool.make_dir(image_path, 0)
 
         page_count = 1
         image_count = 1
