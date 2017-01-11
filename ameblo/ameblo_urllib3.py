@@ -298,7 +298,7 @@ class Download(threading.Thread):
                         if image_url.rfind("/") > image_url.rfind("."):
                             file_type = "jpg"
                         else:
-                            file_type = image_url.split(".")[-1]
+                            file_type = image_url.split(".")[-1].split("?")[0]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                         if tool.save_net_file2(image_url, file_path):
                             if check_image_invalid(file_path):
