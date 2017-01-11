@@ -11,10 +11,14 @@ import clickerHeroes
 
 if __name__ == "__main__":
     ch = clickerHeroes.ClickerHeroes()
+    
+    # todo 根据当前窗口大小，自适应坐标位置
+    # (点击升级的按钮位置，1 ~ 4），保证升级窗口中第一个按钮完整显示）
+    click_button_index = 2
+    click_x, click_y = clickerHeroes.UPGRADE_BUTTON_POS[click_button_index]
     count = 0
     while True:
         # 自动升级
-        ch.auto_click(100, 370)
         # 判断指定制定坐标，是不是出现了装备宝箱，如果出现了就打开并关闭弹出界面
         red, green, blue = ch.get_color(570, 410)
         if red == 255 and 250 <= green <= 253 and 190 <= blue <= 210:
@@ -23,6 +27,7 @@ if __name__ == "__main__":
             ch.auto_click(920, 125)
             print "open equip box"
         # 每隔60秒检查一次是否启动了自动通关模式（战斗失败会自动关闭）
+        ch.auto_click(click_x, click_y)
         if count >= 60:
             is_find = False
             for pos_x in range(1110, 1130):
