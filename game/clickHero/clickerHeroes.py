@@ -26,7 +26,8 @@ class ClickerHeroes():
     def __init__(self):
         windows_title = "Clicker Heroes"
         self.window_handle = win32gui.FindWindow(None, windows_title)
-        print
+        # 设置为默认窗口大小（避免坐标产生偏移）
+        self.set_window_size(DEFAULT_WINDOWS_SIZE[0], DEFAULT_WINDOWS_SIZE[1])
 
     # 获取窗口大小
     def get_window_size(self):
