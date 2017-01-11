@@ -112,3 +112,7 @@ class ClickerHeroes():
     def is_foreground_window(self):
         return win32gui.GetForegroundWindow() == self.window_handle
 
+    # 根据屏幕坐标获取对应窗口坐标
+    def get_client_position(self, pos_x, pos_y):
+        return win32gui.ScreenToClient(self.window_handle, (pos_x, pos_y))
+
