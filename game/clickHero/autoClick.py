@@ -12,5 +12,5 @@ import clickerHeroes
 if __name__ == "__main__":
     ch = clickerHeroes.ClickerHeroes()
     while True:
-        ch.auto_click(clickerHeroes.MONSTER_CLICK_POS[0], clickerHeroes.MONSTER_CLICK_POS[1])
+        ch.auto_click(clickerHeroes.MONSTER_CLICK_POSITION[0], clickerHeroes.MONSTER_CLICK_POSITION[1])
         time.sleep(0.01)

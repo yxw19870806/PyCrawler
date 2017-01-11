@@ -24,12 +24,11 @@ def check_relic_box():
 # 检测自动通过模式
 # 如果有检测到自动通关模式被关闭，开启后返回
 def check_progression_mode():
-    for pos_x in range(1110, 1130):
-        for pos_y in range(240, 260):
-            red, green, blue = ch.get_color(pos_x, pos_y)
-            if red == 255 and green == 0 and blue == 0:
-                ch.auto_click(1120, 250)
-                return True
+    for pos_x, pos_y in clickerHeroes.PROGRESSION_MODE_CHECK_POSITION:
+        red, green, blue = ch.get_color(pos_x, pos_y)
+        if red == 255 and green == 0 and blue == 0:
+            ch.auto_click(1120, 250)
+            return True
     return False
 
 
