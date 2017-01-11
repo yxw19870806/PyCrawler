@@ -40,11 +40,11 @@ def is_max_page_count(page_data, page_count):
         paging_data = tool.find_sub_string(page_data, '<div class="page topPaging">', "</div>")
         last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
         if len(last_page) == 1:
-            return int(last_page[0]) >= page_count
+            return page_count >= int(last_page[0])
         page_count_find = re.findall('<a [^>]*?>(\d*)</a>', paging_data)
         if len(page_count_find) > 0:
             page_count_find = map(int, page_count_find)
-            return max(page_count_find) >= page_count
+            return page_count >= max(page_count_find)
         return False
     # 只有下一页和上一页按钮的样式
     elif page_data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
