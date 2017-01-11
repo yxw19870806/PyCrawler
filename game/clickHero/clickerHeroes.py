@@ -107,3 +107,8 @@ class ClickerHeroes():
         green = (color >> 8) & 255
         blue = (color >> 16) & 255
         return red, green, blue
+
+    # 判断是否是最顶端窗口
+    def is_foreground_window(self):
+        return win32gui.GetForegroundWindow() == self.window_handle
+

@@ -47,14 +47,15 @@ if __name__ == "__main__":
 
         # 每10分钟检测一次
         if count >= 600:
-            # 检测宝箱，并且只要开启过一次后就不再检测
-            if not is_open_equip_box and check_relic_box():
-                is_open_equip_box = True
-                print "open relic box"
+            # 只有窗口置顶时才进行判断
+            if ch.is_foreground_window():
+                # 检测宝箱，并且只要开启过一次后就不再检测
+                if not is_open_equip_box and check_relic_box():
+                    is_open_equip_box = True
+                    print "open relic box"
 
-            if check_progression_mode():
-                print "enable progression mode"
-
+                if check_progression_mode():
+                    print "enable progression mode"
             # 重置计数
             count = 0
 
