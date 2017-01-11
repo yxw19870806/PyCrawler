@@ -9,37 +9,55 @@ import time
 import clickerHeroes
 
 
+# 检测遗物宝箱
+# 如果有检测到宝箱并点击开启后返回True
+def check_relic_box():
+    red, green, blue = ch.get_color(570, 410)
+    if red == 255 and 250 <= green <= 253 and 190 <= blue <= 210:
+        ch.auto_click(575, 370)
+        time.sleep(1)
+        ch.auto_click(920, 125)
+        return True
+    return False
+
+
+# 检测自动通过模式
+# 如果有检测到自动通关模式被关闭，开启后返回
+def check_progression_mode():
+    for pos_x in range(1110, 1130):
+        for pos_y in range(240, 260):
+            red, green, blue = ch.get_color(pos_x, pos_y)
+            if red == 255 and green == 0 and blue == 0:
+                ch.auto_click(1120, 250)
+                return True
+    return False
+
+
 if __name__ == "__main__":
     ch = clickerHeroes.ClickerHeroes()
-    
+
+    count = 0
     # todo 根据当前窗口大小，自适应坐标位置
     # (点击升级的按钮位置，1 ~ 4），保证升级窗口中第一个按钮完整显示）
-    click_button_index = 2
+    click_button_index = 1
     click_x, click_y = clickerHeroes.UPGRADE_BUTTON_POS[click_button_index]
-    count = 0
+    is_open_equip_box = False
     while True:
         # 自动升级
         ch.auto_click(click_x, click_y)
-        # 每隔10分钟秒检查一次是否启动了自动通关模式（战斗失败会自动关闭）
-        if count >= 60:
-            # 判断指定制定坐标，是不是出现了装备宝箱，如果出现了就打开并关闭弹出界面
-            red, green, blue = ch.get_color(570, 410)
-            if red == 255 and 250 <= green <= 253 and 190 <= blue <= 210:
-                ch.auto_click(575, 370)
-                time.sleep(1)
-                ch.auto_click(920, 125)
-                print "open equip box"
-            is_find = False
-            for pos_x in range(1110, 1130):
-                for pos_y in range(240, 260):
-                    red, green, blue = ch.get_color(pos_x, pos_y)
-                    if red == 255 and green == 0 and blue == 0:
-                        ch.auto_click(1120, 250)
-                        print "continue battle"
-                        is_find = True
-                        break
-                if is_find:
-                    break
+
+        # 每10分钟检测一次
+        if count >= 600:
+            # 检测宝箱，并且只要开启过一次后就不再检测
+            if not is_open_equip_box and check_relic_box():
+                is_open_equip_box = True
+                print "open relic box"
+
+            if check_progression_mode():
+                print "enable progression mode"
+
+            # 重置计数
             count = 0
+
         time.sleep(1)
         count += 1
