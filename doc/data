@@ -154,6 +154,8 @@ filename = "c:\\aa.bb\\cc.dd"
 获取文件扩展名: os.path.splitext(filename)[1] -> dd
 
 23.win32Gui
+http://docs.activestate.com/activepython/2.7/pywin32/win32gui.html
+http://www.programcreek.com/python/index/322/win32gui
 1.根据标题或者类名查找窗口
 win32gui.FindWindow(WINDOW_CLASS_NAME, WINDOW_TITLE_NAME)
 	param	WINDOW_CLASS_NAME（窗口类名，不要则为Null或0）
@@ -197,6 +199,12 @@ win32gui.SetWindowPos(WINDOW_HANDLE, WINDOW_Z_INDEX, WINDOW_POSITION_X, WINDOW_P
 				win32con.SWP_NOSIZE：维持当前尺寸（忽略第5个和第6个参数）。
 				win32con.SWP_NOZORDER：维持当前Z序（忽略第2个参数）。
 				win32con.SWP_SHOWWINDOW：显示窗口。
+win32gui.MoveWindow(WINDOW_HANDLE, WINDOW_POSITION_X, WINDOW_POSITION_Y, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_REPAINT)
+	param	WINDOW_HANDLE（窗口句柄）
+			WINDOW_POSITION_X（新窗口的左边界，单位：像素）
+    		WINDOW_POSITION_Y（新窗口的顶边界，单位：像素）
+			WINDOW_WIDTH（新窗口的长，单位：像素）
+			WINDOW_HEIGHT（新窗口的宽，单位：像素）
 5.根据设备上下文获取对应窗口坐标的颜色RGB值
 win32gui.GetPixel(DEVICE_CONTEXT, POSITION_X, POSITION_Y)
 	param	DEVICE_CONTEXT（设备上下文）
@@ -205,15 +213,27 @@ win32gui.GetPixel(DEVICE_CONTEXT, POSITION_X, POSITION_Y)
 	return	RGB_VALUE（颜色RGB值对应的整数）范围：0 ~ 16777215，转化为16进制后，从右往左每2位分别代表RGB的值
 6.获取当前最顶端窗口的窗口句柄
 win32gui.GetForegroundWindow()
-7.根据窗口句柄，获取某个屏幕坐标对应的窗口相对坐标
+6.获取桌面窗口的窗口句柄
+win32gui.GetDesktopWindow()
+所有程序窗口都是桌面窗口的子窗口
+7.根据窗口句柄，遍历获取所有子窗口
+window = win32gui.GetWindow(WINDOW_HANDLE, win32con.GW_CHILD)
+while window:
+    window = win32gui.GetWindow(window, win32con.GW_HWNDNEXT)
+8.根据窗口句柄，获取某个屏幕坐标对应的窗口相对坐标
 win32gui.ScreenToClient(WINDOW_HANDLE, (SCREEN_POSITION_X, SCREEN_POSITION_Y))
 	param	WINDOW_HANDLE（窗口句柄）
 			SCREEN_POSITION_X（屏幕X坐标）
 			SCREEN_POSITION_Y（屏幕Y坐标）
 	return	WINDOW_POSITION_X（窗口X坐标）
 			WINDOW_POSITION_Y（窗口X坐标）
-
-
+9.根据窗口句柄，获取窗口相对坐标对应的屏幕坐标
+win32gui.ClientToScreen(WINDOW_HANDLE, (WINDOW_POSITION_X, WINDOW_POSITION_Y))
+	param	WINDOW_HANDLE（窗口句柄）
+			WINDOW_POSITION_X（窗口X坐标）
+			WINDOW_POSITION_Y（窗口X坐标）
+	return	SCREEN_POSITION_X（屏幕X坐标）
+			SCREEN_POSITION_Y（屏幕Y坐标）
 
 
 
