@@ -87,12 +87,13 @@ def get_image_url_list(account_name, blog_id):
 # http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_image_url(image_url):
     # 过滤表情
-    if image_url.find("http://emoji.ameba.jp") == 0 or image_url.find("http://i.yimg.jp/images/mail/emoji") == 0 or \
-            image_url.find("http://blog.ameba.jp/ucs/img/char") == 0 or image_url.find("https://mail.google.com/mail/e") == 0:
+    if image_url.find("http://emoji.ameba.jp/") == 0 or image_url.find("http://blog.ameba.jp/ucs/img/char/") == 0 \
+            or image_url.find("http://i.yimg.jp/images/mail/emoji/") == 0 or image_url.find("http://stat100.ameba.jp//blog/ucs/img/char/") == 0:
         return ""
     # 无效的地址
-    elif image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 or image_url.find("https://mail.google.com/mail/u") == 0 \
-            or image_url[-9:] == "clear.gif":
+    elif image_url.find("https://b.st-hatena.com/images/entry-button/") == 0 or image_url.find("http://vc.ameba.jp/view?") == 0 \
+            or image_url.find("https://mail.google.com/mail/" ) == 0 or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download/") == 0 \
+            or image_url.find("http://blog.watanabepro.co.jp/") >= 0 or image_url[-9:] == "clear.gif":
         return ""
     # ameba上传图片
     elif image_url.find("http://stat.ameba.jp/user_images") == 0:
@@ -125,7 +126,10 @@ def check_image_invalid(file_path):
     # 文件小于1K
     if file_size < 1024:
         return True
-    image = Image.open(file_path)
+    try:
+        image = Image.open(file_path)
+    except IOError:  # 不是图片格式
+        return False
     # 长或宽任意小于20像素的
     if image.height <= 20 or image.width <= 20:
         return True
