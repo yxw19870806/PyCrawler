@@ -772,8 +772,11 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
                 print_msg(str(e))
                 print_msg(url + " 访问超时，稍后重试")
         except urllib3.exceptions.ProtocolError, e:
-            print_msg(str(e))
-            print_msg(url + " 访问超时，稍后重试")
+            if str(e).find("'Connection aborted.', error(10054,") >= 0:
+                return ErrorResponse(-3)
+            else:
+                print_msg(str(e))
+                print_msg(url + " 访问超时，稍后重试")
         except Exception, e:
             print_msg(url)
             print_msg(str(e))
