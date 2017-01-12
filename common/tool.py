@@ -797,6 +797,9 @@ class ErrorResponse(object):
 # file_url 文件所在网址
 # file_path 文件所在本地路径，包括路径和文件名
 # need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
+# return
+#       status: 0：失败，1：成功,
+#       code: -1：下载失败（网络问题），>0：对应url的http code
 def save_net_file2(file_url, file_path, need_content_type=False):
     file_path = change_path_encoding(file_path)
     create_file = False
@@ -817,16 +820,16 @@ def save_net_file2(file_url, file_path, need_content_type=False):
             content_length = get_response_info(response, "Content-Length")
             file_size = os.path.getsize(file_path)
             if (content_length is None) or (int(content_length) == file_size):
-                return True
+                return {"status": 1, "code": 0}
             else:
-                print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
+                print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         elif response.status > 0:
             if create_file:
                 os.remove(file_path)
-            return False
+            return {"status": 0, "code": response.status}
     if create_file:
         os.remove(file_path)
-    return False
+    return {"status": 0, "code": -1}
 
 
 # 获取请求response中的指定信息(urlib3)

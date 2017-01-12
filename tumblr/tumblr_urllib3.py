@@ -316,11 +316,12 @@ class Download(threading.Thread):
 
                                     file_type = video_type.split("/")[-1]
                                     video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                    if tool.save_net_file2(video_url, video_file_path):
+                                    save_file_return = tool.save_net_file2(video_url, video_file_path)
+                                    if save_file_return["status"] == 1:
                                         log.step(account_id + " 第%s个视频下载成功" % video_count)
                                         video_count += 1
                                     else:
-                                        log.error(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_play_url))
+                                        log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_play_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                             else:
                                 log.error(account_id + " 第%s个视频 日志%s中没有找到视频" % (video_count, post_id))
 
@@ -350,11 +351,12 @@ class Download(threading.Thread):
 
                                 file_type = image_url.split(".")[-1]
                                 image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                if tool.save_net_file2(image_url, image_file_path):
+                                save_file_return = tool.save_net_file2(image_url, image_file_path)
+                                if save_file_return["status"] == 1:
                                     log.step(account_id + " 第%s张图片下载成功" % image_count)
                                     image_count += 1
                                 else:
-                                    log.error(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                                    log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                         else:
                             log.error(account_id + " 第%s张图片 日志%s中没有找到图片" % (image_count, post_id))
 

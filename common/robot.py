@@ -427,3 +427,14 @@ def is_process_end():
     elif process.PROCESS_STATUS == process.PROCESS_STATUS_FINISH:
         return 2
     return 0
+
+
+# 获取网络文件下载失败的原因
+def get_save_net_file_failed_reason(return_code):
+    if return_code == 404:
+        return "源文件已被删除"
+    elif return_code == -1:
+        return "源文件获取超时"
+    elif return_code > 0:
+        return "未知错误，http code %s" % return_code
+

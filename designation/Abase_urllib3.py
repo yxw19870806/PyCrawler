@@ -141,7 +141,8 @@ class Download(threading.Thread):
             is_exist = False
             file_path = self.file_path
 
-        if tool.save_net_file2(self.file_url, file_path):
+        save_file_return = tool.save_net_file2(self.file_url, file_path)
+        if save_file_return["status"] == 1:
             if check_invalid_image(file_path):
                 os.remove(file_path)
                 log.step("%s的封面图片无效，自动删除" % self.title)
@@ -159,7 +160,7 @@ class Download(threading.Thread):
                 TOTAL_IMAGE_COUNT += 1
                 self.thread_lock.release()
         else:
-            log.error("%s的封面图片 %s 下载失败" % (self.title, self.file_url))
+            log.error("%s的封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
 
 if __name__ == "__main__":

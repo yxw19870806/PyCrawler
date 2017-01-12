@@ -300,7 +300,8 @@ class Download(threading.Thread):
                         else:
                             file_type = image_url.split(".")[-1].split("?")[0]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        if tool.save_net_file2(image_url, file_path):
+                        save_file_return = tool.save_net_file2(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             if check_image_invalid(file_path):
                                 os.remove(file_path)
                                 log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, image_url))
@@ -308,7 +309,7 @@ class Download(threading.Thread):
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:

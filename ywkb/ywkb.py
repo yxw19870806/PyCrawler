@@ -72,11 +72,12 @@ class Template(robot.Robot):
 
                 file_type = image_url.split(".")[-1]
                 file_path = os.path.join(self.image_download_path, "%04d.%s" % (post_id, file_type))
-                if tool.save_net_file2(image_url, file_path):
+                save_file_return = tool.save_net_file2(image_url, file_path)
+                if save_file_return["status"] == 1:
                     log.step("%s的图片下载成功" % post_id)
                     image_count += 1
                 else:
-                    log.error("%s的图片 %s 获取失败" % (post_id, image_url))
+                    log.error("%s的图片 %s 下载失败，原因：%s" % (post_id, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
             page_count += 1
 
