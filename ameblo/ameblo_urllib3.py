@@ -101,8 +101,8 @@ def get_origin_image_url(image_url):
         return ""
     # 无效的地址
     elif image_url.find("https://mail.google.com/mail/") == 0 or image_url.find("http://vc.ameba.jp/view?") == 0 \
-            or image_url.find("https://b.st-hatena.com/images/entry-button/" ) == 0 or image_url[-9:] == "clear.gif" \
-            or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0:
+            or image_url.find("https://b.st-hatena.com/images/entry-button/" ) == 0 or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download") == 0 \
+            or image_url.find("http://blog.watanabepro.co.jp/") >= 0 or image_url[-9:] == "clear.gif":
         return ""
     # ameba上传图片
     elif image_url.find("http://stat.ameba.jp/user_images") == 0:
