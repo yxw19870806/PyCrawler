@@ -30,7 +30,7 @@ if sys.version_info < (2, 7, 12):
 elif sys.version_info >= (3,):
     raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
 HTTP_CONNECTION_TIMEOUT = 10
-HTTP_REQUEST_RETRY_COUNT = 100
+HTTP_REQUEST_RETRY_COUNT = 10
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
@@ -758,25 +758,23 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
             elif input_str in ["s", "stop"]:
                 sys.exit()
         except urllib3.exceptions.MaxRetryError, e:
+            print_msg(url)
+            print_msg(str(e))
             # 无限重定向
-            if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
-                return ErrorResponse(-1)
-            else:
-                print_msg(url)
-                print_msg(str(e))
+            # if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
+            #     return ErrorResponse(-1)
         except urllib3.exceptions.ConnectTimeoutError, e:
+            print_msg(str(e))
+            print_msg(url + " 访问超时，稍后重试")
             # 域名无法解析
-            if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
-                return ErrorResponse(-2)
-            else:
-                print_msg(str(e))
-                print_msg(url + " 访问超时，稍后重试")
+            # if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
+            #     return ErrorResponse(-2)
         except urllib3.exceptions.ProtocolError, e:
-            if str(e).find("'Connection aborted.', error(10054,") >= 0:
-                return ErrorResponse(-3)
-            else:
-                print_msg(str(e))
-                print_msg(url + " 访问超时，稍后重试")
+            print_msg(str(e))
+            print_msg(url + " 访问超时，稍后重试")
+            # 链接被终止
+            # if str(e).find("'Connection aborted.', error(10054,") >= 0:
+            #     return ErrorResponse(-3)
         except Exception, e:
             print_msg(url)
             print_msg(str(e))
@@ -826,7 +824,13 @@ def save_net_file2(file_url, file_path, need_content_type=False):
                 return {"status": 1, "code": 0}
             else:
                 print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
-        elif response.status > 0:
+        # 超过重试次数，直接退出
+        elif response.status == 0:
+            if create_file:
+                os.remove(file_path)
+            return {"status": 0, "code": 0}
+        # 其他http code，退出
+        else:
             if create_file:
                 os.remove(file_path)
             return {"status": 0, "code": response.status}
