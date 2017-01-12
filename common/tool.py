@@ -800,7 +800,9 @@ class ErrorResponse(object):
 # need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
 # return
 #       status: 0：失败，1：成功,
-#       code: -1：下载失败（网络问题），>0：对应url的http code
+#       code:   -1：无法访问（没有获得返回，可能是域名无法解析，请求被直接丢弃，地址被墙等）
+#               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
+#               > 0：访问出错，对应url的http code
 def save_net_file2(file_url, file_path, need_content_type=False):
     file_path = change_path_encoding(file_path)
     create_file = False
@@ -828,7 +830,7 @@ def save_net_file2(file_url, file_path, need_content_type=False):
         elif response.status == 0:
             if create_file:
                 os.remove(file_path)
-            return {"status": 0, "code": 0}
+            return {"status": 0, "code": -1}
         # 其他http code，退出
         else:
             if create_file:
@@ -836,7 +838,7 @@ def save_net_file2(file_url, file_path, need_content_type=False):
             return {"status": 0, "code": response.status}
     if create_file:
         os.remove(file_path)
-    return {"status": 0, "code": -1}
+    return {"status": 0, "code": -2}
 
 
 # 获取请求response中的指定信息(urlib3)

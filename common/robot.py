@@ -434,7 +434,8 @@ def get_save_net_file_failed_reason(return_code):
     if return_code == 404:
         return "源文件已被删除"
     elif return_code == -1:
-        return "源文件获取超时"
+        return "源文件多次获取失败，可能无法访问"
+    elif return_code == -2:
+        return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
-
