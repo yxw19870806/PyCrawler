@@ -434,7 +434,7 @@ class Download(threading.Thread):
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
                             else:
-                                log.error(account_name + " 第%s张图片 %s 获取失败" % (image_count, image_url))
+                                log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                         # 达到配置文件中的下载数量，结束视频下载
                         if 0 < GET_VIDEO_COUNT < video_count:
