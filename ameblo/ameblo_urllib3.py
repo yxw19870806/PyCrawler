@@ -140,7 +140,7 @@ def check_image_invalid(file_path):
     try:
         image = Image.open(file_path)
     except IOError:  # 不是图片格式
-        return False
+        return True
     # 长或宽任意小于20像素的
     if image.height <= 20 or image.width <= 20:
         return True
