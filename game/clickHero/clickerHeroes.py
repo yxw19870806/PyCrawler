@@ -5,6 +5,7 @@ clicker heroes窗口处理类
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+from common import keyboardEvent
 import pywintypes
 import win32api
 import win32con
@@ -36,6 +37,23 @@ PROGRESSION_MODE_CHECK_POSITION = (
 MONSTER_CLICK_POSITION = (855, 395)
 DEFAULT_WINDOWS_SIZE = (1152, 678)
 DEFAULT_CLIENT_SIZE = (1136, 640)
+PROCESS_STATUS_PAUSE = 0  # 进程暂停
+PROCESS_STATUS_RUN = 1  # 进程运行
+PROCESS_STATUS = PROCESS_STATUS_RUN  # 当前进程状态
+
+
+# 设置暂停状态
+def pause_process():
+    global PROCESS_STATUS
+    print "pause process"
+    PROCESS_STATUS = PROCESS_STATUS_PAUSE
+
+
+# 设置运行状态
+def continue_process():
+    global PROCESS_STATUS
+    print "continue process"
+    PROCESS_STATUS = PROCESS_STATUS_RUN
 
 
 class ClickerHeroes():
@@ -44,6 +62,10 @@ class ClickerHeroes():
         self.window_handle = win32gui.FindWindow(None, windows_title)
         # 设置为默认窗口大小（避免坐标产生偏移）
         self.set_window_size(DEFAULT_WINDOWS_SIZE[0], DEFAULT_WINDOWS_SIZE[1])
+        keyboard_event_bind = {"Prior": pause_process, "Next": continue_process}
+        keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
+        keyboard_control_thread.setDaemon(True)
+        keyboard_control_thread.start()
 
     # 获取窗口大小
     def get_window_size(self):

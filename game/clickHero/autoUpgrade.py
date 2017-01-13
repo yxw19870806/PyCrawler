@@ -42,6 +42,8 @@ if __name__ == "__main__":
     click_x, click_y = clickerHeroes.UPGRADE_BUTTON_POS[click_button_index]
     is_open_equip_box = False
     while True:
+        while clickerHeroes.PROCESS_STATUS == clickerHeroes.PROCESS_STATUS_PAUSE:
+            time.sleep(1)
         # 自动升级
         ch.auto_click(click_x, click_y)
 
