@@ -71,7 +71,7 @@ class MeiTuZZ(robot.Robot):
                 break
 
             if album_page_return_code == -500:
-                log.error("第%s页相册内部错误" % album_id)
+                log.step("第%s页相册内部错误，跳过" % album_id)
                 album_id += 1
                 continue
             elif album_page_return_code != 1:
@@ -81,7 +81,7 @@ class MeiTuZZ(robot.Robot):
             if album_page.find("<title>相册已被删除</title>") >= 0:
                 error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
-                    log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
+                    log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
                     album_id -= error_count - 1
                     break
                 else:
