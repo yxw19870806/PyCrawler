@@ -27,7 +27,7 @@ def check_progression_mode():
     for pos_x, pos_y in clickerHeroes.PROGRESSION_MODE_CHECK_POSITION:
         red, green, blue = ch.get_color(pos_x, pos_y)
         if red == 255 and green == 0 and blue == 0:
-            ch.auto_click(1120, 250)
+            ch.auto_click(1110, 250)
             return True
     return False
 
