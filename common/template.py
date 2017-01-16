@@ -104,10 +104,8 @@ class Template(robot.Robot):
                 new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
-        # todo 是否需要下载图片或视频
         # 删除临时文件夹
-        tool.remove_dir(IMAGE_TEMP_PATH)
-        tool.remove_dir(VIDEO_TEMP_PATH)
+        self.finish_task()
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
