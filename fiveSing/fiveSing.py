@@ -27,7 +27,7 @@ NEW_SAVE_DATA_PATH = ""
 # page_type 页面类型：yc - 原唱、fc - 翻唱
 # account_id -> inory
 def get_one_page_audio_list(account_id, page_type, page_count):
-    # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
+    # http://5sing.kugou.com/inory/yc/1.html
     audio_album_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
     audio_album_return_code, audio_album_page = tool.http_request(audio_album_url)[:2]
     if audio_album_return_code == 1:
@@ -37,6 +37,7 @@ def get_one_page_audio_list(account_id, page_type, page_count):
 
 # 根据歌曲类型和歌曲id获取歌曲下载地址
 def get_audio_url(audio_id, song_type):
+    # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
     audio_info_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
     audio_info_return_code, audio_info = tool.http_request(audio_info_url)[:2]
     if audio_info_return_code == 1:
