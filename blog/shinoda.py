@@ -35,8 +35,9 @@ class Shinoda(robot.Robot):
         # 下载
         page_index = 1
         image_count = 1
-        is_over = False
         new_last_blog_id = ""
+        is_over = False
+        need_make_image_dir = True
         if self.is_sort:
             image_path = self.image_temp_path
         else:
@@ -48,10 +49,12 @@ class Shinoda(robot.Robot):
             index_page_return_code, index_page = tool.http_request(index_url)[:2]
 
             if index_page_return_code == 1:
+                # 获取页面内的全部图片
                 image_name_list = re.findall('data-original="./([^"]*)"', index_page)
                 log.trace("第%s页获取的全部图片：%s" % (page_index, image_name_list))
 
                 for image_name in image_name_list:
+                    # 获取blog_id
                     blog_id = image_name.split("-")[0]
 
                     # 检查是否已下载到前一次的图片
@@ -64,10 +67,17 @@ class Shinoda(robot.Robot):
                         new_last_blog_id = blog_id
 
                     image_url = "http://blog.mariko-shinoda.net/%s" % image_name
-                    # 文件类型
+                    log.step("开始下载第%s张图片 %s" % (image_count, image_url))
+
+                    # 第一张图片，创建目录
+                    if need_make_image_dir:
+                        if not tool.make_dir(image_path, 0):
+                            log.error("创建图片下载目录 %s 失败" % image_path)
+                            tool.process_exit()
+                        need_make_image_dir = False
+
                     file_type = image_url.split(".")[-1].split(":")[0]
                     file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
-                    log.step("开始下载第%s张图片 %s" % (image_count, image_url))
                     if tool.save_net_file(image_url, file_path):
                         log.step("第%s张图片下载成功" % image_count)
                         image_count += 1
@@ -78,7 +88,7 @@ class Shinoda(robot.Robot):
                 log.error("无法访问博客页面 %s" % index_url)
                 is_over = True
 
-        log.step("下载完毕")
+        log.step("下载完毕，总共获得%s张图片" % (image_count - 1))
 
         # 排序复制到保存目录
         if self.is_sort:
