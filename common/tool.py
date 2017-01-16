@@ -272,6 +272,9 @@ def set_cookie_from_browser(file_path, browser_type, target_domains=""):
                 s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
             except:
                 pass
+    else:
+        print_msg("不支持的浏览器类型：" + browser_type)
+        return False
     s.seek(0)
     cookie_jar = cookielib.MozillaCookieJar()
     cookie_jar._really_load(s, "", True, True)
@@ -325,6 +328,9 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
                 except:
                     return None
                 return value
+    else:
+        print_msg("不支持的浏览器类型：" + browser_type)
+        return None
     return None
 
 
