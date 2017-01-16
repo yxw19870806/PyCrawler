@@ -162,7 +162,10 @@ class Ameblo(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
         }
-        robot.Robot.__init__(self, sys_config, use_urllib3=True)
+        extra_config = {
+            'save_data_path': os.path.join("info\\save2.data")
+        }
+        robot.Robot.__init__(self, sys_config, extra_config=extra_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
