@@ -41,7 +41,7 @@ class Fkoji(robot.Robot):
             robot.SYS_SET_PROXY: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
     def main(self):
         # 解析存档文件
@@ -77,12 +77,12 @@ class Fkoji(robot.Robot):
             log.step("开始解析第%s页图片" % page_index)
 
             index_url = "http://jigadori.fkoji.com/?p=%s" % page_index
-            index_page_return_code, index_page_response = tool.http_request(index_url)[:2]
-            if index_page_return_code != 1:
+            index_response = tool.http_request2(index_url)
+            if index_response.status != 200:
                 log.error("无法访问首页地址 %s" % index_url)
                 tool.process_exit()
 
-            index_page = BeautifulSoup.BeautifulSoup(index_page_response)
+            index_page = BeautifulSoup.BeautifulSoup(index_response.data)
             photo_list = index_page.body.findAll("div", "photo")
             # 已经下载到最后一页
             if not photo_list:
@@ -132,11 +132,12 @@ class Fkoji(robot.Robot):
                         if file_type.find("/") != -1:
                             file_type = "jpg"
                         file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, account_id, file_type))
-                        if tool.save_net_file(image_url, file_path):
+                        save_file_return = tool.save_net_file2(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             log.step("第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error("第%s张图片 %s，account_id：%s，下载失败" % (image_count, image_url, account_id))
+                            log.error("第%s张图片 %s，account_id：%s，下载失败，原因：%s" % (image_count, image_url, account_id, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 if is_over:
                     break
 
