@@ -25,52 +25,6 @@ NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
 NOT_LOGIN_CAN_RUN = False
 SAVE_ACCOUNT_INFO = True
-COOKIE_INFO = {"acw_tc": "", "PHPSESSID": ""}
-
-
-# 检测登录状态
-def check_login():
-    if not COOKIE_INFO["acw_tc"] or not COOKIE_INFO["PHPSESSID"]:
-        return False
-    home_page_url = "http://bcy.net/home/user/index"
-    header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
-    home_page_response = tool.http_request2(home_page_url, header_list=header_list)
-    if home_page_response.status == 200:
-        if home_page_response.data.find('<a href="/login">登录</a>') == -1:
-            return True
-        else:
-            return False
-    return False
-
-
-# 从文件中获取账号信息
-def read_cookie_info_from_file():
-    if not os.path.exists("account.data"):
-        return False
-    file_handle = open("account.data", "r")
-    cookie_info = file_handle.read()
-    file_handle.close()
-    try:
-        cookie_info = json.loads(base64.b64decode(cookie_info[1:]))
-    except TypeError:
-        pass
-    except ValueError:
-        pass
-    else:
-        if robot.check_sub_key(("acw_tc", "PHPSESSID"), cookie_info):
-            global COOKIE_INFO
-            COOKIE_INFO["acw_tc"] = cookie_info["acw_tc"]
-            COOKIE_INFO["PHPSESSID"] = cookie_info["PHPSESSID"]
-            return True
-    return False
-
-
-# 保存账号信息到到文件中
-def save_cookie_info_to_file(cookie_info):
-    account_info = tool.generate_random_string(1) + base64.b64encode(json.dumps(cookie_info))
-    file_handle = open("account.data", "w")
-    file_handle.write(account_info)
-    file_handle.close()
 
 
 # 从控制台输入获取账号信息
@@ -89,27 +43,68 @@ def get_account_info_from_console():
                 pass
 
 
+# 从文件中获取账号信息
+def get_account_info_from_file():
+    if not os.path.exists("account.data"):
+        return None, None
+    file_handle = open("account.data", "r")
+    account_info = file_handle.read()
+    file_handle.close()
+    try:
+        account_info = json.loads(base64.b64decode(account_info[1:]))
+    except TypeError:
+        account_info = {}
+    except ValueError:
+        account_info = {}
+    if robot.check_sub_key(("email", "password"), account_info):
+        return account_info["email"], account_info["password"]
+    return None, None
+
+
+# 保存账号信息到到文件中
+def set_account_info_to_file(email, password):
+    account_info = base64.b64encode(tool.generate_random_string(1) + json.dumps({"email": email, "password": password}))
+    file_handle = open("account.data", "w")
+    file_handle.write(account_info)
+    file_handle.close()
+
+
 # 模拟登录
-def login():
-    global COOKIE_INFO
-    # 访问首页，获取一个随机session id
-    home_page_url = "http://bcy.net/home/user/index"
-    home_page_response = tool.http_request2(home_page_url)
-    if home_page_response.status == 200 and "Set-Cookie" in home_page_response.headers:
-        COOKIE_INFO["acw_tc"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "acw_tc=", ";")
-        COOKIE_INFO["PHPSESSID"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "PHPSESSID=", ";")
+# from_where    1：从文件中读取
+#               2：控制台输入
+def login(from_where):
+    if from_where == 1:
+        email, password = get_account_info_from_file()
+        if email is None or password is None:
+            return False
     else:
-        return False
-    # 从命令行中输入账号密码
-    email, password = get_account_info_from_console()
+         email, password = get_account_info_from_console()
+
+    # 使用cookie
+    cookie = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
+    urllib2.install_opener(opener)
+
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
-    header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
-    login_response = tool.http_request2(login_url, login_post, header_list=header_list)
-    if login_response.status == 200:
-        if login_response.data.find('<a href="/login">登录</a>') == -1:
-            if SAVE_ACCOUNT_INFO:
-                save_cookie_info_to_file(COOKIE_INFO)
+    login_response = tool.http_request(login_url, login_post)
+    if login_response[0] == 1 and login_response[2].geturl() == "http://bcy.net/home/user/index":
+        if from_where == 2 and SAVE_ACCOUNT_INFO:
+            set_account_info_to_file(email, password)
+        return True
+    else:
+        return False
+
+
+# 检测登录状态
+def check_login():
+    home_page_url = "http://bcy.net/home/user/index"
+    home_page_return = tool.http_request(home_page_url)
+    if home_page_return[0] == 1:
+        real_url = home_page_return[2].geturl()
+        if (home_page_url != real_url) or ("http://bcy.net/start" == real_url):
+            return False
+        else:
             return True
     return False
 
@@ -118,10 +113,10 @@ def login():
 def follow(account_id):
     follow_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_response = tool.http_request2(follow_url, follow_post_data)
-    if follow_response.status == 200:
+    follow_return_code, follow_return_data = tool.http_request(follow_url, follow_post_data)[:2]
+    if follow_return_code == 1:
         # 0 未登录，11 关注成功，12 已关注
-        if int(follow_response.data) == 12:
+        if int(follow_return_data) == 12:
             return True
     return False
 
@@ -130,9 +125,9 @@ def follow(account_id):
 def unfollow(account_id):
     unfollow_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_response = tool.http_request2(unfollow_url, unfollow_post_data)
-    if unfollow_response.status == 200:
-        if int(unfollow_response.data) == 1:
+    unfollow_return_code, unfollow_return_data = tool.http_request(unfollow_url, unfollow_post_data)[:2]
+    if unfollow_return_code == 1:
+        if int(unfollow_return_data) == 1:
             return True
     return False
 
@@ -141,9 +136,9 @@ def unfollow(account_id):
 def get_one_page_post(coser_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-    post_page_response = tool.http_request2(post_url)
-    if post_page_response.status == 200:
-        return post_page_response.data
+    post_page_return_code, post_page = tool.http_request(post_url)[:2]
+    if post_page_return_code == 1:
+        return post_page
     return None
 
 
@@ -167,12 +162,12 @@ def get_rp_list(post_page):
 def get_image_url_list(cp_id, rp_id):
     # http://bcy.net/coser/detail/9299/36484
     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-    rp_page_response = tool.http_request2(rp_url)
-    if rp_page_response.status == 200:
-        if rp_page_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
+    rp_page_return_code, rp_page_response = tool.http_request(rp_url)[:2]
+    if rp_page_return_code == 1:
+        if rp_page_response.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
             return -1, []
         else:
-            return 1, re.findall("src='([^']*)'", rp_page_response.data)
+            return 1, re.findall("src='([^']*)'", rp_page_response)
     return 0, []
 
 
@@ -191,11 +186,10 @@ class Bcy(robot.Robot):
         global GET_PAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global COOKIE_INFO
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_GET_COOKIE: {"bcy.net": ("acw_tc", "PHPSESSID")},
+            robot.SYS_SET_COOKIE: ("bcy.net",),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -203,8 +197,6 @@ class Bcy(robot.Robot):
         GET_PAGE_COUNT = self.get_page_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        COOKIE_INFO["acw_tc"] = self.cookie_value["acw_tc"]
-        # COOKIE_INFO["PHPSESSID"] = self.cookie_value["PHPSESSID"]
 
     def main(self):
         global ACCOUNTS
@@ -213,21 +205,20 @@ class Bcy(robot.Robot):
         # 未登录时提示可能无法获取粉丝指定的作品
         if not check_login():
             # 尝试从文件中获取账号信息
-            if read_cookie_info_from_file() and check_login():
-                pass
-            else:
+            if not login(1) and not NOT_LOGIN_CAN_RUN:
                 while True:
                     input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否手动输入账号密码登录(Y)es？ 或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
-                        if login():
-                            break
-                        else:
+                        if not login(2):
                             log.step("登录失败！")
+                        else:
+                            break
                     elif input_str in ["e", "exit"]:
                         tool.process_exit()
                     elif input_str in ["c", "continue"]:
                         break
+
 
         # 解析存档文件
         # account_id  last_rp_id
