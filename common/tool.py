@@ -780,10 +780,11 @@ def set_proxy2(ip, port):
 
 
 # http请求(urlib3)
-# header_list   http header信息，e.g. {"Host":“www.example.com"}
-# is_random_ip  是否使用伪造IP
-# return        -1：无法访问；-100：URL格式不正确；其他>0：网页返回码（正常返回码为200）
-def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
+# header_list       http header信息，e.g. {"Host":“www.example.com"}
+# is_random_ip      是否使用伪造IP
+# exception_return  如果异常信息中包含以下字符串，直接返回-1
+# return            0：无法访问，-1:特殊异常捕获后的返回，-100：URL格式不正确，其他>0：网页返回码（正常返回码为200）
+def http_request2(url, post_data=None, header_list=None, is_random_ip=True, exception_return= ""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(-100)
     if HTTP_CONNECTION_POOL is None:
@@ -821,27 +822,29 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True):
                 pass
             elif input_str in ["s", "stop"]:
                 sys.exit()
-        except urllib3.exceptions.MaxRetryError, e:
-            print_msg(url)
-            print_msg(str(e))
-            # 无限重定向
-            # if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
-            #     return ErrorResponse(-1)
-        except urllib3.exceptions.ConnectTimeoutError, e:
-            print_msg(str(e))
-            print_msg(url + " 访问超时，稍后重试")
-            # 域名无法解析
-            # if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
-            #     return ErrorResponse(-2)
-        except urllib3.exceptions.ProtocolError, e:
-            print_msg(str(e))
-            print_msg(url + " 访问超时，稍后重试")
-            # 链接被终止
-            # if str(e).find("'Connection aborted.', error(10054,") >= 0:
-            #     return ErrorResponse(-3)
+        # except urllib3.exceptions.MaxRetryError, e:
+        #     print_msg(url)
+        #     print_msg(str(e))
+        #     # 无限重定向
+        #     # if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
+        #     #     return ErrorResponse(-1)
+        # except urllib3.exceptions.ConnectTimeoutError, e:
+        #     print_msg(str(e))
+        #     print_msg(url + " 访问超时，稍后重试")
+        #     # 域名无法解析
+        #     # if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
+        #     #     return ErrorResponse(-2)
+        # except urllib3.exceptions.ProtocolError, e:
+        #     print_msg(str(e))
+        #     print_msg(url + " 访问超时，稍后重试")
+        #     # 链接被终止
+        #     # if str(e).find("'Connection aborted.', error(10054,") >= 0:
+        #     #     return ErrorResponse(-3)
         except Exception, e:
-            print_msg(url)
+            if exception_return and str(e).find(exception_return) >= 0:
+                return ErrorResponse(-1)
             print_msg(str(e))
+            print_msg(url + " 访问超时，稍后重试")
             traceback.print_exc()
 
         retry_count += 1
