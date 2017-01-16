@@ -358,6 +358,64 @@ def set_empty_cookie():
     urllib2.install_opener(opener)
 
 
+# 从浏览器保存的cookie文件中读取所有cookie
+# return    {
+#           "domain1": {"key1": "value1", "key2": "value2", ......}
+#           "domain2": {"key1": "value1", "key2": "value2", ......}
+#           }
+def get_all_cookie_from_browser(browser_type, file_path):
+    if not os.path.exists(file_path):
+        print_msg("cookie目录：" + file_path + " 不存在")
+        return None
+    all_cookies = {}
+    if browser_type == 1:
+        for cookie_name in os.listdir(file_path):
+            if cookie_name.find(".txt") == -1:
+                continue
+            cookie_file = open(os.path.join(file_path, cookie_name), "r")
+            cookie_info = cookie_file.read()
+            cookie_file.close()
+            for cookies in cookie_info.split("*"):
+                cookie_list = cookies.strip("\n").split("\n")
+                if len(cookie_list) < 8:
+                    continue
+                cookie_domain = cookie_list[2].split("/")[0]
+                cookie_key = cookie_info[0]
+                cookie_value = cookie_info[1]
+                if cookie_domain not in all_cookies:
+                    all_cookies[cookie_domain] = {}
+                all_cookies[cookie_domain][cookie_key] = cookie_value
+    elif browser_type == 2:
+        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
+        cur = con.cursor()
+        cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
+        for cookie_info in cur.fetchall():
+            cookie_domain = cookie_info[0]
+            cookie_key = cookie_info[4]
+            cookie_value = cookie_info[5]
+            if cookie_domain not in all_cookies:
+                all_cookies[cookie_domain] = {}
+            all_cookies[cookie_domain][cookie_key] = cookie_value
+    elif browser_type == 3:
+        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
+        cur = con.cursor()
+        cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
+        for cookie_info in cur.fetchall():
+            cookie_domain = cookie_info[0]
+            cookie_key = cookie_info[4]
+            try:
+                cookie_value = win32crypt.CryptUnprotectData(cookie_info[6], None, None, None, 0)[1]
+            except:
+                continue
+            if cookie_domain not in all_cookies:
+                all_cookies[cookie_domain] = {}
+            all_cookies[cookie_domain][cookie_key] = cookie_value
+    else:
+        print_msg("不支持的浏览器类型：" + browser_type)
+        return None
+    return all_cookies
+
+
 # 设置代理
 def set_proxy(ip, port):
     proxy_address = "http://%s:%s" % (ip, port)
