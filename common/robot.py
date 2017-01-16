@@ -24,6 +24,8 @@ SYS_SET_PROXY = "set_proxy"
 SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
 # 程序是否需要开启cookie, value不为为空()时，从浏览器中加载相关域名的cookies，否则仅仅添加一个空的cookie对象
 SYS_SET_COOKIE = "set_cookie"
+# 程序是否需要从浏览器存储哦的cookie中获取指定cookie的值
+SYS_GET_COOKIE = "get_cookie"
 
 
 class Robot(object):
@@ -50,6 +52,7 @@ class Robot(object):
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
         sys_set_proxy = SYS_SET_PROXY in sys_config
         sys_set_cookie = SYS_SET_COOKIE in sys_config
+        sys_get_cookie = SYS_GET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
 
         # exe程序
@@ -220,6 +223,24 @@ class Robot(object):
             else:
                 # 使用空cookie
                 tool.set_empty_cookie()
+        self.cookie_value = {}
+        if sys_get_cookie:
+            # 操作系统&浏览器
+            browser_type = get_config(config, "BROWSER_TYPE", 2, 1)
+            # cookie
+            is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
+            if is_auto_get_cookie:
+                cookie_path = tool.get_default_browser_cookie_path(browser_type)
+            else:
+                cookie_path = get_config(config, "COOKIE_PATH", "", 0)
+            all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+            for cookie_domain in all_cookie_from_browser:
+                if cookie_domain in sys_config[SYS_GET_COOKIE]:
+                    for cookie_name in sys_config[SYS_GET_COOKIE][cookie_domain]:
+                        if cookie_name in all_cookie_from_browser[cookie_domain]:
+                            self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
+                        else:
+                            self.cookie_value[cookie_name] = ""
 
         # Http Setting
         tool.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
