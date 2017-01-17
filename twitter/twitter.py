@@ -169,12 +169,17 @@ def get_video_url_list(tweet_id):
     video_page_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
     video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
     if video_page_return_code == 1:
-        m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
+        m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
         if m3u8_file_url:
             m3u8_file_url = m3u8_file_url.replace("\\/", "/")
             ts_url_list = []
             get_ts_url_list(m3u8_file_url, ts_url_list)
             return "ts", ts_url_list
+        video_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
+        if video_url:
+            video_url = video_url.replace("\\/", "/")
+            file_type = video_url.split(".")[-1]
+            return file_type, video_url
         vmap_file_url = tool.find_sub_string(video_page, "&quot;vmap_url&quot;:&quot;", "&quot;")
         if vmap_file_url:
             vmap_file_url = vmap_file_url.replace("\\/", "/")
