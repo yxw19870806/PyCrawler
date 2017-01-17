@@ -87,6 +87,18 @@ def get_image_url_list(account_name, blog_id):
     return None
 
 
+# 过滤一些无效的地址
+def filter_image_url(image_url):
+    # 过滤表情
+    if image_url.find("http://emoji.ameba.jp/") == 0 or image_url.find("http://blog.ameba.jp/ucs/img/char/") == 0 \
+            or image_url.find("http://i.yimg.jp/images/mail/emoji/") == 0 or image_url.find("http://stat100.ameba.jp//blog/ucs/img/char/") == 0 \
+            or image_url.find("https://b.st-hatena.com/images/entry-button/") == 0 or image_url.find("http://vc.ameba.jp/view?") == 0 \
+            or image_url.find("https://mail.google.com/mail/") == 0 or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download/") == 0 \
+            or image_url.find("http://blog.watanabepro.co.jp/") >= 0 or image_url[-9:] == "clear.gif":
+        return True
+    return False
+
+
 # 获取原始图片下载地址
 # http://stat.ameba.jp/user_images/20110612/15/akihabara48/af/3e/j/t02200165_0800060011286009555.jpg
 # ->
@@ -95,17 +107,7 @@ def get_image_url_list(account_name, blog_id):
 # ->
 # http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_image_url(image_url):
-    # 过滤表情
-    if image_url.find("http://emoji.ameba.jp/") == 0 or image_url.find("http://blog.ameba.jp/ucs/img/char/") == 0 \
-            or image_url.find("http://i.yimg.jp/images/mail/emoji/") == 0 or image_url.find("http://stat100.ameba.jp//blog/ucs/img/char/") == 0:
-        return ""
-    # 无效的地址
-    elif image_url.find("https://b.st-hatena.com/images/entry-button/") == 0 or image_url.find("http://vc.ameba.jp/view?") == 0 \
-            or image_url.find("https://mail.google.com/mail/" ) == 0 or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download/") == 0 \
-            or image_url.find("http://blog.watanabepro.co.jp/") >= 0 or image_url[-9:] == "clear.gif":
-        return ""
-    # ameba上传图片
-    elif image_url.find("http://stat.ameba.jp/user_images") == 0:
+    if image_url.find("http://stat.ameba.jp/user_images") == 0:
         # 最新的image_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
         image_url = image_url.split("?")[0]
@@ -122,12 +124,11 @@ def get_origin_image_url(image_url):
                 image_url = "/".join(temp_list)
             else:
                 # todo 检测包含其他格式
-                log.error("无法解析的图片地址 %s" % image_url)
+                log.step("无法解析的图片地址 %s" % image_url)
     elif image_url.find("http://stat100.ameba.jp/blog/img/") == 0:
         pass
     else:
-        # todo 检测是否包含第三方图片
-        log.error("第三方图片地址 %s" % image_url)
+        log.trace("第三方图片地址 %s" % image_url)
     return image_url
 
 
@@ -287,11 +288,10 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                     for image_url in list(image_url_list):
+                        if filter_image_url(image_url):
+                            continue
                         # 获取原始图片下载地址
                         image_url = get_origin_image_url(image_url)
-                        # 无效的图片，跳过
-                        if image_url == "":
-                            continue
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
