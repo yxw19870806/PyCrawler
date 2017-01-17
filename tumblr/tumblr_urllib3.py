@@ -61,13 +61,13 @@ def filter_post_url(post_url_list):
 # 根据日志地址以及可能的后缀，获取日志页面的head标签下的内容
 def get_post_page_head(account_id, post_id, postfix_list):
     post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-    post_page_response = tool.http_request2(post_url)
+    post_page_response = tool.http_request2(post_url, exception_return="Caused by ResponseError('too many redirects',)")
     # 不带后缀的可以访问，则直接返回页面
     # 如果无法访问，则依次访问带有后缀的页面
     if post_page_response.status == -1:
         for postfix in postfix_list:
             temp_post_url = post_url + "/" + urllib2.quote(postfix)
-            post_page_response = tool.http_request2(temp_post_url)
+            post_page_response = tool.http_request2(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
             if post_page_response != -1:
                 break
     if post_page_response.status == 200:
