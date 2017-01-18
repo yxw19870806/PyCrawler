@@ -386,10 +386,11 @@ class Download(threading.Thread):
                         first_tweet_id = tweet_id
 
                     # 视频
-                    if is_download_image:
+                    if is_download_video:
                         # 这个tweet是否包含视频
                         if check_has_video(tweet_data):
                             video_file_type, video_url_list = get_video_url_list(tweet_id)
+                            video_url_list = []
                             if len(video_url_list) > 0:
                                 log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
 
@@ -414,7 +415,7 @@ class Download(threading.Thread):
                             is_download_image = False
 
                     # 图片
-                    if is_download_video:
+                    if is_download_image:
                         # 匹配获取全部的图片地址
                         image_url_list = get_image_url_list(tweet_data)
                         for image_url in image_url_list:
