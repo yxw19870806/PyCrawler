@@ -13,6 +13,7 @@ import re
 import threading
 import time
 import traceback
+import urllib
 
 ACCOUNTS = []
 INIT_MAX_ID = "999999999999999999"
@@ -172,9 +173,7 @@ def get_video_url_list(tweet_id):
         m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
         if m3u8_file_url:
             m3u8_file_url = m3u8_file_url.replace("\\/", "/") + ".m3u8"
-            ts_url_list = []
-            get_ts_url_list(m3u8_file_url, ts_url_list)
-            return "ts", ts_url_list
+            return "ts", get_ts_url_list(m3u8_file_url)
         video_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
         if video_url:
             video_url = video_url.replace("\\/", "/")
@@ -199,16 +198,17 @@ def get_image_url_list(tweet_data):
 
 # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
 # 迭代从m3u8文件中获取真实的ts地址列表
-def get_ts_url_list(file_url, ts_file_list):
+def get_ts_url_list(file_url):
     file_return_code, file_data = tool.http_request(file_url)[:2]
     if file_return_code == 1:
-        new_file_url_list = re.findall("(/ext_tw_video/[\S]*)", file_data)
-        for new_file_url in new_file_url_list:
-            new_file_url = "https://video.twimg.com%s" % new_file_url
-            if new_file_url.split(".")[-1] == "m3u8":
-                get_ts_url_list(new_file_url, ts_file_list)
-            elif new_file_url.split(".")[-1] == "ts":
-                ts_file_list.append(new_file_url)
+        # 是否包含的是m3u8文件（不同分辨率）
+        include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", file_data)
+        if len(include_m3u8_file_list) > 0:
+            file_url_protocol, file_url_path = urllib.splittype(file_url)
+            file_url_host = urllib.splithost(file_url_path)[0]
+            return get_ts_url_list("%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1]))
+        else:
+            return re.findall("(/[\S]*.ts)", file_data)
 
 
 # 将多个ts文件的地址保存为本地视频文件
