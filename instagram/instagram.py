@@ -437,7 +437,11 @@ class Download(threading.Thread):
 
                 if not is_over:
                     if media_data["page_info"]["has_next_page"]:
-                        cursor = str(media_data["page_info"]["end_cursor"])
+                        if cursor == str(media_data["page_info"]["end_cursor"]):
+                            log.error(account_name + " 下一页cursor %s没有变化" % (cursor))
+                            is_over = True
+                        else:
+                            cursor = str(media_data["page_info"]["end_cursor"])
                     else:
                         is_over = True
 
