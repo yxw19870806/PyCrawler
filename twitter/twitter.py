@@ -193,7 +193,7 @@ def get_video_url_list(tweet_id):
                 ts_url_list = []
                 for ts_file_path in ts_url_find:
                     ts_url_list.append("%s://%s%s" % (file_url_protocol, file_url_host, ts_file_path))
-                return ts_url_list
+                return "ts", ts_url_list
             return "ts", []
         # 直接包含视频播放地址的处理
         video_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
@@ -397,7 +397,6 @@ class Download(threading.Thread):
                         # 这个tweet是否包含视频
                         if check_has_video(tweet_data):
                             video_file_type, video_url_list = get_video_url_list(tweet_id)
-                            video_url_list = []
                             if len(video_url_list) > 0:
                                 log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
 
