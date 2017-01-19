@@ -77,13 +77,7 @@ def get_image_url_list(account_name, blog_id):
             article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
         if not article_data:
             article_data = tool.find_sub_string(blog_page, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
-        image_url_list_find = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
-        image_url_list = []
-        for image_url in image_url_list_find:
-            # 过滤表情
-            if image_url.find(".ameba.jp/blog/ucs/") == -1:
-                image_url_list.append(image_url)
-        return image_url_list
+        return re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
     return None
 
 
@@ -91,7 +85,8 @@ def get_image_url_list(account_name, blog_id):
 def filter_image_url(image_url):
     # 过滤表情
     if image_url.find("http://emoji.ameba.jp/") == 0 or image_url.find("http://blog.ameba.jp/ucs/img/char/") == 0 \
-            or image_url.find("http://i.yimg.jp/images/mail/emoji/") == 0 or image_url.find("http://stat100.ameba.jp//blog/ucs/img/char/") == 0 \
+            or image_url.find("http://stat.ameba.jp/blog/ucs/img/") == 0 or image_url.find("http://stat100.ameba.jp//blog/ucs/img/char/") == 0 \
+            or image_url.find("http://i.yimg.jp/images/mail/emoji/") == 0 \
             or image_url.find("https://b.st-hatena.com/images/entry-button/") == 0 or image_url.find("http://vc.ameba.jp/view?") == 0 \
             or image_url.find("https://mail.google.com/mail/") == 0 or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download/") == 0 \
             or image_url.find("http://blog.watanabepro.co.jp/") >= 0 or image_url[-9:] == "clear.gif":
