@@ -24,13 +24,10 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取指定页数的日志页面
+# 获取指定页数的所有日志
 def get_blog_page(account_name, page_count):
     index_page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    index_page_response = tool.http_request2(index_page_url)
-    if index_page_response.status == 200:
-        return index_page_response.data
-    return None
+    return tool.http_request2(index_page_url)
 
 
 # 获取指定id的日志页面
@@ -251,13 +248,13 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页日志页面
-                page_data = get_blog_page(account_name, page_count)
-                if page_data is None:
-                    log.error(account_name + " 第%s页日志无法获取" % page_count)
+                blog_page_response = get_blog_page(account_name, page_count)
+                if blog_page_response.status != 200:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_page_response.status)))
                     tool.process_exit()
 
                 # 获取一页所有日志id列表
-                blog_id_list = get_blog_id_list(page_data)
+                blog_id_list = get_blog_id_list(blog_page_response.data)
                 log.trace(account_name + " 第%s页获取的所有日志：%s" % (page_count, blog_id_list))
 
                 for blog_id in list(blog_id_list):
@@ -280,7 +277,7 @@ class Download(threading.Thread):
                     # 获取指定id的日志
                     blog_data_response = get_blog_entry(account_name, blog_id)
                     if blog_data_response.status != 200:
-                        log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_page_response.status)))
+                        log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_data_response.status)))
                         tool.process_exit()
 
                     # 从日志页面中获取全部的图片地址列表
@@ -326,7 +323,7 @@ class Download(threading.Thread):
                         is_over = True
                     else:
                         # 获取总页数
-                        if is_max_page_count(page_data, page_count):
+                        if is_max_page_count(blog_page_response.data, page_count):
                             is_over = True
                         else:
                             page_count += 1
