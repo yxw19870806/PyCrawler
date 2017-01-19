@@ -25,7 +25,7 @@ IS_SORT = True
 
 
 # 获取指定页数的所有日志
-def get_blog_page(account_name, page_count):
+def get_one_page_blog(account_name, page_count):
     index_page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
     return tool.http_request2(index_page_url)
 
@@ -245,7 +245,7 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页日志页面
-                blog_page_response = get_blog_page(account_name, page_count)
+                blog_page_response = get_one_page_blog(account_name, page_count)
                 if blog_page_response.status != 200:
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_page_response.status)))
                     tool.process_exit()
