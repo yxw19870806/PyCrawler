@@ -6,7 +6,7 @@ http://changba.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -24,7 +24,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号首页页面
 def get_user_index_page(account_id):
     index_url = "http://changba.com/u/%s" % account_id
-    return tool.http_request2(index_url)
+    return net.http_request(index_url)
 
 
 # 根据账号主页，查找对应的user id
@@ -37,14 +37,14 @@ def get_user_id(account_index_page):
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
     audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
-    return tool.http_request2(audio_album_url, json_decode=True)
+    return net.http_request(audio_album_url, json_decode=True)
 
 
 # 获取歌曲的下载地址
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_url(audio_en_word_id):
     audio_index_url = "http://changba.com/s/%s" % audio_en_word_id
-    audio_index_response = tool.http_request2(audio_index_url)
+    audio_index_response = net.http_request(audio_index_url)
     if audio_index_response.status == 200:
         audio_source_url = tool.find_sub_string(audio_index_response.data, 'var a="', '"')
         if audio_source_url:
@@ -210,7 +210,7 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info["songname"].encode("utf-8")))
-                    save_file_return = tool.save_net_file2(audio_url, file_path)
+                    save_file_return = net.save_net_file(audio_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1

@@ -6,7 +6,7 @@ http://blog.mariko-shinoda.net/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 
@@ -14,7 +14,7 @@ import re
 # 获取指定页数的所有日志
 def get_one_page_blog(page_count):
     index_page_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
-    return tool.http_request2(index_page_url)
+    return net.http_request(index_page_url)
 
 
 # 判断日志是否已经全部获取完毕
@@ -99,7 +99,7 @@ class Shinoda(robot.Robot):
 
                 file_type = image_url.split(".")[-1].split(":")[0]
                 file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
-                save_file_return = tool.save_net_file2(image_url, file_path)
+                save_file_return = net.save_net_file(image_url, file_path)
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_count)
                     image_count += 1

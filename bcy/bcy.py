@@ -6,7 +6,7 @@ http://bcy.net
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import base64
 import json
 import os
@@ -32,7 +32,7 @@ def check_login():
         return False
     home_page_url = "http://bcy.net/home/user/index"
     header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
-    home_page_response = tool.http_request2(home_page_url, header_list=header_list)
+    home_page_response = net.http_request(home_page_url, header_list=header_list)
     if home_page_response.status == 200:
         if home_page_response.data.find('<a href="/login">登录</a>') == -1:
             return True
@@ -92,7 +92,7 @@ def login():
     global COOKIE_INFO
     # 访问首页，获取一个随机session id
     home_page_url = "http://bcy.net/home/user/index"
-    home_page_response = tool.http_request2(home_page_url)
+    home_page_response = net.http_request(home_page_url)
     if home_page_response.status == 200 and "Set-Cookie" in home_page_response.headers:
         COOKIE_INFO["acw_tc"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "acw_tc=", ";")
         COOKIE_INFO["PHPSESSID"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "PHPSESSID=", ";")
@@ -103,7 +103,7 @@ def login():
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
     header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
-    login_response = tool.http_request2(login_url, login_post, header_list=header_list)
+    login_response = net.http_request(login_url, login_post, header_list=header_list)
     if login_response.status == 200:
         if login_response.data.find('<a href="/login">登录</a>') == -1:
             if SAVE_ACCOUNT_INFO:
@@ -116,7 +116,7 @@ def login():
 def follow(account_id):
     follow_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_response = tool.http_request2(follow_url, follow_post_data)
+    follow_response = net.http_request(follow_url, follow_post_data)
     if follow_response.status == 200:
         # 0 未登录，11 关注成功，12 已关注
         if int(follow_response.data) == 12:
@@ -128,7 +128,7 @@ def follow(account_id):
 def unfollow(account_id):
     unfollow_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_response = tool.http_request2(unfollow_url, unfollow_post_data)
+    unfollow_response = net.http_request(unfollow_url, unfollow_post_data)
     if unfollow_response.status == 200:
         if int(unfollow_response.data) == 1:
             return True
@@ -139,7 +139,7 @@ def unfollow(account_id):
 def get_one_page_post(coser_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-    return tool.http_request2(post_url)
+    return net.http_request(post_url)
 
 
 # 解析作品信息，获取所有的正片信息
@@ -160,7 +160,7 @@ def get_rp_list(post_page):
 def get_rp_data(cp_id, rp_id):
     # http://bcy.net/coser/detail/9299/36484
     rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-    return tool.http_request2(rp_url)
+    return net.http_request(rp_url)
 
 
 # 检测正片是否被管理员锁定

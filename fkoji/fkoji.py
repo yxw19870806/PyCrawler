@@ -6,7 +6,7 @@ http://jigadori.fkoji.com
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 from common import BeautifulSoup
 import os
 import time
@@ -77,7 +77,7 @@ class Fkoji(robot.Robot):
             log.step("开始解析第%s页图片" % page_index)
 
             index_url = "http://jigadori.fkoji.com/?p=%s" % page_index
-            index_response = tool.http_request2(index_url)
+            index_response = net.http_request(index_url)
             if index_response.status != 200:
                 log.error("无法访问首页地址 %s" % index_url)
                 tool.process_exit()
@@ -132,7 +132,7 @@ class Fkoji(robot.Robot):
                         if file_type.find("/") != -1:
                             file_type = "jpg"
                         file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, account_id, file_type))
-                        save_file_return = tool.save_net_file2(image_url, file_path)
+                        save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
                             log.step("第%s张图片下载成功" % image_count)
                             image_count += 1

@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import keyboardEvent, log, process, tool
+from common import keyboardEvent, log, net, process, tool
 import codecs
 import ConfigParser
 import os
@@ -197,13 +197,13 @@ class Robot(object):
             proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
             if use_urllib3:
                 # 使用代理的线程池
-                tool.set_proxy2(proxy_ip, proxy_port)
+                net.set_proxy(proxy_ip, proxy_port)
             else:
                 tool.set_proxy(proxy_ip, proxy_port)
         else:
             if use_urllib3:
                 # 初始化urllib3的线程池
-                tool.init_http_connection_pool()
+                net.init_http_connection_pool()
 
         # cookies
         if sys_set_cookie and not use_urllib3:
@@ -244,7 +244,9 @@ class Robot(object):
 
         # Http Setting
         tool.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
+        net.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
         tool.HTTP_REQUEST_RETRY_COUNT = get_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, 1)
+        net.HTTP_REQUEST_RETRY_COUNT = get_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, 1)
 
         # 线程数
         self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
@@ -468,11 +470,11 @@ def get_save_net_file_failed_reason(return_code):
 def get_http_request_failed_reason(return_code):
     if return_code == 404:
         reason = "页面已被删除"
-    elif return_code == tool.HTTP_RETURN_CODE_RETRY:
+    elif return_code == net.HTTP_RETURN_CODE_RETRY:
         reason = "页面多次获取失败，可能无法访问"
-    elif return_code == tool.HTTP_RETURN_CODE_URL_INVALID:
+    elif return_code == net.HTTP_RETURN_CODE_URL_INVALID:
         reason = "URL格式错误"
-    elif return_code == tool.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
+    elif return_code == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
         reason = "返回的不是一个有效的JSON格式"
     elif return_code > 0:
         reason = "未知错误，http code %s" % return_code

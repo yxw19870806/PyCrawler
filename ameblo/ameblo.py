@@ -6,7 +6,7 @@ http://ameblo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 from PIL import Image
 import os
 import re
@@ -27,13 +27,13 @@ IS_SORT = True
 # 获取指定页数的所有日志
 def get_one_page_blog(account_name, page_count):
     index_page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    return tool.http_request2(index_page_url)
+    return net.http_request(index_page_url)
 
 
 # 获取指定id的日志页面
 def get_blog_entry(account_name, blog_id):
     blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    return tool.http_request2(blog_url)
+    return net.http_request(blog_url)
 
 
 # 根绝日志页面，获取日志总页数
@@ -299,7 +299,7 @@ class Download(threading.Thread):
                         else:
                             file_type = image_url.split(".")[-1].split("?")[0]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        save_file_return = tool.save_net_file2(image_url, file_path)
+                        save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
                             if check_image_invalid(file_path):
                                 os.remove(file_path)

@@ -6,7 +6,7 @@ http://www.tumblr.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -31,7 +31,7 @@ IS_DOWNLOAD_VIDEO = True
 # 获取一页的日志地址列表
 def get_one_page_post_url_list(account_id, page_count):
     index_page_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
-    index_page_response = tool.http_request2(index_page_url)
+    index_page_response = net.http_request(index_page_url)
     if index_page_response.status == 200:
         return re.findall('"(http[s]?://' + account_id + '.tumblr.com/post/[^"|^#]*)["|#]', index_page_response.data)
     return None
@@ -61,13 +61,13 @@ def filter_post_url(post_url_list):
 # 根据日志地址以及可能的后缀，获取日志页面的head标签下的内容
 def get_post_page_head(account_id, post_id, postfix_list):
     post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-    post_page_response = tool.http_request2(post_url, exception_return="Caused by ResponseError('too many redirects',)")
+    post_page_response = net.http_request(post_url, exception_return="Caused by ResponseError('too many redirects',)")
     # 不带后缀的可以访问，则直接返回页面
     # 如果无法访问，则依次访问带有后缀的页面
     if post_page_response.status == -1:
         for postfix in postfix_list:
             temp_post_url = post_url + "/" + urllib2.quote(postfix)
-            post_page_response = tool.http_request2(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
+            post_page_response = net.http_request(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
             if post_page_response != -1:
                 break
     if post_page_response.status == 200:
@@ -79,7 +79,7 @@ def get_post_page_head(account_id, post_id, postfix_list):
 # 根据日志id获取页面中的全部视频信息（视频地址、视频）
 def get_video_info_list(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-    video_page_response = tool.http_request2(video_play_url)
+    video_page_response = net.http_request(video_play_url)
     if video_page_response.status == 200:
         return re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="([^"]*)"', video_page_response.data)
     return None
@@ -316,7 +316,7 @@ class Download(threading.Thread):
 
                                     file_type = video_type.split("/")[-1]
                                     video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                    save_file_return = tool.save_net_file2(video_url, video_file_path)
+                                    save_file_return = net.save_net_file(video_url, video_file_path)
                                     if save_file_return["status"] == 1:
                                         log.step(account_id + " 第%s个视频下载成功" % video_count)
                                         video_count += 1
@@ -351,7 +351,7 @@ class Download(threading.Thread):
 
                                 file_type = image_url.split(".")[-1]
                                 image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                save_file_return = tool.save_net_file2(image_url, image_file_path)
+                                save_file_return = net.save_net_file(image_url, image_file_path)
                                 if save_file_return["status"] == 1:
                                     log.step(account_id + " 第%s张图片下载成功" % image_count)
                                     image_count += 1

@@ -4,7 +4,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import hashlib
 import os
 import re
@@ -18,7 +18,7 @@ TOTAL_IMAGE_COUNT = 0
 # 获取指定一页的页面
 def get_one_page_data(page_count):
     index_url = "http://www.abase.me/movies.php?page=%s" % page_count
-    return tool.http_request2(index_url)
+    return net.http_request(index_url)
 
 
 # 根据页面内容获取页面中的影片数量
@@ -149,7 +149,7 @@ class Download(threading.Thread):
             is_exist = False
             file_path = self.file_path
 
-        save_file_return = tool.save_net_file2(self.file_url, file_path)
+        save_file_return = net.save_net_file(self.file_url, file_path)
         if save_file_return["status"] == 1:
             if check_invalid_image(file_path):
                 os.remove(file_path)
