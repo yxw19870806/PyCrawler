@@ -460,3 +460,5 @@ def get_save_net_file_failed_reason(return_code):
         return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
+    else:
+        return "未知错误，下载返回码 %s" % return_code
