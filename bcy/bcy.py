@@ -299,7 +299,7 @@ class Download(threading.Thread):
             first_rp_id = ""
             unique_list = []
             is_over = False
-            need_make_download_dir = True  # 是否需要创建cn目录
+            need_make_download_dir = True
             while not is_over:
                 log.step(cn + " 开始解析第%s页作品" % page_count)
 

@@ -22,15 +22,15 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 根据account_id获取user_id
-def get_user_id(account_id):
+# 获取账号首页页面
+def get_user_index_page(account_id):
     index_url = "http://changba.com/u/%s" % account_id
-    index_response = tool.http_request2(index_url)
-    if index_response.status == 200:
-        user_id = tool.find_sub_string(index_response.data, "var userid = '", "'")
-        if user_id:
-            return user_id
-    return None
+    return tool.http_request2(index_url)
+
+
+# 根据账号主页，查找对应的user id
+def get_user_id(account_index_page):
+    return tool.find_sub_string(account_index_page, "var userid = '", "'")
 
 
 # 获取一页的歌曲信息，单条歌曲信息的格式：[歌曲id，歌曲名字，歌曲下载地址]
@@ -162,8 +162,13 @@ class Download(threading.Thread):
 
             video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
-            user_id = get_user_id(account_id)
-            if user_id is None:
+            # 查找账号user id
+            account_index_page_response = get_user_index_page(account_id)
+            if account_index_page_response.status != 200:
+                log.error(account_name + " 主页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_page_response.status))
+                tool.process_exit()
+            user_id = get_user_id(account_index_page_response.data)
+            if not user_id:
                 log.error(account_name + " userid获取失败")
                 tool.process_exit()
 
