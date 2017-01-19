@@ -33,6 +33,12 @@ def get_blog_page(account_name, page_count):
     return None
 
 
+# 获取指定id的日志页面
+def get_blog_entry(account_name, blog_id):
+    blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
+    return tool.http_request2(blog_url)
+
+
 # 根绝日志页面，获取日志总页数
 def is_max_page_count(page_data, page_count):
     # 有页数选择的页面样式
@@ -66,19 +72,14 @@ def get_blog_id_list(page_data):
     return re.findall('data-unique-entry-id="([\d]*)"', page_data)
 
 
-# 从日志列表中获取全部的图片，并过滤掉表情
-def get_image_url_list(account_name, blog_id):
-    blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    blog_page_response = tool.http_request2(blog_url)
-    if blog_page_response.status == 200:
-        blog_page = blog_page_response.data
-        article_data = tool.find_sub_string(blog_page, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
-        if not article_data:
-            article_data = tool.find_sub_string(blog_page, '<div class="articleText">', "<!--entryBottom-->", 1)
-        if not article_data:
-            article_data = tool.find_sub_string(blog_page, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
-        return re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
-    return None
+# 从日志中获取全部的图片
+def get_image_url_list(blog_data):
+    article_data = tool.find_sub_string(blog_data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
+    if not article_data:
+        article_data = tool.find_sub_string(blog_data, '<div class="articleText">', "<!--entryBottom-->", 1)
+    if not article_data:
+        article_data = tool.find_sub_string(blog_data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
+    return re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
 
 
 # 过滤一些无效的地址
@@ -276,11 +277,14 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析日志%s" % blog_id)
 
-                    # 从日志页面中获取全部的图片地址列表
-                    image_url_list = get_image_url_list(account_name, blog_id)
-                    if image_url_list is None:
-                        log.error(account_name + " 日志%s无法获取" % blog_id)
+                    # 获取指定id的日志
+                    blog_data_response = get_blog_entry(account_name, blog_id)
+                    if blog_data_response.status != 200:
+                        log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_page_response.status)))
                         tool.process_exit()
+
+                    # 从日志页面中获取全部的图片地址列表
+                    image_url_list = get_image_url_list(blog_data_response.data)
 
                     for image_url in list(image_url_list):
                         if filter_image_url(image_url):
