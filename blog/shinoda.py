@@ -51,8 +51,9 @@ class Shinoda(robot.Robot):
         # 下载
         page_count = 1
         image_count = 1
-        is_over = False
         new_last_blog_time = ""
+        is_over = False
+        need_make_download_dir = True
         if self.is_sort:
             image_path = self.image_temp_path
         else:
@@ -89,6 +90,12 @@ class Shinoda(robot.Robot):
             for image_name in image_name_list:
                 image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                 log.step("开始下载第%s张图片 %s" % (image_count, image_url))
+
+                if need_make_download_dir:
+                    if not tool.make_dir(image_path, 0):
+                        log.error("创建图片下载目录 %s 失败" % image_path)
+                        tool.process_exit()
+                    need_make_download_dir = False
 
                 file_type = image_url.split(".")[-1].split(":")[0]
                 file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
