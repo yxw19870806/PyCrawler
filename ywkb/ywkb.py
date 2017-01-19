@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 
@@ -13,7 +13,7 @@ import re
 # 获取一页图片信息列表
 def get_one_page_image_info_list(page_count):
     index_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
-    index_response = tool.http_request2(index_url)
+    index_response = net.http_request(index_url)
     if index_response.status == 200:
         article_data = tool.find_sub_string(index_response.data, '<section id="primary"', "</section>")
         image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
@@ -72,7 +72,7 @@ class Template(robot.Robot):
 
                 file_type = image_url.split(".")[-1]
                 file_path = os.path.join(self.image_download_path, "%04d.%s" % (post_id, file_type))
-                save_file_return = tool.save_net_file2(image_url, file_path)
+                save_file_return = net.save_net_file(image_url, file_path)
                 if save_file_return["status"] == 1:
                     log.step("%s的图片下载成功" % post_id)
                     image_count += 1

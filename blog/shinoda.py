@@ -6,9 +6,25 @@ http://blog.mariko-shinoda.net/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
+
+
+# 获取指定页数的所有日志
+def get_one_page_blog(page_count):
+    index_page_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
+    return net.http_request(index_page_url)
+
+
+# 判断日志是否已经全部获取完毕
+def is_blog_over(page_data):
+    return page_data == "記事が存在しません。"
+
+
+# 获取页面中的所有图片地址列表
+def get_image_name_list(page_data):
+    return re.findall('data-original="./([^"]*)"', page_data)
 
 
 class Shinoda(robot.Robot):
@@ -21,7 +37,7 @@ class Shinoda(robot.Robot):
 
     def main(self):
         # 解析存档文件
-        last_blog_id = ""
+        last_blog_time = 0
         image_start_index = 0
         if os.path.exists(self.save_data_path):
             save_file = open(self.save_data_path, "r")
@@ -30,56 +46,66 @@ class Shinoda(robot.Robot):
             save_info = save_info.split("\t")
             if len(save_info) >= 2:
                 image_start_index = int(save_info[0])
-                last_blog_id = save_info[1]
+                last_blog_time = int(save_info[1])
 
         # 下载
-        page_index = 1
+        page_count = 1
         image_count = 1
+        new_last_blog_time = ""
         is_over = False
-        new_last_blog_id = ""
+        need_make_download_dir = True
         if self.is_sort:
             image_path = self.image_temp_path
         else:
             image_path = self.image_download_path
         while not is_over:
-            log.step("开始解析第%s页日志" % page_index)
+            log.step("开始解析第%s页日志" % page_count)
 
-            index_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_index - 1)
-            index_response = tool.http_request2(index_url)
+            # 获取一页日志
+            index_page_response = get_one_page_blog(page_count)
+            if index_page_response.status != 200:
+                log.error("第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                tool.process_exit()
 
-            if index_response.status == 200:
-                # 获取页面内的全部图片
-                image_name_list = re.findall('data-original="./([^"]*)"', index_response.data)
-                log.trace("第%s页获取的全部图片：%s" % (page_index, image_name_list))
+            # 是否已经获取完毕
+            if is_blog_over(index_page_response.data):
+                break
 
-                for image_name in image_name_list:
-                    # 获取blog_id
-                    blog_id = image_name.split("-")[0]
+            # 获取页面内的全部图片
+            image_name_list = get_image_name_list(index_page_response.data)
+            log.trace("第%s页获取的全部图片：%s" % (page_count, image_name_list))
 
-                    # 检查是否已下载到前一次的图片
-                    if blog_id == last_blog_id:
-                        is_over = True
-                        break
+            if len(image_name_list) >= 1:
+                # 获取blog时间
+                blog_time = int(image_name_list[0].split("-")[0])
 
-                    # 将第一个博客的id做为新的存档记录
-                    if new_last_blog_id == "":
-                        new_last_blog_id = blog_id
+                # 检查是否已下载到前一次的图片
+                if blog_time <= last_blog_time:
+                    is_over = True
 
-                    image_url = "http://blog.mariko-shinoda.net/%s" % image_name
-                    log.step("开始下载第%s张图片 %s" % (image_count, image_url))
+                # 将第一个博客的id做为新的存档记录
+                if new_last_blog_time == "":
+                    new_last_blog_time = str(blog_time)
 
-                    file_type = image_url.split(".")[-1].split(":")[0]
-                    file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
-                    save_file_return = tool.save_net_file2(image_url, file_path)
-                    if save_file_return["status"] == 1:
-                        log.step("第%s张图片下载成功" % image_count)
-                        image_count += 1
-                    else:
-                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                page_index += 1
-            else:
-                log.error("无法访问博客页面 %s" % index_url)
-                is_over = True
+            for image_name in image_name_list:
+                image_url = "http://blog.mariko-shinoda.net/%s" % image_name
+                log.step("开始下载第%s张图片 %s" % (image_count, image_url))
+
+                if need_make_download_dir:
+                    if not tool.make_dir(image_path, 0):
+                        log.error("创建图片下载目录 %s 失败" % image_path)
+                        tool.process_exit()
+                    need_make_download_dir = False
+
+                file_type = image_url.split(".")[-1].split(":")[0]
+                file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
+                save_file_return = net.save_net_file(image_url, file_path)
+                if save_file_return["status"] == 1:
+                    log.step("第%s张图片下载成功" % image_count)
+                    image_count += 1
+                else:
+                    log.step("第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            page_count += 1
 
         log.step("下载完毕，总共获得%s张图片" % (image_count - 1))
 
@@ -96,7 +122,7 @@ class Shinoda(robot.Robot):
         new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
         log.step("保存新存档文件 %s" % new_save_file_path)
         new_save_file = open(new_save_file_path, "w")
-        new_save_file.write(str(image_start_index) + "\t" + new_last_blog_id)
+        new_save_file.write(str(image_start_index) + "\t" + new_last_blog_time)
         new_save_file.close()
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))

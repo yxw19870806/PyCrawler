@@ -6,7 +6,7 @@ http://www.tumblr.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -31,9 +31,9 @@ IS_DOWNLOAD_VIDEO = True
 # 获取一页的日志地址列表
 def get_one_page_post_url_list(account_id, page_count):
     index_page_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
-    index_page_return_code, index_page_response = tool.http_request(index_page_url)[:2]
-    if index_page_return_code == 1:
-        return re.findall('"(http[s]?://' + account_id + '.tumblr.com/post/[^"|^#]*)["|#]', index_page_response)
+    index_page_response = net.http_request(index_page_url)
+    if index_page_response.status == 200:
+        return re.findall('"(http[s]?://' + account_id + '.tumblr.com/post/[^"|^#]*)["|#]', index_page_response.data)
     return None
 
 
@@ -61,17 +61,17 @@ def filter_post_url(post_url_list):
 # 根据日志地址以及可能的后缀，获取日志页面的head标签下的内容
 def get_post_page_head(account_id, post_id, postfix_list):
     post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-    post_page_return_code, post_page_data = tool.http_request(post_url)[:2]
+    post_page_response = net.http_request(post_url, exception_return="Caused by ResponseError('too many redirects',)")
     # 不带后缀的可以访问，则直接返回页面
     # 如果无法访问，则依次访问带有后缀的页面
-    if post_page_return_code != 1:
+    if post_page_response.status == -1:
         for postfix in postfix_list:
             temp_post_url = post_url + "/" + urllib2.quote(postfix)
-            post_page_return_code, post_page_data = tool.http_request(temp_post_url)[:2]
-            if post_page_return_code == 1:
+            post_page_response = net.http_request(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
+            if post_page_response != -1:
                 break
-    if post_page_data is not None:
-        return tool.find_sub_string(post_page_data, "<head", "</head>", 3)
+    if post_page_response.status == 200:
+        return tool.find_sub_string(post_page_response.data, "<head", "</head>", 3)
     else:
         return None
 
@@ -79,9 +79,9 @@ def get_post_page_head(account_id, post_id, postfix_list):
 # 根据日志id获取页面中的全部视频信息（视频地址、视频）
 def get_video_info_list(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-    video_page_return_code, video_page = tool.http_request(video_play_url)[:2]
-    if video_page_return_code == 1:
-        return re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="([^"]*)"', video_page)
+    video_page_response = net.http_request(video_play_url)
+    if video_page_response.status == 200:
+        return re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="([^"]*)"', video_page_response.data)
     return None
 
 
@@ -113,6 +113,21 @@ def filter_different_resolution_images(image_url_list):
     return new_image_url_list.values()
 
 
+# 获取视频的真实下载地址
+# http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
+# ->
+# http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
+# urllib3跳转有些问题，跳转后的地址会带有#_=_，访问时会返回403错误，避免麻烦，这里就直接生产真实的下载地址了
+def get_video_url(video_url):
+    # 去除视频指定分辨率
+    temp_list = video_url.split("/")
+    if temp_list[-1].isdigit():
+        video_id = temp_list[-2]
+    else:
+        video_id = temp_list[-1]
+    return "http://vtt.tumblr.com/%s.mp4" % video_id
+
+
 class Tumblr(robot.Robot):
     def __init__(self):
         global GET_PAGE_COUNT
@@ -130,7 +145,7 @@ class Tumblr(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
@@ -283,12 +298,14 @@ class Download(threading.Thread):
                             log.error(account_id + " 第%s个视频 日志%s无法获取视频播放页" % (video_count, post_id))
                         else:
                             if len(video_list) > 0:
-                                for video_url, video_type in list(video_list):
-                                    # 去除视频指定分辨率
-                                    temp_list = video_url.split("/")
-                                    if temp_list[-1].isdigit():
-                                        video_url = "/".join(temp_list[:-1])
-                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                                for video_play_url, video_type in list(video_list):
+                                    # 获取视频的真实下载地址
+                                    video_url = get_video_url(video_play_url)
+                                    # # 去除视频指定分辨率
+                                    # temp_list = video_url.split("/")
+                                    # if temp_list[-1].isdigit():
+                                    #     video_url = "/".join(temp_list[:-1])
+                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_play_url))
 
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
@@ -299,11 +316,12 @@ class Download(threading.Thread):
 
                                     file_type = video_type.split("/")[-1]
                                     video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                    if tool.save_net_file(video_url, video_file_path):
+                                    save_file_return = net.save_net_file(video_url, video_file_path)
+                                    if save_file_return["status"] == 1:
                                         log.step(account_id + " 第%s个视频下载成功" % video_count)
                                         video_count += 1
                                     else:
-                                        log.error(account_id + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                                        log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_play_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                             else:
                                 log.error(account_id + " 第%s个视频 日志%s中没有找到视频" % (video_count, post_id))
 
@@ -333,11 +351,12 @@ class Download(threading.Thread):
 
                                 file_type = image_url.split(".")[-1]
                                 image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                if tool.save_net_file(image_url, image_file_path):
+                                save_file_return = net.save_net_file(image_url, image_file_path)
+                                if save_file_return["status"] == 1:
                                     log.step(account_id + " 第%s张图片下载成功" % image_count)
                                     image_count += 1
                                 else:
-                                    log.error(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                                    log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                         else:
                             log.error(account_id + " 第%s张图片 日志%s中没有找到图片" % (image_count, post_id))
 

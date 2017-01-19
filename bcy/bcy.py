@@ -6,16 +6,14 @@ http://bcy.net
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import base64
-import cookielib
 import json
 import os
 import re
 import threading
 import time
 import traceback
-import urllib2
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
@@ -34,7 +32,7 @@ def check_login():
         return False
     home_page_url = "http://bcy.net/home/user/index"
     header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
-    home_page_response = tool.http_request2(home_page_url, header_list=header_list)
+    home_page_response = net.http_request(home_page_url, header_list=header_list)
     if home_page_response.status == 200:
         if home_page_response.data.find('<a href="/login">登录</a>') == -1:
             return True
@@ -94,7 +92,7 @@ def login():
     global COOKIE_INFO
     # 访问首页，获取一个随机session id
     home_page_url = "http://bcy.net/home/user/index"
-    home_page_response = tool.http_request2(home_page_url)
+    home_page_response = net.http_request(home_page_url)
     if home_page_response.status == 200 and "Set-Cookie" in home_page_response.headers:
         COOKIE_INFO["acw_tc"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "acw_tc=", ";")
         COOKIE_INFO["PHPSESSID"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "PHPSESSID=", ";")
@@ -105,7 +103,7 @@ def login():
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
     header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
-    login_response = tool.http_request2(login_url, login_post, header_list=header_list)
+    login_response = net.http_request(login_url, login_post, header_list=header_list)
     if login_response.status == 200:
         if login_response.data.find('<a href="/login">登录</a>') == -1:
             if SAVE_ACCOUNT_INFO:
@@ -118,7 +116,7 @@ def login():
 def follow(account_id):
     follow_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_response = tool.http_request2(follow_url, follow_post_data)
+    follow_response = net.http_request(follow_url, follow_post_data)
     if follow_response.status == 200:
         # 0 未登录，11 关注成功，12 已关注
         if int(follow_response.data) == 12:
@@ -130,7 +128,7 @@ def follow(account_id):
 def unfollow(account_id):
     unfollow_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_response = tool.http_request2(unfollow_url, unfollow_post_data)
+    unfollow_response = net.http_request(unfollow_url, unfollow_post_data)
     if unfollow_response.status == 200:
         if int(unfollow_response.data) == 1:
             return True
@@ -141,10 +139,7 @@ def unfollow(account_id):
 def get_one_page_post(coser_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-    post_page_response = tool.http_request2(post_url)
-    if post_page_response.status == 200:
-        return post_page_response.data
-    return None
+    return net.http_request(post_url)
 
 
 # 解析作品信息，获取所有的正片信息
@@ -161,19 +156,23 @@ def get_rp_list(post_page):
     return cp_id, rp_list
 
 
+# 获取正片页面
+def get_rp_data(cp_id, rp_id):
+    # http://bcy.net/coser/detail/9299/36484
+    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
+    return net.http_request(rp_url)
+
+
+# 检测正片是否被管理员锁定
+def is_invalid_rp(rp_data):
+    return rp_data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0
+
+
 # 获取正片页面内的所有图片地址列表
 # cp_id -> 9299
 # rp_id -> 36484
-def get_image_url_list(cp_id, rp_id):
-    # http://bcy.net/coser/detail/9299/36484
-    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-    rp_page_response = tool.http_request2(rp_url)
-    if rp_page_response.status == 200:
-        if rp_page_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
-            return -1, []
-        else:
-            return 1, re.findall("src='([^']*)'", rp_page_response.data)
-    return 0, []
+def get_image_url_list(rp_data):
+    return re.findall("src='([^']*)'", rp_data)
 
 
 # 根据当前作品页面，获取作品页数上限
@@ -298,18 +297,18 @@ class Download(threading.Thread):
             first_rp_id = ""
             unique_list = []
             is_over = False
-            need_make_download_dir = True  # 是否需要创建cn目录
+            need_make_download_dir = True
             while not is_over:
                 log.step(cn + " 开始解析第%s页作品" % page_count)
 
                 # 获取一页的作品信息
-                post_page = get_one_page_post(coser_id, page_count)
-                if post_page is None:
-                    log.error(cn + " 无法访问第%s页作品" % page_count)
+                post_page_response = get_one_page_post(coser_id, page_count)
+                if post_page_response.status != 200:
+                    log.error(cn + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(post_page_response.status)))
                     tool.process_exit()
 
                 # 解析作品信息，获取所有的正片信息
-                cp_id, rp_list = get_rp_list(post_page)
+                cp_id, rp_list = get_rp_list(post_page_response.data)
                 if cp_id is None:
                     log.error(cn + " 第%s页作品解析异常" % page_count)
                     tool.process_exit()
@@ -354,26 +353,32 @@ class Download(threading.Thread):
                             log.error(cn + " 创建作品目录 %s 失败" % rp_path)
                             tool.process_exit()
 
-                    # 获取正片页面内的所有图片地址列表
-                    image_url_status, image_url_list = get_image_url_list(cp_id, rp_id)
-                    if image_url_status == 0:
-                        log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
+                    # 获取正片页面
+                    rp_page_response = get_rp_data(cp_id, rp_id)
+                    if rp_page_response.status != 200:
+                        log.error(cn + " 作品%s（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
+                        tool.process_exit()
+
+                    if is_invalid_rp(rp_page_response.data):
+                        log.error(cn + " 作品%s（cp_id：%s）已被管理员锁定，跳过" % (rp_id, cp_id))
                         continue
-                    elif image_url_status == -1:
-                        log.error(cn + " 正片：%s，已被管理员锁定，cp_id：%s" % (rp_id, cp_id))
-                        continue
+
+                    # 获取作品中的全部图片地址
+                    image_url_list = get_image_url_list(rp_page_response.data)
 
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
                         log.step(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
-                            # 重新获取下正片页面内的所有图片地址列表
-                            image_url_status, image_url_list = get_image_url_list(cp_id, rp_id)
-                            if image_url_status == 0:
-                                log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
-                                continue
+                            # 重新获取正片页面
+                            rp_page_response = get_rp_data(cp_id, rp_id)
+                            if rp_page_response.status != 200:
+                                log.error(cn + " 作品%s（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
+                                tool.process_exit()
+                            # 重新获取作品中的全部图片地址
+                            image_url_list = get_image_url_list(rp_page_response.data)
 
                     if len(image_url_list) == 0:
-                        log.error(cn + " 正片：%s没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品，cp_id：%s" % (rp_id, cp_id))
+                        log.error(cn + " 作品%s（cp_id：%s）没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % (rp_id, cp_id))
                         continue
 
                     image_count = 1
@@ -387,11 +392,12 @@ class Download(threading.Thread):
                         else:
                             file_type = "jpg"
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
-                            image_count += 1
+                        save_file_return = net.save_net_file(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             log.step(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
+                            image_count += 1
                         else:
-                            log.error(cn + " %s 第%s张图片 %s 下载失败" % (rp_id, image_count, image_url))
+                            log.error(" %s 第%s张图片 %s，下载失败，原因：%s" % (rp_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     this_cn_total_image_count += image_count - 1
 
@@ -402,7 +408,7 @@ class Download(threading.Thread):
                         total_rp_count += 1
 
                 if not is_over:
-                    if page_count >= get_max_page_count(coser_id, post_page):
+                    if page_count >= get_max_page_count(coser_id, post_page_response.data):
                         is_over = True
                     else:
                         page_count += 1

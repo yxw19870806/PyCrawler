@@ -6,8 +6,7 @@ http://changba.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
-import json
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -22,45 +21,30 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 根据account_id获取user_id
-def get_user_id(account_id):
+# 获取账号首页页面
+def get_user_index_page(account_id):
     index_url = "http://changba.com/u/%s" % account_id
-    index_response = tool.http_request2(index_url)
-    if index_response.status == 200:
-        user_id = tool.find_sub_string(index_response.data, "var userid = '", "'")
-        if user_id:
-            return user_id
-    return None
+    return net.http_request(index_url)
+
+
+# 根据账号主页，查找对应的user id
+def get_user_id(account_index_page):
+    return tool.find_sub_string(account_index_page, "var userid = '", "'")
 
 
 # 获取一页的歌曲信息，单条歌曲信息的格式：[歌曲id，歌曲名字，歌曲下载地址]
 # user_id -> 4306405
-def get_one_page_audio_list(user_id, page_count):
+def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
     audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
-    audio_album_response = tool.http_request2(audio_album_url)
-    if audio_album_response.status == 200:
-        try:
-            audio_album_page = json.loads(audio_album_response.data)
-        except ValueError:
-            pass
-        else:
-            audio_list = []
-            for audio_info in audio_album_page:
-                if robot.check_sub_key(("songname", "workid", "enworkid"), audio_info):
-                    audio_id = str(audio_info["workid"])
-                    audio_name = audio_info["songname"].encode("utf-8")
-                    audio_url = str(audio_info["enworkid"])
-                    audio_list.append([audio_id, audio_name, audio_url])
-            return audio_list
-    return None
+    return net.http_request(audio_album_url, json_decode=True)
 
 
 # 获取歌曲的下载地址
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_url(audio_en_word_id):
     audio_index_url = "http://changba.com/s/%s" % audio_en_word_id
-    audio_index_response = tool.http_request2(audio_index_url)
+    audio_index_response = net.http_request(audio_index_url)
     if audio_index_response.status == 200:
         audio_source_url = tool.find_sub_string(audio_index_response.data, 'var a="', '"')
         if audio_source_url:
@@ -162,8 +146,13 @@ class Download(threading.Thread):
 
             video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
-            user_id = get_user_id(account_id)
-            if user_id is None:
+            # 查找账号user id
+            account_index_page_response = get_user_index_page(account_id)
+            if account_index_page_response.status != 200:
+                log.error(account_name + " 主页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_page_response.status))
+                tool.process_exit()
+            user_id = get_user_id(account_index_page_response.data)
+            if not user_id:
                 log.error(account_name + " userid获取失败")
                 tool.process_exit()
 
@@ -176,21 +165,23 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
 
-                # 获取指定一页的歌曲信息
-                audio_list = get_one_page_audio_list(user_id, page_count)
-                if audio_list is None:
-                    log.step(account_name + " 第%s页歌曲列表获取失败" % page_count)
-                    first_audio_id = "0"
-                    break  # 存档恢复
+                # 获取一页歌曲
+                audio_data_response = get_one_page_audio(user_id, page_count)
+                if audio_data_response.status != 200:
+                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(audio_data_response.status)))
+                    tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if len(audio_list) == 0:
+                if audio_data_response.data is []:
                     break
 
-                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_list))
+                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_data_response.data))
 
-                for audio_info in list(audio_list):
-                    audio_id = audio_info[0]
+                for audio_info in audio_data_response.data:
+                    if not robot.check_sub_key(("songname", "workid", "enworkid"), audio_info):
+                        log.error(account_name + " 第%s首歌曲信息%s异常" % (video_count, audio_info))
+                        continue
+                    audio_id = str(audio_info["workid"])
 
                     # 检查是否歌曲id小于上次的记录
                     if int(audio_id) <= int(self.account_info[1]):
@@ -208,7 +199,7 @@ class Download(threading.Thread):
                         unique_list.append(audio_id)
 
                     # 获取歌曲的下载地址
-                    audio_url = get_audio_url(audio_info[2])
+                    audio_url = get_audio_url(str(audio_info["enworkid"]))
                     log.step(account_name + " 开始下载第%s首歌曲 %s" % (video_count, audio_url))
 
                     # 第一首歌曲，创建目录
@@ -218,8 +209,8 @@ class Download(threading.Thread):
                             tool.process_exit()
                         need_make_download_dir = False
 
-                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info[1]))
-                    save_file_return = tool.save_net_file2(audio_url, file_path)
+                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_info["songname"].encode("utf-8")))
+                    save_file_return = net.save_net_file(audio_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
@@ -234,7 +225,7 @@ class Download(threading.Thread):
                 if not is_over:
                     # 获取的歌曲数量少于1页的上限，表示已经到结束了
                     # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                    if len(audio_list) < 20:
+                    if len(audio_data_response.data) < 20:
                         is_over = True
                     else:
                         page_count += 1

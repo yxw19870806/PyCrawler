@@ -6,7 +6,7 @@ http://5sing.kugou.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import re
@@ -30,7 +30,7 @@ COOKIE_INFO = {"5sing_ssid": "", "5sing_auth": ""}
 def get_one_page_audio_list(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
     audio_album_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
-    audio_album_response = tool.http_request2(audio_album_url)
+    audio_album_response = net.http_request(audio_album_url)
     if audio_album_response.status == 200:
         return re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_album_response.data)
     return None
@@ -41,7 +41,7 @@ def get_audio_url(audio_id, song_type):
     # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
     audio_info_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
     header_list = {"Cookie": "5sing_ssid=%s; 5sing_auth=%s" % (COOKIE_INFO["5sing_ssid"], COOKIE_INFO["5sing_auth"])}
-    audio_info_response = tool.http_request2(audio_info_url, header_list=header_list)
+    audio_info_response = net.http_request(audio_info_url, header_list=header_list)
     if audio_info_response.status == 200:
         try:
             audio_info = json.loads(audio_info_response.data)
@@ -210,7 +210,7 @@ class Download(threading.Thread):
                             need_make_download_dir = False
 
                         file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_title))
-                        save_file_return = tool.save_net_file2(audio_url, file_path)
+                        save_file_return = net.save_net_file(audio_url, file_path)
                         if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                             video_count += 1
