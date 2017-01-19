@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 from common import process
 import cookielib
 import cStringIO
+import json
 import mimetools
 import os
 import platform
@@ -779,14 +780,24 @@ def set_proxy2(ip, port):
     print_msg("设置代理成功")
 
 
+HTTP_RETURN_CODE_RETRY = 0
+HTTP_RETURN_CODE_URL_INVALID = -1
+HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2
+HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
+
+
 # http请求(urlib3)
 # header_list       http header信息，e.g. {"Host":“www.example.com"}
 # is_random_ip      是否使用伪造IP
 # exception_return  如果异常信息中包含以下字符串，直接返回-1
-# return            0：无法访问，-1:特殊异常捕获后的返回，-100：URL格式不正确，其他>0：网页返回码（正常返回码为200）
-def http_request2(url, post_data=None, header_list=None, is_random_ip=True, exception_return= ""):
+# return            0：无法访问
+#                   -1：URL格式不正确
+#                   -2：json decode error
+#                   -10：特殊异常捕获后的返回
+#                   其他>0：网页返回码（正常返回码为200）
+def http_request2(url, post_data=None, header_list=None, is_random_ip=True, json_decode=False, exception_return=""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
-        return ErrorResponse(-100)
+        return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
 
@@ -814,6 +825,11 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True, exce
                 response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list)
             else:
                 response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list)
+            if json_decode:
+                try:
+                    response.data =json.loads
+                except ValueError:
+                    return ErrorResponse(HTTP_RETURN_CODE_JSON_DECODE_ERROR)
             return response
         except urllib3.exceptions.ProxyError:
             notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
@@ -842,7 +858,7 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True, exce
         #     #     return ErrorResponse(-3)
         except Exception, e:
             if exception_return and str(e).find(exception_return) >= 0:
-                return ErrorResponse(-1)
+                return ErrorResponse(HTTP_RETURN_CODE_EXCEPTION_CATCH)
             print_msg(str(e))
             print_msg(url + " 访问超时，稍后重试")
             traceback.print_exc()
@@ -850,7 +866,7 @@ def http_request2(url, post_data=None, header_list=None, is_random_ip=True, exce
         retry_count += 1
         if retry_count >= HTTP_REQUEST_RETRY_COUNT:
             print_msg("无法访问页面：" + url)
-            return ErrorResponse(0)
+            return ErrorResponse(HTTP_RETURN_CODE_RETRY)
 
 
 # 错误response的对象
