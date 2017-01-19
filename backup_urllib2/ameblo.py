@@ -239,7 +239,7 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
-                # 获取一页日志页面
+                # 获取一页日志
                 page_data = get_blog_page(account_name, page_count)
                 if page_data is None:
                     log.error(account_name + " 第%s页日志无法获取" % page_count)

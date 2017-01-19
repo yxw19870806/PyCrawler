@@ -193,16 +193,16 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页日志信息
-                blog_page = get_one_page_blog(account_id, page_count)
-                if blog_page is None:
+                index_page = get_one_page_blog(account_id, page_count)
+                if index_page is None:
                     log.error(account_name + " 第%s页日志获取失败" % page_count)
                     tool.process_exit()
-                if not blog_page:
+                if not index_page:
                     log.error(account_name + " 第%s页日志解析失败" % page_count)
                     tool.process_exit()
 
                 # 将日志内容按日志分组
-                blog_data_list = get_blog_data_list(blog_page)
+                blog_data_list = get_blog_data_list(index_page)
                 if len(blog_data_list) == 0:
                     log.error(account_name + " 第%s页日志分组失败" % page_count)
                     tool.process_exit()
@@ -267,7 +267,7 @@ class Download(threading.Thread):
                     if 0 < GET_PAGE_COUNT <= page_count:
                         is_over = True
                     # 判断当前页数是否大等于总页数
-                    elif page_count >= get_max_page_count(blog_page):
+                    elif page_count >= get_max_page_count(index_page):
                         is_over = True
                     else:
                         page_count += 1
