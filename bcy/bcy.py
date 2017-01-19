@@ -8,14 +8,12 @@ email: hikaru870806@hotmail.com
 """
 from common import log, robot, tool
 import base64
-import cookielib
 import json
 import os
 import re
 import threading
 import time
 import traceback
-import urllib2
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
