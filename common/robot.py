@@ -462,3 +462,18 @@ def get_save_net_file_failed_reason(return_code):
         return "未知错误，http code %s" % return_code
     else:
         return "未知错误，下载返回码 %s" % return_code
+
+
+# 获取网络文件下载失败的原因
+def get_http_request_failed_reason(return_code):
+    if return_code == 404:
+        reason = "页面已被删除"
+    elif return_code == 0:
+        reason = "页面多次获取失败，可能无法访问"
+    elif return_code == -100:
+        reason = "URL格式错误"
+    elif return_code > 0:
+        reason = "未知错误，http code %s" % return_code
+    else:
+        reason = "未知错误，访问返回码 %s" % return_code
+    return "访问失败，原因：%s" % reason
