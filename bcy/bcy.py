@@ -392,11 +392,12 @@ class Download(threading.Thread):
                         else:
                             file_type = "jpg"
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
-                            image_count += 1
+                        save_file_return = net.save_net_file(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             log.step(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
+                            image_count += 1
                         else:
-                            log.error(cn + " %s 第%s张图片 %s 下载失败" % (rp_id, image_count, image_url))
+                            log.error(" %s 第%s张图片 %s，下载失败，原因：%s" % (rp_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     this_cn_total_image_count += image_count - 1
 
