@@ -141,10 +141,7 @@ def unfollow(account_id):
 def get_one_page_post(coser_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (coser_id, page_count)
-    post_page_response = tool.http_request2(post_url)
-    if post_page_response.status == 200:
-        return post_page_response.data
-    return None
+    return tool.http_request2(post_url)
 
 
 # 解析作品信息，获取所有的正片信息
@@ -161,19 +158,23 @@ def get_rp_list(post_page):
     return cp_id, rp_list
 
 
+# 获取正片页面
+def get_rp_data(cp_id, rp_id):
+    # http://bcy.net/coser/detail/9299/36484
+    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
+    return tool.http_request2(rp_url)
+
+
+# 检测正片是否被管理员锁定
+def is_invalid_rp(rp_data):
+    return rp_data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0
+
+
 # 获取正片页面内的所有图片地址列表
 # cp_id -> 9299
 # rp_id -> 36484
-def get_image_url_list(cp_id, rp_id):
-    # http://bcy.net/coser/detail/9299/36484
-    rp_url = "http://bcy.net/coser/detail/%s/%s" % (cp_id, rp_id)
-    rp_page_response = tool.http_request2(rp_url)
-    if rp_page_response.status == 200:
-        if rp_page_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
-            return -1, []
-        else:
-            return 1, re.findall("src='([^']*)'", rp_page_response.data)
-    return 0, []
+def get_image_url_list(rp_data):
+    return re.findall("src='([^']*)'", rp_data)
 
 
 # 根据当前作品页面，获取作品页数上限
@@ -303,13 +304,13 @@ class Download(threading.Thread):
                 log.step(cn + " 开始解析第%s页作品" % page_count)
 
                 # 获取一页的作品信息
-                post_page = get_one_page_post(coser_id, page_count)
-                if post_page is None:
-                    log.error(cn + " 无法访问第%s页作品" % page_count)
+                post_page_response = get_one_page_post(coser_id, page_count)
+                if post_page_response.status != 200:
+                    log.error(cn + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(post_page_response.status)))
                     tool.process_exit()
 
                 # 解析作品信息，获取所有的正片信息
-                cp_id, rp_list = get_rp_list(post_page)
+                cp_id, rp_list = get_rp_list(post_page_response.data)
                 if cp_id is None:
                     log.error(cn + " 第%s页作品解析异常" % page_count)
                     tool.process_exit()
@@ -354,26 +355,32 @@ class Download(threading.Thread):
                             log.error(cn + " 创建作品目录 %s 失败" % rp_path)
                             tool.process_exit()
 
-                    # 获取正片页面内的所有图片地址列表
-                    image_url_status, image_url_list = get_image_url_list(cp_id, rp_id)
-                    if image_url_status == 0:
-                        log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
+                    # 获取正片页面
+                    rp_page_response = get_rp_data(cp_id, rp_id)
+                    if rp_page_response.status != 200:
+                        log.error(cn + " 作品%s（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
+                        tool.process_exit()
+
+                    if is_invalid_rp(rp_page_response.data):
+                        log.error(cn + " 作品%s（cp_id：%s）已被管理员锁定，跳过" % (rp_id, cp_id))
                         continue
-                    elif image_url_status == -1:
-                        log.error(cn + " 正片：%s，已被管理员锁定，cp_id：%s" % (rp_id, cp_id))
-                        continue
+
+                    # 获取作品中的全部图片地址
+                    image_url_list = get_image_url_list(rp_page_response.data)
 
                     if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
                         log.step(cn + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
                         if follow(coser_id):
-                            # 重新获取下正片页面内的所有图片地址列表
-                            image_url_status, image_url_list = get_image_url_list(cp_id, rp_id)
-                            if image_url_status == 0:
-                                log.error(cn + " 无法访问正片：%s，cp_id：%s" % (rp_id, cp_id))
-                                continue
+                            # 重新获取正片页面
+                            rp_page_response = get_rp_data(cp_id, rp_id)
+                            if rp_page_response.status != 200:
+                                log.error(cn + " 作品%s（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
+                                tool.process_exit()
+                            # 重新获取作品中的全部图片地址
+                            image_url_list = get_image_url_list(rp_page_response.data)
 
                     if len(image_url_list) == 0:
-                        log.error(cn + " 正片：%s没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品，cp_id：%s" % (rp_id, cp_id))
+                        log.error(cn + " 作品%s（cp_id：%s）没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % (rp_id, cp_id))
                         continue
 
                     image_count = 1
@@ -402,7 +409,7 @@ class Download(threading.Thread):
                         total_rp_count += 1
 
                 if not is_over:
-                    if page_count >= get_max_page_count(coser_id, post_page):
+                    if page_count >= get_max_page_count(coser_id, post_page_response.data):
                         is_over = True
                     else:
                         page_count += 1
