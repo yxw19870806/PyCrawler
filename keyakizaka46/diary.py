@@ -6,7 +6,7 @@ http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -29,9 +29,9 @@ def get_one_page_diary_data(account_id, page_count):
     # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
     diary_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
     diary_page_url += "?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
-    diary_return_code, diary_page = tool.http_request(diary_page_url)[:2]
-    if diary_return_code == 1:
-        diary_page = tool.find_sub_string(diary_page, '<div class="box-main">', '<div class="box-sideMember">')
+    diary_response = net.http_request(diary_page_url)
+    if diary_response.status == 200:
+        diary_page = tool.find_sub_string(diary_response.data, '<div class="box-main">', '<div class="box-sideMember">')
         if diary_page:
             return re.findall("<article>([\s|\S]*?)</article>", diary_page)
     return None
@@ -198,11 +198,12 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
+                        save_file_return = net.save_net_file(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:

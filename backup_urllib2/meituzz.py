@@ -6,7 +6,7 @@ http://meituzz.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import log, robot, tool
 import json
 import os
 import re
@@ -65,20 +65,20 @@ class MeiTuZZ(robot.Robot):
 
             album_url = "http://meituzz.com/album/browse?albumID=%s" % album_id
             try:
-                album_page_response = net.http_request(album_url)
+                album_page_return_code, album_page = tool.http_request(album_url)[:2]
             except SystemExit:
                 log.step("提前退出")
                 break
 
-            if album_page_response.status == -500:
+            if album_page_return_code == -500:
                 log.step("第%s页相册内部错误，跳过" % album_id)
                 album_id += 1
                 continue
-            elif album_page_response.status != 200:
+            elif album_page_return_code != 1:
                 log.error("第%s页图片获取失败" % album_id)
                 break
 
-            if album_page_response.data.find("<title>相册已被删除</title>") >= 0:
+            if album_page.find("<title>相册已被删除</title>") >= 0:
                 error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
@@ -92,15 +92,15 @@ class MeiTuZZ(robot.Robot):
             error_count = 0
 
             # 图片下载
-            if self.is_download_image and album_page_response.data.find('<input type="hidden" id="imageList"') >= 0:
-                total_photo_count = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="totalPageNum" value=', " ")
+            if self.is_download_image and album_page.find('<input type="hidden" id="imageList"') >= 0:
+                total_photo_count = tool.find_sub_string(album_page, '<input type="hidden" id="totalPageNum" value=', " ")
                 if not total_photo_count:
                     log.error("第%s页图片数量解析失败" % album_id)
                     break
                 total_photo_count = int(total_photo_count)
 
                 # 获取页面全部图片地址列表
-                image_url_list = get_image_url_list(album_page_response.data)
+                image_url_list = get_image_url_list(album_page)
                 if image_url_list is None:
                     log.error("第%s页图片地址列表解析失败" % album_id)
                     break
@@ -111,7 +111,7 @@ class MeiTuZZ(robot.Robot):
 
                 is_fee = False
                 if len(image_url_list) != total_photo_count:
-                    album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page_response.data)
+                    album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page)
                     if len(album_reward_find) == 1:
                         album_reward = int(album_reward_find[0])
                         if album_reward > 0 and total_photo_count - len(image_url_list) <= 1:
@@ -133,12 +133,11 @@ class MeiTuZZ(robot.Robot):
 
                     image_file_path = os.path.join(image_path, "%04d.jpg" % image_count)
                     try:
-                        save_file_return = net.save_net_file(image_url, image_file_path, True)
-                        if save_file_return["status"] == 1:
+                        if tool.save_net_file(image_url, image_file_path, True):
                             log.step("第%s页第%s张图片下载成功" % (album_id, image_count))
                             image_count += 1
                         else:
-                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error("第%s页第%s张图片 %s 下载失败" % (album_id, image_count, image_url))
                     except SystemExit:
                         log.step("提前退出")
                         tool.remove_dir(image_path)
@@ -148,21 +147,20 @@ class MeiTuZZ(robot.Robot):
                 total_image_count += image_count - 1
 
             # 视频下载
-            if self.is_download_image and album_page_response.data.find('<input type="hidden" id="VideoUrl"') >= 0:
+            if self.is_download_image and album_page.find('<input type="hidden" id="VideoUrl"') >= 0:
                 # 获取视频下载地址
-                video_url = get_video_url(album_page_response.data)
+                video_url = get_video_url(album_page)
                 log.step("开始下载第%s页视频 %s" % (album_id, video_url))
 
-                video_title = robot.filter_text(tool.find_sub_string(album_page_response.data, "<title>", "</title>"))
+                video_title = robot.filter_text(tool.find_sub_string(album_page, "<title>", "</title>"))
                 file_type = video_url.split(".")[-1]
                 video_file_path = os.path.join(self.video_download_path, "%s %s.%s" % (album_id, video_title, file_type))
                 try:
-                    save_file_return = net.save_net_file(video_url, video_file_path)
-                    if save_file_return["status"] == 1:
+                    if tool.save_net_file(video_url, video_file_path, True):
                         log.step("第%s页视频下载成功" % album_id)
                         total_video_count += 1
                     else:
-                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("第%s页视频 %s 下载失败" % (album_id, video_url))
                 except SystemExit:
                     log.step("提前退出")
                     is_over = True

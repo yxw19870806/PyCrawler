@@ -6,7 +6,7 @@ https://www.flickr.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import threading
@@ -27,10 +27,10 @@ IS_SORT = True
 # 获取账号的user id和此次的token
 def get_api_info(account_name):
     photo_index_url = "https://www.flickr.com/photos/%s" % account_name
-    photo_index_return_code, photo_index_page = tool.http_request(photo_index_url)[:2]
-    if photo_index_return_code == 1:
-        user_id = tool.find_sub_string(photo_index_page, '"nsid":"', '"')
-        site_key = tool.find_sub_string(photo_index_page, '"site_key":"', '"')
+    photo_index_response = net.http_request(photo_index_url)
+    if photo_index_response.status == 200:
+        user_id = tool.find_sub_string(photo_index_response.data, '"nsid":"', '"')
+        site_key = tool.find_sub_string(photo_index_response.data, '"site_key":"', '"')
         return {"user_id": user_id, "site_key": site_key}
     return None
 
@@ -38,7 +38,7 @@ def get_api_info(account_name):
 # 获取指定账号的一页图片信息列表
 # user_id -> 36587311@N08
 def get_one_page_image_data(user_id, page_count, api_key, request_id):
-    page_data_url = "https://api.flickr.com/services/rest"
+    image_data_page_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
     # 所有可支持的参数
     # extra_data = [
@@ -68,16 +68,16 @@ def get_one_page_image_data(user_id, page_count, api_key, request_id):
         "reqId": request_id,
         "nojsoncallback": 1,
     }
-    page_data_return_code, page_data = tool.http_request(page_data_url, post_data)[:2]
-    if page_data_return_code == 1:
+    image_page_response = net.http_request(image_data_page_url, post_data)
+    if image_page_response.status == 200:
         try:
-            page_data = json.loads(page_data)
+            image_page_data = json.loads(image_page_response.data)
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("stat", "photos"), page_data) and page_data["stat"] == "ok":
-                if robot.check_sub_key(("photo", "total"), page_data["photos"]):
-                    return page_data
+            if robot.check_sub_key(("stat", "photos"), image_page_data) and image_page_data["stat"] == "ok":
+                if robot.check_sub_key(("photo", "total"), image_page_data["photos"]):
+                    return image_page_data
     return None
 
 
@@ -234,11 +234,12 @@ class Download(threading.Thread):
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                    if tool.save_net_file(image_url, file_path):
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s张图片下载成功" % image_count)
                         image_count += 1
                     else:
-                        log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:

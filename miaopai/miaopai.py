@@ -6,7 +6,7 @@ http://www.miaopai.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import re
@@ -49,10 +49,10 @@ def get_follow_list(suid):
 # suid -> 0r9ewgQ0v7UoDptu
 def get_one_page_follow_data(suid, page_count):
     follow_list_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
-    follow_list_page_return_code, follow_list_data = tool.http_request(follow_list_url)[:2]
-    if follow_list_page_return_code == 1:
+    follow_list_page_response = net.http_request(follow_list_url)
+    if follow_list_page_response.status == 200:
         try:
-            follow_list_data = json.loads(follow_list_data)
+            follow_list_data = json.loads(follow_list_page_response.data)
         except ValueError:
             pass
         else:
@@ -65,9 +65,9 @@ def get_one_page_follow_data(suid, page_count):
 # account_id -> mi9wmdhhof
 def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
-    index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
-    if index_page_return_code == 1:
-        suid = tool.find_sub_string(index_page, '<button class="guanzhu gz" suid="', '" heade="1" token="">+关注</button>')
+    index_page_response = net.http_request(index_page_url)
+    if index_page_response.status == 200:
+        suid = tool.find_sub_string(index_page_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="">+关注</button>')
         if suid:
             return suid
     return None
@@ -78,10 +78,10 @@ def get_suid(account_id):
 def get_one_page_video_data(suid, page_count):
     # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
     media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
-    media_page_return_code, media_page = tool.http_request(media_page_url)[:2]
-    if media_page_return_code == 1:
+    media_page_response = net.http_request(media_page_url)
+    if media_page_response.status == 200:
         try:
-            media_page = json.loads(media_page)
+            media_page = json.loads(media_page_response.data)
         except ValueError:
             pass
         else:
@@ -99,10 +99,10 @@ def get_scid_list(msg_data):
 # video_id -> 9oUkvbHMnrliNyKX3VSDNw__
 def get_video_url_by_video_id(video_id):
     video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
-    video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
-    if video_info_page_return_code == 1:
+    video_info_page_response = net.http_request(video_info_url)
+    if video_info_page_response.status == 200:
         try:
-            video_info_page = json.loads(video_info_page)
+            video_info_page = json.loads(video_info_page_response.data)
         except ValueError:
             pass
         else:
@@ -266,11 +266,12 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
-                    if tool.save_net_file(video_url, file_path):
+                    save_file_return = net.save_net_file(video_url, file_path)
+                    if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
                     else:
-                        log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                        log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:

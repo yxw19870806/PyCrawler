@@ -6,7 +6,7 @@ https://7gogo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import log, robot, tool
 import json
 import os
 import threading
@@ -32,10 +32,10 @@ IS_DOWNLOAD_VIDEO = True
 def get_message_page_data(account_name, target_id):
     image_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
     image_page_url += "?targetId=%s&limit=%s&direction=PREV" % (target_id, MESSAGE_COUNT_PER_PAGE)
-    image_page_response = net.http_request(image_page_url)
-    if image_page_response.status == 200:
+    image_page_return_code, image_page_data = tool.http_request(image_page_url)[:2]
+    if image_page_return_code == 1:
         try:
-            image_page_data = json.loads(image_page_response.data)
+            image_page_data = json.loads(image_page_data)
         except ValueError:
             pass
         else:
@@ -213,12 +213,11 @@ class Download(threading.Thread):
 
                                 file_type = image_url.split(".")[-1]
                                 image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                save_file_return = net.save_net_file(image_url, image_file_path)
-                                if save_file_return["status"] == 1:
+                                if tool.save_net_file(image_url, image_file_path):
                                     log.step(account_name + " 第%s张图片下载成功" % image_count)
                                     image_count += 1
                                 else:
-                                    log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                                    log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
                         elif body_type == 8:  # video
                             if IS_DOWNLOAD_VIDEO:
                                 if not robot.check_sub_key(("movieUrlHq",), media_info):
@@ -237,12 +236,11 @@ class Download(threading.Thread):
 
                                 file_type = video_url.split(".")[-1]
                                 video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                save_file_return = net.save_net_file(video_url, video_file_path)
-                                if save_file_return["status"] == 1:
+                                if tool.save_net_file(video_url, video_file_path):
                                     log.step(account_name + " 第%s个视频下载成功" % video_count)
                                     video_count += 1
                                 else:
-                                    log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                                    log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
                         elif body_type == 7:  # 转发
                             pass
                         else:

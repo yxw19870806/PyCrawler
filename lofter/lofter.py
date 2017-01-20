@@ -6,7 +6,7 @@ http://www.lofter.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -27,9 +27,9 @@ IS_SORT = True
 def get_one_page_post_url_list(account_id, page_count):
     # http://moexia.lofter.com/?page=1
     index_page_url = "http://%s.lofter.com/?page=%s" % (account_id, page_count)
-    index_page_return_code, index_page = tool.http_request(index_page_url)[:2]
-    if index_page_return_code == 1:
-        return re.findall('"(http://' + account_id + '.lofter.com/post/[^"]*)"', index_page)
+    index_page_response = net.http_request(index_page_url)
+    if index_page_response.status == 200:
+        return re.findall('"(http://' + account_id + '.lofter.com/post/[^"]*)"', index_page_response.data)
     return None
 
 
@@ -173,13 +173,13 @@ class Download(threading.Thread):
 
                     log.step(account_id + " 开始解析日志 %s" % post_url)
 
-                    post_page_return_code, post_page = tool.http_request(post_url)[:2]
-                    if post_page_return_code != 1:
+                    post_page_response = net.http_request(post_url)
+                    if post_page_response.status != 200:
                         log.error(account_id + " 第%s张图片，无法访问日志 %s" % (image_count, post_url))
                         continue
 
                     # 获取图片下载地址列表
-                    image_url_list = get_image_url_list(post_page)
+                    image_url_list = get_image_url_list(post_page_response.data)
                     if len(image_url_list) == 0:
                         log.error(account_id + " 第%s张图片，日志 %s 中没有找到图片" % (image_count, post_url))
                         continue
@@ -199,11 +199,12 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
+                        save_file_return = net.save_net_file(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             log.step(account_id + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_id + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:

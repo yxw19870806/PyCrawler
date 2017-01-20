@@ -6,7 +6,7 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import log, robot, tool
 import json
 import os
 import threading
@@ -36,9 +36,9 @@ IS_DOWNLOAD_VIDEO = True
 def set_csrf_token():
     global CSRF_TOKEN
     index_url = "https://www.instagram.com/instagram"
-    index_page_response = net.http_request(index_url)
-    if index_page_response.status == 200:
-        set_cookie_info = net.get_response_info(index_page_response, "Set-Cookie")
+    index_page_response = tool.http_request(index_url)
+    if index_page_response[0] == 1:
+        set_cookie_info = tool.get_response_info(index_page_response[2].info(), "Set-Cookie")
         if set_cookie_info is not None:
             csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
             if csrf_token:
@@ -69,10 +69,10 @@ def set_session_id():
 def get_account_id(account_name):
     search_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
     for i in range(0, 10):
-        search_response= net.http_request(search_url)
-        if search_response.status == 200:
+        search_return_code, search_data = tool.http_request(search_url)[:2]
+        if search_return_code == 1:
             try:
-                search_data = json.loads(search_response.data)
+                search_data = json.loads(search_data)
             except ValueError:
                 continue
             if robot.check_sub_key(("users",), search_data):
@@ -127,10 +127,10 @@ def get_one_page_follow_by_list(account_id, cursor=None):
         "X-CSRFToken": CSRF_TOKEN,
         "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
     }
-    follow_by_list_response = net.http_request(query_url, post_data, header_list)
-    if follow_by_list_response.status == 200:
+    follow_by_list_return_code, follow_by_list_data = tool.http_request(query_url, post_data, header_list)[:2]
+    if follow_by_list_return_code == 1:
         try:
-            follow_by_list_data = json.loads(follow_by_list_response.data)
+            follow_by_list_data = json.loads(follow_by_list_data)
         except ValueError:
             pass
         else:
@@ -185,10 +185,10 @@ def get_one_page_follow_list(account_id, cursor=None):
         "X-CSRFToken": CSRF_TOKEN,
         "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
     }
-    follow_list_response = tool.http_request(query_url, post_data, header_list)
-    if follow_list_response.status == 200:
+    follow_list_return_code, follow_list_data = tool.http_request(query_url, post_data, header_list)[:2]
+    if follow_list_return_code == 1:
         try:
-            follow_list_data = json.loads(follow_list_response.data)
+            follow_list_data = json.loads(follow_list_data)
         except ValueError:
             pass
         else:
@@ -212,10 +212,10 @@ def get_one_page_media_data(account_id, cursor):
         "X-CSRFToken": CSRF_TOKEN,
         "Cookie": "csrftoken=%s" % CSRF_TOKEN,
     }
-    media_data_response = tool.http_request(media_page_url, post_data, header_list)
-    if media_data_response.status == 200:
+    media_data_return_code, media_data = tool.http_request(media_page_url, post_data, header_list)[:2]
+    if media_data_return_code == 1:
         try:
-            media_data = json.loads(media_data_response.data)
+            media_data = json.loads(media_data)
         except ValueError:
             pass
         else:
@@ -230,9 +230,9 @@ def get_one_page_media_data(account_id, cursor):
 # post_id -> BKdvRtJBGou
 def get_video_url(post_id):
     post_page_url = "https://www.instagram.com/p/%s/" % post_id
-    post_page_response = net.http_request(post_page_url)
-    if post_page_response.status == 200:
-        return tool.find_sub_string(post_page_response.data, '<meta property="og:video:secure_url" content="', '" />')
+    post_page_return_code, post_page = tool.http_request(post_page_url)[:2]
+    if post_page_return_code == 1:
+        return tool.find_sub_string(post_page, '<meta property="og:video:secure_url" content="', '" />')
     return None
 
 
@@ -396,12 +396,11 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1]
                         image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, image_file_path)
-                        if save_file_return["status"] == 1:
+                        if tool.save_net_file(image_url, image_file_path):
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO and photo_info["is_video"]:
@@ -425,12 +424,11 @@ class Download(threading.Thread):
 
                         file_type = video_url.split(".")[-1]
                         video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                        save_file_return = net.save_net_file(video_url, video_file_path)
-                        if save_file_return["status"] == 1:
+                        if tool.save_net_file(video_url, video_file_path):
                             log.step(account_name + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
-                            log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
@@ -439,7 +437,11 @@ class Download(threading.Thread):
 
                 if not is_over:
                     if media_data["page_info"]["has_next_page"]:
-                        cursor = str(media_data["page_info"]["end_cursor"])
+                        if cursor == str(media_data["page_info"]["end_cursor"]):
+                            log.error(account_name + " 下一页cursor %s没有变化" % (cursor))
+                            is_over = True
+                        else:
+                            cursor = str(media_data["page_info"]["end_cursor"])
                     else:
                         is_over = True
 

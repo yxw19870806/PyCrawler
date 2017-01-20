@@ -6,7 +6,7 @@ http://www.meipai.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import log, robot, tool
 import json
 import os
 import re
@@ -31,15 +31,15 @@ def get_follow_list(account_id):
     follow_list = {}
     while page_count <= max_page_count:
         follow_list_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
-        follow_list_page_response = net.http_request(follow_list_url)
-        if follow_list_page_response == 200:
-            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_list_page_response.data)
+        follow_list_page_return_code, follow_list_page = tool.http_request(follow_list_url)[:2]
+        if follow_list_page_return_code == 1:
+            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_list_page)
             for follow_info in follow_list_find:
                 follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()
                 follow_account_name = tool.find_sub_string(follow_info, 'title="', '"')
                 follow_list[follow_account_id] = follow_account_name
             if max_page_count == 1:
-                page_info = tool.find_sub_string(follow_list_page_response.data, '<div class="paging-wrap">', "</div>")
+                page_info = tool.find_sub_string(follow_list_page, '<div class="paging-wrap">', "</div>")
                 if page_info:
                     page_find = re.findall("friends\?p=(\d*)", page_info)
                     page_find = [int(i) for i in page_find]
@@ -55,10 +55,10 @@ def get_one_page_video_data(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
     video_page_url = "http://www.meipai.com/users/user_timeline"
     video_page_url += "?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
-    video_page_response = net.http_request(video_page_url)
-    if video_page_response.status == 200:
+    video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
+    if video_page_return_code == 1:
         try:
-            video_page = json.loads(video_page_response.data)
+            video_page = json.loads(video_page)
         except ValueError:
             pass
         else:
@@ -208,12 +208,11 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
-                    save_file_return = net.save_net_file(video_url, file_path)
-                    if save_file_return["status"] == 1:
+                    if tool.save_net_file(video_url, file_path):
                         log.step(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
                     else:
-                        log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:

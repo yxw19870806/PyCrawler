@@ -6,7 +6,7 @@ https://plus.google.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -27,9 +27,9 @@ IS_SORT = True
 def get_one_page_album(account_id, token):
     index_url = "https://plus.google.com/_/photos/pc/read/"
     post_data = 'f.req=[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, token)
-    index_page_return_code, index_page = tool.http_request(index_url, post_data)[:2]
-    if index_page_return_code == 1:
-        return index_page
+    index_page_response = net.http_request(index_url, post_data)
+    if index_page_response.status == 200:
+        return index_page_response.data
     return None
 
 
@@ -40,20 +40,20 @@ def get_picasaweb_url_list(album_page):
 
 # 获取picasaweb页的album id
 def get_picasaweb_page_album_id(account_id, picasaweb_url):
-    message_page_return_code, message_page = tool.http_request(picasaweb_url)[:2]
-    if message_page_return_code == 1:
+    message_page_response = net.http_request(picasaweb_url)
+    if message_page_response.status == 200:
         # 查找picasaweb页的album id
         album_archive_url = "https://get.google.com/albumarchive/pwa/%s/album/" % account_id
-        return tool.find_sub_string(message_page, 'href="%s' % album_archive_url, '"')
+        return tool.find_sub_string(message_page_response.data, 'href="%s' % album_archive_url, '"')
     return None
 
 
 # 获取album id对应相册存档页的全部图片地址列表
 def get_image_url_list(account_id, album_id):
     album_archive_url = "https://get.google.com/albumarchive/pwaf/%s/album/%s?source=pwa" % (account_id, album_id)
-    album_archive_page_return_code, album_archive_page = tool.http_request(album_archive_url)[:2]
-    if album_archive_page_return_code == 1:
-        return re.findall('<img src="([^"]*)"', album_archive_page)
+    album_archive_page_response = net.http_request(album_archive_url)
+    if album_archive_page_response.status == 1:
+        return re.findall('<img src="([^"]*)"', album_archive_page_response.data)
     return None
 
 
@@ -245,11 +245,12 @@ class Download(threading.Thread):
                         else:
                             file_type = "jpg"
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
+                        save_file_return = net.save_net_file(image_url, file_path)
+                        if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
