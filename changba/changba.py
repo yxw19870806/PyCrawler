@@ -172,12 +172,12 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if audio_data_response.data is []:
+                if audio_data_response.json_data is []:
                     break
 
-                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_data_response.data))
+                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_data_response.json_data))
 
-                for audio_info in audio_data_response.data:
+                for audio_info in audio_data_response.json_data:
                     if not robot.check_sub_key(("songname", "workid", "enworkid"), audio_info):
                         log.error(account_name + " 第%s首歌曲信息%s异常" % (video_count, audio_info))
                         continue
@@ -225,7 +225,7 @@ class Download(threading.Thread):
                 if not is_over:
                     # 获取的歌曲数量少于1页的上限，表示已经到结束了
                     # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                    if len(audio_data_response.data) < 20:
+                    if len(audio_data_response.json_data) < 20:
                         is_over = True
                     else:
                         page_count += 1
