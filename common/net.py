@@ -89,7 +89,7 @@ def http_request(url, post_data=None, header_list=None, is_random_ip=True, json_
                 response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list)
             if json_decode:
                 try:
-                    response.data = json.loads(response.data)
+                    response.json_data = json.loads(response.data)
                 except ValueError:
                     return ErrorResponse(HTTP_RETURN_CODE_JSON_DECODE_ERROR)
             return response
