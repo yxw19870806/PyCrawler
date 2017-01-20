@@ -139,8 +139,8 @@ class Download(threading.Thread):
             account_name = self.account_info[0]
 
         # 原创、翻唱
-        audio_type_to_index = {"yc": 1, "fc": 2}
-        audio_type_name = {"yc": "原唱", "fc": "翻唱"}
+        audio_type_to_index = {"yc": 1, "fc": 2}  # 存档文件里的下标
+        audio_type_name = {"yc": "原唱", "fc": "翻唱"}  # 显示名字
         try:
             log.step(account_name + " 开始")
 
@@ -159,8 +159,9 @@ class Download(threading.Thread):
                     # 获取一页歌曲
                     audio_page_response = get_one_page_audio(account_id, audio_type, page_count)
                     if audio_page_response.status != 200:
-                        log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(audio_page_response.status)))
-                        tool.process_exit()
+                        log.error(account_name + " 第%s页%s歌曲访问失败，原因：%s" % (page_count, audio_type_name[audio_type], robot.get_http_request_failed_reason(audio_page_response.status)))
+                        first_audio_id = "0"  # 存档恢复
+                        break
 
                     # 获取全部歌曲信息列表
                     audio_info_list = get_audio_info_list(audio_type, audio_page_response.data)
@@ -169,7 +170,7 @@ class Download(threading.Thread):
                     if len(audio_info_list) == 0:
                         break
 
-                    log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_info_list))
+                    log.trace(account_name + " 第%s页%s歌曲获取的所有歌曲：%s" % (page_count, audio_type_name[audio_type], audio_info_list))
 
                     for audio_info in audio_info_list:
                         audio_id = audio_info[0]
@@ -194,20 +195,20 @@ class Download(threading.Thread):
                         # 获取歌曲的下载地址
                         audio_info_response = get_audio_url(audio_id, audio_type_to_index[audio_type])
                         if audio_info_response.status != 200:
-                            log.error(account_name + " %s歌曲%s信息页面访问失败，原因：%s" % (audio_type_name[audio_type], audio_id, robot.get_http_request_failed_reason(audio_page_response.status)))
+                            log.error(account_name + " %s歌曲%s《%s》信息页访问失败，原因：%s" % (audio_type_name[audio_type], audio_id, audio_title, robot.get_http_request_failed_reason(audio_page_response.status)))
                             continue
 
                         if not audio_info_response.audio_url:
-                            log.step(account_name + " %s歌曲ID %s，暂不提供下载地址" % (audio_type_name[audio_type], audio_id))
+                            log.step(account_name + " %s歌曲%s《%s》暂不提供下载地址" % (audio_type_name[audio_type], audio_id, audio_title))
                             continue
 
                         audio_url = audio_info_response.audio_url
-                        log.step(account_name + " 开始下载第%s首%s歌曲 %s" % (video_count, audio_type_name[audio_type], audio_url))
+                        log.step(account_name + " 开始下载第%s首%s歌曲《%s》%s" % (video_count, audio_type_name[audio_type], audio_title, audio_url))
 
                         # 第一首歌曲，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(video_path, 0):
-                                log.error(account_name + " 创建歌曲下载目录 %s 失败" % video_path)
+                                log.error(account_name + " 创建%s歌曲下载目录 %s 失败" % (audio_type_name[audio_type], video_path))
                                 tool.process_exit()
                             need_make_download_dir = False
 
@@ -217,7 +218,7 @@ class Download(threading.Thread):
                             log.step(account_name + " 第%s首%s歌曲下载成功" % (video_count, audio_type_name[audio_type]))
                             video_count += 1
                         else:
-                            log.error(account_name + " 第%s首%s歌曲 %s 下载失败，原因：%s" % (video_count, audio_type_name[audio_type], audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s首%s歌曲《%s》%s下载失败，原因：%s" % (video_count, audio_type_name[audio_type], audio_title, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_VIDEO_COUNT < video_count:

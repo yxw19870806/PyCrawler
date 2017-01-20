@@ -11,7 +11,6 @@ import re
 import time
 import threading
 
-
 TOTAL_IMAGE_COUNT = 0
 
 
