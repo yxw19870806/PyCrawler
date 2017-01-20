@@ -331,7 +331,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(rp_id)
 
-                    log.step(cn + " 开始解析作品%s" % rp_id)
+                    log.step(cn + " 开始解析作品%s 《%s》" % (rp_id, title))
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
@@ -340,9 +340,9 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     # 过滤标题中不支持的字符
-                    title = robot.filter_text(title)
-                    if title:
-                        rp_path = os.path.join(image_path, "%s %s" % (rp_id, title))
+                    filtered_title = robot.filter_text(title)
+                    if filtered_title:
+                        rp_path = os.path.join(image_path, "%s %s" % (rp_id, filtered_title))
                     else:
                         rp_path = os.path.join(image_path, rp_id)
                     if not tool.make_dir(rp_path, 0):
@@ -356,11 +356,11 @@ class Download(threading.Thread):
                     # 获取正片页面
                     rp_page_response = get_rp_data(cp_id, rp_id)
                     if rp_page_response.status != 200:
-                        log.error(cn + " 作品%s（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
+                        log.error(cn + " 作品%s 《%s》（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, title, robot.get_http_request_failed_reason(rp_page_response.status)))
                         tool.process_exit()
 
                     if is_invalid_rp(rp_page_response.data):
-                        log.error(cn + " 作品%s（cp_id：%s）已被管理员锁定，跳过" % (rp_id, cp_id))
+                        log.error(cn + " 作品%s 《%s》（cp_id：%s）已被管理员锁定，跳过" % (rp_id, title, cp_id))
                         continue
 
                     # 获取作品中的全部图片地址
@@ -372,20 +372,20 @@ class Download(threading.Thread):
                             # 重新获取正片页面
                             rp_page_response = get_rp_data(cp_id, rp_id)
                             if rp_page_response.status != 200:
-                                log.error(cn + " 作品%s（cp_id：%s）访问失败，原因：%s" % (rp_id, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
+                                log.error(cn + " 作品%s 《%s》（cp_id：%s）访问失败，原因：%s" % (rp_id, title, cp_id, robot.get_http_request_failed_reason(rp_page_response.status)))
                                 tool.process_exit()
                             # 重新获取作品中的全部图片地址
                             image_url_list = get_image_url_list(rp_page_response.data)
 
                     if len(image_url_list) == 0:
-                        log.error(cn + " 作品%s（cp_id：%s）没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % (rp_id, cp_id))
+                        log.error(cn + " 作品%s 《%s》（cp_id：%s）没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % (rp_id, title, cp_id))
                         continue
 
                     image_count = 1
                     for image_url in list(image_url_list):
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        log.step(cn + " %s 开始下载第%s张图片 %s" % (rp_id, image_count, image_url))
+                        log.step(cn + " %s 《%s》开始下载第%s张图片 %s" % (rp_id, title, image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
@@ -394,10 +394,10 @@ class Download(threading.Thread):
                         file_path = os.path.join(rp_path, "%03d.%s" % (image_count, file_type))
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(cn + " %s 第%s张图片下载成功" % (rp_id, image_count))
+                            log.step(cn + " %s 《%s》第%s张图片下载成功" % (rp_id, title, image_count))
                             image_count += 1
                         else:
-                            log.error(" %s 第%s张图片 %s，下载失败，原因：%s" % (rp_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(" %s 《%s》第%s张图片 %s，下载失败，原因：%s" % (rp_id, title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     this_cn_total_image_count += image_count - 1
 
