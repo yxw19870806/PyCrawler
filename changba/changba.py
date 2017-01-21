@@ -36,8 +36,8 @@ def get_user_id(account_index_page):
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
-    audio_album_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
-    return net.http_request(audio_album_url, json_decode=True)
+    index_page_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
+    return net.http_request(index_page_url, json_decode=True)
 
 
 # 获取歌曲的下载地址
@@ -170,18 +170,18 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
 
                 # 获取一页歌曲
-                audio_data_response = get_one_page_audio(user_id, page_count)
-                if audio_data_response.status != 200:
-                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(audio_data_response.status)))
+                index_page_response = get_one_page_audio(user_id, page_count)
+                if index_page_response.status != 200:
+                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if audio_data_response.json_data is []:
+                if index_page_response.json_data is []:
                     break
 
-                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, audio_data_response.json_data))
+                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, index_page_response.json_data))
 
-                for audio_info in audio_data_response.json_data:
+                for audio_info in index_page_response.json_data:
                     if not robot.check_sub_key(("songname", "workid", "enworkid"), audio_info):
                         log.error(account_name + " 第%s首歌曲信息%s异常" % (video_count, audio_info))
                         continue
@@ -230,7 +230,7 @@ class Download(threading.Thread):
                         log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
                     else:
-                        log.error(account_name + " 第%s首歌曲《audio_name》 %s 下载失败，原因：%s" % (video_count, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_name, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -240,7 +240,7 @@ class Download(threading.Thread):
                 if not is_over:
                     # 获取的歌曲数量少于1页的上限，表示已经到结束了
                     # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                    if len(audio_data_response.json_data) < 20:
+                    if len(index_page_response.json_data) < 20:
                         is_over = True
                     else:
                         page_count += 1
