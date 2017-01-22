@@ -35,9 +35,9 @@ def get_api_info(account_name):
     return None
 
 
-# 获取指定账号的一页图片信息列表
+# 获取指定页数的图片信息列表
 # user_id -> 36587311@N08
-def get_one_page_image_data(user_id, page_count, api_key, request_id):
+def get_one_page_image(user_id, page_count, api_key, request_id):
     image_data_page_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
     # 所有可支持的参数
@@ -68,17 +68,7 @@ def get_one_page_image_data(user_id, page_count, api_key, request_id):
         "reqId": request_id,
         "nojsoncallback": 1,
     }
-    image_page_response = net.http_request(image_data_page_url, post_data)
-    if image_page_response.status == 200:
-        try:
-            image_page_data = json.loads(image_page_response.data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("stat", "photos"), image_page_data) and image_page_data["stat"] == "ok":
-                if robot.check_sub_key(("photo", "total"), image_page_data["photos"]):
-                    return image_page_data
-    return None
+    return net.http_request(image_data_page_url, post_data, json_decode=True)
 
 
 class Flickr(robot.Robot):
@@ -196,14 +186,20 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取一页图片信息
-                page_data = get_one_page_image_data(api_info["user_id"], page_count, api_info["site_key"], request_id)
-                if page_data is None:
-                    log.error(account_name + " 第%s页图片信息获取失败" % page_count)
+                index_page_response = get_one_page_image(api_info["user_id"], page_count, api_info["site_key"], request_id)
+                if index_page_response.status != 200:
+                    log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页获取的所有图片：%s" % (page_count, page_data["photos"]["photo"]))
+                # json格式验证
+                if not robot.check_sub_key(("stat", "photos"), index_page_response.json_data) or index_page_response.json_data["stat"] != "ok" or \
+                        not robot.check_sub_key(("photo", "total"), index_page_response.json_data["photos"]):
+                    log.error(account_name + " 第%s页图片信息解析失败" % page_count)
+                    tool.process_exit()
 
-                for photo_info in page_data["photos"]["photo"]:
+                log.trace(account_name + " 第%s页获取的所有图片：%s" % (page_count, index_page_response.json_data["photos"]["photo"]))
+
+                for photo_info in index_page_response.json_data["photos"]["photo"]:
                     if "dateupload" not in photo_info:
                         log.error(account_name + " 第%s张图片上传时间获取失败，图片信息：%s" % (image_count, photo_info))
                         continue
@@ -250,7 +246,7 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_PAGE_COUNT <= page_count:
                         is_over = True
-                    elif page_count >= int(page_data["photos"]["pages"]):
+                    elif page_count >= int(index_page_response.json_data["photos"]["pages"]):
                         is_over = True
                     else:
                         page_count += 1
