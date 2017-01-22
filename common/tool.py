@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 from common import process
 import cookielib
 import cStringIO
+import hashlib
 import mimetools
 import os
 import platform
@@ -749,6 +750,15 @@ def generate_random_string(string_length, char_lib_type=7):
         result += random_string[random.randint(0, length)]
 
     return result
+
+
+# 获取指定文件的MD5值
+def get_file_md5(file_path):
+    file_handle = open(file_path, "rb")
+    md5_obj = hashlib.md5()
+    md5_obj.update(file_handle.read())
+    file_handle.close()
+    return md5_obj.hexdigest()
 
 
 # 结束进程
