@@ -17,18 +17,19 @@ TOTAL_IMAGE_COUNT = 0
 # 获取指定一页的页面
 def get_one_page_data(page_count):
     index_page_url = "http://www.abase.me/movies.php?page=%s" % page_count
-    return net.http_request(index_page_url)
-
-
-# 根据页面内容获取页面中的影片数量
-def get_page_video_count(index_page):
-    return index_page.count('<div class="item pull-left">')
-
-
-# 根据页面内容获取页面内的所有图片信息列表
-# return [image_url, title]
-def get_image_info_list(index_page):
-    return re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', index_page)
+    index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "page_video_count": 0,  # 页面解析出的影片数量
+        "image_info_list": [],  # 页面解析出的图片信息数量
+    }
+    if index_page_response.status == 200:
+        # 获取页面中的影片数量
+        extra_info["page_video_count"] = index_page_response.data.count('<div class="item pull-left">')
+        # 获取页面中的所有图片信息列表
+        # 单张图片信息的格式[image_url, title]
+        extra_info["image_info_list"] = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', index_page_response.data)
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 # 获取图片原图的下载地址
@@ -51,11 +52,7 @@ def get_large_image_url(image_url):
 # 检测图片是否是无效的（已被删除的无效图片）
 def check_invalid_image(file_path):
     if os.path.getsize(file_path) == 2732:
-        file_handle = open(file_path, "rb")
-        md5_obj = hashlib.md5()
-        md5_obj.update(file_handle.read())
-        file_handle.close()
-        if md5_obj.hexdigest() in ["f591f3826a1085af5cdeeca250b2c97a", "ec9c76280bf2d31aa39c203808446f06"]:
+        if tool.get_file_md5(file_path) in ["f591f3826a1085af5cdeeca250b2c97a", "ec9c76280bf2d31aa39c203808446f06"]:
             return True
     return False
 
@@ -86,18 +83,13 @@ class ABase(robot.Robot):
                 log.error("第%s页访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                 break
 
-            # 获取页面中的影片数量
-            page_video_count = get_page_video_count(index_page_response.data)
             # 已经下载完毕了
-            if page_video_count == 0:
+            if index_page_response.extra_info["page_video_count"] == 0:
                 break
 
-            # 获取页面中的所有图片信息列表
-            image_info_list = get_image_info_list(index_page_response.data)
+            log.trace("第%s页获取到影片%s个，封面图片%s张" % (page_count, len(index_page_response.extra_info["image_info_list"]), index_page_response.extra_info["page_video_count"]))
 
-            log.trace("第%s页获取到影片%s个，封面图片%s张" % (page_count, len(image_info_list), page_video_count))
-
-            for small_image_url, title in image_info_list:
+            for small_image_url, title in index_page_response.extra_info["image_info_list"]:
                 # 达到线程上限，等待
                 while thread_type == 1 and threading.activeCount() >= self.thread_count + main_thread_count:
                     time.sleep(5)
