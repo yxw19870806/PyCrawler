@@ -14,17 +14,17 @@ import re
 # 获取指定页数的所有日志
 def get_one_page_blog(page_count):
     index_page_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
-    return net.http_request(index_page_url)
-
-
-# 判断日志是否已经全部获取完毕
-def is_blog_over(page_data):
-    return page_data == "記事が存在しません。"
-
-
-# 获取页面中的所有图片地址列表
-def get_image_name_list(page_data):
-    return re.findall('data-original="./([^"]*)"', page_data)
+    extra_info = {
+        "is_over": 0,  # 是不是最后一页日志
+        "image_name_list": [],  # 页面解析出的所有图片名字列表
+    }
+    index_page_response = net.http_request(index_page_url)
+    if index_page_response.status == 200:
+        # 检测是否是最后一页
+        extra_info["is_over"] = index_page_response.data == "記事が存在しません。"
+        extra_info["image_name_list"] = re.findall('data-original="./([^"]*)"', index_page_response.data)
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 class Shinoda(robot.Robot):
@@ -68,16 +68,15 @@ class Shinoda(robot.Robot):
                 tool.process_exit()
 
             # 是否已经获取完毕
-            if is_blog_over(index_page_response.data):
+            if index_page_response.extar_info["is_over"]:
                 break
 
             # 获取页面内的全部图片
-            image_name_list = get_image_name_list(index_page_response.data)
-            log.trace("第%s页获取的全部图片：%s" % (page_count, image_name_list))
+            log.trace("第%s页获取的全部图片：%s" % (page_count, index_page_response.extar_info["image_name_list"]))
 
-            if len(image_name_list) >= 1:
+            if len(index_page_response.extar_info["image_name_list"]) >= 1:
                 # 获取blog时间
-                blog_time = int(image_name_list[0].split("-")[0])
+                blog_time = int(index_page_response.extar_info["image_name_list"][0].split("-")[0])
 
                 # 检查是否已下载到前一次的图片
                 if blog_time <= last_blog_time:
@@ -87,7 +86,7 @@ class Shinoda(robot.Robot):
                 if new_last_blog_time == "":
                     new_last_blog_time = str(blog_time)
 
-            for image_name in image_name_list:
+            for image_name in index_page_response.extar_info["image_name_list"]:
                 image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                 log.step("开始下载第%s张图片 %s" % (image_count, image_url))
 
