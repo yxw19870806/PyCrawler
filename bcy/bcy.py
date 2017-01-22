@@ -136,10 +136,10 @@ def unfollow(account_id):
 
 
 # 获取一页的作品信息
-def get_one_page_post(account_id, page_count):
+def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
-    post_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
-    return net.http_request(post_url)
+    index_page_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
+    return net.http_request(index_page_url)
 
 
 # 解析作品信息，获取所有的作品信息
@@ -302,13 +302,13 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 
                 # 获取一页的作品信息
-                post_page_response = get_one_page_post(account_id, page_count)
-                if post_page_response.status != 200:
-                    log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(post_page_response.status)))
+                index_page_response = get_one_page_album(account_id, page_count)
+                if index_page_response.status != 200:
+                    log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
                 # 解析作品信息，获取所有的作品信息
-                coser_id, album_list = get_album_list(post_page_response.data)
+                coser_id, album_list = get_album_list(index_page_response.data)
                 if coser_id is None:
                     log.error(account_name + " 第%s页作品解析异常" % page_count)
                     tool.process_exit()
@@ -408,7 +408,7 @@ class Download(threading.Thread):
                         total_album_count += 1
 
                 if not is_over:
-                    if page_count >= get_max_page_count(account_id, post_page_response.data):
+                    if page_count >= get_max_page_count(account_id, index_page_response.data):
                         is_over = True
                     else:
                         page_count += 1
