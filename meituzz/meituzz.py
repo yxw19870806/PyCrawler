@@ -70,7 +70,7 @@ class MeiTuZZ(robot.Robot):
                 log.step("提前退出")
                 break
 
-            if album_page_response.status == -500:
+            if album_page_response.status == 500:
                 log.step("第%s页相册内部错误，跳过" % album_id)
                 album_id += 1
                 continue
