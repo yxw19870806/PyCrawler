@@ -20,13 +20,13 @@ def get_one_page_data(page_count):
     index_page_response = net.http_request(index_page_url)
     extra_info = {
         "page_video_count": 0,  # 页面解析出的影片数量
-        "image_info_list": [],  # 页面解析出的图片信息数量
+        "image_info_list": [],  # 页面解析出的图片信息列表
     }
     if index_page_response.status == 200:
         # 获取页面中的影片数量
         extra_info["page_video_count"] = index_page_response.data.count('<div class="item pull-left">')
         # 获取页面中的所有图片信息列表
-        # 单张图片信息的格式[image_url, title]
+        # 单张图片信息的格式：[image_url, title]
         extra_info["image_info_list"] = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', index_page_response.data)
     index_page_response.extra_info = extra_info
     return index_page_response

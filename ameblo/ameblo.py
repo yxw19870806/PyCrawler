@@ -34,7 +34,7 @@ def get_one_page_blog(account_name, page_count):
     }
     if index_page_response.status == 200:
         extra_info["blog_id_list"] = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
-        # 获取是否还有下一页
+        # 检测是否还有下一页
         # 有页数选择的页面样式
         if index_page_response.data.find('<div class="page topPaging">') >= 0:
             paging_data = tool.find_sub_string(index_page_response.data, '<div class="page topPaging">', "</div>")
@@ -71,6 +71,7 @@ def get_blog_page(account_name, blog_id):
             article_data = tool.find_sub_string(blog_page_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
         if not article_data:
             article_data = tool.find_sub_string(blog_page_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
+        # 获取页面中所有的图片地址列表
         extra_info["image_url_list"] = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
     blog_page_response.extra_info = extra_info
     return blog_page_response

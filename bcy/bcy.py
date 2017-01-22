@@ -36,8 +36,6 @@ def check_login():
     if home_page_response.status == 200:
         if home_page_response.data.find('<a href="/login">登录</a>') == -1:
             return True
-        else:
-            return False
     return False
 
 
@@ -114,23 +112,23 @@ def login():
 
 # 关注指定账号
 def follow(account_id):
-    follow_url = "http://bcy.net/weibo/Operate/follow?"
+    follow_page_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_response = net.http_request(follow_url, follow_post_data)
-    if follow_response.status == 200:
+    follow_page_response = net.http_request(follow_page_url, follow_post_data)
+    if follow_page_response.status == 200:
         # 0 未登录，11 关注成功，12 已关注
-        if int(follow_response.data) == 12:
+        if int(follow_page_response.data) == 12:
             return True
     return False
 
 
 # 取消关注指定账号
 def unfollow(account_id):
-    unfollow_url = "http://bcy.net/weibo/Operate/follow?"
+    unfollow_page_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_response = net.http_request(unfollow_url, unfollow_post_data)
-    if unfollow_response.status == 200:
-        if int(unfollow_response.data) == 1:
+    unfollow_page_response = net.http_request(unfollow_page_url, unfollow_post_data)
+    if unfollow_page_response.status == 200:
+        if int(unfollow_page_response.data) == 1:
             return True
     return False
 
@@ -157,7 +155,7 @@ def get_one_page_album(account_id, page_count):
             extra_info["album_title_list"] = re.findall('<img src="\S*" alt="([\S ]*)" />', index_page_response.data)
             if "${post.title}" in extra_info["album_title_list"]:
                 extra_info["album_title_list"].remove("${post.title}")
-        # 获取是否还有下一页
+        # 检测是否还有下一页
         max_page_count = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">' , index_page_response.data)
         if max_page_count:
             max_page_count = max(max_page_count)

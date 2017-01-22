@@ -37,7 +37,7 @@ def get_user_index_page(account_id):
     return index_page_response
 
 
-# 获取一页的歌曲信息，单条歌曲信息的格式：[歌曲id，歌曲名字，歌曲下载地址]
+# 获取一页的歌曲信息
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
@@ -45,7 +45,7 @@ def get_one_page_audio(user_id, page_count):
     return net.http_request(index_page_url, json_decode=True)
 
 
-# 获取歌曲的下载地址
+# 获取歌曲的播放页面
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_play_page(audio_en_word_id):
     audio_play_page_url = "http://changba.com/s/%s" % audio_en_word_id
@@ -54,6 +54,7 @@ def get_audio_play_page(audio_en_word_id):
     }
     audio_play_page_response = net.http_request(audio_play_page_url)
     if audio_play_page_response.status == 200:
+        # 获取歌曲下载地址
         audio_source_url = tool.find_sub_string(audio_play_page_response.data, 'var a="', '"')
         if audio_source_url:
             # 从JS处解析的规则
