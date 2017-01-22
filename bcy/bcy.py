@@ -151,10 +151,20 @@ def get_one_page_album(account_id, page_count):
         coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', index_page_response.data)
         if len(coser_id_find) == 1:
             extra_info["coser_id"] = coser_id_find[0]
+            # 获取作品id列表
             extra_info["album_id_list"] = re.findall("/coser/detail/" + extra_info["coser_id"] + '/(\d+)"', index_page_response.data)
+            # 获取作品标题列表
             extra_info["album_title_list"] = re.findall('<img src="\S*" alt="([\S ]*)" />', index_page_response.data)
             if "${post.title}" in extra_info["album_title_list"]:
                 extra_info["album_title_list"].remove("${post.title}")
+        # 获取是否还有下一页
+        max_page_count = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">' , index_page_response.data)
+        if max_page_count:
+            max_page_count = max(max_page_count)
+        else:
+            max_page_count = 1
+        if page_count >= max_page_count:
+            extra_info["is_over"] = True
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -183,16 +193,6 @@ def get_album_page(coser_id, album_id):
         extra_info["image_url_list"] = re.findall("src='([^']*)'", album_page_response.data)
     album_page_response.extra_info = extra_info
     return album_page_response
-
-
-# 根据当前作品页面，获取作品页数上限
-def get_max_page_count(account_id, post_page):
-    max_page_count = tool.find_sub_string(post_page, '<a href="/u/%s/post/cos?&p=' % account_id, '">')
-    if max_page_count:
-        max_page_count = int(max_page_count)
-    else:
-        max_page_count = 1
-    return max_page_count
 
 
 class Bcy(robot.Robot):
@@ -415,7 +415,7 @@ class Download(threading.Thread):
                         total_album_count += 1
 
                 if not is_over:
-                    if page_count >= get_max_page_count(account_id, index_page_response.data):
+                    if index_page_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
