@@ -139,40 +139,50 @@ def unfollow(account_id):
 def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     index_page_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
-    return net.http_request(index_page_url)
+    index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "coser_id": None,  # coser id
+        "album_id_list": [],  # 页面解析出的所有作品id列表
+        "album_title_list": [],  # 页面解析出的所有作品标题列表
+        "is_over": False,  # 是不是最后一页作品
+    }
+    if index_page_response.status == 200:
+        # 获取coser id
+        coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', index_page_response.data)
+        if len(coser_id_find) == 1:
+            extra_info["coser_id"] = coser_id_find[0]
+            extra_info["album_id_list"] = re.findall("/coser/detail/" + extra_info["coser_id"] + '/(\d+)"', index_page_response.data)
+            extra_info["album_title_list"] = re.findall('<img src="\S*" alt="([\S ]*)" />', index_page_response.data)
+            if "${post.title}" in extra_info["album_title_list"]:
+                extra_info["album_title_list"].remove("${post.title}")
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
-# 解析作品信息，获取所有的作品信息
-def get_album_list(post_page):
-    cp_and_album_id_list = re.findall('/coser/detail/(\d+)/(\d+)"', post_page)
-    title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', post_page)
-    if "${post.title}" in title_list:
-        title_list.remove("${post.title}")
-    coser_id = None
-    album_list = {}
-    if len(cp_and_album_id_list) == len(title_list):
-        for coser_id, album_id in cp_and_album_id_list:
-            album_list[album_id] = title_list.pop(0)
-    return coser_id, album_list
-
-
-# 获取作品页面
+# 获取作品
 # coser_id -> 9299
 # album_id -> 36484
 def get_album_page(coser_id, album_id):
     # http://bcy.net/coser/detail/9299/36484
     album_page_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
-    return net.http_request(album_page_url)
-
-
-# 检测作品是否被管理员锁定
-def is_invalid_album(album_page):
-    return album_page.find("该作品属于下属违规情况，已被管理员锁定：") >= 0
-
-
-# 获取作品页面内的所有图片地址列表
-def get_image_url_list(album_page):
-    return re.findall("src='([^']*)'", album_page)
+    header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
+    album_page_response = net.http_request(album_page_url, header_list=header_list)
+    extra_info = {
+        "is_admin_locked": False,  # 是否被管理员锁定
+        "is_only_follower": False,  # 是否只显示给粉丝
+        "image_url_list": [],  # 页面解析出的所有图片地址列表
+    }
+    if album_page_response.status == 200:
+        # 检测作品是否被管理员锁定
+        if album_page_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
+            extra_info["is_admin_locked"] = True
+        # 检测作品是否只对粉丝可见
+        if album_page_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
+            extra_info["is_only_follower"] = True
+        # 获取作品页面内的所有图片地址列表
+        extra_info["image_url_list"] = re.findall("src='([^']*)'", album_page_response.data)
+    album_page_response.extra_info = extra_info
+    return album_page_response
 
 
 # 根据当前作品页面，获取作品页数上限
@@ -203,7 +213,7 @@ class Bcy(robot.Robot):
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         COOKIE_INFO["acw_tc"] = self.cookie_value["acw_tc"]
-        # COOKIE_INFO["PHPSESSID"] = self.cookie_value["PHPSESSID"]
+        COOKIE_INFO["PHPSESSID"] = self.cookie_value["PHPSESSID"]
 
     def main(self):
         global ACCOUNTS
@@ -307,15 +317,13 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                # 解析作品信息，获取所有的作品信息
-                coser_id, album_list = get_album_list(index_page_response.data)
-                if coser_id is None:
-                    log.error(account_name + " 第%s页作品解析异常" % page_count)
+                if len(index_page_response.extra_info["album_id_list"]) != len(index_page_response.extra_info["album_title_list"]):
+                    log.error(account_name + " 第%s页作品解析出的作品id和标题数量" % page_count)
                     tool.process_exit()
-                log.trace(account_name + " coser id：%s" % coser_id)
-                log.trace(account_name + " 第%s页获取的所有作品：%s" % (page_count, album_list))
 
-                for album_id, title in album_list.iteritems():
+                log.trace(account_name + " 第%s页获取的所有作品：%s" % (page_count, index_page_response.extra_info["album_id_list"]))
+
+                for album_id in index_page_response.extra_info["album_id_list"]:
                     # 检查是否已下载到前一次的图片
                     if int(album_id) <= int(self.account_info[1]):
                         is_over = True
@@ -331,7 +339,9 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(album_id)
 
-                    log.step(account_name + " 开始解析作品%s 《%s》" % (album_id, title))
+                    album_title = index_page_response.extra_info["album_title_list"].pop(0)
+
+                    log.step(account_name + " 开始解析作品%s 《%s》" % (album_id, album_title))
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
@@ -340,7 +350,7 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     # 过滤标题中不支持的字符
-                    filtered_title = robot.filter_text(title)
+                    filtered_title = robot.filter_text(album_title)
                     if filtered_title:
                         album_path = os.path.join(image_path, "%s %s" % (album_id, filtered_title))
                     else:
@@ -354,38 +364,35 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     # 获取作品页面
-                    album_page_response = get_album_page(coser_id, album_id)
+                    album_page_response = get_album_page(index_page_response.extra_info["coser_id"], album_id)
                     if album_page_response.status != 200:
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, coser_id, title, robot.get_http_request_failed_reason(album_page_response.status)))
+                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, index_page_response.extra_info["coser_id"], album_title, robot.get_http_request_failed_reason(album_page_response.status)))
                         tool.process_exit()
 
-                    if is_invalid_album(album_page_response.data):
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）已被管理员锁定，跳过" % (album_id, title, coser_id))
+                    # 是不是已被管理员锁定
+                    if album_page_response.extra_info["is_admin_locked"]:
+                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）已被管理员锁定，跳过" % (album_id, album_title, index_page_response.extra_info["coser_id"]))
                         continue
 
-                    # 获取作品中的全部图片地址
-                    image_url_list = get_image_url_list(album_page_response.data)
-
-                    if len(image_url_list) == 0 and IS_AUTO_FOLLOW:
-                        log.step(account_name + " 检测到可能有私密作品且账号不是ta的粉丝，自动关注")
+                    # 是不是只对粉丝可见，并判断是否需要自动关注
+                    if album_page_response.extra_info["is_only_follower"] and IS_AUTO_FOLLOW:
+                        log.step(account_name + " 作品%s 《%s》（coser_id：%s）是私密作品且账号不是ta的粉丝，自动关注")
                         if follow(account_id):
                             # 重新获取作品页面
-                            album_page_response = get_album_page(coser_id, album_id)
+                            album_page_response = get_album_page(index_page_response.extra_info["coser_id"], album_id)
                             if album_page_response.status != 200:
-                                log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, title, coser_id, robot.get_http_request_failed_reason(album_page_response.status)))
+                                log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, album_title, index_page_response.extra_info["coser_id"], robot.get_http_request_failed_reason(album_page_response.status)))
                                 tool.process_exit()
-                            # 重新获取作品中的全部图片地址
-                            image_url_list = get_image_url_list(album_page_response.data)
 
-                    if len(image_url_list) == 0:
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）没有任何图片，可能是你使用的账号没有关注ta，所以无法访问只对粉丝开放的私密作品" % (album_id, title, coser_id))
+                    if len(album_page_response.extra_info["image_url_list"]) == 0:
+                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）没有解析出图片" % (album_id, album_title, index_page_response.extra_info["coser_id"]))
                         continue
 
                     image_count = 1
-                    for image_url in list(image_url_list):
+                    for image_url in album_page_response.extra_info["image_url_list"]:
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        log.step(account_name + " %s 《%s》开始下载第%s张图片 %s" % (album_id, title, image_count, image_url))
+                        log.step(account_name + " %s 《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
@@ -394,10 +401,10 @@ class Download(threading.Thread):
                         file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " %s 《%s》第%s张图片下载成功" % (album_id, title, image_count))
+                            log.step(account_name + " %s 《%s》第%s张图片下载成功" % (album_id, album_title, image_count))
                             image_count += 1
                         else:
-                            log.error(" %s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_id, title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(" %s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     this_account_total_image_count += image_count - 1
 
