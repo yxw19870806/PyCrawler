@@ -507,6 +507,11 @@ def change_path_encoding(path):
             path = path.encode("GBK")
         else:
             path = path.decode("UTF-8").encode("GBK")
+    except UnicodeEncodeError:
+        if isinstance(path, unicode):
+            path = path.encode("UTF-8")
+        else:
+            path = path.decode("UTF-8")
     except UnicodeDecodeError:
         if isinstance(path, unicode):
             path = path.encode("UTF-8")
