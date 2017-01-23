@@ -56,7 +56,7 @@ for item_path, item_position in item_list.items():
         else:
             item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
         item_index_page_response = net.http_request(item_index_url)
-        if item_index_page_response.status == 200:
+        if item_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             # item_index = item_index.decode("utf-8")
             item_index_page = tool.find_sub_string(item_index_page_response.data, '<div class="cizhui-c-m', '<div class="data-options', 1)
             item_index_page = item_index_page.decode("GBK").encode("utf-8")
@@ -71,7 +71,7 @@ for item_path, item_position in item_list.items():
                 item_name = item_name.replace("'", "’")
                 item_page_url = base_host + item_page_url
                 item_page_response = net.http_request(item_page_url)
-                if item_page_response.status == 200:
+                if item_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     item_detail = tool.find_sub_string(item_page_response.data, '<div class="content-right-bdl clearfix">', '<dl class="content-right-bdr">')
                     item_detail = item_detail.decode("GBK").encode("utf-8")
                     attribute = tool.find_sub_string(item_detail, "<!-- 主要属性-->", "<!-- 华丽丽的分割线 -->").strip()

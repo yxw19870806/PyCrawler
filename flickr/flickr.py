@@ -32,7 +32,7 @@ def get_photo_index_page(account_name):
         "user_id": None,  # 页面解析出的user id
         "site_key": None,  # 页面解析出的site key
     }
-    if photo_index_page_response.status == 200:
+    if photo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["user_id"] = tool.find_sub_string(photo_index_page_response.data, '"nsid":"', '"')
         extra_info["site_key"] = tool.find_sub_string(photo_index_page_response.data, '"site_key":"', '"')
     photo_index_page_response.extra_info = extra_info
@@ -155,7 +155,7 @@ class Download(threading.Thread):
 
             # 获取相册首页页面
             photo_index_page_response = get_photo_index_page(account_name)
-            if photo_index_page_response.status != 200:
+            if photo_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error(account_name + " 相册首页访问失败，原因：%s" % robot.get_http_request_failed_reason(photo_index_page_response.status))
                 tool.process_exit()
             if not photo_index_page_response.extra_info["user_id"]:
@@ -178,7 +178,7 @@ class Download(threading.Thread):
 
                 # 获取一页图片
                 index_page_response = get_one_page_image(photo_index_page_response.extra_info["user_id"], page_count, photo_index_page_response.extra_info["site_key"], request_id)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 

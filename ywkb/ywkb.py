@@ -14,7 +14,7 @@ import re
 def get_one_page_image_info_list(page_count):
     index_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
     index_response = net.http_request(index_url)
-    if index_response.status == 200:
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         article_data = tool.find_sub_string(index_response.data, '<section id="primary"', "</section>")
         image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
         return {"is_over": False, "image_info_list": image_info_list}

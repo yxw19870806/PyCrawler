@@ -50,7 +50,7 @@ def get_follow_list(suid):
 def get_one_page_follow_data(suid, page_count):
     follow_list_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
     follow_list_page_response = net.http_request(follow_list_url)
-    if follow_list_page_response.status == 200:
+    if follow_list_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         try:
             follow_list_data = json.loads(follow_list_page_response.data)
         except ValueError:
@@ -66,7 +66,7 @@ def get_one_page_follow_data(suid, page_count):
 def get_suid(account_id):
     index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
     index_page_response = net.http_request(index_page_url)
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         suid = tool.find_sub_string(index_page_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="">+关注</button>')
         if suid:
             return suid
@@ -79,7 +79,7 @@ def get_one_page_video_data(suid, page_count):
     # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
     media_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     media_page_response = net.http_request(media_page_url)
-    if media_page_response.status == 200:
+    if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         try:
             media_page = json.loads(media_page_response.data)
         except ValueError:
@@ -100,14 +100,14 @@ def get_scid_list(msg_data):
 def get_video_url_by_video_id(video_id):
     video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
     video_info_page_response = net.http_request(video_info_url)
-    if video_info_page_response.status == 200:
+    if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         try:
             video_info_page = json.loads(video_info_page_response.data)
         except ValueError:
             pass
         else:
             if robot.check_sub_key(("status", "result"), video_info_page):
-                if int(video_info_page["status"]) == 200:
+                if int(video_info_page["status"]) == net.HTTP_RETURN_CODE_SUCCEED:
                     for result in video_info_page["result"]:
                         if robot.check_sub_key(("path", "host", "scheme"), result):
                             return str(result["scheme"]) + str(result["host"]) + str(result["path"])

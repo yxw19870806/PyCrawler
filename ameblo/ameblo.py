@@ -32,7 +32,7 @@ def get_one_page_blog(account_name, page_count):
         "blog_id_list": [],  # 页面解析出的所有日志id列表
         "is_over": False,  # 是不是最后一页日志
     }
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["blog_id_list"] = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
         # 检测是否还有下一页
         # 有页数选择的页面样式
@@ -64,7 +64,7 @@ def get_blog_page(account_name, blog_id):
     extra_info = {
         "image_url_list": [],  # 页面解析出的所有图片地址列表
     }
-    if blog_page_response.status == 200:
+    if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 日志正文部分（有多种页面模板）
         article_data = tool.find_sub_string(blog_page_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
         if not article_data:
@@ -244,7 +244,7 @@ class Download(threading.Thread):
 
                 # 获取一页日志
                 index_page_response = get_one_page_blog(account_name, page_count)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
@@ -273,7 +273,7 @@ class Download(threading.Thread):
 
                     # 获取日志
                     blog_page_response = get_blog_page(account_name, blog_id)
-                    if blog_page_response.status != 200:
+                    if blog_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_page_response.status)))
                         tool.process_exit()
 

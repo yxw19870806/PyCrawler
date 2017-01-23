@@ -74,7 +74,7 @@ class MeiTuZZ(robot.Robot):
                 log.step("第%s页相册内部错误，跳过" % album_id)
                 album_id += 1
                 continue
-            elif album_page_response.status != 200:
+            elif album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页图片获取失败" % album_id)
                 break
 

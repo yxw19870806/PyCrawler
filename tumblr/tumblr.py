@@ -32,7 +32,7 @@ IS_DOWNLOAD_VIDEO = True
 def get_one_page_post_url_list(account_id, page_count):
     index_page_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
     index_page_response = net.http_request(index_page_url)
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return re.findall('"(http[s]?://' + account_id + '.tumblr.com/post/[^"|^#]*)["|#]', index_page_response.data)
     return None
 
@@ -70,7 +70,7 @@ def get_post_page_head(account_id, post_id, postfix_list):
             post_page_response = net.http_request(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
             if post_page_response.status != net.HTTP_RETURN_CODE_EXCEPTION_CATCH:
                 break
-    if post_page_response.status == 200:
+    if post_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return tool.find_sub_string(post_page_response.data, "<head", "</head>", 3)
     else:
         return None
@@ -80,7 +80,7 @@ def get_post_page_head(account_id, post_id, postfix_list):
 def get_video_info_list(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_page_response = net.http_request(video_play_url)
-    if video_page_response.status == 200:
+    if video_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="([^"]*)"', video_page_response.data)
     return None
 

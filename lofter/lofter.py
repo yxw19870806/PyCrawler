@@ -31,7 +31,7 @@ def get_one_page_blog(account_name, page_count):
     extra_info = {
         "blog_url_list": [],  # 页面解析出的所有日志列表
     }
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的日志地址列表
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', index_page_response.data)
         # 去重排序
@@ -46,7 +46,7 @@ def get_blog_page(blog_url):
     extra_info = {
         "image_url_list": [],  # 页面解析出的所有图片列表
     }
-    if blog_page_response.status == 200:
+    if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["image_url_list"] = re.findall('bigimgsrc="([^"]*)"', blog_page_response.data)
     blog_page_response.extra_info = extra_info
     return blog_page_response
@@ -153,7 +153,7 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 index_page_response = get_one_page_blog(account_name, page_count)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
@@ -185,7 +185,7 @@ class Download(threading.Thread):
 
                     # 获取日志
                     blog_page_response = get_blog_page(blog_url)
-                    if blog_page_response.status != 200:
+                    if blog_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 第%s张图片，无法访问日志 %s" % (image_count, blog_url))
                         continue
 

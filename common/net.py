@@ -184,7 +184,7 @@ def save_net_file(file_url, file_path, need_content_type=False):
     create_file = False
     for i in range(0, 5):
         response = http_request(file_url)
-        if response.status == 200:
+        if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = get_response_info(response, "Content-Type")
