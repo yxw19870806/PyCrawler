@@ -50,21 +50,11 @@ def get_follow_list(account_id):
     return follow_list
 
 
-# 获取一页的视频信息
-def get_one_page_video_data(account_id, page_count):
+# 获取指定页数的所有视频
+def get_one_page_video(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
-    video_page_url = "http://www.meipai.com/users/user_timeline"
-    video_page_url += "?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
-    video_page_response = net.http_request(video_page_url)
-    if video_page_response.status == 200:
-        try:
-            video_page = json.loads(video_page_response.data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("medias",), video_page):
-                return video_page["medias"]
-    return None
+    index_page_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
+    return net.http_request(index_page_url, json_decode=True)
 
 
 class MeiPai(robot.Robot):
@@ -168,21 +158,25 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
-                # 获取指定一页的视频信息
-                medias_data = get_one_page_video_data(account_id, page_count)
-                if medias_data is None:
-                    log.error(account_name + " 视频列表获取失败")
+                # 获取一页视频
+                index_page_response = get_one_page_video(account_id, page_count)
+                if index_page_response.status != 200:
+                    log.error("第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
-                log.trace(account_name + " 第%s页获取的全部视频：%s" % (page_count, medias_data))
+                if not robot.check_sub_key(("medias"), index_page_response.json_data):
+                    log.error(account_name + " 第%s页视频解析失败" % video_count)
+                    tool.process_exit()
 
-                for media in medias_data:
-                    if not robot.check_sub_key(("video", "id"), media):
-                        log.error(account_name + " 第%s个视频信：%s解析失败" % (video_count, media))
+                log.trace(account_name + " 第%s页获取的全部视频：%s" % (page_count, index_page_response.json_data["medias"]))
+
+                for video_info in index_page_response.json_data["medias"]:
+                    if not robot.check_sub_key(("video", "id"), video_info):
+                        log.error(account_name + " 第%s个视频解析失败，视频信息：%s" % (video_count, video_info))
                         continue
 
-                    video_id = str(media["id"])
+                    video_id = str(video_info["id"])
 
-                    # 检查是否图片时间小于上次的记录
+                    # 检查是否已下载到前一次的视频
                     if int(video_id) <= int(self.account_info[2]):
                         is_over = True
                         break
@@ -197,7 +191,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(video_id)
 
-                    video_url = str(media["video"])
+                    video_url = str(video_info["video"])
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     # 第一个视频，创建目录
@@ -221,7 +215,7 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if len(medias_data) >= VIDEO_COUNT_PER_PAGE:
+                    if len(index_page_response.json_data["medias"]) >= VIDEO_COUNT_PER_PAGE:
                         page_count += 1
                     else:
                         # 获取的数量小于请求的数量，已经没有剩余视频了
