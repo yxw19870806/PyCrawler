@@ -64,11 +64,11 @@ def get_post_page_head(account_id, post_id, postfix_list):
     post_page_response = net.http_request(post_url, exception_return="Caused by ResponseError('too many redirects',)")
     # 不带后缀的可以访问，则直接返回页面
     # 如果无法访问，则依次访问带有后缀的页面
-    if post_page_response.status == -1:
+    if post_page_response.status == net.HTTP_RETURN_CODE_EXCEPTION_CATCH:
         for postfix in postfix_list:
             temp_post_url = post_url + "/" + urllib2.quote(postfix)
             post_page_response = net.http_request(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
-            if post_page_response != -1:
+            if post_page_response.status != net.HTTP_RETURN_CODE_EXCEPTION_CATCH:
                 break
     if post_page_response.status == 200:
         return tool.find_sub_string(post_page_response.data, "<head", "</head>", 3)
