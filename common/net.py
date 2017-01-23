@@ -25,6 +25,7 @@ HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1
 HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
+HTTP_RETURN_CODE_SUCCEED = 200
 
 
 # 错误response的对象
@@ -33,6 +34,8 @@ class ErrorResponse(object):
         self.status = status
         self.data = None
         self.headers = {}
+        self.json_data = []
+        self.extra_info = {}
 
 
 # 初始化urllib3的连接池
