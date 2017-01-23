@@ -24,24 +24,26 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取一页的日志列表
-def get_one_page_diary_data(account_id, page_count):
+# 获取指定页数的所有日志
+def get_one_page_blog(account_id, page_count):
     # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
-    diary_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
-    diary_page_url += "?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
-    diary_response = net.http_request(diary_page_url)
-    if diary_response.status == 200:
-        diary_page = tool.find_sub_string(diary_response.data, '<div class="box-main">', '<div class="box-sideMember">')
-        if diary_page:
-            return re.findall("<article>([\s|\S]*?)</article>", diary_page)
-    return None
-
-
-# 获取日志中的全部图片地址列表
-def get_image_url_list(diary_info):
-    diary_info = tool.find_sub_string(diary_info, '<div class="box-article">', '<div class="box-bottom">')
-    # 日志中所有的图片
-    return re.findall('<img[\S|\s]*?src="([^"]+)"', diary_info)
+    index_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
+    index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "blog_info_list": [],  # 页面解析出的日志信息
+    }
+    if index_page_response.status == 200:
+        # 日志正文部分
+        blog_article_html = tool.find_sub_string(index_page_response.data, '<div class="box-main">', '<div class="box-sideMember">')
+        blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
+        for blog_info in blog_list:
+            # 获取日志id
+            blog_id = tool.find_sub_string(blog_info, "id=", "&")
+            # 获取日志页面中所有的图片地址列表
+            image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
+            extra_info["blog_info_list"].append({"blog_id": blog_id, "image_url_list": image_url_list})
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 class Diary(robot.Robot):
@@ -102,7 +104,7 @@ class Diary(robot.Robot):
         if len(ACCOUNTS) > 0:
             new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
             for account_id in ACCOUNTS:
-                # account_id  image_count  last_diary_id
+                # account_id  image_count  last_blog_id
                 new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
@@ -141,45 +143,41 @@ class Download(threading.Thread):
 
             image_count = 1
             page_count = 1
-            first_diary_id = "0"
+            first_blog_id = "0"
             is_over = False
             need_make_image_dir = True
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页博客信息
-                diary_list = get_one_page_diary_data(account_id, page_count)
-                if diary_list is None:
-                    log.error(account_name + " 第%s页日志列表解析异常" % page_count)
+                index_page_response = get_one_page_blog(account_id, page_count)
+                if index_page_response.status != 200:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
                 # 没有获取到任何日志，所有日志已经全部获取完毕了
-                if len(diary_list) == 0:
+                if len(index_page_response.extra_info["blog_info_list"]) == 0:
                     break
 
-                for diary_info in list(diary_list):
+                for blog_data in index_page_response.extra_info["blog_info_list"]:
                     # 日志id
-                    diary_id = tool.find_sub_string(diary_info, "id=", "&")
-                    if not diary_id:
-                        log.error(account_name + " 日志id解析异常，日志信息：%s" % diary_info)
+                    if not blog_data["blog_id"]:
+                        log.error(account_name + " 日志id解析异常，日志信息：%s" % blog_data)
                         continue
 
-                    # 检查是否是上一次的最后视频
-                    if int(diary_id) <= int(self.account_info[2]):
+                    # 检查是否是上一次的最后日志
+                    if int(blog_data["blog_id"]) <= int(self.account_info[2]):
                         is_over = True
                         break
 
                     # 将第一个日志的id做为新的存档记录
-                    if first_diary_id == "0":
-                        first_diary_id = diary_id
+                    if first_blog_id == "0":
+                        first_blog_id = blog_data["blog_id"]
 
-                    log.step(account_name + " 开始解析日志%s" % diary_id)
+                    log.step(account_name + " 开始解析日志%s" % blog_data["blog_id"])
+                    log.trace(account_name + " 日志%s获取的所有图片：%s" % (blog_data["blog_id"], blog_data["image_url_list"]))
 
-                    # 获取这个日志中的全部图片地址列表
-                    image_url_list = get_image_url_list(diary_info)
-                    log.trace(account_name + " 日志%s获取的所有图片：%s" % (diary_id, image_url_list))
-
-                    for image_url in image_url_list:
+                    for image_url in blog_data["image_url_list"]:
                         # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
                         if image_url[:7] != "http://" and image_url[:8] != "https://":
                             if image_url[0] == "/":
@@ -230,9 +228,9 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_diary_id != "0":
+            if first_blog_id != "0":
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = first_diary_id
+                self.account_info[2] = first_blog_id
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
