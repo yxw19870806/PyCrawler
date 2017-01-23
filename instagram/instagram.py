@@ -157,7 +157,7 @@ def get_owner_id(account_name):
     return None
 
 
-# 获取一页的媒体信息
+# 获取指定页数的所有媒体
 # account_id -> 490060609
 def get_one_page_media(account_id, cursor):
     # https://www.instagram.com/query/?q=ig_user(490060609){media.after(9999999999999999999,12){nodes{code,date,display_src,is_video},page_info}}
@@ -168,7 +168,7 @@ def get_one_page_media(account_id, cursor):
     return net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
 
 
-# 获取指定视频的播放页面
+# 获取指定id的视频播放页
 # post_id -> BKdvRtJBGou
 def get_video_play_page(post_id):
     video_play_page_url = "https://www.instagram.com/p/%s/" % post_id
@@ -355,7 +355,7 @@ class Download(threading.Thread):
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO and media_info["is_video"]:
-                        # 获取视频播放页面
+                        # 获取视频播放页
                         video_play_page_response = get_video_play_page(media_info["code"])
                         if video_play_page_response.status != 200:
                             log.error(account_name + " 第%s个视频 %s 播放页访问失败，原因：%s" % (video_count, media_info["code"], robot.get_http_request_failed_reason(video_play_page_response.status)))

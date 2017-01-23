@@ -133,7 +133,7 @@ def unfollow(account_id):
     return False
 
 
-# 获取一页的作品信息
+# 获取指定页数的所有作品
 def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     index_page_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
@@ -167,7 +167,7 @@ def get_one_page_album(account_id, page_count):
     return index_page_response
 
 
-# 获取作品
+# 获取指定id的作品
 # coser_id -> 9299
 # album_id -> 36484
 def get_album_page(coser_id, album_id):
@@ -309,7 +309,7 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 
-                # 获取一页的作品信息
+                # 获取一页作品
                 index_page_response = get_one_page_album(account_id, page_count)
                 if index_page_response.status != 200:
                     log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
@@ -361,7 +361,7 @@ class Download(threading.Thread):
                             log.error(account_name + " 创建作品目录 %s 失败" % album_path)
                             tool.process_exit()
 
-                    # 获取作品页面
+                    # 获取作品
                     album_page_response = get_album_page(index_page_response.extra_info["coser_id"], album_id)
                     if album_page_response.status != 200:
                         log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, index_page_response.extra_info["coser_id"], album_title, robot.get_http_request_failed_reason(album_page_response.status)))

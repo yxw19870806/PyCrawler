@@ -24,7 +24,7 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取账号相册首页页面
+# 获取账号相册首页
 def get_photo_index_page(account_name):
     photo_index_page_url = "https://www.flickr.com/photos/%s" % account_name
     photo_index_page_response = net.http_request(photo_index_page_url)
@@ -39,7 +39,7 @@ def get_photo_index_page(account_name):
     return photo_index_page_response
 
 
-# 获取指定页数的图片信息列表
+# 获取指定页数的所有图片
 # user_id -> 36587311@N08
 def get_one_page_image(user_id, page_count, api_key, request_id):
     api_url = "https://api.flickr.com/services/rest"
@@ -176,7 +176,7 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
-                # 获取一页图片信息
+                # 获取一页图片
                 index_page_response = get_one_page_image(photo_index_page_response.extra_info["user_id"], page_count, photo_index_page_response.extra_info["site_key"], request_id)
                 if index_page_response.status != 200:
                     log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))

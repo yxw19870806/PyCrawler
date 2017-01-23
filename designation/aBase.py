@@ -14,7 +14,7 @@ import threading
 TOTAL_IMAGE_COUNT = 0
 
 
-# 获取指定一页的页面
+# 获取指定页数的所有图片
 def get_one_page_data(page_count):
     index_page_url = "http://www.abase.me/movies.php?page=%s" % page_count
     index_page_response = net.http_request(index_page_url)
@@ -77,7 +77,7 @@ class ABase(robot.Robot):
         while True:
             log.step("开始解析第%s页图片" % page_count)
 
-            # 获取一页页面
+            # 获取一页图片
             index_page_response = get_one_page_data(page_count)
             if index_page_response.status != 200:
                 log.error("第%s页访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))

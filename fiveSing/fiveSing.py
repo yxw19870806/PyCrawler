@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 COOKIE_INFO = {"5sing_ssid": "", "5sing_auth": ""}
 
 
-# 获取一页的歌曲
+# 获取指定页数的所有歌曲
 # page_type 页面类型：yc - 原唱、fc - 翻唱
 # account_id -> inory
 def get_one_page_audio(account_id, page_type, page_count):
@@ -41,7 +41,7 @@ def get_one_page_audio(account_id, page_type, page_count):
     return index_page_response
 
 
-# 根据歌曲类型和歌曲id获取歌曲详情页面（json格式）
+# 获取指定id的歌曲详情页
 def get_audio_info_page(audio_id, song_type):
     # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
     audio_info_page_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
@@ -195,13 +195,13 @@ class Download(threading.Thread):
                         else:
                             unique_list.append(audio_id)
 
-                        # 获取歌曲的详情页面
+                        # 获取歌曲的详情页
                         audio_info_page_response = get_audio_info_page(audio_id, audio_type_to_index[audio_type])
                         if audio_info_page_response.status != 200:
                             log.error(account_name + " %s歌曲%s《%s》详情页访问失败，原因：%s" % (audio_type_name[audio_type], audio_id, audio_title, robot.get_http_request_failed_reason(index_page_response.status)))
                             continue
 
-                        # 获取歌曲的下载地址
+                        # 获取歌曲
                         audio_url = audio_info_page_response.extar_info["audio_url"]
                         if not audio_url:
                             log.step(account_name + " %s歌曲%s《%s》暂不提供下载地址" % (audio_type_name[audio_type], audio_id, audio_title))

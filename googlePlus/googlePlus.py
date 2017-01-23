@@ -57,7 +57,7 @@ def get_blog_page(account_id, picasaweb_url):
     return blog_page_response
 
 
-# 获取相册存档页
+# 获取指定id的相册页
 def get_album_page(account_id, album_id):
     # https://get.google.com/albumarchive/pwaf/102249965218267255722/album/6282184792644344177?source=pwa
     album_page_url = "https://get.google.com/albumarchive/pwaf/%s/album/%s?source=pwa" % (account_id, album_id)
@@ -206,7 +206,7 @@ class Download(threading.Thread):
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     blog_url = blog_url.replace("\u003d", "=")
 
-                    # 获取日志页面
+                    # 获取日志页
                     blog_page_response = get_blog_page(account_id, blog_url)
                     if blog_page_response.status != 200:
                         log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_page_response.status)))
@@ -234,7 +234,7 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析日志 %s" % blog_url)
                     
-                    # 获取册的全部图片地址列表
+                    # 获取相册页
                     album_page_response = get_album_page(account_id, album_id)
                     if album_page_response.status != 200:
                         log.error(account_name + " 相册%s访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))

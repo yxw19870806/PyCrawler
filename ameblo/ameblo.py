@@ -57,7 +57,7 @@ def get_one_page_blog(account_name, page_count):
     return index_page_response
 
 
-# 获取指定id的日志页面
+# 获取指定id的日志
 def get_blog_page(account_name, blog_id):
     blog_page_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
     blog_page_response = net.http_request(blog_page_url)
@@ -271,7 +271,7 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析日志%s" % blog_id)
 
-                    # 获取指定id的日志
+                    # 获取日志
                     blog_page_response = get_blog_page(account_name, blog_id)
                     if blog_page_response.status != 200:
                         log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_page_response.status)))

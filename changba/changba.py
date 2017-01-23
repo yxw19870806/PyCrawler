@@ -37,7 +37,7 @@ def get_user_index_page(account_id):
     return index_page_response
 
 
-# 获取一页的歌曲信息
+# 获取指定页数的所有歌曲信息
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
@@ -45,7 +45,7 @@ def get_one_page_audio(user_id, page_count):
     return net.http_request(index_page_url, json_decode=True)
 
 
-# 获取歌曲的播放页面
+# 获取指定id的歌曲播放页
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
 def get_audio_play_page(audio_en_word_id):
     audio_play_page_url = "http://changba.com/s/%s" % audio_en_word_id
@@ -209,14 +209,13 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(audio_id)
 
-                    # 获取歌曲播放页面
                     audio_name = audio_info["songname"].encode("utf-8")
+                    # 获取歌曲播放页
                     audio_play_page_response = get_audio_play_page(str(audio_info["enworkid"]))
                     if audio_play_page_response.status != 200:
                         log.error(account_name + " 歌曲《%s》播放页面访问失败，原因：%s" % (audio_name, robot.get_http_request_failed_reason(audio_play_page_response.status)))
                         continue
 
-                    # 获取歌曲下载地址
                     audio_url = audio_play_page_response.extra_info["audio_url"]
                     log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_name, audio_url))
 
