@@ -35,22 +35,19 @@ IS_DOWNLOAD_VIDEO = True
 # 获取csr_token并设置全局变量，后续需要设置header才能进行访问数据
 def set_csrf_token():
     global CSRF_TOKEN
-    index_url = "https://www.instagram.com/instagram"
-    index_page_response = net.http_request(index_url)
-    if index_page_response.status == 200:
-        set_cookie_info = net.get_response_info(index_page_response, "Set-Cookie")
-        if set_cookie_info is not None:
-            csrf_token = tool.find_sub_string(set_cookie_info, "csrftoken=", ";")
-            if csrf_token:
-                CSRF_TOKEN = csrf_token
-                return True
+    home_page_url = "https://www.instagram.com/instagram"
+    home_page_response = net.http_request(home_page_url)
+    if home_page_response.status == 200 and "Set-Cookie" in home_page_response.headers:
+        csrf_token = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "csrftoken=", ";")
+        if csrf_token:
+            CSRF_TOKEN = csrf_token
+            return True
     return False
 
 
 # 从cookie中获取登录的sessionid
 def set_session_id():
     global SESSION_ID
-    from common import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
@@ -60,28 +57,9 @@ def set_session_id():
         cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-    session_id = tool.get_cookie_value_from_browser("sessionid", cookie_path, browser_type, ("instagram.com",))
-    if session_id:
-        SESSION_ID = session_id
-
-
-# 根据账号名字获得账号id（字母账号->数字账号)
-def get_account_id(account_name):
-    search_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
-    for i in range(0, 10):
-        search_response= net.http_request(search_url)
-        if search_response.status == 200:
-            try:
-                search_data = json.loads(search_response.data)
-            except ValueError:
-                continue
-            if robot.check_sub_key(("users",), search_data):
-                for user in search_data["users"]:
-                    if robot.check_sub_key(("user",), user) and robot.check_sub_key(("username", "pk"), user["user"]):
-                        if account_name.lower() == str(user["user"]["username"]).lower():
-                            return user["user"]["pk"]
-        time.sleep(5)
-    return None
+    all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+    if "www.instagram.com" in all_cookie_from_browser and "sessionid" in all_cookie_from_browser["www.instagram.com"]:
+        SESSION_ID = all_cookie_from_browser["www.instagram.com"]["sessionid"]
 
 
 # 获取指定账号的全部粉丝列表（需要cookies）
@@ -90,56 +68,38 @@ def get_follow_by_list(account_id):
     # 从cookies中获取session id的值
     set_session_id()
     # 从页面中获取csrf token的值
-    if CSRF_TOKEN is None:
+    if not CSRF_TOKEN:
         set_csrf_token()
 
     cursor = None
     follow_by_list = []
     while True:
-        follow_by_page_data = get_one_page_follow_by_list(account_id, cursor)
-        if follow_by_page_data is not None:
-            for node in follow_by_page_data["nodes"]:
-                if robot.check_sub_key(("username",), node):
-                    follow_by_list.append(node["username"])
-            if follow_by_page_data["page_info"]["has_next_page"]:
-                cursor = follow_by_page_data["page_info"]["end_cursor"]
-            else:
-                break
-        else:
-            break
+        follow_by_page_response = get_one_page_follow_by(account_id, cursor)
+        if follow_by_page_response.status == 200:
+            if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) \
+                    and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
+                for node in follow_by_page_response.json_data["followed_by"]["nodes"]:
+                    if robot.check_sub_key(("username",), node):
+                        follow_by_list.append(node["username"])
+                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_by_page_response.json_data["followed_by"]["page_info"]):
+                    if follow_by_page_response.json_data["followed_by"]["page_info"]["has_next_page"]:
+                        cursor = follow_by_page_response.json_data["followed_by"]["page_info"]["end_cursor"]
+                        continue
+        break
     return follow_by_list
 
 
 # 获取指定一页的粉丝列表（需要cookies）
 # account_id -> 490060609
-def get_one_page_follow_by_list(account_id, cursor=None):
-    query_url = "https://www.instagram.com/query/"
+def get_one_page_follow_by(account_id, cursor=None):
+    query_page_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
-    params = "nodes{username},page_info"
     if cursor is None:
-        post_data = "q=ig_user(%s){followed_by.first(%s){%s}}" % (account_id, USER_COUNT_PER_PAGE, params)
+        post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
     else:
-        post_data = "q=ig_user(%s){followed_by.after(%s,%s){%s}}" % (account_id, cursor, USER_COUNT_PER_PAGE, params)
-    # todo session id error
-    # IGSCdaccb7f76627fa16a0d418f32a733030cb4cdeefaaddc5464a3da52eb8acfe06%3AID8fxYoOH96eMPpf4kEWwIhLA9ihMLuO%3A%7B%22_token_ver%22%3A2%2C%22_auth_user_id%22%3A3539660450%2C%22_token%22%3A%223539660450%3Amm50iieIxyG0NWWxuFifs0j23vhA5WpR%3Afd860ccd5c16e35eadf3e0946c00178b50fce7b45a9d09c62498dbbffdc8fa2b%22%2C%22asns%22%3A%7B%2247.89.39.193%22%3A45102%2C%22time%22%3A1480388199%7D%2C%22_auth_user_backend%22%3A%22accounts.backends.CaseInsensitiveModelBackend%22%2C%22last_refreshed%22%3A1480392303.831638%2C%22_platform%22%3A4%2C%22_auth_user_hash%22%3A%22%22%7D
-    header_list = {
-        "Referer": "https://www.instagram.com/",
-        "X-CSRFToken": CSRF_TOKEN,
-        "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
-    }
-    follow_by_list_response = net.http_request(query_url, post_data, header_list)
-    if follow_by_list_response.status == 200:
-        try:
-            follow_by_list_data = json.loads(follow_by_list_response.data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("followed_by",), follow_by_list_data):
-                followed_by_data = follow_by_list_data["followed_by"]
-                if robot.check_sub_key(("page_info", "nodes"), followed_by_data):
-                    if robot.check_sub_key(("end_cursor", "has_next_page"), followed_by_data["page_info"]):
-                        return followed_by_data
-    return None
+        post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
+    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
+    return net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
 
 
 # 获取指定账号的全部关注列表（需要cookies）
@@ -148,54 +108,52 @@ def get_follow_list(account_id):
     # 从cookies中获取session id的值
     set_session_id()
     # 从页面中获取csrf token的值
-    if CSRF_TOKEN is None:
+    if not CSRF_TOKEN:
         set_csrf_token()
 
     cursor = None
     follow_list = []
     while True:
-        follow_page_data = get_one_page_follow_list(account_id, cursor)
-        if follow_page_data is not None:
-            for node in follow_page_data["nodes"]:
-                if robot.check_sub_key(("username",), node):
-                    follow_list.append(node["username"])
-            if follow_page_data["page_info"]["has_next_page"]:
-                cursor = follow_page_data["page_info"]["end_cursor"]
-            else:
-                break
-        else:
-            break
+        follow_page_response = get_one_page_follow_by(account_id, cursor)
+        if follow_page_response.status == 200:
+            if robot.check_sub_key(("follows",), follow_page_response.json_data) \
+                    and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
+                for node in follow_page_response.json_data["follows"]["nodes"]:
+                    if robot.check_sub_key(("username",), node):
+                        follow_list.append(node["username"])
+                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_page_response.json_data["follows"]["page_info"]):
+                    if follow_page_response.json_data["follows"]["page_info"]["has_next_page"]:
+                        cursor = follow_page_response.json_data["follows"]["page_info"]["end_cursor"]
+                        continue
+        break
     return follow_list
 
 
 # 获取指定一页的关注列表（需要cookies）
 # account_id -> 490060609
-def get_one_page_follow_list(account_id, cursor=None):
-    query_url = "https://www.instagram.com/query/"
+def get_one_page_follow(account_id, cursor=None):
+    query_page_url = "https://www.instagram.com/query/"
     # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
-    params = "nodes{username},page_info"
     if cursor is None:
-        post_data = "q=ig_user(%s){follows.first(%s){%s}}" % (account_id, USER_COUNT_PER_PAGE, params)
+        post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
     else:
-        post_data = "q=ig_user(%s){follows.after(%s,%s){%s}}" % (account_id, cursor, USER_COUNT_PER_PAGE, params)
-    # todo session id error
-    # IGSCdaccb7f76627fa16a0d418f32a733030cb4cdeefaaddc5464a3da52eb8acfe06%3AID8fxYoOH96eMPpf4kEWwIhLA9ihMLuO%3A%7B%22_token_ver%22%3A2%2C%22_auth_user_id%22%3A3539660450%2C%22_token%22%3A%223539660450%3Amm50iieIxyG0NWWxuFifs0j23vhA5WpR%3Afd860ccd5c16e35eadf3e0946c00178b50fce7b45a9d09c62498dbbffdc8fa2b%22%2C%22asns%22%3A%7B%2247.89.39.193%22%3A45102%2C%22time%22%3A1480388199%7D%2C%22_auth_user_backend%22%3A%22accounts.backends.CaseInsensitiveModelBackend%22%2C%22last_refreshed%22%3A1480392303.831638%2C%22_platform%22%3A4%2C%22_auth_user_hash%22%3A%22%22%7D
-    header_list = {
-        "Referer": "https://www.instagram.com/",
-        "X-CSRFToken": CSRF_TOKEN,
-        "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID),
-    }
-    follow_list_response = tool.http_request(query_url, post_data, header_list)
-    if follow_list_response.status == 200:
-        try:
-            follow_list_data = json.loads(follow_list_response.data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("follows",), follow_list_data):
-                if robot.check_sub_key(("page_info", "nodes"), follow_list_data["follows"]):
-                    if robot.check_sub_key(("end_cursor", "has_next_page"), follow_list_data["follows"]["page_info"]):
-                        return follow_list_data["follows"]
+        post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
+    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
+    return net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
+
+
+# 根据账号名字获得账号id（字母账号->数字账号)
+def get_owner_id(account_name):
+    search_page_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
+    for i in range(0, 10):
+        search_page_response = net.http_request(search_page_url, json_decode=True)
+        if search_page_response.status == 200:
+            if robot.check_sub_key(("users",), search_page_response.json_data):
+                for user in search_page_response.json_data["users"]:
+                    if robot.check_sub_key(("user",), user) and robot.check_sub_key(("username", "pk"), user["user"]):
+                        if account_name.lower() == str(user["user"]["username"]).lower():
+                            return user["user"]["pk"]
+        time.sleep(5)
     return None
 
 
@@ -207,12 +165,8 @@ def get_one_page_media_data(account_id, cursor):
     media_page_url = "https://www.instagram.com/query/"
     params = "nodes{code,date,display_src,is_video},page_info"
     post_data = "q=ig_user(%s){media.after(%s,%s){%s}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE, params)
-    header_list = {
-        "Referer": "https://www.instagram.com/",
-        "X-CSRFToken": CSRF_TOKEN,
-        "Cookie": "csrftoken=%s" % CSRF_TOKEN,
-    }
-    media_data_response = tool.http_request(media_page_url, post_data, header_list)
+    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s" % CSRF_TOKEN}
+    media_data_response = tool.http_request(media_page_url, post_data=post_data, header_list=header_list)
     if media_data_response.status == 200:
         try:
             media_data = json.loads(media_data_response.data)
@@ -275,7 +229,7 @@ class Instagram(robot.Robot):
         ACCOUNTS = account_list.keys()
 
         if not set_csrf_token():
-            log.error("token和session获取查找失败")
+            log.error("token设置失败")
             tool.process_exit()
 
         # 循环下载每个id
@@ -341,8 +295,8 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
-            account_id = get_account_id(account_name)
-            if account_id is None:
+            owner_id = get_owner_id(account_name)
+            if owner_id is None:
                 log.error(account_name + " account id 查找失败")
                 tool.process_exit()
 
@@ -357,7 +311,7 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析cursor %s的媒体信息" % cursor)
 
                 # 获取指定时间后的一页媒体信息
-                media_data = get_one_page_media_data(account_id, cursor)
+                media_data = get_one_page_media_data(owner_id, cursor)
                 if media_data is None:
                     log.error(account_name + " 媒体列表解析异常")
                     tool.process_exit()
