@@ -165,7 +165,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 日志id解析异常，日志信息：%s" % blog_data)
                         continue
 
-                    # 检查是否是上一次的最后日志
+                    # 检查是否已下载到前一次的日志
                     if int(blog_data["blog_id"]) <= int(self.account_info[2]):
                         is_over = True
                         break

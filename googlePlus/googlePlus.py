@@ -206,7 +206,7 @@ class Download(threading.Thread):
                     # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
                     blog_url = blog_url.replace("\u003d", "=")
 
-                    # 获取日志页
+                    # 获取日志
                     blog_page_response = get_blog_page(account_id, blog_url)
                     if blog_page_response.status != 200:
                         log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_page_response.status)))
@@ -217,12 +217,12 @@ class Download(threading.Thread):
                     album_id = blog_page_response.extra_info["album_id"]
                     log.trace(account_name + " 日志 %s 的album id：%s" % (blog_url, album_id))
 
-                    # 检查是否已下载到前一次的图片
+                    # 检查是否已下载到前一次的日志
                     if int(album_id) <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一个album_id做为新的存档记录
+                    # 将第一个日志的id做为新的存档记录
                     if first_album_id == "0":
                         first_album_id = album_id
 

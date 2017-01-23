@@ -78,11 +78,11 @@ class Shinoda(robot.Robot):
                 # 获取blog时间
                 blog_time = int(index_page_response.extar_info["image_name_list"][0].split("-")[0])
 
-                # 检查是否已下载到前一次的图片
+                # 检查是否已下载到前一次的日志
                 if blog_time <= last_blog_time:
                     is_over = True
 
-                # 将第一个博客的id做为新的存档记录
+                # 将第一个日志的id做为新的存档记录
                 if new_last_blog_time == "":
                     new_last_blog_time = str(blog_time)
 

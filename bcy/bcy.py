@@ -322,7 +322,7 @@ class Download(threading.Thread):
                 log.trace(account_name + " 第%s页获取的所有作品：%s" % (page_count, index_page_response.extra_info["album_id_list"]))
 
                 for album_id in index_page_response.extra_info["album_id_list"]:
-                    # 检查是否已下载到前一次的图片
+                    # 检查是否已下载到前一次的作品
                     if int(album_id) <= int(self.account_info[1]):
                         is_over = True
                         break

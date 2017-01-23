@@ -104,7 +104,7 @@ class Fkoji(robot.Robot):
                     log.error("第%s张图片，解析tweet-created-at失败" % image_count)
                     continue
 
-                # 下载完毕
+                # 检查是否已下载到前一次的图片
                 if tweet_created_time <= save_data_image_time:
                     is_over = True
                     break

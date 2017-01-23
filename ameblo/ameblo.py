@@ -255,7 +255,7 @@ class Download(threading.Thread):
                 log.trace(account_name + " 第%s页获取的所有日志：%s" % (page_count, index_page_response.extra_info["blog_id_list"]))
 
                 for blog_id in index_page_response.extra_info["blog_id_list"]:
-                    # 检查是否是上一次的最后blog
+                    # 检查是否已下载到前一次的日志
                     if int(blog_id) <= int(self.account_info[2]):
                         break
 

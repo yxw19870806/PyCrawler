@@ -180,12 +180,12 @@ class Download(threading.Thread):
                         # 过滤标题中不支持的字符
                         audio_title = robot.filter_text(audio_info[1])
 
-                        # 检查是否歌曲id小于上次的记录
+                        # 检查是否已下载到前一次的歌曲
                         if int(audio_id) <= int(self.account_info[audio_type_to_index[audio_type]]):
                             is_over = True
                             break
 
-                        # 将第一首歌曲id做为新的存档记录
+                        # 将第一首歌曲的id做为新的存档记录
                         if first_audio_id == "0":
                             first_audio_id = str(audio_id)
 
