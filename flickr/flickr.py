@@ -24,21 +24,25 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取账号的user id和此次的token
-def get_api_info(account_name):
-    photo_index_url = "https://www.flickr.com/photos/%s" % account_name
-    photo_index_response = net.http_request(photo_index_url)
-    if photo_index_response.status == 200:
-        user_id = tool.find_sub_string(photo_index_response.data, '"nsid":"', '"')
-        site_key = tool.find_sub_string(photo_index_response.data, '"site_key":"', '"')
-        return {"user_id": user_id, "site_key": site_key}
-    return None
+# 获取账号相册首页页面
+def get_photo_index_page(account_name):
+    photo_index_page_url = "https://www.flickr.com/photos/%s" % account_name
+    photo_index_page_response = net.http_request(photo_index_page_url)
+    extra_info = {
+        "user_id": None,  # 页面解析出的user id
+        "site_key": None,  # 页面解析出的site key
+    }
+    if photo_index_page_response.status == 200:
+        extra_info["user_id"] = tool.find_sub_string(photo_index_page_response.data, '"nsid":"', '"')
+        extra_info["site_key"] = tool.find_sub_string(photo_index_page_response.data, '"site_key":"', '"')
+    photo_index_page_response.extra_info = extra_info
+    return photo_index_page_response
 
 
 # 获取指定页数的图片信息列表
 # user_id -> 36587311@N08
 def get_one_page_image(user_id, page_count, api_key, request_id):
-    image_data_page_url = "https://api.flickr.com/services/rest"
+    api_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
     # 所有可支持的参数
     # extra_data = [
@@ -51,24 +55,11 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
     # ]
     extra_data = ["date_upload", "url_o"]
     post_data = {
-        "per_page": IMAGE_COUNT_PER_PAGE,
-        "page": page_count,
-        "extras": ",".join(extra_data),
-        "get_user_info": 0,
-        # "jump_to": "",
-        "user_id": user_id,
-        "view_as": "use_pref",
-        "sort": "use_pref",
-        # "viewerNSID": "",
-        "method": "flickr.people.getPhotos",
-        # "csrf": "",
-        "api_key": api_key,
-        "format": "json",
-        "hermes": 1,
-        "reqId": request_id,
-        "nojsoncallback": 1,
+        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "extras": ",".join(extra_data), "get_user_info": 0, "user_id": user_id,
+        "view_as": "use_pref", "sort": "use_pref", "method": "flickr.people.getPhotos", "api_key": api_key, "format": "json",
+        "hermes": 1, "reqId": request_id, "nojsoncallback": 1,
     }
-    return net.http_request(image_data_page_url, post_data, json_decode=True)
+    return net.http_request(api_url, post_data, json_decode=True)
 
 
 class Flickr(robot.Robot):
@@ -162,15 +153,15 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
 
-            # 获取user id
-            api_info = get_api_info(account_name)
-            if api_info is None:
-                log.error(account_name + " API信息查找失败")
+            # 获取相册首页页面
+            photo_index_page_response = get_photo_index_page(account_name)
+            if photo_index_page_response.status != 200:
+                log.error(account_name + " 相册首页访问失败，原因：%s" % robot.get_http_request_failed_reason(photo_index_page_response.status))
                 tool.process_exit()
-            if not api_info["user_id"]:
+            if not photo_index_page_response.extra_info["user_id"]:
                 log.error(account_name + " user_id解析失败")
                 tool.process_exit()
-            if not api_info["site_key"]:
+            if not photo_index_page_response.extra_info["site_key"]:
                 log.error(account_name + " site_key解析失败")
                 tool.process_exit()
             # 生成一个随机的request id用作访问（使用原理暂时不明，只管模拟页面传入）
@@ -186,7 +177,7 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取一页图片信息
-                index_page_response = get_one_page_image(api_info["user_id"], page_count, api_info["site_key"], request_id)
+                index_page_response = get_one_page_image(photo_index_page_response.extra_info["user_id"], page_count, photo_index_page_response.extra_info["site_key"], request_id)
                 if index_page_response.status != 200:
                     log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
