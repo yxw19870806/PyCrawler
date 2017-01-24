@@ -71,7 +71,7 @@ class Shinoda(robot.Robot):
             if index_page_response.extar_info["is_over"]:
                 break
 
-            # 获取页面内的全部图片
+            # 获取页面内的所有图片
             log.trace("第%s页获取的全部图片：%s" % (page_count, index_page_response.extar_info["image_name_list"]))
 
             if len(index_page_response.extar_info["image_name_list"]) >= 1:
