@@ -14,6 +14,70 @@ import re
 ERROR_PAGE_COUNT_CHECK = 10
 
 
+# 获取指定页数的相册
+def get_album_page(page_count):
+    album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
+    album_page_response = net.http_request(album_url)
+    extra_info = {
+        "is_delete": False,  # 相册是不是已被删除（或还没有内容）
+        "image_info": {},  # 图片相册信息
+        "video_info": {},  # 视频相册信息
+        "is_exit": False,  # 视频相册信息
+    }
+    if album_page_response.status == 200:
+        # 检测相册是否已被删除
+        extra_info["is_delete"] = album_page_response.data.find("<title>相册已被删除</title>") >= 0
+        # 检测是否是图片相册
+        if album_page_response.data.find('<input type="hidden" id="imageList"') >= 0:
+            image_info = {
+                "is_error": False,  # 获取的图片数量和图片地址数量是否一致
+                "image_url_list": [],  # 获取的图片地址列表
+            }
+            # 获取图片数量
+            image_count_find = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="totalPageNum" value=', " ")
+            if image_count_find.isdigit() and int(image_count_find) > 0:
+                image_count = int(image_count_find)
+                # 获取图片地址列表
+                image_url_list_find = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="imageList" value=', " ")
+                try:
+                    image_info["image_url_list"] = json.loads(image_url_list_find)
+                except ValueError:
+                    pass
+                if len(image_info["image_url_list"]) == 0:
+                    image_info["is_error"] = True
+                elif len(image_info["image_url_list"]) != image_count:
+                    album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page_response.data)
+                    # 收费相册
+                    if len(album_reward_find) == 1 and album_reward_find[0].isdigit() and int(album_reward_find) > 0:
+                        # 图片地址数量大于获取的数量，或者获取的数量比图片地址数量多一张以上
+                        if image_count < len(image_info["image_url_list"]) or image_count > len(image_info["image_url_list"]) + 1:
+                            image_info["is_error"] = True
+                    else:
+                        # 非收费相册，两个数量不一致
+                        image_info["is_error"] = True
+            else:
+                image_info["is_error"] = True
+            extra_info["image_info"] = image_info
+        # 检测是否是视频相册
+        if album_page_response.data.find('<input type="hidden" id="VideoUrl"') >= 0:
+            video_info = {
+                "video_url": None,  # 获取的视频地址
+                "video_title": "",  # 获取的视频标题
+            }
+            # 获取视频下载地址
+            video_url = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="VideoUrl" value="', '">')
+            if video_url:
+                if video_url[0] == "/":
+                    video_info["video_url"] = "http://t.xiutuzz.com%s" % video_url
+                else:
+                    video_info["video_url"] = video_url
+            # 获取视频标题
+            video_info["video_title"] = robot.filter_text(tool.find_sub_string(album_page_response.data, "<title>", "</title>"))
+            extra_info["video_info"] = video_info
+    album_page_response.extra_info = extra_info
+    return album_page_response
+
+
 # 根据页面内容获取图片下载地址列表
 def get_image_url_list(album_page):
     image_url_list_find = tool.find_sub_string(album_page, '<input type="hidden" id="imageList" value=', " ")
@@ -63,9 +127,9 @@ class MeiTuZZ(robot.Robot):
         while not is_over:
             log.step("开始解析第%s页相册" % album_id)
 
-            album_url = "http://meituzz.com/album/browse?albumID=%s" % album_id
+            # 获取相册
             try:
-                album_page_response = net.http_request(album_url)
+                album_page_response = get_album_page(album_id)
             except SystemExit:
                 log.step("提前退出")
                 break
@@ -78,7 +142,7 @@ class MeiTuZZ(robot.Robot):
                 log.error("第%s页图片获取失败" % album_id)
                 break
 
-            if album_page_response.data.find("<title>相册已被删除</title>") >= 0:
+            if album_page_response.extra_info["is_delete"]:
                 error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
@@ -92,33 +156,12 @@ class MeiTuZZ(robot.Robot):
             error_count = 0
 
             # 图片下载
-            if self.is_download_image and album_page_response.data.find('<input type="hidden" id="imageList"') >= 0:
-                total_photo_count = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="totalPageNum" value=', " ")
-                if not total_photo_count:
-                    log.error("第%s页图片数量解析失败" % album_id)
+            if self.is_download_image and album_page_response.extra_info["image_info"]:
+                if album_page_response.extra_info["image_info"]["is_error"]:
+                    log.error("第%s页图片解析失败" % album_id)
                     break
-                total_photo_count = int(total_photo_count)
 
-                # 获取页面全部图片地址列表
-                image_url_list = get_image_url_list(album_page_response.data)
-                if image_url_list is None:
-                    log.error("第%s页图片地址列表解析失败" % album_id)
-                    break
-                if len(image_url_list) == 0:
-                    log.error("第%s页没有获取到图片" % album_id)
-                    break
-                log.trace("第%s页获取的全部图片：%s" % (album_id, image_url_list))
-
-                is_fee = False
-                if len(image_url_list) != total_photo_count:
-                    album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page_response.data)
-                    if len(album_reward_find) == 1:
-                        album_reward = int(album_reward_find[0])
-                        if album_reward > 0 and total_photo_count - len(image_url_list) <= 1:
-                            is_fee = True
-                    if not is_fee:
-                        log.error("第%s页解析获取的图片数量不符" % album_id)
-                        # break
+                log.trace("第%s页获取的全部图片：%s" % (album_id, album_page_response.extra_info["image_info"]["image_url_list"]))
 
                 image_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 if not tool.make_dir(image_path, 0):
@@ -126,7 +169,7 @@ class MeiTuZZ(robot.Robot):
                     break
 
                 image_count = 1
-                for image_url in image_url_list:
+                for image_url in album_page_response.extra_info["image_info"]["image_url_list"]:
                     # 去除模糊效果
                     image_url = str(image_url).split("@")[0]
                     log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
@@ -148,12 +191,15 @@ class MeiTuZZ(robot.Robot):
                 total_image_count += image_count - 1
 
             # 视频下载
-            if self.is_download_image and album_page_response.data.find('<input type="hidden" id="VideoUrl"') >= 0:
-                # 获取视频下载地址
-                video_url = get_video_url(album_page_response.data)
+            if self.is_download_image and album_page_response.extra_info["video_info"]:
+                if album_page_response.extra_info["video_info"]["video_url"] is None:
+                    log.error("第%s页视频解析失败" % album_id)
+                    break
+
+                video_url = album_page_response.extra_info["video_info"]["video_url"]
                 log.step("开始下载第%s页视频 %s" % (album_id, video_url))
 
-                video_title = robot.filter_text(tool.find_sub_string(album_page_response.data, "<title>", "</title>"))
+                video_title = album_page_response.extra_info["video_info"]["video_title"]
                 file_type = video_url.split(".")[-1]
                 video_file_path = os.path.join(self.video_download_path, "%s %s.%s" % (album_id, video_title, file_type))
                 try:
