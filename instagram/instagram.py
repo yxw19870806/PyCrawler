@@ -74,7 +74,14 @@ def get_follow_by_list(account_id):
     cursor = None
     follow_by_list = []
     while True:
-        follow_by_page_response = get_one_page_follow_by(account_id, cursor)
+        query_page_url = "https://www.instagram.com/query/"
+        # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
+        if cursor is None:
+            post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
+        else:
+            post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
+        header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
+        follow_by_page_response = net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
         if follow_by_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) \
                     and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
@@ -89,19 +96,6 @@ def get_follow_by_list(account_id):
     return follow_by_list
 
 
-# 获取指定一页的粉丝列表（需要cookies）
-# account_id -> 490060609
-def get_one_page_follow_by(account_id, cursor=None):
-    query_page_url = "https://www.instagram.com/query/"
-    # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
-    if cursor is None:
-        post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
-    else:
-        post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
-    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
-    return net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
-
-
 # 获取指定账号的全部关注列表（需要cookies）
 # account_id -> 490060609
 def get_follow_list(account_id):
@@ -114,7 +108,14 @@ def get_follow_list(account_id):
     cursor = None
     follow_list = []
     while True:
-        follow_page_response = get_one_page_follow_by(account_id, cursor)
+        query_page_url = "https://www.instagram.com/query/"
+        # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
+        if cursor is None:
+            post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
+        else:
+            post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
+        header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
+        follow_page_response = net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
         if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("follows",), follow_page_response.json_data) \
                     and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
@@ -127,19 +128,6 @@ def get_follow_list(account_id):
                         continue
         break
     return follow_list
-
-
-# 获取指定一页的关注列表（需要cookies）
-# account_id -> 490060609
-def get_one_page_follow(account_id, cursor=None):
-    query_page_url = "https://www.instagram.com/query/"
-    # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
-    if cursor is None:
-        post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
-    else:
-        post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
-    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
-    return net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
