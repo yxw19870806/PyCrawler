@@ -156,9 +156,9 @@ def get_one_page_album(account_id, page_count):
             if "${post.title}" in extra_info["album_title_list"]:
                 extra_info["album_title_list"].remove("${post.title}")
         # 检测是否还有下一页
-        max_page_count = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">' , index_page_response.data)
-        if max_page_count:
-            max_page_count = max(max_page_count)
+        page_count_find = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">' , index_page_response.data)
+        if len(page_count_find) > 0:
+            max_page_count = max(map(int, page_count_find))
         else:
             max_page_count = 1
         if page_count >= max_page_count:

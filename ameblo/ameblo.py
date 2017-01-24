@@ -43,8 +43,7 @@ def get_one_page_blog(account_name, page_count):
                 extra_info["is_over"] = page_count >= int(last_page[0])
             page_count_find = re.findall("<a [^>]*?>(\d*)</a>", paging_data)
             if len(page_count_find) > 0:
-                page_count_find = map(int, page_count_find)
-                extra_info["is_over"] = page_count >= max(page_count_find)
+                extra_info["is_over"] = page_count >= max(map(int, page_count_find))
         # 只有下一页和上一页按钮的样式
         elif index_page_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
             if index_page_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
