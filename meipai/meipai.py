@@ -24,26 +24,25 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取指定账号的全部关注列表
+# 获取指定账号的所有关注列表
 def get_follow_list(account_id):
     max_page_count = 1
     page_count = 1
     follow_list = {}
     while page_count <= max_page_count:
-        follow_list_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
-        follow_list_page_response = net.http_request(follow_list_url)
-        if follow_list_page_response == net.HTTP_RETURN_CODE_SUCCEED:
-            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_list_page_response.data)
+        follow_page_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
+        follow_page_response = net.http_request(follow_page_url)
+        if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_page_response.data)
             for follow_info in follow_list_find:
                 follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()
                 follow_account_name = tool.find_sub_string(follow_info, 'title="', '"')
                 follow_list[follow_account_id] = follow_account_name
             if max_page_count == 1:
-                page_info = tool.find_sub_string(follow_list_page_response.data, '<div class="paging-wrap">', "</div>")
+                page_info = tool.find_sub_string(follow_page_response.data, '<div class="paging-wrap">', "</div>")
                 if page_info:
-                    page_find = re.findall("friends\?p=(\d*)", page_info)
-                    page_find = [int(i) for i in page_find]
-                    max_page_count = max(page_find)
+                    page_count_find = re.findall("friends\?p=(\d*)", page_info)
+                    max_page_count = max(map(int, page_count_find))
             page_count += 1
         else:
             return None
