@@ -53,11 +53,9 @@ def get_one_page_audio(user_id, page_count):
                 "audio_title": "",  # 视频标题
                 "audio_key": None,  # 视频唯一key
             }
-            if robot.check_sub_key(("workid",), audio_info):
+            if robot.check_sub_key(("workid", "songname", "enworkid"), audio_info):
                 extra_audio_info["audio_id"] = str(audio_info["workid"])
-            if robot.check_sub_key(("songname",), audio_info):
                 extra_audio_info["audio_title"] = str(audio_info["songname"].encode("utf-8"))
-            if robot.check_sub_key(("enworkid",), audio_info):
                 extra_audio_info["audio_key"] = str(audio_info["enworkid"])
             extra_info["audio_info_list"].append(extra_audio_info)
     index_page_response.extra_info = extra_info

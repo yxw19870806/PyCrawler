@@ -51,9 +51,8 @@ def get_audio_info_page(audio_id, song_type):
         "audio_url": None,  # 页面解析出的歌曲下载地址
     }
     if audio_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("success", "data"), audio_info_page_response.data):
-            if audio_info_page_response.data["success"] and robot.check_sub_key(("fileName",), audio_info_page_response.data["data"]):
-                extra_info["audio_url"] = str(audio_info_page_response.data["data"]["fileName"])
+        if robot.check_sub_key(("data"), audio_info_page_response.data) and robot.check_sub_key(("fileName",), audio_info_page_response.data["data"]):
+            extra_info["audio_url"] = str(audio_info_page_response.data["data"]["fileName"])
     audio_info_page_response.extra_info = extra_info
     return audio_info_page_response
 

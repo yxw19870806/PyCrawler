@@ -59,11 +59,13 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
     }
     index_page_response = net.http_request(api_url, post_data, json_decode=True)
     extra_info = {
+        "is_error": False,  # 是不是格式不符合
         "image_info_list": [],  # 页面解析出的图片信息列表
         "is_over": False,  # 是不是最后一页图片
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("photos",), index_page_response.json_data) and robot.check_sub_key(("photo", "pages"), index_page_response.json_data["photos"]):
+        if robot.check_sub_key(("photos",), index_page_response.json_data) and \
+                robot.check_sub_key(("photo", "pages"), index_page_response.json_data["photos"]) and len(index_page_response.json_data["photos"]["photo"]) > 0:
             for photo_info in index_page_response.json_data["photos"]["photo"]:
                 extra_image_info = {
                     "image_url": None,  # 图片下载地址
@@ -78,8 +80,11 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
                 extra_info["image_info_list"].append(extra_image_info)
             if page_count >= int(index_page_response.json_data["photos"]["pages"]):
                 extra_info["is_over"] = True
+        else:
+            extra_info["is_error"] = True
     index_page_response.extra_info = extra_info
     return index_page_response
+
 
 class Flickr(robot.Robot):
     def __init__(self):
@@ -201,7 +206,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["image_info_list"] is []:
+                if index_page_response.extra_info["is_error"]:
                     log.error(account_name + " 第%s页图片信息%s解析失败" % (page_count, index_page_response.json_data))
                     tool.process_exit()
 
