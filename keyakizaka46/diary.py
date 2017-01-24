@@ -32,7 +32,7 @@ def get_one_page_blog(account_id, page_count):
     extra_info = {
         "blog_info_list": [],  # 页面解析出的日志信息
     }
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 日志正文部分
         blog_article_html = tool.find_sub_string(index_page_response.data, '<div class="box-main">', '<div class="box-sideMember">')
         blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
@@ -151,7 +151,7 @@ class Download(threading.Thread):
 
                 # 获取一页博客信息
                 index_page_response = get_one_page_blog(account_id, page_count)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 

@@ -32,7 +32,7 @@ def get_one_page_blog(account_id, token):
         "blog_url_list": [],  # 页面解析出的日志地址列表
         "key": "",  # 页面解析出的下一页token
     }
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的日志地址列表
         extra_info["blog_url_list"] = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response.data)
         # 获取页面中所有的日志地址列表
@@ -49,7 +49,7 @@ def get_blog_page(account_id, picasaweb_url):
     extra_info = {
         "album_id": None,  # 页面解析出的相册id
     }
-    if blog_page_response.status == 200:
+    if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
         if album_id.isdigit():
             extra_info["album_id"] = album_id
@@ -65,7 +65,7 @@ def get_album_page(account_id, album_id):
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
     album_page_response = net.http_request(album_page_url)
-    if album_page_response.status == 200:
+    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的图片地址列表
         for try_count in range(0, 5):
             image_url_list = re.findall('<img src="([^"]*)"', album_page_response.data)
@@ -194,7 +194,7 @@ class Download(threading.Thread):
             while not is_over:
                 # 获取一页相册
                 index_page_response = get_one_page_blog(account_id, key)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
@@ -208,7 +208,7 @@ class Download(threading.Thread):
 
                     # 获取日志
                     blog_page_response = get_blog_page(account_id, blog_url)
-                    if blog_page_response.status != 200:
+                    if blog_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_page_response.status)))
                         tool.process_exit()
                     if not blog_page_response.extra_info["album_id"]:
@@ -236,7 +236,7 @@ class Download(threading.Thread):
                     
                     # 获取相册页
                     album_page_response = get_album_page(account_id, album_id)
-                    if album_page_response.status != 200:
+                    if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 相册%s访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
                         tool.process_exit()
 

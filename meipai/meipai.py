@@ -32,7 +32,7 @@ def get_follow_list(account_id):
     while page_count <= max_page_count:
         follow_list_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
         follow_list_page_response = net.http_request(follow_list_url)
-        if follow_list_page_response == 200:
+        if follow_list_page_response == net.HTTP_RETURN_CODE_SUCCEED:
             follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_list_page_response.data)
             for follow_info in follow_list_find:
                 follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()
@@ -160,10 +160,10 @@ class Download(threading.Thread):
 
                 # 获取一页视频
                 index_page_response = get_one_page_video(account_id, page_count)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error("第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
-                if not robot.check_sub_key(("medias"), index_page_response.json_data):
+                if not robot.check_sub_key(("medias",), index_page_response.json_data):
                     log.error(account_name + " 第%s页视频解析失败" % video_count)
                     tool.process_exit()
 

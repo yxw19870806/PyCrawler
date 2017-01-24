@@ -37,7 +37,7 @@ def set_csrf_token():
     global CSRF_TOKEN
     home_page_url = "https://www.instagram.com/instagram"
     home_page_response = net.http_request(home_page_url)
-    if home_page_response.status == 200 and "Set-Cookie" in home_page_response.headers:
+    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Set-Cookie" in home_page_response.headers:
         csrf_token = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "csrftoken=", ";")
         if csrf_token:
             CSRF_TOKEN = csrf_token
@@ -75,7 +75,7 @@ def get_follow_by_list(account_id):
     follow_by_list = []
     while True:
         follow_by_page_response = get_one_page_follow_by(account_id, cursor)
-        if follow_by_page_response.status == 200:
+        if follow_by_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) \
                     and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
                 for node in follow_by_page_response.json_data["followed_by"]["nodes"]:
@@ -115,7 +115,7 @@ def get_follow_list(account_id):
     follow_list = []
     while True:
         follow_page_response = get_one_page_follow_by(account_id, cursor)
-        if follow_page_response.status == 200:
+        if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("follows",), follow_page_response.json_data) \
                     and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
                 for node in follow_page_response.json_data["follows"]["nodes"]:
@@ -147,7 +147,7 @@ def get_owner_id(account_name):
     search_page_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
     for i in range(0, 10):
         search_page_response = net.http_request(search_page_url, json_decode=True)
-        if search_page_response.status == 200:
+        if search_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("users",), search_page_response.json_data):
                 for user in search_page_response.json_data["users"]:
                     if robot.check_sub_key(("user",), user) and robot.check_sub_key(("username", "pk"), user["user"]):
@@ -176,7 +176,7 @@ def get_video_play_page(post_id):
     extra_info = {
         "video_url": None,  # 页面解析出的图片地址列表
     }
-    if video_play_page_response.status == 200:
+    if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["video_url"] = tool.find_sub_string(video_play_page_response.data, '<meta property="og:video:secure_url" content="', '" />')
     video_play_page_response.extra_info = extra_info
     return video_play_page_response
@@ -304,7 +304,7 @@ class Download(threading.Thread):
 
                 # 获取指定时间后的一页媒体信息
                 media_page_response = get_one_page_media(owner_id, cursor)
-                if media_page_response.status != 200:
+                if media_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " cursor %s的媒体信息访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(media_page_response.status)))
                     tool.process_exit()
 
@@ -357,7 +357,7 @@ class Download(threading.Thread):
                     if IS_DOWNLOAD_VIDEO and media_info["is_video"]:
                         # 获取视频播放页
                         video_play_page_response = get_video_play_page(media_info["code"])
-                        if video_play_page_response.status != 200:
+                        if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                             log.error(account_name + " 第%s个视频 %s 播放页访问失败，原因：%s" % (video_count, media_info["code"], robot.get_http_request_failed_reason(video_play_page_response.status)))
                             tool.process_exit()
                         if not video_play_page_response.extra_info["video_url"]:

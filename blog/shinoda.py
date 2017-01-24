@@ -19,7 +19,7 @@ def get_one_page_blog(page_count):
         "image_name_list": [],  # 页面解析出的所有图片名字列表
     }
     index_page_response = net.http_request(index_page_url)
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 检测是否是最后一页
         extra_info["is_over"] = index_page_response.data == "記事が存在しません。"
         extra_info["image_name_list"] = re.findall('data-original="./([^"]*)"', index_page_response.data)
@@ -63,7 +63,7 @@ class Shinoda(robot.Robot):
 
             # 获取一页日志
             index_page_response = get_one_page_blog(page_count)
-            if index_page_response.status != 200:
+            if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                 tool.process_exit()
 

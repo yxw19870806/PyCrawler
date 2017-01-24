@@ -28,7 +28,7 @@ def get_user_index_page(account_id):
     extra_info = {
         "user_id": None,  # 页面解析出的user id
     }
-    if index_page_response.status == 200:
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
         user_id = tool.find_sub_string(index_page_response.data, "var userid = '", "'")
         if user_id and user_id.isdigit():
@@ -53,7 +53,7 @@ def get_audio_play_page(audio_en_word_id):
         "audio_url": None,  # 页面解析出的user id
     }
     audio_play_page_response = net.http_request(audio_play_page_url)
-    if audio_play_page_response.status == 200:
+    if audio_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取歌曲下载地址
         audio_source_url = tool.find_sub_string(audio_play_page_response.data, 'var a="', '"')
         if audio_source_url:
@@ -159,7 +159,7 @@ class Download(threading.Thread):
 
             # 查找账号user id
             account_index_page_response = get_user_index_page(account_id)
-            if account_index_page_response.status != 200:
+            if account_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error(account_name + " 主页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_page_response.status))
                 tool.process_exit()
 
@@ -178,7 +178,7 @@ class Download(threading.Thread):
 
                 # 获取一页歌曲
                 index_page_response = get_one_page_audio(account_index_page_response.extra_info["user_id"], page_count)
-                if index_page_response.status != 200:
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
@@ -212,7 +212,7 @@ class Download(threading.Thread):
                     audio_name = audio_info["songname"].encode("utf-8")
                     # 获取歌曲播放页
                     audio_play_page_response = get_audio_play_page(str(audio_info["enworkid"]))
-                    if audio_play_page_response.status != 200:
+                    if audio_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 歌曲《%s》播放页面访问失败，原因：%s" % (audio_name, robot.get_http_request_failed_reason(audio_play_page_response.status)))
                         continue
 

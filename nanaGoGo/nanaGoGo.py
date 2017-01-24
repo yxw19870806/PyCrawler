@@ -33,7 +33,7 @@ def get_message_page_data(account_name, target_id):
     image_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
     image_page_url += "?targetId=%s&limit=%s&direction=PREV" % (target_id, MESSAGE_COUNT_PER_PAGE)
     image_page_response = net.http_request(image_page_url)
-    if image_page_response.status == 200:
+    if image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         try:
             image_page_data = json.loads(image_page_response.data)
         except ValueError:
