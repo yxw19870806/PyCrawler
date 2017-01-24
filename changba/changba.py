@@ -23,18 +23,18 @@ NEW_SAVE_DATA_PATH = ""
 
 # 获取账号首页页面
 def get_user_index_page(account_id):
-    index_url = "http://changba.com/u/%s" % account_id
-    index_page_response = net.http_request(index_url)
+    account_index_url = "http://changba.com/u/%s" % account_id
+    account_index_page_response = net.http_request(account_index_url)
     extra_info = {
         "user_id": None,  # 页面解析出的user id
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
-        user_id = tool.find_sub_string(index_page_response.data, "var userid = '", "'")
+        user_id = tool.find_sub_string(account_index_page_response.data, "var userid = '", "'")
         if user_id and user_id.isdigit():
             extra_info["user_id"] = user_id
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    account_index_page_response.extra_info = extra_info
+    return account_index_page_response
 
 
 # 获取指定页数的所有歌曲信息
@@ -42,7 +42,26 @@ def get_user_index_page(account_id):
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
     index_page_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
-    return net.http_request(index_page_url, json_decode=True)
+    index_page_response = net.http_request(index_page_url, json_decode=True)
+    extra_info = {
+        "audio_info_list": [],  # 页面解析出的歌曲信息列表
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        for audio_info in index_page_response.json_data:
+            extra_audio_info = {
+                "audio_id": None,  # 视频自增id
+                "audio_title": "",  # 视频标题
+                "audio_key": None,  # 视频唯一key
+            }
+            if robot.check_sub_key(("workid",), audio_info):
+                extra_audio_info["audio_id"] = str(audio_info["workid"])
+            if robot.check_sub_key(("songname",), audio_info):
+                extra_audio_info["audio_title"] = str(audio_info["songname"].encode("utf-8"))
+            if robot.check_sub_key(("enworkid",), audio_info):
+                extra_audio_info["audio_key"] = str(audio_info["enworkid"])
+            extra_info["audio_info_list"].append(extra_audio_info)
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 # 获取指定id的歌曲播放页
@@ -183,41 +202,39 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if index_page_response.json_data is []:
+                if index_page_response.extra_info["audio_info_list"] is []:
                     break
 
-                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, index_page_response.json_data))
+                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, index_page_response.extra_info["audio_info_list"]))
 
-                for audio_info in index_page_response.json_data:
-                    if not robot.check_sub_key(("songname", "workid", "enworkid"), audio_info):
+                for audio_info in index_page_response.extra_info["audio_info_list"]:
+                    if audio_info["audio_id"] is None or audio_info["audio_key"] is None:
                         log.error(account_name + " 第%s首歌曲信息%s异常" % (video_count, audio_info))
                         continue
-                    audio_id = str(audio_info["workid"])
 
                     # 检查是否已下载到前一次的歌曲
-                    if int(audio_id) <= int(self.account_info[1]):
+                    if int(audio_info["audio_id"]) <= int(self.account_info[1]):
                         is_over = True
                         break
 
                     # 将第一首歌曲的id做为新的存档记录
                     if first_audio_id == "0":
-                        first_audio_id = str(audio_id)
+                        first_audio_id = str(audio_info["audio_id"])
 
                     # 新增歌曲导致的重复判断
-                    if audio_id in unique_list:
+                    if audio_info["audio_id"] in unique_list:
                         continue
                     else:
-                        unique_list.append(audio_id)
+                        unique_list.append(audio_info["audio_id"])
 
-                    audio_name = audio_info["songname"].encode("utf-8")
                     # 获取歌曲播放页
-                    audio_play_page_response = get_audio_play_page(str(audio_info["enworkid"]))
+                    audio_play_page_response = get_audio_play_page(audio_info["audio_key"])
                     if audio_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 歌曲《%s》播放页面访问失败，原因：%s" % (audio_name, robot.get_http_request_failed_reason(audio_play_page_response.status)))
+                        log.error(account_name + " 歌曲《%s》播放页面访问失败，原因：%s" % (audio_info["audio_title"], robot.get_http_request_failed_reason(audio_play_page_response.status)))
                         continue
 
                     audio_url = audio_play_page_response.extra_info["audio_url"]
-                    log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_name, audio_url))
+                    log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_info["audio_title"], audio_url))
 
                     # 第一首歌曲，创建目录
                     if need_make_download_dir:
@@ -226,13 +243,13 @@ class Download(threading.Thread):
                             tool.process_exit()
                         need_make_download_dir = False
 
-                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_name))
+                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_info["audio_id"], audio_info["audio_title"]))
                     save_file_return = net.save_net_file(audio_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
                     else:
-                        log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_name, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_info["audio_title"], audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -242,7 +259,7 @@ class Download(threading.Thread):
                 if not is_over:
                     # 获取的歌曲数量少于1页的上限，表示已经到结束了
                     # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                    if len(index_page_response.json_data) < 20:
+                    if len(index_page_response.extra_info["audio_info_list"]) < 20:
                         is_over = True
                     else:
                         page_count += 1
