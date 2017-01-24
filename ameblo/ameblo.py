@@ -256,6 +256,7 @@ class Download(threading.Thread):
                 for blog_id in index_page_response.extra_info["blog_id_list"]:
                     # 检查是否已下载到前一次的日志
                     if int(blog_id) <= int(self.account_info[2]):
+                        is_over = True
                         break
 
                     # 将第一个日志的时间做为新的存档记录
