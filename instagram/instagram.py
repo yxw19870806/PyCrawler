@@ -62,7 +62,7 @@ def set_session_id():
         SESSION_ID = all_cookie_from_browser["www.instagram.com"]["sessionid"]
 
 
-# 获取指定账号的全部粉丝列表（需要cookies）
+# 获取指定账号的所有粉丝列表（需要cookies）
 # account_id -> 490060609
 def get_follow_by_list(account_id):
     # 从cookies中获取session id的值
@@ -96,7 +96,7 @@ def get_follow_by_list(account_id):
     return follow_by_list
 
 
-# 获取指定账号的全部关注列表（需要cookies）
+# 获取指定账号的所有关注列表（需要cookies）
 # account_id -> 490060609
 def get_follow_list(account_id):
     # 从cookies中获取session id的值
