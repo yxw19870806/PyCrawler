@@ -305,7 +305,7 @@ class Download(threading.Thread):
                                     # temp_list = video_url.split("/")
                                     # if temp_list[-1].isdigit():
                                     #     video_url = "/".join(temp_list[:-1])
-                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_play_url))
+                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                                     # 第一个视频，创建目录
                                     if need_make_video_dir:
