@@ -456,6 +456,8 @@ def is_process_end():
 def get_save_net_file_failed_reason(return_code):
     if return_code == 404:
         return "源文件已被删除"
+    elif return_code == 403:
+        return "源文件没有权限下载"
     elif return_code == -1:
         return "源文件多次获取失败，可能无法访问"
     elif return_code == -2:
@@ -470,6 +472,8 @@ def get_save_net_file_failed_reason(return_code):
 def get_http_request_failed_reason(return_code):
     if return_code == 404:
         reason = "页面已被删除"
+    elif return_code == 403:
+        reason = "页面没有权限访问"
     elif return_code == net.HTTP_RETURN_CODE_RETRY:
         reason = "页面多次获取失败，可能无法访问"
     elif return_code == net.HTTP_RETURN_CODE_URL_INVALID:
