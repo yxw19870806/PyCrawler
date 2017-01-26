@@ -131,6 +131,9 @@ c:\python27\Scripts\pip.exe install XXX.whl
 a = [1, 2, 3, 4, 5, "6", "a"]
 map(str, a)
 
+a = [[1, 2], [3, 4], [5, 6]]
+[map(str, key) for key in a]
+
 20.list去重
 a = [1, 2, 3, 4, 5, 5, 4, 3, 2]
 list(set(a))
