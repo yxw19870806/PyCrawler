@@ -234,13 +234,14 @@ class Robot(object):
             else:
                 cookie_path = get_config(config, "COOKIE_PATH", "", 0)
             all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+            for cookie_domain in sys_config[SYS_GET_COOKIE]:
+                for cookie_key in sys_config[SYS_GET_COOKIE][cookie_domain]:
+                    self.cookie_value[cookie_key] = ""
             for cookie_domain in all_cookie_from_browser:
                 if cookie_domain in sys_config[SYS_GET_COOKIE]:
                     for cookie_name in sys_config[SYS_GET_COOKIE][cookie_domain]:
                         if cookie_name in all_cookie_from_browser[cookie_domain]:
                             self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
-                        else:
-                            self.cookie_value[cookie_name] = ""
 
         # Http Setting
         tool.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
