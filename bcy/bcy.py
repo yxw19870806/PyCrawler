@@ -148,13 +148,15 @@ def get_one_page_album(account_id, page_count):
         # 获取coser id
         coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', index_page_response.data)
         if len(coser_id_find) == 1:
-            extra_info["coser_id"] = coser_id_find[0]
+            extra_info["coser_id"] = str(coser_id_find[0])
             # 获取作品id列表
             extra_info["album_id_list"] = re.findall("/coser/detail/" + extra_info["coser_id"] + '/(\d+)"', index_page_response.data)
+            extra_info["album_id_list"] = map(str, extra_info["album_id_list"])
             # 获取作品标题列表
-            extra_info["album_title_list"] = re.findall('<img src="\S*" alt="([\S ]*)" />', index_page_response.data)
-            if "${post.title}" in extra_info["album_title_list"]:
-                extra_info["album_title_list"].remove("${post.title}")
+            album_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', index_page_response.data)
+            if "${post.title}" in album_title_list:
+                album_title_list.remove("${post.title}")
+            extra_info["album_title_list"] = map(str, album_title_list)
         # 检测是否还有下一页
         page_count_find = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">' , index_page_response.data)
         if len(page_count_find) > 0:
@@ -188,7 +190,8 @@ def get_album_page(coser_id, album_id):
         if album_page_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
             extra_info["is_only_follower"] = True
         # 获取作品页面内的所有图片地址列表
-        extra_info["image_url_list"] = re.findall("src='([^']*)'", album_page_response.data)
+        image_url_list = re.findall("src='([^']*)'", album_page_response.data)
+        extra_info["image_url_list"] = map(str, image_url_list)
     album_page_response.extra_info = extra_info
     return album_page_response
 

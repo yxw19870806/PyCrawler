@@ -34,11 +34,12 @@ def get_one_page_blog(account_id, token):
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的日志地址列表
-        extra_info["blog_url_list"] = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response.data)
+        blog_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response.data)
+        extra_info["blog_url_list"] = map(str, blog_url_list)
         # 获取页面中所有的日志地址列表
         token_find = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_response.data)
         if len(token_find) > 0 and len(token_find[0]) > 80:
-            extra_info["key"] = token_find[0]
+            extra_info["key"] = str(token_find[0])
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -52,7 +53,7 @@ def get_blog_page(account_id, picasaweb_url):
     if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
         if album_id.isdigit():
-            extra_info["album_id"] = album_id
+            extra_info["album_id"] = str(album_id)
     blog_page_response.extra_info = extra_info
     return blog_page_response
 
@@ -70,7 +71,8 @@ def get_album_page(account_id, album_id):
         for try_count in range(0, 5):
             image_url_list = re.findall('<img src="([^"]*)"', album_page_response.data)
             if len(image_url_list) > 0:
-                extra_info["image_url_list"] = image_url_list
+                image_url_list = image_url_list
+                extra_info["image_url_list"] = map(str, image_url_list)
                 break
             # 没有获取到图片，重新访问一下
             album_page_response = net.http_request(album_page_url)

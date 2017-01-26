@@ -47,7 +47,8 @@ def get_blog_page(blog_url):
         "image_url_list": [],  # 页面解析出的所有图片列表
     }
     if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["image_url_list"] = re.findall('bigimgsrc="([^"]*)"', blog_page_response.data)
+        image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_page_response.data)
+        extra_info["image_url_list"] = map(str, image_url_list)
     blog_page_response.extra_info = extra_info
     return blog_page_response
 

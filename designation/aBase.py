@@ -27,7 +27,8 @@ def get_one_page_data(page_count):
         extra_info["page_video_count"] = index_page_response.data.count('<div class="item pull-left">')
         # 获取页面中的所有图片信息列表
         # 单张图片信息的格式：[image_url, title]
-        extra_info["image_info_list"] = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', index_page_response.data)
+        image_info_list = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', index_page_response.data)
+        extra_info["image_info_list"] = [map(str, key) for key in image_info_list]
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -94,7 +95,7 @@ class ABase(robot.Robot):
                 while thread_type == 1 and threading.activeCount() >= self.thread_count + main_thread_count:
                     time.sleep(5)
 
-                title = robot.filter_text(str(title)).upper()
+                title = robot.filter_text(title).upper()
                 image_url = get_large_image_url(small_image_url)
                 if image_url is None:
                     log.error("%s的封面图片 %s 大图地址获取失败" % (small_image_url, title))

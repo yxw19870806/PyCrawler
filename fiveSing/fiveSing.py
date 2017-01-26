@@ -36,7 +36,8 @@ def get_one_page_audio(account_id, page_type, page_count):
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的歌曲信息列表
         # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-        extra_info["audio_info_list"] = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', index_page_response.data)
+        audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', index_page_response.data)
+        extra_info["audio_info_list"] = map(str, audio_info_list)
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -186,7 +187,7 @@ class Download(threading.Thread):
 
                         # 将第一首歌曲的id做为新的存档记录
                         if first_audio_id == "0":
-                            first_audio_id = str(audio_id)
+                            first_audio_id = audio_id
 
                         # 新增歌曲导致的重复判断
                         if audio_id in unique_list:

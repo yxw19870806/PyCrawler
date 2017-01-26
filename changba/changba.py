@@ -32,7 +32,7 @@ def get_user_index_page(account_id):
         # 获取user id
         user_id = tool.find_sub_string(account_index_page_response.data, "var userid = '", "'")
         if user_id and user_id.isdigit():
-            extra_info["user_id"] = user_id
+            extra_info["user_id"] = str(user_id)
     account_index_page_response.extra_info = extra_info
     return account_index_page_response
 
@@ -77,7 +77,7 @@ def get_audio_play_page(audio_en_word_id):
             # 从JS处解析的规则
             special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
             if len(special_find) == 0:
-                extra_info["audio_url"] = audio_source_url
+                extra_info["audio_url"] = str(audio_source_url)
             elif len(special_find) == 1:
                 e = int(special_find[0][1], 8)
                 f = int(special_find[0][2], 16) / e / e
@@ -217,7 +217,7 @@ class Download(threading.Thread):
 
                     # 将第一首歌曲的id做为新的存档记录
                     if first_audio_id == "0":
-                        first_audio_id = str(audio_info["audio_id"])
+                        first_audio_id = audio_info["audio_id"]
 
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:

@@ -68,7 +68,8 @@ def get_one_page_video(suid, page_count):
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中的所有视频id列表
         if robot.check_sub_key(("isall", "msg"), index_page_response.json_data):
-            extra_info["video_id_list"] = re.findall('data-scid="([^"]*)"', index_page_response.json_data["msg"])
+            video_id_list = re.findall('data-scid="([^"]*)"', index_page_response.json_data["msg"])
+            extra_info["video_id_list"] = map(str, video_id_list)
     index_page_response.extra_info = extra_info
     return index_page_response
 

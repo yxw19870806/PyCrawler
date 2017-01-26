@@ -33,7 +33,8 @@ def get_one_page_blog(account_name, page_count):
         "is_over": False,  # 是不是最后一页日志
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["blog_id_list"] = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
+        blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
+        extra_info["blog_id_list"] = map(str, blog_id_list)
         # 检测是否还有下一页
         # 有页数选择的页面样式
         if index_page_response.data.find('<div class="page topPaging">') >= 0:
@@ -71,7 +72,8 @@ def get_blog_page(account_name, blog_id):
         if not article_data:
             article_data = tool.find_sub_string(blog_page_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
         # 获取页面中所有的图片地址列表
-        extra_info["image_url_list"] = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
+        image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
+        extra_info["image_url_list"] = map(str, image_url_list)
     blog_page_response.extra_info = extra_info
     return blog_page_response
 
@@ -261,7 +263,7 @@ class Download(threading.Thread):
 
                     # 将第一个日志的时间做为新的存档记录
                     if first_blog_id == "0":
-                        first_blog_id = str(blog_id)
+                        first_blog_id = blog_id
 
                     # 新增日志导致的重复判断
                     if blog_id in unique_list:
