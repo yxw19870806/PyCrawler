@@ -20,7 +20,7 @@ GET_PAGE_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-COOKIE_INFO = {"5sing_ssid": "", "5sing_auth": ""}
+COOKIE_INFO = {"5sing_auth": ""}
 
 
 # 获取指定页数的所有歌曲
@@ -37,7 +37,7 @@ def get_one_page_audio(account_id, page_type, page_count):
         # 获取页面中所有的歌曲信息列表
         # 单首歌曲信息的格式：[歌曲id，歌曲标题]
         audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', index_page_response.data)
-        extra_info["audio_info_list"] = map(str, audio_info_list)
+        extra_info["audio_info_list"] = [map(str, key) for key in audio_info_list]
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -46,14 +46,14 @@ def get_one_page_audio(account_id, page_type, page_count):
 def get_audio_info_page(audio_id, song_type):
     # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
     audio_info_page_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
-    header_list = {"Cookie": "5sing_ssid=%s; 5sing_auth=%s" % (COOKIE_INFO["5sing_ssid"], COOKIE_INFO["5sing_auth"])}
+    header_list = {"Cookie": "5sing_auth=%s" % COOKIE_INFO["5sing_auth"]}
     audio_info_page_response = net.http_request(audio_info_page_url, header_list=header_list, json_decode=True)
     extra_info = {
         "audio_url": None,  # 页面解析出的歌曲下载地址
     }
     if audio_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("data"), audio_info_page_response.data) and robot.check_sub_key(("fileName",), audio_info_page_response.data["data"]):
-            extra_info["audio_url"] = str(audio_info_page_response.data["data"]["fileName"])
+        if robot.check_sub_key(("data",), audio_info_page_response.json_data) and robot.check_sub_key(("fileName",), audio_info_page_response.json_data["data"]):
+            extra_info["audio_url"] = str(audio_info_page_response.json_data["data"]["fileName"])
     audio_info_page_response.extra_info = extra_info
     return audio_info_page_response
 
@@ -68,7 +68,7 @@ class FiveSing(robot.Robot):
 
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_GET_COOKIE: {".kugou.com": ("5sing_ssid", "5sing_auth")},
+            robot.SYS_GET_COOKIE: {".kugou.com": ("5sing_auth",)},
         }
         robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
@@ -77,11 +77,14 @@ class FiveSing(robot.Robot):
         GET_PAGE_COUNT = self.get_page_count
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        COOKIE_INFO["5sing_ssid"] = self.cookie_value["5sing_ssid"]
         COOKIE_INFO["5sing_auth"] = self.cookie_value["5sing_auth"]
 
     def main(self):
         global ACCOUNTS
+
+        if not COOKIE_INFO["5sing_auth"]:
+            log.error("cookie获取失败，请查看浏览器内的登录状态")
+            tool.process_exit()
 
         # 解析存档文件
         # account_id  last_yc_audio_id  last_fc_audio_id
@@ -202,7 +205,7 @@ class Download(threading.Thread):
                             continue
 
                         # 获取歌曲
-                        audio_url = audio_info_page_response.extar_info["audio_url"]
+                        audio_url = audio_info_page_response.extra_info["audio_url"]
                         if not audio_url:
                             log.step(account_name + " %s歌曲%s《%s》暂不提供下载地址" % (audio_type_name[audio_type], audio_id, audio_title))
                             continue
