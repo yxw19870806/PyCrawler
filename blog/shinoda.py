@@ -15,7 +15,7 @@ import re
 def get_one_page_blog(page_count):
     index_page_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
     extra_info = {
-        "is_over": 0,  # 是不是最后一页日志
+        "is_over": False,  # 是不是最后一页日志
         "image_name_list": [],  # 页面解析出的所有图片名字列表
     }
     index_page_response = net.http_request(index_page_url)
@@ -69,25 +69,25 @@ class Shinoda(robot.Robot):
                 tool.process_exit()
 
             # 是否已经获取完毕
-            if index_page_response.extar_info["is_over"]:
+            if index_page_response.extra_info["is_over"]:
                 break
 
             # 获取页面内的所有图片
-            log.trace("第%s页获取的全部图片：%s" % (page_count, index_page_response.extar_info["image_name_list"]))
+            log.trace("第%s页获取的全部图片：%s" % (page_count, index_page_response.extra_info["image_name_list"]))
 
-            if len(index_page_response.extar_info["image_name_list"]) >= 1:
+            if len(index_page_response.extra_info["image_name_list"]) >= 1:
                 # 获取blog时间
-                blog_time = int(index_page_response.extar_info["image_name_list"][0].split("-")[0])
+                blog_time = int(index_page_response.extra_info["image_name_list"][0].split("-")[0])
 
                 # 检查是否已下载到前一次的日志
                 if blog_time <= last_blog_time:
-                    is_over = True
+                    break
 
                 # 将第一个日志的id做为新的存档记录
                 if new_last_blog_time == "":
                     new_last_blog_time = str(blog_time)
 
-            for image_name in index_page_response.extar_info["image_name_list"]:
+            for image_name in index_page_response.extra_info["image_name_list"]:
                 image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                 log.step("开始下载第%s张图片 %s" % (image_count, image_url))
 
