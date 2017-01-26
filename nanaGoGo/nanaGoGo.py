@@ -28,20 +28,26 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取一页日志信息
-def get_message_page_data(account_name, target_id):
-    image_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
-    image_page_url += "?targetId=%s&limit=%s&direction=PREV" % (target_id, MESSAGE_COUNT_PER_PAGE)
-    image_page_response = net.http_request(image_page_url)
-    if image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        try:
-            image_page_data = json.loads(image_page_response.data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("data",), image_page_data):
-                return image_page_data["data"]
-    return None
+# 获取指定页数的所有媒体信息
+def get_one_page_media(account_name, target_id):
+    index_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
+    index_page_response = net.http_request(index_page_url, json_decode=True)
+    extra_info = {
+        "media_info_list": [],  # 页面解析出的所有媒体信息列表
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("data",), index_page_response.json_data):
+            for media_info in index_page_response.json_data["data"]:
+                extra_media_info = {
+                    "blog_id": None,  # 页面解析出的日志id
+                    "blog_body": None,  # 页面解析出的日志id
+                }
+                if robot.check_sub_key(("post",), media_info) and robot.check_sub_key(("body", "postId"), media_info["post"]):
+                    extra_media_info["blog_id"] = str(media_info["post"]["postId"])
+                    extra_media_info["blog_body"] = str(media_info["post"]["body"])
+                extra_info["media_info_list"].append(extra_media_info)
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 class NanaGoGo(robot.Robot):
@@ -153,38 +159,33 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析%s后的一页视频" % target_id)
 
-                # 获取一页日志信息
-                message_page_data = get_message_page_data(account_name, target_id)
-                if message_page_data is None:
-                    log.error(account_name + " 媒体列表解析异常")
+                # 获取一页媒体信息
+                index_page_response = get_one_page_media(account_name, target_id)
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " target id %s的媒体信息访问失败，原因：%s" % (target_id, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if len(message_page_data) == 0:
+                if len(index_page_response.extra_info["media_info_list"]) == 0:
                     break
 
-                for message_info in message_page_data:
-                    if not robot.check_sub_key(("post",), message_info):
-                        log.error(account_name + " 媒体信息解析异常 %s" % message_info)
+                for media_info in index_page_response.extra_info["media_info_list"]:
+                    if media_info["blog_id"] is None:
+                        log.error(account_name + " 媒体信息解析异常")
                         continue
-                    if not robot.check_sub_key(("body", "postId"), message_info["post"]):
-                        log.error(account_name + " 媒体信息解析异常 %s" % message_info)
-                        continue
-
-                    target_id = message_info["post"]["postId"]
 
                     # 检查是否已下载到前一次的记录
-                    if int(target_id) <= int(self.account_info[3]):
+                    if int(media_info["blog_id"]) <= int(self.account_info[3]):
                         is_over = True
                         break
 
                     # 将第一个媒体的postId做为新的存档记录
                     if first_post_id == "0":
-                        first_post_id = str(target_id)
+                        first_post_id = media_info["blog_id"]
 
-                    log.step(account_name + " 开始解析日志%s" % target_id)
+                    log.step(account_name + " 开始解析日志%s" % media_info["blog_id"])
 
-                    for media_info in message_info["post"]["body"]:
+                    for media_info in media_info["blog_body"]:
                         if not robot.check_sub_key(("bodyType",), media_info):
                             log.error(account_name + " 媒体列表bodyType解析异常")
                             continue

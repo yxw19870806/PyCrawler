@@ -31,7 +31,7 @@ def get_album_page(page_count):
         if album_page_response.data.find('<input type="hidden" id="imageList"') >= 0:
             image_info = {
                 "is_error": False,  # 获取的图片数量和图片地址数量是否一致
-                "image_url_list": [],  # 获取的图片地址列表
+                "image_url_list": [],  # 页面解析出的所有图片地址列表
             }
             # 获取图片数量
             image_count_find = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="totalPageNum" value=', " ")
