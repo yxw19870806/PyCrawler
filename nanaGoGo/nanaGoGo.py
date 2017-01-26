@@ -65,7 +65,7 @@ class NanaGoGo(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         IMAGE_TEMP_PATH = self.image_temp_path
@@ -185,24 +185,24 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析日志%s" % media_info["blog_id"])
 
-                    for media_info in media_info["blog_body"]:
-                        if not robot.check_sub_key(("bodyType",), media_info):
+                    for blog_body in media_info["blog_body"]:
+                        if not robot.check_sub_key(("bodyType",), blog_body):
                             log.error(account_name + " 媒体列表bodyType解析异常")
                             continue
 
                         # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
-                        body_type = int(media_info["bodyType"])
+                        body_type = int(blog_body["bodyType"])
                         if body_type == 1:  # 文本
                             pass
                         elif body_type == 2:  # 表情
                             pass
                         elif body_type == 3:  # 图片
                             if IS_DOWNLOAD_IMAGE:
-                                if not robot.check_sub_key(("image",), media_info):
-                                    log.error(account_name + " 第%s张图片解析异常%s" % (image_count, media_info))
+                                if not robot.check_sub_key(("image",), blog_body):
+                                    log.error(account_name + " 第%s张图片解析异常%s" % (image_count, blog_body))
                                     continue
 
-                                image_url = str(media_info["image"])
+                                image_url = str(blog_body["image"])
                                 log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                                 # 第一张图片，创建目录
@@ -222,11 +222,11 @@ class Download(threading.Thread):
                                     log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                         elif body_type == 8:  # video
                             if IS_DOWNLOAD_VIDEO:
-                                if not robot.check_sub_key(("movieUrlHq",), media_info):
-                                    log.error(account_name + " 第%s个视频解析异常%s" % (video_count, media_info))
+                                if not robot.check_sub_key(("movieUrlHq",), blog_body):
+                                    log.error(account_name + " 第%s个视频解析异常%s" % (video_count, blog_body))
                                     continue
 
-                                video_url = str(media_info["movieUrlHq"])
+                                video_url = str(blog_body["movieUrlHq"])
                                 log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                                 # 第一个视频，创建目录
@@ -247,7 +247,7 @@ class Download(threading.Thread):
                         elif body_type == 7:  # 转发
                             pass
                         else:
-                            log.error(account_name + " 第%s张图片、第%s个视频，未知bodytype %s, %s" % (image_count, video_count, body_type, media_info))
+                            log.error(account_name + " 第%s张图片、第%s个视频，未知bodytype %s, %s" % (image_count, video_count, body_type, blog_body))
 
             # 排序
             if IS_SORT:
