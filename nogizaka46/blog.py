@@ -6,7 +6,7 @@ http://blog.nogizaka46.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import os
 import re
 import threading
@@ -27,50 +27,46 @@ IS_SORT = True
 # account_id -> asuka.saito
 def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
-    blog_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
-    blog_return_code, blog_page = tool.http_request(blog_url)[:2]
-    if blog_return_code == 1:
-        return tool.find_sub_string(blog_page, '<div class="paginate">', '<div class="paginate">', 1)
-    return None
+    index_page_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
+    index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "blog_info_list": [],  # 页面解析出的所有图片信息列表
+        "is_over": False,  # 是不是最后一页日志
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取日志中文，并分组
+        page_html = tool.find_sub_string(index_page_response.data, '<div class="paginate">', '<div class="paginate">', 1)
+        blog_data_list = page_html.split('<h1 class="clearfix">')
+        if len(blog_data_list) > 0:
+            # 第一位不是日志内容，没有用
+            blog_data_list.pop(0)
+        for blog_data in blog_data_list:
+            extra_image_info = {
+                "blog_id": None,  # 页面解析出的日志id
+                "image_url_list": [],  # 页面解析出的所有图片地址列表
+                "big_2_small_image_lust": {},  # 页面解析出的所有含有大图的图片列表
+            }
+            blog_id = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
+            if blog_id and blog_id.isdigit():
+                # 获取日志id
+                extra_image_info["blog_id"] = blog_id
+                image_url_list = re.findall('src="([^"]*)"', blog_data)
+                # 获取图片地址列表
+                extra_image_info["image_url_list"] = map(str, image_url_list)
+                # 所有的大图对应的小图
+                big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
+                big_2_small_image_lust = {}
+                for big_image_url, small_image_url in big_image_list_find:
+                    big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
+                extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
+            extra_info["blog_info_list"].append(extra_image_info)
+        # 检测是否还有下一页
+        paginate_data = tool.find_sub_string(index_page_response.data, '<div class="paginate">', "</div>")
+        page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
+        extra_info["is_over"] = page_count >= max(map(int, page_count_find))
 
-
-# 获取页面中的所有日志内容列表
-def get_blog_data_list(blog_page):
-    blog_data_list = blog_page.split('<h1 class="clearfix">')
-    if len(blog_data_list) > 0:
-        # 第一位不是日志内容，没有用
-        blog_data_list.pop(0)
-    return blog_data_list
-
-
-# 解析日志页面，获取日志最大页数
-def get_max_page_count(blog_page):
-    paginate_data = tool.find_sub_string(blog_page, '<div class="paginate">', "</div>")
-    page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
-    return max(map(int, page_count_find))
-
-
-# 解析日志页面，获取日志id
-def get_blog_id(account_id, blog_data):
-    # <a href="http://blog.nogizaka46.com/asuka.saito/2016/10/035004.php"
-    blog_id_info = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
-    if blog_id_info:
-        return int(blog_id_info.split("/")[-1])
-    return None
-
-
-# 获取日志中的全部图片地址列表
-def get_image_url_list(blog_data):
-    return re.findall('src="([^"]*)"', blog_data)
-
-
-# 获取日志中存在的所有大图显示地址，以及对应的小图地址
-def get_big_image_url_list(blog_data):
-    big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
-    big_2_small_list = {}
-    for big_image_url, small_image_url in big_image_list_find:
-        big_2_small_list[small_image_url] = big_image_url
-    return big_2_small_list
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 # 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
@@ -99,7 +95,7 @@ class Blog(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_SET_COOKIE: (),
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
         self.thread_count = 1
 
         # 设置全局变量，供子线程调用
@@ -192,52 +188,41 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
-                # 获取一页日志信息
-                index_page = get_one_page_blog(account_id, page_count)
-                if index_page is None:
-                    log.error(account_name + " 第%s页日志获取失败" % page_count)
-                    tool.process_exit()
-                if not index_page:
-                    log.error(account_name + " 第%s页日志解析失败" % page_count)
+                # 获取一页图片
+                index_page_response = get_one_page_blog(account_id, page_count)
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页日志获取失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                # 将日志内容按日志分组
-                blog_data_list = get_blog_data_list(index_page)
-                if len(blog_data_list) == 0:
-                    log.error(account_name + " 第%s页日志分组失败" % page_count)
+                if len(index_page_response.extra_info["blog_info_list"]) == 0:
+                    log.error(account_name + " 第%s页日志%s分组失败" % (page_count, index_page_response.data))
                     tool.process_exit()
 
-                for blog_data in blog_data_list:
+                for blog_info in index_page_response.extra_info["blog_info_list"]:
                     # 获取日志id
-                    blog_id = get_blog_id(account_id, blog_data)
-                    if blog_id is None:
-                        log.error(account_name + " 日志解析日志id失败，日志内容：%s" % blog_data)
+                    if blog_info["blog_id"] is None:
+                        log.error(account_name + " 日志id解析失败")
                         tool.process_exit()
 
                     # 检查是否已下载到前一次的日志
-                    if blog_id <= int(self.account_info[2]):
+                    if blog_info["blog_id"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
                     # 将第一个日志的ID做为新的存档记录
                     if first_blog_id == "0":
-                        first_blog_id = str(blog_id)
+                        first_blog_id = blog_info["blog_id"]
 
-                    log.step(account_name + " 开始解析日志%s" % blog_id)
+                    log.step(account_name + " 开始解析日志%s" % blog_info["blog_id"])
 
-                    # 获取该页日志的全部图片地址列表
-                    image_url_list = get_image_url_list(blog_data)
-                    if len(image_url_list) == 0:
+                    if len(blog_info["image_url_list"]) == 0:
                         continue
 
-                    # 获取日志页面中存在的所有大图显示地址，以及对应的小图地址
-                    big_2_small_list = get_big_image_url_list(blog_data)
-
                     # 下载图片
-                    for image_url in image_url_list:
+                    for image_url in blog_info["image_url_list"]:
                         # 检查是否存在大图可以下载
                         if not is_big_image_over:
-                            image_url, is_big_image_over = check_big_image(image_url, big_2_small_list)
+                            image_url, is_big_image_over = check_big_image(image_url, blog_info["big_2_small_image_lust"])
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
@@ -266,8 +251,7 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载页数，结束
                     if 0 < GET_PAGE_COUNT <= page_count:
                         is_over = True
-                    # 判断当前页数是否大等于总页数
-                    elif page_count >= get_max_page_count(index_page):
+                    elif index_page_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1

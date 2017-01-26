@@ -33,6 +33,7 @@ def get_one_page_blog(account_name, page_count):
         "is_over": False,  # 是不是最后一页日志
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取日志id列表
         blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
         extra_info["blog_id_list"] = map(str, blog_id_list)
         # 检测是否还有下一页
