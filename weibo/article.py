@@ -42,8 +42,8 @@ def auto_redirect_visit(url):
 # 获取一页的文章预览信息
 # page_id -> 1005052212970554
 def get_one_page_preview_article_data(page_id, page_count):
-    # http://weibo.com/p/1005052212970554/wenzhang?Pl_Core_ArticleList__63_page=1
-    preview_article_page_url = "http://weibo.com/p/%s/wenzhang?Pl_Core_ArticleList__63_page=%s" % (page_id, page_count)
+    # http://weibo.com/p/1005052212970554/wenzhang?Pl_Core_ArticleList__62_page=1
+    preview_article_page_url = "http://weibo.com/p/%s/wenzhang?Pl_Core_ArticleList__62_page=%s" % (page_id, page_count)
     preview_article_page = auto_redirect_visit(preview_article_page_url)
     if preview_article_page:
         return preview_article_page
@@ -53,7 +53,7 @@ def get_one_page_preview_article_data(page_id, page_count):
 
 # 将文章预览页面内容按照文章分组
 def get_preview_article_data_list(preview_article_page):
-    preview_article_page = tool.find_sub_string(preview_article_page, '"domid":"Pl_Core_ArticleList__63"', "</script>")
+    preview_article_page = tool.find_sub_string(preview_article_page, '"domid":"Pl_Core_ArticleList__62"', "</script>")
     preview_article_page = tool.find_sub_string(preview_article_page, '"html":"', '"})')
     preview_article_page = preview_article_page.replace("\\t", "").replace("\\n", "").replace("\\r", "")
     return re.findall("<li([\S|\s]*?)<\\\\/li>", preview_article_page)
@@ -93,7 +93,7 @@ def get_article_url(preview_article_data):
 
 # 根据文章预览页面，获取文章总页数
 def get_max_page_count(preview_article_data):
-    page_count_find = re.findall('Pl_Core_ArticleList__63\\\\">([\d]+)<\\\\/a>', preview_article_data)
+    page_count_find = re.findall('Pl_Core_ArticleList__62\\\\">([\d]+)<\\\\/a>', preview_article_data)
     return max(map(int, page_count_find))
 
 
