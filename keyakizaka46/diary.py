@@ -38,7 +38,7 @@ def get_one_page_blog(account_id, page_count):
         blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
         for blog_info in blog_list:
             # 获取日志id
-            blog_id = tool.find_sub_string(blog_info, "id=", "&")
+            blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
             # 获取日志页面中所有的图片地址列表
             image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
             extra_info["blog_info_list"].append({"blog_id": blog_id, "image_url_list": map(str, image_url_list)})
