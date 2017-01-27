@@ -145,7 +145,7 @@ def get_article_image_url_list(article_page, article_type):
 
 
 class Article(robot.Robot):
-    def __init__(self):
+    def __init__(self, extra_config):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
@@ -155,11 +155,6 @@ class Article(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_SET_COOKIE: ("weibo.com", ".sina.com.cn"),
-        }
-        extra_config = {
-            "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data"),
-            "image_download_path": os.path.join(os.path.abspath(""), "photo\\article"),
-            "image_temp_path": os.path.join(os.path.abspath(""), "photo\\article\\tempImage"),
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
@@ -311,6 +306,8 @@ class Download(threading.Thread):
                         if not tool.make_dir(article_path, 0):
                             log.error(account_name + " 创建文章目录 %s 失败" % article_path)
                             tool.process_exit()
+
+                    log.step(account_name + " %s 开始解析文章%s《%s》" % (title, article_id, title))
 
                     # 文章顶部图片
                     top_picture_url = get_article_top_picture_url(article_page)
