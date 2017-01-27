@@ -40,16 +40,20 @@ def get_album_page(page_count):
                 # 获取图片地址列表
                 image_url_list_find = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="imageList" value=', " ")
                 try:
-                    image_url_list = json.loads(image_url_list_find)
+                    image_url_list_json = json.loads(image_url_list_find)
                 except ValueError:
                     image_info["is_error"] = True
                 else:
+                    image_url_list = []
+                    for image_urls in image_url_list_json:
+                        for image_url in image_urls:
+                            image_url_list.append(image_url)
                     if len(image_url_list) == 0:
                         image_info["is_error"] = True
                     elif len(image_url_list) != image_count:
                         album_reward_find = re.findall('<input type="hidden" id="rewardAmount" value="(\d*)">', album_page_response.data)
                         # 收费相册
-                        if len(album_reward_find) == 1 and album_reward_find[0].isdigit() and int(album_reward_find) > 0:
+                        if len(album_reward_find) == 1 and album_reward_find[0].isdigit() and int(album_reward_find[0]) > 0:
                             # 图片地址数量大于获取的数量，或者获取的数量比图片地址数量多一张以上
                             if image_count < len(image_url_list) or image_count > len(image_url_list) + 1:
                                 image_info["is_error"] = True
