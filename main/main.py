@@ -208,7 +208,12 @@ def weibo_article():
     from weibo import article
     weibo_article_path = os.path.join(os.path.abspath(".."), "weibo")
     os.chdir(weibo_article_path)
-    article.Article().main()
+    extra_config = {
+        "save_data_path": os.path.join(os.path.abspath(""), "info\\article.data"),
+        "image_download_path": os.path.join(os.path.abspath(""), "article"),
+        "image_temp_path": os.path.join(os.path.abspath(""), "article\\tempImage"),
+    }
+    article.Article(extra_config).main()
 
 
 # 微视
