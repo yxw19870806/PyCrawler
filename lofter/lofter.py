@@ -158,7 +158,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                if len(index_page_response["blog_url_list"]) == 0:
+                if len(index_page_response.extra_info["blog_url_list"]) == 0:
                     # 下载完毕了
                     break
 
