@@ -44,7 +44,7 @@ def get_one_page_media(account_name, target_id):
                 }
                 if robot.check_sub_key(("post",), media_info) and robot.check_sub_key(("body", "postId"), media_info["post"]):
                     extra_media_info["blog_id"] = str(media_info["post"]["postId"])
-                    extra_media_info["blog_body"] = str(media_info["post"]["body"])
+                    extra_media_info["blog_body"] = media_info["post"]["body"]
                 extra_info["media_info_list"].append(extra_media_info)
     index_page_response.extra_info = extra_info
     return index_page_response
@@ -183,8 +183,10 @@ class Download(threading.Thread):
                     if first_post_id == "0":
                         first_post_id = media_info["blog_id"]
 
-                    log.step(account_name + " 开始解析日志%s" % media_info["blog_id"])
+                    # 设置target id，取下一页图片
+                    target_id = media_info["blog_id"]
 
+                    log.step(account_name + " 开始解析日志%s" % media_info["blog_id"])
                     for blog_body in media_info["blog_body"]:
                         if not robot.check_sub_key(("bodyType",), blog_body):
                             log.error(account_name + " 媒体列表bodyType解析异常")
