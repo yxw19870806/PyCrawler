@@ -64,22 +64,27 @@ def get_one_page_blog(account_id, page_count):
         paginate_data = tool.find_sub_string(index_page_response.data, '<div class="paginate">', "</div>")
         page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
         extra_info["is_over"] = page_count >= max(map(int, page_count_find))
-
     index_page_response.extra_info = extra_info
     return index_page_response
 
 
 # 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
 def check_big_image(image_url, big_2_small_list):
+    big_image_response = net.ErrorResponse(net.HTTP_RETURN_CODE_EXCEPTION_CATCH)
+    extra_info = {
+        "image_url": None,  # 页面解析出的大图地址
+        "is_over": False,  # 是不是已经没有还生效的大图了
+    }
     if image_url in big_2_small_list:
-        big_image_display_page_return_code, big_image_display_page = tool.http_request(big_2_small_list[image_url])[:2]
-        if big_image_display_page_return_code == 1:
-            temp_image_url = tool.find_sub_string(big_image_display_page, '<img src="', '"')
+        big_image_response = net.http_request(big_2_small_list[image_url])
+        if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')
             if temp_image_url != "/img/expired.gif":
-                return temp_image_url, False
+                extra_info["image_url"] = temp_image_url
             else:
-                return image_url, True  # 如果有发现一个已经过期的图片，那么再往前的图片也是过期的，不用再检查了
-    return image_url, False
+                extra_info["is_over"] = True
+    big_image_response.extra_info = extra_info
+    return big_image_response
 
 
 class Blog(robot.Robot):
@@ -220,9 +225,14 @@ class Download(threading.Thread):
 
                     # 下载图片
                     for image_url in blog_info["image_url_list"]:
+                        header_list = None
                         # 检查是否存在大图可以下载
                         if not is_big_image_over:
-                            image_url, is_big_image_over = check_big_image(image_url, blog_info["big_2_small_image_lust"])
+                            big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
+                            if big_image_response.extra_info["image_url"] is not None:
+                                image_url = big_image_response.extra_info["image_url"]
+                                header_list = {"Cookie": big_image_response.headers["Set-Cookie"]}
+                            is_big_image_over = big_image_response.extra_info["is_over"]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
@@ -236,7 +246,7 @@ class Download(threading.Thread):
                         if file_type.find("?") != -1:
                             file_type = "jpeg"
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
+                        if tool.save_net_file(image_url, file_path, http_headers_list=header_list):
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
