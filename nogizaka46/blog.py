@@ -247,11 +247,12 @@ class Download(threading.Thread):
                         if file_type.find("?") != -1:
                             file_type = "jpeg"
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path, http_headers_list=header_list):
+                        save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
+                        if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
