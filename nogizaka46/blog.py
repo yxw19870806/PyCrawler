@@ -217,7 +217,7 @@ class Download(threading.Thread):
 
                     # 将第一个日志的ID做为新的存档记录
                     if first_blog_id == "0":
-                        first_blog_id = blog_info["blog_id"]
+                        first_blog_id = str(blog_info["blog_id"])
 
                     log.step(account_name + " 开始解析日志%s" % blog_info["blog_id"])
 
