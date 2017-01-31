@@ -47,9 +47,10 @@ def get_one_page_blog(account_id, page_count):
                 "big_2_small_image_lust": {},  # 页面解析出的所有含有大图的图片列表
             }
             blog_id = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
+            blog_id = blog_id.split("/")[-1]
             if blog_id and blog_id.isdigit():
                 # 获取日志id
-                extra_image_info["blog_id"] = blog_id
+                extra_image_info["blog_id"] = int(blog_id)
                 image_url_list = re.findall('src="([^"]*)"', blog_data)
                 # 获取图片地址列表
                 extra_image_info["image_url_list"] = map(str, image_url_list)
