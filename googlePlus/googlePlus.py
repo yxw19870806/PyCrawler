@@ -46,16 +46,21 @@ def get_one_page_blog(account_id, token):
 
 # 获取日志页面
 def get_blog_page(account_id, picasaweb_url):
-    blog_page_response = net.http_request(picasaweb_url)
-    extra_info = {
-        "album_id": None,  # 页面解析出的相册id
-    }
-    if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
-        if album_id.isdigit():
-            extra_info["album_id"] = str(album_id)
-    blog_page_response.extra_info = extra_info
-    return blog_page_response
+    retry_count = 0
+    while True:
+        blog_page_response = net.http_request(picasaweb_url)
+        extra_info = {
+            "album_id": None,  # 页面解析出的相册id
+        }
+        if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
+            if album_id.isdigit():
+                extra_info["album_id"] = str(album_id)
+        elif blog_page_response.status == 500 and retry_count < 5:
+            retry_count += 1
+            continue
+        blog_page_response.extra_info = extra_info
+        return blog_page_response
 
 
 # 获取指定id的相册页
