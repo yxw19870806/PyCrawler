@@ -472,17 +472,16 @@ def get_save_net_file_failed_reason(return_code):
 # 获取网络文件下载失败的原因
 def get_http_request_failed_reason(return_code):
     if return_code == 404:
-        reason = "页面已被删除"
+        return "页面已被删除"
     elif return_code == 403:
-        reason = "页面没有权限访问"
+        return "页面没有权限访问"
     elif return_code == net.HTTP_RETURN_CODE_RETRY:
-        reason = "页面多次获取失败，可能无法访问"
+        return "页面多次获取失败，可能无法访问"
     elif return_code == net.HTTP_RETURN_CODE_URL_INVALID:
-        reason = "URL格式错误"
+        return "URL格式错误"
     elif return_code == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
-        reason = "返回的不是一个有效的JSON格式"
+        return "返回的不是一个有效的JSON格式"
     elif return_code > 0:
-        reason = "未知错误，http code %s" % return_code
+        return "未知错误，http code %s" % return_code
     else:
-        reason = "未知错误，return code %s" % return_code
-    return "访问失败，原因：%s" % reason
+        return "未知错误，return code %s" % return_code
