@@ -206,7 +206,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 获取相册页中的所有日志（picasweb.google.com）地址列表
-                log.trace(account_name + " 相册获取的所有日志页：%s" % index_page_response.extra_info["blog_url_list"])
+                log.trace(account_name + " 相册页（token：%s）获取的所有日志页：%s" % (key, index_page_response.extra_info["blog_url_list"]))
 
                 for blog_url in index_page_response.extra_info["blog_url_list"]:
                     # 有可能拿到带authkey的，需要去掉
