@@ -56,6 +56,7 @@ def get_blog_page(account_id, picasaweb_url):
             album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
             if album_id.isdigit():
                 extra_info["album_id"] = str(album_id)
+        # 如果status==500，重试最多5次
         elif blog_page_response.status == 500 and retry_count < 5:
             retry_count += 1
             continue
@@ -70,19 +71,21 @@ def get_album_page(account_id, album_id):
     extra_info = {
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
-    album_page_response = net.http_request(album_page_url)
-    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中所有的图片地址列表
-        for try_count in range(0, 5):
+    retry_count = 0
+    while True:
+        album_page_response = net.http_request(album_page_url)
+        if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            # 获取页面中所有的图片地址列表
             image_url_list = re.findall('<img src="([^"]*)"', album_page_response.data)
             if len(image_url_list) > 0:
                 image_url_list = image_url_list
                 extra_info["image_url_list"] = map(str, image_url_list)
-                break
-            # 没有获取到图片，重新访问一下
-            album_page_response = net.http_request(album_page_url)
-    album_page_response.extra_info = extra_info
-    return album_page_response
+            # 如果没有解析到图片，重试最多5次
+            elif retry_count < 5:
+                retry_count += 1
+                continue
+        album_page_response.extra_info = extra_info
+        return album_page_response
 
 
 # 重组URL并使用最大分辨率
