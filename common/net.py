@@ -179,11 +179,11 @@ def get_response_info(response, key):
 #       code:   -1：无法访问（没有获得返回，可能是域名无法解析，请求被直接丢弃，地址被墙等）
 #               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
 #               > 0：访问出错，对应url的http code
-def save_net_file(file_url, file_path, need_content_type=False):
+def save_net_file(file_url, file_path, need_content_type=False, header_list=None):
     file_path = tool.change_path_encoding(file_path)
     create_file = False
     for i in range(0, 5):
-        response = http_request(file_url)
+        response = http_request(file_url, header_list=header_list)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type:
