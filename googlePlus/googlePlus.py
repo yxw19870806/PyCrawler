@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, net, robot, tool
+import json
 import os
 import re
 import threading
@@ -66,24 +67,53 @@ def get_blog_page(account_id, picasaweb_url):
 
 # 获取指定id的相册页
 def get_album_page(account_id, album_id):
-    # https://get.google.com/albumarchive/pwaf/102249965218267255722/album/6282184792644344177?source=pwa
+    # 图片只有一页：https://get.google.com/albumarchive/pwaf/102249965218267255722/album/6282184792644344177?source=pwa
+    # 图片不止一页：https://get.google.com/albumarchive/pwaf/109057690948151627836/album/6376176710287947473?source=pwa
     album_page_url = "https://get.google.com/albumarchive/pwaf/%s/album/%s?source=pwa" % (account_id, album_id)
     extra_info = {
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
-    retry_count = 0
+    # retry_count = 0
+    image_url_list = []
     while True:
         album_page_response = net.http_request(album_page_url)
         if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            # 获取页面中所有的图片地址列表
-            image_url_list = re.findall('<img src="([^"]*)"', album_page_response.data)
+            script_data = tool.find_sub_string(album_page_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+            script_data = tool.find_sub_string(script_data, "return ", "}});")
+            try:
+                script_data = json.loads(script_data)
+                user_key = script_data[4][0]
+                continue_token = script_data[3]
+                for data in script_data[4][1]:
+                    image_url_list.append(str(data[1]))
+            except ValueError:
+                pass
+            else:
+                # 如果不为空，说明还有下一页
+                while continue_token:
+                    continue_image_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
+                    post_data = {
+                        "f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token),
+                    }
+                    continue_image_page_response = net.http_request(continue_image_page_url, post_data=post_data, encode_multipart=False)
+                    if continue_image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                        continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None)
+                        continue_data = continue_data.strip()
+                        try:
+                            continue_data = json.loads(continue_data)
+                            continue_token = continue_data[0][2]["113305010"][3]
+                            for data in continue_data[0][2]["113305010"][4][1]:
+                                image_url_list.append(str(data[1]))
+                        except ValueError:
+                            image_url_list = []
+                            continue_token = ""
             if len(image_url_list) > 0:
-                image_url_list = image_url_list
-                extra_info["image_url_list"] = map(str, image_url_list)
+                extra_info["image_url_list"] = image_url_list
+            # todo 暂时不要，会不会还出现这个问题
             # 如果没有解析到图片，重试最多5次
-            elif retry_count < 5:
-                retry_count += 1
-                continue
+            # elif retry_count < 5:
+            #     retry_count += 1
+            #     continue
         album_page_response.extra_info = extra_info
         return album_page_response
 
@@ -257,8 +287,6 @@ class Download(threading.Thread):
                     log.trace(account_name + " 相册存档页%s获取的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
 
                     for image_url in album_page_response.extra_info["image_url_list"]:
-                        # 获取图片大图地址
-                        image_url = generate_max_resolution_image_url(image_url)
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
