@@ -117,10 +117,15 @@ def filter_different_resolution_images(image_url_list):
 # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
 # ->
 # http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
-# urllib3跳转有些问题，跳转后的地址会带有#_=_，访问时会返回403错误，避免麻烦，这里就直接生产真实的下载地址了
-def get_video_url(video_url):
+def get_video_url(video_play_page_url):
+    video_play_page_response = net.http_request(video_play_page_url, redirect=False)
+    if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Location" in video_play_page_response.headers:
+        # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
+        # ->
+        # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
+        return video_play_page_response.headers["Location"].replace("#_=_", "").replace("_r1_480", "_r1_720")
     # 去除视频指定分辨率
-    temp_list = video_url.split("/")
+    temp_list = video_play_page_url.split("/")
     if temp_list[-1].isdigit():
         video_id = temp_list[-2]
     else:
