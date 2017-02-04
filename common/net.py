@@ -178,8 +178,8 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         response = http_request(file_url, header_list=header_list)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
-            if need_content_type:
-                content_type = get_response_info(response, "Content-Type")
+            if need_content_type and "Content-Type" in response.headers:
+                content_type = response.headers["Content-Type"]
                 if content_type and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
@@ -188,12 +188,15 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             file_handle.close()
             create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
-            content_length = get_response_info(response, "Content-Length")
-            file_size = os.path.getsize(file_path)
-            if (content_length is None) or (int(content_length) == file_size):
-                return {"status": 1, "code": 0}
+            if "Content-Length" in response.headers:
+                content_length = response.headers["Content-Length"]
+                file_size = os.path.getsize(file_path)
+                if int(content_length) == file_size:
+                    return {"status": 1, "code": 0}
+                else:
+                    tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
             else:
-                tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+                return {"status": 1, "code": 0}
         # 超过重试次数，直接退出
         elif response.status == 0:
             if create_file:
