@@ -52,6 +52,7 @@ def get_one_page_audio(user_id, page_count):
                 "audio_id": None,  # 视频自增id
                 "audio_title": "",  # 视频标题
                 "audio_key": None,  # 视频唯一key
+                "json_data": audio_info,  # 原始数据
             }
             if robot.check_sub_key(("workid", "songname", "enworkid"), audio_info):
                 extra_audio_info["audio_id"] = str(audio_info["workid"])
@@ -207,7 +208,7 @@ class Download(threading.Thread):
 
                 for audio_info in index_page_response.extra_info["audio_info_list"]:
                     if audio_info["audio_id"] is None or audio_info["audio_key"] is None:
-                        log.error(account_name + " 第%s首歌曲信息%s异常" % (video_count, audio_info))
+                        log.error(account_name + " 第%s首歌曲信息%s解析失败" % (video_count, audio_info["json_data"]))
                         continue
 
                     # 检查是否已下载到前一次的歌曲
