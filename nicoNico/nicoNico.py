@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import re
@@ -27,9 +27,9 @@ IS_SORT = True
 def get_video_info_list(account_id):
     # http://www.nicovideo.jp/mylist/15614906#+page=1
     video_page_url = "http://www.nicovideo.jp/mylist/%s" % account_id
-    video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
-    if video_page_return_code == 1:
-        video_data = tool.find_sub_string(video_page, "Mylist.preload(%s," % account_id, ");").strip()
+    video_page_response = net.http_request(video_page_url)
+    if video_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        video_data = tool.find_sub_string(video_page_response.data, "Mylist.preload(%s," % account_id, ");").strip()
         try:
             video_data = json.loads(video_data)
         except ValueError:
@@ -61,7 +61,6 @@ class NicoNico(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        # todo 是否需要下载图片或视频
         GET_VIDEO_COUNT = self.get_video_count
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
