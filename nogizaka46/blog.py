@@ -197,7 +197,7 @@ class Download(threading.Thread):
                 # 获取一页图片
                 index_page_response = get_one_page_blog(account_id, page_count)
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志获取失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
                 if len(index_page_response.extra_info["blog_info_list"]) == 0:
