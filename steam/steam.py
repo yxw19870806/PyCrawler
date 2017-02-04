@@ -5,7 +5,7 @@ steam相关数据解析爬虫
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import tool
+from common import net, tool
 import json
 import os
 import re
@@ -13,9 +13,8 @@ import re
 
 # 读取cookies后获取指定账号的全部游戏列表
 def get_owned_app_list(user_id):
-    tool.quickly_set(1, 0)
-    game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_page_return_code, game_index_page = tool.http_request(game_index_url)[:2]
+    game_index_page_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_page_return_code, game_index_page = net.http_request(game_index_page_url)[:2]
     if game_index_page_return_code == 1:
         owned_all_game_data = tool.find_sub_string(game_index_page, "var rgGames = ", ";")
         try:
