@@ -162,14 +162,6 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-# 获取请求response中的指定信息(urlib3)
-def get_response_info(response, key):
-    if isinstance(response, urllib3.HTTPResponse):
-        if key in response.headers:
-            return response.headers[key]
-    return None
-
-
 # 保存网络文件
 # file_url 文件所在网址
 # file_path 文件所在本地路径，包括路径和文件名

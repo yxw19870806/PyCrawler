@@ -40,8 +40,7 @@ def get_one_forum_page_thread_url_list(forum_page_url):
 def get_thread_author_post(thread_page_url):
     thread_page_response = net.http_request(thread_page_url)
     if thread_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        content_type = net.get_response_info(thread_page_response, "Content-Type")
-        charset = tool.find_sub_string(content_type, "charset=")
+        charset = tool.find_sub_string(thread_page_response.headers["Content-Type"], "charset=")
         post_message = tool.find_sub_string(thread_page_response.data, '<td class="t_f" id="postmessage_', '<div id="comment_')
         post_message = post_message[post_message.find('">') + 2: post_message.rfind("</td>")]
         return post_message.decode(charset)
