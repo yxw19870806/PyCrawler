@@ -164,7 +164,7 @@ class Download(threading.Thread):
                 # 获取一页视频信息
                 video_data = get_one_page_video_data(account_id, page_time)
                 if video_data is None:
-                    log.error(account_name + " 视频列表获取失败")
+                    log.error(account_name + " 视频列表解析失败")
                     tool.process_exit()
 
                 for video_info in video_data["info"]:

@@ -114,7 +114,7 @@ class MeiTuZZ(robot.Robot):
                     log.error("第%s页图片解析失败" % album_id)
                     break
 
-                log.trace("第%s页获取的全部图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+                log.trace("第%s页解析的全部图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
 
                 image_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 if not tool.make_dir(image_path, 0):

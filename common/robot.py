@@ -476,7 +476,7 @@ def get_http_request_failed_reason(return_code):
     elif return_code == 403:
         return "页面没有权限访问"
     elif return_code == net.HTTP_RETURN_CODE_RETRY:
-        return "页面多次获取失败，可能无法访问"
+        return "页面多次访问失败，可能无法访问"
     elif return_code == net.HTTP_RETURN_CODE_URL_INVALID:
         return "URL格式错误"
     elif return_code == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:

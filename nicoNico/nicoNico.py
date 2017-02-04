@@ -142,7 +142,7 @@ class Download(threading.Thread):
             # 获取视频信息列表
             video_info_list = get_video_info_list(account_id)
             if video_info_list is None:
-                log.error(account_name + " 视频列表获取失败")
+                log.error(account_name + " 视频列表解析失败")
                 tool.process_exit()
 
             video_count = 1

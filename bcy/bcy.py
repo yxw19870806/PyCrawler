@@ -322,7 +322,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页作品解析出的作品id和标题数量" % page_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页获取的所有作品：%s" % (page_count, index_page_response.extra_info["album_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, index_page_response.extra_info["album_id_list"]))
 
                 for album_id in index_page_response.extra_info["album_id_list"]:
                     # 检查是否已下载到前一次的作品

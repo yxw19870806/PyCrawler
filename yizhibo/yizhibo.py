@@ -215,7 +215,7 @@ class Download(threading.Thread):
                 # 获取全部图片地址列表
                 image_url_list = get_image_url_list(account_id)
                 if image_url_list is None:
-                    log.error(account_name + " 图片列表获取失败")
+                    log.error(account_name + " 图片列表解析失败")
                     break
 
                 for image_url in list(image_url_list):
@@ -267,14 +267,14 @@ class Download(threading.Thread):
                 # 获取全部视频ID列表
                 video_id_list = get_video_id_list(account_id)
                 if video_id_list is None:
-                    log.error(account_name + " 视频列表获取失败")
+                    log.error(account_name + " 视频列表解析失败")
                     break
 
                 for video_id in list(video_id_list):
                     # 获取视频的时间和下载地址
                     video_info = get_video_info(video_id)
                     if video_info is None:
-                        log.error(account_name + " 第%s个视频 %s 信息获取失败" % (video_count, video_id))
+                        log.error(account_name + " 第%s个视频 %s 信息解析失败" % (video_count, video_id))
                         continue
 
                     # 检查是否已下载到前一次的视频
@@ -290,7 +290,7 @@ class Download(threading.Thread):
                     # 视频的真实下载地址列表
                     ts_url_list = get_ts_url_list(link_url)
                     if ts_url_list is None:
-                        log.error(account_name + " 第%s个视频下载地址列表 %s 获取失败" % (video_count, link_url))
+                        log.error(account_name + " 第%s个视频下载地址列表 %s 解析失败" % (video_count, link_url))
                         continue
 
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, ts_url_list))

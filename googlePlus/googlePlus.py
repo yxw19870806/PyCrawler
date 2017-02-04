@@ -239,7 +239,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 获取相册页中的所有日志（picasweb.google.com）地址列表
-                log.trace(account_name + " 相册页（token：%s）获取的所有日志页：%s" % (key, index_page_response.extra_info["blog_url_list"]))
+                log.trace(account_name + " 相册页（token：%s）解析的所有日志页：%s" % (key, index_page_response.extra_info["blog_url_list"]))
 
                 for blog_url in index_page_response.extra_info["blog_url_list"]:
                     # 有可能拿到带authkey的，需要去掉
@@ -252,7 +252,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_page_response.status)))
                         tool.process_exit()
                     if not blog_page_response.extra_info["album_id"]:
-                        log.error(account_name + " 日志 %s 获取album id失败" % blog_url)
+                        log.error(account_name + " 日志 %s 解析album id失败" % blog_url)
                         tool.process_exit()
                     album_id = blog_page_response.extra_info["album_id"]
                     log.trace(account_name + " 日志 %s 的album id：%s" % (blog_url, album_id))
@@ -284,7 +284,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 相册%s没有解析到图片" % album_id)
                         tool.process_exit()
                         
-                    log.trace(account_name + " 相册存档页%s获取的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
 
                     for image_url in album_page_response.extra_info["image_url_list"]:
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))

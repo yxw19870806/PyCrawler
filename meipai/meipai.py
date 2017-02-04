@@ -166,7 +166,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页视频解析失败" % video_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页获取的全部视频：%s" % (page_count, index_page_response.json_data["medias"]))
+                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, index_page_response.json_data["medias"]))
 
                 for video_info in index_page_response.json_data["medias"]:
                     if not robot.check_sub_key(("video", "id"), video_info):

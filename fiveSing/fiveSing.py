@@ -176,7 +176,7 @@ class Download(threading.Thread):
                     if len(index_page_response.extra_info["audio_info_list"]) == 0:
                         break
 
-                    log.trace(account_name + " 第%s页%s歌曲获取的所有歌曲：%s" % (page_count, audio_type_name[audio_type], index_page_response.extra_info["audio_info_list"]))
+                    log.trace(account_name + " 第%s页%s歌曲解析的所有歌曲：%s" % (page_count, audio_type_name[audio_type], index_page_response.extra_info["audio_info_list"]))
 
                     for audio_info in index_page_response.extra_info["audio_info_list"]:
                         audio_id = audio_info[0]

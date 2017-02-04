@@ -161,11 +161,11 @@ class Download(threading.Thread):
                 # 获取一页相册
                 index_page_response = get_one_page_album(account_id, post_time)
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " %s相册访问失败，原因：%s" % (post_time, robot.get_http_request_failed_reason(index_page_response.status)))
+                    log.error(account_name + " %s后的一页相册访问失败，原因：%s" % (post_time, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                if not robot.check_sub_key(("posts", "result"), index_page_response.json_data) or index_page_response.json_data["result"] != "SUCCESS":
-                    log.error(account_name + " %s相册 %s 解析失败" % (post_time, index_page_response.json_data))
+                if not (robot.check_sub_key(("posts", "result"), index_page_response.json_data) and index_page_response.json_data["result"] == "SUCCESS"):
+                    log.error(account_name + " %s后的一页相册 %s 解析失败" % (post_time, index_page_response.json_data))
                     continue
 
                 # 如果为空，表示已经取完了

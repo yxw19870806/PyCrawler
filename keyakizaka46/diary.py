@@ -162,7 +162,7 @@ class Download(threading.Thread):
                 for blog_data in index_page_response.extra_info["blog_info_list"]:
                     # 日志id
                     if not blog_data["blog_id"]:
-                        log.error(account_name + " 日志id解析异常，日志信息：%s" % blog_data)
+                        log.error(account_name + " 日志信息%s解析日志id失败" % blog_data)
                         continue
 
                     # 检查是否已下载到前一次的日志
@@ -175,7 +175,7 @@ class Download(threading.Thread):
                         first_blog_id = blog_data["blog_id"]
 
                     log.step(account_name + " 开始解析日志%s" % blog_data["blog_id"])
-                    log.trace(account_name + " 日志%s获取的所有图片：%s" % (blog_data["blog_id"], blog_data["image_url_list"]))
+                    log.trace(account_name + " 日志%s解析的所有图片：%s" % (blog_data["blog_id"], blog_data["image_url_list"]))
 
                     for image_url in blog_data["image_url_list"]:
                         # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址

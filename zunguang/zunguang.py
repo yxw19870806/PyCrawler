@@ -66,7 +66,7 @@ class ZunGuang(robot.Robot):
             # 根据取图片地址列表
             album_status, album_data = get_one_page_album_data(page_count)
             if album_status == -1:
-                log.error("第%s页相册获取失败" % page_count)
+                log.error("第%s页相册解析失败" % page_count)
                 break
             elif album_status == -2:
                 log.error("第%s页相册解析失败" % page_count)

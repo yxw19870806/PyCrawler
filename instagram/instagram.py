@@ -296,19 +296,22 @@ class Download(threading.Thread):
                     log.error(account_name + " cursor %s的媒体信息访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(media_page_response.status)))
                     tool.process_exit()
 
-                if not robot.check_sub_key(("media",), media_page_response.json_data) or not robot.check_sub_key(("page_info", "nodes"), media_page_response.json_data["media"]) \
-                        or not robot.check_sub_key(("has_next_page", "end_cursor"), media_page_response.json_data["media"]["page_info"]):
+                if not (
+                    robot.check_sub_key(("media",), media_page_response.json_data) and
+                    robot.check_sub_key(("page_info", "nodes"), media_page_response.json_data["media"]) and
+                    robot.check_sub_key(("has_next_page", "end_cursor"), media_page_response.json_data["media"]["page_info"])
+                ):
                     log.error(account_name + " cursor %s的媒体信息%s解析失败" % (cursor, media_page_response.json_data))
                     tool.process_exit()
 
-                log.trace(account_name + " cursor %s获取的所有媒体信息：%s" % (cursor, media_page_response.json_data["media"]["nodes"]))
+                log.trace(account_name + " cursor %s解析的所有媒体信息：%s" % (cursor, media_page_response.json_data["media"]["nodes"]))
 
                 for media_info in media_page_response.json_data["media"]["nodes"]:
                     if not robot.check_sub_key(("is_video", "display_src", "date"), media_info):
-                        log.error(account_name + " 媒体信息解析异常")
+                        log.error(account_name + " 媒体信息%s解析失败" % media_info)
                         break
                     if media_info["is_video"] and not robot.check_sub_key(("code",), media_info):
-                        log.error(account_name + " 视频code解析异常")
+                        log.error(account_name + " 媒体信息%s解析视频code失败" % media_info)
                         break
 
                     # 检查是否已下载到前一次的图片

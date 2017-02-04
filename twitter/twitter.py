@@ -358,7 +358,7 @@ class Download(threading.Thread):
                 # 获取指定时间点后的一页图片信息
                 media_page = get_media_page_data(account_name, data_tweet_id)
                 if media_page is None:
-                    log.error(account_name + " 媒体列表解析异常")
+                    log.error(account_name + " 媒体列表解析失败")
                     tool.process_exit()
 
                 # 上一页正好获取了全部的媒体信息，所以这一页没有任何内容，完成了，直接退出
@@ -367,7 +367,7 @@ class Download(threading.Thread):
 
                 tweet_list = get_tweet_list(media_page["items_html"])
                 if len(tweet_list) == 0:
-                    log.error(account_name + " 媒体列表拆分异常，items_html：%s" % media_page["items_html"])
+                    log.error(account_name + " 媒体列表拆分失败，items_html：%s" % media_page["items_html"])
                     tool.process_exit()
 
                 if media_page["new_latent_count"] != len(tweet_list):
@@ -378,7 +378,7 @@ class Download(threading.Thread):
                     # 获取tweet_id
                     tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
                     if not tweet_id:
-                        log.error(account_name + " tweet id解析异常，tweet数据：%s" % tweet_data)
+                        log.error(account_name + " tweet id解析失败，tweet数据：%s" % tweet_data)
                         continue
 
                     log.step(account_name + " 开始解析tweet %s" % tweet_id)
@@ -414,7 +414,7 @@ class Download(threading.Thread):
                                 else:
                                     log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
                             else:
-                                log.error(account_name + " 第%s个视频 没有获取到源地址，tweet id：%s" % (video_count, tweet_id))
+                                log.error(account_name + " 第%s个视频 没有解析到源地址，tweet id：%s" % (video_count, tweet_id))
 
                         # 达到配置文件中的下载数量，结束图片下载
                         if 0 < GET_IMAGE_COUNT < image_count:

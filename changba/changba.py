@@ -182,7 +182,7 @@ class Download(threading.Thread):
                 tool.process_exit()
 
             if not account_index_page_response.extra_info["user_id"]:
-                log.error(account_name + " user id获取失败")
+                log.error(account_name + " user id解析失败")
                 tool.process_exit()
 
             page_count = 0
@@ -204,7 +204,7 @@ class Download(threading.Thread):
                 if index_page_response.extra_info["audio_info_list"] is []:
                     break
 
-                log.trace(account_name + " 第%s页获取的所有歌曲：%s" % (page_count, index_page_response.extra_info["audio_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有歌曲：%s" % (page_count, index_page_response.extra_info["audio_info_list"]))
 
                 for audio_info in index_page_response.extra_info["audio_info_list"]:
                     if audio_info["audio_id"] is None or audio_info["audio_key"] is None:

@@ -195,7 +195,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s张图片，日志 %s 中没有找到图片" % (image_count, blog_url))
                         continue
 
-                    log.trace(account_name + " 日志 %s 获取的所有图片：%s" % (blog_url, blog_page_response.extra_info["image_url_list"]))
+                    log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_page_response.extra_info["image_url_list"]))
 
                     for image_url in blog_page_response.extra_info["image_url_list"]:
                         if image_url.rfind("?") > image_url.rfind("."):

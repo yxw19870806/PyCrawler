@@ -88,7 +88,7 @@ class ABase(robot.Robot):
             if index_page_response.extra_info["page_video_count"] == 0:
                 break
 
-            log.trace("第%s页获取到影片%s个，封面图片%s张" % (page_count, len(index_page_response.extra_info["image_info_list"]), index_page_response.extra_info["page_video_count"]))
+            log.trace("第%s页解析到影片%s个，封面图片%s张" % (page_count, len(index_page_response.extra_info["image_info_list"]), index_page_response.extra_info["page_video_count"]))
 
             for small_image_url, title in index_page_response.extra_info["image_info_list"]:
                 # 达到线程上限，等待
@@ -98,7 +98,7 @@ class ABase(robot.Robot):
                 title = robot.filter_text(title).upper()
                 image_url = get_large_image_url(small_image_url)
                 if image_url is None:
-                    log.error("%s的封面图片 %s 大图地址获取失败" % (small_image_url, title))
+                    log.error("%s的封面图片 %s 大图地址解析失败" % (small_image_url, title))
                     continue
 
                 log.step("开始下载%s的封面图片 %s" % (title, image_url))

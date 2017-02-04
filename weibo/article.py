@@ -235,7 +235,7 @@ class Download(threading.Thread):
             # 获取账号对应的page_id
             account_page_id = get_account_page_id(account_id)
             if account_page_id is None:
-                log.error(account_name + " 微博主页没有获取到page_id")
+                log.error(account_name + " 微博主页没有解析到page_id")
                 tool.process_exit()
 
             page_count = 1
@@ -248,7 +248,7 @@ class Download(threading.Thread):
                 preview_article_page = get_one_page_preview_article_data(account_page_id, page_count)
 
                 if preview_article_page is None:
-                    log.error(account_name + " 第%s页文章获取失败" % page_count)
+                    log.error(account_name + " 第%s页文章解析失败" % page_count)
                     tool.process_exit()
 
                 # 将文章预览页面内容分组
@@ -288,7 +288,7 @@ class Download(threading.Thread):
                     # 获取文章页面内容
                     article_page = auto_redirect_visit(article_url)
                     if not article_page:
-                        log.error(account_name + " 文章 %s 获取失败" % article_url)
+                        log.error(account_name + " 文章 %s 解析失败" % article_url)
                         continue
 
                     # 文章标题

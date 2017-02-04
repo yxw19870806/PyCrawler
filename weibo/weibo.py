@@ -343,7 +343,7 @@ class Download(threading.Thread):
                 if account_page_id is None:
                     account_page_id = get_account_page_id(account_id)
                     if account_page_id is None:
-                        log.error(account_name + " 微博主页没有获取到page_id")
+                        log.error(account_name + " 微博主页没有解析到page_id")
                         break
 
                 log.step(account_name + " 开始解析%s后一页视频" % since_id)
@@ -373,7 +373,7 @@ class Download(threading.Thread):
                     return_code, video_url_list = get_video_url(video_play_url)
                     if return_code != 1:
                         if return_code == -1:
-                            log.error(account_name + " 第%s个视频 %s 没有获取到源地址" % (video_count, video_play_url))
+                            log.error(account_name + " 第%s个视频 %s 没有解析到源地址" % (video_count, video_play_url))
                         elif return_code == -2:
                             log.error(account_name + " 第%s个视频 %s 无法访问" % (video_count, video_play_url))
                         elif return_code == -3:
@@ -424,11 +424,11 @@ class Download(threading.Thread):
                 # 获取指定一页图片的信息
                 photo_page_data = get_one_page_photo_data(account_id, page_count)
                 if photo_page_data is None:
-                    log.error(account_name + " 图片列表获取失败")
+                    log.error(account_name + " 图片列表解析失败")
                     first_image_time = "0"  # 存档恢复
                     break
 
-                log.trace(account_name + "第%s页获取的全部图片信息：%s" % (page_count, photo_page_data))
+                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_page_data))
 
                 for image_info in photo_page_data["photo_list"]:
                     if not robot.check_sub_key(("pic_host", "pic_name", "timestamp"), image_info):

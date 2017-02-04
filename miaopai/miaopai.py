@@ -185,7 +185,7 @@ class Download(threading.Thread):
 
             user_id = get_user_id(account_id)
             if user_id is None:
-                log.error(account_name + " suid获取失败")
+                log.error(account_name + " suid解析失败")
                 tool.process_exit()
 
             page_count = 1
@@ -207,7 +207,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页没有找到视频" % page_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页获取的所有视频：%s" % (page_count, index_page_response.extra_info["video_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, index_page_response.extra_info["video_id_list"]))
 
                 for video_id in index_page_response.extra_info["video_id_list"]:
                     video_id = str(video_id)

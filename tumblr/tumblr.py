@@ -250,7 +250,7 @@ class Download(threading.Thread):
                 if len(post_url_list) == 0:
                     break
 
-                log.trace(account_id + " 相册第%s页获取的所有日志：%s" % (page_count, post_url_list))
+                log.trace(account_id + " 相册第%s页解析的所有日志：%s" % (page_count, post_url_list))
                 post_url_list_group_by_post_id = filter_post_url(post_url_list)
                 log.trace(account_id + " 相册第%s页去重排序后的所有日志：%s" % (page_count, post_url_list_group_by_post_id))
 
@@ -272,13 +272,13 @@ class Download(threading.Thread):
                         log.error(account_id + " 无法访问日志%s" % post_id)
                         continue
                     if not post_page_head:
-                        log.error(account_id + " 日志%s截取head标签异常" % post_id)
+                        log.error(account_id + " 日志%s截取head标签失败" % post_id)
                         continue
 
                     # 获取og_type（页面类型的是视频还是图片或其他）
                     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
                     if not og_type:
-                        log.error(account_id + " 日志%s，'og:type'获取异常" % post_id)
+                        log.error(account_id + " 日志%s，'og:type'解析失败" % post_id)
                         continue
 
                     # 空、音频、引用，跳过
@@ -295,7 +295,7 @@ class Download(threading.Thread):
                     if IS_DOWNLOAD_VIDEO and og_type == "tumblr-feed:video":
                         video_list = get_video_info_list(account_id, post_id)
                         if video_list is None:
-                            log.error(account_id + " 第%s个视频 日志%s无法获取视频播放页" % (video_count, post_id))
+                            log.error(account_id + " 第%s个视频 日志%s无法解析视频播放页" % (video_count, post_id))
                         else:
                             if len(video_list) > 0:
                                 for video_play_url, video_type in list(video_list):
@@ -337,7 +337,7 @@ class Download(threading.Thread):
                             log.trace(account_id + " 日志%s过滤前的所有图片：%s" % (post_id, page_image_url_list))
                             # 过滤头像以及页面上找到不同分辨率的同一张图
                             page_image_url_list = filter_different_resolution_images(page_image_url_list)
-                        log.trace(account_id + " 日志%s获取的的所有图片：%s" % (post_id, page_image_url_list))
+                        log.trace(account_id + " 日志%s解析的的所有图片：%s" % (post_id, page_image_url_list))
                         if len(page_image_url_list) > 0:
                             for image_url in page_image_url_list:
                                 log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))

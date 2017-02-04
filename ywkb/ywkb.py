@@ -51,7 +51,7 @@ class Template(robot.Robot):
 
             image_info = get_one_page_image_info_list(page_count)
             if image_info is None:
-                log.error(" 第%s页图片无法获取" % page_count)
+                log.error(" 第%s页图片无法解析" % page_count)
                 tool.process_exit()
 
             if image_info["is_over"]:

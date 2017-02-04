@@ -214,11 +214,11 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页图片信息%s解析失败" % (page_count, index_page_response.json_data))
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页获取的所有图片：%s" % (page_count, index_page_response.extra_info["image_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, index_page_response.extra_info["image_info_list"]))
 
                 for image_info in index_page_response.extra_info["image_info_list"]:
                     if image_info["image_time"] is None:
-                        log.error(account_name + " 第%s张图片，图片信息%s的上传时间获取失败" % (image_count, image_info["json_data"]))
+                        log.error(account_name + " 第%s张图片，图片信息%s的上传时间解析失败" % (image_count, image_info["json_data"]))
                         continue
 
                     # 检查是否是上一次的最后视频
@@ -231,7 +231,7 @@ class Download(threading.Thread):
                         first_image_time = image_info["image_time"]
 
                     if image_info["image_url"] is None:
-                        log.error(account_name + " 第%s张图片，，图片信息%s的下载地址获取失败" % (image_count, image_info["json_data"]))
+                        log.error(account_name + " 第%s张图片，，图片信息%s的下载地址解析失败" % (image_count, image_info["json_data"]))
                         continue
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
