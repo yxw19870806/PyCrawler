@@ -83,8 +83,7 @@ def get_follow_by_list(account_id):
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
         follow_by_page_response = net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
         if follow_by_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) \
-                    and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
+            if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
                 for node in follow_by_page_response.json_data["followed_by"]["nodes"]:
                     if robot.check_sub_key(("username",), node):
                         follow_by_list.append(node["username"])
@@ -117,8 +116,7 @@ def get_follow_list(account_id):
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
         follow_page_response = net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
         if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("follows",), follow_page_response.json_data) \
-                    and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
+            if robot.check_sub_key(("follows",), follow_page_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
                 for node in follow_page_response.json_data["follows"]["nodes"]:
                     if robot.check_sub_key(("username",), node):
                         follow_list.append(node["username"])

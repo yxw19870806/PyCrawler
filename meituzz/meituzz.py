@@ -23,6 +23,7 @@ def get_album_page(page_count):
         "image_url_list": None,  # 页面解析出的所有图片地址列表
         "video_url": None,  # 页面解析出的所有视频地址
         "title": "",  # 页面解析出的相册标题
+        "is_error": False,  # 是不是没有任何图片或视频
     }
     if album_page_response.status == 200:
         # 获取相册标题
@@ -31,6 +32,7 @@ def get_album_page(page_count):
         extra_info["is_delete"] = extra_info["video_title"] == "相册已被删除"
         if not extra_info["is_delete"]:
             key = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="s" value="', '">')
+            is_error = True
             if key:
                 media_page_url = "http://zz.meituzz.com/ab/bd"
                 post_data = {"y": page_count, "s": key}
@@ -38,6 +40,7 @@ def get_album_page(page_count):
                 if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     # 检测是否是图片相册
                     if robot.check_sub_key(("i",), media_page_response.json_data):
+                        is_error = False
                         image_url_list = []
                         for image_info in media_page_response.json_data["i"]:
                             if robot.check_sub_key(("url",), image_info):
@@ -48,7 +51,9 @@ def get_album_page(page_count):
                         extra_info["image_url_list"] = image_url_list
                     # 检测是否是视频相册
                     if robot.check_sub_key(("v",), media_page_response.json_data):
+                        is_error = False
                         extra_info["video_url"] = str(media_page_response.json_data["v"])
+            extra_info["is_error"] = is_error
     album_page_response.extra_info = extra_info
     return album_page_response
 
@@ -105,13 +110,18 @@ class MeiTuZZ(robot.Robot):
                     log.step("第%s页相册已被删除" % album_id)
                     album_id += 1
                     continue
+
+            if album_page_response.extra_info["is_error"]:
+                log.step("第%s页相册解析失败" % album_id)
+                break
+
             # 错误数量重置
             error_count = 0
 
             # 图片下载
             if self.is_download_image and album_page_response.extra_info["image_url_list"] is not None:
                 if len(album_page_response.extra_info["image_url_list"]) == 0:
-                    log.error("第%s页图片解析失败" % album_id)
+                    log.error("第%s页相册图片解析失败" % album_id)
                     break
 
                 log.trace("第%s页解析的全部图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
