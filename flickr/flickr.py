@@ -64,12 +64,16 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
         "is_over": False,  # 是不是最后一页图片
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("photos",), index_page_response.json_data) and \
-                robot.check_sub_key(("photo", "pages"), index_page_response.json_data["photos"]) and len(index_page_response.json_data["photos"]["photo"]) > 0:
+        if (
+            robot.check_sub_key(("photos",), index_page_response.json_data) and
+            robot.check_sub_key(("photo", "pages"), index_page_response.json_data["photos"]) and
+            len(index_page_response.json_data["photos"]["photo"]) > 0
+        ):
             for photo_info in index_page_response.json_data["photos"]["photo"]:
                 extra_image_info = {
                     "image_url": None,  # 图片下载地址
                     "image_time": None,  # 图片上传时间
+                    "json_data": photo_info,  # 原始数据
                 }
                 if robot.check_sub_key(("dateupload",), photo_info):
                     extra_image_info["image_time"] = str(photo_info["dateupload"])
@@ -214,7 +218,7 @@ class Download(threading.Thread):
 
                 for image_info in index_page_response.extra_info["image_info_list"]:
                     if image_info["image_time"] is None:
-                        log.error(account_name + " 第%s张图片上传时间获取失败，所有的图片信息：%s" % (image_count, index_page_response.json_data))
+                        log.error(account_name + " 第%s张图片，图片信息%s的上传时间获取失败" % (image_count, image_info["json_data"]))
                         continue
 
                     # 检查是否是上一次的最后视频
@@ -227,7 +231,7 @@ class Download(threading.Thread):
                         first_image_time = image_info["image_time"]
 
                     if image_info["image_url"] is None:
-                        log.error(account_name + " 第%s张图片下载地址获取失败，所有的图片信息：%s" % (image_count, index_page_response.json_data))
+                        log.error(account_name + " 第%s张图片，，图片信息%s的下载地址获取失败" % (image_count, image_info["json_data"]))
                         continue
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
