@@ -32,16 +32,15 @@ def get_owned_app_list(user_id):
 # 获取所有打折游戏列表
 def get_discount_list():
     page_count = 1
-    total_page_count = 99
+    total_page_count = -1
     discount_list = []
     app_id_list = []
-    while page_count <= total_page_count:
-        index_url = "http://store.steampowered.com/search/results"
-        index_url += "?sort_by=Price_ASC&category1=998&os=win&specials=1&page=%s" % page_count
-        index_page_return_code, index_page = tool.http_request(index_url)[:2]
-        if index_page_return_code != 1:
+    while total_page_count == -1 or page_count <= total_page_count:
+        search_game_page_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=998&os=win&specials=1&page=%s" % page_count
+        search_game_page_response = net.http_request(search_game_page_url)
+        if search_game_page_response != net.HTTP_RETURN_CODE_SUCCEED:
             break
-        items_page = tool.find_sub_string(index_page, "<!-- List Items -->", "<!-- End List Items -->")
+        items_page = tool.find_sub_string(search_game_page_response.data, "<!-- List Items -->", "<!-- End List Items -->")
         items_page = tool.find_sub_string(items_page, "<a href=", None)
         items_page = items_page.replace("\n", "").replace("\r", "").replace("<a href=", "\n<a href=")
         items = items_page.split("\n")
@@ -61,13 +60,11 @@ def get_discount_list():
             if app_id not in app_id_list:
                 discount_list.append("%s\t%s\t%s\t%s" % (app_id, discount, old_price, new_price))
                 app_id_list.append(app_id)
-        if total_page_count == 99:
-            pagination_page = tool.find_sub_string(index_page, '<div class="search_pagination">', None)
+        if total_page_count == -1:
+            pagination_page = tool.find_sub_string(search_game_page_response.data, '<div class="search_pagination">', None)
             page_find = re.findall('return false;">([\d]*)</a>', pagination_page)
             if len(page_find) > 0:
-                total_page_count = 0
-                for page_id in page_find:
-                    total_page_count = max(total_page_count, int(page_id))
+                total_page_count = max(map(str, page_find))
         page_count += 1
     return discount_list
 
