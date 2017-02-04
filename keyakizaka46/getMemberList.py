@@ -6,15 +6,15 @@ http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import tool
+from common import net, tool
 import re
 
 
 def get_member_list():
-    index_url = "http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member"
-    index_return_code, index_page = tool.http_request(index_url)[:2]
-    if index_return_code:
-        member_list_data = tool.find_sub_string(index_page, '<ul class="thumb">', "</ul>")
+    index_page_url = "http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member"
+    index_page_response = net.http_request(index_page_url)
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        member_list_data = tool.find_sub_string(index_page_response.data, '<ul class="thumb">', "</ul>")
         if member_list_data:
             member_list_find = re.findall("<li ([\S|\s]*?)</li>", member_list_data)
             for member_info in member_list_find:
