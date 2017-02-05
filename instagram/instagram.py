@@ -151,7 +151,38 @@ def get_one_page_media(account_id, cursor):
     query_page_url = "https://www.instagram.com/query/"
     post_data = {"q": "ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)}
     header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s" % CSRF_TOKEN}
-    return net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
+    media_page_response = net.http_request(query_page_url, post_data=post_data, header_list=header_list, json_decode=True)
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "media_info_list": [],  # 页面解析出的媒体信息列表
+        "next_cursor": None,  # 下一页媒体信息的指针
+    }
+    if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if (
+            robot.check_sub_key(("media",), media_page_response.json_data) and
+            robot.check_sub_key(("page_info", "nodes"), media_page_response.json_data["media"]) and
+            robot.check_sub_key(("has_next_page", "end_cursor"), media_page_response.json_data["media"]["page_info"])
+        ):
+            for media_info in media_page_response.json_data["media"]["nodes"]:
+                media_extra_info = {
+                    "image_url": None,  # 页面解析出的图片下载地址
+                    "is_video": False,  # 是不是视频
+                    "video_id": None,  # 页面解析出的视频id
+                    "json_data": media_info,  # 原始数据
+                }
+                if robot.check_sub_key(("is_video", "display_src", "date"), media_info):
+                    media_extra_info["image_url"] = str(media_info["display_src"]).split("?")[0]
+                    media_extra_info["is_video"] = media_info["is_video"]
+                    if media_extra_info["is_video"] and robot.check_sub_key(("code",), media_info):
+                        media_extra_info["video_id"] = media_info["code"]
+                extra_info["media_info_list"].append(media_extra_info)
+            # 获取下一页的指针
+            if media_page_response.json_data["media"]["page_info"]["has_next_page"]:
+                extra_info["next_cursor"] = str(media_page_response.json_data["media"]["page_info"]["end_cursor"])
+        else:
+            extra_info["is_error"] = True
+    media_page_response.extra_info = extra_info
+    return media_page_response
 
 
 # 获取指定id的视频播放页
@@ -294,22 +325,18 @@ class Download(threading.Thread):
                     log.error(account_name + " cursor %s的媒体信息访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(media_page_response.status)))
                     tool.process_exit()
 
-                if not (
-                    robot.check_sub_key(("media",), media_page_response.json_data) and
-                    robot.check_sub_key(("page_info", "nodes"), media_page_response.json_data["media"]) and
-                    robot.check_sub_key(("has_next_page", "end_cursor"), media_page_response.json_data["media"]["page_info"])
-                ):
+                if media_page_response.extra_info["is_error"]:
                     log.error(account_name + " cursor %s的媒体信息%s解析失败" % (cursor, media_page_response.json_data))
                     tool.process_exit()
 
-                log.trace(account_name + " cursor %s解析的所有媒体信息：%s" % (cursor, media_page_response.json_data["media"]["nodes"]))
+                log.trace(account_name + " cursor %s解析的所有媒体信息：%s" % (cursor, media_page_response.extra_info["media_info_list"]))
 
-                for media_info in media_page_response.json_data["media"]["nodes"]:
-                    if not robot.check_sub_key(("is_video", "display_src", "date"), media_info):
-                        log.error(account_name + " 媒体信息%s解析失败" % media_info)
+                for media_info in media_page_response.extra_info["media_info_list"]:
+                    if media_info["image_url"] is None:
+                        log.error(account_name + " 媒体信息%s解析失败" % media_info["json_data"])
                         break
-                    if media_info["is_video"] and not robot.check_sub_key(("code",), media_info):
-                        log.error(account_name + " 媒体信息%s解析视频code失败" % media_info)
+                    if IS_DOWNLOAD_VIDEO and media_info["is_video"] and media_info["video_id"] is None:
+                        log.error(account_name + " 媒体信息%s的视频id解析失败" % media_info["json_data"])
                         break
 
                     # 检查是否已下载到前一次的图片
@@ -323,8 +350,7 @@ class Download(threading.Thread):
 
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
-                        image_url = str(media_info["display_src"].split("?")[0])
-                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, media_info["image_url"]))
 
                         # 第一张图片，创建目录
                         if need_make_image_dir:
@@ -333,19 +359,19 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_image_dir = False
 
-                        file_type = image_url.split(".")[-1]
+                        file_type = media_info["image_url"].split(".")[-1]
                         image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, image_file_path)
+                        save_file_return = net.save_net_file(media_info["image_url"], image_file_path)
                         if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, media_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 视频
                     if IS_DOWNLOAD_VIDEO and media_info["is_video"]:
                         # 获取视频播放页
-                        video_play_page_response = get_video_play_page(media_info["code"])
+                        video_play_page_response = get_video_play_page(media_info["video_id"])
                         if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                             log.error(account_name + " 第%s个视频 %s 播放页访问失败，原因：%s" % (video_count, media_info["code"], robot.get_http_request_failed_reason(video_play_page_response.status)))
                             tool.process_exit()
@@ -378,10 +404,10 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if media_page_response.json_data["media"]["page_info"]["has_next_page"]:
-                        cursor = str(media_page_response.json_data["media"]["page_info"]["end_cursor"])
-                    else:
+                    if media_page_response.extra_info["next_cursor"] is None:
                         is_over = True
+                    else:
+                        cursor = media_page_response.extra_info["next_cursor"]
 
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
