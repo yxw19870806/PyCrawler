@@ -22,7 +22,6 @@ GET_PAGE_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-COOKIE_INFO = {"5sing_auth": ""}
 
 
 # 获取指定页数的所有歌曲
@@ -88,11 +87,9 @@ class FiveSing(robot.Robot):
         global GET_PAGE_COUNT
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global COOKIE_INFO
 
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_GET_COOKIE: {".kugou.com": ("5sing_auth",)},
         }
         robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
@@ -101,14 +98,9 @@ class FiveSing(robot.Robot):
         GET_PAGE_COUNT = self.get_page_count
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        COOKIE_INFO["5sing_auth"] = self.cookie_value["5sing_auth"]
 
     def main(self):
         global ACCOUNTS
-
-        if not COOKIE_INFO["5sing_auth"]:
-            log.error("cookie获取失败，请查看浏览器内的登录状态")
-            tool.process_exit()
 
         # 解析存档文件
         # account_id  last_yc_audio_id  last_fc_audio_id
