@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, net, robot, tool
+import base64
+import json
 import os
 import re
 import threading
@@ -42,20 +44,42 @@ def get_one_page_audio(account_id, page_type, page_count):
     return index_page_response
 
 
-# 获取指定id的歌曲详情页
-def get_audio_info_page(audio_id, song_type):
-    # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
-    audio_info_page_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
-    header_list = {"Cookie": "5sing_auth=%s" % COOKIE_INFO["5sing_auth"]}
-    audio_info_page_response = net.http_request(audio_info_page_url, header_list=header_list, json_decode=True)
+# 获取指定id的歌曲播放页
+def get_audio_play_page(audio_id, song_type):
+    audio_page_url = "http://5sing.kugou.com/%s/%s.html" % (song_type, audio_id)
+    audio_page_response = net.http_request(audio_page_url)
     extra_info = {
         "audio_url": None,  # 页面解析出的歌曲下载地址
     }
-    if audio_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("data",), audio_info_page_response.json_data) and robot.check_sub_key(("fileName",), audio_info_page_response.json_data["data"]):
-            extra_info["audio_url"] = str(audio_info_page_response.json_data["data"]["fileName"])
-    audio_info_page_response.extra_info = extra_info
-    return audio_info_page_response
+    if audio_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        audio_info = tool.find_sub_string(audio_page_response.data, '"ticket":', ",").strip().strip('"')
+        try:
+            audio_info = json.loads(base64.b64decode(audio_info))
+        except TypeError:
+            pass
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("file",), audio_info):
+                extra_info["audio_url"] = str(audio_info["file"])
+    audio_page_response.extra_info = extra_info
+    return audio_page_response
+    # # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
+    # audio_info_page_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
+    # header_list = {"Cookie": "5sing_auth=%s" % COOKIE_INFO["5sing_auth"]}
+    # audio_info_page_response = net.http_request(audio_info_page_url, header_list=header_list, json_decode=True)
+    # extra_info = {
+    #     "audio_url": None,  # 页面解析出的歌曲下载地址
+    # }
+    # if audio_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    #     if robot.check_sub_key(("data", "code"), audio_info_page_response.json_data):
+    #         if int(audio_info_page_response.json_data["code"]) == 1008 and robot.check_sub_key(("fileName",), audio_info_page_response.json_data["data"]):
+    #             extra_info["audio_url"] = str(audio_info_page_response.json_data["data"]["fileName"])
+    #         # 不能下载
+    #         elif int(audio_info_page_response.json_data["code"]) == 1006 and audio_info_page_response.json_data["data"] is []:
+    #             extra_info["audio_url"] = ""
+    # audio_info_page_response.extra_info = extra_info
+    # return audio_info_page_response
 
 
 class FiveSing(robot.Robot):
@@ -199,15 +223,15 @@ class Download(threading.Thread):
                             unique_list.append(audio_id)
 
                         # 获取歌曲的详情页
-                        audio_info_page_response = get_audio_info_page(audio_id, audio_type_to_index[audio_type])
+                        audio_info_page_response = get_audio_play_page(audio_id, audio_type_to_index[audio_type])
                         if audio_info_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                            log.error(account_name + " %s歌曲%s《%s》详情页访问失败，原因：%s" % (audio_type_name[audio_type], audio_id, audio_title, robot.get_http_request_failed_reason(index_page_response.status)))
+                            log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name[audio_type], audio_id, audio_title, robot.get_http_request_failed_reason(index_page_response.status)))
                             continue
 
                         # 获取歌曲
                         audio_url = audio_info_page_response.extra_info["audio_url"]
-                        if not audio_url:
-                            log.step(account_name + " %s歌曲%s《%s》暂不提供下载地址" % (audio_type_name[audio_type], audio_id, audio_title))
+                        if audio_url is None:
+                            log.step(account_name + " %s歌曲%s《%s》下载地址解析失败" % (audio_type_name[audio_type], audio_id, audio_title))
                             continue
 
                         log.step(account_name + " 开始下载第%s首%s歌曲《%s》%s" % (video_count, audio_type_name[audio_type], audio_title, audio_url))
