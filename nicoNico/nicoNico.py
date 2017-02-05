@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 from common import log, net, robot, tool
 import json
 import os
-import re
 import threading
 import time
 import traceback

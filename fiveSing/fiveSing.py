@@ -164,13 +164,15 @@ class Download(threading.Thread):
             account_name = self.account_info[0]
 
         # 原创、翻唱
-        audio_type_to_index = {"yc": 1, "fc": 2}  # 存档文件里的下标
-        audio_type_name = {"yc": "原唱", "fc": "翻唱"}  # 显示名字
+        audio_type_to_index_dict = {"yc": 1, "fc": 2}  # 存档文件里的下标
+        audio_type_name_dict = {"yc": "原唱", "fc": "翻唱"}  # 显示名字
         try:
             log.step(account_name + " 开始")
 
             video_count = 1
-            for audio_type in audio_type_to_index.keys():
+            for audio_type in audio_type_to_index_dict.keys():
+                audio_type_index = audio_type_to_index_dict[audio_type]
+                audio_type_name = audio_type_name_dict[audio_type]
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type)
 
                 page_count = 1
@@ -179,12 +181,12 @@ class Download(threading.Thread):
                 is_over = False
                 need_make_download_dir = True
                 while not is_over:
-                    log.step(account_name + " 开始解析第%s页歌曲" % page_count)
+                    log.step(account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
 
                     # 获取一页歌曲
                     index_page_response = get_one_page_audio(account_id, audio_type, page_count)
                     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 第%s页%s歌曲访问失败，原因：%s" % (page_count, audio_type_name[audio_type], robot.get_http_request_failed_reason(index_page_response.status)))
+                        log.error(account_name + " 第%s页%s歌曲访问失败，原因：%s" % (page_count, audio_type_name, robot.get_http_request_failed_reason(index_page_response.status)))
                         first_audio_id = "0"  # 存档恢复
                         break
 
@@ -192,7 +194,7 @@ class Download(threading.Thread):
                     if len(index_page_response.extra_info["audio_info_list"]) == 0:
                         break
 
-                    log.trace(account_name + " 第%s页%s歌曲解析的所有歌曲：%s" % (page_count, audio_type_name[audio_type], index_page_response.extra_info["audio_info_list"]))
+                    log.trace(account_name + " %s第%s页解析的所有歌曲：%s" % (page_count, audio_type_name, index_page_response.extra_info["audio_info_list"]))
 
                     for audio_info in index_page_response.extra_info["audio_info_list"]:
                         audio_id = audio_info[0]
@@ -200,7 +202,7 @@ class Download(threading.Thread):
                         audio_title = robot.filter_text(audio_info[1])
 
                         # 检查是否已下载到前一次的歌曲
-                        if int(audio_id) <= int(self.account_info[audio_type_to_index[audio_type]]):
+                        if int(audio_id) <= int(self.account_info[audio_type_index]):
                             is_over = True
                             break
 
@@ -217,31 +219,31 @@ class Download(threading.Thread):
                         # 获取歌曲的详情页
                         audio_play_page_response = get_audio_play_page(audio_id, audio_type)
                         if audio_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                            log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name[audio_type], audio_id, audio_title, robot.get_http_request_failed_reason(audio_play_page_response.status)))
+                            log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name, audio_id, audio_title, robot.get_http_request_failed_reason(audio_play_page_response.status)))
                             continue
 
                         # 获取歌曲
                         audio_url = audio_play_page_response.extra_info["audio_url"]
                         if audio_url is None:
-                            log.step(account_name + " %s歌曲%s《%s》下载地址解析失败" % (audio_type_name[audio_type], audio_id, audio_title))
+                            log.step(account_name + " %s歌曲%s《%s》下载地址解析失败" % (audio_type_name, audio_id, audio_title))
                             continue
 
-                        log.step(account_name + " 开始下载第%s首%s歌曲《%s》%s" % (video_count, audio_type_name[audio_type], audio_title, audio_url))
+                        log.step(account_name + " 开始下载第%s首%s歌曲《%s》%s" % (video_count, audio_type_name, audio_title, audio_url))
 
                         # 第一首歌曲，创建目录
                         if need_make_download_dir:
                             if not tool.make_dir(video_path, 0):
-                                log.error(account_name + " 创建%s歌曲下载目录 %s 失败" % (audio_type_name[audio_type], video_path))
+                                log.error(account_name + " 创建%s歌曲下载目录 %s 失败" % (audio_type_name, video_path))
                                 tool.process_exit()
                             need_make_download_dir = False
 
                         file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_title))
                         save_file_return = net.save_net_file(audio_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 第%s首%s歌曲下载成功" % (video_count, audio_type_name[audio_type]))
+                            log.step(account_name + " 第%s首%s歌曲下载成功" % (video_count, audio_type_name))
                             video_count += 1
                         else:
-                            log.error(account_name + " 第%s首%s歌曲《%s》%s下载失败，原因：%s" % (video_count, audio_type_name[audio_type], audio_title, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s首%s歌曲《%s》%s下载失败，原因：%s" % (video_count, audio_type_name, audio_title, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_VIDEO_COUNT < video_count:
@@ -261,7 +263,7 @@ class Download(threading.Thread):
 
                 # 新的存档记录
                 if first_audio_id != "0":
-                    self.account_info[audio_type_to_index[audio_type]] = first_audio_id
+                    self.account_info[audio_type_index] = first_audio_id
 
             log.step(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
 

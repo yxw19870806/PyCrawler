@@ -92,9 +92,7 @@ def get_album_page(account_id, album_id):
                 # 如果不为空，说明还有下一页
                 while continue_token:
                     continue_image_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
-                    post_data = {
-                        "f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token),
-                    }
+                    post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
                     continue_image_page_response = net.http_request(continue_image_page_url, post_data=post_data, encode_multipart=False)
                     if continue_image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                         continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None)
@@ -116,15 +114,6 @@ def get_album_page(account_id, album_id):
             #     continue
         album_page_response.extra_info = extra_info
         return album_page_response
-
-
-# 重组URL并使用最大分辨率
-# https://lh3.googleusercontent.com/uhGpzweN4P7b8KG042-XfksSgpDW6qKtDSIGo-HV1EhVgwQnh1u0DCWEERdlavj0NEusMwwn8OmJnRw=w165-h220-rw
-# ->
-# https://lh3.googleusercontent.com/uhGpzweN4P7b8KG042-XfksSgpDW6qKtDSIGo-HV1EhVgwQnh1u0DCWEERdlavj0NEusMwwn8OmJnRw=w9999-h9999
-# wXXXX-hXXXX 显示分辨率, -rw 使用webp格式
-def generate_max_resolution_image_url(image_url):
-    return image_url.split("=")[0] + "=w9999-h9999"
 
 
 class GooglePlus(robot.Robot):

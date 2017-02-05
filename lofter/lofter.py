@@ -35,7 +35,7 @@ def get_one_page_blog(account_name, page_count):
         # 获取页面中所有的日志地址列表
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', index_page_response.data)
         # 去重排序
-        extra_info["blog_url_list"]  = sorted(list(set(blog_url_list)), reverse=True)
+        extra_info["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
     index_page_response.extra_info = extra_info
     return index_page_response
 
