@@ -63,7 +63,7 @@ def get_one_page_video(suid, page_count):
     index_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     index_page_response = net.http_request(index_page_url, json_decode=True)
     extra_info = {
-        "video_id_list": {},  # 页面解析出的所有视频id
+        "video_id_list": [],  # 页面解析出的所有视频id
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中的所有视频id列表
