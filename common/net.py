@@ -60,7 +60,7 @@ def set_proxy(ip, port):
 #                   -2：json decode error
 #                   -10：特殊异常捕获后的返回
 #                   其他>0：网页返回码（正常返回码为200）
-def http_request(url, post_data=None, header_list=None, is_random_ip=True, json_decode=False, encode_multipart=True, redirect=True, exception_return=""):
+def http_request(url, post_data=None, header_list=None, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
