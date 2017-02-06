@@ -26,21 +26,48 @@ IS_SORT = True
 
 # 获取指定token后的一页相册
 def get_one_page_blog(account_id, token):
-    index_page_url = "https://plus.google.com/_/photos/pc/read/"
-    post_data = {"f.req": '[["posts",null,null,"synthetic:posts:%s",3,"%s",null],[%s,1,null],"%s",null,null,null,null,null,null,null,2]' % (account_id, account_id, GET_IMAGE_URL_COUNT, token)}
-    index_page_response = net.http_request(index_page_url, post_data=post_data, encode_multipart=False)
     extra_info = {
-        "blog_url_list": [],  # 页面解析出的日志地址列表
-        "key": "",  # 页面解析出的下一页token
+        "blog_info_list": [],  # 页面解析出的日志信息列表
+        "key": None,  # 页面解析出的下一页token
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中所有的日志地址列表
-        blog_url_list = re.findall('\[\["(https://picasaweb.google.com/[^"]*)"', index_page_response.data)
-        extra_info["blog_url_list"] = map(str, blog_url_list)
-        # 获取页面中所有的日志地址列表
-        token_find = re.findall('"([.]?[a-zA-Z0-9-_]*)"', index_page_response.data)
-        if len(token_find) > 0 and len(token_find[0]) > 80:
-            extra_info["key"] = str(token_find[0])
+    script_data = []
+    if token:
+        index_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
+        post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
+        index_page_response = net.http_request(index_page_url, post_data=post_data)
+        if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            script_data = tool.find_sub_string(index_page_response.data, ")]}'", None).strip()
+            try:
+                script_data = json.loads(script_data)
+            except ValueError:
+                script_data = []
+            if len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2]):
+                script_data = script_data[0][2]["113305009"]
+            else:
+                script_data = []
+    else:
+        index_page_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
+        index_page_response = net.http_request(index_page_url)
+        if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            script_data = tool.find_sub_string(index_page_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+            script_data = tool.find_sub_string(script_data, "return ", "}});")
+            try:
+                script_data = json.loads(script_data)
+            except ValueError:
+                script_data = []
+    if len(script_data) == 3:
+        for data in script_data[1]:
+            extra_blog_info = {
+                "blog_id": None,  # 页面解析出的日志id
+                "blog_time": None,  # 页面解析出的日志上传时间
+                "json_data": data,  # 页面解析出的日志上传时间
+            }
+            if len(data) >= 2 and robot.check_sub_key(("113305016",), data[1]) and len(data[1]["113305016"]) == 1 and len(data[1]["113305016"][0]) >= 5:
+                extra_blog_info["blog_id"] = str(data[1]["113305016"][0][0])
+                if isinstance(data[1]["113305016"][0][4], long):
+                    extra_blog_info["blog_time"] = int(data[1]["113305016"][0][4] / 1000)
+            extra_info["blog_info_list"].append(extra_blog_info)
+        extra_info["key"] = str(script_data[2])
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -67,9 +94,9 @@ def get_blog_page(account_id, picasaweb_url):
 
 # 获取指定id的相册页
 def get_album_page(account_id, album_id):
-    # 图片只有一页：https://get.google.com/albumarchive/pwaf/102249965218267255722/album/6282184792644344177?source=pwa
-    # 图片不止一页：https://get.google.com/albumarchive/pwaf/109057690948151627836/album/6376176710287947473?source=pwa
-    album_page_url = "https://get.google.com/albumarchive/pwaf/%s/album/%s?source=pwa" % (account_id, album_id)
+    # 图片只有一页：https://get.google.com/albumarchive/102249965218267255722/album/AF1QipPLt_v4vK2Jkqcm5DOtFl6aHWZMTdu0A4mOpOFN?source=pwa
+    # 图片不止一页：https://get.google.com/albumarchive/109057690948151627836/album/AF1QipMg1hsC4teQFP5xaBioWo-1SCr4Hphh4mfc0ZZX?source=pwa
+    album_page_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
     extra_info = {
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
@@ -95,8 +122,7 @@ def get_album_page(account_id, album_id):
                     post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
                     continue_image_page_response = net.http_request(continue_image_page_url, post_data=post_data, encode_multipart=False)
                     if continue_image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                        continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None)
-                        continue_data = continue_data.strip()
+                        continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None).strip()
                         try:
                             continue_data = json.loads(continue_data)
                             continue_token = continue_data[0][2]["113305010"][3]
@@ -107,11 +133,6 @@ def get_album_page(account_id, album_id):
                             continue_token = ""
             if len(image_url_list) > 0:
                 extra_info["image_url_list"] = image_url_list
-            # todo 暂时不要，会不会还出现这个问题
-            # 如果没有解析到图片，重试最多5次
-            # elif retry_count < 5:
-            #     retry_count += 1
-            #     continue
         album_page_response.extra_info = extra_info
         return album_page_response
 
@@ -217,63 +238,50 @@ class Download(threading.Thread):
             image_count = 1
             key = ""
             first_album_id = "0"
-            unique_list = []
             is_over = False
             need_make_download_dir = True
             while not is_over:
+                log.step(account_name + " 开始解析 %s 相册页" % key)
+
                 # 获取一页相册
                 index_page_response = get_one_page_blog(account_id, key)
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                # 获取相册页中的所有日志（picasweb.google.com）地址列表
-                log.trace(account_name + " 相册页（token：%s）解析的所有日志页：%s" % (key, index_page_response.extra_info["blog_url_list"]))
+                log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, index_page_response.extra_info["blog_info_list"]))
 
-                for blog_url in index_page_response.extra_info["blog_url_list"]:
-                    # 有可能拿到带authkey的，需要去掉
-                    # https://picasaweb.google.com/116300481938868290370/2015092603?authkey\u003dGv1sRgCOGLq-jctf-7Ww#6198800191175756402
-                    blog_url = blog_url.replace("\u003d", "=")
+                for blog_info in index_page_response.extra_info["blog_info_list"]:
+                    if blog_info["blog_id"] is None:
+                        log.error(account_name + " 日志信息%s的日志id解析失败" % blog_info["json_data"])
+                        tool.process_exit()
 
-                    # 获取日志
-                    blog_page_response = get_blog_page(account_id, blog_url)
-                    if blog_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_page_response.status)))
+                    if blog_info["blog_time"] is None:
+                        log.error(account_name + " 日志信息%s的日志时间解析失败" % blog_info["json_data"])
                         tool.process_exit()
-                    if not blog_page_response.extra_info["album_id"]:
-                        log.error(account_name + " 日志 %s 解析album id失败" % blog_url)
-                        tool.process_exit()
-                    album_id = blog_page_response.extra_info["album_id"]
-                    log.trace(account_name + " 日志 %s 的album id：%s" % (blog_url, album_id))
 
                     # 检查是否已下载到前一次的日志
-                    if int(album_id) <= int(self.account_info[2]):
+                    if blog_info["blog_time"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
                     # 将第一个日志的id做为新的存档记录
                     if first_album_id == "0":
-                        first_album_id = album_id
+                        first_album_id = str(blog_info["blog_time"])
 
-                    # 相同的album_id判断
-                    if album_id in unique_list:
-                        continue
-                    else:
-                        unique_list.append(album_id)
-
-                    log.step(account_name + " 开始解析日志 %s" % blog_url)
+                    log.step(account_name + " 开始解析日志 %s" % blog_info["blog_id"])
                     
                     # 获取相册页
-                    album_page_response = get_album_page(account_id, album_id)
+                    album_page_response = get_album_page(account_id, blog_info["blog_id"])
                     if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 相册%s访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
+                        log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], robot.get_http_request_failed_reason(album_page_response.status)))
                         tool.process_exit()
 
                     if len(album_page_response.extra_info["image_url_list"]) == 0:
-                        log.error(account_name + " 相册%s没有解析到图片" % album_id)
+                        log.error(account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
                         tool.process_exit()
                         
-                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_page_response.extra_info["image_url_list"]))
 
                     for image_url in album_page_response.extra_info["image_url_list"]:
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
@@ -285,12 +293,8 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_download_dir = False
 
-                        if image_url.rfind("/") < image_url.rfind("."):
-                            file_type = image_url.split(".")[-1]
-                        else:
-                            file_type = "jpg"
-                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, file_path)
+                        file_path = os.path.join(image_path, "%04d.jpg" % image_count)
+                        save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
                         if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
