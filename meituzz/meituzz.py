@@ -25,9 +25,9 @@ def get_album_page(page_count):
     }
     if album_page_response.status == 200:
         # 获取相册标题
-        extra_info["video_title"] = tool.find_sub_string(album_page_response.data, "<title>", "</title>")
+        extra_info["title"] = tool.find_sub_string(album_page_response.data, "<title>", "</title>").replace("\n", "")
         # 检测相册是否已被删除
-        extra_info["is_delete"] = extra_info["video_title"] == "相册已被删除"
+        extra_info["is_delete"] = extra_info["title"] == "相册已被删除"
         if not extra_info["is_delete"]:
             key = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="s" value="', '">')
             is_error = True
@@ -154,7 +154,8 @@ class MeiTuZZ(robot.Robot):
                 video_url = album_page_response.extra_info["video_url"]
                 log.step("开始下载第%s页视频 %s" % (album_id, video_url))
 
-                video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, album_page_response.extra_info["title"]))
+                title = robot.filter_text(album_page_response.extra_info["title"])
+                video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, title))
                 try:
                     save_file_return = net.save_net_file(video_url, video_file_path)
                     if save_file_return["status"] == 1:
