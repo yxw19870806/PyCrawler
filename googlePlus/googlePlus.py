@@ -56,17 +56,18 @@ def get_one_page_blog(account_id, token):
             except ValueError:
                 script_data = []
     if len(script_data) == 3:
-        for data in script_data[1]:
-            extra_blog_info = {
-                "blog_id": None,  # 页面解析出的日志id
-                "blog_time": None,  # 页面解析出的日志上传时间
-                "json_data": data,  # 页面解析出的日志上传时间
-            }
-            if len(data) >= 2 and robot.check_sub_key(("113305016",), data[1]) and len(data[1]["113305016"]) == 1 and len(data[1]["113305016"][0]) >= 5:
-                extra_blog_info["blog_id"] = str(data[1]["113305016"][0][0])
-                if isinstance(data[1]["113305016"][0][4], long):
-                    extra_blog_info["blog_time"] = int(data[1]["113305016"][0][4] / 1000)
-            extra_info["blog_info_list"].append(extra_blog_info)
+        if script_data[1] is not None:
+            for data in script_data[1]:
+                extra_blog_info = {
+                    "blog_id": None,  # 页面解析出的日志id
+                    "blog_time": None,  # 页面解析出的日志上传时间
+                    "json_data": data,  # 页面解析出的日志上传时间
+                }
+                if len(data) >= 2 and robot.check_sub_key(("113305016",), data[1]) and len(data[1]["113305016"]) == 1 and len(data[1]["113305016"][0]) >= 5:
+                    extra_blog_info["blog_id"] = str(data[1]["113305016"][0][0])
+                    if isinstance(data[1]["113305016"][0][4], long):
+                        extra_blog_info["blog_time"] = int(data[1]["113305016"][0][4] / 1000)
+                extra_info["blog_info_list"].append(extra_blog_info)
         extra_info["key"] = str(script_data[2])
     index_page_response.extra_info = extra_info
     return index_page_response
