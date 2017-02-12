@@ -45,8 +45,8 @@ class Template(robot.Robot):
         page_count = 1
         image_count = 1
         first_post_id = 0
-        is_over = True
-        while is_over:
+        is_over = False
+        while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
             image_info = get_one_page_image_info_list(page_count)
