@@ -9,12 +9,15 @@ email: hikaru870806@hotmail.com
 from common import log, net, robot, tool
 import os
 
-ERROR_PAGE_COUNT_CHECK = 10
+ERROR_PAGE_COUNT_CHECK = 50
 
 
 # 获取指定页数的相册
 def get_album_page(page_count):
-    album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
+    if page_count <= 25000:
+        album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
+    else:
+        album_url = "http://zz.meituzz.com/ab/brV9?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
     album_page_response = net.http_request(album_url)
     extra_info = {
         "is_delete": False,  # 相册是不是已被删除（或还没有内容）
