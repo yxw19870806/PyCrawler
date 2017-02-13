@@ -22,7 +22,8 @@ import traceback
 import urllib
 import urllib2
 import zipfile
-import win32crypt
+if platform.system() == "Windows":
+    import win32crypt
 
 # 初始化操作
 if sys.version_info < (2, 7, 12):
