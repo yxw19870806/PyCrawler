@@ -174,7 +174,7 @@ def _random_ip_address():
 def save_net_file(file_url, file_path, need_content_type=False, header_list=None):
     file_path = tool.change_path_encoding(file_path)
     create_file = False
-    for i in range(0, 5):
+    for retry_count in range(0, 5):
         response = http_request(file_url, header_list=header_list)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
@@ -198,7 +198,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             else:
                 return {"status": 1, "code": 0}
         # 超过重试次数，直接退出
-        elif response.status == 0:
+        elif response.status == HTTP_RETURN_CODE_RETRY:
             if create_file:
                 os.remove(file_path)
             return {"status": 0, "code": -1}
