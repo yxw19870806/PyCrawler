@@ -452,7 +452,7 @@ def print_msg(msg, is_time=True):
     if IS_EXECUTABLE:
         print msg.decode("utf-8").encode("GBK")
     else:
-        print msg
+        print msg.decode("utf-8").encode("GBK")
     thread_lock.release()
 
 
