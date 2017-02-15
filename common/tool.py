@@ -21,7 +21,6 @@ import threading
 import traceback
 import urllib
 import urllib2
-import zipfile
 if platform.system() == "Windows":
     import win32crypt
 
@@ -39,132 +38,6 @@ if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
     IS_EXECUTABLE = False
-
-
-# http请求
-# header_list   http header信息，e.g. {"Host":“www.example.com"}
-# is_random_ip  是否使用伪造IP
-# 返回 【返回码，数据, response】
-# 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
-def http_request(url, post_data=None, header_list=None, is_random_ip=True):
-    if not (url.find("http://") == 0 or url.find("https://") == 0):
-        return -100, None, None
-    count = 0
-    while True:
-        while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
-            time.sleep(10)
-        if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
-            process_exit(0)
-        try:
-            if post_data:
-                if isinstance(post_data, dict):
-                    post_data = urllib.urlencode(post_data)
-                request = urllib2.Request(url, post_data)
-            else:
-                request = urllib2.Request(url)
-
-            # 设置User-Agent
-            request.add_header("User-Agent", random_user_agent())
-
-            # 设置一个随机IP
-            if is_random_ip:
-                random_ip = random_ip_address()
-                request.add_header("X-Forwarded-For", random_ip)
-                request.add_header("x-Real-Ip", random_ip)
-
-            # 自定义header
-            if isinstance(header_list, dict):
-                for header_name, header_value in header_list.iteritems():
-                    request.add_header(header_name, header_value)
-
-            # 设置访问超时
-            response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
-
-            if response:
-                return 1, response.read(), response
-        except Exception, e:
-            # Connection refused（代理无法访问）
-            if str(e).find("[Errno 10061]") != -1:
-                # 判断是否设置了代理
-                if urllib2._opener.handlers is not None:
-                    for handler in urllib2._opener.handlers:
-                        if isinstance(handler, urllib2.ProxyHandler):
-                            notice = "无法访问代理服务器，请检查代理设置。检查完成后输入[(C)ontinue]继续程序或者[(S)top]退出程序："
-                            input_str = raw_input(notice).lower()
-                            if input_str in ["c", "continue"]:
-                                pass
-                            elif input_str in ["s", "stop"]:
-                                sys.exit()
-                            break
-            # 10053 Software caused connection abort
-            # 10054 Connection reset by peer
-            elif str(e).find("[Errno 10053] ") != -1 or str(e).find("[Errno 10054] ") != -1 or \
-                    str(e).find("HTTP Error 502: Server dropped connection") != -1:
-                print_msg(str(e))
-                print_msg(url + " 访问超时，稍后重试")
-                time.sleep(30)
-            # 超时
-            elif str(e).find("timed out") != -1 or str(e).find("urlopen error EOF occurred in violation of protocol") != -1:
-                print_msg(str(e))
-                print_msg(url + " 访问超时，稍后重试")
-                time.sleep(10)
-            # 400
-            elif str(e).lower().find("http error 400") != -1:
-                return -400, None, None
-            # 403
-            elif str(e).lower().find("http error 403") != -1:
-                return -403, None, None
-            # 404
-            elif str(e).lower().find("http error 404") != -1:
-                return -404, None, None
-            # 500
-            elif str(e).lower().find("http error 500") != -1:
-                return -500, None, None
-            else:
-                print_msg(url)
-                print_msg(str(e))
-                traceback.print_exc()
-
-        count += 1
-        if count > HTTP_REQUEST_RETRY_COUNT:
-            print_msg("无法访问页面：" + url)
-            return -1, None, None
-
-
-# 随机生成一个合法的user agent
-def random_user_agent():
-    # "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
-    # "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
-    firefox_version_max = 49
-    # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["45.0.2454", "46.0.2490", "47.0.2526", "48.0.2564", "49.0.2623",
-                           "50.0.2661", "51.0.2704", "52.0.2743", "53.0.2785", "54.0.2840"]
-    windows_version_list = ["6.1", "6.3", "10.0"]
-    browser_type = random.choice(["firefox", "chrome"])
-    os_type = random.choice(windows_version_list)
-    if browser_type == "firefox":
-        firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
-        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" \
-               % (os_type, firefox_version, firefox_version)
-    elif browser_type == "chrome":
-        sub_version = random.randint(1, 100)
-        chrome_version = random.choice(chrome_version_list)
-        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" \
-               % (os_type, chrome_version, sub_version)
-    return ""
-
-
-# 生成一个随机的IP地址
-def random_ip_address():
-    return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-
-# 获取请求response中的指定信息
-def get_response_info(response_info, key):
-    if isinstance(response_info, mimetools.Message):
-        if key in response_info:
-            return response_info[key]
-    return None
 
 
 # 根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
@@ -186,98 +59,6 @@ def get_default_browser_cookie_path(browser_type):
         return os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default")
     print_msg("浏览器类型：" + browser_type + "不存在")
     return None
-
-
-# 根据key和value创建一个cookie
-def create_cookie(name, value, domain="", path="/"):
-    return cookielib.Cookie(version=0, name=name, value=value, port=None, port_specified=False, domain=domain,
-                            domain_specified=False, domain_initial_dot=False, path=path, path_specified=True,
-                            secure=False, expires=None, discard=True, comment=None, comment_url=None,
-                            rest={"HttpOnly": None}, rfc2109=False)
-
-
-# 加载在浏览器中已经保存了的cookies
-# browser_type=1: IE
-# browser_type=2: firefox
-# browser_type=3: chrome
-def set_cookie_from_browser(file_path, browser_type, target_domains=""):
-    if not os.path.exists(file_path):
-        print_msg("cookie目录：" + file_path + " 不存在")
-        return False
-    ftstr = ["FALSE", "TRUE"]
-    s = cStringIO.StringIO()
-    s.write("# Netscape HTTP Cookie File\n")
-    if browser_type == 1:
-        for cookie_name in os.listdir(file_path):
-            if cookie_name.find(".txt") == -1:
-                continue
-            cookie_file = open(os.path.join(file_path, cookie_name), "r")
-            cookie_info = cookie_file.read()
-            cookie_file.close()
-            for cookies in cookie_info.split("*"):
-                cookie_list = cookies.strip("\n").split("\n")
-                if len(cookie_list) < 8:
-                    continue
-                domain = cookie_list[2].split("/")[0]
-                if __filter_domain(domain, target_domains):
-                    continue
-                domain_specified = ftstr[cookie_list[2].startswith(".")]
-                path = cookie_list[2].replace(domain, "")
-                secure = ftstr[0]
-                expires = cookie_list[4]
-                name = cookie_list[0]
-                value = cookie_list[1]
-                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
-    elif browser_type == 2:
-        # DB文件开启了WAL功能（SQL3.7引入，旧版本Python2.7.5的sqlite3的版本是3.6，可能无法访问，需要升级python版本）
-        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
-        cur = con.cursor()
-        cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
-        for cookie_info in cur.fetchall():
-            domain = cookie_info[0]
-            if __filter_domain(domain, target_domains):
-                continue
-            domain_specified = ftstr[cookie_info[0].startswith(".")]
-            path = cookie_info[1]
-            secure = ftstr[cookie_info[2]]
-            expires = cookie_info[3]
-            name = cookie_info[4]
-            value = cookie_info[5]
-            try:
-                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
-            except:
-                pass
-    elif browser_type == 3:
-        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
-        cur = con.cursor()
-        cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
-        for cookie_info in cur.fetchall():
-            domain = cookie_info[0]
-            if __filter_domain(domain, target_domains):
-                continue
-            domain_specified = ftstr[cookie_info[0].startswith(".")]
-            path = cookie_info[1]
-            secure = ftstr[cookie_info[2]]
-            expires = cookie_info[3]
-            name = cookie_info[4]
-            value = cookie_info[5]
-            try:
-                value = win32crypt.CryptUnprotectData(cookie_info[6], None, None, None, 0)[1]
-            except:
-                pass
-            try:
-                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
-            except:
-                pass
-    else:
-        print_msg("不支持的浏览器类型：" + browser_type)
-        return False
-    s.seek(0)
-    cookie_jar = cookielib.MozillaCookieJar()
-    cookie_jar._really_load(s, "", True, True)
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
-    urllib2.install_opener(opener)
-    return True
 
 
 # 从浏览器保存的cookies中获取指定key的cookie value
@@ -413,37 +194,6 @@ def get_all_cookie_from_browser(browser_type, file_path):
     return all_cookies
 
 
-# 设置代理
-def set_proxy(ip, port):
-    proxy_address = "http://%s:%s" % (ip, port)
-    proxy_handler = urllib2.ProxyHandler({"http": proxy_address, "https": proxy_address})
-    opener = urllib2.build_opener(proxy_handler)
-    urllib2.install_opener(opener)
-    print_msg("设置代理成功")
-
-
-# 快速设置cookie和代理
-# is_set_cookie True / False
-# is_set_proxy True / False
-def quickly_set(is_set_cookie=True, is_set_proxy=True):
-    import robot
-    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
-    if is_set_cookie:
-        # 操作系统&浏览器
-        browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
-        # cookie
-        is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
-        if is_auto_get_cookie:
-            cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
-        else:
-            cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-        set_cookie_from_browser(cookie_path, browser_type)
-    if is_set_proxy:
-        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
-        set_proxy(proxy_ip, proxy_port)
-
-
 # 控制台输出
 def print_msg(msg, is_time=True):
     if is_time:
@@ -461,12 +211,6 @@ def print_msg(msg, is_time=True):
 # 获取时间
 def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
-
-
-# http请求返回的时间字符串转换为时间戳
-def response_time_to_timestamp(time_string):
-    last_modified_time = time.strptime(time_string, "%a, %d %b %Y %H:%M:%S %Z")
-    return int(time.mktime(last_modified_time)) - time.timezone
 
 
 # 根据开始与结束的字符串，截取字符串
@@ -505,6 +249,7 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
 
 
 # 文件路径编码转换
+# todo 优化
 def change_path_encoding(path):
     try:
         if isinstance(path, unicode):
@@ -536,42 +281,6 @@ def write_file(msg, file_path, append_type=1):
     file_handle.write(msg + "\n")
     file_handle.close()
     thread_lock.release()
-
-
-# 保存网络文件
-# file_url 文件所在网址
-# file_path 文件所在本地路径，包括路径和文件名
-# need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
-def save_net_file(file_url, file_path, need_content_type=False):
-    file_path = change_path_encoding(file_path)
-    create_file = False
-    for i in range(0, 5):
-        page_return_code, page_data, page_response = http_request(file_url)
-        if page_return_code == 1:
-            # response中的Content-Type作为文件后缀名
-            if need_content_type:
-                content_type = get_response_info(page_response.info(), "Content-Type")
-                if content_type and content_type != "octet-stream":
-                    file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
-            # 下载
-            create_file = True
-            file_handle = open(file_path, "wb")
-            file_handle.write(page_data)
-            file_handle.close()
-            # 判断文件下载后的大小和response中的Content-Length是否一致
-            content_length = get_response_info(page_response.info(), "Content-Length")
-            file_size = os.path.getsize(file_path)
-            if (content_length is None) or (int(content_length) == file_size):
-                return True
-            else:
-                print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
-        elif page_return_code < 0:
-            if create_file:
-                os.remove(file_path)
-            return False
-    if create_file:
-        os.remove(file_path)
-    return False
 
 
 # 按照指定连接符合并二维数组生成字符串
@@ -689,47 +398,6 @@ def copy_files(source_path, destination_path):
     shutil.copyfile(source_path, destination_path)
 
 
-# 压缩文件夹
-# need_source_dir   是否需要把文件夹名作为根目录
-def zip_dir(source_dir, zip_file_path, need_source_dir=True):
-    file_list = []
-    path_prefix_len = len(source_dir)  # 文件列表路径前缀的长度
-    # 是目录，直接添加
-    if os.path.isfile(source_dir):
-        file_list.append(source_dir)
-    else:
-        # 如果需要包含目录
-        if need_source_dir:
-            path_prefix_len -= len(os.path.basename(source_dir)) + 1
-        for root, dirs, files in os.walk(source_dir):
-            for name in files:
-                file_list.append(os.path.join(root, name))
-    zip_file = zipfile.ZipFile(zip_file_path, "w", zipfile.zlib.DEFLATED)
-    for file_path in file_list:
-        zip_file_path = file_path[path_prefix_len:]
-        zip_file.write(file_path, zip_file_path)
-    zip_file.close()
-
-
-# 解压缩文件
-def unzip_file(zip_file_path, destination_path):
-    if not os.path.exists(destination_path):
-        os.makedirs(destination_path)
-    zip_file = zipfile.ZipFile(zip_file_path)
-    for zip_file_path in zip_file.namelist():
-        zip_file_path = zip_file_path.replace("\\", "/")
-        if zip_file_path.endswith("/"):  # 解压目录
-            os.makedirs(os.path.join(destination_path, zip_file_path))
-        else:  # 解压文件
-            file_path = os.path.join(destination_path, zip_file_path)  # 文件的完整路径
-            file_dir = os.path.dirname(file_path)
-            if not os.path.exists(file_dir):
-                os.makedirs(file_dir)
-            outfile = open(file_path, "wb")
-            outfile.write(zip_file.read(zip_file_path))
-            outfile.close()
-
-
 # 生成指定长度的随机字符串
 # char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
 def generate_random_string(string_length, char_lib_type=7):
@@ -776,3 +444,290 @@ def shutdown(delay_time=30):
         os.system("shutdown -s -f -t " + str(delay_time))
     else:
         os.system("halt")
+
+
+# 保存网络文件
+# file_url 文件所在网址
+# file_path 文件所在本地路径，包括路径和文件名
+# need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
+# todo 已废弃，使用net.save_net_file
+def save_net_file(file_url, file_path, need_content_type=False):
+    file_path = change_path_encoding(file_path)
+    create_file = False
+    for i in range(0, 5):
+        page_return_code, page_data, page_response = http_request(file_url)
+        if page_return_code == 1:
+            # response中的Content-Type作为文件后缀名
+            if need_content_type:
+                content_type = get_response_info(page_response.info(), "Content-Type")
+                if content_type and content_type != "octet-stream":
+                    file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
+            # 下载
+            create_file = True
+            file_handle = open(file_path, "wb")
+            file_handle.write(page_data)
+            file_handle.close()
+            # 判断文件下载后的大小和response中的Content-Length是否一致
+            content_length = get_response_info(page_response.info(), "Content-Length")
+            file_size = os.path.getsize(file_path)
+            if (content_length is None) or (int(content_length) == file_size):
+                return True
+            else:
+                print_msg("本地文件%s: %s和网络文件%s:%s不一致" % (file_path, content_length, file_url, file_size))
+        elif page_return_code < 0:
+            if create_file:
+                os.remove(file_path)
+            return False
+    if create_file:
+        os.remove(file_path)
+    return False
+
+
+# http请求
+# header_list   http header信息，e.g. {"Host":“www.example.com"}
+# is_random_ip  是否使用伪造IP
+# 返回 【返回码，数据, response】
+# 返回码 1：正常返回；-1：无法访问；-100：URL格式不正确；其他< 0：网页返回码
+# todo 已废弃，使用net.http_request()
+def http_request(url, post_data=None, header_list=None, is_random_ip=True):
+    if not (url.find("http://") == 0 or url.find("https://") == 0):
+        return -100, None, None
+    count = 0
+    while True:
+        while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
+            time.sleep(10)
+        if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
+            process_exit(0)
+        try:
+            if post_data:
+                if isinstance(post_data, dict):
+                    post_data = urllib.urlencode(post_data)
+                request = urllib2.Request(url, post_data)
+            else:
+                request = urllib2.Request(url)
+
+            # 设置User-Agent
+            request.add_header("User-Agent", random_user_agent())
+
+            # 设置一个随机IP
+            if is_random_ip:
+                random_ip = random_ip_address()
+                request.add_header("X-Forwarded-For", random_ip)
+                request.add_header("x-Real-Ip", random_ip)
+
+            # 自定义header
+            if isinstance(header_list, dict):
+                for header_name, header_value in header_list.iteritems():
+                    request.add_header(header_name, header_value)
+
+            # 设置访问超时
+            response = urllib2.urlopen(request, timeout=HTTP_CONNECTION_TIMEOUT)
+
+            if response:
+                return 1, response.read(), response
+        except Exception, e:
+            # Connection refused（代理无法访问）
+            if str(e).find("[Errno 10061]") != -1:
+                # 判断是否设置了代理
+                if urllib2._opener.handlers is not None:
+                    for handler in urllib2._opener.handlers:
+                        if isinstance(handler, urllib2.ProxyHandler):
+                            notice = "无法访问代理服务器，请检查代理设置。检查完成后输入[(C)ontinue]继续程序或者[(S)top]退出程序："
+                            input_str = raw_input(notice).lower()
+                            if input_str in ["c", "continue"]:
+                                pass
+                            elif input_str in ["s", "stop"]:
+                                sys.exit()
+                            break
+            # 10053 Software caused connection abort
+            # 10054 Connection reset by peer
+            elif str(e).find("[Errno 10053] ") != -1 or str(e).find("[Errno 10054] ") != -1 or \
+                    str(e).find("HTTP Error 502: Server dropped connection") != -1:
+                print_msg(str(e))
+                print_msg(url + " 访问超时，稍后重试")
+                time.sleep(30)
+            # 超时
+            elif str(e).find("timed out") != -1 or str(e).find("urlopen error EOF occurred in violation of protocol") != -1:
+                print_msg(str(e))
+                print_msg(url + " 访问超时，稍后重试")
+                time.sleep(10)
+            # 400
+            elif str(e).lower().find("http error 400") != -1:
+                return -400, None, None
+            # 403
+            elif str(e).lower().find("http error 403") != -1:
+                return -403, None, None
+            # 404
+            elif str(e).lower().find("http error 404") != -1:
+                return -404, None, None
+            # 500
+            elif str(e).lower().find("http error 500") != -1:
+                return -500, None, None
+            else:
+                print_msg(url)
+                print_msg(str(e))
+                traceback.print_exc()
+
+        count += 1
+        if count > HTTP_REQUEST_RETRY_COUNT:
+            print_msg("无法访问页面：" + url)
+            return -1, None, None
+
+
+# 随机生成一个合法的user agent
+# todo 已废弃，使用net.random_user_agent()
+def random_user_agent():
+    # "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
+    # "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+    firefox_version_max = 49
+    # https://zh.wikipedia.org/zh-cn/Google_Chrome
+    chrome_version_list = ["45.0.2454", "46.0.2490", "47.0.2526", "48.0.2564", "49.0.2623",
+                           "50.0.2661", "51.0.2704", "52.0.2743", "53.0.2785", "54.0.2840"]
+    windows_version_list = ["6.1", "6.3", "10.0"]
+    browser_type = random.choice(["firefox", "chrome"])
+    os_type = random.choice(windows_version_list)
+    if browser_type == "firefox":
+        firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
+        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" \
+               % (os_type, firefox_version, firefox_version)
+    elif browser_type == "chrome":
+        sub_version = random.randint(1, 100)
+        chrome_version = random.choice(chrome_version_list)
+        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" \
+               % (os_type, chrome_version, sub_version)
+    return ""
+
+
+# 生成一个随机的IP地址
+# todo 已废弃，使用net._random_ip_address()
+def random_ip_address():
+    return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+
+# 获取请求response中的指定信息
+# todo 已废弃，使用urllib3自带的headers属性
+def get_response_info(response_info, key):
+    if isinstance(response_info, mimetools.Message):
+        if key in response_info:
+            return response_info[key]
+    return None
+
+
+# 加载在浏览器中已经保存了的cookies
+# browser_type=1: IE
+# browser_type=2: firefox
+# browser_type=3: chrome
+# todo 已废弃，改为从所有cookies中获取制定cookie key的值，然后使用urllib3自带的headers参数传递（"Cookie": "cookie_key=cookie_value;")
+def set_cookie_from_browser(file_path, browser_type, target_domains=""):
+    if not os.path.exists(file_path):
+        print_msg("cookie目录：" + file_path + " 不存在")
+        return False
+    ftstr = ["FALSE", "TRUE"]
+    s = cStringIO.StringIO()
+    s.write("# Netscape HTTP Cookie File\n")
+    if browser_type == 1:
+        for cookie_name in os.listdir(file_path):
+            if cookie_name.find(".txt") == -1:
+                continue
+            cookie_file = open(os.path.join(file_path, cookie_name), "r")
+            cookie_info = cookie_file.read()
+            cookie_file.close()
+            for cookies in cookie_info.split("*"):
+                cookie_list = cookies.strip("\n").split("\n")
+                if len(cookie_list) < 8:
+                    continue
+                domain = cookie_list[2].split("/")[0]
+                if __filter_domain(domain, target_domains):
+                    continue
+                domain_specified = ftstr[cookie_list[2].startswith(".")]
+                path = cookie_list[2].replace(domain, "")
+                secure = ftstr[0]
+                expires = cookie_list[4]
+                name = cookie_list[0]
+                value = cookie_list[1]
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+    elif browser_type == 2:
+        # DB文件开启了WAL功能（SQL3.7引入，旧版本Python2.7.5的sqlite3的版本是3.6，可能无法访问，需要升级python版本）
+        con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
+        cur = con.cursor()
+        cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
+        for cookie_info in cur.fetchall():
+            domain = cookie_info[0]
+            if __filter_domain(domain, target_domains):
+                continue
+            domain_specified = ftstr[cookie_info[0].startswith(".")]
+            path = cookie_info[1]
+            secure = ftstr[cookie_info[2]]
+            expires = cookie_info[3]
+            name = cookie_info[4]
+            value = cookie_info[5]
+            try:
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+            except:
+                pass
+    elif browser_type == 3:
+        if platform.system() != "Windows":
+            return None
+        con = sqlite3.connect(os.path.join(file_path, "Cookies"))
+        cur = con.cursor()
+        cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
+        for cookie_info in cur.fetchall():
+            domain = cookie_info[0]
+            if __filter_domain(domain, target_domains):
+                continue
+            domain_specified = ftstr[cookie_info[0].startswith(".")]
+            path = cookie_info[1]
+            secure = ftstr[cookie_info[2]]
+            expires = cookie_info[3]
+            name = cookie_info[4]
+            value = cookie_info[5]
+            try:
+                value = win32crypt.CryptUnprotectData(cookie_info[6], None, None, None, 0)[1]
+            except:
+                pass
+            try:
+                s.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (domain, domain_specified, path, secure, expires, name, value))
+            except:
+                pass
+    else:
+        print_msg("不支持的浏览器类型：" + browser_type)
+        return False
+    s.seek(0)
+    cookie_jar = cookielib.MozillaCookieJar()
+    cookie_jar._really_load(s, "", True, True)
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
+    urllib2.install_opener(opener)
+    return True
+
+
+# 设置代理
+# todo 已废弃，使用net.set_proxy()
+def set_proxy(ip, port):
+    proxy_address = "http://%s:%s" % (ip, port)
+    proxy_handler = urllib2.ProxyHandler({"http": proxy_address, "https": proxy_address})
+    opener = urllib2.build_opener(proxy_handler)
+    urllib2.install_opener(opener)
+    print_msg("设置代理成功")
+
+
+# 快速设置cookie和代理
+# is_set_cookie True / False
+# is_set_proxy True / False
+# todo 已废弃
+def quickly_set(is_set_cookie=True, is_set_proxy=True):
+    import robot
+    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    if is_set_cookie:
+        # 操作系统&浏览器
+        browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
+        # cookie
+        is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+        if is_auto_get_cookie:
+            cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+        else:
+            cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
+        set_cookie_from_browser(cookie_path, browser_type)
+    if is_set_proxy:
+        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        set_proxy(proxy_ip, proxy_port)
