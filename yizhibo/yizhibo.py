@@ -101,6 +101,11 @@ def save_video(ts_file_list, file_path):
     file_handle.close()
     return True
 
+# http请求返回的时间字符串转换为时间戳
+def response_time_to_timestamp(time_string):
+    last_modified_time = time.strptime(time_string, "%a, %d %b %Y %H:%M:%S %Z")
+    return int(time.mktime(last_modified_time)) - time.timezone
+
 
 class YiZhiBo(robot.Robot):
     def __init__(self):
@@ -229,7 +234,7 @@ class Download(threading.Thread):
                     # 获取图片的上传时间（字符串）
                     response_last_modified_time = tool.get_response_info(image_response.info(), "Last-Modified")
                     # 字符串转换为时间戳
-                    image_created_time = tool.response_time_to_timestamp(response_last_modified_time)
+                    image_created_time = response_time_to_timestamp(response_last_modified_time)
 
                     # 检查是否已下载到前一次的图片
                     if int(image_created_time) <= int(self.account_info[4]):
