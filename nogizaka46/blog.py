@@ -77,13 +77,16 @@ def check_big_image(image_url, big_2_small_list):
         "is_over": False,  # 是不是已经没有还生效的大图了
     }
     if image_url in big_2_small_list:
-        big_image_response = net.http_request(big_2_small_list[image_url])
-        if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')
-            if temp_image_url != "/img/expired.gif":
-                extra_info["image_url"] = temp_image_url
-            else:
-                extra_info["is_over"] = True
+        if big_2_small_list[image_url].find("http://dcimg.awalker.jp") == 0:
+            big_image_response = net.http_request(big_2_small_list[image_url])
+            if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')
+                if temp_image_url != "/img/expired.gif":
+                    extra_info["image_url"] = temp_image_url
+                else:
+                    extra_info["is_over"] = True
+        else:
+            extra_info["image_url"] = big_2_small_list[image_url]
     big_image_response.extra_info = extra_info
     return big_image_response
 
@@ -232,7 +235,8 @@ class Download(threading.Thread):
                             big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
                             if big_image_response.extra_info["image_url"] is not None:
                                 image_url = big_image_response.extra_info["image_url"]
-                                header_list = {"Cookie": big_image_response.headers["Set-Cookie"]}
+                                if "Set-Cookie" in big_image_response.headers:
+                                    header_list = {"Cookie": big_image_response.headers["Set-Cookie"]}
                             is_big_image_over = big_image_response.extra_info["is_over"]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
