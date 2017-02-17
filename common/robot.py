@@ -389,24 +389,6 @@ def rewrite_save_file(temp_save_data_path, save_data_path):
     os.remove(temp_save_data_path)
 
 
-# 对存档文件夹按照指定列重新排序
-def sort_save_data(save_data_path, sort_key_index=0):
-    save_data_file = open(save_data_path, "")
-    lines = save_data_file.readlines()
-    save_data_file.close()
-    line_list = {}
-    for line in lines:
-        line = line.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
-        temp_list = line.split("\t")
-        if len(temp_list) > 0:
-            line_list[temp_list[sort_key_index]] = temp_list
-
-    save_data_file = open(save_data_path, "w")
-    for sort_key in sorted(line_list.keys()):
-        save_data_file.write("\t".join(line_list[sort_key]) + "\n")
-    save_data_file.close()
-
-
 # 生成新存档的文件路径
 def get_new_save_file_path(old_save_file_path):
     file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path)
