@@ -174,9 +174,9 @@ def get_one_page_media(account_id, cursor):
                 if robot.check_sub_key(("is_video", "display_src", "date"), media_info):
                     media_extra_info["image_url"] = str(media_info["display_src"]).split("?")[0]
                     media_extra_info["is_video"] = media_info["is_video"]
-                    media_extra_info["time"] = media_info["date"]
+                    media_extra_info["time"] = str(int(media_info["date"]))
                     if media_extra_info["is_video"] and robot.check_sub_key(("code",), media_info):
-                        media_extra_info["video_id"] = media_info["code"]
+                        media_extra_info["video_id"] = str(media_info["code"])
                 extra_info["media_info_list"].append(media_extra_info)
             # 获取下一页的指针
             if media_page_response.json_data["media"]["page_info"]["has_next_page"]:
@@ -348,7 +348,7 @@ class Download(threading.Thread):
 
                     # 将第一张图片的上传时间做为新的存档记录
                     if first_created_time == "0":
-                        first_created_time = str(int(media_info["time"]))
+                        first_created_time = media_info["time"]
 
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
