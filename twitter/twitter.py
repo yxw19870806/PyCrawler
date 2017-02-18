@@ -365,9 +365,13 @@ class Download(threading.Thread):
                 if media_page["new_latent_count"] == 0 and not media_page["has_more_items"]:
                     break
 
+                # 没有返回任何信息
+                if not media_page["items_html"].strip():
+                    break
+
                 tweet_list = get_tweet_list(media_page["items_html"])
                 if len(tweet_list) == 0:
-                    log.error(account_name + " 媒体列表拆分失败，items_html：%s" % media_page["items_html"])
+                    log.error(account_name + " 媒体列表拆分失败，items_html：%s" % str(media_page["items_html"]))
                     tool.process_exit()
 
                 if media_page["new_latent_count"] != len(tweet_list):
