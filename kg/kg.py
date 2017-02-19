@@ -15,10 +15,8 @@ ACCOUNTS = []
 AUDIO_COUNT_PER_PAGE = 8
 TOTAL_VIDEO_COUNT = 0
 GET_VIDEO_COUNT = 0
-VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = True
 
 
 # 获取指定页数的一页歌曲信息
@@ -69,10 +67,8 @@ def get_audio_play_page(audio_id):
 class KG(robot.Robot):
     def __init__(self):
         global GET_VIDEO_COUNT
-        global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_SORT
 
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
@@ -81,9 +77,7 @@ class KG(robot.Robot):
 
         # 设置全局变量，供子线程调用
         GET_VIDEO_COUNT = self.get_video_count
-        VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
-        IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
@@ -152,7 +146,7 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             # 歌曲
             video_count = 1
@@ -221,6 +215,11 @@ class Download(threading.Thread):
                         video_count += 1
                     else:
                         log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_info["audio_title"], audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_VIDEO_COUNT < video_count:
+                        is_over = True
+                        break
 
                 if index_page_response.extra_info["is_over"]:
                     is_over = True
