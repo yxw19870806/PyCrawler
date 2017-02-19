@@ -152,11 +152,7 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT:
-                video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-            else:
-                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
 
             # 歌曲
             video_count = 1
