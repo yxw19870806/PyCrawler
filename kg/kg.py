@@ -60,6 +60,10 @@ def get_audio_play_page(audio_id):
         audio_url = tool.find_sub_string(audio_play_page_response.data, '"playurl":"', '"')
         if audio_url:
             extra_info["audio_url"] = audio_url
+        else:
+            audio_url = tool.find_sub_string(audio_play_page_response.data, '"playurl_video":"', '"')
+            if audio_url:
+                extra_info["audio_url"] = audio_url
     audio_play_page_response.extra_info = extra_info
     return audio_play_page_response
 
@@ -208,7 +212,8 @@ class Download(threading.Thread):
                             tool.process_exit()
                         need_make_download_dir = False
 
-                    file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_info["audio_id"], audio_info["audio_title"]))
+                    file_type = audio_url.split(".")[-1].split("?")[0]
+                    file_path = os.path.join(video_path, "%s - %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], file_type))
                     save_file_return = net.save_net_file(audio_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s首歌曲下载成功" % video_count)
