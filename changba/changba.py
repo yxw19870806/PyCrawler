@@ -54,8 +54,11 @@ def get_one_page_audio(user_id, page_count):
                 "json_data": audio_info,  # 原始数据
             }
             if robot.check_sub_key(("workid", "songname", "enworkid"), audio_info):
+                # 获取歌曲id
                 extra_audio_info["audio_id"] = str(audio_info["workid"])
+                # 获取歌曲标题
                 extra_audio_info["audio_title"] = str(audio_info["songname"].encode("utf-8"))
+                # 获取歌曲key
                 extra_audio_info["audio_key"] = str(audio_info["enworkid"])
             extra_info["audio_info_list"].append(extra_audio_info)
     index_page_response.extra_info = extra_info

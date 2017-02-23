@@ -75,8 +75,10 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
                     "image_time": None,  # 图片上传时间
                     "json_data": photo_info,  # 原始数据
                 }
+                # 获取视频上传时间
                 if robot.check_sub_key(("dateupload",), photo_info):
                     extra_image_info["image_time"] = str(photo_info["dateupload"])
+                # 获取视频下载地址
                 if robot.check_sub_key(("url_o_cdn",), photo_info):
                     extra_image_info["image_url"] = str(photo_info["url_o_cdn"])
                 elif robot.check_sub_key(("url_o",), photo_info):
