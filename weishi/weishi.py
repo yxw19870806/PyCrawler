@@ -6,7 +6,7 @@ http://weishi.qq.com
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import random
@@ -24,34 +24,64 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 
 
-# 获取账号指定一页的视频信息
+# 获取指定一页的视频信息
 def get_one_page_video_data(account_id, page_time):
-    video_data_url = "http://wsm.qq.com/weishi/t/other.php?uid=%s&reqnum=%s" % (account_id, VIDEO_COUNT_PER_PAGE)
+    index_page_url = "http://wsm.qq.com/weishi/t/other.php?uid=%s&reqnum=%s" % (account_id, VIDEO_COUNT_PER_PAGE)
     if page_time > 0:
-        video_data_url += "&pageflag=02&pagetime=%s" % page_time
+        index_page_url += "&pageflag=02&pagetime=%s" % page_time
     else:
-        video_data_url += "&pageflag=0"
+        index_page_url += "&pageflag=0"
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "video_info_list": [],  # 页面解析出的视频信息列表
+        "is_over": False,  # 是不是最后一页视频
+    }
     header_list = {"Referer": "http://weishi.qq.com/"}
-    video_data_return_code, video_data = tool.http_request(video_data_url, header_list=header_list)[:2]
-    if video_data_return_code == 1:
-        try:
-            video_data = json.loads(video_data)
-        except ValueError:
-            pass
+    index_page_response = net.http_request(index_page_url, header_list=header_list, json_decode=True)
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if (
+            robot.check_sub_key(("ret", "data"), index_page_response.json_data) and
+            int(index_page_response.json_data["ret"]) == 0 and
+            robot.check_sub_key(("info", "hasNext"), index_page_response.json_data["data"])
+        ):
+            for video_info in index_page_response.json_data["data"]["info"]:
+                extra_video_info = {
+                    "video_id": None,  # 视频id
+                    "video_part_id_list": [],  # 视频分集id
+                    "video_time": None,  # 视频上传时间
+                    "json_data": video_info,  # 原始数据
+                }
+                if robot.check_sub_key(("newvideos", "id", "timestamp"), video_info):
+                    # 获取视频id
+                    extra_video_info["video_id"] = str(video_info["id"])
+                    # 获取分集id
+                    video_part_id_list = []
+                    for video_part_info in video_info["newvideos"]:
+                        if robot.check_sub_key(("vid",), video_part_info):
+                            video_part_id_list.append(str(video_part_info["vid"]))
+                        else:
+                            video_part_id_list = []
+                            break
+                    extra_video_info["video_part_id_list"] = video_part_id_list
+                    # 获取视频上传时间
+                    if isinstance(video_info["timestamp"], int) or str(video_info["timestamp"]).isdigit():
+                        extra_video_info["video_time"] = int(video_info["timestamp"])
+                extra_info["video_info_list"].append(extra_video_info)
+            # 检测是否还有下一页
+            extra_info["is_over"] = bool(index_page_response.json_data["data"]["hasNext"])
         else:
-            if robot.check_sub_key(("ret", "data"), video_data) and int(video_data["ret"]) == 0:
-                if robot.check_sub_key(("info", "hasNext"), video_data["data"]):
-                    return video_data["data"]
-    return None
+            extra_info["is_error"] = True
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 # 根据视频id和vid获取视频下载地址
 def get_video_url(video_vid, video_id):
     video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&id=%s" % (video_vid, video_id)
-    video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
-    if video_info_page_return_code == 1:
+    video_info_page_response = net.http_request(video_info_url)
+    if video_info_page_response.status == 200:
         try:
-            video_info_page = json.loads(video_info_page)
+            video_info_page = json.loads(video_info_page_response.data)
         except ValueError:
             pass
         else:
@@ -72,7 +102,7 @@ class WeiShi(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_VIDEO_COUNT = self.get_video_count
@@ -162,60 +192,66 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页视频" % video_count)
 
                 # 获取一页视频信息
-                video_data = get_one_page_video_data(account_id, page_time)
-                if video_data is None:
-                    log.error(account_name + " 视频列表解析失败")
+                index_page_response = get_one_page_video_data(account_id, page_time)
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (page_time, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                for video_info in video_data["info"]:
-                    if not robot.check_sub_key(("newvideos", "id", "timestamp"), video_info):
-                        log.error(account_name + " 视频信息 %s 解析失败" % video_info)
-                        continue
+                if index_page_response.extra_info["is_error"]:
+                    log.error(account_name + " %s后的一页视频信息%s解析失败" % (page_time, index_page_response.json_data))
+                    tool.process_exit()
 
-                    page_time = int(video_info["timestamp"])
+                for video_info in index_page_response.extra_info["video_info_list"]:
+                    if video_info["video_id"] is None:
+                        log.error(account_name + " 第%s个视频信息%s的视频id解析失败" % (video_count, video_info["json_data"]))
+                        tool.process_exit()
+
+                    if len(video_info["video_part_id_list"]) == 0:
+                        log.error(account_name + " 第%s个视频信息%s的视频分集id解析失败" % (video_count, video_info["json_data"]))
+                        tool.process_exit()
+
+                    if video_info["video_time"] is None:
+                        log.error(account_name + " 第%s个视频信息%s的视频时间解析失败" % (video_count, video_info["json_data"]))
+                        tool.process_exit()
+
                     # 检查是否已下载到前一次的视频
-                    if page_time <= int(self.account_info[2]):
+                    if video_info["video_time"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
                     # 将第一个视频的上传时间做为新的存档记录
                     if first_video_time == "0":
-                        first_video_time = str(page_time)
+                        first_video_time = str(video_info["video_time"])
 
-                    # todo 处理如果有多个视频
-                    if len(video_info["newvideos"]) != 1:
-                        log.error(account_name + " 视频信息 %s 发现多个视频下载信息" % video_info)
-                        continue
-                    if not robot.check_sub_key(("vid",), video_info["newvideos"][0]):
-                        log.error(account_name + " 视频信息 %s 解析vid失败" % video_info)
-                        continue
+                    for video_part_id in video_info["video_part_id_list"]:
+                        # 获取视频下载地址
+                        video_url = get_video_url(video_part_id, video_info["video_id"])
+                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
-                    # 获取视频下载地址
-                    video_url = get_video_url(video_info["newvideos"][0]["vid"], video_info["id"])
-                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                        # 第一个视频，创建目录
+                        if need_make_video_dir:
+                            if not tool.make_dir(video_path, 0):
+                                log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                                tool.process_exit()
+                            need_make_video_dir = False
 
-                    # 第一个视频，创建目录
-                    if need_make_video_dir:
-                        if not tool.make_dir(video_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                            tool.process_exit()
-                        need_make_video_dir = False
-
-                    file_type = video_url.split(".")[-1].split("?")[0]
-                    file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                    if tool.save_net_file(video_url, file_path):
-                        log.step(account_name + " 第%s个视频下载成功" % video_count)
-                        video_count += 1
-                    else:
-                        log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                        file_type = video_url.split(".")[-1].split("?")[0]
+                        file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
+                        if tool.save_net_file(video_url, file_path):
+                            log.step(account_name + " 第%s个视频下载成功" % video_count)
+                            video_count += 1
+                        else:
+                            log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 达到配置文件中的下载数量，结束
-                    if 0 < GET_VIDEO_COUNT < video_data:
+                    if 0 < GET_VIDEO_COUNT < video_count:
                         is_over = True
                         break
 
+                    page_time = video_info["video_time"]
+
                 if not is_over:
-                    if not video_data["hasNext"]:
+                    if index_page_response.extra_info["is_over"]:
                         is_over = True
 
             log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
