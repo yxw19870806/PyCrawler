@@ -37,7 +37,7 @@ class Template(robot.Robot):
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
             robot.SYS_SET_COOKIE: ("example.com",)
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count

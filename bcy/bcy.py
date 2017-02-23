@@ -207,7 +207,7 @@ class Bcy(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_GET_COOKIE: {"bcy.net": ("acw_tc", "PHPSESSID")},
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_PAGE_COUNT = self.get_page_count
