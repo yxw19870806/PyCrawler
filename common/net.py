@@ -41,13 +41,13 @@ class ErrorResponse(object):
 # 初始化urllib3的连接池
 def init_http_connection_pool():
     global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.PoolManager(retries=False, timeout=urllib3.Timeout(connect=HTTP_CONNECTION_TIMEOUT))
+    HTTP_CONNECTION_POOL = urllib3.PoolManager(retries=False)
 
 
 # 设置代理，初始化带有代理的urllib3的连接池
 def set_proxy(ip, port):
     global HTTP_CONNECTION_POOL
-    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False, timeout=urllib3.Timeout(connect=HTTP_CONNECTION_TIMEOUT))
+    HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
     tool.print_msg("设置代理成功")
 
 
@@ -60,7 +60,8 @@ def set_proxy(ip, port):
 #                   -2：json decode error
 #                   -10：特殊异常捕获后的返回
 #                   其他>0：网页返回码（正常返回码为200）
-def http_request(url, post_data=None, header_list=None, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
+def http_request(url, post_data=None, header_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True,
+                 json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
@@ -86,10 +87,19 @@ def http_request(url, post_data=None, header_list=None, is_random_ip=True, json_
             header_list["x-Real-Ip"] = random_ip
 
         try:
-            if post_data:
-                response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list, redirect=redirect, encode_multipart=encode_multipart)
+            if connection_timeout == 0 and read_timeout == 0:
+                timeout = None
+            elif connection_timeout == 0:
+                timeout = urllib3.Timeout(read=read_timeout)
+            elif read_timeout == 0:
+                timeout = urllib3.Timeout(connect=connection_timeout)
             else:
-                response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list, redirect=redirect)
+                timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
+            if post_data:
+                response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list, redirect=redirect, timeout=timeout, encode_multipart=encode_multipart)
+            else:
+                response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list, redirect=redirect, timeout=timeout
+                )
             if json_decode:
                 try:
                     response.json_data = json.loads(response.data)
@@ -117,6 +127,10 @@ def http_request(url, post_data=None, header_list=None, is_random_ip=True, json_
                 pass
             elif input_str in ["s", "stop"]:
                 tool.process_exit(0)
+        except urllib3.exceptions.ReadTimeoutError:
+            pass
+        except urllib3.exceptions.ConnectTimeoutError:
+            pass
         # except urllib3.exceptions.MaxRetryError, e:
         #     print_msg(url)
         #     print_msg(str(e))
@@ -189,7 +203,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     file_path = tool.change_path_encoding(file_path)
     create_file = False
     for retry_count in range(0, 5):
-        response = http_request(file_url, header_list=header_list)
+        response = http_request(file_url, header_list=header_list, read_timeout=0)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type and "Content-Type" in response.headers:
