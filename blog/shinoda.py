@@ -113,17 +113,16 @@ class Shinoda(robot.Robot):
         if self.is_sort:
             log.step("图片开始从下载目录移动到保存目录")
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
-                log.step(" 图片从下载目录移动到保存目录成功")
+                log.step("图片从下载目录移动到保存目录成功")
             else:
-                log.error(" 创建图片保存目录 %s 失败" % self.image_download_path)
+                log.error("创建图片保存目录 %s 失败" % self.image_download_path)
                 tool.process_exit()
 
         # 保存新的存档文件
-        new_save_file_path = robot.get_new_save_file_path(self.save_data_path)
-        log.step("保存新存档文件 %s" % new_save_file_path)
-        new_save_file = open(new_save_file_path, "w")
-        new_save_file.write(str(image_start_index) + "\t" + new_last_blog_time)
-        new_save_file.close()
+        if new_last_blog_time != "":
+            save_file = open(self.save_data_path, "w")
+            save_file.write(str(image_start_index) + "\t" + new_last_blog_time)
+            save_file.close()
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 
