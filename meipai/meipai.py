@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, net, robot, tool
+import base64
 import os
 import re
 import threading
@@ -53,6 +54,35 @@ def get_one_page_video(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
     index_page_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
     return net.http_request(index_page_url, json_decode=True)
+
+
+# 解密视频下载地址
+# 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
+def decode_video_url(video_url):
+    loc1 = get_hex(video_url)
+    loc2 = get_dec(loc1["hex"])
+    loc3 = sub_str(loc1["str"], loc2["pre"])
+    return base64.b64decode(sub_str(loc3, get_pos(loc3, loc2["tail"])))
+
+
+def get_hex(arg1):
+    return {"str": arg1[4:], "hex": reduce(lambda x, y: y + x, arg1[0:4])}
+
+
+def get_dec(arg1):
+    loc1 = str(int(arg1, 16))
+    return {"pre": [int(loc1[0]), int(loc1[1])], "tail": [int(loc1[2]), int(loc1[3])]}
+
+
+def sub_str(arg1, arg2):
+    loc1 = arg1[:arg2[0]]
+    loc2 = arg1[arg2[0]: arg2[0] + arg2[1]]
+    return loc1 + arg1[arg2[0]:].replace(loc2, "")
+
+
+def get_pos(arg1, arg2):
+    arg2[0] = len(arg1) - arg2[0] - arg2[1]
+    return arg2
 
 
 class MeiPai(robot.Robot):
@@ -189,7 +219,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(video_id)
 
-                    video_url = str(video_info["video"])
+                    video_url = decode_video_url(str(video_info["video"]))
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     # 第一个视频，创建目录
