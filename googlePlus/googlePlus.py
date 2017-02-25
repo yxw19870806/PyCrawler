@@ -295,12 +295,18 @@ class Download(threading.Thread):
                             need_make_download_dir = False
 
                         file_path = os.path.join(image_path, "%04d.jpg" % image_count)
-                        save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
-                        if save_file_return["status"] == 1:
-                            log.step(account_name + " 第%s张图片下载成功" % image_count)
-                            image_count += 1
-                        else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        retry_count = 0
+                        while True:
+                            save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
+                            if save_file_return["status"] == 1:
+                                log.step(account_name + " 第%s张图片下载成功" % image_count)
+                                image_count += 1
+                            elif save_file_return["status"] == 0 and save_file_return["code"] == 500 and retry_count <= 5:
+                                retry_count += 1
+                                continue
+                            else:
+                                log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            break
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_IMAGE_COUNT < image_count:
