@@ -285,6 +285,10 @@ class Download(threading.Thread):
                     log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_page_response.extra_info["image_url_list"]))
 
                     for image_url in album_page_response.extra_info["image_url_list"]:
+                        # 视频跳过
+                        if image_url.find("video.googleusercontent.com") != -1:
+                            continue
+
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         # 第一张图片，创建目录
