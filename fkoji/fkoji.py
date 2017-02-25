@@ -154,15 +154,15 @@ class Fkoji(robot.Robot):
 
         # 排序复制到保存目录
         if self.is_sort:
-            is_check_ok = False
-            while not is_check_ok:
-                # 等待手动检测所有图片结束
-                input_str = raw_input(tool.get_time() + " 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
-                input_str = input_str.lower()
-                if input_str in ["y", "yes"]:
-                    is_check_ok = True
-                elif input_str in ["n", "no"]:
-                    tool.process_exit()
+            # is_check_ok = False
+            # while not is_check_ok:
+            #     # 等待手动检测所有图片结束
+            #     input_str = raw_input(tool.get_time() + " 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
+            #     input_str = input_str.lower()
+            #     if input_str in ["y", "yes"]:
+            #         is_check_ok = True
+            #     elif input_str in ["n", "no"]:
+            #         tool.process_exit()
 
             all_path = os.path.join(self.image_download_path, "all")
             if not tool.make_dir(all_path, 0):
