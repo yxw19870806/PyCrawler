@@ -23,50 +23,28 @@ NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
 NOT_LOGIN_CAN_RUN = False
 SAVE_ACCOUNT_INFO = True
-COOKIE_INFO = {"acw_tc": "", "PHPSESSID": ""}
+COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
 
 
 # 检测登录状态
 def check_login():
+    if not COOKIE_INFO["LOGGED_USER"]:
+        return False
+    header_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
+    index_page_url = "http://bcy.net/"
+    index_page_response = net.http_request(index_page_url, header_list=header_list)
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Set-Cookie" in index_page_response.headers:
+        COOKIE_INFO["acw_tc"] = tool.find_sub_string(index_page_response.headers["Set-Cookie"], "acw_tc=", ";")
+        COOKIE_INFO["PHPSESSID"] = tool.find_sub_string(index_page_response.headers["Set-Cookie"], "PHPSESSID=", ";")
     if not COOKIE_INFO["acw_tc"] or not COOKIE_INFO["PHPSESSID"]:
         return False
     home_page_url = "http://bcy.net/home/user/index"
-    header_list = {"Cookie": "acw_tc=%s; PHPSESSID=%s; mobile_set=no" % (COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
+    header_list = {"Cookie": "LOGGED_USER=%s; acw_tc=%s; PHPSESSID=%s" % (COOKIE_INFO["LOGGED_USER"], COOKIE_INFO["acw_tc"], COOKIE_INFO["PHPSESSID"])}
     home_page_response = net.http_request(home_page_url, header_list=header_list)
     if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if home_page_response.data.find('<a href="/login">登录</a>') == -1:
             return True
     return False
-
-
-# 从文件中获取账号信息
-def read_cookie_info_from_file():
-    if not os.path.exists("account.data"):
-        return False
-    file_handle = open("account.data", "r")
-    cookie_info = file_handle.read()
-    file_handle.close()
-    try:
-        cookie_info = json.loads(base64.b64decode(cookie_info[1:]))
-    except TypeError:
-        pass
-    except ValueError:
-        pass
-    else:
-        if robot.check_sub_key(("acw_tc", "PHPSESSID"), cookie_info):
-            global COOKIE_INFO
-            COOKIE_INFO["acw_tc"] = cookie_info["acw_tc"]
-            COOKIE_INFO["PHPSESSID"] = cookie_info["PHPSESSID"]
-            return True
-    return False
-
-
-# 保存账号信息到到文件中
-def save_cookie_info_to_file(cookie_info):
-    account_info = tool.generate_random_string(1) + base64.b64encode(json.dumps(cookie_info))
-    file_handle = open("account.data", "w")
-    file_handle.write(account_info)
-    file_handle.close()
 
 
 # 从控制台输入获取账号信息
@@ -104,8 +82,6 @@ def login():
     login_response = net.http_request(login_url, login_post, header_list=header_list)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if login_response.data.find('<a href="/login">登录</a>') == -1:
-            if SAVE_ACCOUNT_INFO:
-                save_cookie_info_to_file(COOKIE_INFO)
             return True
     return False
 
@@ -205,7 +181,7 @@ class Bcy(robot.Robot):
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_GET_COOKIE: {"bcy.net": ("acw_tc", "PHPSESSID")},
+            robot.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
         }
         robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
@@ -213,8 +189,7 @@ class Bcy(robot.Robot):
         GET_PAGE_COUNT = self.get_page_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        COOKIE_INFO["acw_tc"] = self.cookie_value["acw_tc"]
-        COOKIE_INFO["PHPSESSID"] = self.cookie_value["PHPSESSID"]
+        COOKIE_INFO["LOGGED_USER"] = self.cookie_value["LOGGED_USER"]
 
     def main(self):
         global ACCOUNTS
@@ -222,22 +197,18 @@ class Bcy(robot.Robot):
         # 检测登录状态
         # 未登录时提示可能无法获取粉丝指定的作品
         if not check_login():
-            # 尝试从文件中获取账号信息
-            if read_cookie_info_from_file() and check_login():
-                pass
-            else:
-                while True:
-                    input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否手动输入账号密码登录(Y)es？ 或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
-                    input_str = input_str.lower()
-                    if input_str in ["y", "yes"]:
-                        if login():
-                            break
-                        else:
-                            log.step("登录失败！")
-                    elif input_str in ["e", "exit"]:
-                        tool.process_exit()
-                    elif input_str in ["c", "continue"]:
+            while True:
+                input_str = raw_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否手动输入账号密码登录(Y)es？ 或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["y", "yes"]:
+                    if login():
                         break
+                    else:
+                        log.step("登录失败！")
+                elif input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    break
 
         # 解析存档文件
         # account_id  last_album_id
