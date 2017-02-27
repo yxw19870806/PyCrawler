@@ -32,6 +32,7 @@ def get_one_page_media(account_name, target_id):
     index_page_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
     index_page_response = net.http_request(index_page_url, json_decode=True)
     extra_info = {
+        "is_error": False,  # 是不是格式不符合
         "media_info_list": [],  # 页面解析出的所有媒体信息列表
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -40,11 +41,14 @@ def get_one_page_media(account_name, target_id):
                 extra_media_info = {
                     "blog_id": None,  # 页面解析出的日志id
                     "blog_body": None,  # 页面解析出的日志id
+                    "json_data": media_info,  # 原始数据
                 }
                 if robot.check_sub_key(("post",), media_info) and robot.check_sub_key(("body", "postId"), media_info["post"]):
                     extra_media_info["blog_id"] = str(media_info["post"]["postId"])
                     extra_media_info["blog_body"] = media_info["post"]["body"]
                 extra_info["media_info_list"].append(extra_media_info)
+        else:
+            extra_info["is_error"] = True
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -164,13 +168,17 @@ class Download(threading.Thread):
                     log.error(account_name + " target id %s的媒体信息访问失败，原因：%s" % (target_id, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
+                if index_page_response.extra_info["is_error"]:
+                    log.error(account_name + " target id %s的媒体信息解析失败" % target_id)
+                    tool.process_exit()
+
                 # 如果为空，表示已经取完了
                 if len(index_page_response.extra_info["media_info_list"]) == 0:
                     break
 
                 for media_info in index_page_response.extra_info["media_info_list"]:
                     if media_info["blog_id"] is None:
-                        log.error(account_name + " 媒体信息解析异常")
+                        log.error(account_name + " 媒体信息%s的日志id解析失败" % media_info["json_data"])
                         continue
 
                     # 检查是否已下载到前一次的记录
@@ -188,7 +196,7 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析日志%s" % media_info["blog_id"])
                     for blog_body in media_info["blog_body"]:
                         if not robot.check_sub_key(("bodyType",), blog_body):
-                            log.error(account_name + " 媒体列表bodyType解析异常")
+                            log.error(account_name + " 媒体信息%s的bodyType解析失败" % media_info["json_data"])
                             continue
 
                         # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
@@ -200,7 +208,7 @@ class Download(threading.Thread):
                         elif body_type == 3:  # 图片
                             if IS_DOWNLOAD_IMAGE:
                                 if not robot.check_sub_key(("image",), blog_body):
-                                    log.error(account_name + " 第%s张图片解析异常%s" % (image_count, blog_body))
+                                    log.error(account_name + " 第%s张图片解析失败%s" % (image_count, blog_body))
                                     continue
 
                                 image_url = str(blog_body["image"])
