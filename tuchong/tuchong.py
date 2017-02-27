@@ -152,7 +152,7 @@ class Download(threading.Thread):
             this_account_total_image_count = 0
             post_count = 0
             first_post_id = "0"
-            post_time = "2016-11-16 14:12:00"
+            post_time = time.strftime('%Y-%m-%d %H:%M:%S')
             is_over = False
             while not is_over:
                 log.step(account_name + " 开始解析%s后的一页相册" % post_time)
