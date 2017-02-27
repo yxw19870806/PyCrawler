@@ -24,6 +24,7 @@ def get_one_page_audio(account_id, page_count):
     index_page_url = "http://kg.qq.com/cgi/kg_ugc_get_homepage?type=get_ugc&format=json&share_uid=%s&start=%s&num=%s" % (account_id, page_count, AUDIO_COUNT_PER_PAGE)
     index_page_response = net.http_request(index_page_url, json_decode=True)
     extra_info = {
+        "is_error": False,  # 是不是格式不符合
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
         "is_over": False,  # 是不是最后一页歌曲
     }
@@ -45,6 +46,8 @@ def get_one_page_audio(account_id, page_count):
                         audio_extra_info["audio_time"] = str(audio_info["time"])
                 extra_info["audio_info_list"].append(audio_extra_info)
             extra_info["is_over"] = not bool(int(index_page_response.json_data["data"]["has_more"]))
+        else:
+            extra_info["is_error"] = True
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -166,6 +169,10 @@ class Download(threading.Thread):
                 index_page_response = get_one_page_audio(account_id, page_count)
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                    tool.process_exit()
+
+                if index_page_response.extra_info["is_error"]:
+                    log.error(account_name + " 第%s页歌曲解析失败" % page_count)
                     tool.process_exit()
 
                 for audio_info in index_page_response.extra_info["audio_info_list"]:
