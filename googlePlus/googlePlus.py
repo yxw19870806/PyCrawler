@@ -27,8 +27,10 @@ IS_SORT = True
 # 获取指定token后的一页相册
 def get_one_page_blog(account_id, token):
     extra_info = {
+        "is_error": True,  # 是不是格式不符合
         "blog_info_list": [],  # 页面解析出的日志信息列表
         "key": None,  # 页面解析出的下一页token
+        "json_data": None,  # 原始数据
     }
     script_data = []
     if token:
@@ -36,11 +38,13 @@ def get_one_page_blog(account_id, token):
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
         index_page_response = net.http_request(index_page_url, post_data=post_data)
         if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data = tool.find_sub_string(index_page_response.data, ")]}'", None).strip()
+            script_data_string = tool.find_sub_string(index_page_response.data, ")]}'", None).strip()
             try:
-                script_data = json.loads(script_data)
+                script_data = json.loads(script_data_string)
             except ValueError:
                 script_data = []
+            else:
+                extra_info["json_data"] = script_data_string
             if len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2]):
                 script_data = script_data[0][2]["113305009"]
             else:
@@ -50,13 +54,16 @@ def get_one_page_blog(account_id, token):
         index_page_response = net.http_request(index_page_url)
         if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             script_data = tool.find_sub_string(index_page_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
-            script_data = tool.find_sub_string(script_data, "return ", "}});")
+            script_data_string = tool.find_sub_string(script_data, "return ", "}});")
             try:
-                script_data = json.loads(script_data)
+                script_data = json.loads(script_data_string)
             except ValueError:
                 script_data = []
+            else:
+                extra_info["json_data"] = script_data_string
     if len(script_data) == 3:
         if script_data[1] is not None:
+            extra_info["is_error"] = False
             for data in script_data[1]:
                 extra_blog_info = {
                     "blog_id": None,  # 页面解析出的日志id
@@ -248,6 +255,13 @@ class Download(threading.Thread):
                 index_page_response = get_one_page_blog(account_id, key)
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, robot.get_http_request_failed_reason(index_page_response.status)))
+                    tool.process_exit()
+
+                if index_page_response.extra_info["is_error"]:
+                    if index_page_response.extra_info["json_data"] is None:
+                        log.error(account_name + " 相册页（token：%s）JSON数据解析失败" % key)
+                    else:
+                        log.error(account_name + " 相册页（token：%s）%s解析数据失败" % (key, index_page_response.extra_info["json_data"]))
                     tool.process_exit()
 
                 log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, index_page_response.extra_info["blog_info_list"]))
