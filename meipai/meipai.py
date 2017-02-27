@@ -98,7 +98,7 @@ def get_dec(arg1):
 def sub_str(arg1, arg2):
     loc1 = arg1[:arg2[0]]
     loc2 = arg1[arg2[0]: arg2[0] + arg2[1]]
-    return loc1 + arg1[arg2[0]:].replace(loc2, "")
+    return loc1 + arg1[arg2[0]:].replace(loc2, "", 1)
 
 
 def get_pos(arg1, arg2):
