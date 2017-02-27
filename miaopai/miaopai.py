@@ -62,6 +62,7 @@ def get_one_page_video(suid, page_count):
     index_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     index_page_response = net.http_request(index_page_url, json_decode=True)
     extra_info = {
+        "is_error": False,  # 是不是格式不符合
         "video_id_list": [],  # 页面解析出的所有视频id
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -69,6 +70,8 @@ def get_one_page_video(suid, page_count):
         if robot.check_sub_key(("isall", "msg"), index_page_response.json_data):
             video_id_list = re.findall('data-scid="([^"]*)"', index_page_response.json_data["msg"])
             extra_info["video_id_list"] = map(str, video_id_list)
+        else:
+            extra_info["is_error"] = True
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -200,6 +203,10 @@ class Download(threading.Thread):
                 index_page_response = get_one_page_video(user_id, page_count)
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                    tool.process_exit()
+
+                if index_page_response.extra_info["is_error"]:
+                    log.error(account_name + " 第%s页视频解析失败" % page_count)
                     tool.process_exit()
 
                 if len(index_page_response.extra_info["video_id_list"]) == 0:
