@@ -53,16 +53,37 @@ def get_follow_list(account_id):
 def get_one_page_video(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
     index_page_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
-    return net.http_request(index_page_url, json_decode=True)
-
-
-# 解密视频下载地址
-# 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
-def decode_video_url(video_url):
-    loc1 = get_hex(video_url)
-    loc2 = get_dec(loc1["hex"])
-    loc3 = sub_str(loc1["str"], loc2["pre"])
-    return base64.b64decode(sub_str(loc3, get_pos(loc3, loc2["tail"])))
+    index_page_response = net.http_request(index_page_url, json_decode=True)
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "video_info_list": [],  # 页面解析出的所有视频信息列表
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("medias",), index_page_response.json_data):
+            for media_data in index_page_response.json_data["medias"]:
+                extra_video_info = {
+                    "video_id": None,  # 解析出的视频id
+                    "video_url": None,  # 解析出的视频下载地址
+                    "json_data": media_data,  # 原始数据
+                }
+                if robot.check_sub_key(("video", "id"), media_data):
+                    # 获取视频id
+                    extra_video_info["video_id"] = str(media_data["id"])
+                    # 获取视频下载地址
+                    # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
+                    loc1 = get_hex(str(media_data["video"]))
+                    loc2 = get_dec(loc1["hex"])
+                    loc3 = sub_str(loc1["str"], loc2["pre"])
+                    try:
+                        video_url = base64.b64decode(sub_str(loc3, get_pos(loc3, loc2["tail"])))
+                    except TypeError:
+                        pass
+                    else:
+                        if video_url.find("http") == 0:
+                            extra_video_info["video_url"] = video_url
+                extra_info["video_info_list"].append(extra_video_info)
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 def get_hex(arg1):
@@ -191,36 +212,38 @@ class Download(threading.Thread):
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error("第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
-                if not robot.check_sub_key(("medias",), index_page_response.json_data):
+
+                if index_page_response.extra_info["is_error"]:
                     log.error(account_name + " 第%s页视频解析失败" % video_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, index_page_response.json_data["medias"]))
+                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, index_page_response.extra_info["video_info_list"]))
 
-                for video_info in index_page_response.json_data["medias"]:
-                    if not robot.check_sub_key(("video", "id"), video_info):
-                        log.error(account_name + " 第%s个视频解析失败，视频信息：%s" % (video_count, video_info))
+                for video_info in index_page_response.extra_info["video_info_list"]:
+                    if video_info["video_id"] is None:
+                        log.error(account_name + " 第%s个视频信息%s的视频id解析失败" % (video_count, video_info["json_data"]))
                         continue
 
-                    video_id = str(video_info["id"])
-
                     # 检查是否已下载到前一次的视频
-                    if int(video_id) <= int(self.account_info[2]):
+                    if int(video_info["video_id"]) <= int(self.account_info[2]):
                         is_over = True
                         break
 
                     # 将第一张图片的上传时间做为新的存档记录
                     if first_video_id == "0":
-                        first_video_id = video_id
+                        first_video_id = video_info["video_id"]
 
                     # 新增视频导致的重复判断
-                    if video_id in unique_list:
+                    if video_info["video_id"] in unique_list:
                         continue
                     else:
-                        unique_list.append(video_id)
+                        unique_list.append(video_info["video_id"])
 
-                    video_url = decode_video_url(str(video_info["video"]))
-                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                    if video_info["video_url"] is None:
+                        log.error(account_name + " 第%s个视频信息%s的视频地址解析失败" % (video_count, video_info["json_data"]))
+                        continue
+
+                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_info["video_url"]))
 
                     # 第一个视频，创建目录
                     if need_make_download_dir:
@@ -230,12 +253,12 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
-                    save_file_return = net.save_net_file(video_url, file_path)
+                    save_file_return = net.save_net_file(video_info["video_url"], file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s个视频下载成功" % video_count)
                         video_count += 1
                     else:
-                        log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_info["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
@@ -243,7 +266,7 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if len(index_page_response.json_data["medias"]) >= VIDEO_COUNT_PER_PAGE:
+                    if len(index_page_response.extra_info["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
                         page_count += 1
                     else:
                         # 获取的数量小于请求的数量，已经没有剩余视频了
