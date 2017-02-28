@@ -7,12 +7,14 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, net, robot, tool
+import json
 import os
 import re
 import threading
 import time
 import traceback
-import urllib2
+import urllib
+import urlparse
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
@@ -29,51 +31,34 @@ IS_DOWNLOAD_VIDEO = True
 
 
 # 获取一页的日志地址列表
-def get_one_page_post_url_list(account_id, page_count):
-    index_page_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
+def get_one_page_post(account_id, page_count):
+    host = "http://%s.tumblr.com" % account_id
+    index_page_url = "%s/page/%s" % (host, page_count)
     index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "is_error": True,  # 是不是格式不符合
+        "post_url_list": [],  # 页面解析出的日志地址列表
+    }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return re.findall('"(http[s]?://' + account_id + '.tumblr.com/post/[^"|^#]*)["|#]', index_page_response.data)
-    return None
+        page_data = tool.find_sub_string(index_page_response.data, '<script type="application/ld+json">', "</script>").strip()
+        try:
+            page_data = json.loads(page_data)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("itemListElement",), page_data):
+                extra_info["is_error"] = False
+                for post_info in page_data["itemListElement"]:
+                    post_url_split = urlparse.urlsplit(post_info["url"].encode("utf-8"))
+                    post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
+                    extra_info["post_url_list"].append(str(post_url))
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
-# 根据post id将同样的信息页合并
-def filter_post_url(post_url_list):
-    new_post_url_list = {}
-    for post_url in post_url_list:
-        # 无效的信息页
-        post_url = post_url.replace("/embed", "")
-        temp = post_url[post_url.find("tumblr.com/post/") + len("tumblr.com/post/"):].split("/", 1)
-        post_id = temp[0]
-        if post_id not in new_post_url_list:
-            new_post_url_list[post_id] = []
-        # photoset_iframe 开头的地址，是相册的播放页，无效的
-        if post_url.find("photoset_iframe/") == -1 and len(temp) == 2:
-            new_post_url_list[post_id].append(temp[1])
-
-    # 去重排序
-    for post_id in new_post_url_list:
-        new_post_url_list[post_id] = sorted(list(set(new_post_url_list[post_id])), reverse=True)
-
-    return new_post_url_list
-
-
-# 根据日志地址以及可能的后缀，获取日志页面的head标签下的内容
-def get_post_page_head(account_id, post_id, postfix_list):
-    post_url = "http://%s.tumblr.com/post/%s" % (account_id, post_id)
-    post_page_response = net.http_request(post_url, exception_return="Caused by ResponseError('too many redirects',)")
-    # 不带后缀的可以访问，则直接返回页面
-    # 如果无法访问，则依次访问带有后缀的页面
-    if post_page_response.status == net.HTTP_RETURN_CODE_EXCEPTION_CATCH:
-        for postfix in postfix_list:
-            temp_post_url = post_url + "/" + urllib2.quote(postfix)
-            post_page_response = net.http_request(temp_post_url, exception_return="Caused by ResponseError('too many redirects',)")
-            if post_page_response.status != net.HTTP_RETURN_CODE_EXCEPTION_CATCH:
-                break
-    if post_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return tool.find_sub_string(post_page_response.data, "<head", "</head>", 3)
-    else:
-        return None
+# 获取日志页面
+def get_post_page(post_url):
+    return net.http_request(post_url)
 
 
 # 根据日志id获取页面中的全部视频信息（视频地址、视频）
@@ -246,20 +231,20 @@ class Download(threading.Thread):
                 log.step(account_id + " 开始解析第%s页相册" % page_count)
 
                 # 获取一页的日志地址
-                post_url_list = get_one_page_post_url_list(account_id, page_count)
-                if post_url_list is None:
-                    log.error(account_id + " 无法访问第%s页相册" % page_count)
+                index_page_response = get_one_page_post(account_id, page_count)
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_id + " 第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                # 如果为空，表示已经取完了
-                if len(post_url_list) == 0:
-                    break
+                if index_page_response.extra_info["is_error"]:
+                    log.error(account_id + " 第%s页相册解析失败" % (page_count))
+                    tool.process_exit()
 
-                log.trace(account_id + " 相册第%s页解析的所有日志：%s" % (page_count, post_url_list))
-                post_url_list_group_by_post_id = filter_post_url(post_url_list)
-                log.trace(account_id + " 相册第%s页去重排序后的所有日志：%s" % (page_count, post_url_list_group_by_post_id))
+                log.trace(account_id + " 相册第%s页解析的所有日志：%s" % (page_count, index_page_response.extra_info["post_url_list"]))
 
-                for post_id in sorted(post_url_list_group_by_post_id.keys(), reverse=True):
+                for post_url in index_page_response.extra_info["post_url_list"]:
+                    post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
+
                     # 检查信息页id是否小于上次的记录
                     if int(post_id) <= int(self.account_info[3]):
                         is_over = True
@@ -271,11 +256,13 @@ class Download(threading.Thread):
 
                     log.step(account_id + " 开始解析日志%s" % post_id)
 
-                    # 获取信息页并截取head标签内的内容
-                    post_page_head = get_post_page_head(account_id, post_id, post_url_list_group_by_post_id[post_id])
-                    if post_page_head is None:
-                        log.error(account_id + " 无法访问日志%s" % post_id)
-                        continue
+                    # 获取日志
+                    post_page_response = get_post_page(post_url)
+                    if post_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_id + " 日志%s访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(post_page_response.status)))
+                        tool.process_exit()
+
+                    post_page_head = tool.find_sub_string(post_page_response.data, "<head", "</head>", 3)
                     if not post_page_head:
                         log.error(account_id + " 日志%s截取head标签失败" % post_id)
                         continue
