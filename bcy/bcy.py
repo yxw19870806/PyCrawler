@@ -357,14 +357,14 @@ class Download(threading.Thread):
                                 tool.process_exit()
 
                     if len(album_page_response.extra_info["image_url_list"]) == 0:
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）没有解析出图片" % (album_id, album_title, index_page_response.extra_info["coser_id"]))
+                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）解析图片失败" % (album_id, album_title, index_page_response.extra_info["coser_id"]))
                         continue
 
                     image_count = 1
                     for image_url in album_page_response.extra_info["image_url_list"]:
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        log.step(account_name + " %s 《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+                        log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
@@ -373,10 +373,10 @@ class Download(threading.Thread):
                         file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " %s 《%s》第%s张图片下载成功" % (album_id, album_title, image_count))
+                            log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_id, album_title, image_count))
                             image_count += 1
                         else:
-                            log.error(" %s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     this_account_total_image_count += image_count - 1
 
