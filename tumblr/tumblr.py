@@ -113,61 +113,35 @@ def get_post_page(post_url):
     return post_page_response
 
 
-# 根据日志id获取页面中的全部视频信息（视频地址、视频）
-def get_video_info_list(account_id, post_id):
-    video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-    video_page_response = net.http_request(video_play_url)
-    if video_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="([^"]*)"', video_page_response.data)
-    return None
-
-
-# 过滤头像以及页面上找到不同分辨率的同一张图，保留分辨率较大的那张
-def filter_different_resolution_images(image_url_list):
-    new_image_url_list = {}
-    for image_url in image_url_list:
-        # 头像，跳过
-        if image_url.find("/avatar_") != -1:
-            continue
-
-        image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
-        # 判断是否有分辨率更小的相同图片
-        if image_id in new_image_url_list:
-            resolution = image_url.split("_")[-1].split(".")[0]
-            if resolution[-1] == "h":
-                resolution = int(resolution[:-1])
+# 获取视频播放页面
+def get_video_play_page(account_id, post_id):
+    video_play_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+    video_play_page_response = net.http_request(video_play_page_url)
+    extra_info = {
+        "video_url": None,  # 页面解析出的视频地址
+    }
+    if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        video_url_find = re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_page_response.data)
+        if len(video_url_find) == 1:
+            video_response = net.http_request(video_url_find[0], redirect=False)
+            if video_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Location" in video_response.headers:
+                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
+                # ->
+                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
+                extra_info["video_url"] = video_response.headers["Location"].replace("#_=_", "").replace("_r1_480", "_r1_720")
             else:
-                resolution = int(resolution)
-            old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
-            if old_resolution[-1] == "h":
-                old_resolution = int(old_resolution[:-1])
-            else:
-                old_resolution = int(old_resolution)
-            if resolution < old_resolution:
-                continue
-        new_image_url_list[image_id] = image_url
-
-    return new_image_url_list.values()
-
-
-# 获取视频的真实下载地址
-# http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
-# ->
-# http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
-def get_video_url(video_play_page_url):
-    video_play_page_response = net.http_request(video_play_page_url, redirect=False)
-    if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Location" in video_play_page_response.headers:
-        # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
-        # ->
-        # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
-        return video_play_page_response.headers["Location"].replace("#_=_", "").replace("_r1_480", "_r1_720")
-    # 去除视频指定分辨率
-    temp_list = video_play_page_url.split("/")
-    if temp_list[-1].isdigit():
-        video_id = temp_list[-2]
-    else:
-        video_id = temp_list[-1]
-    return "http://vtt.tumblr.com/%s.mp4" % video_id
+                # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
+                # ->
+                # http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
+                # 去除视频指定分辨率
+                temp_list = video_play_page_url.split("/")
+                if temp_list[-1].isdigit():
+                    video_id = temp_list[-2]
+                else:
+                    video_id = temp_list[-1]
+                extra_info["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
+    video_play_page_response.extra_info = extra_info
+    return video_play_page_response
 
 
 class Tumblr(robot.Robot):
@@ -295,7 +269,7 @@ class Download(threading.Thread):
                     log.error(account_id + " 第%s页相册解析失败" % page_count)
                     tool.process_exit()
 
-                log.trace(account_id + " 相册第%s页解析的所有日志：%s" % (page_count, index_page_response.extra_info["post_url_list"]))
+                log.trace(account_id + " 第%s页相册解析的所有日志：%s" % (page_count, index_page_response.extra_info["post_url_list"]))
 
                 for post_url in index_page_response.extra_info["post_url_list"]:
                     post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
@@ -315,51 +289,48 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(post_id)
 
-                    log.step(account_id + " 开始解析日志%s" % post_url)
+                    log.step(account_id + " 开始解析日志 %s" % post_url)
 
                     # 获取日志
                     post_page_response = get_post_page(post_url)
                     if post_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_id + " 日志%s访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(post_page_response.status)))
+                        log.error(account_id + " 日志 %s 访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(post_page_response.status)))
                         continue
 
                     if post_page_response.extra_info["is_error"]:
-                        log.error(account_id + " 日志%s解析失败")
+                        log.error(account_id + " 日志 %s 解析失败")
                         continue
 
                     # 视频下载
-                    if IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
-                        video_list = get_video_info_list(account_id, post_id)
-                        if video_list is None:
-                            log.error(account_id + " 第%s个视频 日志%s无法解析视频播放页" % (video_count, post_url))
+                    while IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
+                        video_play_page_response = get_video_play_page(account_id, post_id)
+                        if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                            log.error(account_id + " 第%s个视频（日志 %s）的视频播放页面访问失败，原因：%s" % (video_count, post_url, robot.get_http_request_failed_reason(video_play_page_response.status)))
+                            break
+
+                        if video_play_page_response.extra_info["video_url"] is None:
+                            log.error(account_id + " 第%s个视频（日志 %s）的视频下载地址解析失败" % (video_count, post_url))
+                            break
+
+                        video_url = video_play_page_response.extra_info["video_url"]
+
+                        log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
+
+                        # 第一个视频，创建目录
+                        if need_make_video_dir:
+                            if not tool.make_dir(video_path, 0):
+                                log.error(account_id + " 创建视频下载目录 %s 失败" % video_path)
+                                tool.process_exit()
+                            need_make_video_dir = False
+
+                        file_type = video_url.split(".")[-1]
+                        video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
+                        save_file_return = net.save_net_file(video_url, video_file_path)
+                        if save_file_return["status"] == 1:
+                            log.step(account_id + " 第%s个视频下载成功" % video_count)
+                            video_count += 1
                         else:
-                            if len(video_list) > 0:
-                                for video_play_url, video_type in list(video_list):
-                                    # 获取视频的真实下载地址
-                                    video_url = get_video_url(video_play_url)
-                                    # # 去除视频指定分辨率
-                                    # temp_list = video_url.split("/")
-                                    # if temp_list[-1].isdigit():
-                                    #     video_url = "/".join(temp_list[:-1])
-                                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                                    # 第一个视频，创建目录
-                                    if need_make_video_dir:
-                                        if not tool.make_dir(video_path, 0):
-                                            log.error(account_id + " 创建视频下载目录 %s 失败" % video_path)
-                                            tool.process_exit()
-                                        need_make_video_dir = False
-
-                                    file_type = video_type.split("/")[-1]
-                                    video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                    save_file_return = net.save_net_file(video_url, video_file_path)
-                                    if save_file_return["status"] == 1:
-                                        log.step(account_id + " 第%s个视频下载成功" % video_count)
-                                        video_count += 1
-                                    else:
-                                        log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_play_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                            else:
-                                log.error(account_id + " 第%s个视频 日志%s中没有找到视频" % (video_count, post_url))
+                            log.error(account_id + " 第%s个视频（日志 %s） %s 下载失败，原因：%s" % (video_count, post_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE and len(post_page_response.extra_info["image_url_list"]) > 0:
@@ -381,7 +352,7 @@ class Download(threading.Thread):
                                 log.step(account_id + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
                             else:
-                                log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                                log.error(account_id + " 第%s张图片（日志 %s） %s 下载失败，原因：%s" % (image_count, post_url, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
                     # 达到配置文件中的下载数量，结束
