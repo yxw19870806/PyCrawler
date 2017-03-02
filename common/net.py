@@ -203,7 +203,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     file_path = tool.change_path_encoding(file_path)
     create_file = False
     for retry_count in range(0, 5):
-        response = http_request(file_url, header_list=header_list, read_timeout=0)
+        response = http_request(file_url, header_list=header_list, read_timeout=60)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type and "Content-Type" in response.headers:
