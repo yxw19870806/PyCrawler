@@ -207,7 +207,7 @@ class Download(threading.Thread):
 
                     if audio_play_page_response.extra_info["audio_url"] is None:
                         log.error(account_name + " 歌曲%s《%s》下载地址解析失败" % (audio_info["audio_key"], audio_info["audio_title"]))
-                        continue
+                        tool.process_exit()
 
                     audio_url = audio_play_page_response.extra_info["audio_url"]
                     log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_info["audio_title"], audio_url))

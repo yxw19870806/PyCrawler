@@ -101,7 +101,7 @@ class Fkoji(robot.Robot):
                 # 从图片页面中解析获取推特发布时间的时间戳
                 tweet_created_time = get_tweet_created_time(photo_info)
                 if tweet_created_time is None:
-                    log.error("第%s张图片，解析tweet-created-at失败" % image_count)
+                    log.error("第%s张图片 图片上传时间解析失败" % image_count)
                     continue
 
                 # 检查是否已下载到前一次的图片
@@ -116,7 +116,7 @@ class Fkoji(robot.Robot):
                 # 从图片页面中解析获取推特发布账号
                 account_id = get_tweet_account_id(photo_info)
                 if account_id is None:
-                    log.error("第%s张图片，解析tweet账号失败" % image_count)
+                    log.error("第%s张图片 解析Twitter账号失败" % image_count)
                     continue
 
                 # 找图片

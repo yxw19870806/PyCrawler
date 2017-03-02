@@ -165,7 +165,7 @@ class Download(threading.Thread):
 
                 if not (robot.check_sub_key(("posts", "result"), index_page_response.json_data) and index_page_response.json_data["result"] == "SUCCESS"):
                     log.error(account_name + " %s后的一页相册 %s 解析失败" % (post_time, index_page_response.json_data))
-                    continue
+                    tool.process_exit()
 
                 # 如果为空，表示已经取完了
                 if len(index_page_response.json_data["posts"]) == 0:
@@ -175,8 +175,8 @@ class Download(threading.Thread):
 
                 for post_info in index_page_response.json_data["posts"]:
                     if not robot.check_sub_key(("title", "post_id", "published_at", "images"), post_info):
-                        log.error(account_name + " 相册信息解析失败：%s" % post_info)
-                        continue
+                        log.error(account_name + " 相册信息%s解析失败" % post_info)
+                        tool.process_exit()
 
                     post_id = str(post_info["post_id"])
 
@@ -210,7 +210,7 @@ class Download(threading.Thread):
                         image_count += 1
                         if not robot.check_sub_key(("img_id",), image_info):
                             log.error(account_name + " 相册%s 第%s张图片解析失败" % (post_id, image_count))
-                            continue
+                            tool.process_exit()
                         image_url = generate_large_image_url(account_id, image_info["img_id"])
                         log.step(account_name + " 相册%s 开始下载第%s张图片 %s" % (post_id, image_count, image_url))
 

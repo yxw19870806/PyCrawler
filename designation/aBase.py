@@ -81,7 +81,7 @@ class ABase(robot.Robot):
             index_page_response = get_one_page_data(page_count)
             if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
-                break
+                tool.process_exit()
 
             # 已经下载完毕了
             if index_page_response.extra_info["page_video_count"] == 0:

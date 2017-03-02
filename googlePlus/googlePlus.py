@@ -261,7 +261,7 @@ class Download(threading.Thread):
                     if index_page_response.extra_info["json_data"] is None:
                         log.error(account_name + " 相册页（token：%s）JSON数据解析失败" % key)
                     else:
-                        log.error(account_name + " 相册页（token：%s）%s解析数据失败" % (key, index_page_response.extra_info["json_data"]))
+                        log.error(account_name + " 相册页（token：%s）%s解析失败" % (key, index_page_response.extra_info["json_data"]))
                     tool.process_exit()
 
                 log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, index_page_response.extra_info["blog_info_list"]))

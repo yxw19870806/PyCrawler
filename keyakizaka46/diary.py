@@ -163,7 +163,7 @@ class Download(threading.Thread):
                     # 日志id
                     if not blog_data["blog_id"]:
                         log.error(account_name + " 日志信息%s解析日志id失败" % blog_data)
-                        continue
+                        tool.process_exit()
 
                     # 检查是否已下载到前一次的日志
                     if int(blog_data["blog_id"]) <= int(self.account_info[2]):

@@ -360,7 +360,7 @@ class Download(threading.Thread):
 
                     if len(album_page_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_id, album_title))
-                        continue
+                        tool.process_exit()
 
                     image_count = 1
                     for image_url in album_page_response.extra_info["image_url_list"]:

@@ -236,7 +236,10 @@ class Download(threading.Thread):
                     # 获取视频下载地址
                     video_info_page_response = get_video_info_page(video_id)
                     if video_info_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 视频%s解析下载地址失败" % video_id)
+                        log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_info_page_response.status)))
+                        tool.process_exit()
+                    if video_info_page_response.extra_info["video_url"] is None:
+                        log.error(account_name + " 视频%s下载地址解析失败" % video_id)
                         tool.process_exit()
 
                     video_url = video_info_page_response.extra_info["video_url"]

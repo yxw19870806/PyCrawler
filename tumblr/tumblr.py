@@ -295,22 +295,22 @@ class Download(threading.Thread):
                     post_page_response = get_post_page(post_url)
                     if post_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_id + " 日志 %s 访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(post_page_response.status)))
-                        continue
+                        tool.process_exit()
 
                     if post_page_response.extra_info["is_error"]:
                         log.error(account_id + " 日志 %s 解析失败")
-                        continue
+                        tool.process_exit()
 
                     # 视频下载
-                    while IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
+                    if IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
                         video_play_page_response = get_video_play_page(account_id, post_id)
                         if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                            log.error(account_id + " 第%s个视频（日志 %s）的视频播放页面访问失败，原因：%s" % (video_count, post_url, robot.get_http_request_failed_reason(video_play_page_response.status)))
-                            break
+                            log.error(account_id + " 日志 %s 的视频播放页面访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(video_play_page_response.status)))
+                            tool.process_exit()
 
                         if video_play_page_response.extra_info["video_url"] is None:
-                            log.error(account_id + " 第%s个视频（日志 %s）的视频下载地址解析失败" % (video_count, post_url))
-                            break
+                            log.error(account_id + " 日志 %s 的视频下载地址解析失败" % post_url)
+                            tool.process_exit()
 
                         video_url = video_play_page_response.extra_info["video_url"]
 
@@ -330,11 +330,11 @@ class Download(threading.Thread):
                             log.step(account_id + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
-                            log.error(account_id + " 第%s个视频（日志 %s） %s 下载失败，原因：%s" % (video_count, post_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE and len(post_page_response.extra_info["image_url_list"]) > 0:
-                        log.trace(account_id + " 日志%s解析的的所有图片：%s" % (post_url, post_page_response.extra_info["image_url_list"]))
+                        log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_page_response.extra_info["image_url_list"]))
                         for image_url in post_page_response.extra_info["image_url_list"]:
                             log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
@@ -352,7 +352,7 @@ class Download(threading.Thread):
                                 log.step(account_id + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
                             else:
-                                log.error(account_id + " 第%s张图片（日志 %s） %s 下载失败，原因：%s" % (image_count, post_url, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                                log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
                     # 达到配置文件中的下载数量，结束

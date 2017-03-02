@@ -351,7 +351,7 @@ class Download(threading.Thread):
                 # 获取指定时间点后的一页视频信息
                 video_page_data = get_one_page_video_data(account_page_id, since_id)
                 if video_page_data is None:
-                    log.error(account_name + " 视频列表解析异常")
+                    log.error(account_name + " 视频列表解析失败")
                     first_video_url = ""  # 存档恢复
                     break
 

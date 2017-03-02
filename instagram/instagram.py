@@ -336,10 +336,10 @@ class Download(threading.Thread):
                 for media_info in media_page_response.extra_info["media_info_list"]:
                     if media_info["image_url"] is None:
                         log.error(account_name + " 媒体信息%s解析失败" % media_info["json_data"])
-                        break
+                        tool.process_exit()
                     if IS_DOWNLOAD_VIDEO and media_info["is_video"] and media_info["video_id"] is None:
                         log.error(account_name + " 媒体信息%s的视频id解析失败" % media_info["json_data"])
-                        break
+                        tool.process_exit()
 
                     # 检查是否已下载到前一次的图片
                     if int(media_info["time"]) <= int(self.account_info[3]):
@@ -371,15 +371,15 @@ class Download(threading.Thread):
                             log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, media_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 视频
-                    if IS_DOWNLOAD_VIDEO and media_info["is_video"]:
+                    while IS_DOWNLOAD_VIDEO and media_info["is_video"]:
                         # 获取视频播放页
                         video_play_page_response = get_video_play_page(media_info["video_id"])
                         if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                             log.error(account_name + " 第%s个视频 %s 播放页访问失败，原因：%s" % (video_count, media_info["code"], robot.get_http_request_failed_reason(video_play_page_response.status)))
-                            tool.process_exit()
+                            break
                         if not video_play_page_response.extra_info["video_url"]:
                             log.error(account_name + " 第%s个视频 %s 下载地址解析失败" % (video_count, media_info["code"]))
-                            continue
+                            tool.process_exit()
 
                         video_url = video_play_page_response.extra_info["video_url"]
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
@@ -399,6 +399,7 @@ class Download(threading.Thread):
                             video_count += 1
                         else:
                             log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        break
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:

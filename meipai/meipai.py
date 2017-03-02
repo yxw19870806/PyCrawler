@@ -221,8 +221,8 @@ class Download(threading.Thread):
 
                 for video_info in index_page_response.extra_info["video_info_list"]:
                     if video_info["video_id"] is None:
-                        log.error(account_name + " 第%s个视频信息%s的视频id解析失败" % (video_count, video_info["json_data"]))
-                        continue
+                        log.error(account_name + " 视频信息%s的视频id解析失败" % video_info["json_data"])
+                        tool.process_exit()
 
                     # 检查是否已下载到前一次的视频
                     if int(video_info["video_id"]) <= int(self.account_info[2]):
@@ -240,8 +240,8 @@ class Download(threading.Thread):
                         unique_list.append(video_info["video_id"])
 
                     if video_info["video_url"] is None:
-                        log.error(account_name + " 第%s个视频信息%s的视频地址解析失败" % (video_count, video_info["json_data"]))
-                        continue
+                        log.error(account_name + " 视频信息%s的视频地址解析失败" % video_info["json_data"])
+                        tool.process_exit()
 
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_info["video_url"]))
 

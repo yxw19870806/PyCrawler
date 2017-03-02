@@ -179,7 +179,7 @@ class Download(threading.Thread):
                 for media_info in index_page_response.extra_info["media_info_list"]:
                     if media_info["blog_id"] is None:
                         log.error(account_name + " 媒体信息%s的日志id解析失败" % media_info["json_data"])
-                        continue
+                        tool.process_exit()
 
                     # 检查是否已下载到前一次的记录
                     if int(media_info["blog_id"]) <= int(self.account_info[3]):
@@ -197,7 +197,7 @@ class Download(threading.Thread):
                     for blog_body in media_info["blog_body"]:
                         if not robot.check_sub_key(("bodyType",), blog_body):
                             log.error(account_name + " 媒体信息%s的bodyType解析失败" % media_info["json_data"])
-                            continue
+                            tool.process_exit()
 
                         # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
                         body_type = int(blog_body["bodyType"])
@@ -229,10 +229,12 @@ class Download(threading.Thread):
                                     image_count += 1
                                 else:
                                     log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        elif body_type == 7:  # 转发
+                            pass
                         elif body_type == 8:  # video
                             if IS_DOWNLOAD_VIDEO:
                                 if not robot.check_sub_key(("movieUrlHq",), blog_body):
-                                    log.error(account_name + " 第%s个视频解析异常%s" % (video_count, blog_body))
+                                    log.error(account_name + " 第%s个视频解析失败%s" % (video_count, blog_body))
                                     continue
 
                                 video_url = str(blog_body["movieUrlHq"])
@@ -253,10 +255,9 @@ class Download(threading.Thread):
                                     video_count += 1
                                 else:
                                     log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                        elif body_type == 7:  # 转发
-                            pass
                         else:
                             log.error(account_name + " 第%s张图片、第%s个视频，未知bodytype %s, %s" % (image_count, video_count, body_type, blog_body))
+                            tool.process_exit()
 
             # 排序
             if IS_SORT:

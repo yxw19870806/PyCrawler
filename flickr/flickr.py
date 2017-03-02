@@ -220,8 +220,8 @@ class Download(threading.Thread):
 
                 for image_info in index_page_response.extra_info["image_info_list"]:
                     if image_info["image_time"] is None:
-                        log.error(account_name + " 第%s张图片，图片信息%s的上传时间解析失败" % (image_count, image_info["json_data"]))
-                        continue
+                        log.error(account_name + " 图片信息%s的上传时间解析失败" % image_info["json_data"])
+                        tool.process_exit()
 
                     # 检查是否是上一次的最后视频
                     if int(self.account_info[2]) >= int(image_info["image_time"]):
@@ -233,8 +233,8 @@ class Download(threading.Thread):
                         first_image_time = image_info["image_time"]
 
                     if image_info["image_url"] is None:
-                        log.error(account_name + " 第%s张图片，图片信息%s的下载地址解析失败" % (image_count, image_info["json_data"]))
-                        continue
+                        log.error(account_name + "图片信息%s的下载地址解析失败" % image_info["json_data"])
+                        tool.process_exit()
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
                     if need_make_image_dir:

@@ -211,7 +211,7 @@ class Download(threading.Thread):
                 for audio_info in index_page_response.extra_info["audio_info_list"]:
                     if audio_info["audio_id"] is None or audio_info["audio_key"] is None:
                         log.error(account_name + " 歌曲信息%s解析失败" % audio_info["json_data"])
-                        continue
+                        tool.process_exit()
 
                     # 检查是否已下载到前一次的歌曲
                     if int(audio_info["audio_id"]) <= int(self.account_info[1]):
@@ -232,11 +232,11 @@ class Download(threading.Thread):
                     audio_play_page_response = get_audio_play_page(audio_info["audio_key"])
                     if audio_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 歌曲%s《%s》播放页面访问失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], robot.get_http_request_failed_reason(audio_play_page_response.status)))
-                        continue
+                        tool.process_exit()
 
                     if audio_play_page_response.extra_info["audio_url"] is None:
                         log.error(account_name + " 歌曲%s《%s》下载地址解析失败" % (audio_info["audio_key"], audio_info["audio_title"]))
-                        continue
+                        tool.process_exit()
 
                     audio_url = audio_play_page_response.extra_info["audio_url"]
                     log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_info["audio_title"], audio_url))

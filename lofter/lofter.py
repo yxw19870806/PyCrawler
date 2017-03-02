@@ -187,12 +187,12 @@ class Download(threading.Thread):
                     # 获取日志
                     blog_page_response = get_blog_page(blog_url)
                     if blog_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 第%s张图片，无法访问日志 %s" % (image_count, blog_url))
+                        log.error(account_name + " 日志 %s 访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_page_response.status)))
                         continue
 
                     # 获取图片下载地址列表
                     if len(blog_page_response.extra_info["image_url_list"]) == 0:
-                        log.error(account_name + " 第%s张图片，日志 %s 中没有找到图片" % (image_count, blog_url))
+                        log.error(account_name + " 日志 %s 中没有找到图片" % blog_url)
                         continue
 
                     log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_page_response.extra_info["image_url_list"]))

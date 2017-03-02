@@ -453,6 +453,7 @@ def get_save_net_file_failed_reason(return_code):
 
 # 获取网络文件下载失败的原因
 def get_http_request_failed_reason(return_code):
+    # return_code = response.status
     if return_code == 404:
         return "页面已被删除"
     elif return_code == 403:
