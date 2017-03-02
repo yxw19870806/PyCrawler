@@ -38,7 +38,7 @@ if __name__ == "__main__":
     count = 0
     # todo 根据当前窗口大小，自适应坐标位置
     # (点击升级的按钮位置，1 ~ 4），保证升级窗口中第一个按钮完整显示）
-    click_button_index = 2
+    click_button_index = 1
     click_x, click_y = clickerHeroes.UPGRADE_BUTTON_POS[click_button_index]
     is_open_equip_box = False
     while True:
