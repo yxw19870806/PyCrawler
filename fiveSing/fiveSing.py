@@ -193,7 +193,7 @@ class Download(threading.Thread):
                     if len(index_page_response.extra_info["audio_info_list"]) == 0:
                         break
 
-                    log.trace(account_name + " %s第%s页解析的所有歌曲：%s" % (page_count, audio_type_name, index_page_response.extra_info["audio_info_list"]))
+                    log.trace(account_name + " 第%s页%s解析的所有歌曲：%s" % (page_count, audio_type_name, index_page_response.extra_info["audio_info_list"]))
 
                     for audio_info in index_page_response.extra_info["audio_info_list"]:
                         audio_id = audio_info[0]
@@ -227,7 +227,7 @@ class Download(threading.Thread):
                             log.step(account_name + " %s歌曲%s《%s》下载地址解析失败" % (audio_type_name, audio_id, audio_title))
                             continue
 
-                        log.step(account_name + " 开始下载第%s首%s歌曲《%s》%s" % (video_count, audio_type_name, audio_title, audio_url))
+                        log.step(account_name + " 开始下载第%s首%s歌曲《%s》 %s" % (video_count, audio_type_name, audio_title, audio_url))
 
                         # 第一首歌曲，创建目录
                         if need_make_download_dir:

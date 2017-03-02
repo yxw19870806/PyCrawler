@@ -143,7 +143,7 @@ class Fkoji(robot.Robot):
                             log.step("第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error("第%s张图片 %s，account_id：%s，下载失败，原因：%s" % (image_count, image_url, account_id, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_count, account_id, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 if is_over:
                     break
 

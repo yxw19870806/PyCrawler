@@ -335,29 +335,31 @@ class Download(threading.Thread):
                             log.error(account_name + " 创建作品目录 %s 失败" % album_path)
                             tool.process_exit()
 
+                    coser_id = index_page_response.extra_info["coser_id"]
+
                     # 获取作品
-                    album_page_response = get_album_page(index_page_response.extra_info["coser_id"], album_id)
+                    album_page_response = get_album_page(coser_id, album_id)
                     if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, index_page_response.extra_info["coser_id"], album_title, robot.get_http_request_failed_reason(album_page_response.status)))
+                        log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_page_response.status)))
                         tool.process_exit()
 
                     # 是不是已被管理员锁定
                     if album_page_response.extra_info["is_admin_locked"]:
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）已被管理员锁定，跳过" % (album_id, album_title, index_page_response.extra_info["coser_id"]))
+                        log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_id, album_title))
                         continue
 
                     # 是不是只对粉丝可见，并判断是否需要自动关注
                     if album_page_response.extra_info["is_only_follower"] and IS_AUTO_FOLLOW:
-                        log.step(account_name + " 作品%s 《%s》（coser_id：%s）是私密作品且账号不是ta的粉丝，自动关注")
+                        log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_id, album_title))
                         if follow(account_id):
                             # 重新获取作品页面
-                            album_page_response = get_album_page(index_page_response.extra_info["coser_id"], album_id)
+                            album_page_response = get_album_page(coser_id, album_id)
                             if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                                log.error(account_name + " 作品%s 《%s》（coser_id：%s）访问失败，原因：%s" % (album_id, album_title, index_page_response.extra_info["coser_id"], robot.get_http_request_failed_reason(album_page_response.status)))
+                                log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_page_response.status)))
                                 tool.process_exit()
 
                     if len(album_page_response.extra_info["image_url_list"]) == 0:
-                        log.error(account_name + " 作品%s 《%s》（coser_id：%s）解析图片失败" % (album_id, album_title, index_page_response.extra_info["coser_id"]))
+                        log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_id, album_title))
                         continue
 
                     image_count = 1

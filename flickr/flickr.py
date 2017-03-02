@@ -233,7 +233,7 @@ class Download(threading.Thread):
                         first_image_time = image_info["image_time"]
 
                     if image_info["image_url"] is None:
-                        log.error(account_name + " 第%s张图片，，图片信息%s的下载地址解析失败" % (image_count, image_info["json_data"]))
+                        log.error(account_name + " 第%s张图片，图片信息%s的下载地址解析失败" % (image_count, image_info["json_data"]))
                         continue
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
