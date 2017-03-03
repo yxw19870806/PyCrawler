@@ -129,18 +129,18 @@ def get_follow_list(account_id):
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
-def get_owner_id(account_name):
-    search_page_url = "https://www.instagram.com/web/search/topsearch/?context=blended&rank_token=1&query=%s" % account_name
-    for i in range(0, 10):
-        search_page_response = net.http_request(search_page_url, json_decode=True)
-        if search_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("users",), search_page_response.json_data):
-                for user in search_page_response.json_data["users"]:
-                    if robot.check_sub_key(("user",), user) and robot.check_sub_key(("username", "pk"), user["user"]):
-                        if account_name.lower() == str(user["user"]["username"]).lower():
-                            return user["user"]["pk"]
-        time.sleep(5)
-    return None
+def get_index_page(account_name):
+    index_page_url = "https://www.instagram.com/%s" % account_name
+    index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "account_id": None,  # 页面解析出的account id
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        account_id = tool.find_sub_string(index_page_response.data, '"profilePage_', '"')
+        if account_id and account_id.isdigit():
+            extra_info["account_id"] = account_id
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 # 获取指定页数的所有媒体
@@ -306,9 +306,17 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
-            owner_id = get_owner_id(account_name)
-            if owner_id is None:
-                log.error(account_name + " account id 查找失败")
+            # 获取首页
+            index_page_response = get_index_page(account_name)
+            if index_page_response.status == 404:
+                log.error(account_name + " 账号不存在")
+                tool.process_exit()
+            elif index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(index_page_response.status))
+                tool.process_exit()
+
+            if index_page_response.extra_info["account_id"] is None:
+                log.error(account_name + " account id解析失败")
                 tool.process_exit()
 
             image_count = 1
@@ -322,7 +330,7 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析cursor %s的媒体信息" % cursor)
 
                 # 获取指定时间后的一页媒体信息
-                media_page_response = get_one_page_media(owner_id, cursor)
+                media_page_response = get_one_page_media(index_page_response.extra_info["account_id"], cursor)
                 if media_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " cursor %s的媒体信息访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(media_page_response.status)))
                     tool.process_exit()
