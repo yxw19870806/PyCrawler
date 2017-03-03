@@ -35,6 +35,9 @@ def get_one_page_blog(account_name, page_count):
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取日志id列表
         blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
+        if len(blog_id_list) == 0:
+            page_data = tool.find_sub_string(index_page_response.data, '<div amb-component="tiles" class="skin-tiles">', '<div amb-component="entryAd" class="skin-entryAd">')
+            blog_id_list = re.findall('<a amb-component="imageFrameLink" href="http://ameblo.jp/' + account_name + '/entry-(\d*).html" rel="bookmark">', page_data)
         extra_info["blog_id_list"] = map(str, blog_id_list)
         # 检测是否还有下一页
         # 有页数选择的页面样式
