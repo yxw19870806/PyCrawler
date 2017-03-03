@@ -245,14 +245,14 @@ class Download(threading.Thread):
                     image_count = 0
                     for image_url in album_info["image_url_list"]:
                         image_count += 1
-                        log.step(account_name + " 相册%s 开始下载第%s张图片 %s" % (album_info["album_id"], image_count, image_url))
+                        log.step(account_name + " 相册%s 《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
 
                         file_path = os.path.join(post_path, "%s.jpg" % image_count)
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 相册%s 第%s张图片下载成功" % (album_info["album_id"], image_count))
+                            log.step(account_name + " 相册%s 《%s》 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_count))
                         else:
-                            log.error(account_name + " 相册%s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 相册%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                     this_account_total_image_count += image_count
 
                     if not is_over:
