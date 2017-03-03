@@ -43,7 +43,42 @@ def get_home_page(account_name):
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
     index_page_url = "https://www.tuchong.com/rest/sites/%s/posts/%s?limit=%s" % (account_id, post_time, IMAGE_COUNT_PER_PAGE)
-    return net.http_request(index_page_url, json_decode=True)
+    index_page_response = net.http_request(index_page_url, json_decode=True)
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "album_info_list": [],  # 页面解析出的图片信息列表
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("posts", "result"), index_page_response.json_data) and index_page_response.json_data["result"] == "SUCCESS":
+            for album_info in index_page_response.json_data["posts"]:
+                extra_image_info = {
+                    "album_id": None, # 页面解析出的相册id
+                    "album_time": None,  # 页面解析出的相册创建时间
+                    "album_title": "", # 页面解析出的相册标题
+                    "image_url_list": [], # 页面解析出的图片地址列表
+                    "json_data": album_info,  # 原始数据
+                }
+                if robot.check_sub_key(("title", "post_id", "published_at", "images"), album_info):
+                    # 获取相册id
+                    if str(album_info["post_id"]).isdigit():
+                        extra_image_info["album_id"] = str(album_info["post_id"])
+                    # 获取相册标题
+                    extra_image_info["album_title"] = str(album_info["title"].encode("utf-8"))
+                    # 获取图片下载地址
+                    for image_info in album_info["images"]:
+                        if robot.check_sub_key(("img_id",), image_info):
+                            extra_image_info["image_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, str(image_info["img_id"])))
+                        else:
+                            extra_image_info["image_url_list"] = []
+                            break
+                    # 获取相册创建时间
+                    if str(album_info["published_at"]).isdigit():
+                        extra_info["album_time"] = str(album_info["published_at"])
+                extra_info["album_info_list"].append(extra_image_info)
+        else:
+            extra_info["is_error"] = True
+    index_page_response.extra_info = extra_info
+    return index_page_response
 
 
 # 生成图片大图下载地址
@@ -163,63 +198,61 @@ class Download(threading.Thread):
                     log.error(account_name + " %s后的一页相册访问失败，原因：%s" % (post_time, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
 
-                if not (robot.check_sub_key(("posts", "result"), index_page_response.json_data) and index_page_response.json_data["result"] == "SUCCESS"):
+                if index_page_response.extra_info["is_error"]:
                     log.error(account_name + " %s后的一页相册 %s 解析失败" % (post_time, index_page_response.json_data))
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if len(index_page_response.json_data["posts"]) == 0:
+                if len(index_page_response.extra_info["album_info_list"]) == 0:
                     break
 
-                log.trace(account_name + " %s后的一页相册：%s" % (post_time, index_page_response.json_data["posts"]))
+                log.trace(account_name + " %s后的一页相册：%s" % (post_time, index_page_response.extra_info["album_info_list"]))
 
-                for post_info in index_page_response.json_data["posts"]:
-                    if not robot.check_sub_key(("title", "post_id", "published_at", "images"), post_info):
-                        log.error(account_name + " 相册信息%s解析失败" % post_info)
+                for album_info in index_page_response.extra_info["album_info_list"]:
+                    if album_info["album_id"] is None:
+                        log.error(account_name + " 相册信息%s解析相册id失败" % album_info["json_data"])
                         tool.process_exit()
 
-                    post_id = str(post_info["post_id"])
+                    if len(album_info["image_url_list"]) == 0:
+                        log.error(account_name + " 相册信息%s解析图片地址失败" % album_info["json_data"])
+                        tool.process_exit()
 
                     # 检查信息页id是否小于上次的记录
-                    if int(post_id) <= int(self.account_info[1]):
+                    if int(album_info["album_id"]) <= int(self.account_info[1]):
                         is_over = True
                         break
 
                     # 将第一个信息页的id做为新的存档记录
                     if first_post_id == "0":
-                        first_post_id = post_id
+                        first_post_id = album_info["album_id"]
 
-                    log.step(account_name + " 开始解析相册%s" % post_id)
+                    log.step(account_name + " 开始解析相册%s" % album_info["album_id"])
 
                     # 过滤标题中不支持的字符
-                    title = robot.filter_text(post_info["title"])
+                    title = robot.filter_text(album_info["album_title"])
                     if title:
-                        post_path = os.path.join(image_path, "%s %s" % (post_id, title))
+                        post_path = os.path.join(image_path, "%s %s" % (album_info["album_id"], title))
                     else:
-                        post_path = os.path.join(image_path, post_id)
+                        post_path = os.path.join(image_path, album_info["album_id"])
                     if not tool.make_dir(post_path, 0):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
                         log.error(account_name + " 创建相册目录 %s 失败，尝试不使用title" % post_path)
-                        post_path = os.path.join(image_path, post_id)
+                        post_path = os.path.join(image_path, album_info["album_id"])
                         if not tool.make_dir(post_path, 0):
                             log.error(account_name + " 创建相册目录 %s 失败" % post_path)
                             tool.process_exit()
 
                     image_count = 0
-                    for image_info in post_info["images"]:
+                    for image_url in album_info["image_url_list"]:
                         image_count += 1
-                        if not robot.check_sub_key(("img_id",), image_info):
-                            log.error(account_name + " 相册%s 第%s张图片解析失败" % (post_id, image_count))
-                            tool.process_exit()
-                        image_url = generate_large_image_url(account_id, image_info["img_id"])
-                        log.step(account_name + " 相册%s 开始下载第%s张图片 %s" % (post_id, image_count, image_url))
+                        log.step(account_name + " 相册%s 开始下载第%s张图片 %s" % (album_info["album_id"], image_count, image_url))
 
                         file_path = os.path.join(post_path, "%s.jpg" % image_count)
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 相册%s 第%s张图片下载成功" % (post_id, image_count))
+                            log.step(account_name + " 相册%s 第%s张图片下载成功" % (album_info["album_id"], image_count))
                         else:
-                            log.error(account_name + " 相册%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 相册%s 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                     this_account_total_image_count += image_count
 
                     if not is_over:
@@ -227,8 +260,8 @@ class Download(threading.Thread):
                         if 0 < GET_PAGE_COUNT < post_count:
                             is_over = True
                         else:
-                            # 相册发布时间
-                            post_time = post_info["published_at"]
+                            # 相册创建时间
+                            post_time = album_info["album_time"]
                             post_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
