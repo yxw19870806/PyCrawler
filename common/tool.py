@@ -233,19 +233,29 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
     if start_string is None:
         start_index = 0
     else:
+        # 开始字符串第一次出现的位置
         start_index = string.find(start_string)
-    if start_index >= 0:
-        if start_string is not None and include_string & 1 == 0:
+        if start_index == -1:
+            return ""
+        # 加上开始字符串的长度
+        if start_string is not None:
             start_index += len(start_string)
-        if end_string is None:
-            stop_index = len(string)
-        else:
-            stop_index = string.find(end_string, start_index)
-        if stop_index >= 0:
-            if include_string & 2 == 2:
-                stop_index += len(end_string)
-            return string[start_index:stop_index]
-    return ""
+
+    if end_string is None:
+        stop_index = len(string)
+    else:
+        # 结束字符串第一次出现的位置
+        stop_index = string.find(end_string, start_index)
+        if stop_index == -1:
+            return ""
+
+    find_string = string[start_index:stop_index]
+    # 是否需要追加开始或结束字符串
+    if include_string & 1 == 1 and start_string is not None:
+        find_string = start_string + find_string
+    if include_string & 2 == 2 and end_string is not None:
+        find_string += end_string
+    return find_string
 
 
 # 文件路径编码转换
