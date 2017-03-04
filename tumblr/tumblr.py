@@ -121,10 +121,10 @@ def get_video_play_page(account_id, post_id):
         "video_url": None,  # 页面解析出的视频地址
     }
     if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        video_url_find = re.findall('src="(http[s]?://www.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_page_response.data)
+        video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_page_response.data)
         if len(video_url_find) == 1:
             video_response = net.http_request(video_url_find[0], redirect=False)
-            if video_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Location" in video_response.headers:
+            if video_response.status == 302 and "Location" in video_response.headers:
                 # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
                 # ->
                 # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
@@ -134,7 +134,7 @@ def get_video_play_page(account_id, post_id):
                 # ->
                 # http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
                 # 去除视频指定分辨率
-                temp_list = video_play_page_url.split("/")
+                temp_list = video_url_find[0].split("/")
                 if temp_list[-1].isdigit():
                     video_id = temp_list[-2]
                 else:
