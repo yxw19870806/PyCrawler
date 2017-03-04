@@ -347,12 +347,19 @@ class Download(threading.Thread):
 
                             file_type = image_url.split(".")[-1]
                             image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                            save_file_return = net.save_net_file(image_url, image_file_path)
-                            if save_file_return["status"] == 1:
-                                log.step(account_id + " 第%s张图片下载成功" % image_count)
-                                image_count += 1
-                            else:
-                                log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            retry_count = 0
+                            while True:
+                                save_file_return = net.save_net_file(image_url, image_file_path)
+                                if save_file_return["status"] == 1:
+                                    log.step(account_id + " 第%s张图片下载成功" % image_count)
+                                    image_count += 1
+                                # 下载失败，并且http_code不是403和404，重试
+                                elif save_file_return["status"] == 0 and save_file_return["code"] not in [403, 404] and retry_count <= 5:
+                                    retry_count += 1
+                                    continue
+                                else:
+                                    log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                                break
 
                 if not is_over:
                     # 达到配置文件中的下载数量，结束
