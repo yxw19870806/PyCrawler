@@ -94,6 +94,7 @@ def check_big_image(image_url, big_2_small_list):
 
 # 检测图片是否有效
 def check_image_invalid(file_path):
+    file_path = tool.change_path_encoding(file_path)
     file_size = os.path.getsize(file_path)
     # 文件小于1K
     if file_size < 1024:
@@ -270,7 +271,7 @@ class Download(threading.Thread):
                         save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
                         if save_file_return["status"] == 1:
                             if check_image_invalid(file_path):
-                                os.remove(file_path)
+                                os.remove(tool.change_path_encoding(file_path))
                                 log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, image_url))
                             else:
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)
