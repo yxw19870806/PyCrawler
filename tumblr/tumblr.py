@@ -50,10 +50,19 @@ def get_one_page_post(account_id, page_count):
             else:
                 if robot.check_sub_key(("itemListElement",), page_data):
                     extra_info["is_error"] = False
+                    post_url_list = []
                     for post_info in page_data["itemListElement"]:
-                        post_url_split = urlparse.urlsplit(post_info["url"].encode("utf-8"))
-                        post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
-                        extra_info["post_url_list"].append(str(post_url))
+                        if robot.check_sub_key(("url",), post_info):
+                            post_url_split = urlparse.urlsplit(post_info["url"].encode("utf-8"))
+                            post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
+                            post_url_list.append(str(post_url))
+                        else:
+                            post_url_list = []
+                    if len(post_url_list) == 0:
+                        extra_info["is_error"] = True
+                    else:
+                        extra_info["post_url_list"] = post_url_list
+
         else:
             extra_info["is_over"] = True
     index_page_response.extra_info = extra_info
