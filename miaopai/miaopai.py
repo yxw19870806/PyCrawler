@@ -46,10 +46,10 @@ def get_follow_list(suid):
 # 获取用户的suid，作为查找指定用户的视频页的凭证
 # account_id -> mi9wmdhhof
 def get_user_id(account_id):
-    index_page_url = "http://www.miaopai.com/u/paike_%s" % account_id
+    index_page_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
     index_page_response = net.http_request(index_page_url)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        user_id = tool.find_sub_string(index_page_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="">+关注</button>')
+        user_id = tool.find_sub_string(index_page_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
         if user_id:
             return user_id
     return None
