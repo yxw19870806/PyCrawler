@@ -145,7 +145,7 @@ def get_article_image_url_list(article_page, article_type):
 
 
 class Article(robot.Robot):
-    def __init__(self, extra_config):
+    def __init__(self, extra_config=None):
         global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
