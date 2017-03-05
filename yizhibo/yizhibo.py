@@ -6,7 +6,7 @@ http://www.yizhibo.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import re
@@ -31,19 +31,19 @@ IS_DOWNLOAD_VIDEO = True
 
 # 获取指定账号的全部视频ID列表
 def get_video_id_list(account_id):
-    video_list_url = "http://www.yizhibo.com/member/personel/user_works?memberid=%s" % account_id
-    index_return_code, index_page = tool.http_request(video_list_url)[:2]
-    if index_return_code == 1:
-        return re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', index_page)
+    video_index_page_url = "http://www.yizhibo.com/member/personel/user_works?memberid=%s" % account_id
+    video_index_page_response = net.http_request(video_index_page_url)
+    if video_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_index_page_response.data)
     return None
 
 
 # 获取指定账号的全部图片地址列表
 def get_image_url_list(account_id):
-    video_list_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
-    index_return_code, index_page = tool.http_request(video_list_url)[:2]
-    if index_return_code == 1:
-        return re.findall('<img src="([^"]*)" alt="" class="index_img_main">', index_page)
+    image_index_page_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
+    image_index_page_response = tool.http_request(image_index_page_url)[:2]
+    if image_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return re.findall('<img src="([^"]*)" alt="" class="index_img_main">', image_index_page_response.data)
     return None
 
 
@@ -52,16 +52,11 @@ def get_image_url_list(account_id):
 def get_video_info(video_id):
     # http://api.xiaoka.tv/live/web/get_play_live?scid=qxonW5XeZru03nUB
     video_info_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
-    video_info_return_code, video_info_data = tool.http_request(video_info_url)[:2]
-    if video_info_return_code == 1:
-        try:
-            video_info_data = json.loads(video_info_data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("result", "data"), video_info_data) and int(video_info_data["result"]) == 1:
-                if robot.check_sub_key(("createtime", "linkurl"), video_info_data["data"]):
-                    return video_info_data
+    video_info_response = net.http_request(video_info_url, json_decode=True)
+    if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("result", "data"), video_info_response.json_data) and int(video_info_response.json_data["result"]) == 1:
+            if robot.check_sub_key(("createtime", "linkurl"), video_info_response.json_data["data"]):
+                return video_info_response.json_data
     return None
 
 
