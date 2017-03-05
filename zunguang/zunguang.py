@@ -6,36 +6,60 @@ http://zunguang.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
-import json
+from common import log, net, robot, tool
 import os
 
 ERROR_PAGE_COUNT_CHECK = 10
 
 
 # 根据页面内容获取图片地址列表
-def get_one_page_album_data(page_count):
-    album_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
+def get_album_page(page_count):
+    album_page_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
-    album_return_code, album_data = tool.http_request(album_url, post_data, is_random_ip=False)[:2]
-    if album_return_code != 1:
-        return -1, None
-    try:
-        album_data = json.loads(album_data)
-    except ValueError:
-        return -2, None  # JSON decode error
-    if robot.check_sub_key(("body",), album_data) and robot.check_sub_key(("blog",), album_data["body"]):
-        if not album_data["body"]["blog"]:
-            return 2, None  # 相册已被已被删除
-        blog_type = int(album_data["body"]["blog"][0]["type"])
-        if blog_type == 2:
-            return 3, None  # 歌曲类型的相册
-        elif blog_type == 3:
-            album_body = album_data["body"]["blog"][0]
-            if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
-                return 1, album_body
+    album_page_response = net.http_request(album_page_url, post_data=post_data, json_decode=True, is_random_ip=False)
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
+        "title": "",  # 页面解析出的相册标题
+        "image_url_list": [],  # 页面解析出的图片地址列表
+    }
+    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if (
+            robot.check_sub_key(("body",), album_page_response.json_data) and
+            robot.check_sub_key(("blog",), album_page_response.json_data["body"]) and
+            isinstance(album_page_response.json_data["body"]["blog"], list)
+        ):
+            if len(album_page_response.json_data["body"]["blog"]) == 0:
+                extra_info["is_skip"] = True
+            elif len(album_page_response.json_data["body"]["blog"]) == 1:
+                if robot.check_sub_key(("type",), album_page_response.json_data["body"]["blog"][0]):
+                    album_type = int(album_page_response.json_data["body"]["blog"][0]["type"])
+                    if album_type == 2:  # 歌曲类型的相册
+                        extra_info["is_skip"] = True
+                    elif album_type == 3:  # 图片类型的相册
+                        album_body = album_page_response.json_data["body"]["blog"][0]
+                        if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
+                            if album_body["title"]:
+                                extra_info["title"] = str(album_body["title"].encode("utf-8"))
+                            image_url_list = []
+                            for image_data in album_body["attr"]["img"]:
+                                if robot.check_sub_key(("url",), image_data):
+                                    image_url_list.append("http://www.zunguang.com/%s" % str(image_data["url"]))
+                                else:
+                                    image_url_list = []
+                                    break
+                            if len(image_url_list) == 0:
+                                extra_info["is_error"] = True
+                            else:
+                                extra_info["image_url_list"] = image_url_list
+                    else:  # 其他类型的相册
+                        extra_info["is_error"] = True
+            else:
+                extra_info["is_error"] = True
         else:
-            return 4, blog_type
+            extra_info["is_error"] = True
+    album_page_response.extra_info = extra_info
+    return album_page_response
 
 
 class ZunGuang(robot.Robot):
@@ -44,7 +68,7 @@ class ZunGuang(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        robot.Robot.__init__(self, sys_config, use_urllib3=True)
 
         tool.print_msg("配置文件读取完成")
 
@@ -63,64 +87,65 @@ class ZunGuang(robot.Robot):
         while not is_over:
             log.step("开始解析第%s页图片" % page_count)
 
-            # 根据取图片地址列表
-            album_status, album_data = get_one_page_album_data(page_count)
-            if album_status == -1:
-                log.error("第%s页相册解析失败" % page_count)
+            # 获取相册
+            try:
+                album_page_response = get_album_page(page_count)
+            except SystemExit:
+                log.step("提前退出")
                 break
-            elif album_status == -2:
+
+            if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error("第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_page_response.status)))
+                tool.process_exit()
+
+            if album_page_response.extra_info["is_error"]:
                 log.error("第%s页相册解析失败" % page_count)
-                break
-            elif album_status == 2:
-                error_count += 1
+                tool.process_exit()
+
+            if album_page_response.extra_info["is_skip"]:
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
                     page_count -= error_count - 1
                     break
                 else:
-                    log.error("第%s页相册已被删除" % page_count)
+                    log.error("第%s页相册没有图片，跳过" % page_count)
                     page_count += 1
                     continue
-            elif album_status == 3:
-                log.error("第%s页歌曲相册" % page_count)
-                page_count += 1
-                continue
-            elif album_status == 4:
-                log.error("第%s页相册未知相册类型%s" % (page_count, album_data))
-                break
+
             # 错误数量重置
             error_count = 0
 
             # 下载目录标题
             title = ""
-            if album_data["title"]:
+            if album_page_response.extra_info["title"]:
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(str(album_data["title"].encode("utf-8")))
+                title = robot.filter_text(album_page_response.extra_info["title"])
             if title:
                 image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, title))
             else:
                 image_path = os.path.join(self.image_download_path, "%04d" % page_count)
             if not tool.make_dir(image_path, 0):
                 # 目录出错，把title去掉后再试一次，如果还不行退出
-                log.error("第%s页创建相册目录 %s 失败，尝试不使用title" % (page_count, image_path))
+                log.error("创建第%s页相册目录 %s 失败，尝试不使用title" % (page_count, image_path))
                 post_path = os.path.join(image_path, page_count)
                 if not tool.make_dir(post_path, 0):
-                    log.error("第%s页创建相册目录 %s 失败" % (page_count, image_path))
+                    log.error("创建第%s页相册目录 %s 失败" % (page_count, image_path))
                     tool.process_exit()
 
+            log.step("第%s页相册解析的全部图片：%s" % (page_count, album_page_response.extra_info["image_url_list"]))
             image_count = 1
-            for image_data in album_data["attr"]["img"]:
-                image_url = "http://www.zunguang.com/%s" % str(image_data["url"])
+            for image_url in album_page_response.extra_info["image_url_list"]:
                 log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
                 file_path = os.path.join(image_path, "%03d.%s" % (image_count, file_type))
                 try:
-                    if tool.save_net_file(image_url, file_path, True):
+                    save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
+                    if save_file_return["status"] == 1:
                         log.step("第%s页第%s张图片下载成功" % (page_count, image_count))
                         image_count += 1
                     else:
-                        log.error("第%s页第%s张图片 %s 下载失败" % (page_count, image_count, image_url))
+                        log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (page_count, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
                     tool.remove_dir(image_path)
