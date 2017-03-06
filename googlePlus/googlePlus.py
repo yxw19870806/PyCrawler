@@ -72,8 +72,8 @@ def get_one_page_blog(account_id, token):
                 }
                 if len(data) >= 2 and robot.check_sub_key(("113305016",), data[1]) and len(data[1]["113305016"]) == 1 and len(data[1]["113305016"][0]) >= 5:
                     extra_blog_info["blog_id"] = str(data[1]["113305016"][0][0])
-                    if isinstance(data[1]["113305016"][0][4], long):
-                        extra_blog_info["blog_time"] = int(data[1]["113305016"][0][4] / 1000)
+                    if robot.is_integer(data[1]["113305016"][0][4]):
+                        extra_blog_info["blog_time"] = int(int(data[1]["113305016"][0][4]) / 1000)
                 extra_info["blog_info_list"].append(extra_blog_info)
         extra_info["key"] = str(script_data[2])
     index_page_response.extra_info = extra_info
@@ -90,7 +90,7 @@ def get_blog_page(account_id, picasaweb_url):
         }
         if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
-            if album_id.isdigit():
+            if album_id and robot.is_integer(album_id):
                 extra_info["album_id"] = str(album_id)
         # 如果status==500，重试最多5次
         elif blog_page_response.status == 500 and retry_count < 5:
