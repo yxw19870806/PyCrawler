@@ -60,7 +60,7 @@ def get_one_page_album(account_id, post_time):
                 }
                 if robot.check_sub_key(("title", "post_id", "published_at", "images"), album_info):
                     # 获取相册id
-                    if str(album_info["post_id"]).isdigit():
+                    if robot.is_integer(album_info["post_id"]):
                         extra_image_info["album_id"] = str(album_info["post_id"])
                     # 获取相册标题
                     extra_image_info["album_title"] = str(album_info["title"].encode("utf-8"))
@@ -72,18 +72,13 @@ def get_one_page_album(account_id, post_time):
                             extra_image_info["image_url_list"] = []
                             break
                     # 获取相册创建时间
-                    if str(album_info["published_at"]).isdigit():
+                    if robot.is_integer(album_info["published_at"]):
                         extra_info["album_time"] = str(album_info["published_at"])
                 extra_info["album_info_list"].append(extra_image_info)
         else:
             extra_info["is_error"] = True
     index_page_response.extra_info = extra_info
     return index_page_response
-
-
-# 生成图片大图下载地址
-def generate_large_image_url(account_id, image_id):
-    return "https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, image_id)
 
 
 class TuChong(robot.Robot):

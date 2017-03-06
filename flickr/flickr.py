@@ -33,8 +33,12 @@ def get_photo_index_page(account_name):
         "site_key": None,  # 页面解析出的site key
     }
     if photo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["user_id"] = tool.find_sub_string(photo_index_page_response.data, '"nsid":"', '"')
-        extra_info["site_key"] = tool.find_sub_string(photo_index_page_response.data, '"site_key":"', '"')
+        user_id = tool.find_sub_string(photo_index_page_response.data, '"nsid":"', '"')
+        if user_id and robot.is_integer(user_id):
+            extra_info["user_id"] = user_id
+        site_key = tool.find_sub_string(photo_index_page_response.data, '"site_key":"', '"')
+        if site_key:
+            extra_info["site_key"] = site_key
     photo_index_page_response.extra_info = extra_info
     return photo_index_page_response
 
@@ -67,7 +71,8 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
         if (
             robot.check_sub_key(("photos",), index_page_response.json_data) and
             robot.check_sub_key(("photo", "pages"), index_page_response.json_data["photos"]) and
-            len(index_page_response.json_data["photos"]["photo"]) > 0
+            len(index_page_response.json_data["photos"]["photo"]) > 0 and
+            robot.is_integer(index_page_response.json_data["photos"]["pages"])
         ):
             for photo_info in index_page_response.json_data["photos"]["photo"]:
                 extra_image_info = {
@@ -76,7 +81,7 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
                     "json_data": photo_info,  # 原始数据
                 }
                 # 获取视频上传时间
-                if robot.check_sub_key(("dateupload",), photo_info):
+                if robot.check_sub_key(("dateupload",), photo_info) and robot.is_integer(photo_info["dateupload"]):
                     extra_image_info["image_time"] = str(photo_info["dateupload"])
                 # 获取视频下载地址
                 if robot.check_sub_key(("url_o_cdn",), photo_info):
@@ -188,13 +193,10 @@ class Download(threading.Thread):
             if photo_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error(account_name + " 相册首页访问失败，原因：%s" % robot.get_http_request_failed_reason(photo_index_page_response.status))
                 tool.process_exit()
-            if not photo_index_page_response.extra_info["user_id"]:
-                log.error(account_name + " user_id解析失败")
+            if photo_index_page_response.extra_info["user_id"] is None or photo_index_page_response.extra_info["site_key"] is None:
+                log.error(account_name + " user_id或site_key解析失败")
                 tool.process_exit()
-            if not photo_index_page_response.extra_info["site_key"]:
-                log.error(account_name + " site_key解析失败")
-                tool.process_exit()
-            # 生成一个随机的request id用作访问（使用原理暂时不明，只管模拟页面传入）
+            # 生成一个随机的request id用作访问（模拟页面传入）
             request_id = tool.generate_random_string(8)
 
             # 图片

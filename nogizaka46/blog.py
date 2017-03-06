@@ -47,20 +47,22 @@ def get_one_page_blog(account_id, page_count):
                 "image_url_list": [],  # 页面解析出的所有图片地址列表
                 "big_2_small_image_lust": {},  # 页面解析出的所有含有大图的图片列表
             }
+            # 获取日志id
             blog_id = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
             blog_id = blog_id.split("/")[-1]
-            if blog_id and blog_id.isdigit():
+            if blog_id and robot.is_integer(blog_id):
                 # 获取日志id
                 extra_image_info["blog_id"] = int(blog_id)
-                image_url_list = re.findall('src="([^"]*)"', blog_data)
-                # 获取图片地址列表
-                extra_image_info["image_url_list"] = map(str, image_url_list)
-                # 所有的大图对应的小图
-                big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
-                big_2_small_image_lust = {}
-                for big_image_url, small_image_url in big_image_list_find:
-                    big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
-                extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
+            # 获取图片地址列表
+            image_url_list = re.findall('src="([^"]*)"', blog_data)
+            extra_image_info["image_url_list"] = map(str, image_url_list)
+            # 获取所有的大图对应的小图
+            big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
+            big_2_small_image_lust = {}
+            for big_image_url, small_image_url in big_image_list_find:
+                big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
+            extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
+
             extra_info["blog_info_list"].append(extra_image_info)
         # 检测是否还有下一页
         paginate_data = tool.find_sub_string(index_page_response.data, '<div class="paginate">', "</div>")
@@ -81,6 +83,7 @@ def check_big_image(image_url, big_2_small_list):
         if big_2_small_list[image_url].find("http://dcimg.awalker.jp") == 0:
             big_image_response = net.http_request(big_2_small_list[image_url])
             if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                # 检测是不是已经过期删除
                 temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')
                 if temp_image_url != "/img/expired.gif":
                     extra_info["image_url"] = temp_image_url

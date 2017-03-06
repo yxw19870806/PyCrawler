@@ -62,22 +62,6 @@ def get_audio_play_page(audio_id, song_type):
                 extra_info["audio_url"] = str(audio_info["file"])
     audio_play_page_response.extra_info = extra_info
     return audio_play_page_response
-    # # http://service.5sing.kugou.com/song/getPermission?songId=15663426&songType=fc
-    # audio_info_page_url = "http://service.5sing.kugou.com/song/getPermission?songId=%s&songType=%s" % (audio_id, song_type)
-    # header_list = {"Cookie": "5sing_auth=%s" % COOKIE_INFO["5sing_auth"]}
-    # audio_info_page_response = net.http_request(audio_info_page_url, header_list=header_list, json_decode=True)
-    # extra_info = {
-    #     "audio_url": None,  # 页面解析出的歌曲下载地址
-    # }
-    # if audio_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-    #     if robot.check_sub_key(("data", "code"), audio_info_page_response.json_data):
-    #         if int(audio_info_page_response.json_data["code"]) == 1008 and robot.check_sub_key(("fileName",), audio_info_page_response.json_data["data"]):
-    #             extra_info["audio_url"] = str(audio_info_page_response.json_data["data"]["fileName"])
-    #         # 不能下载
-    #         elif int(audio_info_page_response.json_data["code"]) == 1006 and audio_info_page_response.json_data["data"] is []:
-    #             extra_info["audio_url"] = ""
-    # audio_info_page_response.extra_info = extra_info
-    # return audio_info_page_response
 
 
 class FiveSing(robot.Robot):

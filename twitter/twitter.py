@@ -6,7 +6,7 @@ https://twitter.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import re
@@ -31,9 +31,8 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 从cookie中获取auth_token
+# 从cookie中获取登录的auth_token
 def get_auth_token():
-    from common import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
@@ -43,17 +42,9 @@ def get_auth_token():
         cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-    return tool.get_cookie_value_from_browser("auth_token", cookie_path, browser_type, (".twitter.com",))
-
-
-# 根据账号名字获得账号id（字母账号->数字账号)
-def get_account_id(account_name):
-    account_index_url = "https://twitter.com/%s" % account_name
-    account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
-    if account_index_return_code == 1:
-        account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if account_id:
-            return account_id
+    all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+    if ".twitter.com" in all_cookie_from_browser and "auth_token" in all_cookie_from_browser[".twitter.com"]:
+        return all_cookie_from_browser["www.instagram.com"]["sessionid"]
     return None
 
 
@@ -63,15 +54,10 @@ def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
     follow_data = {"user_id": account_id}
     header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    follow_return_code, follow_data = tool.http_request(follow_url, follow_data, header_list)[:2]
-    if follow_return_code == 1:
-        try:
-            follow_data = json.loads(follow_data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("new_state",), follow_data) and follow_data["new_state"] == "following":
-                return True
+    follow_response = net.http_request(follow_url, post_data=follow_data, header_list=header_list, json_decode=True)
+    if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("new_state",), follow_response.json_data) and follow_response.json_data["new_state"] == "following":
+            return True
     return False
 
 
@@ -81,9 +67,9 @@ def unfollow_account(auth_token, account_id):
     unfollow_url = "https://twitter.com/i/user/unfollow"
     unfollow_data = {"user_id": account_id}
     header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    unfollow_return_code, unfollow_data = tool.http_request(unfollow_url, unfollow_data, header_list)[:2]
-    if unfollow_return_code == 1:
-        if robot.check_sub_key(("new_state",), unfollow_data) and unfollow_data["new_state"] == "not-following":
+    unfollow_response = net.http_request(unfollow_url, post_data=unfollow_data, header_list=header_list, json_decode=True)
+    if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("new_state",), unfollow_response.json_data) and unfollow_response.json_data["new_state"] == "not-following":
             return True
     return False
 
@@ -97,72 +83,104 @@ def get_follow_list(account_name):
     if auth_token is None:
         return None
     while True:
-        follow_page_data = get_follow_page_data(account_name, auth_token, position_id)
+        follow_page_data = get_one_page_follow(account_name, auth_token, position_id)
         if follow_page_data is not None:
             profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_page_data["items_html"])
             if len(profile_list) > 0:
                 follow_list += profile_list
             if follow_page_data["has_more_items"]:
                 position_id = follow_page_data["min_position"]
-            else:
-                break
-        else:
-            break
+                continue
+        break
     return follow_list
 
 
-# 获取指定一页的关注列表
-def get_follow_page_data(account_name, auth_token, position_id):
+# 获取一页的关注列表
+def get_one_page_follow(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
     header_list = {"Cookie": "auth_token=%s;" % auth_token}
-    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, header_list=header_list)[:2]
-    if follow_list_return_code == 1:
-        try:
-            follow_list_data = json.loads(follow_list_data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_data):
-                return follow_list_data
+    follow_list_response = net.http_request(follow_list_url, header_list=header_list, json_decode=True)
+    if follow_list_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_response.json_data):
+            return follow_list_response.json_data
+    return None
+
+
+# 根据账号名字获得账号id（字母账号->数字账号)
+def get_account_id(account_name):
+    account_index_url = "https://twitter.com/%s" % account_name
+    account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
+    if account_index_return_code == 1:
+        account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+        if account_id and robot.is_integer(account_id):
+            return account_id
     return None
 
 
 # 获取一页的媒体信息
-def get_media_page_data(account_name, data_tweet_id):
+def get_media_page_data(account_name, position_blog_id):
     media_page_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
-    media_page_url += "?include_available_features=1&include_entities=1&max_position=%s" % data_tweet_id
-    media_page_return_code, media_page_response = tool.http_request(media_page_url)[:2]
-    if media_page_return_code == 1:
-        try:
-            media_page = json.loads(media_page_response)
-        except ValueError:
-            pass
+    media_page_url += "?include_available_features=1&include_entities=1&max_position=%s" % position_blog_id
+    media_page_response = net.http_request(media_page_url, json_decode=True)
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "is_over": False,  # 是不是已经结束（没有获取到任何内容）
+        "media_info_list": [],  # 页面解析出的媒体信息列表
+        "next_page_position": None  # 页面解析出的下一页指针
+    }
+    if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if (
+            robot.check_sub_key(("has_more_items", "items_html", "new_latent_count", "min_position"), media_page_response.json_data) and
+            robot.is_integer(media_page_response.json_data["new_latent_count"]) and
+            robot.is_integer(media_page_response.json_data["min_position"])
+        ):
+            # 没有任何内容
+            if int(media_page_response.json_data["new_latent_count"]) == 0 and not str(media_page_response.json_data["items_html"]).strip():
+                extra_info["is_skip"] = True
+            else:
+                # tweet信息分组
+                temp_tweet_data_list = media_page_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
+                tweet_data_list = []
+                for tweet_data in temp_tweet_data_list:
+                    if len(tweet_data) < 50:
+                        continue
+                    tweet_data = tweet_data.encode("utf-8")
+                    # 被圈出来的用户，追加到前面的页面中
+                    if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
+                        tweet_data_list[-1] += tweet_data
+                    else:
+                        tweet_data_list.append(tweet_data)
+                if int(media_page_response.json_data["new_latent_count"]) == len(tweet_data_list) > 0:
+                    for tweet_data in tweet_data_list:
+                        extra_media_info = {
+                            "blog_id": None,  # 页面解析出的日志id
+                            "has_video": False,  # 是不是包含视频
+                            "image_url_list": [],  # 页面解析出的图片地址列表
+                        }
+                        # 获取日志id
+                        blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
+                        if blog_id and robot.is_integer(blog_id):
+                            extra_media_info["blog_id"] = str(blog_id)
+                        else:
+                            extra_info["is_error"] = True
+                            extra_info["media_info_list"] = []
+                            break
+                        # 获取图片地址列表
+                        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
+                        extra_media_info["image_url_list"] = map(str, image_url_list)
+                        # 判断是不是有视频
+                        extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
+
+                        extra_info["media_info_list"].append(extra_media_info)
+                    # 判断有没有下一页
+                    if media_page_response.json_data["has_more_items"]:
+                        extra_info["next_page_position"] = str(media_page_response.json_data["min_position"])
+                else:
+                    extra_info["is_error"] = True
         else:
-            if robot.check_sub_key(("has_more_items", "items_html", "new_latent_count", "min_position"), media_page):
-                return media_page
-    return None
-
-
-# 从媒体列表中将不同的媒体信息拆分组
-def get_tweet_list(media_page_items_html):
-    media_page_items_html = media_page_items_html.replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"')
-    tweet_data_list = media_page_items_html.split("\n")
-    tweet_id_list = []
-    for tweet_data in tweet_data_list:
-        if len(tweet_data) < 50:
-            continue
-        tweet_data = tweet_data.encode("utf-8")
-        # 被圈出来的用户，追加到前面的页面中
-        if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
-            tweet_id_list[-1] += tweet_data
-        else:
-            tweet_id_list.append(tweet_data)
-    return tweet_id_list
-
-
-# 检查tweet中是否包含视频
-def check_has_video(tweet_data):
-    return tweet_data.find("PlayableMedia--video") >= 0
+            extra_info["is_error"] = True
+    media_page_response.extra_info = extra_info
+    return media_page_response
 
 
 # 根据视频所在推特的ID，获取视频的下载地址
@@ -213,11 +231,6 @@ def get_video_url_list(tweet_id):
     return "", []
 
 
-# 获取推特中的全部图片下载地址
-def get_image_url_list(tweet_data):
-    return re.findall('data-image-url="([^"]*)"', tweet_data)
-
-
 # 将多个ts文件的地址保存为本地视频文件
 def save_video(ts_file_list, file_path):
     file_handle = open(file_path, "wb")
@@ -257,7 +270,7 @@ class Twitter(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        robot.Robot.__init__(self, sys_config, extra_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -345,7 +358,7 @@ class Download(threading.Thread):
 
             image_count = 1
             video_count = 1
-            data_tweet_id = INIT_MAX_ID
+            position_blog_id = INIT_MAX_ID
             first_tweet_id = "0"
             is_over = False
             is_download_image = IS_DOWNLOAD_IMAGE
@@ -353,72 +366,58 @@ class Download(threading.Thread):
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
-                log.step(account_name + " 开始解析%s后的一页媒体列表" % data_tweet_id)
+                log.step(account_name + " 开始解析%s后的一页媒体列表" % position_blog_id)
 
                 # 获取指定时间点后的一页图片信息
-                media_page = get_media_page_data(account_name, data_tweet_id)
-                if media_page is None:
-                    log.error(account_name + " 媒体列表解析失败")
+                media_page_response = get_media_page_data(account_name, position_blog_id)
+                if media_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " %s后的一页媒体列表访问失败，原因：%s" % (position_blog_id, robot.get_http_request_failed_reason(media_page_response.status)))
                     tool.process_exit()
 
-                # 上一页正好获取了全部的媒体信息，所以这一页没有任何内容，完成了，直接退出
-                if media_page["new_latent_count"] == 0 and not media_page["has_more_items"]:
-                    break
-
-                # 没有返回任何信息
-                if not media_page["items_html"].strip():
-                    break
-
-                tweet_list = get_tweet_list(media_page["items_html"])
-                if len(tweet_list) == 0:
-                    log.error(account_name + " 媒体列表拆分失败，items_html：%s" % str(media_page["items_html"]))
+                if media_page_response.extra_info["is_error"]:
+                    log.error(account_name + " %s后的一页媒体列表解析失败" % position_blog_id)
                     tool.process_exit()
 
-                if media_page["new_latent_count"] != len(tweet_list):
-                    log.error(account_name + " 解析的媒体数量不等于new_latent_count的数值")
-                    # tool.process_exit()
+                if media_page_response.extra_info["is_over"]:
+                    break
 
-                for tweet_data in tweet_list:
-                    # 获取tweet_id
-                    tweet_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-                    if not tweet_id:
-                        log.error(account_name + " tweet id解析失败，tweet数据：%s" % tweet_data)
+                for media_info in media_page_response.extra_info["media_info_list"]:
+                    if media_info["blog_id"] is None:
+                        log.error(account_name + " 媒体数据里的日志id解析失败%s" % media_info)
                         continue
 
-                    log.step(account_name + " 开始解析tweet %s" % tweet_id)
+                    log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
 
                     # 检查是否tweet的id小于上次的记录
-                    if int(tweet_id) <= int(self.account_info[3]):
+                    if int(media_info["blog_id"]) <= int(self.account_info[3]):
                         is_over = True
                         break
 
                     # 将第一个tweet的id做为新的存档记录
                     if first_tweet_id == "0":
-                        first_tweet_id = tweet_id
+                        first_tweet_id = media_info["blog_id"]
 
                     # 视频
-                    if is_download_video:
-                        # 这个tweet是否包含视频
-                        if check_has_video(tweet_data):
-                            video_file_type, video_url_list = get_video_url_list(tweet_id)
-                            if len(video_url_list) > 0:
-                                log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
+                    if is_download_video and media_info["has_video"]:
+                        video_file_type, video_url_list = get_video_url_list(media_info["blog_id"])
+                        if len(video_url_list) > 0:
+                            log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
 
-                                # 第一个视频，创建目录
-                                if need_make_video_dir:
-                                    if not tool.make_dir(video_path, 0):
-                                        log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                                        tool.process_exit()
-                                    need_make_video_dir = False
+                            # 第一个视频，创建目录
+                            if need_make_video_dir:
+                                if not tool.make_dir(video_path, 0):
+                                    log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                                    tool.process_exit()
+                                need_make_video_dir = False
 
-                                video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
-                                if save_video(video_url_list, video_file_path):
-                                    log.step(account_name + " 第%s个视频下载成功" % video_count)
-                                    video_count += 1
-                                else:
-                                    log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
+                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
+                            if save_video(video_url_list, video_file_path):
+                                log.step(account_name + " 第%s个视频下载成功" % video_count)
+                                video_count += 1
                             else:
-                                log.error(account_name + " 第%s个视频 没有解析到源地址，tweet id：%s" % (video_count, tweet_id))
+                                log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
+                        else:
+                            log.error(account_name + " 第%s个视频 没有解析到源地址，tweet id：%s" % (video_count, media_info["blog_id"]))
 
                         # 达到配置文件中的下载数量，结束图片下载
                         if 0 < GET_IMAGE_COUNT < image_count:
@@ -426,31 +425,26 @@ class Download(threading.Thread):
 
                     # 图片
                     if is_download_image:
-                        # 匹配获取全部的图片地址
-                        image_url_list = get_image_url_list(tweet_data)
-                        for image_url in image_url_list:
-                            image_url = str(image_url)
+                        for image_url in media_info["image_url_list"]:
                             log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                            image_return_code, image_byte = tool.http_request(image_url)[:2]
-                            # 404，不算做错误，图片已经被删掉了
-                            if image_return_code == -404:
-                                log.error(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
-                            elif image_return_code == 1:
-                                # 第一张图片，创建目录
-                                if need_make_image_dir:
-                                    if not tool.make_dir(image_path, 0):
-                                        log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                        tool.process_exit()
-                                    need_make_image_dir = False
+                            # 第一张图片，创建目录
+                            if need_make_image_dir:
+                                if not tool.make_dir(image_path, 0):
+                                    log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                    tool.process_exit()
+                                need_make_image_dir = False
 
-                                file_type = image_url.split(".")[-1].split(":")[0]
-                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                save_image(image_byte, image_file_path)
+                            file_type = image_url.split(".")[-1].split(":")[0]
+                            image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                            save_file_return = net.save_net_file(image_url, image_file_path)
+                            if save_file_return["status"] == 1:
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)
                                 image_count += 1
+                            elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
+                                log.error(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
                             else:
-                                log.error(account_name + " 第%s张图片 %s 下载失败" % (image_count, image_url))
+                                log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束视频下载
                         if 0 < GET_VIDEO_COUNT < video_count:
@@ -462,11 +456,11 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    # 查找下一页的data_tweet_id
-                    if media_page["has_more_items"]:
-                        data_tweet_id = str(media_page["min_position"])
-                    else:
+                    # 下一页的指针
+                    if media_page_response.extra_info["next_page_position"] is None:
                         is_over = True
+                    else:
+                        position_blog_id = media_page_response.extra_info["next_page_position"]
 
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
