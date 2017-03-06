@@ -412,6 +412,17 @@ def check_sub_key(needles, haystack):
     return False
 
 
+# 判断是不是整数
+def is_integer(number):
+    if isinstance(number, int):
+        return True
+    elif isinstance(number, long):
+        return True
+    elif str(number).isdigit():
+        return True
+    return False
+
+
 # 过滤文本中的字符，以符合windows支持的路径字符集
 def filter_text(text):
     for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
