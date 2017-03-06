@@ -40,11 +40,15 @@ def get_one_page_media(account_name, target_id):
             for media_info in index_page_response.json_data["data"]:
                 extra_media_info = {
                     "blog_id": None,  # 页面解析出的日志id
-                    "blog_body": None,  # 页面解析出的日志id
+                    "blog_body": None,  # 页面解析出的日志内容
                     "json_data": media_info,  # 原始数据
                 }
                 if robot.check_sub_key(("post",), media_info) and robot.check_sub_key(("body", "postId"), media_info["post"]):
-                    extra_media_info["blog_id"] = str(media_info["post"]["postId"])
+                    # 获取日志id
+                    blog_id = str(media_info["post"]["postId"])
+                    if blog_id and robot.is_integer(blog_id):
+                        extra_media_info["blog_id"] = blog_id
+                    # 获取日志内容
                     extra_media_info["blog_body"] = media_info["post"]["body"]
                 extra_info["media_info_list"].append(extra_media_info)
         else:
