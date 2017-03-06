@@ -37,11 +37,19 @@ def get_one_page_blog(account_id, page_count):
         blog_article_html = tool.find_sub_string(index_page_response.data, '<div class="box-main">', '<div class="box-sideMember">')
         blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
         for blog_info in blog_list:
+            extra_blog_info = {
+                "blog_id" : None,  # 页面解析出的日志id
+                "image_url_list": [],  # 页面解析出的图片下载地址列表
+            }
             # 获取日志id
             blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
+            if blog_id and robot.is_integer(blog_id):
+                extra_blog_info["blog_id"] = blog_id
             # 获取日志页面中所有的图片地址列表
             image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
-            extra_info["blog_info_list"].append({"blog_id": blog_id, "image_url_list": map(str, image_url_list)})
+            extra_blog_info["image_url_list"] = map(str, image_url_list)
+
+            extra_info["blog_info_list"].append(extra_blog_info)
     index_page_response.extra_info = extra_info
     return index_page_response
 
