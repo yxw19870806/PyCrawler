@@ -137,7 +137,7 @@ def get_index_page(account_name):
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(index_page_response.data, '"profilePage_', '"')
-        if account_id and account_id.isdigit():
+        if account_id and robot.is_integer(account_id):
             extra_info["account_id"] = account_id
     index_page_response.extra_info = extra_info
     return index_page_response
@@ -172,9 +172,13 @@ def get_one_page_media(account_id, cursor):
                     "json_data": media_info,  # 原始数据
                 }
                 if robot.check_sub_key(("is_video", "display_src", "date"), media_info):
+                    # 获取图片下载地址
                     media_extra_info["image_url"] = str(media_info["display_src"]).split("?")[0]
+                    # 检测是否有视频
                     media_extra_info["is_video"] = media_info["is_video"]
+                    # 获取图片上传时间
                     media_extra_info["time"] = str(int(media_info["date"]))
+                    # 获取视频id
                     if media_extra_info["is_video"] and robot.check_sub_key(("code",), media_info):
                         media_extra_info["video_id"] = str(media_info["code"])
                 extra_info["media_info_list"].append(media_extra_info)
@@ -196,7 +200,9 @@ def get_video_play_page(post_id):
         "video_url": None,  # 页面解析出的图片地址列表
     }
     if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["video_url"] = tool.find_sub_string(video_play_page_response.data, '<meta property="og:video:secure_url" content="', '" />')
+        video_url = tool.find_sub_string(video_play_page_response.data, '<meta property="og:video:secure_url" content="', '" />')
+        if video_url:
+            extra_info["video_url"] = video_url
     video_play_page_response.extra_info = extra_info
     return video_play_page_response
 
@@ -385,7 +391,7 @@ class Download(threading.Thread):
                         if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                             log.error(account_name + " 第%s个视频 %s 播放页访问失败，原因：%s" % (video_count, media_info["code"], robot.get_http_request_failed_reason(video_play_page_response.status)))
                             break
-                        if not video_play_page_response.extra_info["video_url"]:
+                        if video_play_page_response.extra_info["video_url"] is None:
                             log.error(account_name + " 第%s个视频 %s 下载地址解析失败" % (video_count, media_info["code"]))
                             tool.process_exit()
 
