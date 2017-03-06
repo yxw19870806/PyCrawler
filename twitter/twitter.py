@@ -6,7 +6,7 @@ https://twitter.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, robot, tool
+from common import log, net, robot, tool
 import json
 import os
 import re
@@ -31,9 +31,8 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 从cookie中获取auth_token
+# 从cookie中获取登录的auth_token
 def get_auth_token():
-    from common import robot
     config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
@@ -43,17 +42,9 @@ def get_auth_token():
         cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-    return tool.get_cookie_value_from_browser("auth_token", cookie_path, browser_type, (".twitter.com",))
-
-
-# 根据账号名字获得账号id（字母账号->数字账号)
-def get_account_id(account_name):
-    account_index_url = "https://twitter.com/%s" % account_name
-    account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
-    if account_index_return_code == 1:
-        account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if account_id:
-            return account_id
+    all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+    if ".twitter.com" in all_cookie_from_browser and "auth_token" in all_cookie_from_browser[".twitter.com"]:
+        return all_cookie_from_browser["www.instagram.com"]["sessionid"]
     return None
 
 
@@ -63,15 +54,10 @@ def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
     follow_data = {"user_id": account_id}
     header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    follow_return_code, follow_data = tool.http_request(follow_url, follow_data, header_list)[:2]
-    if follow_return_code == 1:
-        try:
-            follow_data = json.loads(follow_data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("new_state",), follow_data) and follow_data["new_state"] == "following":
-                return True
+    follow_response = net.http_request(follow_url, post_data=follow_data, header_list=header_list, json_decode=True)
+    if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("new_state",), follow_response.json_data) and follow_response.json_data["new_state"] == "following":
+            return True
     return False
 
 
@@ -81,9 +67,9 @@ def unfollow_account(auth_token, account_id):
     unfollow_url = "https://twitter.com/i/user/unfollow"
     unfollow_data = {"user_id": account_id}
     header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    unfollow_return_code, unfollow_data = tool.http_request(unfollow_url, unfollow_data, header_list)[:2]
-    if unfollow_return_code == 1:
-        if robot.check_sub_key(("new_state",), unfollow_data) and unfollow_data["new_state"] == "not-following":
+    unfollow_response = net.http_request(unfollow_url, post_data=unfollow_data, header_list=header_list, json_decode=True)
+    if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("new_state",), unfollow_response.json_data) and unfollow_response.json_data["new_state"] == "not-following":
             return True
     return False
 
@@ -97,33 +83,37 @@ def get_follow_list(account_name):
     if auth_token is None:
         return None
     while True:
-        follow_page_data = get_follow_page_data(account_name, auth_token, position_id)
+        follow_page_data = get_one_page_follow(account_name, auth_token, position_id)
         if follow_page_data is not None:
             profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_page_data["items_html"])
             if len(profile_list) > 0:
                 follow_list += profile_list
             if follow_page_data["has_more_items"]:
                 position_id = follow_page_data["min_position"]
-            else:
-                break
-        else:
-            break
+                continue
+        break
     return follow_list
 
 
-# 获取指定一页的关注列表
-def get_follow_page_data(account_name, auth_token, position_id):
+# 获取一页的关注列表
+def get_one_page_follow(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
     header_list = {"Cookie": "auth_token=%s;" % auth_token}
-    follow_list_return_code, follow_list_data = tool.http_request(follow_list_url, header_list=header_list)[:2]
-    if follow_list_return_code == 1:
-        try:
-            follow_list_data = json.loads(follow_list_data)
-        except ValueError:
-            pass
-        else:
-            if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_data):
-                return follow_list_data
+    follow_list_response = net.http_request(follow_list_url, header_list=header_list, json_decode=True)
+    if follow_list_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_response.json_data):
+            return follow_list_response.json_data
+    return None
+
+
+# 根据账号名字获得账号id（字母账号->数字账号)
+def get_account_id(account_name):
+    account_index_url = "https://twitter.com/%s" % account_name
+    account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
+    if account_index_return_code == 1:
+        account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+        if account_id and robot.is_integer(account_id):
+            return account_id
     return None
 
 
