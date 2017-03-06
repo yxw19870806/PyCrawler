@@ -71,7 +71,9 @@ def get_one_page_blog(account_id, token):
                     "json_data": data,  # 页面解析出的日志上传时间
                 }
                 if len(data) >= 2 and robot.check_sub_key(("113305016",), data[1]) and len(data[1]["113305016"]) == 1 and len(data[1]["113305016"][0]) >= 5:
+                    # 获取日志id
                     extra_blog_info["blog_id"] = str(data[1]["113305016"][0][0])
+                    # 获取日志创建时间
                     if robot.is_integer(data[1]["113305016"][0][4]):
                         extra_blog_info["blog_time"] = int(int(data[1]["113305016"][0][4]) / 1000)
                 extra_info["blog_info_list"].append(extra_blog_info)
