@@ -155,7 +155,7 @@ def get_one_page_media(account_id, cursor):
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "media_info_list": [],  # 页面解析出的媒体信息列表
-        "next_cursor": None,  # 下一页媒体信息的指针
+        "next_page_cursor": None,  # 下一页媒体信息的指针
     }
     if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
@@ -184,7 +184,7 @@ def get_one_page_media(account_id, cursor):
                 extra_info["media_info_list"].append(media_extra_info)
             # 获取下一页的指针
             if media_page_response.json_data["media"]["page_info"]["has_next_page"]:
-                extra_info["next_cursor"] = str(media_page_response.json_data["media"]["page_info"]["end_cursor"])
+                extra_info["next_page_cursor"] = str(media_page_response.json_data["media"]["page_info"]["end_cursor"])
         else:
             extra_info["is_error"] = True
     media_page_response.extra_info = extra_info
@@ -421,10 +421,10 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if media_page_response.extra_info["next_cursor"] is None:
+                    if media_page_response.extra_info["next_page_cursor"] is None:
                         is_over = True
                     else:
-                        cursor = media_page_response.extra_info["next_cursor"]
+                        cursor = media_page_response.extra_info["next_page_cursor"]
 
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
