@@ -108,10 +108,10 @@ def get_one_page_follow(account_name, auth_token, position_id):
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_id(account_name):
-    account_index_url = "https://twitter.com/%s" % account_name
-    account_index_return_code, account_index_page = tool.http_request(account_index_url)[:2]
-    if account_index_return_code == 1:
-        account_id = tool.find_sub_string(account_index_page, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+    home_page_url = "https://twitter.com/%s" % account_name
+    home_page_response = net.http_request(home_page_url)
+    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        account_id = tool.find_sub_string(home_page_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
         if account_id and robot.is_integer(account_id):
             return account_id
     return None
@@ -242,14 +242,6 @@ def save_video(ts_file_list, file_path):
             return False
     file_handle.close()
     return True
-
-
-# 将图片的二进制数据保存为本地文件
-def save_image(image_byte, image_path):
-    image_path = tool.change_path_encoding(image_path)
-    image_file = open(image_path, "wb")
-    image_file.write(image_byte)
-    image_file.close()
 
 
 class Twitter(robot.Robot):
