@@ -39,10 +39,14 @@ def get_one_page_audio(account_id, page_count):
                     "json_data": audio_info,  # 原始数据
                 }
                 if robot.check_sub_key(("title", "shareid", "ksong_mid", "time"), audio_info):
+                    # 获取歌曲id
                     audio_extra_info["audio_id"] = str(audio_info["ksong_mid"])
+                    # 获取歌曲访问token
                     audio_extra_info["audio_key"] = str(audio_info["shareid"])
+                    # 获取歌曲标题
                     audio_extra_info["audio_title"] = str(audio_info["title"].encode("utf-8"))
-                    if isinstance(audio_info["time"], int) or str(audio_info["time"]).isdigit():
+                    # 获取歌曲上传时间
+                    if robot.is_integer(audio_info["time"]):
                         audio_extra_info["audio_time"] = str(audio_info["time"])
                 extra_info["audio_info_list"].append(audio_extra_info)
             extra_info["is_over"] = not bool(int(index_page_response.json_data["data"]["has_more"]))
