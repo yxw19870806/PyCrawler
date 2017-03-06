@@ -51,6 +51,7 @@ def get_one_page_post(account_id, page_count):
                 if robot.check_sub_key(("itemListElement",), page_data):
                     extra_info["is_error"] = False
                     post_url_list = []
+                    # 获取日志地址列表
                     for post_info in page_data["itemListElement"]:
                         if robot.check_sub_key(("url",), post_info):
                             post_url_split = urlparse.urlsplit(post_info["url"].encode("utf-8"))
@@ -88,12 +89,14 @@ def get_post_page(post_url):
                 if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote", "tumblr-feed:link"]:
                     pass
                 else:
+                    # 视频
                     if og_type == "tumblr-feed:video":
                         extra_info["has_video"] = True
                         image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
                         if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
                             extra_info["image_url_list"].append(image_url)
                     else:
+                        # 获取图片地址列表
                         image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
                         new_image_url_list = {}
                         for image_url in image_url_list:
@@ -133,6 +136,7 @@ def get_video_play_page(account_id, post_id):
         video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_page_response.data)
         if len(video_url_find) == 1:
             video_response = net.http_request(video_url_find[0], redirect=False)
+            # 获取视频重定向页面
             if video_response.status == 302 and "Location" in video_response.headers:
                 # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
                 # ->
