@@ -238,3 +238,34 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     if create_file:
         os.remove(file_path)
     return {"status": 0, "code": -2}
+
+
+# 保存网络文件列表（多个URL的内容按顺序写入一个文件）
+# file_url 文件所在网址
+# file_path 文件所在本地路径，包括路径和文件名
+# return
+#       status: 0：失败，1：成功,
+#       code:   -1：无法访问（没有获得返回，可能是域名无法解析，请求被直接丢弃，地址被墙等）
+#               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
+#               > 0：访问出错，对应url的http code
+def save_net_file_list(file_url_list, file_path, header_list=None):
+    file_path = tool.change_path_encoding(file_path)
+    for retry_count in range(0, 5):
+        # 下载
+        file_handle = open(file_path, "wb")
+        for file_url in file_url_list:
+            response = http_request(file_url, header_list=header_list, read_timeout=60)
+            if response.status == HTTP_RETURN_CODE_SUCCEED:
+                file_handle.write(response.data)
+            # 超过重试次数，直接退出
+            elif response.status == HTTP_RETURN_CODE_RETRY:
+                os.remove(file_path)
+                return {"status": 0, "code": -1}
+            # 其他http code，退出
+            else:
+                os.remove(file_path)
+                return {"status": 0, "code": response.status}
+        file_handle.close()
+        return {"status": 1, "code": 0}
+    # os.remove(file_path)
+    return {"status": 0, "code": -2}
