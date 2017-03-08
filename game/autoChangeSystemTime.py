@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 import datetime
 import win32api
 import time
+import math
 
 
 def set_system_time(year, month, day, hour, minute, second):
@@ -15,8 +16,13 @@ def set_system_time(year, month, day, hour, minute, second):
 
 
 if __name__ == "__main__":
-    while True:
+    now = win32api.GetSystemTime()
+    process_time = 0
+    for i in range(0, 1):
         set_system_time(2005, 1, 1, 0, 0, 0)
         time.sleep(0.2)
         set_system_time(2035, 1, 1, 0, 0, 0)
         time.sleep(0.2)
+        process_time += 0.4
+
+    set_system_time(now[0], now[1], now[3], now[4], now[5], now[6] + math.ceil(process_time))
