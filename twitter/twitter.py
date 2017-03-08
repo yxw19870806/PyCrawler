@@ -184,64 +184,54 @@ def get_media_page_data(account_name, position_blog_id):
 
 
 # 根据视频所在推特的ID，获取视频的下载地址
-def get_video_url_list(tweet_id):
-    video_page_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
-    video_page_return_code, video_page = tool.http_request(video_page_url)[:2]
-    if video_page_return_code == 1:
+def get_video_play_page(tweet_id):
+    video_play_page_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
+    video_play_page_response = net.http_request(video_play_page_url)
+    extra_info = {
+        "video_url": None,  # 页面解析出的视频地址
+    }
+    if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 包含m3u8文件地址的处理
         # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
-        m3u8_file_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
+        m3u8_file_url = tool.find_sub_string(video_play_page_response.data, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
         if m3u8_file_url:
             m3u8_file_url = m3u8_file_url.replace("\\/", "/") + ".m3u8"
             file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
             file_url_host = urllib.splithost(file_url_path)[0]
-            m3u8_file_return_code, m3u8_file_data = tool.http_request(m3u8_file_url)[:2]
-            if m3u8_file_return_code != 1:
-                return "ts", []
-            # 是否包含的是m3u8文件（不同分辨率）
-            include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_data)
-            if len(include_m3u8_file_list) > 0:
-                # 生成最高分辨率视频所在的m3u8文件地址
-                m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
-                m3u8_file_return_code, m3u8_file_data = tool.http_request(m3u8_file_url)[:2]
-                if m3u8_file_return_code != 1:
-                    return "ts", []
-            ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_data)
-            if len(ts_url_find) > 0:
-                ts_url_list = []
-                for ts_file_path in ts_url_find:
-                    ts_url_list.append("%s://%s%s" % (file_url_protocol, file_url_host, ts_file_path))
-                return "ts", ts_url_list
-            return "ts", []
-        # 直接包含视频播放地址的处理
-        video_url = tool.find_sub_string(video_page, "&quot;video_url&quot;:&quot;", "&quot;")
-        if video_url:
-            video_url = video_url.replace("\\/", "/")
-            file_type = video_url.split(".")[-1]
-            return file_type, [video_url]
-        vmap_file_url = tool.find_sub_string(video_page, "&quot;vmap_url&quot;:&quot;", "&quot;")
-        if vmap_file_url:
-            vmap_file_url = vmap_file_url.replace("\\/", "/")
-            vmap_file_return_code, vmap_file = tool.http_request(vmap_file_url)[:2]
-            if vmap_file_return_code:
-                media_file_url = tool.find_sub_string(vmap_file, "<![CDATA[", "]]>")
-                if media_file_url:
-                    file_type = media_file_url.split(".")[-1].split("?")[0]
-                    return file_type, media_file_url
-    return "", []
-
-
-# 将多个ts文件的地址保存为本地视频文件
-def save_video(ts_file_list, file_path):
-    file_handle = open(file_path, "wb")
-    for ts_file_url in ts_file_list:
-        ts_file_return_code, ts_file_data = tool.http_request(ts_file_url)[:2]
-        if ts_file_return_code == 1:
-            file_handle.write(ts_file_data)
+            m3u8_file_response = net.http_request(m3u8_file_url)
+            while m3u8_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                # 是否包含的是m3u8文件（不同分辨率）
+                include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
+                if len(include_m3u8_file_list) > 0:
+                    # 生成最高分辨率视频所在的m3u8文件地址
+                    m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
+                    m3u8_file_response = net.http_request(m3u8_file_url)
+                    if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        break
+                ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
+                if len(ts_url_find) > 0:
+                    ts_url_list = []
+                    for ts_file_path in ts_url_find:
+                        ts_url_list.append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
+                    extra_info["video_url"] = ts_url_list
+                break
         else:
-            return False
-    file_handle.close()
-    return True
+            # 直接包含视频播放地址的处理
+            video_url = tool.find_sub_string(video_play_page_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
+            if video_url:
+                extra_info["video_url"] = video_url
+            else:
+                # 直接包含视频播放地址的处理
+                vmap_file_url = tool.find_sub_string(video_play_page_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
+                if vmap_file_url:
+                    vmap_file_url = vmap_file_url.replace("\\/", "/")
+                    vmap_file_response = net.http_request(vmap_file_url)
+                    if vmap_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                        video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
+                        if video_url:
+                            extra_info["video_url"] = str(video_url)
+    video_play_page_response.extra_info = extra_info
+    return video_play_page_response
 
 
 class Twitter(robot.Robot):
@@ -391,25 +381,41 @@ class Download(threading.Thread):
 
                     # 视频
                     if is_download_video and media_info["has_video"]:
-                        video_file_type, video_url_list = get_video_url_list(media_info["blog_id"])
-                        if len(video_url_list) > 0:
-                            log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url_list))
+                        # 获取视频播放地址
+                        video_play_page_response = get_video_play_page(media_info["blog_id"])
+                        if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                            log.error(account_name + " 日志%s的视频播放页访问失败，原因：%s" % (media_info["blog_id"], robot.get_http_request_failed_reason(video_play_page_response.status)))
+                            tool.process_exit()
 
-                            # 第一个视频，创建目录
-                            if need_make_video_dir:
-                                if not tool.make_dir(video_path, 0):
-                                    log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                                    tool.process_exit()
-                                need_make_video_dir = False
+                        if video_play_page_response.extra_info["video_url"] is None:
+                            log.error(account_name + " 日志%s的视频下载地址解析失败" % media_info["blog_id"])
+                            tool.process_exit()
 
-                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
-                            if save_video(video_url_list, video_file_path):
-                                log.step(account_name + " 第%s个视频下载成功" % video_count)
-                                video_count += 1
-                            else:
-                                log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url_list))
+                        video_url = video_play_page_response.extra_info["video_url"]
+                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+
+                        # 第一个视频，创建目录
+                        if need_make_video_dir:
+                            if not tool.make_dir(video_path, 0):
+                                log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
+                                tool.process_exit()
+                            need_make_video_dir = False
+
+                        # 分割后的ts格式视频
+                        if isinstance(video_url, list):
+                            video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
+                            save_file_return = net.save_net_file_list(video_url, video_file_path)
+                        # 其他格式的视频
                         else:
-                            log.error(account_name + " 第%s个视频 没有解析到源地址，tweet id：%s" % (video_count, media_info["blog_id"]))
+                            video_file_type = video_url.split(".")[-1]
+                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, video_file_type))
+                            save_file_return = net.save_net_file(video_url, video_file_path)
+
+                        if save_file_return["status"] == 1:
+                            log.step(account_name + " 第%s个视频下载成功" % video_count)
+                            video_count += 1
+                        else:
+                            log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                         # 达到配置文件中的下载数量，结束图片下载
                         if 0 < GET_IMAGE_COUNT < image_count:
