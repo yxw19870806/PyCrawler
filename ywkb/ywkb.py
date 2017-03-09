@@ -12,18 +12,22 @@ import re
 
 # 获取一页图片信息列表
 def get_one_page_image_info_list(page_count):
-    index_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
-    index_response = net.http_request(index_url)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        article_data = tool.find_sub_string(index_response.data, '<section id="primary"', "</section>")
+    index_page_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
+    index_page_response = net.http_request(index_page_url)
+    extra_info = {
+        "is_over": False,  # 是不是已经没有新的相册
+        "image_info_list": [],  # 是不是已经没有新的相册
+    }
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        article_data = tool.find_sub_string(index_page_response.data, '<section id="primary"', "</section>")
         image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
-        return {"is_over": False, "image_info_list": image_info_list}
-    elif index_response.status == 404:
-        return {"is_over": True, "image_info_list": []}
+
+    elif index_page_response.status == 404:
+        extra_info["is_over"] = True
     return None
 
 
-class Template(robot.Robot):
+class YWKB(robot.Robot):
     def __init__(self):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
@@ -93,4 +97,4 @@ class Template(robot.Robot):
 
 
 if __name__ == "__main__":
-    Template().main()
+    YWKB().main()
