@@ -57,9 +57,13 @@ def continue_process():
 
 
 class ClickerHeroes():
+    window_title = "Clicker Heroes"
+
+    @property
+    def window_handle(self):
+        return win32gui.FindWindow(None, self.window_title)
+
     def __init__(self):
-        windows_title = "Clicker Heroes"
-        self.window_handle = win32gui.FindWindow(None, windows_title)
         # 设置为默认窗口大小（避免坐标产生偏移）
         self.set_window_size(DEFAULT_WINDOWS_SIZE[0], DEFAULT_WINDOWS_SIZE[1])
         keyboard_event_bind = {"Prior": pause_process, "Next": continue_process}
