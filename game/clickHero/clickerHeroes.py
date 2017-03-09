@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 """
 from common import keyboardEvent
 import pywintypes
+import sys
 import win32api
 import win32con
 import win32gui
@@ -45,15 +46,25 @@ PROCESS_STATUS = PROCESS_STATUS_RUN  # 当前进程状态
 # 设置暂停状态
 def pause_process():
     global PROCESS_STATUS
-    print "pause process"
+    print_msg("pause process")
     PROCESS_STATUS = PROCESS_STATUS_PAUSE
 
 
 # 设置运行状态
 def continue_process():
     global PROCESS_STATUS
-    print "continue process"
+    print_msg("continue process")
     PROCESS_STATUS = PROCESS_STATUS_RUN
+
+
+# 输出文字
+def print_msg(msg):
+    # 终端输出编码
+    output_encoding = sys.stdout.encoding
+    if output_encoding == "utf-8":
+        print msg
+    else:
+        print msg.decode("utf-8").encode(output_encoding)
 
 
 class ClickerHeroes():
