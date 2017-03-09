@@ -5,8 +5,8 @@ clicker heroes自动升级树精
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+from game.clickHero import clickerHeroes
 import time
-import clickerHeroes
 
 
 if __name__ == "__main__":
