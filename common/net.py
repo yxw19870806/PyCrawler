@@ -60,9 +60,12 @@ def set_proxy(ip, port):
 #                   -2：json decode error
 #                   -10：特殊异常捕获后的返回
 #                   其他>0：网页返回码（正常返回码为200）
-def http_request(url, post_data=None, header_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True,
+def http_request(url, method="GET", post_data=None, header_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True,
                  json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
+        return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
+    method = method.upper()
+    if method not in ["GET", "POST", "HEADER"]:
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
@@ -95,11 +98,10 @@ def http_request(url, post_data=None, header_list=None, connection_timeout=HTTP_
                 timeout = urllib3.Timeout(connect=connection_timeout)
             else:
                 timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
-            if post_data:
-                response = HTTP_CONNECTION_POOL.request('POST', url, fields=post_data, headers=header_list, redirect=redirect, timeout=timeout, encode_multipart=encode_multipart)
+            if method == "POST":
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, encode_multipart=encode_multipart)
             else:
-                response = HTTP_CONNECTION_POOL.request('GET', url, headers=header_list, redirect=redirect, timeout=timeout
-                )
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout)
             if json_decode:
                 try:
                     response.json_data = json.loads(response.data)
