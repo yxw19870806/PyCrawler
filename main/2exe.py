@@ -5,7 +5,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import tool
+from common import extraTool, tool
 from distutils.core import setup
 import os
 import py2exe
@@ -28,7 +28,7 @@ def create_exe(py_file_path, need_zip=False):
     tool.make_dir(os.path.join(build_dist_path, "data\\"), 0)
     tool.copy_files(os.path.realpath("..\\common\\config_exe.ini"), os.path.join(build_dist_path, "data\\config.ini"))
     if need_zip:
-        tool.zip_dir(build_dist_path, os.path.realpath("%s.zip" % py_file_name))
+        extraTool.zip_dir(build_dist_path, os.path.realpath("%s.zip" % py_file_name))
         tool.remove_dir(build_dist_path)
     else:
         shutil.move(build_dist_path, os.path.realpath(".\\%s" % py_file_name))
