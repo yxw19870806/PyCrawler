@@ -374,7 +374,7 @@ def make_dir(dir_path, create_mode):
             else:
                 is_delete = False
                 while not is_delete:
-                    input_str = raw_input(get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input_str = console_input(get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
                         is_delete = True
@@ -551,7 +551,7 @@ def http_request(url, post_data=None, header_list=None, is_random_ip=True):
                     for handler in urllib2._opener.handlers:
                         if isinstance(handler, urllib2.ProxyHandler):
                             notice = "无法访问代理服务器，请检查代理设置。检查完成后输入[(C)ontinue]继续程序或者[(S)top]退出程序："
-                            input_str = raw_input(notice).lower()
+                            input_str = console_input(notice).lower()
                             if input_str in ["c", "continue"]:
                                 pass
                             elif input_str in ["s", "stop"]:
