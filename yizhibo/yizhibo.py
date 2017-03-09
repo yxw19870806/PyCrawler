@@ -29,15 +29,6 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取全部视频ID列表
-def get_video_id_list(account_id):
-    video_index_page_url = "http://www.yizhibo.com/member/personel/user_works?memberid=%s" % account_id
-    video_index_page_response = net.http_request(video_index_page_url)
-    if video_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_index_page_response.data)
-    return None
-
-
 # 获取全部图片地址列表
 def get_image_url_list(account_id):
     image_index_page_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
@@ -52,6 +43,29 @@ def get_image_url_list(account_id):
         extra_info["image_url_list"] = map(str, image_url_list)
     image_index_page_response.extra_info = extra_info
     return image_index_page_response
+
+
+#  获取图片的header
+def get_image_header(image_url):
+    image_head_response = net.http_request(image_url, method="HEAD")
+    extra_info = {
+        "time": None, # header解析出的图片上传时间
+    }
+    if image_head_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if "Last-Modified" in image_head_response.headers:
+            last_modified_time = time.strptime(image_head_response.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S %Z")
+            extra_info["time"] = int(time.mktime(last_modified_time)) - time.timezone
+    image_head_response.extra_info = extra_info
+    return image_head_response
+
+
+# 获取全部视频ID列表
+def get_video_id_list(account_id):
+    video_index_page_url = "http://www.yizhibo.com/member/personel/user_works?memberid=%s" % account_id
+    video_index_page_response = net.http_request(video_index_page_url)
+    if video_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_index_page_response.data)
+    return None
 
 
 # 根据video id获取指定视频的详细信息（上传时间、视频列表的下载地址等）
@@ -82,14 +96,6 @@ def get_ts_url_list(link_url):
         return None
 
 
-# 将图片的二进制数据保存为本地文件
-def save_image(image_byte, image_path):
-    image_path = tool.change_path_encoding(image_path)
-    image_file = open(image_path, "wb")
-    image_file.write(image_byte)
-    image_file.close()
-
-
 # 将多个ts文件的地址保存为本地视频文件
 def save_video(ts_file_list, file_path):
     file_path = tool.change_path_encoding(file_path)
@@ -102,12 +108,6 @@ def save_video(ts_file_list, file_path):
             return False
     file_handle.close()
     return True
-
-
-# http请求返回的时间字符串转换为时间戳
-def response_time_to_timestamp(time_string):
-    last_modified_time = time.strptime(time_string, "%a, %d %b %Y %H:%M:%S %Z")
-    return int(time.mktime(last_modified_time)) - time.timezone
 
 
 class YiZhiBo(robot.Robot):
@@ -223,35 +223,38 @@ class Download(threading.Thread):
                 # 获取全部图片地址列表
                 image_index_page_response = get_image_url_list(account_id)
                 if image_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("图片首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(image_index_page_response.status))
-                    tool.process_exit()
+                    log.error(account_name + " 图片首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(image_index_page_response.status))
+                    break
 
                 # 没有图片
                 if not image_index_page_response.extra_info["is_exist"]:
                     break
 
                 if len(image_index_page_response.extra_info["image_url_list"]) == 0:
-                    log.error("图片地址解析失败")
-                    tool.process_exit()
+                    log.error(account_name + " 图片地址解析失败")
+                    break
 
+                is_error = False
                 for image_url in image_index_page_response.extra_info["image_url_list"]:
-                    image_return_code, image_byte, image_response = tool.http_request(image_url)
-                    if image_return_code != 1:
-                        log.step(account_name + " 第%s张图片下载失败" % image_count)
-                        continue
+                    image_head_response = get_image_header(image_url)
 
-                    # 获取图片的上传时间（字符串）
-                    response_last_modified_time = tool.get_response_info(image_response.info(), "Last-Modified")
-                    # 字符串转换为时间戳
-                    image_created_time = response_time_to_timestamp(response_last_modified_time)
+                    if image_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 图片%s访问失败，原因：%s" % (image_url, robot.get_http_request_failed_reason(image_head_response.status)))
+                        is_error = True
+                        break  # 存档恢复
+
+                    if image_head_response.extra_info["time"] is None:
+                        log.error(account_name + " 第%s张图片 %s 上传时间获取失败" % (image_count, image_url))
+                        is_error = True
+                        break  # 存档恢复
 
                     # 检查是否已下载到前一次的图片
-                    if int(image_created_time) <= int(self.account_info[4]):
+                    if int(image_head_response.extra_info["time"]) <= int(self.account_info[4]):
                         break
 
                     # 将第一张图片的上传时间做为新的存档记录
                     if first_image_time == "0":
-                        first_image_time = str(image_created_time)
+                        first_image_time = str(image_head_response.extra_info["time"])
 
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
@@ -264,13 +267,21 @@ class Download(threading.Thread):
 
                     file_type = image_url.split(".")[-1].split(":")[0]
                     image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                    save_image(image_byte, image_file_path)
-                    log.step(account_name + " 第%s张图片下载成功" % image_count)
-                    image_count += 1
+                    save_file_return = net.save_net_file(image_url, image_file_path)
+                    if save_file_return["status"] == 1:
+                        log.step(account_name + " 第%s张图片下载成功" % image_count)
+                        image_count += 1
+                    else:
+                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        continue
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
                         break
+
+                # 存档恢复
+                if is_error:
+                    first_image_time = "0"
                 break
 
             # 视频
