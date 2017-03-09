@@ -54,7 +54,7 @@ def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
     follow_data = {"user_id": account_id}
     header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    follow_response = net.http_request(follow_url, post_data=follow_data, header_list=header_list, json_decode=True)
+    follow_response = net.http_request(follow_url, method="POST", post_data=follow_data, header_list=header_list, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("new_state",), follow_response.json_data) and follow_response.json_data["new_state"] == "following":
             return True
@@ -67,7 +67,7 @@ def unfollow_account(auth_token, account_id):
     unfollow_url = "https://twitter.com/i/user/unfollow"
     unfollow_data = {"user_id": account_id}
     header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    unfollow_response = net.http_request(unfollow_url, post_data=unfollow_data, header_list=header_list, json_decode=True)
+    unfollow_response = net.http_request(unfollow_url, method="POST", post_data=unfollow_data, header_list=header_list, json_decode=True)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("new_state",), unfollow_response.json_data) and unfollow_response.json_data["new_state"] == "not-following":
             return True

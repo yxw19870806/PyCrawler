@@ -16,7 +16,7 @@ ERROR_PAGE_COUNT_CHECK = 10
 def get_album_page(page_count):
     album_page_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
-    album_page_response = net.http_request(album_page_url, post_data=post_data, json_decode=True, is_random_ip=False)
+    album_page_response = net.http_request(album_page_url, method="POST", post_data=post_data, json_decode=True, is_random_ip=False)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）

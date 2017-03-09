@@ -36,7 +36,7 @@ def get_one_page_blog(account_id, token):
     if token:
         index_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
-        index_page_response = net.http_request(index_page_url, post_data=post_data)
+        index_page_response = net.http_request(index_page_url, method="POST", post_data=post_data)
         if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             script_data_string = tool.find_sub_string(index_page_response.data, ")]}'", None).strip()
             try:
@@ -130,7 +130,7 @@ def get_album_page(account_id, album_id):
                 while continue_token:
                     continue_image_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
                     post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-                    continue_image_page_response = net.http_request(continue_image_page_url, post_data=post_data, encode_multipart=False)
+                    continue_image_page_response = net.http_request(continue_image_page_url, method="POST", post_data=post_data, encode_multipart=False)
                     if continue_image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                         continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None).strip()
                         try:

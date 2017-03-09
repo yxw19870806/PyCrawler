@@ -37,7 +37,7 @@ def get_album_page(page_count):
             if key:
                 media_page_url = "http://zz.meituzz.com/ab/bd"
                 post_data = {"y": page_count, "s": key}
-                media_page_response = net.http_request(media_page_url, post_data=post_data, json_decode=True)
+                media_page_response = net.http_request(media_page_url, method="POST", post_data=post_data, json_decode=True)
                 if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     # 检测是否是图片相册
                     if robot.check_sub_key(("i",), media_page_response.json_data):

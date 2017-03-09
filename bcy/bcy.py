@@ -90,7 +90,7 @@ def login():
 def follow(account_id):
     follow_page_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_page_response = net.http_request(follow_page_url, post_data=follow_post_data)
+    follow_page_response = net.http_request(follow_page_url, method="POST", post_data=follow_post_data)
     if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 0 未登录，11 关注成功，12 已关注
         if int(follow_page_response.data) == 12:
@@ -102,7 +102,7 @@ def follow(account_id):
 def unfollow(account_id):
     unfollow_page_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_page_response = net.http_request(unfollow_page_url, post_data=unfollow_post_data)
+    unfollow_page_response = net.http_request(unfollow_page_url, method="POST", post_data=unfollow_post_data)
     if unfollow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if int(unfollow_page_response.data) == 1:
             return True
