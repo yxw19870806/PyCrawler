@@ -67,6 +67,14 @@ def print_msg(msg):
         print msg.decode("utf-8").encode(output_encoding)
 
 
+# 控制台输入
+def console_input(msg):
+    output_encoding = sys.stdout.encoding
+    if output_encoding != "utf-8":
+        msg = msg.decode("utf-8").encode(output_encoding)
+    return raw_input(msg)
+
+
 class ClickerHeroes():
     window_title = "Clicker Heroes"
 
