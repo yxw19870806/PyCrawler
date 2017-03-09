@@ -25,4 +25,4 @@ if __name__ == "__main__":
         time.sleep(0.2)
         process_time += 0.4
 
-    set_system_time(now[0], now[1], now[3], now[4], now[5], now[6] + math.ceil(process_time))
+    set_system_time(now[0], now[1], now[3], now[4], now[5], now[6] + int(math.ceil(process_time)))
