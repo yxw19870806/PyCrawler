@@ -46,15 +46,17 @@ PROCESS_STATUS = PROCESS_STATUS_RUN  # 当前进程状态
 # 设置暂停状态
 def pause_process():
     global PROCESS_STATUS
-    print_msg("pause process")
-    PROCESS_STATUS = PROCESS_STATUS_PAUSE
+    if PROCESS_STATUS != PROCESS_STATUS_PAUSE:
+        print_msg("pause process")
+        PROCESS_STATUS = PROCESS_STATUS_PAUSE
 
 
 # 设置运行状态
 def continue_process():
     global PROCESS_STATUS
-    print_msg("continue process")
-    PROCESS_STATUS = PROCESS_STATUS_RUN
+    if PROCESS_STATUS != PROCESS_STATUS_RUN:
+        print_msg("continue process")
+        PROCESS_STATUS = PROCESS_STATUS_RUN
 
 
 # 输出文字
