@@ -75,7 +75,7 @@ def console_input(msg):
     return raw_input(msg)
 
 
-class ClickerHeroes():
+class ClickerHeroes:
     window_title = "Clicker Heroes"
 
     @property
@@ -89,6 +89,7 @@ class ClickerHeroes():
         keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
         keyboard_control_thread.setDaemon(True)
         keyboard_control_thread.start()
+        print_msg("开始运行，键盘按下pageUp按钮暂停，pageOn按钮继续")
 
     # 获取窗口大小
     def get_window_size(self):
@@ -146,7 +147,7 @@ class ClickerHeroes():
     def get_color(self, pos_x, pos_y):
         try:
             color = win32gui.GetPixel(win32gui.GetDC(self.window_handle), pos_x, pos_y)
-        except pywintypes.error, e:
+        except pywintypes.error:
             return None, None, None
         red = color & 255
         green = (color >> 8) & 255
@@ -160,4 +161,3 @@ class ClickerHeroes():
     # 根据屏幕坐标获取对应窗口坐标
     def get_client_position(self, pos_x, pos_y):
         return win32gui.ScreenToClient(self.window_handle, (pos_x, pos_y))
-

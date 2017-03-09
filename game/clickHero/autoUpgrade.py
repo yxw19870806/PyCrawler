@@ -33,15 +33,16 @@ def check_progression_mode():
 
 
 if __name__ == "__main__":
-    ch = clickerHeroes.ClickerHeroes()
-
-    count = 0
     click_button_index = 0
     # (点击升级的按钮位置，1 ~ 4），保证升级窗口中第一个按钮完整显示）
     while not 1 <= int(click_button_index) <= 4:
         input_str = clickerHeroes.console_input("请输入点击的按钮位置（1-4）: ")
         if str(input_str).isdigit():
             click_button_index = int(input_str)
+
+    ch = clickerHeroes.ClickerHeroes()
+
+    count = 0
     # todo 根据当前窗口大小，自适应坐标位置
     click_x, click_y = clickerHeroes.UPGRADE_BUTTON_POS[click_button_index]
     is_open_equip_box = False
