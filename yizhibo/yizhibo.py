@@ -29,7 +29,7 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取指定账号的全部视频ID列表
+# 获取全部视频ID列表
 def get_video_id_list(account_id):
     video_index_page_url = "http://www.yizhibo.com/member/personel/user_works?memberid=%s" % account_id
     video_index_page_response = net.http_request(video_index_page_url)
@@ -38,13 +38,20 @@ def get_video_id_list(account_id):
     return None
 
 
-# 获取指定账号的全部图片地址列表
+# 获取全部图片地址列表
 def get_image_url_list(account_id):
     image_index_page_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
-    image_index_page_response = tool.http_request(image_index_page_url)[:2]
+    image_index_page_response = net.http_request(image_index_page_url)
+    extra_info = {
+        "is_exist": True,  # 是否存在图片
+        "image_url_list": [],  # 页面解析出的图片地址列表
+    }
     if image_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return re.findall('<img src="([^"]*)" alt="" class="index_img_main">', image_index_page_response.data)
-    return None
+        extra_info["is_exist"] = image_index_page_response.data.find("还没有照片哦") == -1
+        image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_page_response.data)
+        extra_info["image_url_list"] = map(str, image_url_list)
+    image_index_page_response.extra_info = extra_info
+    return image_index_page_response
 
 
 # 根据video id获取指定视频的详细信息（上传时间、视频列表的下载地址等）
@@ -95,6 +102,7 @@ def save_video(ts_file_list, file_path):
             return False
     file_handle.close()
     return True
+
 
 # http请求返回的时间字符串转换为时间戳
 def response_time_to_timestamp(time_string):
@@ -213,14 +221,20 @@ class Download(threading.Thread):
             need_make_image_dir = True
             while IS_DOWNLOAD_IMAGE:
                 # 获取全部图片地址列表
-                image_url_list = get_image_url_list(account_id)
-                if image_url_list is None:
-                    log.error(account_name + " 图片列表解析失败")
+                image_index_page_response = get_image_url_list(account_id)
+                if image_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error("图片首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(image_index_page_response.status))
+                    tool.process_exit()
+
+                # 没有图片
+                if not image_index_page_response.extra_info["is_exist"]:
                     break
 
-                for image_url in list(image_url_list):
-                    # 不使用缩略图
-                    image_url = image_url.split("@")[0]
+                if len(image_index_page_response.extra_info["image_url_list"]) == 0:
+                    log.error("图片地址解析失败")
+                    tool.process_exit()
+
+                for image_url in image_index_page_response.extra_info["image_url_list"]:
                     image_return_code, image_byte, image_response = tool.http_request(image_url)
                     if image_return_code != 1:
                         log.step(account_name + " 第%s张图片下载失败" % image_count)
