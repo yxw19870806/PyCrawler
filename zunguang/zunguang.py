@@ -91,15 +91,18 @@ class ZunGuang(robot.Robot):
                 album_page_response = get_album_page(page_count)
             except SystemExit:
                 log.step("提前退出")
+                page_count -= error_count - 1
                 break
 
             if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_page_response.status)))
-                tool.process_exit()
+                page_count -= error_count - 1
+                break
 
             if album_page_response.extra_info["is_error"]:
                 log.error("第%s页相册解析失败" % page_count)
-                tool.process_exit()
+                page_count -= error_count - 1
+                break
 
             if album_page_response.extra_info["is_skip"]:
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
@@ -129,7 +132,7 @@ class ZunGuang(robot.Robot):
                 post_path = os.path.join(image_path, page_count)
                 if not tool.make_dir(post_path, 0):
                     log.error("创建第%s页相册目录 %s 失败" % (page_count, image_path))
-                    tool.process_exit()
+                    break
 
             log.step("第%s页相册解析的全部图片：%s" % (page_count, album_page_response.extra_info["image_url_list"]))
             image_count = 1
