@@ -26,12 +26,11 @@ def get_album_page(page_count):
     if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
             robot.check_sub_key(("body",), album_page_response.json_data) and
-            robot.check_sub_key(("blog",), album_page_response.json_data["body"]) and
-            isinstance(album_page_response.json_data["body"]["blog"], list)
+            robot.check_sub_key(("blog",), album_page_response.json_data["body"])
         ):
-            if len(album_page_response.json_data["body"]["blog"]) == 0:
+            if album_page_response.json_data["body"]["blog"] is False:
                 extra_info["is_skip"] = True
-            elif len(album_page_response.json_data["body"]["blog"]) == 1:
+            elif isinstance(album_page_response.json_data["body"]["blog"], list) and len(album_page_response.json_data["body"]["blog"]) == 1:
                 if robot.check_sub_key(("type",), album_page_response.json_data["body"]["blog"][0]):
                     album_type = int(album_page_response.json_data["body"]["blog"][0]["type"])
                     if album_type == 2:  # 歌曲类型的相册
