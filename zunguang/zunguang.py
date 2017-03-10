@@ -91,20 +91,21 @@ class ZunGuang(robot.Robot):
                 album_page_response = get_album_page(page_count)
             except SystemExit:
                 log.step("提前退出")
-                page_count -= error_count - 1
+                page_count -= error_count
                 break
 
             if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_page_response.status)))
-                page_count -= error_count - 1
+                page_count -= error_count
                 break
 
             if album_page_response.extra_info["is_error"]:
                 log.error("第%s页相册解析失败" % page_count)
-                page_count -= error_count - 1
+                page_count -= error_count
                 break
 
             if album_page_response.extra_info["is_skip"]:
+                error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
                     page_count -= error_count - 1
