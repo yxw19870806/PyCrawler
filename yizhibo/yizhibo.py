@@ -80,7 +80,6 @@ def get_video_id_list(account_id):
 def get_video_info_page(video_id):
     # http://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
     video_info_page_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
-    print video_info_page_url
     video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
