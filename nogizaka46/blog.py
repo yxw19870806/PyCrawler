@@ -125,7 +125,6 @@ class Blog(robot.Robot):
             robot.SYS_SET_COOKIE: (),
         }
         robot.Robot.__init__(self, sys_config, use_urllib3=True)
-        self.thread_count = 1
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
