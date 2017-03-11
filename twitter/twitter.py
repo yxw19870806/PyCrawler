@@ -132,7 +132,7 @@ def get_media_page_data(account_name, position_blog_id):
         if (
             robot.check_sub_key(("has_more_items", "items_html", "new_latent_count", "min_position"), media_page_response.json_data) and
             robot.is_integer(media_page_response.json_data["new_latent_count"]) and
-            robot.is_integer(media_page_response.json_data["min_position"])
+            (robot.is_integer(media_page_response.json_data["min_position"]) or media_page_response.json_data["min_position"] is None)
         ):
             # 没有任何内容
             if int(media_page_response.json_data["new_latent_count"]) == 0 and not str(media_page_response.json_data["items_html"]).strip():
@@ -219,7 +219,7 @@ def get_video_play_page(tweet_id):
             # 直接包含视频播放地址的处理
             video_url = tool.find_sub_string(video_play_page_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
             if video_url:
-                extra_info["video_url"] = video_url
+                extra_info["video_url"] = video_url.replace("\\/", "/")
             else:
                 # 直接包含视频播放地址的处理
                 vmap_file_url = tool.find_sub_string(video_play_page_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
@@ -229,7 +229,7 @@ def get_video_play_page(tweet_id):
                     if vmap_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                         video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
                         if video_url:
-                            extra_info["video_url"] = str(video_url)
+                            extra_info["video_url"] = str(video_url.replace("\\/", "/"))
     video_play_page_response.extra_info = extra_info
     return video_play_page_response
 
