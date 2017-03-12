@@ -131,6 +131,7 @@ def get_video_play_page(account_id, post_id):
     video_play_page_response = net.http_request(video_play_page_url)
     extra_info = {
         "video_url": None,  # 页面解析出的视频地址
+        "is_skip": False,  # 是不是第三方的视频地址需要跳过
     }
     if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_page_response.data)
@@ -153,6 +154,8 @@ def get_video_play_page(account_id, post_id):
                 else:
                     video_id = temp_list[-1]
                 extra_info["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
+        elif len(video_url_find) == 0:
+            extra_info["is_skip"] = True
     video_play_page_response.extra_info = extra_info
     return video_play_page_response
 
@@ -315,11 +318,16 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                     # 视频下载
-                    if IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
+                    while IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
                         video_play_page_response = get_video_play_page(account_id, post_id)
                         if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                             log.error(account_id + " 日志 %s 的视频播放页面访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(video_play_page_response.status)))
                             tool.process_exit()
+
+                        # 第三方视频，跳过
+                        if video_play_page_response.extra_info["is_skip"]:
+                            log.error(account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
+                            break
 
                         if video_play_page_response.extra_info["video_url"] is None:
                             log.error(account_id + " 日志 %s 的视频下载地址解析失败" % post_url)
@@ -344,6 +352,7 @@ class Download(threading.Thread):
                             video_count += 1
                         else:
                             log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        break
 
                     # 图片下载
                     if IS_DOWNLOAD_IMAGE and len(post_page_response.extra_info["image_url_list"]) > 0:
