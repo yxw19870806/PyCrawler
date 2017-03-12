@@ -82,6 +82,8 @@ def get_one_page_blog(account_id, token):
                     if robot.is_integer(blog_data[4]):
                         extra_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
                 extra_info["blog_info_list"].append(extra_blog_info)
+        else:
+            extra_info["is_error"] = False
         extra_info["next_page_key"] = str(script_data[2])
     index_page_response.extra_info = extra_info
     return index_page_response
