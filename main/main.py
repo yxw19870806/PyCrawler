@@ -141,10 +141,10 @@ def nogizaka46_blog():
 
 # 篠田麻里子blog
 def shinoda_blog():
-    from blog import shinoda
-    shinoda_blog_path = os.path.join(os.path.abspath(".."), "blog")
+    from shinoda import shinoda
+    shinoda_blog_path = os.path.join(os.path.abspath(".."), "shinoda")
     os.chdir(shinoda_blog_path)
-    shinoda.Shinoda().main()
+    shinoda.Blog().main()
 
 
 # 图虫

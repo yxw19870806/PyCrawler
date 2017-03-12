@@ -28,7 +28,7 @@ def get_one_page_blog(page_count):
     return index_page_response
 
 
-class Shinoda(robot.Robot):
+class Blog(robot.Robot):
     def __init__(self):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
@@ -128,4 +128,4 @@ class Shinoda(robot.Robot):
 
 
 if __name__ == "__main__":
-    Shinoda().main()
+    Blog().main()
