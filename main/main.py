@@ -22,13 +22,13 @@ def bcy():
 # 唱吧
 def chang_ba():
     from changba import changba
-    chang_ba_path = os.path.join(os.path.abspath(".."), "chang_ba")
+    chang_ba_path = os.path.join(os.path.abspath(".."), "changba")
     os.chdir(chang_ba_path)
     changba.ChangBa().main()
 
 
 # 5sing
-def fiveSing():
+def five_sing():
     from fiveSing import fiveSing
     five_sing_path = os.path.join(os.path.abspath(".."), "fiveSing")
     os.chdir(five_sing_path)
@@ -139,6 +139,14 @@ def nogizaka46_blog():
     blog.Blog().main()
 
 
+# 篠田麻里子blog
+def shinoda_blog():
+    from blog import shinoda
+    shinoda_blog_path = os.path.join(os.path.abspath(".."), "blog")
+    os.chdir(shinoda_blog_path)
+    shinoda.Shinoda().main()
+
+
 # 图虫
 def tuchong():
     from tuchong import tuchong
@@ -232,6 +240,14 @@ def yizhibo():
     yizhibo.YiZhiBo().main()
 
 
+# 尤物看板
+def ywkb():
+    from ywkb import ywkb
+    ywkb_path = os.path.join(os.path.abspath(".."), "ywkb")
+    os.chdir(ywkb_path)
+    ywkb.YWKB().main()
+
+
 # 尊光
 def zunguang():
     from zunguang import zunguang
@@ -243,7 +259,8 @@ def zunguang():
 # ameblo()
 # bcy()
 # chang_ba()
-# fiveSing()
+# five_sing()
+# fkoji()
 # google_plus()
 # instagram()
 # keyakizaka46_diary()
@@ -252,15 +269,14 @@ def zunguang():
 # meituzz()
 # miaopai()
 # nana_go_go()
-# nico_nico()
 # nogizaka46_blog()
+# shinoda_blog()
 # tuchong()
 # tumblr()
 # twitter()
 # weibo()
 # weibo_article()
-# weishi()
 # yizhibo()
+# ywkb()
 # zunguang()
-# fkoji()
 # tool.shutdown()
