@@ -19,13 +19,14 @@ IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
+COOKIE_INFO = {"SUB": ""}
 
 
 # 获取账号首页
 def get_home_page(account_id):
     home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
     header_list = {
-        "cookie": "SUB=" + tool.generate_random_string(50)
+        "cookie": "SUB=" + COOKIE_INFO["SUB"]
     }
     extra_info = {
         "account_page_id": None,  # 页面解析出的账号page id
@@ -45,7 +46,7 @@ def get_one_page_preview_article(page_id, page_count):
     # http://weibo.com/p/1005052212970554/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=1&ajaxpagelet=1
     index_page_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
     header_list = {
-        "cookie": "SUB=" + tool.generate_random_string(50)
+        "cookie": "SUB=" + COOKIE_INFO["SUB"]
     }
     extra_info = {
         "article_info_list": [],  # 页面解析出的文章信息列表
@@ -82,7 +83,7 @@ def get_one_page_preview_article(page_id, page_count):
 # 获取文章页面
 def get_article_page(article_page_url):
     header_list = {
-        "cookie": "SUB=_2A251znmvDeRxGedM7VEY9y7LzjyIHXVWuuxnrDV8PUNbmtAKLUvkkW9vWbMd_k6SiFJJR4g6wzWGM7YAdQ.."
+        "cookie": "SUB=" + COOKIE_INFO["SUB"]
     }
     article_page_response = net.http_request(article_page_url, header_list=header_list)
     extra_info = {
@@ -137,11 +138,13 @@ class Article(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_SORT
+        global COOKIE_INFO
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
+            robot.SYS_GET_COOKIE: {".sina.com.cn": ("SUB",)},
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        robot.Robot.__init__(self, sys_config, extra_config, use_urllib3=True)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
@@ -149,6 +152,7 @@ class Article(robot.Robot):
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        COOKIE_INFO["SUB"] = self.cookie_value["SUB"]
 
     def main(self):
         global ACCOUNTS
