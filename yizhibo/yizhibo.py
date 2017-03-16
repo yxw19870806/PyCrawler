@@ -117,20 +117,6 @@ def get_video_m3u8_file(video_file_url):
     return video_file_response
 
 
-# 将多个ts文件的地址保存为本地视频文件
-def save_video(ts_file_list, file_path):
-    file_path = tool.change_path_encoding(file_path)
-    file_handle = open(file_path, "wb")
-    for ts_file_url in ts_file_list:
-        ts_file_return_code, ts_file_data = tool.http_request(ts_file_url)[:2]
-        if ts_file_return_code == 1:
-            file_handle.write(ts_file_data)
-        else:
-            return False
-    file_handle.close()
-    return True
-
-
 class YiZhiBo(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
