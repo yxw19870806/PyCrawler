@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, robot, tool
+from common import net_tool
 import os
 import re
 import threading
@@ -23,7 +24,7 @@ IS_SORT = True
 
 # 访问微博域名网页，自动判断是否需要跳转
 def auto_redirect_visit(url):
-    page_return_code, page_response = tool.http_request(url)[:2]
+    page_return_code, page_response = net_tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
         redirect_url_find = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)

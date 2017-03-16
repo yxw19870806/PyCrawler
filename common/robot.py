@@ -6,6 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import keyboardEvent, log, net, process, tool
+from common import net_tool
 import codecs
 import ConfigParser
 import os
@@ -199,7 +200,7 @@ class Robot(object):
                 # 使用代理的线程池
                 net.set_proxy(proxy_ip, proxy_port)
             else:
-                tool.set_proxy(proxy_ip, proxy_port)
+                net_tool.set_proxy(proxy_ip, proxy_port)
         else:
             if use_urllib3:
                 # 初始化urllib3的线程池
@@ -216,13 +217,13 @@ class Robot(object):
                     cookie_path = tool.get_default_browser_cookie_path(browser_type)
                 else:
                     cookie_path = get_config(config, "COOKIE_PATH", "", 0)
-                if not tool.set_cookie_from_browser(cookie_path, browser_type, sys_config[SYS_SET_COOKIE]):
+                if not net_tool.set_cookie_from_browser(cookie_path, browser_type, sys_config[SYS_SET_COOKIE]):
                     self.print_msg("导入浏览器cookies失败")
                     tool.process_exit()
                     return
             else:
                 # 使用空cookie
-                tool.set_empty_cookie()
+                net_tool.set_empty_cookie()
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
@@ -244,9 +245,7 @@ class Robot(object):
                             self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
 
         # Http Setting
-        tool.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
         net.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
-        tool.HTTP_REQUEST_RETRY_COUNT = get_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, 1)
         net.HTTP_REQUEST_RETRY_COUNT = get_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, 1)
 
         # 线程数

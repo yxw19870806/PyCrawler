@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, robot, tool
+from common import net_tool
 import hashlib
 import json
 import os
@@ -51,7 +52,7 @@ def md5(file_byte):
 
 # 访问微博域名网页，自动判断是否需要跳转
 def auto_redirect_visit(url):
-    page_return_code, page_response = tool.http_request(url)[:2]
+    page_return_code, page_response = net_tool.http_request(url)[:2]
     if page_return_code == 1:
         # 有重定向
         redirect_url_find = re.findall('location.replace\(["|\']([^"|^\']*)["|\']\)', page_response)
@@ -127,7 +128,7 @@ def get_video_url(video_play_url):
     if video_play_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".")
         video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
-        video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
+        video_info_page_return_code, video_info_page = net_tool.http_request(video_info_url)[:2]
         if video_info_page_return_code == 1:
             try:
                 video_info_page = json.loads(video_info_page)
@@ -167,7 +168,7 @@ def get_video_url(video_play_url):
         return -2, None
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
-        video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
+        video_play_page_return_code, video_play_page = net_tool.http_request(video_play_url)[:2]
         if video_play_page_return_code == 1:
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_page)
             if len(video_url_find) == 1:
@@ -181,14 +182,14 @@ def get_video_url(video_play_url):
         return 1, ["http://gslb.miaopai.com/stream/%s.mp4" % video_id]
     # http://www.weishi.com/t/2000546051794045
     elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
-        video_play_page_return_code, video_play_page = tool.http_request(video_play_url)[:2]
+        video_play_page_return_code, video_play_page = net_tool.http_request(video_play_url)[:2]
         if video_play_page_return_code == 1:
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_page)
             if len(video_id_find) == 1:
                 video_id = video_play_url.split("/")[-1]
                 video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php"
                 video_info_url += "?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
-                video_info_page_return_code, video_info_page = tool.http_request(video_info_url)[:2]
+                video_info_page_return_code, video_info_page = net_tool.http_request(video_info_url)[:2]
                 if video_info_page_return_code == 1:
                     try:
                         video_info_page = json.loads(video_info_page)
@@ -207,7 +208,7 @@ def get_video_url(video_play_url):
 # 访问图片源地址，判断是不是图片已经被删除或暂时无法访问后，返回图片字节
 def get_image_byte(image_url):
     for i in range(0, 10):
-        image_return_code, image_data = tool.http_request(image_url)[:2]
+        image_return_code, image_data = net_tool.http_request(image_url)[:2]
         if image_return_code == 1:
             # 处理获取的文件为weibo默认获取失败的图片
             md5_digest = md5(image_data)
