@@ -317,7 +317,7 @@ class Download(threading.Thread):
 
                         file_type = top_picture_url.split(".")[-1]
                         file_path = os.path.join(article_path, "0000.%s" % file_type)
-                        if tool.save_net_file(top_picture_url, file_path):
+                        if net_tool.save_net_file(top_picture_url, file_path):
                             log.step(account_name + " %s 顶部图片下载成功" % title)
                             this_account_total_image_count += 1
                         else:
@@ -337,7 +337,7 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(article_path, "%s.%s" % (image_count, file_type))
-                        if tool.save_net_file(image_url, file_path):
+                        if net_tool.save_net_file(image_url, file_path):
                             log.step(account_name + " %s 第%s张图片下载成功" % (title, image_count))
                             image_count += 1
                         else:

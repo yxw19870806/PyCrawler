@@ -391,7 +391,7 @@ class Download(threading.Thread):
 
                     video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     for video_url in video_url_list:
-                        if tool.save_net_file(video_url, video_file_path):
+                        if net_tool.save_net_file(video_url, video_file_path):
                             log.step(account_name + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
