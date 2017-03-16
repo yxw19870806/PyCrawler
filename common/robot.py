@@ -238,9 +238,8 @@ class Robot(object):
             for cookie_domain in sys_config[SYS_GET_COOKIE]:
                 for cookie_key in sys_config[SYS_GET_COOKIE][cookie_domain]:
                     self.cookie_value[cookie_key] = ""
-            for cookie_domain in all_cookie_from_browser:
-                if cookie_domain in sys_config[SYS_GET_COOKIE]:
-                    for cookie_name in sys_config[SYS_GET_COOKIE][cookie_domain]:
+                if cookie_domain in all_cookie_from_browser:
+                    for cookie_name in self.cookie_value:
                         if cookie_name in all_cookie_from_browser[cookie_domain]:
                             self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
 
