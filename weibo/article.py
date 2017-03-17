@@ -125,7 +125,11 @@ def get_article_page(article_page_url):
             # 获取文章图片地址列表
             article_body = None
             if article_type == "t":
+                # 正文到作者信息间的页面
                 article_body = tool.find_sub_string(article_page_response.data, '<div class="WB_editor_iframe', '<div class="artical_add_box')
+                if not article_body:
+                    # 正文到打赏按钮间的页面（未登录不显示关注界面）
+                    article_body = tool.find_sub_string(article_page_response.data, '<div class="WB_editor_iframe', '<div node-type="fanService">')
             elif article_type == "p":
                 article_body = tool.find_sub_string(article_page_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
             if article_body is not None:
