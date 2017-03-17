@@ -22,12 +22,22 @@ IS_SORT = True
 COOKIE_INFO = {"SUB": ""}
 
 
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO["SUB"]:
+        return False
+    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    weibo_index_page_url = "http://weibo.com/"
+    weibo_index_page_response = net.http_request(weibo_index_page_url, header_list=header_list)
+    if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
+    return False
+
+
 # 获取账号首页
 def get_home_page(account_id):
     home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
-    header_list = {
-        "cookie": "SUB=" + COOKIE_INFO["SUB"]
-    }
+    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
     extra_info = {
         "account_page_id": None,  # 页面解析出的账号page id
     }
@@ -45,9 +55,7 @@ def get_home_page(account_id):
 def get_one_page_preview_article(page_id, page_count):
     # http://weibo.com/p/1005052212970554/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=1&ajaxpagelet=1
     index_page_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
-    header_list = {
-        "cookie": "SUB=" + COOKIE_INFO["SUB"]
-    }
+    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
     extra_info = {
         "article_info_list": [],  # 页面解析出的文章信息列表
         "is_over": False,  # 是不是最后一页文章
@@ -82,9 +90,7 @@ def get_one_page_preview_article(page_id, page_count):
 
 # 获取文章页面
 def get_article_page(article_page_url):
-    header_list = {
-        "cookie": "SUB=" + COOKIE_INFO["SUB"]
-    }
+    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
     article_page_response = net.http_request(article_page_url, header_list=header_list)
     extra_info = {
         "is_error": False,  # 是不是页面格式不符合
@@ -156,6 +162,16 @@ class Article(robot.Robot):
 
     def main(self):
         global ACCOUNTS
+
+        if not check_login():
+            while True:
+                input_str = tool.console_input(tool.get_time() + " 没有检测到您的登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
+                input_str = input_str.lower()
+                if input_str in ["y", "yes"]:
+                    COOKIE_INFO["SUB"] = tool.generate_random_string(50)
+                    break
+                elif input_str in ["n", "no"]:
+                    tool.process_exit()
 
         # 解析存档文件
         # account_id  last_article_time  (account_name)
