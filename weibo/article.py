@@ -94,12 +94,14 @@ def get_article_page(article_page_url):
     article_page_response = net.http_request(article_page_url, header_list=header_list)
     extra_info = {
         "is_error": False,  # 是不是页面格式不符合
+        "is_pay": False,  # 是否需要购买
         "article_id": "",  # 文章地址解析出的文章id
         "article_title": "",  # 页面解析出的文章标题
         "top_image_url": None,  # 页面解析出的文章顶部图片
         "image_url_list": [],  # 页面解析出的文章信息列表
     }
     if article_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        extra_info["is_pay"] = article_page_response.data.find("购买继续阅读") >= 0
         article_type = None
         article_id = tool.find_sub_string(article_page_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
         if article_id:
@@ -291,6 +293,9 @@ class Download(threading.Thread):
                     if article_page_response.extra_info["is_error"]:
                         log.error(account_name + " 文章 %s 解析失败" % article_info["article_url"])
                         tool.process_exit()
+
+                    if article_page_response.extra_info["is_pay"]:
+                        log.error(account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
 
                     article_id = article_page_response.extra_info["article_id"]
                     article_title = article_page_response.extra_info["article_title"]
