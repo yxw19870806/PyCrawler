@@ -5,6 +5,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from multiprocessing.connection import Client, Listener
+import sys
 import threading
 
 
@@ -54,8 +55,20 @@ def set_process_status(process_status):
 
 
 def pause_process():
+    _print_msg("pause process")
     set_process_status(PROCESS_STATUS_PAUSE)
 
 
 def continue_process():
+    _print_msg("continue process")
     set_process_status(PROCESS_STATUS_RUN)
+
+
+# 控制台输出
+def _print_msg(msg):
+    # 终端输出编码
+    output_encoding = sys.stdout.encoding
+    if output_encoding == "utf-8":
+        print msg
+    else:
+        print msg.decode("utf-8").encode(output_encoding)
