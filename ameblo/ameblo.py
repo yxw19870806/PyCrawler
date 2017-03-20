@@ -159,7 +159,7 @@ class Ameblo(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
         }
-        robot.Robot.__init__(self, sys_config, use_urllib3=True)
+        robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count

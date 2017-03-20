@@ -63,7 +63,7 @@ class ABase(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config, use_urllib3=True)
+        robot.Robot.__init__(self, sys_config)
 
         self.thread_count = 50
 

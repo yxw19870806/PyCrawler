@@ -6,7 +6,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import keyboardEvent, log, net, process, tool
-from common import net_tool
 import codecs
 import ConfigParser
 import os
@@ -23,9 +22,7 @@ SYS_DOWNLOAD_VIDEO = "download_video"
 SYS_SET_PROXY = "set_proxy"
 # 程序是否支持不需要存档文件就可以开始运行
 SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
-# 程序是否需要开启cookie, value不为为空()时，从浏览器中加载相关域名的cookies，否则仅仅添加一个空的cookie对象
-SYS_SET_COOKIE = "set_cookie"
-# 程序是否需要从浏览器存储哦的cookie中获取指定cookie的值
+# 程序是否需要从浏览器存储的cookie中获取指定cookie的值
 SYS_GET_COOKIE = "get_cookie"
 
 
@@ -40,7 +37,7 @@ class Robot(object):
             self.print_function(msg)
 
     # 程序全局变量的设置
-    def __init__(self, sys_config, extra_config=None, use_urllib3=False):
+    def __init__(self, sys_config, extra_config=None):
         global IS_INIT
         self.start_time = time.time()
 
@@ -52,7 +49,6 @@ class Robot(object):
         sys_download_image = SYS_DOWNLOAD_IMAGE in sys_config
         sys_download_video = SYS_DOWNLOAD_VIDEO in sys_config
         sys_set_proxy = SYS_SET_PROXY in sys_config
-        sys_set_cookie = SYS_SET_COOKIE in sys_config
         sys_get_cookie = SYS_GET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
 
@@ -196,34 +192,13 @@ class Robot(object):
         if is_proxy == 1 or (is_proxy == 2 and sys_set_proxy):
             proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
             proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
-            if use_urllib3:
-                # 使用代理的线程池
-                net.set_proxy(proxy_ip, proxy_port)
-            else:
-                net_tool.set_proxy(proxy_ip, proxy_port)
+            # 使用代理的线程池
+            net.set_proxy(proxy_ip, proxy_port)
         else:
-            if use_urllib3:
-                # 初始化urllib3的线程池
-                net.init_http_connection_pool()
+            # 初始化urllib3的线程池
+            net.init_http_connection_pool()
 
         # cookies
-        if sys_set_cookie and not use_urllib3:
-            if sys_config[SYS_SET_COOKIE]:  # 加载浏览器cookie
-                # 操作系统&浏览器
-                browser_type = get_config(config, "BROWSER_TYPE", 2, 1)
-                # cookie
-                is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
-                if is_auto_get_cookie:
-                    cookie_path = tool.get_default_browser_cookie_path(browser_type)
-                else:
-                    cookie_path = get_config(config, "COOKIE_PATH", "", 0)
-                if not net_tool.set_cookie_from_browser(cookie_path, browser_type, sys_config[SYS_SET_COOKIE]):
-                    self.print_msg("导入浏览器cookies失败")
-                    tool.process_exit()
-                    return
-            else:
-                # 使用空cookie
-                net_tool.set_empty_cookie()
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器

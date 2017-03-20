@@ -72,7 +72,7 @@ class NanaGoGo(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config, use_urllib3=True)
+        robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         IMAGE_TEMP_PATH = self.image_temp_path

@@ -66,7 +66,7 @@ class MeiTuZZ(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config, use_urllib3=True)
+        robot.Robot.__init__(self, sys_config)
 
         tool.print_msg("配置文件读取完成")
 

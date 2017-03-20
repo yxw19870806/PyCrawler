@@ -35,9 +35,8 @@ class Template(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
-            robot.SYS_SET_COOKIE: ("example.com",)
         }
-        robot.Robot.__init__(self, sys_config, use_urllib3=True)
+        robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         GET_VIDEO_COUNT = self.get_video_count
