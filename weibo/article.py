@@ -43,6 +43,7 @@ def get_home_page(account_id):
     }
     home_page_response = net.http_request(home_page_url, header_list=header_list)
     if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取账号page id
         account_page_id = tool.find_sub_string(home_page_response.data, "$CONFIG['page_id']='", "'")
         if account_page_id and robot.is_integer(account_page_id):
             extra_info["account_page_id"] = account_page_id

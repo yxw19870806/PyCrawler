@@ -28,18 +28,22 @@ def get_album_page(page_count):
             robot.check_sub_key(("body",), album_page_response.json_data) and
             robot.check_sub_key(("blog",), album_page_response.json_data["body"])
         ):
+            # 判断是不是需要跳过
             if album_page_response.json_data["body"]["blog"] is False:
                 extra_info["is_skip"] = True
             elif isinstance(album_page_response.json_data["body"]["blog"], list) and len(album_page_response.json_data["body"]["blog"]) == 1:
                 if robot.check_sub_key(("type",), album_page_response.json_data["body"]["blog"][0]):
+                    # 获取相册类型
                     album_type = int(album_page_response.json_data["body"]["blog"][0]["type"])
                     if album_type == 2:  # 歌曲类型的相册
                         extra_info["is_skip"] = True
                     elif album_type == 3:  # 图片类型的相册
                         album_body = album_page_response.json_data["body"]["blog"][0]
                         if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
+                            # 获取相册标题
                             if album_body["title"]:
                                 extra_info["title"] = str(album_body["title"].encode("utf-8"))
+                            # 获取图片地址列表
                             image_url_list = []
                             for image_data in album_body["attr"]["img"]:
                                 if robot.check_sub_key(("url",), image_data):

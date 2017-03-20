@@ -155,7 +155,7 @@ def get_one_page_media(account_id, cursor):
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "media_info_list": [],  # 页面解析出的媒体信息列表
-        "next_page_cursor": None,  # 下一页媒体信息的指针
+        "next_page_cursor": None,  # 页面解析出的下一页媒体信息的指针
     }
     if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (

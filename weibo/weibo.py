@@ -43,6 +43,7 @@ def get_home_page(account_id):
     }
     home_page_response = net.http_request(home_page_url, header_list=header_list)
     if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取账号page id
         account_page_id = tool.find_sub_string(home_page_response.data, "$CONFIG['page_id']='", "'")
         if account_page_id and robot.is_integer(account_page_id):
             extra_info["account_page_id"] = account_page_id
@@ -73,16 +74,19 @@ def get_one_page_photo(account_id, page_count):
                     "image_url": None,  # 页面解析出的图片地址
                     "json_data": image_info,  # 原始数据
                 }
+                # 获取图片上传时间
                 if robot.check_sub_key(("timestamp",), image_info) and robot.is_integer(image_info["timestamp"]):
                     extra_image_info["image_time"] = int(image_info["timestamp"])
                 else:
                     extra_info["is_error"] = True
                     break
+                # 获取图片地址
                 if robot.check_sub_key(("pic_host", "pic_name"), image_info):
                     extra_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
                 else:
                     extra_info["is_error"] = True
                     break
+
                 extra_info["image_info_list"].append(extra_image_info)
             # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
             extra_info["is_over"] = page_count >= (index_page_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
@@ -106,8 +110,8 @@ def get_one_page_video(account_page_id, since_id):
     header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "video_url_list": [],  # 页面解析出的所有视频地址列表
-        "next_page_since_id": None,  # 页面解析出的下一页视频指针
+        "video_play_url_list": [],  # 页面解析出的所有视频地址列表
+        "next_page_since_id": None,  # 页面解析出的下一页视频的指针
     }
     index_page_response = net.http_request(index_page_url, header_list=header_list, json_decode=True)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -117,8 +121,10 @@ def get_one_page_video(account_page_id, since_id):
             int(index_page_response.json_data["code"]) == 100000
         ):
             page_html = index_page_response.json_data["data"].encode("utf-8")
-            video_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
-            extra_info["video_url_list"] = map(str, video_url_list)
+            # 获取视频播放地址类别
+            video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
+            extra_info["video_play_url_list"] = map(str, video_play_url_list)
+            # 获取下一页视频的指针
             next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
             if robot.is_integer(next_page_since_id):
                 extra_info["next_page_since_id"] = next_page_since_id
@@ -358,15 +364,15 @@ class Download(threading.Thread):
                         first_video_url = ""  # 存档恢复
                         break
 
-                    if len(index_page_response.extra_info["video_url_list"]) == 0:
+                    if len(index_page_response.extra_info["video_play_url_list"]) == 0:
                         log.error(account_name + " %s后的一页视频%s没有解析到视频地址" % (since_id, index_page_response.json_data))
                         first_video_url = ""  # 存档恢复
                         break
 
                     # 匹配获取全部的视频页面
-                    log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, index_page_response.extra_info["video_url_list"]))
+                    log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, index_page_response.extra_info["video_play_url_list"]))
 
-                    for video_play_page_url in index_page_response.extra_info["video_url_list"]:
+                    for video_play_page_url in index_page_response.extra_info["video_play_url_list"]:
                         # 检查是否是上一次的最后视频
                         if self.account_info[4] == video_play_page_url:
                             is_over = True
