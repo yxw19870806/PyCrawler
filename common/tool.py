@@ -427,6 +427,9 @@ def generate_random_string(string_length, char_lib_type=7):
 
 # 获取指定文件的MD5值
 def get_file_md5(file_path):
+    file_path = change_path_encoding(file_path)
+    if not os.path.exists(file_path):
+        return None
     file_handle = open(file_path, "rb")
     md5_obj = hashlib.md5()
     md5_obj.update(file_handle.read())
