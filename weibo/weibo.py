@@ -118,7 +118,8 @@ def check_image_invalid(file_path):
 # page_id -> 1005052535836307
 def get_one_page_video(account_page_id, since_id):
     # http://weibo.com/p/aj/album/loading?type=video&since_id=9999999999999999&page_id=1005052535836307&page=1&ajax_call=1
-    index_page_url = "http://weibo.com/p/aj/album/loading?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1" % (since_id, account_page_id)
+    index_page_url = "http://weibo.com/p/aj/album/loading"
+    index_page_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1&__rnd=%s" % (since_id, account_page_id, int(time.time() * 1000))
     header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": False,  # 是不是格式不符合
