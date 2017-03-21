@@ -136,7 +136,11 @@ def get_one_page_video(account_page_id, since_id):
             page_html = index_page_response.json_data["data"].encode("utf-8")
             # 获取视频播放地址类别
             video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
-            extra_info["video_play_url_list"] = map(str, video_play_url_list)
+            if len(video_play_url_list) == 0:
+                if page_html.find("还没有发布过视频") == -1:
+                    extra_info["is_error"] = True
+            else:
+                extra_info["video_play_url_list"] = map(str, video_play_url_list)
             # 获取下一页视频的指针
             next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
             if robot.is_integer(next_page_since_id):
@@ -454,11 +458,6 @@ class Download(threading.Thread):
 
                     if index_page_response.extra_info["is_error"]:
                         log.error(account_name + " %s后的一页视频%s解析失败" % (since_id, index_page_response.json_data))
-                        first_video_url = ""  # 存档恢复
-                        break
-
-                    if len(index_page_response.extra_info["video_play_url_list"]) == 0:
-                        log.error(account_name + " %s后的一页视频%s没有解析到视频地址" % (since_id, index_page_response.json_data))
                         first_video_url = ""  # 存档恢复
                         break
 
