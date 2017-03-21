@@ -34,6 +34,18 @@ IS_DOWNLOAD_VIDEO = True
 COOKIE_INFO = {"SUB": ""}
 
 
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO["SUB"]:
+        return False
+    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    weibo_index_page_url = "http://weibo.com/"
+    weibo_index_page_response = net.http_request(weibo_index_page_url, header_list=header_list)
+    if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
+    return False
+
+
 # 获取账号首页
 def get_home_page(account_id):
     home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
@@ -260,6 +272,10 @@ class Weibo(robot.Robot):
     def main(self):
         global ACCOUNTS
 
+        if not check_login():
+            log.error("没有检测到您的登录信息，无法获取图片或视频，自动退出程序！")
+            tool.process_exit()
+
         # 解析存档文件
         # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
@@ -331,6 +347,82 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+
+            # 图片
+            image_count = 1
+            page_count = 1
+            first_image_time = "0"
+            unique_list = []
+            is_over = False
+            need_make_image_dir = True
+            while IS_DOWNLOAD_IMAGE and (not is_over):
+                log.step(account_name + " 开始解析第%s页图片" % page_count)
+
+                # 获取指定一页图片的信息
+                index_page_response = get_one_page_photo(account_id, page_count)
+                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                    tool.process_exit()
+
+                if index_page_response.extra_info["is_error"]:
+                    log.error(account_name + " 第%s页图片%s解析失败" % (page_count, index_page_response.json_data))
+                    tool.process_exit()
+
+                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, index_page_response.extra_info["image_info_list"]))
+
+                for image_info in index_page_response.extra_info["image_info_list"]:
+                    if image_info["image_time"] is None:
+                        log.error(account_name + " 第%s页图片%s解析失败" % (page_count, index_page_response.json_data))
+                        tool.process_exit()
+
+                    # 检查是否图片时间小于上次的记录
+                    if image_info["image_time"] <= int(self.account_info[2]):
+                        is_over = True
+                        break
+
+                    # 将第一张图片的上传时间做为新的存档记录
+                    if first_image_time == "0":
+                        first_image_time = str(image_info["image_time"])
+
+                    # 新增图片导致的重复判断
+                    if image_info["image_url"] in unique_list:
+                        continue
+                    else:
+                        unique_list.append(image_info["image_url"])
+
+                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
+
+                    # 第一张图片，创建目录
+                    if need_make_image_dir:
+                        if not tool.make_dir(image_path, 0):
+                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                            tool.process_exit()
+                        need_make_image_dir = False
+
+                    file_type = image_info["image_url"].split(".")[-1]
+                    if file_type.find("/") != -1:
+                        file_type = "jpg"
+                    image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                    save_return = net.save_net_file(image_info["image_url"], image_file_path)
+                    if save_return["status"] == 1:
+                        if check_image_invalid(image_file_path):
+                            log.error(account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_count, image_info["image_url"]))
+                        else:
+                            log.step(account_name + " 第%s张图片下载成功" % image_count)
+                            image_count += 1
+                    else:
+                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_info["image_url"], robot.get_save_net_file_failed_reason(save_return["code"])))
+
+                    # 达到配置文件中的下载数量，结束
+                    if 0 < GET_IMAGE_COUNT < image_count:
+                        is_over = True
+                        break
+
+                if not is_over:
+                    if index_page_response.extra_info["is_over"]:
+                        is_over = True
+                    else:
+                        page_count += 1
 
             # 视频
             video_count = 1
@@ -428,82 +520,6 @@ class Download(threading.Thread):
                     log.error(account_name + " 没有找到上次下载的最后一个视频地址")
 
                 break
-
-            # 图片
-            image_count = 1
-            page_count = 1
-            first_image_time = "0"
-            unique_list = []
-            is_over = False
-            need_make_image_dir = True
-            while IS_DOWNLOAD_IMAGE and (not is_over):
-                log.step(account_name + " 开始解析第%s页图片" % page_count)
-
-                # 获取指定一页图片的信息
-                index_page_response = get_one_page_photo(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
-                    tool.process_exit()
-
-                if index_page_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页图片%s解析失败" % (page_count, index_page_response.json_data))
-                    tool.process_exit()
-
-                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, index_page_response.extra_info["image_info_list"]))
-
-                for image_info in index_page_response.extra_info["image_info_list"]:
-                    if image_info["image_time"] is None:
-                        log.error(account_name + " 第%s页图片%s解析失败" % (page_count, index_page_response.json_data))
-                        tool.process_exit()
-
-                    # 检查是否图片时间小于上次的记录
-                    if image_info["image_time"] <= int(self.account_info[2]):
-                        is_over = True
-                        break
-
-                    # 将第一张图片的上传时间做为新的存档记录
-                    if first_image_time == "0":
-                        first_image_time = str(image_info["image_time"])
-
-                    # 新增图片导致的重复判断
-                    if image_info["image_url"] in unique_list:
-                        continue
-                    else:
-                        unique_list.append(image_info["image_url"])
-
-                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
-
-                    # 第一张图片，创建目录
-                    if need_make_image_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_image_dir = False
-
-                    file_type = image_info["image_url"].split(".")[-1]
-                    if file_type.find("/") != -1:
-                        file_type = "jpg"
-                    image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                    save_return = net.save_net_file(image_info["image_url"], image_file_path)
-                    if save_return["status"] == 1:
-                        if check_image_invalid(image_file_path):
-                            log.error(account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_count, image_info["image_url"]))
-                        else:
-                            log.step(account_name + " 第%s张图片下载成功" % image_count)
-                            image_count += 1
-                    else:
-                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_info["image_url"], robot.get_save_net_file_failed_reason(save_return["code"])))
-
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_IMAGE_COUNT < image_count:
-                        is_over = True
-                        break
-
-                if not is_over:
-                    if index_page_response.extra_info["is_over"]:
-                        is_over = True
-                    else:
-                        page_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
