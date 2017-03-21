@@ -162,7 +162,7 @@ def get_video_url(video_play_page_url):
             ):
                 for video_info in video_info_page_response.json_data["result"]:
                     if robot.check_sub_key(("path", "host", "scheme"), video_info):
-                        video_url = video_info["scheme"] + video_info["host"] + video_info["path"]
+                        video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
                         break
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
@@ -172,7 +172,7 @@ def get_video_url(video_play_page_url):
         if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url = tool.find_sub_string(video_play_page_response.data, "video_src=", "&")
             if video_url:
-                video_url = urllib2.unquote(video_url)
+                video_url = str(urllib2.unquote(video_url))
             else:
                 video_url = None
         elif video_play_page_response.status == 404:
@@ -208,7 +208,7 @@ def get_video_url(video_play_page_url):
                 video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
                 if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     if robot.check_sub_key(("data",), video_info_page_response.json_data) and robot.check_sub_key(("url",), video_info_page_response.json_data["data"]):
-                        video_url = random.choice(video_info_page_response.json_data["data"]["url"])
+                        video_url = str(random.choice(video_info_page_response.json_data["data"]["url"]))
     else:  # 其他视频，暂时不支持，收集看看有没有
         log.error("其他第三方视频：" + video_play_page_url)
         video_url = ""
