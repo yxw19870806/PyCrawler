@@ -495,8 +495,6 @@ class Download(threading.Thread):
                             need_make_video_dir = False
 
                         video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
-                        a = net.http_request(video_url, method="HEAD")
-                        print a.headers
                         save_return = net.save_net_file(video_url, video_file_path)
                         if save_return["status"] == 1:
                             log.step(account_name + " 第%s个视频下载成功" % video_count)
