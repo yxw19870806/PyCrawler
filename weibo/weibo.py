@@ -46,6 +46,19 @@ def check_login():
     return False
 
 
+# 使用浏览器保存的cookie模拟登录请求，获取一个session级别的访问cookie
+def generate_login_cookie():
+    global COOKIE_INFO
+    login_url = "http://login.sina.com.cn/sso/login.php?url=http%3A%2F%2Fweibo.com"
+    login_response = net.http_request(login_url, cookies_list=COOKIE_INFO)
+    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookies = net.get_cookies_from_response_header(login_response.headers)
+        if set_cookies:
+            COOKIE_INFO.update(set_cookies)
+            return True
+    return False
+
+
 # 获取账号首页
 def get_home_page(account_id):
     home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
@@ -257,7 +270,10 @@ class Weibo(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_GET_COOKIE: {".sina.com.cn": ("SUB",)},
+            robot.SYS_GET_COOKIE: {
+                ".sina.com.cn": (),
+                ".login.sina.com.cn": (),
+            },
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
@@ -272,14 +288,17 @@ class Weibo(robot.Robot):
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        COOKIE_INFO["SUB"] = self.cookie_value["SUB"]
+        COOKIE_INFO.update(self.cookie_value)
 
     def main(self):
         global ACCOUNTS
 
+        # 检测登录状态
         if not check_login():
-            log.error("没有检测到您的登录信息，无法获取图片或视频，自动退出程序！")
-            tool.process_exit()
+            # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
+            if generate_login_cookie() and not check_login():
+                log.error("没有检测到您的登录信息，无法获取图片或视频，自动退出程序！")
+                tool.process_exit()
 
         # 解析存档文件
         # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)
