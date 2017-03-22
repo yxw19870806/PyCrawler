@@ -37,10 +37,10 @@ def set_csrf_token():
     global CSRF_TOKEN
     home_page_url = "https://www.instagram.com/instagram"
     home_page_response = net.http_request(home_page_url)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Set-Cookie" in home_page_response.headers:
-        csrf_token = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "csrftoken=", ";")
-        if csrf_token:
-            CSRF_TOKEN = csrf_token
+    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(home_page_response.headers)
+        if "csrftoken" in set_cookie:
+            CSRF_TOKEN = set_cookie["csrftoken"]
             return True
     return False
 
