@@ -26,9 +26,9 @@ COOKIE_INFO = {"SUB": ""}
 def check_login():
     if not COOKIE_INFO["SUB"]:
         return False
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
     weibo_index_page_url = "http://weibo.com/"
-    weibo_index_page_response = net.http_request(weibo_index_page_url, header_list=header_list)
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    weibo_index_page_response = net.http_request(weibo_index_page_url, cookies_list=cookies_list)
     if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
     return False
@@ -37,11 +37,11 @@ def check_login():
 # 获取账号首页
 def get_home_page(account_id):
     home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "account_page_id": None,  # 页面解析出的账号page id
     }
-    home_page_response = net.http_request(home_page_url, header_list=header_list)
+    home_page_response = net.http_request(home_page_url, cookies_list=cookies_list)
     if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(home_page_response.data, "$CONFIG['page_id']='", "'")
@@ -56,12 +56,12 @@ def get_home_page(account_id):
 def get_one_page_preview_article(page_id, page_count):
     # http://weibo.com/p/1005052212970554/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=1&ajaxpagelet=1
     index_page_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "article_info_list": [],  # 页面解析出的文章信息列表
         "is_over": False,  # 是不是最后一页文章
     }
-    index_page_response = net.http_request(index_page_url, header_list=header_list)
+    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         article_data = tool.find_sub_string(index_page_response.data, '"html":"', '"})')
         article_data = article_data.replace("\\t", "").replace("\\n", "").replace("\\r", "")
@@ -91,8 +91,8 @@ def get_one_page_preview_article(page_id, page_count):
 
 # 获取文章页面
 def get_article_page(article_page_url):
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
-    article_page_response = net.http_request(article_page_url, header_list=header_list)
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    article_page_response = net.http_request(article_page_url, cookies_list=cookies_list)
     extra_info = {
         "is_error": False,  # 是不是页面格式不符合
         "is_pay": False,  # 是否需要购买

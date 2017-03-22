@@ -38,9 +38,9 @@ COOKIE_INFO = {"SUB": ""}
 def check_login():
     if not COOKIE_INFO["SUB"]:
         return False
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     weibo_index_page_url = "http://weibo.com/"
-    weibo_index_page_response = net.http_request(weibo_index_page_url, header_list=header_list)
+    weibo_index_page_response = net.http_request(weibo_index_page_url, cookies_list=cookies_list)
     if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
     return False
@@ -62,11 +62,11 @@ def generate_login_cookie():
 # 获取账号首页
 def get_home_page(account_id):
     home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "account_page_id": None,  # 页面解析出的账号page id
     }
-    home_page_response = net.http_request(home_page_url, header_list=header_list)
+    home_page_response = net.http_request(home_page_url, cookies_list=cookies_list)
     if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(home_page_response.data, "$CONFIG['page_id']='", "'")
@@ -79,13 +79,13 @@ def get_home_page(account_id):
 # 获取一页的图片信息
 def get_one_page_photo(account_id, page_count):
     index_page_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": True,  # 是不是格式不符合
         "image_info_list": [],  # 页面解析出的所有图片信息列表
         "is_over": False,  # 是不是最后一页图片
     }
-    index_page_response = net.http_request(index_page_url, header_list=header_list, json_decode=True)
+    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list, json_decode=True)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
             robot.check_sub_key(("data",), index_page_response.json_data) and
@@ -133,13 +133,13 @@ def get_one_page_video(account_page_id, since_id):
     # http://weibo.com/p/aj/album/loading?type=video&since_id=9999999999999999&page_id=1005052535836307&page=1&ajax_call=1
     index_page_url = "http://weibo.com/p/aj/album/loading"
     index_page_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1&__rnd=%s" % (since_id, account_page_id, int(time.time() * 1000))
-    header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "video_play_url_list": [],  # 页面解析出的所有视频地址列表
         "next_page_since_id": None,  # 页面解析出的下一页视频的指针
     }
-    index_page_response = net.http_request(index_page_url, header_list=header_list, json_decode=True)
+    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list, json_decode=True)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if(
             robot.check_sub_key(("code", "data"), index_page_response.json_data) and
@@ -185,8 +185,8 @@ def get_video_url(video_play_page_url):
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
-        header_list = {"cookie": "SUB=" + COOKIE_INFO["SUB"]}
-        video_play_page_response = net.http_request(video_play_page_url, header_list=header_list)
+        cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+        video_play_page_response = net.http_request(video_play_page_url, cookies_list=cookies_list)
         if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url = tool.find_sub_string(video_play_page_response.data, "video_src=", "&")
             if video_url:
