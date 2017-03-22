@@ -68,9 +68,13 @@ def login():
     # 访问首页，获取一个随机session id
     home_page_url = "http://bcy.net/home/user/index"
     home_page_response = net.http_request(home_page_url)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Set-Cookie" in home_page_response.headers:
-        COOKIE_INFO["acw_tc"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "acw_tc=", ";")
-        COOKIE_INFO["PHPSESSID"] = tool.find_sub_string(home_page_response.headers["Set-Cookie"], "PHPSESSID=", ";")
+    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(home_page_response.headers)
+        if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
+            COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
+            COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
+        else:
+            return False
     else:
         return False
     # 从命令行中输入账号密码
