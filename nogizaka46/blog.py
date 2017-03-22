@@ -247,14 +247,13 @@ class Download(threading.Thread):
 
                     # 下载图片
                     for image_url in blog_info["image_url_list"]:
-                        header_list = None
+                        cookies_list = None
                         # 检查是否存在大图可以下载
                         if not is_big_image_over:
                             big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
                             if big_image_response.extra_info["image_url"] is not None:
                                 image_url = big_image_response.extra_info["image_url"]
-                                if "Set-Cookie" in big_image_response.headers:
-                                    header_list = {"Cookie": big_image_response.headers["Set-Cookie"]}
+                                cookies_list = net.get_cookies_from_response_header(big_image_response.headers)
                             is_big_image_over = big_image_response.extra_info["is_over"]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
@@ -269,7 +268,7 @@ class Download(threading.Thread):
                         if file_type.find("?") != -1:
                             file_type = "jpeg"
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
+                        save_file_return = net.save_net_file(image_url, file_path, cookies_list=cookies_list)
                         if save_file_return["status"] == 1:
                             if check_image_invalid(file_path):
                                 os.remove(tool.change_path_encoding(file_path))
