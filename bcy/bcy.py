@@ -33,9 +33,11 @@ def check_login():
     header_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
     index_page_url = "http://bcy.net/"
     index_page_response = net.http_request(index_page_url, header_list=header_list)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED and "Set-Cookie" in index_page_response.headers:
-        COOKIE_INFO["acw_tc"] = tool.find_sub_string(index_page_response.headers["Set-Cookie"], "acw_tc=", ";")
-        COOKIE_INFO["PHPSESSID"] = tool.find_sub_string(index_page_response.headers["Set-Cookie"], "PHPSESSID=", ";")
+    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(index_page_response.headers)
+        if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
+            COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
+            COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
     if not COOKIE_INFO["acw_tc"] or not COOKIE_INFO["PHPSESSID"]:
         return False
     home_page_url = "http://bcy.net/home/user/index"
