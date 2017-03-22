@@ -80,8 +80,9 @@ def get_follow_by_list(account_id):
             post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
         else:
             post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
-        header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
-        follow_by_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, json_decode=True)
+        header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN}
+        cookies_list = {"csrftoken": CSRF_TOKEN, "sessionid": SESSION_ID}
+        follow_by_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
         if follow_by_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
                 for node in follow_by_page_response.json_data["followed_by"]["nodes"]:
@@ -113,8 +114,9 @@ def get_follow_list(account_id):
             post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
         else:
             post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
-        header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s; sessionid=%s;" % (CSRF_TOKEN, SESSION_ID)}
-        follow_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, json_decode=True)
+        header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN}
+        cookies_list = {"csrftoken": CSRF_TOKEN, "sessionid": SESSION_ID}
+        follow_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
         if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("follows",), follow_page_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
                 for node in follow_page_response.json_data["follows"]["nodes"]:
@@ -150,8 +152,9 @@ def get_one_page_media(account_id, cursor):
     # node支持的字段：caption,code,comments{count},date,dimensions{height,width},display_src,id,is_video,likes{count},owner{id},thumbnail_src,video_views
     query_page_url = "https://www.instagram.com/query/"
     post_data = {"q": "ig_user(%s){media.after(%s,%s){nodes{code,date,display_src,is_video},page_info}}" % (account_id, cursor, IMAGE_COUNT_PER_PAGE)}
-    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN, "Cookie": "csrftoken=%s" % CSRF_TOKEN}
-    media_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, json_decode=True)
+    header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": CSRF_TOKEN}
+    cookies_list = {"csrftoken": CSRF_TOKEN}
+    media_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "media_info_list": [],  # 页面解析出的媒体信息列表
