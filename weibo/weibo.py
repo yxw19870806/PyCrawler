@@ -137,7 +137,7 @@ def get_one_page_video(account_page_id, since_id):
             # 获取视频播放地址类别
             video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
             if len(video_play_url_list) == 0:
-                if page_html.find("还没有发布过视频") == -1:
+                if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
                     extra_info["is_error"] = True
             else:
                 extra_info["video_play_url_list"] = map(str, video_play_url_list)
