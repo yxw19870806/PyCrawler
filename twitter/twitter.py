@@ -53,8 +53,9 @@ def get_auth_token():
 def follow_account(auth_token, account_id):
     follow_url = "https://twitter.com/i/user/follow"
     follow_data = {"user_id": account_id}
-    header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    follow_response = net.http_request(follow_url, method="POST", post_data=follow_data, header_list=header_list, json_decode=True)
+    header_list = {"Referer": "https://twitter.com/"}
+    cookies_list = {"auth_token": auth_token}
+    follow_response = net.http_request(follow_url, method="POST", post_data=follow_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("new_state",), follow_response.json_data) and follow_response.json_data["new_state"] == "following":
             return True
@@ -66,8 +67,9 @@ def follow_account(auth_token, account_id):
 def unfollow_account(auth_token, account_id):
     unfollow_url = "https://twitter.com/i/user/unfollow"
     unfollow_data = {"user_id": account_id}
-    header_list = {"Cookie": "auth_token=%s;" % auth_token, "Referer": "https://twitter.com/"}
-    unfollow_response = net.http_request(unfollow_url, method="POST", post_data=unfollow_data, header_list=header_list, json_decode=True)
+    header_list = {"Referer": "https://twitter.com/"}
+    cookies_list = {"auth_token": auth_token}
+    unfollow_response = net.http_request(unfollow_url, method="POST", post_data=unfollow_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("new_state",), unfollow_response.json_data) and unfollow_response.json_data["new_state"] == "not-following":
             return True
@@ -98,8 +100,8 @@ def get_follow_list(account_name):
 # 获取一页的关注列表
 def get_one_page_follow(account_name, auth_token, position_id):
     follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
-    header_list = {"Cookie": "auth_token=%s;" % auth_token}
-    follow_list_response = net.http_request(follow_list_url, header_list=header_list, json_decode=True)
+    cookies_list = {"auth_token": auth_token}
+    follow_list_response = net.http_request(follow_list_url, cookies_list=cookies_list, json_decode=True)
     if follow_list_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_response.json_data):
             return follow_list_response.json_data
