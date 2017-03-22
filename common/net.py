@@ -64,6 +64,7 @@ def build_header_cookie_string(cookies_list):
 
 # http请求(urlib3)
 # header_list       http header信息，e.g. {"Host":“www.example.com"}
+# cookies_list      cookie信息，e.g. {"cookie1":“value1", "cookie2":“value2"}
 # is_random_ip      是否使用伪造IP
 # exception_return  如果异常信息中包含以下字符串，直接返回-1
 # return            0：无法访问
@@ -71,8 +72,8 @@ def build_header_cookie_string(cookies_list):
 #                   -2：json decode error
 #                   -10：特殊异常捕获后的返回
 #                   其他>0：网页返回码（正常返回码为200）
-def http_request(url, method="GET", post_data=None, header_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True,
-                 json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
+def http_request(url, method="GET", post_data=None, header_list=None, cookies_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT,
+                 read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     method = method.upper()
@@ -98,7 +99,11 @@ def http_request(url, method="GET", post_data=None, header_list=None, connection
         if is_random_ip:
             random_ip = _random_ip_address()
             header_list["X-Forwarded-For"] = random_ip
-            header_list["x-Real-Ip"] = random_ip
+            header_list["X-Real-Ip"] = random_ip
+
+        # 设置cookie
+        if cookies_list:
+            header_list["Cookie"] = build_header_cookie_string(cookies_list)
 
         try:
             if connection_timeout == 0 and read_timeout == 0:
