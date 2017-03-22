@@ -51,6 +51,17 @@ def set_proxy(ip, port):
     tool.print_msg("设置代理成功")
 
 
+# 根据传入cookie key和value，生成一个放入header中的cookie字符串
+# {"cookie1":“value1", "cookie2":“value2"} -> cookie1=value1; cookie2=value2
+def build_header_cookie_string(cookies_list):
+    if not cookies_list:
+        return ""
+    temp_string = []
+    for cookie_name in cookies_list:
+        temp_string.append(cookie_name + "=" + cookies_list[cookie_name])
+    return "; ".join(temp_string)
+
+
 # http请求(urlib3)
 # header_list       http header信息，e.g. {"Host":“www.example.com"}
 # is_random_ip      是否使用伪造IP
