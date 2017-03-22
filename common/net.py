@@ -62,6 +62,19 @@ def build_header_cookie_string(cookies_list):
     return "; ".join(temp_string)
 
 
+# 从请求返回的set-cookie字段解析出全部的cookies内容字典
+def get_cookies_from_response_header(response_headers):
+    if not isinstance(response_headers, urllib3._collections.HTTPHeaderDict):
+        return {}
+    if "Set-Cookie" not in response_headers:
+        return {}
+    cookies_list = {}
+    for cookie in response_headers.getlist("Set-Cookie"):
+        cookie_name, cookie_value = cookie.split(";")[0].split("=", 1)
+        cookies_list[cookie_name] = cookie_value
+    return cookies_list
+
+
 # http请求(urlib3)
 # header_list       http header信息，e.g. {"Host":“www.example.com"}
 # cookies_list      cookie信息，e.g. {"cookie1":“value1", "cookie2":“value2"}
