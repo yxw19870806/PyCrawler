@@ -52,6 +52,7 @@ def follow_account(account_id):
         if robot.check_sub_key(("code",), follow_api_response.json_data) and robot.is_integer(follow_api_response.json_data["code"]):
             if int(follow_api_response.json_data["code"]) == 100000:
                 tool.print_msg("关注%s成功" % account_id)
+                time.sleep(5)
                 return True
             elif int(follow_api_response.json_data["code"]) == 100027:
                 tool.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
