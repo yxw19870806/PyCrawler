@@ -211,11 +211,18 @@ class Robot(object):
                 cookie_path = get_config(config, "COOKIE_PATH", "", 0)
             all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
             for cookie_domain in sys_config[SYS_GET_COOKIE]:
-                for cookie_key in sys_config[SYS_GET_COOKIE][cookie_domain]:
-                    self.cookie_value[cookie_key] = ""
-                if cookie_domain in all_cookie_from_browser:
-                    for cookie_name in self.cookie_value:
-                        if cookie_name in all_cookie_from_browser[cookie_domain]:
+                # 如果指定了cookie key
+                if sys_config[SYS_GET_COOKIE][cookie_domain]:
+                    for cookie_key in sys_config[SYS_GET_COOKIE][cookie_domain]:
+                        self.cookie_value[cookie_key] = ""
+                    if cookie_domain in all_cookie_from_browser:
+                        for cookie_name in self.cookie_value:
+                            if cookie_name in all_cookie_from_browser[cookie_domain]:
+                                self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
+                # 没有指定cookie key那么就是取全部
+                else:
+                    if cookie_domain in all_cookie_from_browser:
+                        for cookie_name in all_cookie_from_browser[cookie_domain]:
                             self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
 
         # Http Setting
