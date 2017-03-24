@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import log, net, robot, tool
+import weiboCommon
 import os
 import re
 import threading
@@ -20,35 +21,6 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 COOKIE_INFO = {"SUB": ""}
-
-
-# 检测登录状态
-def check_login():
-    if not COOKIE_INFO["SUB"]:
-        return False
-    weibo_index_page_url = "http://weibo.com/"
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    weibo_index_page_response = net.http_request(weibo_index_page_url, cookies_list=cookies_list)
-    if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
-    return False
-
-
-# 获取账号首页
-def get_home_page(account_id):
-    home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    extra_info = {
-        "account_page_id": None,  # 页面解析出的账号page id
-    }
-    home_page_response = net.http_request(home_page_url, cookies_list=cookies_list)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取账号page id
-        account_page_id = tool.find_sub_string(home_page_response.data, "$CONFIG['page_id']='", "'")
-        if account_page_id and robot.is_integer(account_page_id):
-            extra_info["account_page_id"] = account_page_id
-    home_page_response.extra_info = extra_info
-    return home_page_response
 
 
 # 获取一页的预览文章
@@ -170,7 +142,7 @@ class Article(robot.Robot):
     def main(self):
         global ACCOUNTS
 
-        if not check_login():
+        if not weiboCommon.check_login(COOKIE_INFO):
             while True:
                 input_str = tool.console_input(tool.get_time() + " 没有检测到您的登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
                 input_str = input_str.lower()
@@ -241,7 +213,7 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 获取账号首页
-            home_page_response = get_home_page(account_id)
+            home_page_response = weiboCommon.get_home_page(account_id)
             if home_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(home_page_response.status))
                 tool.process_exit()

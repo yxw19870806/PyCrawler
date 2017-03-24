@@ -6,34 +6,10 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import net, robot, tool
+import weiboCommon
 import os
 import time
 COOKIE_INFO = {"SUB": ""}
-
-
-# 检测登录状态
-def check_login():
-    if not COOKIE_INFO["SUB"]:
-        return False
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    weibo_index_page_url = "http://weibo.com/"
-    weibo_index_page_response = net.http_request(weibo_index_page_url, cookies_list=cookies_list)
-    if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
-    return False
-
-
-# 使用浏览器保存的cookie模拟登录请求，获取一个session级别的访问cookie
-def generate_login_cookie():
-    global COOKIE_INFO
-    login_url = "http://login.sina.com.cn/sso/login.php?url=http%3A%2F%2Fweibo.com"
-    login_response = net.http_request(login_url, cookies_list=COOKIE_INFO)
-    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        set_cookies = net.get_cookies_from_response_header(login_response.headers)
-        if set_cookies:
-            COOKIE_INFO.update(set_cookies)
-            return True
-    return False
 
 
 # 关注指定账号
@@ -96,9 +72,13 @@ if __name__ == "__main__":
         tool.process_exit()
 
     # 检测登录状态
-    if not check_login():
+    if not weiboCommon.check_login(COOKIE_INFO):
         # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-        if generate_login_cookie() and not check_login():
+        new_cookies_list = weiboCommon.generate_login_cookie(COOKIE_INFO)
+        if new_cookies_list:
+            COOKIE_INFO.update(new_cookies_list)
+        # 再次检测登录状态
+        if not weiboCommon.check_login(COOKIE_INFO):
             tool.print_msg("没有检测到您的登录信息，无法关注账号，退出！")
             tool.process_exit()
 
