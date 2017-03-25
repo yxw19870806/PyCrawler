@@ -127,7 +127,10 @@ class Article(robot.Robot):
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_GET_COOKIE: {".sina.com.cn": ("SUB",)},
+            robot.SYS_GET_COOKIE: {
+                ".sina.com.cn": (),
+                ".login.sina.com.cn": (),
+            },
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
@@ -137,20 +140,26 @@ class Article(robot.Robot):
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-        COOKIE_INFO["SUB"] = self.cookie_value["SUB"]
+        COOKIE_INFO.update(self.cookie_value)
 
     def main(self):
         global ACCOUNTS
 
         if not weiboCommon.check_login(COOKIE_INFO):
-            while True:
-                input_str = tool.console_input(tool.get_time() + " 没有检测到您的登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
-                input_str = input_str.lower()
-                if input_str in ["y", "yes"]:
-                    COOKIE_INFO["SUB"] = tool.generate_random_string(50)
-                    break
-                elif input_str in ["n", "no"]:
-                    tool.process_exit()
+            # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
+            new_cookies_list = weiboCommon.generate_login_cookie(COOKIE_INFO)
+            if new_cookies_list:
+                COOKIE_INFO.update(new_cookies_list)
+            # 再次检测登录状态
+            if not weiboCommon.check_login(COOKIE_INFO):
+                while True:
+                    input_str = tool.console_input(tool.get_time() + " 没有检测到您的登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
+                    input_str = input_str.lower()
+                    if input_str in ["y", "yes"]:
+                        COOKIE_INFO["SUB"] = tool.generate_random_string(50)
+                        break
+                    elif input_str in ["n", "no"]:
+                        tool.process_exit()
 
         # 解析存档文件
         # account_id  last_article_time  (account_name)
