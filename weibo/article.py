@@ -315,7 +315,7 @@ class Download(threading.Thread):
                     # 文章正文图片
                     image_count = 1
                     for image_url in article_page_response.extra_info["image_url_list"]:
-                        if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("e.weibo.com") >= 0:
+                        if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
                             continue
                         log.step(account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_count, image_url))
 
