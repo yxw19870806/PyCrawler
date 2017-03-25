@@ -213,6 +213,8 @@ class Download(threading.Thread):
 
                 # 没有视频了
                 if index_page_response.extra_info["is_over"] and len(index_page_response.extra_info["video_id_list"]) == 0:
+                    if self.account_info[2] != "":
+                        log.error(account_name + " 没有找到上次下载的最后一个视频地址")
                     break
 
                 if len(index_page_response.extra_info["video_id_list"]) == 0:
