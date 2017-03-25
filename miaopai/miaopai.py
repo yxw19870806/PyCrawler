@@ -225,7 +225,7 @@ class Download(threading.Thread):
                     video_id = str(video_id)
 
                     # 检查是否已下载到前一次的图片
-                    if first_video_id == self.account_info[2]:
+                    if video_id == self.account_info[2]:
                         is_over = True
                         break
 
