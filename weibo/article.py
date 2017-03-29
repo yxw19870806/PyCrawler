@@ -310,7 +310,7 @@ class Download(threading.Thread):
                             log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
                             this_account_total_image_count += 1
                         else:
-                            log.error(account_name + " 文章%s《%s》 顶部图片 %s 下载失败" % (article_id, article_title, article_page_response.extra_info["top_image_url"]))
+                            log.error(account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_page_response.extra_info["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 文章正文图片
                     image_count = 1
@@ -326,7 +326,7 @@ class Download(threading.Thread):
                             log.step(account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_count))
                             image_count += 1
                         else:
-                            log.error(account_name + " 文章%s《%s》 第%s张图片 %s 下载失败" % (article_id, article_title, image_count, image_url))
+                            log.error(account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     if image_count > 1:
                         this_account_total_image_count += image_count - 1
