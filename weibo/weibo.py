@@ -456,7 +456,7 @@ class Download(threading.Thread):
                         video_url = get_video_url(video_play_page_url)
                         if video_url is None:
                             log.error(account_name + " 第%s个视频 %s 没有解析到下载地址" % (video_count, video_play_page_url))
-                            break
+                            continue
 
                         if video_url is "":
                             continue
