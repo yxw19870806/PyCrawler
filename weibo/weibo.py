@@ -499,7 +499,7 @@ class Download(threading.Thread):
 
             # 排序
             if IS_SORT:
-                if image_count > 1:
+                if first_image_time != "0":
                     log.step(account_name + " 图片开始从下载目录移动到保存目录")
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
@@ -507,7 +507,7 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                         tool.process_exit()
-                if video_count > 1:
+                if first_video_url != "":
                     log.step(account_name + " 视频开始从下载目录移动到保存目录")
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                     if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
