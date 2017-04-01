@@ -135,11 +135,12 @@ def get_video_url(video_play_page_url):
                         break
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        # 多次尝试，在多线程访问的时候有较大几率无法返回正确的信息
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
         video_play_page_response = net.http_request(video_play_page_url, cookies_list=cookies_list)
         if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url = tool.find_sub_string(video_play_page_response.data, "video_src=", "&")
+            if not video_url:
+                video_url = tool.find_sub_string(video_play_page_response.data, 'flashvars="list=', '"')
             if video_url:
                 video_url = str(urllib2.unquote(video_url))
             else:
