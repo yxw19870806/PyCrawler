@@ -9,6 +9,7 @@ from common import tool
 import steamCommon
 import urllib
 
+
 # 获取当前account正在收集的徽章进度
 def main(account_id):
     login_cookie = steamCommon.get_login_cookie_from_browser()
