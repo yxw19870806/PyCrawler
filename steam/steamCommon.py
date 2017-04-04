@@ -11,6 +11,24 @@ import os
 import re
 
 
+# 获取指定账号的全部游戏ud列表
+def get_account_owned_app_list(user_id):
+    game_index_page_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_page_response = net.http_request(game_index_page_url)
+    if game_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        tool.print_msg("所有游戏页访问失败")
+        tool.process_exit()
+    owned_all_game_data = tool.find_sub_string(game_index_page_response.data, "var rgGames = ", ";")
+    try:
+        owned_all_game_data = json.loads(owned_all_game_data)
+    except ValueError:
+        tool.print_msg("所有游戏解析失败")
+        tool.process_exit()
+    app_id_list = []
+    for game_data in owned_all_game_data:
+        if "appid" in game_data:
+            app_id_list.append(str(game_data["appid"]))
+    return app_id_list
 # 获取所有已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
 def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
