@@ -307,8 +307,11 @@ class Download(threading.Thread):
                         file_path = os.path.join(article_path, "000.%s" % file_type)
                         save_file_return = net.save_net_file(article_page_response.extra_info["top_image_url"], file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
-                            this_account_total_image_count += 1
+                            if weiboCommon.check_image_invalid(file_path):
+                                log.error(account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_page_response.extra_info["top_image_url"]))
+                            else:
+                                log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
+                                this_account_total_image_count += 1
                         else:
                             log.error(account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_page_response.extra_info["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
@@ -323,8 +326,11 @@ class Download(threading.Thread):
                         file_path = os.path.join(article_path, "%03d.%s" % (image_count, file_type))
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_count))
-                            image_count += 1
+                            if weiboCommon.check_image_invalid(file_path):
+                                log.error(account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_title, image_count, image_url))
+                            else:
+                                log.step(account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_count))
+                                image_count += 1
                         else:
                             log.error(account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
