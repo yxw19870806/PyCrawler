@@ -6,7 +6,7 @@ http://ameblo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import *
 from PIL import Image
 import os
 import re
