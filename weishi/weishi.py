@@ -6,7 +6,7 @@ http://weishi.qq.com
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import *
 import json
 import os
 import random

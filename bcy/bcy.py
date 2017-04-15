@@ -6,7 +6,7 @@ http://bcy.net
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import *
 import base64
 import json
 import os

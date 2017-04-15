@@ -6,8 +6,7 @@ https://www.flickr.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
-import json
+from common import *
 import os
 import threading
 import time
