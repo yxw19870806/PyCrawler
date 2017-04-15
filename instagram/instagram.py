@@ -168,28 +168,29 @@ def get_one_page_media(account_id, cursor):
                 robot.check_sub_key(("page_info", "nodes"), media_page_response.json_data["media"]) and
                 robot.check_sub_key(("has_next_page", "end_cursor"), media_page_response.json_data["media"]["page_info"])
             ):
-                for media_info in media_page_response.json_data["media"]["nodes"]:
-                    media_extra_info = {
-                        "image_url": None,  # 页面解析出的图片下载地址
-                        "is_video": False,  # 是不是视频
-                        "video_id": None,  # 页面解析出的视频id
-                        "time": None,  # 页面解析出的媒体上传时间
-                        "json_data": media_info,  # 原始数据
-                    }
-                    if robot.check_sub_key(("is_video", "display_src", "date"), media_info):
-                        # 获取图片下载地址
-                        media_extra_info["image_url"] = str(media_info["display_src"]).split("?")[0]
-                        # 检测是否有视频
-                        media_extra_info["is_video"] = media_info["is_video"]
-                        # 获取图片上传时间
-                        media_extra_info["time"] = str(int(media_info["date"]))
-                        # 获取视频id
-                        if media_extra_info["is_video"] and robot.check_sub_key(("code",), media_info):
-                            media_extra_info["video_id"] = str(media_info["code"])
-                    extra_info["media_info_list"].append(media_extra_info)
-                # 获取下一页的指针
-                if media_page_response.json_data["media"]["page_info"]["has_next_page"]:
-                    extra_info["next_page_cursor"] = str(media_page_response.json_data["media"]["page_info"]["end_cursor"])
+                if len(media_page_response.json_data["media"]["nodes"]) > 0:
+                    for media_info in media_page_response.json_data["media"]["nodes"]:
+                        media_extra_info = {
+                            "image_url": None,  # 页面解析出的图片下载地址
+                            "is_video": False,  # 是不是视频
+                            "video_id": None,  # 页面解析出的视频id
+                            "time": None,  # 页面解析出的媒体上传时间
+                            "json_data": media_info,  # 原始数据
+                        }
+                        if robot.check_sub_key(("is_video", "display_src", "date"), media_info):
+                            # 获取图片下载地址
+                            media_extra_info["image_url"] = str(media_info["display_src"]).split("?")[0]
+                            # 检测是否有视频
+                            media_extra_info["is_video"] = media_info["is_video"]
+                            # 获取图片上传时间
+                            media_extra_info["time"] = str(int(media_info["date"]))
+                            # 获取视频id
+                            if media_extra_info["is_video"] and robot.check_sub_key(("code",), media_info):
+                                media_extra_info["video_id"] = str(media_info["code"])
+                        extra_info["media_info_list"].append(media_extra_info)
+                    # 获取下一页的指针
+                    if media_page_response.json_data["media"]["page_info"]["has_next_page"]:
+                        extra_info["next_page_cursor"] = str(media_page_response.json_data["media"]["page_info"]["end_cursor"])
             else:
                 extra_info["is_error"] = True
         media_page_response.extra_info = extra_info
