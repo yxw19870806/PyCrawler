@@ -25,13 +25,16 @@ IS_DOWNLOAD_IMAGE = True
 
 # 获取账号首页
 def get_home_page(account_name):
-    home_page_url = "https://%s.tuchong.com" % account_name
+    if robot.is_integer(account_name):
+        home_page_url = "https://www.tuchong.com/%s" % account_name
+    else:
+        home_page_url = "https://%s.tuchong.com" % account_name
     home_page_url_response = net.http_request(home_page_url)
     extra_info = {
         "account_id": None,  # account id（字母账号->数字账号)
     }
     if home_page_url_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["account_id"] = tool.find_sub_string(home_page_url_response.data, '<div class="time-line" data-site-id="', '">')
+        extra_info["account_id"] = tool.find_sub_string(home_page_url_response.data, 'site_id":"', '",')
     home_page_url_response.extra_info = extra_info
     return home_page_url_response
 
