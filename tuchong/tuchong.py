@@ -55,10 +55,10 @@ def get_one_page_album(account_id, post_time):
         if robot.check_sub_key(("posts", "result"), index_page_response.json_data) and index_page_response.json_data["result"] == "SUCCESS":
             for album_info in index_page_response.json_data["posts"]:
                 extra_image_info = {
-                    "album_id": None, # 页面解析出的相册id
+                    "album_id": None,  # 页面解析出的相册id
                     "album_time": None,  # 页面解析出的相册创建时间
-                    "album_title": "", # 页面解析出的相册标题
-                    "image_url_list": [], # 页面解析出的图片地址列表
+                    "album_title": "",  # 页面解析出的相册标题
+                    "image_url_list": [],  # 页面解析出的图片地址列表
                     "json_data": album_info,  # 原始数据
                 }
                 if robot.check_sub_key(("title", "post_id", "published_at", "images"), album_info):
