@@ -10,11 +10,13 @@ from pyquery import PyQuery as pq
 import json
 import os
 import re
+import sys
 
 
 # 从文件中读取account id
 def get_account_id_from_file():
-    file_handle = open("account.data", "r")
+    file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "account.data")
+    file_handle = open(file_path, "r")
     account = file_handle.read()
     file_handle.close()
     return account
@@ -185,7 +187,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
 
 # 从浏览器中获取登录cookies
 def get_login_cookie_from_browser():
-    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
     # cookie
