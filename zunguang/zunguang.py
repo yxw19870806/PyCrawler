@@ -140,7 +140,7 @@ class ZunGuang(robot.Robot):
                     log.error("创建第%s页相册目录 %s 失败" % (page_count, image_path))
                     break
 
-            log.step("第%s页相册解析的全部图片：%s" % (page_count, album_page_response.extra_info["image_url_list"]))
+            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_page_response.extra_info["image_url_list"]))
             image_count = 1
             for image_url in album_page_response.extra_info["image_url_list"]:
                 log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
