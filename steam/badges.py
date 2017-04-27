@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-获取指定账号
+获取指定账号的全部未收集完成徽章对应的集换卡价格
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -35,4 +35,5 @@ def main(account_id):
 
 
 if __name__ == "__main__":
-    main(76561198172925593)
+    account_id = steamCommon.get_account_id_from_file()
+    main(account_id)
