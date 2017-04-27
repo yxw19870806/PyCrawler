@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 from common import *
 import os
 import re
+import sys
 import threading
 import time
 import traceback
@@ -32,7 +33,7 @@ IS_DOWNLOAD_VIDEO = True
 
 # 从cookie中获取登录的auth_token
 def get_auth_token():
-    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
     # cookie
