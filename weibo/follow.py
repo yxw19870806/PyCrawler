@@ -8,7 +8,9 @@ email: hikaru870806@hotmail.com
 from common import *
 import weiboCommon
 import os
+import sys
 import time
+
 COOKIE_INFO = {"SUB": ""}
 
 
@@ -48,7 +50,7 @@ def follow_account(account_id):
 
 
 if __name__ == "__main__":
-    config = robot.read_config(os.path.join(os.getcwd(), "..\\common\\config.ini"))
+    config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
     # cookie
