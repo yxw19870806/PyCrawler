@@ -58,7 +58,7 @@ class Robot(object):
             os.chdir(application_path)
             config_path = os.path.join(os.getcwd(), "data\\config.ini")
         else:
-            config_path = os.path.join(os.getcwd(), "..\\common\\config.ini")
+            config_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "config.ini")
 
         config = read_config(config_path)
 
