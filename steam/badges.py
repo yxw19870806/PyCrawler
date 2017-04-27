@@ -35,5 +35,4 @@ def main(account_id):
 
 
 if __name__ == "__main__":
-    account_id = steamCommon.get_account_id_from_file()
-    main(account_id)
+    main(steamCommon.get_account_id_from_file())
