@@ -12,6 +12,14 @@ import os
 import re
 
 
+# 从文件中读取account id
+def get_account_id_from_file():
+    file_handle = open("account.data", "r")
+    account = file_handle.read()
+    file_handle.close()
+    return account
+
+
 # 获取指定账号的全部游戏ud列表
 def get_account_owned_app_list(user_id):
     game_index_page_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
