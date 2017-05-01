@@ -89,8 +89,9 @@ def filter_image_url(image_url):
             or image_url.find("http://stat.ameba.jp/blog/ucs/img/") == 0 or image_url.find("http://stat100.ameba.jp//blog/ucs/img/char/") == 0 \
             or image_url.find("http://i.yimg.jp/images/mail/emoji/") == 0 \
             or image_url.find("https://b.st-hatena.com/images/entry-button/") == 0 or image_url.find("http://vc.ameba.jp/view?") == 0 \
-            or image_url.find("https://mail.google.com/mail/") == 0 or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download/") == 0 \
-            or image_url.find("http://blog.watanabepro.co.jp/") >= 0 or image_url[-9:] == "clear.gif":
+            or image_url.find("https://mail.google.com/mail/") == 0 or image_url.find("https://www.youtube.com/") == 0 \
+            or image_url.find("http://jp.mg2.mail.yahoo.co.jp/ya/download/") == 0 or image_url.find("http://blog.watanabepro.co.jp/") >= 0 \
+            or image_url[-9:] == "clear.gif":
         return True
     return False
 
