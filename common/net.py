@@ -85,7 +85,7 @@ def get_cookies_from_response_header(response_headers):
 #                   -2：json decode error
 #                   -10：特殊异常捕获后的返回
 #                   其他>0：网页返回码（正常返回码为200）
-def http_request(url, method="GET", post_data=None, header_list=None, cookies_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT,
+def http_request(url, method="GET", post_data=None, binary_data=None, header_list=None, cookies_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT,
                  read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
@@ -128,7 +128,7 @@ def http_request(url, method="GET", post_data=None, header_list=None, cookies_li
             else:
                 timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
             if method == "POST":
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, encode_multipart=encode_multipart)
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, body=binary_data, encode_multipart=encode_multipart)
             else:
                 response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout)
             if json_decode:
