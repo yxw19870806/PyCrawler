@@ -30,9 +30,9 @@ COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
 def check_login():
     if not COOKIE_INFO["LOGGED_USER"]:
         return False
-    header_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
+    cookies_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
     index_page_url = "http://bcy.net/"
-    index_page_response = net.http_request(index_page_url, header_list=header_list)
+    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         set_cookie = net.get_cookies_from_response_header(index_page_response.headers)
         if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
@@ -84,7 +84,7 @@ def login():
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
     cookies_list = {"acw_tc": COOKIE_INFO["acw_tc"], "PHPSESSID": COOKIE_INFO["PHPSESSID"]}
-    login_response = net.http_request(login_url, login_post, cookies_list=cookies_list)
+    login_response = net.http_request(login_url, method="POST", post_data=login_post, cookies_list=cookies_list)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if login_response.data.find('<a href="/login">登录</a>') == -1:
             return True
