@@ -26,7 +26,10 @@ def main(account_id):
                 card_name = card_read_name.replace(" (Trading Card)", "")
                 card_real_name_dict[card_name] = card_read_name
             for card_name in wanted_card_list:
-                card_read_name = card_real_name_dict[card_name]
+                if card_name in card_real_name_dict:
+                    card_read_name = card_real_name_dict[card_name]
+                else:
+                    card_read_name = card_name
                 if card_read_name in market_card_list:
                     market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.quote(card_read_name))
                     tool.print_msg("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_read_name], market_link), False)
