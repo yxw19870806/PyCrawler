@@ -30,7 +30,7 @@ def get_album_page(page_count):
         # 获取相册标题
         extra_info["title"] = tool.find_sub_string(album_page_response.data, "<title>", "</title>").replace("\n", "")
         # 检测相册是否已被删除
-        extra_info["is_delete"] = extra_info["title"] == "相册已被删除"
+        extra_info["is_delete"] = extra_info["title"] == "作品已被删除"
         if not extra_info["is_delete"]:
             key = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="s" value="', '">')
             is_error = True
