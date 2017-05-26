@@ -128,7 +128,10 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
             else:
                 timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
             if method == "POST":
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, body=binary_data, encode_multipart=encode_multipart)
+                if binary_data is None:
+                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, encode_multipart=encode_multipart)
+                else:
+                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
             else:
                 response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout)
             if json_decode:
