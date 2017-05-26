@@ -303,8 +303,9 @@ class Download(threading.Thread):
 
                     if len(album_page_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
-                        tool.process_exit()
-                        
+                        # tool.process_exit()
+                        continue
+
                     log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_page_response.extra_info["image_url_list"]))
 
                     for image_url in album_page_response.extra_info["image_url_list"]:
