@@ -75,11 +75,20 @@ def get_discount_game_list():
             # 如果没有取到，给个默认值
             if not robot.is_integer(old_price):
                 old_price = 0
+            else:
+                old_price = int(old_price)
             if not robot.is_integer(now_price):
                 now_price = 0
+            else:
+                now_price = int(now_price)
             if not robot.is_integer(discount):
-                discount = int(now_price / old_price * 100)
-            discount_info = {"game_id": game_id, "discount": int(discount), "old_price": int(old_price), "now_price": int(now_price)}
+                if old_price == 0:
+                    discount = 100
+                else:
+                    discount = int(now_price / old_price * 100)
+            else:
+                discount = int(discount)
+            discount_info = {"game_id": game_id, "discount": discount, "old_price": old_price, "now_price": now_price}
             if game_selector.attr("data-ds-packageid"):
                 discount_info["package_id"] = game_selector.attr("data-ds-packageid")
             discount_game_list.append(discount_info)
