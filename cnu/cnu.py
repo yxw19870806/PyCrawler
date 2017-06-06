@@ -62,7 +62,9 @@ class CNU(robot.Robot):
             save_file.close()
             album_id = int(save_info.strip())
 
+        # http://www.cnu.cc/about/ 所有作品
         total_image_count = 0
+        album_count = 0
         is_over = False
         while not is_over:
             log.step("开始解析第%s页作品" % album_id)
@@ -109,6 +111,13 @@ class CNU(robot.Robot):
                 else:
                      log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 total_image_count += image_count - 1
+
+            # 达到配置文件中的下载数量，结束
+            if 0 < self.get_image_count < total_image_count:
+                break
+            if 0 < self.get_page_count <= album_count:
+                break
+            album_count += 1
             album_id += 1
 
         # 重新保存存档文件
