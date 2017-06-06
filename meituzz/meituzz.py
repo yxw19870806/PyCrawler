@@ -99,7 +99,7 @@ class MeiTuZZ(robot.Robot):
                 album_id += 1
                 continue
             elif album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页图片访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
+                log.error("第%s页相册访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
                 break
 
             if album_page_response.extra_info["is_delete"]:
