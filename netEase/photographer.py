@@ -63,7 +63,7 @@ def get_album_page(album_page_url):
     return album_page_response
 
 
-class PP(robot.Robot):
+class Photographer(robot.Robot):
     def __init__(self):
         global GET_IMAGE_COUNT
         global GET_PAGE_COUNT
@@ -250,4 +250,4 @@ class Download(threading.Thread):
 
 
 if __name__ == "__main__":
-    PP().main()
+    Photographer().main()
