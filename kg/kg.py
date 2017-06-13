@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-全面k歌歌曲爬虫
+全民k歌歌曲爬虫
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
