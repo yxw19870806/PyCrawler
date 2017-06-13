@@ -34,7 +34,7 @@ def get_index_page(account_name):
 # 关注指定账号
 def follow_account(account_name, account_id):
     follow_api_url = "https://www.instagram.com/web/friendships/%s/follow/" % account_id
-    header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"], "origin": "https://www.instagram.com", "X-Instagram-AJAX" : 1}
+    header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
     follow_api_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("status", "result"), follow_api_response.json_data) and follow_api_response.json_data["result"] == "following":
@@ -76,21 +76,21 @@ if __name__ == "__main__":
     account_list = robot.read_save_data(save_data_path, 0, [""])
 
     for account in sorted(account_list.keys()):
-        index_page_response = get_index_page(account)
-        if index_page_response.status == 404:
+        account_page_response = get_index_page(account)
+        if account_page_response.status == 404:
             log.error(account + " 账号不存在")
-        elif index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        elif account_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             log.error(account + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(index_page_response.status))
             break
 
-        if index_page_response.extra_info["account_id"] is None:
+        if account_page_response.extra_info["account_id"] is None:
             log.error(account + " account id解析失败")
             tool.process_exit()
 
-        if index_page_response.extra_info["is_follow"]:
+        if account_page_response.extra_info["is_follow"]:
             tool.print_msg("%s已经关注，跳过" % account)
         else:
-            follow_account(account, index_page_response.extra_info["is_follow"])
+            follow_account(account, account_page_response.extra_info["is_follow"])
             time.sleep(0.1)
 
     tool.print_msg("关注完成")
