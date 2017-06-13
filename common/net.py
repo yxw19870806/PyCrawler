@@ -134,7 +134,7 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                     response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
             else:
                 response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout)
-            if json_decode:
+            if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)
                 except ValueError:
