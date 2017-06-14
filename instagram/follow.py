@@ -83,6 +83,7 @@ if __name__ == "__main__":
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
 
+    count = 0
     for account in sorted(account_list.keys()):
         account_page_response = get_index_page(account)
         if account_page_response.status == 404:
@@ -100,7 +101,8 @@ if __name__ == "__main__":
         elif account_page_response.extra_info["is_private"] and not IS_FOLLOW_PRIVATE_ACCOUNT:
             tool.print_msg("%s是私密账号，跳过" % account)
         else:
-            follow_account(account, account_page_response.extra_info["account_id"])
+            if follow_account(account, account_page_response.extra_info["account_id"]):
+                count += 1
             time.sleep(0.1)
 
-    tool.print_msg("关注完成")
+    tool.print_msg("关注完成，成功关注了%s个账号" % count)
