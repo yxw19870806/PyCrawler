@@ -12,7 +12,7 @@ import sys
 import time
 
 COOKIE_INFO = {"csrftoken": "", "sessionid": ""}
-
+IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
 
 # 获取账号首页
 def get_index_page(account_name):
@@ -21,12 +21,14 @@ def get_index_page(account_name):
     extra_info = {
         "account_id": None,  # 页面解析出的account id
         "is_follow": False,  # 是否已经关注
+        "is_private": False,  # 是否是私密账号
     }
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(index_page_response.data, '"profilePage_', '"')
         if account_id and robot.is_integer(account_id):
             extra_info["account_id"] = account_id
         extra_info["is_follow"] = tool.find_sub_string(index_page_response.data, '"followed_by_viewer": ', ",") == "true"
+        extra_info["is_private"] = tool.find_sub_string(index_page_response.data, '"is_private": ', ",") == "true"
     index_page_response.extra_info = extra_info
     return index_page_response
 
@@ -37,9 +39,15 @@ def follow_account(account_name, account_id):
     header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
     follow_api_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("status", "result"), follow_api_response.json_data) and follow_api_response.json_data["result"] == "following":
-            tool.print_msg("关注%s成功" % account_name)
-            return True
+        if robot.check_sub_key(("status", "result"), follow_api_response.json_data):
+            if follow_api_response.json_data["result"] == "following":
+                tool.print_msg("关注%s成功" % account_name)
+                return True
+            elif follow_api_response.json_data["result"] == "requested":
+                tool.print_msg("私密账号%s，已发送关注请求" % account_name)
+                return True
+            else:
+                return False
         else:
             tool.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_name, follow_api_response.json_data))
             tool.process_exit()
@@ -80,7 +88,7 @@ if __name__ == "__main__":
         if account_page_response.status == 404:
             log.error(account + " 账号不存在")
         elif account_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            log.error(account + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(index_page_response.status))
+            log.error(account + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_page_response.status))
             break
 
         if account_page_response.extra_info["account_id"] is None:
@@ -89,6 +97,8 @@ if __name__ == "__main__":
 
         if account_page_response.extra_info["is_follow"]:
             tool.print_msg("%s已经关注，跳过" % account)
+        elif account_page_response.extra_info["is_private"] and not IS_FOLLOW_PRIVATE_ACCOUNT:
+            tool.print_msg("%s是私密账号，跳过" % account)
         else:
             follow_account(account, account_page_response.extra_info["account_id"])
             time.sleep(0.1)
