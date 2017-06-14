@@ -90,7 +90,7 @@ if __name__ == "__main__":
         if account_page_response.extra_info["is_follow"]:
             tool.print_msg("%s已经关注，跳过" % account)
         else:
-            follow_account(account, account_page_response.extra_info["is_follow"])
+            follow_account(account, account_page_response.extra_info["account_id"])
             time.sleep(0.1)
 
     tool.print_msg("关注完成")
