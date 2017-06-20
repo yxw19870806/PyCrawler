@@ -109,14 +109,18 @@ def get_one_page_follow(account_name, auth_token, position_id):
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
-def get_account_id(account_name):
-    home_page_url = "https://twitter.com/%s" % account_name
-    home_page_response = net.http_request(home_page_url)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        account_id = tool.find_sub_string(home_page_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+def get_account_page(account_name):
+    account_page_url = "https://twitter.com/%s" % account_name
+    account_page_response = net.http_request(account_page_url)
+    extra_info = {
+        "account_id": None,  # 页面解析出的account id
+    }
+    if account_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        account_id = tool.find_sub_string(account_page_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
         if account_id and robot.is_integer(account_id):
-            return account_id
-    return None
+            extra_info["account_id"] = account_id
+    account_page_response.extra_info = extra_info
+    return account_page_response
 
 
 # 获取一页的媒体信息
@@ -273,7 +277,7 @@ class Twitter(robot.Robot):
 
         # 解析存档文件
         # account_name  image_count  last_image_time
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
         ACCOUNTS = account_list.keys()
 
         # 循环下载每个id
@@ -339,6 +343,21 @@ class Download(threading.Thread):
             else:
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+
+            account_page_response = get_account_page(account_name)
+            if account_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(account_name + " 首页访问访问失败，原因：%s" % robot.get_http_request_failed_reason(account_page_response.status))
+                tool.process_exit()
+            if account_page_response.extra_info["account_id"] is None:
+                log.error(account_name + " account id 解析失败")
+                tool.process_exit()
+
+            if self.account_info[1] == "":
+                self.account_info[1] = account_page_response.extra_info["account_id"]
+            else:
+                if self.account_info[1] != account_page_response.extra_info["account_id"]:
+                    log.error(account_name + " account id 不符合，原账号已改名")
+                    tool.process_exit()
 
             image_count = 1
             video_count = 1
@@ -485,9 +504,9 @@ class Download(threading.Thread):
 
             # 新的存档记录
             if first_tweet_id != "0":
-                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
-                self.account_info[3] = first_tweet_id
+                self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
+                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
+                self.account_info[4] = first_tweet_id
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
