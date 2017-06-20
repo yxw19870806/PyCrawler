@@ -26,7 +26,7 @@ NEW_SAVE_DATA_PATH = ""
 IS_SORT = True
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
-COOKIE_INFO = {"csrftoken": "", "sessionid": ""}
+COOKIE_INFO = {"csrftoken": ""}
 
 
 # 获取csr_token并设置全局变量，后续需要设置header才能进行访问数据

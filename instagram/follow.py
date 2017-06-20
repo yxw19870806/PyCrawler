@@ -11,8 +11,9 @@ import os
 import sys
 import time
 
-COOKIE_INFO = {"csrftoken": "", "sessionid": ""}
+COOKIE_INFO = {}
 IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
+
 
 # 获取账号首页
 def get_index_page(account_name):

@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 from common import *
 import os
 import sys
-import time
 
 
 # 获取账号首页
