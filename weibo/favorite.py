@@ -121,6 +121,8 @@ class Favorite(robot.Robot):
         total_image_count = 0
         is_over = False
         while not is_over:
+            log.step("开始解析第%s页收藏" % page_count)
+
             index_page_response = get_one_page_favorite(page_count)
             if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页收藏访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
@@ -138,7 +140,7 @@ class Favorite(robot.Robot):
                 if not tool.make_dir(image_path, 0):
                     log.error("创建图片下载目录 %s 失败" % image_path)
                     tool.process_exit()
-
+                
                 image_count = 1
                 for image_url in blog_info["image_url_list"]:
                     log.step("开始下载微博%s的第%s张图片 %s" % (blog_info["blog_id"], image_count, image_url))
