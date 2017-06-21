@@ -84,6 +84,8 @@ class CNU(robot.Robot):
                 log.error("第%s页作品访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
                 break
 
+            log.trace("第%s页作品解析的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+
             # 过滤标题中不支持的字符
             album_title = robot.filter_text(album_page_response.extra_info["album_title"])
             if album_title:
