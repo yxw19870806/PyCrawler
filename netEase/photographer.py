@@ -155,6 +155,8 @@ class Download(threading.Thread):
                 log.error(account_name + " 没有获得相册信息")
                 tool.process_exit()
 
+            log.step(account_name + " 解析的所有相册地址：%s" % home_page_response.extra_info["album_url_list"])
+
             # 下载
             total_image_count = 0
             album_count = 0
@@ -175,6 +177,8 @@ class Download(threading.Thread):
                 if first_album_id == "0":
                     first_album_id = album_id
 
+                log.step(account_name + " 开始解析第相册%s" % album_id)
+
                 album_page_response = get_album_page(album_url)
                 if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, home_page_response.status))
@@ -183,6 +187,8 @@ class Download(threading.Thread):
                 if len(album_page_response.extra_info["image_url_list"]) == 0:
                     log.error(account_name + " 相册 %s 解析图片地址失败" % album_url)
                     tool.process_exit()
+
+                log.step(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
 
                 if need_make_download_dir:
                     if not tool.make_dir(image_path, 0):
