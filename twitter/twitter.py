@@ -317,7 +317,7 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
 
                     # 检查是否tweet的id小于上次的记录
-                    if int(media_info["blog_id"]) <= int(self.account_info[3]):
+                    if int(media_info["blog_id"]) <= int(self.account_info[4]):
                         is_over = True
                         break
 
@@ -413,7 +413,7 @@ class Download(threading.Thread):
                 if image_count > 1:
                     log.step(account_name + " 图片开始从下载目录移动到保存目录")
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
                         log.step(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
                         log.error(account_name + " 创建图片子目录 %s 失败" % destination_path)
@@ -421,7 +421,7 @@ class Download(threading.Thread):
                 if video_count > 1:
                     log.step(account_name + " 视频开始从下载目录移动到保存目录")
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
                         log.step(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
                         log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
