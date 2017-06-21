@@ -164,7 +164,7 @@ class Download(threading.Thread):
             need_make_video_dir = True
 
             while not is_over:
-                log.step(account_name + " 开始解析%s后的一页视频" % target_id)
+                log.step(account_name + " 开始解析target id %s后的一页视频" % target_id)
 
                 # 获取一页媒体信息
                 index_page_response = get_one_page_media(account_name, target_id)
