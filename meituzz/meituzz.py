@@ -120,6 +120,11 @@ class MeiTuZZ(robot.Robot):
             # 错误数量重置
             error_count = 0
 
+            if album_page_response.extra_info["image_url_list"] is not None:
+                log.trace("第%s页相册解析的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+            else:
+                log.trace("第%s页相册解析的视频：%s" % (album_id, album_page_response.extra_info["video_url"]))
+
             # 图片下载
             if self.is_download_image and album_page_response.extra_info["image_url_list"] is not None:
                 if len(album_page_response.extra_info["image_url_list"]) == 0:
