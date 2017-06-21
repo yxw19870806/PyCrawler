@@ -179,6 +179,8 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页歌曲解析失败" % page_count)
                     tool.process_exit()
 
+                log.trace(account_name + " 第%s页解析的所有歌曲信息：%s" % (page_count, index_page_response.extra_info["audio_info_list"]))
+
                 for audio_info in index_page_response.extra_info["audio_info_list"]:
                     if audio_info["audio_id"] is None:
                         log.error(account_name + " 歌曲信息%s的歌曲id解析失败" % audio_info["json_data"])
