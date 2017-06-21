@@ -225,6 +225,8 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志%s分组失败" % (page_count, index_page_response.data))
                     tool.process_exit()
 
+                log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, index_page_response.extra_info["blog_info_list"]))
+
                 for blog_info in index_page_response.extra_info["blog_info_list"]:
                     # 获取日志id
                     if blog_info["blog_id"] is None:
