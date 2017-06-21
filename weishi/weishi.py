@@ -201,6 +201,8 @@ class Download(threading.Thread):
                     log.error(account_name + " %s后的一页视频信息%s解析失败" % (page_time, index_page_response.json_data))
                     tool.process_exit()
 
+                log.step(account_name + " 第%s页解析的所有视频信息：%s" % (video_count, index_page_response.extra_info["video_info_list"]))
+
                 for video_info in index_page_response.extra_info["video_info_list"]:
                     if video_info["video_id"] is None:
                         log.error(account_name + " 第%s个视频信息%s的视频id解析失败" % (video_count, video_info["json_data"]))
