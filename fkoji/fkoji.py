@@ -51,17 +51,16 @@ class Fkoji(robot.Robot):
 
     def main(self):
         # 解析存档文件
-        # 寻找fkoji.save
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "", ""])
-
-        # 这个key的内容为总数据
-        if ALL_SIGN in account_list:
-            image_start_index = int(account_list[ALL_SIGN][1])
-            save_data_image_time = int(account_list[ALL_SIGN][2])
-            account_list.pop(ALL_SIGN)
-        else:
-            image_start_index = 0
-            save_data_image_time = 0
+        last_blog_time = 0
+        image_start_index = 0
+        if os.path.exists(self.save_data_path):
+            save_file = open(self.save_data_path, "r")
+            save_info = save_file.read()
+            save_file.close()
+            save_info = save_info.replace("\n", "").split("\t")
+            if len(save_info) >= 2:
+                image_start_index = int(save_info[0])
+                last_blog_time = int(save_info[1])
 
         if self.is_sort:
             image_path = self.image_temp_path
@@ -76,7 +75,7 @@ class Fkoji(robot.Robot):
         # 下载
         page_count = 1
         image_count = 1
-        first_image_time = 0
+        new_last_blog_time = ""
         unique_list = []
         is_over = False
         while not is_over:
@@ -105,13 +104,13 @@ class Fkoji(robot.Robot):
                     continue
 
                 # 检查是否已下载到前一次的图片
-                if tweet_created_time <= save_data_image_time:
+                if tweet_created_time <= last_blog_time:
                     is_over = True
                     break
 
                 # 将第一张图片的上传时间做为新的存档记录
-                if first_image_time == 0:
-                    first_image_time = tweet_created_time
+                if new_last_blog_time == "":
+                    new_last_blog_time = str(tweet_created_time)
 
                 # 从图片页面中解析获取推特发布账号
                 account_id = get_tweet_account_id(photo_info)
@@ -154,19 +153,8 @@ class Fkoji(robot.Robot):
 
         # 排序复制到保存目录
         if self.is_sort:
-            # is_check_ok = False
-            # while not is_check_ok:
-            #     # 等待手动检测所有图片结束
-            #     input_str = raw_input(tool.get_time() + " 已经下载完毕，是否下一步操作？ (Y)es or (N)o: ")
-            #     input_str = input_str.lower()
-            #     if input_str in ["y", "yes"]:
-            #         is_check_ok = True
-            #     elif input_str in ["n", "no"]:
-            #         tool.process_exit()
-
-            all_path = os.path.join(self.image_download_path, "all")
-            if not tool.make_dir(all_path, 0):
-                log.error("创建目录 %s 失败" % all_path)
+            if not tool.make_dir(self.image_download_path, 0):
+                log.error("创建目录 %s 失败" % self.image_download_path)
                 tool.process_exit()
 
             log.step("图片开始从下载目录移动到保存目录")
@@ -178,24 +166,9 @@ class Fkoji(robot.Robot):
                 file_type = file_name_list[-1]
                 account_id = "_".join(".".join(file_name_list[:-1]).split("_")[1:])
 
-                # 所有
                 image_start_index += 1
                 destination_file_name = "%05d_%s.%s" % (image_start_index, account_id, file_type)
-                destination_path = os.path.join(all_path, destination_file_name)
-                tool.copy_files(image_path, destination_path)
-
-                # 单个
-                each_account_path = os.path.join(self.image_download_path, "single", account_id)
-                if not os.path.exists(each_account_path):
-                    if not tool.make_dir(each_account_path, 0):
-                        log.error("创建目录 %s 失败" % each_account_path)
-                        tool.process_exit()
-                if account_id in account_list:
-                    account_list[account_id][1] = int(account_list[account_id][1]) + 1
-                else:
-                    account_list[account_id] = [account_id, 1]
-                destination_file_name = "%05d.%s" % (account_list[account_id][1], file_type)
-                destination_path = os.path.join(each_account_path, destination_file_name)
+                destination_path = os.path.join(self.image_download_path, destination_file_name)
                 tool.copy_files(image_path, destination_path)
 
             log.step("图片从下载目录移动到保存目录成功")
@@ -204,10 +177,8 @@ class Fkoji(robot.Robot):
             tool.remove_dir(self.image_temp_path)
 
         # 保存新的存档文件
-        temp_list = [account_list[key] for key in sorted(account_list.keys())]
-        # 把总数据插入列表头
-        temp_list.insert(0, [ALL_SIGN, str(image_start_index), str(first_image_time)])
-        tool.write_file(tool.list_to_string(temp_list), self.save_data_path, 2)
+        if new_last_blog_time != "":
+            tool.write_file(str(image_start_index) + "\t" + new_last_blog_time, self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 
