@@ -120,9 +120,7 @@ class Blog(robot.Robot):
 
         # 保存新的存档文件
         if new_last_blog_time != "":
-            save_file = open(self.save_data_path, "w")
-            save_file.write(str(image_start_index) + "\t" + new_last_blog_time)
-            save_file.close()
+            tool.write_file(str(image_start_index) + "\t" + new_last_blog_time, self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 
