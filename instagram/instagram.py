@@ -15,6 +15,7 @@ import traceback
 
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 12
+QUERY_ID = "17859156310193001"
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
@@ -48,9 +49,9 @@ def get_index_page(account_name):
 # account_id -> 490060609
 def get_one_page_media(account_id, cursor):
     if cursor:
-        query_page_url = "https://www.instagram.com/graphql/query/?query_id=17859156310193001&id=%s&first=%s&after=%s" % (account_id, IMAGE_COUNT_PER_PAGE, cursor)
+        query_page_url = "https://www.instagram.com/graphql/query/?query_id=%s&id=%s&first=%s&after=%s" % (QUERY_ID, account_id, IMAGE_COUNT_PER_PAGE, cursor)
     else:
-        query_page_url = "https://www.instagram.com/graphql/query/?query_id=17859156310193001&id=%s&first=%s" % (account_id, IMAGE_COUNT_PER_PAGE)
+        query_page_url = "https://www.instagram.com/graphql/query/?query_id=%s&id=%s&first=%s" % (QUERY_ID, account_id, IMAGE_COUNT_PER_PAGE)
     while True:
         media_page_response = net.http_request(query_page_url, json_decode=True)
         extra_info = {
