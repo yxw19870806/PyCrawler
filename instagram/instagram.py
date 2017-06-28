@@ -18,6 +18,7 @@ IMAGE_COUNT_PER_PAGE = 12
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 GET_IMAGE_COUNT = 0
+GET_VIDEO_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -168,6 +169,7 @@ def get_media_page(page_id):
 class Instagram(robot.Robot):
     def __init__(self, extra_config=None):
         global GET_IMAGE_COUNT
+        global GET_VIDEO_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -186,6 +188,7 @@ class Instagram(robot.Robot):
 
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
+        GET_VIDEO_COUNT = self.get_video_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
@@ -202,10 +205,6 @@ class Instagram(robot.Robot):
         # account_name  image_count  video_count  last_created_time
         account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
         ACCOUNTS = account_list.keys()
-
-        # if not set_csrf_token():
-        #     log.error("token设置失败")
-        #     tool.process_exit()
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
@@ -397,6 +396,9 @@ class Download(threading.Thread):
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
+                        is_over = True
+                        break
+                    if 0 < GET_VIDEO_COUNT < video_count:
                         is_over = True
                         break
 
