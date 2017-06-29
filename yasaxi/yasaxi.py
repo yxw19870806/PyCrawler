@@ -7,6 +7,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+import base64
+import json
 import os
 import threading
 import time
@@ -27,6 +29,32 @@ IS_DOWNLOAD_VIDEO = True
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""
 ZHEZHE_INFO = ""
+
+
+# 从文件中获取用户信息
+def get_account_info_from_file():
+    account_file_path = os.path.realpath("account.data")
+    if not os.path.exists(account_file_path):
+        return False
+    file_handle = open(account_file_path, "r")
+    file_string = file_handle.read()
+    file_handle.close()
+    file_string.replace("\n", "")
+    try:
+        account_data = json.loads(base64.b64decode(file_string))
+    except TypeError:
+        return False
+    except ValueError:
+        return False
+    if robot.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
+        global ACCESS_TOKEN
+        global AUTH_TOKEN
+        global ZHEZHE_INFO
+        ACCESS_TOKEN = account_data["access_token"]
+        AUTH_TOKEN = account_data["auth_token"]
+        ZHEZHE_INFO = account_data["zhezhe_info"]
+        return True
+    return False
 
 
 # 获取指定页数的所有日志
@@ -126,6 +154,11 @@ class Yasaxi(robot.Robot):
     def main(self):
         global ACCOUNTS
         self.thread_count = 1
+
+        # 从文件中宏读取账号信息（访问token）
+        if not get_account_info_from_file():
+            log.error("保存的账号信息读取失败")
+            tool.process_exit()
 
         # 解析存档文件
         # account_id  status_id
