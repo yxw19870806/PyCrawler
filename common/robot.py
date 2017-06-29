@@ -9,6 +9,7 @@ from common import keyboardEvent, log, net, process, tool
 import codecs
 import ConfigParser
 import os
+import re
 import sys
 import threading
 import time
@@ -414,6 +415,15 @@ def filter_text(text):
             return text
         else:
             text = new_text
+
+
+# 替换文本中的表情符号
+def filter_emoji(text):
+    try:
+        emoji = re.compile(u'[\U00010000-\U0010ffff]')
+    except re.error:
+        emoji = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+    return emoji.sub('', text)
 
 
 # 进程是否需要结束
