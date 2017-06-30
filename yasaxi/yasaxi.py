@@ -216,7 +216,7 @@ class Download(threading.Thread):
         global TOTAL_IMAGE_COUNT
 
         account_id = self.account_info[0]
-        account_name = self.account_info[3]
+        account_name = self.account_info[2]
 
         try:
             log.step(account_name + " 开始")
