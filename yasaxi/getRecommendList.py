@@ -49,7 +49,7 @@ def get_recommend():
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data",), api_response.json_data):
             for account_info in api_response.json_data["data"]:
-                print "%s\t%s" % (str(account_info["userId"].encode("utf-8")), str(robot.filter_emoji(account_info["nick"]).encode("utf-8")).strip())
+                print "%s\t\t%s" % (str(account_info["userId"].encode("utf-8")), str(robot.filter_emoji(account_info["nick"]).encode("utf-8")).strip())
 
 if __name__ == "__main__":
     get_account_info_from_file() and get_recommend()
