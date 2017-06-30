@@ -64,13 +64,14 @@ def get_one_page_photo(account_id, cursor):
         "x-access-token": ACCESS_TOKEN,
         "x-auth-token": AUTH_TOKEN,
         "x-zhezhe-info": ZHEZHE_INFO,
+        "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "next_page_cursor": None,  # 页面解析出的下一页图片的指针
         "status_list": [],  # 页面解析出的所有状态列表
     }
-    index_page_response = net.http_request(index_page_url, header_list=header_list, json_decode=True)
+    index_page_response = net.http_request(index_page_url, header_list=header_list, is_random_ip=False, json_decode=True)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data", "next"), index_page_response.json_data):
             for media_info in index_page_response.json_data["data"]:
