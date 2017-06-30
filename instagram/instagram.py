@@ -76,7 +76,7 @@ def get_one_page_media(account_id, cursor):
                     for media_info in media_node["edges"]:
                         media_extra_info = {
                             "image_url": None,  # 页面解析出的图片下载地址
-                            "is_image_group": False,  # 是不是图片组
+                            "is_group": False,  # 是不是图片组
                             "is_video": False,  # 是不是视频
                             "page_id": None,  # 页面解析出的媒体详情界面id
                             "time": None,  # 页面解析出的媒体上传时间
@@ -93,7 +93,7 @@ def get_one_page_media(account_id, cursor):
                             # 获取图片下载地址
                             media_extra_info["image_url"] = str(media_info["node"]["display_url"])
                             # 是不是图片组
-                            media_extra_info["is_image_group"] = media_info["node"]["__typename"] == "GraphSidecar"
+                            media_extra_info["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
                             # 检测是否有视频
                             media_extra_info["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
                             # 获取图片上传时间
@@ -118,9 +118,9 @@ def get_media_page(page_id):
     media_page_url = "https://www.instagram.com/p/%s/" % page_id
     media_page_response = net.http_request(media_page_url)
     extra_info = {
-        "is_error": True,  # 是不是格式不符合
+        "is_error": False,  # 是不是格式不符合
         "image_url_list": [],  # 页面解析出的所有图片下载地址
-        "video_url": "",  # 页面解析出的视频下载地址
+        "video_url_list": [],  # 页面解析出的所有视频下载地址
         "json_data": None,  # 页面解析出的视频下载地址
     }
     if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -138,31 +138,37 @@ def get_media_page(page_id):
             robot.check_sub_key(("__typename",), media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"])
         ):
             media_info = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]
-            # 多张图片
+            # 多张图片/视频
             if media_info["__typename"] == "GraphSidecar":
                 if (
                     robot.check_sub_key(("edge_sidecar_to_children",), media_info) and
                     robot.check_sub_key(("edges",), media_info["edge_sidecar_to_children"]) and
                     len(media_info["edge_sidecar_to_children"]["edges"]) >= 2
                 ):
-                    extra_info["is_error"] = False
-                    # 获取图片地址
                     for edge in media_info["edge_sidecar_to_children"]["edges"]:
-                        if (
-                            robot.check_sub_key(("node",), edge) and
-                            robot.check_sub_key(("__typename", "display_url"), edge["node"]) and
-                            edge["node"]["__typename"] == "GraphImage"
-                        ):
+                        if robot.check_sub_key(("node",), edge) and robot.check_sub_key(("__typename", "display_url"), edge["node"]):
+                            # 获取图片地址
                             extra_info["image_url_list"].append(str(edge["node"]["display_url"]))
+                            # 获取视频地址
+                            if edge["node"]["__typename"] == "GraphVideo":
+                                if robot.check_sub_key(("video_url",), edge["node"]):
+                                    extra_info["video_url_list"].append(str(edge["node"]["video_url"]))
+                                else:
+                                    extra_info["is_error"] = True
+                                    break
                         else:
                             extra_info["is_error"] = True
                             break
+                else:
+                    extra_info["is_error"] = True
             # 视频
             elif media_info["__typename"] == "GraphVideo":
                 # 获取视频地址
                 if robot.check_sub_key(("video_url",), media_info):
-                    extra_info["is_error"] = False
-                    extra_info["video_url"] = str(media_info["video_url"])
+                    extra_info["video_url_list"].append(str(media_info["video_url"]))
+            else:
+                log.error("未知的媒体类型：%s" % media_info["__typename"])
+                extra_info["is_error"] = True
         media_page_response.extra_info = extra_info
     return media_page_response
 
@@ -318,7 +324,7 @@ class Download(threading.Thread):
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
                         # 多张图片
-                        if media_info["is_image_group"]:
+                        if media_info["is_group"]:
                             # 获取媒体详细页
                             media_page_response = get_media_page(media_info["page_id"])
                             if media_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -361,7 +367,7 @@ class Download(threading.Thread):
                                 log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 视频
-                    while IS_DOWNLOAD_VIDEO and media_info["is_video"]:
+                    if IS_DOWNLOAD_VIDEO and (media_info["is_group"] or media_info["is_video"]):
                         # 获取媒体详细页
                         media_page_response = get_media_page(media_info["page_id"])
                         if media_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -375,25 +381,24 @@ class Download(threading.Thread):
                                 log.error(account_name + " 媒体信息%s解析失败" % media_page_response.extra_info["json_data"])
                             tool.process_exit()
 
-                        video_url = media_page_response.extra_info["video_url"]
-                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                        for video_url in media_page_response.extra_info["video_url_list"]:
+                            log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
-                        # 第一个视频，创建目录
-                        if need_make_video_dir:
-                            if not tool.make_dir(video_path, 0):
-                                log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
-                                tool.process_exit()
-                            need_make_video_dir = False
+                            # 第一个视频，创建目录
+                            if need_make_video_dir:
+                                if not tool.make_dir(video_path, 0):
+                                    log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
+                                    tool.process_exit()
+                                need_make_video_dir = False
 
-                        file_type = video_url.split(".")[-1]
-                        video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                        save_file_return = net.save_net_file(video_url, video_file_path)
-                        if save_file_return["status"] == 1:
-                            log.step(account_name + " 第%s个视频下载成功" % video_count)
-                            video_count += 1
-                        else:
-                            log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                        break
+                            file_type = video_url.split(".")[-1]
+                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
+                            save_file_return = net.save_net_file(video_url, video_file_path)
+                            if save_file_return["status"] == 1:
+                                log.step(account_name + " 第%s个视频下载成功" % video_count)
+                                video_count += 1
+                            else:
+                                log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_IMAGE_COUNT < image_count:
