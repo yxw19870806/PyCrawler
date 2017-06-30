@@ -257,15 +257,19 @@ class Download(threading.Thread):
                         for image_url in status_info["image_url_list"]:
                             # 第一张图片，创建目录
                             if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
+                                if not (tool.make_dir(image_path, 0) and tool.make_dir(os.path.join(image_path, "origin"), 0) and tool.make_dir(os.path.join(image_path, "other"), 0)):
                                     log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                     tool.process_exit()
                                 need_make_image_dir = False
 
                             file_name_and_type = image_url.split("?")[0].split("/")[-1]
+                            resolution = image_url.split("?")[0].split("/")[-2]
                             file_name = file_name_and_type.split(".")[0]
                             file_type = file_name_and_type.split(".")[1]
-                            image_file_path = os.path.join(image_path, "%s.%s" % (file_name, file_type))
+                            if file_name[-2:] != "_b" and resolution == "1080" :
+                                image_file_path = os.path.join(image_path, "origin/%s.%s" % (file_name, file_type))
+                            else:
+                                image_file_path = os.path.join(image_path, "other/%s.%s" % (file_name, file_type))
                             log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
                             save_file_return = net.save_net_file(image_url, image_file_path)
                             if save_file_return["status"] == 1:
