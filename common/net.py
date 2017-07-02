@@ -106,7 +106,8 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
             header_list = {}
 
         # 设置User-Agent
-        header_list["User-Agent"] = _random_user_agent()
+        if "User-Agent" not in header_list:
+            header_list["User-Agent"] = _random_user_agent()
 
         # 设置一个随机IP
         if is_random_ip:

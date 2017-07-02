@@ -64,13 +64,14 @@ def get_one_page_photo(account_id, cursor):
         "x-access-token": ACCESS_TOKEN,
         "x-auth-token": AUTH_TOKEN,
         "x-zhezhe-info": ZHEZHE_INFO,
+        "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "next_page_cursor": None,  # 页面解析出的下一页图片的指针
         "status_list": [],  # 页面解析出的所有状态列表
     }
-    index_page_response = net.http_request(index_page_url, header_list=header_list, json_decode=True)
+    index_page_response = net.http_request(index_page_url, header_list=header_list, is_random_ip=False, json_decode=True)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data", "next"), index_page_response.json_data):
             for media_info in index_page_response.json_data["data"]:
@@ -215,7 +216,7 @@ class Download(threading.Thread):
         global TOTAL_IMAGE_COUNT
 
         account_id = self.account_info[0]
-        account_name = self.account_info[3]
+        account_name = self.account_info[2]
 
         try:
             log.step(account_name + " 开始")
@@ -256,15 +257,19 @@ class Download(threading.Thread):
                         for image_url in status_info["image_url_list"]:
                             # 第一张图片，创建目录
                             if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
+                                if not (tool.make_dir(image_path, 0) and tool.make_dir(os.path.join(image_path, "origin"), 0) and tool.make_dir(os.path.join(image_path, "other"), 0)):
                                     log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
                                     tool.process_exit()
                                 need_make_image_dir = False
 
                             file_name_and_type = image_url.split("?")[0].split("/")[-1]
+                            resolution = image_url.split("?")[0].split("/")[-2]
                             file_name = file_name_and_type.split(".")[0]
                             file_type = file_name_and_type.split(".")[1]
-                            image_file_path = os.path.join(image_path, "%s.%s" % (file_name, file_type))
+                            if file_name[-2:] != "_b" and resolution == "1080" :
+                                image_file_path = os.path.join(image_path, "origin/%s.%s" % (file_name, file_type))
+                            else:
+                                image_file_path = os.path.join(image_path, "other/%s.%s" % (file_name, file_type))
                             log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
                             save_file_return = net.save_net_file(image_url, image_file_path)
                             if save_file_return["status"] == 1:
