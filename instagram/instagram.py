@@ -12,6 +12,7 @@ import os
 import threading
 import time
 import traceback
+import urllib
 
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 12
@@ -342,6 +343,11 @@ class Download(threading.Thread):
                             image_url_list = [media_info["image_url"]]
 
                         for image_url in image_url_list:
+                            # 去除特效，获取原始路径
+                            image_url_protocol, image_url_path = urllib.splittype(image_url)
+                            image_url_host = urllib.splithost(image_url_path)[0]
+                            image_url_name = image_url.split("/")[-1]
+                            image_url = "%s://%s//%s" % (image_url_protocol, image_url_host, image_url_name)
                             log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                             # 第一张图片，创建目录
