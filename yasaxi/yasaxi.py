@@ -148,6 +148,9 @@ class Yasaxi(robot.Robot):
         }
         robot.Robot.__init__(self, sys_config)
 
+        # 服务器有请求数量限制，所以取消多线程
+        self.thread_count = 1
+
         # 设置全局变量，供子线程调用
         GET_IMAGE_COUNT = self.get_image_count
         GET_VIDEO_COUNT = self.get_video_count
@@ -161,7 +164,6 @@ class Yasaxi(robot.Robot):
 
     def main(self):
         global ACCOUNTS
-        self.thread_count = 1
 
         # 从文件中宏读取账号信息（访问token）
         if not get_token_from_file():
