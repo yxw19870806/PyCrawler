@@ -75,6 +75,7 @@ def get_one_page_media(account_id, cursor):
                 media_node = media_page_response.json_data["data"]["user"]["edge_owner_to_timeline_media"]
                 for media_info in media_node["edges"]:
                     media_extra_info = {
+                        "is_error": False,  # 是不是格式不符合
                         "image_url": None,  # 页面解析出的图片下载地址
                         "is_group": False,  # 是不是图片组
                         "is_video": False,  # 是不是视频
@@ -88,11 +89,11 @@ def get_one_page_media(account_id, cursor):
                     ):
                         # GraphImage 单张图片、GraphSidecar 多张图片、GraphVideo 视频
                         if media_info["node"]["__typename"] not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
-                            extra_info["is_error"] = True
+                            media_extra_info["is_error"] = True
                             break
                         # 获取图片下载地址
                         media_extra_info["image_url"] = str(media_info["node"]["display_url"])
-                        # 是不是图片组
+                        # 是不是图片/视频组
                         media_extra_info["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
                         # 检测是否有视频
                         media_extra_info["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
@@ -101,7 +102,7 @@ def get_one_page_media(account_id, cursor):
                         # 获取媒体id
                         media_extra_info["page_id"] = str(media_info["node"]["shortcode"])
                     else:
-                        extra_info["is_error"] = True
+                        media_extra_info["is_error"] = True
                         break
                     extra_info["media_info_list"].append(media_extra_info)
                 # 获取下一页的指针
@@ -312,6 +313,10 @@ class Download(threading.Thread):
                 log.trace(account_name + " cursor '%s'解析的所有媒体信息：%s" % (cursor, index_page_response.extra_info["media_info_list"]))
 
                 for media_info in index_page_response.extra_info["media_info_list"]:
+                    if media_info["is_error"]:
+                        log.error(account_name + " 媒体信息%s解析失败" % media_info.extra_info["json_data"])
+                        tool.process_exit()
+
                     # 检查是否已下载到前一次的图片
                     if int(media_info["time"]) <= int(self.account_info[3]):
                         is_over = True
@@ -335,14 +340,14 @@ class Download(threading.Thread):
                                 if media_page_response.extra_info["json_data"] is None:
                                     log.error(account_name + " 媒体%s的详细页解析失败" % media_info["page_id"])
                                 else:
-                                    log.error(account_name + " 媒体信息%s解析失败" % media_page_response.extra_info["json_data"])
+                                    log.error(account_name + " 媒体详细页%s解析失败" % media_page_response.extra_info["json_data"])
                                 tool.process_exit()
 
                             image_url_list = media_page_response.extra_info["image_url_list"]
                         # 单张图片 或者 视频的预览图片
                         else:
                             if media_info["image_url"] is None:
-                                log.error(account_name + " 媒体信息%s解析失败" % media_info["json_data"])
+                                log.error(account_name + " 媒体详细页%s解析失败" % media_info["json_data"])
                                 tool.process_exit()
 
                             image_url_list = [media_info["image_url"]]
@@ -383,7 +388,7 @@ class Download(threading.Thread):
                             if media_page_response.extra_info["json_data"] is None:
                                 log.error(account_name + " 媒体%s的详细页解析失败" % media_info["page_id"])
                             else:
-                                log.error(account_name + " 媒体信息%s解析失败" % media_page_response.extra_info["json_data"])
+                                log.error(account_name + " 媒体详细页%s解析失败" % media_page_response.extra_info["json_data"])
                             tool.process_exit()
 
                         for video_url in media_page_response.extra_info["video_url_list"]:
