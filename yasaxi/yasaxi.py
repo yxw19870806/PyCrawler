@@ -76,10 +76,15 @@ def get_one_page_photo(account_id, cursor):
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
             robot.check_sub_key(("meta",), index_page_response.json_data) and
-            robot.check_sub_key(("code",), index_page_response.json_data["meta"]) and
-            index_page_response.json_data["meta"]["code"] == "NoMoreDataError"
+            robot.check_sub_key(("code",), index_page_response.json_data["meta"])
         ):
-            extra_info["is_over"] = True
+            if index_page_response.json_data["meta"]["code"] == "NoMoreDataError":
+                extra_info["is_over"] = True
+            elif index_page_response.json_data["meta"]["code"] == "TooManyRequests":
+                time.sleep(30)
+                return get_one_page_photo(account_id, cursor)
+            else:
+                extra_info["is_error"] = True
         elif robot.check_sub_key(("data", "next"), index_page_response.json_data):
             for media_info in index_page_response.json_data["data"]:
                 media_extra_info = {
