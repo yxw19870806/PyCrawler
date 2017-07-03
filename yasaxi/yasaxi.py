@@ -67,13 +67,20 @@ def get_one_page_photo(account_id, cursor):
         "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     extra_info = {
+        "is_over": False,  # 是不是已经没有新的图片
         "is_error": False,  # 是不是格式不符合
         "next_page_cursor": None,  # 页面解析出的下一页图片的指针
         "status_list": [],  # 页面解析出的所有状态列表
     }
     index_page_response = net.http_request(index_page_url, header_list=header_list, is_random_ip=False, json_decode=True)
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("data", "next"), index_page_response.json_data):
+        if (
+            robot.check_sub_key(("meta",), index_page_response.json_data) and
+            robot.check_sub_key(("code",), index_page_response.json_data["meta"]) and
+            index_page_response.json_data["meta"]["code"] == "NoMoreDataError"
+        ):
+            extra_info["is_over"] = True
+        elif robot.check_sub_key(("data", "next"), index_page_response.json_data):
             for media_info in index_page_response.json_data["data"]:
                 media_extra_info = {
                     "time": None,  # 页面解析出的上传时间
@@ -235,6 +242,9 @@ class Download(threading.Thread):
                 if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(index_page_response.status)))
                     tool.process_exit()
+
+                if index_page_response.extra_info["is_over"]:
+                    break
 
                 if index_page_response.extra_info["is_error"]:
                     log.error(account_name + " cursor '%s'的图片信息%s解析失败" % (cursor, index_page_response.json_data))
