@@ -16,7 +16,7 @@ ZHEZHE_INFO = ""
 
 
 # 从文件中获取用户信息
-def get_account_info_from_file():
+def get_token_from_file():
     account_file_path = os.path.realpath("account.data")
     if not os.path.exists(account_file_path):
         return False
@@ -39,17 +39,43 @@ def get_account_info_from_file():
     return False
 
 
-def get_recommend():
+# 获取存档文件
+def get_account_from_save_data(file_path):
+    file_handle = open(file_path, "r")
+    lines = file_handle.readlines()
+    file_handle.close()
+    account_list = {}
+    for line in lines:
+        line = line.replace("\n", "")
+        account_info_temp = line.split("\t")
+        account_list[account_info_temp[0]] = line
+    return account_list
+
+
+# 调用推荐API获取所有推荐账号
+def get_account_from_api():
     api_url = "https://api.yasaxi.com/users/recommend?tag="
     header_list = {
         "x-auth-token": AUTH_TOKEN,
         "x-zhezhe-info": ZHEZHE_INFO,
     }
+    account_list = {}
     api_response = net.http_request(api_url, header_list=header_list, json_decode=True)
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data",), api_response.json_data):
             for account_info in api_response.json_data["data"]:
-                print "%s\t\t%s" % (str(account_info["userId"].encode("utf-8")), str(robot.filter_emoji(account_info["nick"]).encode("utf-8")).strip())
+                account_list[str(account_info["userId"].encode("utf-8"))] = str(robot.filter_emoji(account_info["nick"]).encode("utf-8")).strip()
+    return account_list
+
 
 if __name__ == "__main__":
-    get_account_info_from_file() and get_recommend()
+    if get_token_from_file():
+        save_data_path = os.path.join("info/save.data")
+        account_list_from_api = get_account_from_api()
+        if len(account_list_from_api) > 0:
+            account_list_from_save_data = get_account_from_save_data(save_data_path)
+            for account_id in account_list_from_api:
+                if account_id not in account_list_from_save_data:
+                    account_list_from_save_data[account_id] = "%s\t\t%s" % (account_id, account_list_from_api[account_id])
+            temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
+            tool.write_file(tool.list_to_string(temp_list, "\n", ""), save_data_path, 2)
