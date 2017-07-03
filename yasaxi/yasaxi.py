@@ -32,7 +32,7 @@ ZHEZHE_INFO = ""
 
 
 # 从文件中获取用户信息
-def get_account_info_from_file():
+def get_token_from_file():
     account_file_path = os.path.realpath("account.data")
     if not os.path.exists(account_file_path):
         return False
@@ -164,7 +164,7 @@ class Yasaxi(robot.Robot):
         self.thread_count = 1
 
         # 从文件中宏读取账号信息（访问token）
-        if not get_account_info_from_file():
+        if not get_token_from_file():
             log.error("保存的账号信息读取失败")
             tool.process_exit()
 
