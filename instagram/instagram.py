@@ -326,6 +326,8 @@ class Download(threading.Thread):
                     if first_created_time == "0":
                         first_created_time = media_info["time"]
 
+                    log.step(account_name + " 开始解析媒体%s" % media_info["page_id"])
+
                     # 图片
                     if IS_DOWNLOAD_IMAGE:
                         # 多张图片
