@@ -48,7 +48,7 @@ def get_discount_game_list(login_cookie):
     discount_game_list = []
     app_id_list = []
     while True:
-        discount_game_page_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=21,997,998&os=win&specials=1&page=%s" % page_count
+        discount_game_page_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         cookies_list = {
             "steamLogin": login_cookie,
         }
@@ -56,25 +56,50 @@ def get_discount_game_list(login_cookie):
         if discount_game_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             tool.print_msg("第%s页打折游戏列表访问失败" % page_count)
             break
+
         search_result_selector = pq(discount_game_page_response.data).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
         for game_index in range(0, game_list_selector.size()):
             game_selector = game_list_selector.eq(game_index)
             # game app id
-            game_id = game_selector.attr("data-ds-appid")
+            app_id = game_selector.attr("data-ds-appid")
+            package_id = game_selector.attr("data-ds-packageid")
+            bundle_id = game_selector.attr("data-ds-bundleid")
+
+            # 不同类型取对应唯一id
+            if bundle_id is not None:
+                prime_id = bundle_id
+                game_type = "bundle"
+                bundle_info = game_selector.attr("data-ds-bundle-data")
+                app_id = []
+                if bundle_info:
+                    # 包含的所有app_id
+                    app_id_find = re.findall('"m_rgIncludedAppIDs":\[([^\]]*)\]', bundle_info)
+                    for temp_id_list in app_id_find:
+                        temp_id_list = temp_id_list.split(",")
+                        app_id += temp_id_list
+            elif package_id is not None:
+                prime_id = package_id
+                game_type = "package"
+                # package，包含多个游戏
+                if app_id.find(",") >= 0:
+                    app_id = app_id.split(",")
+            else:
+                prime_id = app_id
+                game_type = "game"
+
             # 过滤那些重复的游戏
-            if game_id in app_id_list:
+            if prime_id in app_id_list:
                 continue
-            app_id_list.append(game_id)
-            # package，包含多个游戏
-            if not robot.is_integer(game_id) and game_id.find(",") >= 0:
-                game_id = game_id.split(",")
+            app_id_list.append(prime_id)
+
             # discount
             discount = filter(str.isdigit, game_selector.find(".search_discount span").text().encode("utf-8"))
             # old price
             old_price = filter(str.isdigit, game_selector.find(".search_price span strike").text().encode("utf-8"))
             # now price
             now_price = filter(str.isdigit, game_selector.find(".search_price").remove("span").text().encode("utf-8"))
+
             # 如果没有取到，给个默认值
             if not robot.is_integer(old_price):
                 old_price = 0
@@ -91,10 +116,12 @@ def get_discount_game_list(login_cookie):
                     discount = int(now_price / old_price * 100)
             else:
                 discount = int(discount)
-            discount_info = {"game_id": game_id, "discount": discount, "old_price": old_price, "now_price": now_price}
-            if game_selector.attr("data-ds-packageid"):
-                discount_info["package_id"] = game_selector.attr("data-ds-packageid")
+
+            # 游戏打折信息
+            discount_info = {"type": game_type, "id": prime_id, "app_id": app_id, "discount": discount, "old_price": old_price, "now_price": now_price}
             discount_game_list.append(discount_info)
+
+        # 下一页
         pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html().encode("utf-8")
         page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html)
         total_page_count = max(map(int, page_count_find))
@@ -102,7 +129,6 @@ def get_discount_game_list(login_cookie):
             page_count += 1
         else:
             break
-    # [{'game_id': '299720', 'now_price': '1', 'old_price': '6', 'discount': '83'}, {'game_id': '485450', 'now_price': '1', 'old_price': '7', 'discount': '86'}]
     return discount_game_list
 
 
