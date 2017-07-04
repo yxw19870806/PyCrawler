@@ -43,13 +43,16 @@ def get_account_owned_app_list(user_id):
 
 
 # 获取所有正在打折的游戏列表
-def get_discount_game_list():
+def get_discount_game_list(login_cookie):
     page_count = 1
     discount_game_list = []
     app_id_list = []
     while True:
         discount_game_page_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=21,997,998&os=win&specials=1&page=%s" % page_count
-        discount_game_page_response = net.http_request(discount_game_page_url)
+        cookies_list = {
+            "steamLogin": login_cookie,
+        }
+        discount_game_page_response = net.http_request(discount_game_page_url, cookies_list=cookies_list)
         if discount_game_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             tool.print_msg("第%s页打折游戏列表访问失败" % page_count)
             break
