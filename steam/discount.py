@@ -48,16 +48,22 @@ def main(account_id, min_discount_percent, min_discount_price):
     owned_game_list = steamCommon.get_account_owned_app_list(account_id)
     for discount_info in discount_game_list:
         if discount_info["now_price"] > 0 and discount_info["old_price"] > 0 and (discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent):
-            if isinstance(discount_info["game_id"], list):
-                for game_id in discount_info["game_id"]:
-                    if game_id not in owned_game_list:
-                        if "package_id" in discount_info:
-                            tool.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["package_id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
-                        else:
-                            tool.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["game_id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+            # bundle 或者 package，都包含多个游戏
+            if discount_info["type"] == "bundle" or discount_info["type"] == "package":
+                is_all = True
+                # 遍历包含的全部游戏，如果都有了，则跳过
+                for app_id in discount_info["app_id"]:
+                    if app_id not in owned_game_list:
+                        is_all = False
+                        break
+                if not is_all:
+                    if discount_info["type"] == "bundle":
+                        tool.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                    else:
+                        tool.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
             else:
-                if discount_info["game_id"] not in owned_game_list:
-                    tool.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["game_id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                if discount_info["app_id"] not in owned_game_list:
+                    tool.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
 
 
 if __name__ == "__main__":
