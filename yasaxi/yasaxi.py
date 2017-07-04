@@ -76,7 +76,8 @@ def get_one_page_photo(account_id, cursor):
     if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
             robot.check_sub_key(("meta",), index_page_response.json_data) and
-            robot.check_sub_key(("code",), index_page_response.json_data["meta"])
+            robot.check_sub_key(("code",), index_page_response.json_data["meta"]) and
+            len(index_page_response.json_data["meta"]["code"]) > 0
         ):
             if index_page_response.json_data["meta"]["code"] == "NoMoreDataError":
                 extra_info["is_over"] = True
