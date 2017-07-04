@@ -37,16 +37,17 @@ def load_discount_list():
 # min_discount_percent  最低折扣
 # min_discount_price    最低价格
 def main(account_id, min_discount_percent, min_discount_price):
+    login_cookie = steamCommon.get_login_cookie_from_browser()
     discount_game_list = load_discount_list()
     if not discount_game_list:
-        discount_game_list = steamCommon.get_discount_game_list()
+        discount_game_list = steamCommon.get_discount_game_list(login_cookie)
         save_discount_list(discount_game_list)
         tool.print_msg("get discount game list from website", False)
     else:
         tool.print_msg("get discount game list from cache file", False)
     owned_game_list = steamCommon.get_account_owned_app_list(account_id)
     for discount_info in discount_game_list:
-        if discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent:
+        if discount_info["now_price"] > 0 and discount_info["old_price"] > 0 and (discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent):
             if isinstance(discount_info["game_id"], list):
                 for game_id in discount_info["game_id"]:
                     if game_id not in owned_game_list:
