@@ -3,24 +3,26 @@
 import os
 
 
-def check_repeat(file_path, name_col=0):
-    file_handle = open(file_path, "r")
+# 存档路径
+SAVE_FILE_PATH = os.path.join("save.data")
+# 存档中唯一标示（如，账号id）的字段下标
+NAME_COLUMN = 0
+
+
+# 检测存档文件中是否有相同的主键
+def check_is_repeat():
+    file_handle = open(SAVE_FILE_PATH, "r")
     lines = file_handle.readlines()
     file_handle.close()
-    member = []
+    history = []
     for line in lines:
         temp_list = line.replace("\n", "").split("\t")
-        if temp_list[name_col] in member:
-            print temp_list[name_col]
+        if temp_list[NAME_COLUMN] in history:
+            print temp_list[NAME_COLUMN]
         else:
-            member.append(temp_list[name_col])
-    return member
+            history.append(temp_list[NAME_COLUMN])
+    return history
 
 
 if __name__ == "__main__":
-    # 存档路径
-    SAVE_FILE_PATH = os.path.join("save.data")
-    # 存档中唯一标示（如，账号id）的字段下标
-    NAME_COLUMN = 0
-
-    check_repeat(SAVE_FILE_PATH, NAME_COLUMN)
+    check_is_repeat()
