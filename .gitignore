@@ -28,6 +28,7 @@ weibo/article/
 weibo/photo/
 weibo/video/
 weishi/video/
+yasaxi/photo/
 yizhibo/photo/
 yizhibo/video/
 ywkb/photo/
@@ -35,3 +36,5 @@ zunguang/photo/
 bcy/account.data
 log/
 *-*_*_*.data
+yasaxi/account.data
+steam/account.data
