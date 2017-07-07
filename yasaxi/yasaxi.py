@@ -89,7 +89,6 @@ def get_one_page_photo(account_id, cursor):
         elif robot.check_sub_key(("data", "next"), index_page_response.json_data):
             for media_info in index_page_response.json_data["data"]:
                 media_extra_info = {
-                    "time": None,  # 页面解析出的上传时间
                     "id": None,  # 页面解析出的状态id
                     "image_url_list": [],  # 页面解析出的所有图片地址
                     "json_data": media_info,  # 原始数据
@@ -123,10 +122,9 @@ def get_one_page_photo(account_id, cursor):
                         else:
                             is_error = True
                             break
-                    # 获取上传时间
+                    # 获取状态id
                     if not is_error:
                         media_extra_info["id"] = str(media_info["statusId"])
-                        media_extra_info["time"] = int(media_info["createAt"])
                 extra_info["status_list"].append(media_extra_info)
             if index_page_response.json_data["next"] and robot.is_integer(index_page_response.json_data["next"]):
                 extra_info["next_page_cursor"] = int(index_page_response.json_data["next"])
@@ -241,7 +239,7 @@ class Download(threading.Thread):
             image_count = 1
             # video_count = 1
             cursor = 0
-            first_status_time = "0"
+            first_status_id = ""
             is_over = False
             need_make_image_dir = True
             # need_make_video_dir = True
@@ -266,12 +264,12 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                     # 检查是否已下载到前一次的日志
-                    if status_info["time"] <= int(self.account_info[1]):
+                    if status_info["id"] == int(self.account_info[1]):
                         is_over = True
                         break
 
-                    if first_status_time == "0":
-                        first_status_time = str(status_info["time"])
+                    if first_status_id == "":
+                        first_status_time = status_info["id"]
 
                     log.step(account_name + " 开始解析状态%s的图片" % status_info["id"])
 
@@ -312,8 +310,8 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 新的存档记录
-            if first_status_time != "0":
-                self.account_info[1] = first_status_time
+            if first_status_id != "":
+                self.account_info[1] = first_status_id
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
