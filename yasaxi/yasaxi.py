@@ -269,7 +269,7 @@ class Download(threading.Thread):
                         break
 
                     if first_status_id == "":
-                        first_status_time = status_info["id"]
+                        first_status_id = status_info["id"]
 
                     log.step(account_name + " 开始解析状态%s的图片" % status_info["id"])
 
