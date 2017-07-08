@@ -210,8 +210,8 @@ class Instagram(robot.Robot):
         global ACCOUNTS
 
         # 解析存档文件
-        # account_name  image_count  video_count  last_created_time
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0"])
+        # account_name  account_id  image_count  video_count  last_created_time
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
         ACCOUNTS = account_list.keys()
 
         # 循环下载每个id
@@ -290,6 +290,13 @@ class Download(threading.Thread):
                 log.error(account_name + " account id解析失败")
                 tool.process_exit()
 
+            if self.account_info[1] == "":
+                self.account_info[1] = account_page_response.extra_info["account_id"]
+            else:
+                if self.account_info[1] != account_page_response.extra_info["account_id"]:
+                    log.error(account_name + " account id 不符合，原账号已改名")
+                    tool.process_exit()
+
             image_count = 1
             video_count = 1
             cursor = ""
@@ -318,7 +325,7 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                     # 检查是否已下载到前一次的图片
-                    if int(media_info["time"]) <= int(self.account_info[3]):
+                    if int(media_info["time"]) <= int(self.account_info[4]):
                         is_over = True
                         break
 
@@ -433,7 +440,7 @@ class Download(threading.Thread):
                 if image_count > 1:
                     log.step(account_name + " 图片开始从下载目录移动到保存目录")
                     destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
+                    if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
                         log.step(account_name + " 图片从下载目录移动到保存目录成功")
                     else:
                         log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
@@ -441,7 +448,7 @@ class Download(threading.Thread):
                 if video_count > 1:
                     log.step(account_name + " 视频开始从下载目录移动到保存目录")
                     destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
+                    if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
                         log.step(account_name + " 视频从下载目录移动到保存目录成功")
                     else:
                         log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
@@ -449,9 +456,9 @@ class Download(threading.Thread):
 
             # 新的存档记录
             if first_created_time != "0":
-                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
-                self.account_info[3] = first_created_time
+                self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
+                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
+                self.account_info[4] = first_created_time
 
             # 保存最后的信息
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
