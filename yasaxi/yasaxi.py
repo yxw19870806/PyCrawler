@@ -176,7 +176,7 @@ class Yasaxi(robot.Robot):
 
         # 解析存档文件
         # account_id  status_id
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", ""])
         ACCOUNTS = account_list.keys()
 
         # 循环下载每个id
