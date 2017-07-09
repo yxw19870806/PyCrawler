@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # cookie
     is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
     if is_auto_get_cookie:
-        cookie_path = robot.tool.get_default_browser_cookie_path(browser_type)
+        cookie_path = tool.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
     all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
@@ -78,6 +78,13 @@ if __name__ == "__main__":
     else:
         tool.print_msg("没有获取到登录信息，退出！")
         tool.process_exit()
+    # 设置代理
+    is_proxy = robot.get_config(config, "IS_PROXY", 2, 1)
+    if is_proxy == 1 or is_proxy == 2:
+        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        # 使用代理的线程池
+        net.set_proxy(proxy_ip, proxy_port)
 
     # 存档位置
     save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
