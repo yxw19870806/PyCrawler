@@ -28,13 +28,13 @@ def get_follow_list(suid):
     page_count = 1
     follow_list = {}
     while True:
-        follow_page_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
-        follow_page_response = net.http_request(follow_page_url, json_decode=True)
-        if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("msg", "stat"), follow_page_response.json_data) and follow_page_response.json_data["stat"].isdigit():
-                stat = int(follow_page_response.json_data["stat"]["stat"])
+        follow_pagination_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
+        follow_pagination_response = net.http_request(follow_pagination_url, json_decode=True)
+        if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            if robot.check_sub_key(("msg", "stat"), follow_pagination_response.json_data) and follow_pagination_response.json_data["stat"].isdigit():
+                stat = int(follow_pagination_response.json_data["stat"]["stat"])
                 if stat == 1 or stat == 2:
-                    one_page_follow_list = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_page_response.json_data["msg"])
+                    one_page_follow_list = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_pagination_response.json_data["msg"])
                     for account_name, account_id in one_page_follow_list:
                         follow_list[account_id] = account_name
                     if stat == 1:
@@ -46,10 +46,10 @@ def get_follow_list(suid):
 # 获取用户的suid，作为查找指定用户的视频页的凭证
 # account_id -> mi9wmdhhof
 def get_user_id(account_id):
-    index_page_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
-    index_page_response = net.http_request(index_page_url)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        user_id = tool.find_sub_string(index_page_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
+    account_index_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
+    account_index_response = net.http_request(account_index_url)
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
         if user_id:
             return user_id
     return None
@@ -59,23 +59,23 @@ def get_user_id(account_id):
 # suid -> 0r9ewgQ0v7UoDptu
 def get_one_page_video(suid, page_count):
     # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
-    index_page_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
-    index_page_response = net.http_request(index_page_url, json_decode=True)
+    video_pagination_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
+    video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "video_id_list": [],  # 页面解析出的所有视频id
         "is_over": False  # 是不是最后一页视频
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中的所有视频id列表
-        if robot.check_sub_key(("isall", "msg"), index_page_response.json_data):
-            extra_info["is_over"] = bool(index_page_response.json_data["isall"])
-            video_id_list = re.findall('data-scid="([^"]*)"', index_page_response.json_data["msg"])
+        if robot.check_sub_key(("isall", "msg"), video_pagination_response.json_data):
+            extra_info["is_over"] = bool(video_pagination_response.json_data["isall"])
+            video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
             extra_info["video_id_list"] = map(str, video_id_list)
         else:
             extra_info["is_error"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    video_pagination_response.extra_info = extra_info
+    return video_pagination_response
 
 
 # 获取指定id视频的详情页
@@ -202,28 +202,28 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
                 # 获取指定一页的视频信息
-                index_page_response = get_one_page_video(user_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                video_pagination_response = get_one_page_video(user_id, page_count)
+                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(video_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_error"]:
+                if video_pagination_response.extra_info["is_error"]:
                     log.error(account_name + " 第%s页视频解析失败" % page_count)
                     tool.process_exit()
 
                 # 没有视频了
-                if index_page_response.extra_info["is_over"] and len(index_page_response.extra_info["video_id_list"]) == 0:
+                if video_pagination_response.extra_info["is_over"] and len(video_pagination_response.extra_info["video_id_list"]) == 0:
                     if self.account_info[2] != "":
                         log.error(account_name + " 没有找到上次下载的最后一个视频地址")
                     break
 
-                if len(index_page_response.extra_info["video_id_list"]) == 0:
+                if len(video_pagination_response.extra_info["video_id_list"]) == 0:
                     log.error(account_name + " 第%s页没有找到视频" % page_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, index_page_response.extra_info["video_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response.extra_info["video_id_list"]))
 
-                for video_id in index_page_response.extra_info["video_id_list"]:
+                for video_id in video_pagination_response.extra_info["video_id_list"]:
                     video_id = str(video_id)
 
                     # 检查是否已下载到前一次的图片
