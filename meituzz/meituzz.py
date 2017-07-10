@@ -18,7 +18,7 @@ def get_album_page(page_count):
         album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
     else:
         album_url = "http://zz.meituzz.com/ab/brV9?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
-    album_page_response = net.http_request(album_url)
+    album_response = net.http_request(album_url)
     extra_info = {
         "is_delete": False,  # 相册是不是已被删除（或还没有内容）
         "image_url_list": None,  # 页面解析出的所有图片地址列表
@@ -26,13 +26,13 @@ def get_album_page(page_count):
         "title": "",  # 页面解析出的相册标题
         "is_error": False,  # 是不是没有任何图片或视频
     }
-    if album_page_response.status == 200:
+    if album_response.status == 200:
         # 获取相册标题
-        extra_info["title"] = tool.find_sub_string(album_page_response.data, "<title>", "</title>").replace("\n", "")
+        extra_info["title"] = tool.find_sub_string(album_response.data, "<title>", "</title>").replace("\n", "")
         # 检测相册是否已被删除
         extra_info["is_delete"] = extra_info["title"] == "作品已被删除"
         if not extra_info["is_delete"]:
-            key = tool.find_sub_string(album_page_response.data, '<input type="hidden" id="s" value="', '">')
+            key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
             is_error = True
             if key:
                 media_page_url = "http://zz.meituzz.com/ab/bd"
@@ -56,8 +56,8 @@ def get_album_page(page_count):
                         is_error = False
                         extra_info["video_url"] = str(media_page_response.json_data["v"])
             extra_info["is_error"] = is_error
-    album_page_response.extra_info = extra_info
-    return album_page_response
+    album_response.extra_info = extra_info
+    return album_response
 
 
 class MeiTuZZ(robot.Robot):
@@ -89,20 +89,20 @@ class MeiTuZZ(robot.Robot):
 
             # 获取相册
             try:
-                album_page_response = get_album_page(album_id)
+                album_response = get_album_page(album_id)
             except SystemExit:
                 log.step("提前退出")
                 break
 
-            if album_page_response.status == 500:
+            if album_response.status == 500:
                 log.step("第%s页相册内部错误，跳过" % album_id)
                 album_id += 1
                 continue
-            elif album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页相册访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
+            elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error("第%s页相册访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_response.status)))
                 break
 
-            if album_page_response.extra_info["is_delete"]:
+            if album_response.extra_info["is_delete"]:
                 error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
@@ -113,25 +113,25 @@ class MeiTuZZ(robot.Robot):
                     album_id += 1
                     continue
 
-            if album_page_response.extra_info["is_error"]:
+            if album_response.extra_info["is_error"]:
                 log.step("第%s页相册解析失败" % album_id)
                 break
 
             # 错误数量重置
             error_count = 0
 
-            if album_page_response.extra_info["image_url_list"] is not None:
-                log.trace("第%s页相册解析的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+            if album_response.extra_info["image_url_list"] is not None:
+                log.trace("第%s页相册解析的所有图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
             else:
-                log.trace("第%s页相册解析的视频：%s" % (album_id, album_page_response.extra_info["video_url"]))
+                log.trace("第%s页相册解析的视频：%s" % (album_id, album_response.extra_info["video_url"]))
 
             # 图片下载
-            if self.is_download_image and album_page_response.extra_info["image_url_list"] is not None:
-                if len(album_page_response.extra_info["image_url_list"]) == 0:
+            if self.is_download_image and album_response.extra_info["image_url_list"] is not None:
+                if len(album_response.extra_info["image_url_list"]) == 0:
                     log.error("第%s页相册图片解析失败" % album_id)
                     break
 
-                log.trace("第%s页解析的全部图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+                log.trace("第%s页解析的全部图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
                 image_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 if not tool.make_dir(image_path, 0):
@@ -139,7 +139,7 @@ class MeiTuZZ(robot.Robot):
                     break
 
                 image_count = 1
-                for image_url in album_page_response.extra_info["image_url_list"]:
+                for image_url in album_response.extra_info["image_url_list"]:
                     log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
 
                     image_file_path = os.path.join(image_path, "%04d.jpg" % image_count)
@@ -159,11 +159,11 @@ class MeiTuZZ(robot.Robot):
                 total_image_count += image_count - 1
 
             # 视频下载
-            if self.is_download_image and album_page_response.extra_info["video_url"] is not None:
-                video_url = album_page_response.extra_info["video_url"]
+            if self.is_download_image and album_response.extra_info["video_url"] is not None:
+                video_url = album_response.extra_info["video_url"]
                 log.step("开始下载第%s页视频 %s" % (album_id, video_url))
 
-                title = robot.filter_text(album_page_response.extra_info["title"])
+                title = robot.filter_text(album_response.extra_info["title"])
                 video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, title))
                 try:
                     save_file_return = net.save_net_file(video_url, video_file_path)
