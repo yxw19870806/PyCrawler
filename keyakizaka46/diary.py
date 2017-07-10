@@ -27,14 +27,14 @@ IS_SORT = True
 # 获取指定页数的所有日志
 def get_one_page_blog(account_id, page_count):
     # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
-    index_page_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
-    index_page_response = net.http_request(index_page_url)
+    blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
+    blog_pagination_response = net.http_request(blog_pagination_url)
     extra_info = {
         "blog_info_list": [],  # 页面解析出的日志信息
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 日志正文部分
-        blog_article_html = tool.find_sub_string(index_page_response.data, '<div class="box-main">', '<div class="box-sideMember">')
+        blog_article_html = tool.find_sub_string(blog_pagination_response.data, '<div class="box-main">', '<div class="box-sideMember">')
         blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
         for blog_info in blog_list:
             extra_blog_info = {
@@ -50,8 +50,8 @@ def get_one_page_blog(account_id, page_count):
             extra_blog_info["image_url_list"] = map(str, image_url_list)
 
             extra_info["blog_info_list"].append(extra_blog_info)
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    blog_pagination_response.extra_info = extra_info
+    return blog_pagination_response
 
 
 class Diary(robot.Robot):
@@ -158,16 +158,16 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页博客信息
-                index_page_response = get_one_page_blog(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                blog_pagination_response = get_one_page_blog(account_id, page_count)
+                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
                     tool.process_exit()
 
                 # 没有获取到任何日志，所有日志已经全部获取完毕了
-                if len(index_page_response.extra_info["blog_info_list"]) == 0:
+                if len(blog_pagination_response.extra_info["blog_info_list"]) == 0:
                     break
 
-                for blog_data in index_page_response.extra_info["blog_info_list"]:
+                for blog_data in blog_pagination_response.extra_info["blog_info_list"]:
                     # 日志id
                     if not blog_data["blog_id"]:
                         log.error(account_name + " 日志信息%s解析日志id失败" % blog_data)
