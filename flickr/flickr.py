@@ -24,27 +24,27 @@ IS_SORT = True
 
 
 # 获取账号相册首页
-def get_photo_index_page(account_name):
-    photo_index_page_url = "https://www.flickr.com/photos/%s" % account_name
-    photo_index_page_response = net.http_request(photo_index_page_url)
+def get_account_index_page(account_name):
+    account_index_url = "https://www.flickr.com/photos/%s" % account_name
+    account_index_response = net.http_request(account_index_url)
     extra_info = {
         "user_id": None,  # 页面解析出的user id
         "site_key": None,  # 页面解析出的site key
     }
-    if photo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        user_id = tool.find_sub_string(photo_index_page_response.data, '"nsid":"', '"')
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        user_id = tool.find_sub_string(account_index_response.data, '"nsid":"', '"')
         if user_id and robot.is_integer(user_id):
             extra_info["user_id"] = user_id
-        site_key = tool.find_sub_string(photo_index_page_response.data, '"site_key":"', '"')
+        site_key = tool.find_sub_string(account_index_response.data, '"site_key":"', '"')
         if site_key:
             extra_info["site_key"] = site_key
-    photo_index_page_response.extra_info = extra_info
-    return photo_index_page_response
+    account_index_response.extra_info = extra_info
+    return account_index_response
 
 
 # 获取指定页数的所有图片
 # user_id -> 36587311@N08
-def get_one_page_image(user_id, page_count, api_key, request_id):
+def get_one_page_photo(user_id, page_count, api_key, request_id):
     api_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
     # 所有可支持的参数
@@ -60,20 +60,20 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
         "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "extras": "date_upload,url_o", "get_user_info": 0, "user_id": user_id, "view_as": "use_pref",
         "sort": "use_pref", "method": "flickr.people.getPhotos", "api_key": api_key, "format": "json", "hermes": 1, "reqId": request_id, "nojsoncallback": 1,
     }
-    index_page_response = net.http_request(api_url, post_data, json_decode=True)
+    photo_pagination_response = net.http_request(api_url, post_data, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "image_info_list": [],  # 页面解析出的图片信息列表
         "is_over": False,  # 是不是最后一页图片
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
-            robot.check_sub_key(("photos",), index_page_response.json_data) and
-            robot.check_sub_key(("photo", "pages"), index_page_response.json_data["photos"]) and
-            len(index_page_response.json_data["photos"]["photo"]) > 0 and
-            robot.is_integer(index_page_response.json_data["photos"]["pages"])
+            robot.check_sub_key(("photos",), photo_pagination_response.json_data) and
+            robot.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]) and
+            len(photo_pagination_response.json_data["photos"]["photo"]) > 0 and
+            robot.is_integer(photo_pagination_response.json_data["photos"]["pages"])
         ):
-            for photo_info in index_page_response.json_data["photos"]["photo"]:
+            for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
                 extra_image_info = {
                     "image_url": None,  # 图片下载地址
                     "image_time": None,  # 图片上传时间
@@ -88,12 +88,12 @@ def get_one_page_image(user_id, page_count, api_key, request_id):
                 elif robot.check_sub_key(("url_o",), photo_info):
                     extra_image_info["image_url"] = str(photo_info["url_o"])
                 extra_info["image_info_list"].append(extra_image_info)
-            if page_count >= int(index_page_response.json_data["photos"]["pages"]):
+            if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
                 extra_info["is_over"] = True
         else:
             extra_info["is_error"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    photo_pagination_response.extra_info = extra_info
+    return photo_pagination_response
 
 
 class Flickr(robot.Robot):
@@ -188,11 +188,11 @@ class Download(threading.Thread):
                 image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
 
             # 获取相册首页页面
-            photo_index_page_response = get_photo_index_page(account_name)
-            if photo_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 相册首页访问失败，原因：%s" % robot.get_http_request_failed_reason(photo_index_page_response.status))
+            account_index_response = get_account_index_page(account_name)
+            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(account_name + " 相册首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
                 tool.process_exit()
-            if photo_index_page_response.extra_info["user_id"] is None or photo_index_page_response.extra_info["site_key"] is None:
+            if account_index_response.extra_info["user_id"] is None or account_index_response.extra_info["site_key"] is None:
                 log.error(account_name + " user_id或site_key解析失败")
                 tool.process_exit()
             # 生成一个随机的request id用作访问（模拟页面传入）
@@ -208,18 +208,18 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取一页图片
-                index_page_response = get_one_page_image(photo_index_page_response.extra_info["user_id"], page_count, photo_index_page_response.extra_info["site_key"], request_id)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                photo_pagination_response = get_one_page_photo(account_index_response.extra_info["user_id"], page_count, account_index_response.extra_info["site_key"], request_id)
+                if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页图片信息%s解析失败" % (page_count, index_page_response.json_data))
+                if photo_pagination_response.extra_info["is_error"]:
+                    log.error(account_name + " 第%s页图片信息%s解析失败" % (page_count, photo_pagination_response.json_data))
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, index_page_response.extra_info["image_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
 
-                for image_info in index_page_response.extra_info["image_info_list"]:
+                for image_info in photo_pagination_response.extra_info["image_info_list"]:
                     if image_info["image_time"] is None:
                         log.error(account_name + " 图片信息%s的上传时间解析失败" % image_info["json_data"])
                         tool.process_exit()
@@ -262,7 +262,7 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_PAGE_COUNT <= page_count:
                         is_over = True
-                    elif index_page_response.extra_info["is_over"]:
+                    elif photo_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
