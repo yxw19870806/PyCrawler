@@ -13,20 +13,20 @@ import os
 
 # 获取作品页面
 def get_album_page(album_id):
-    album_page_url = "http://www.cnu.cc/works/%s" % album_id
-    album_page_response = net.http_request(album_page_url)
+    album_url = "http://www.cnu.cc/works/%s" % album_id
+    album_response = net.http_request(album_url)
     extra_info = {
         "is_error": [],  # 是不是格式不符合
         "album_title": "",  # 页面解析出的作品标题
         "image_url_list": [],  # 页面解析出的所有图片地址列表
     }
-    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取作品标题
-        album_title = tool.find_sub_string(album_page_response.data, '<h2 class="work-title">', "</h2>")
+        album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
         if album_title:
             extra_info["album_title"] = album_title.strip()
         # 获取图片地址
-        image_info_string = tool.find_sub_string(album_page_response.data, '<div id="imgs_json" style="display:none">', "</div>")
+        image_info_string = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
         try:
             image_info_data = json.loads(image_info_string)
         except ValueError:
@@ -41,8 +41,8 @@ def get_album_page(album_id):
                     break
             if not extra_info["is_error"]:
                 extra_info["image_url_list"] = image_url_list
-    album_page_response.extra_info = extra_info
-    return album_page_response
+    album_response.extra_info = extra_info
+    return album_response
 
 
 class CNU(robot.Robot):
@@ -71,23 +71,23 @@ class CNU(robot.Robot):
 
             # 获取相册
             try:
-                album_page_response = get_album_page(album_id)
+                album_response = get_album_page(album_id)
             except SystemExit:
                 log.step("提前退出")
                 break
 
-            if album_page_response.status == 404:
+            if album_response.status == 404:
                 log.step("第%s页作品已被删除，跳过" % album_id)
                 album_id += 1
                 continue
-            elif album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页作品访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_page_response.status)))
+            elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error("第%s页作品访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_response.status)))
                 break
 
-            log.trace("第%s页作品解析的所有图片：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+            log.trace("第%s页作品解析的所有图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
             # 过滤标题中不支持的字符
-            album_title = robot.filter_text(album_page_response.extra_info["album_title"])
+            album_title = robot.filter_text(album_response.extra_info["album_title"])
             if album_title:
                 album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
             else:
@@ -101,7 +101,7 @@ class CNU(robot.Robot):
                     tool.process_exit()
 
             image_count = 1
-            for image_url in album_page_response.extra_info["image_url_list"]:
+            for image_url in album_response.extra_info["image_url_list"]:
                 log.step("作品%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
