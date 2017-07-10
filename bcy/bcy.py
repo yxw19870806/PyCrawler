@@ -29,19 +29,19 @@ def check_login():
     if not COOKIE_INFO["LOGGED_USER"]:
         return False
     cookies_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
-    index_page_url = "http://bcy.net/"
-    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        set_cookie = net.get_cookies_from_response_header(index_page_response.headers)
+    index_url = "http://bcy.net/"
+    index_response = net.http_request(index_url, cookies_list=cookies_list)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(index_response.headers)
         if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
             COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
             COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
     if not COOKIE_INFO["acw_tc"] or not COOKIE_INFO["PHPSESSID"]:
         return False
-    home_page_url = "http://bcy.net/home/user/index"
-    home_page_response = net.http_request(home_page_url, cookies_list=COOKIE_INFO)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if home_page_response.data.find('<a href="/login">登录</a>') == -1:
+    home_url = "http://bcy.net/home/user/index"
+    home_response = net.http_request(home_url, cookies_list=COOKIE_INFO)
+    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if home_response.data.find('<a href="/login">登录</a>') == -1:
             return True
     return False
 
@@ -66,10 +66,10 @@ def get_account_info_from_console():
 def login():
     global COOKIE_INFO
     # 访问首页，获取一个随机session id
-    home_page_url = "http://bcy.net/home/user/index"
-    home_page_response = net.http_request(home_page_url)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        set_cookie = net.get_cookies_from_response_header(home_page_response.headers)
+    home_url = "http://bcy.net/home/user/index"
+    home_response = net.http_request(home_url)
+    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(home_response.headers)
         if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
             COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
             COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
@@ -91,23 +91,23 @@ def login():
 
 # 关注指定账号
 def follow(account_id):
-    follow_page_url = "http://bcy.net/weibo/Operate/follow?"
+    follow_api_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_page_response = net.http_request(follow_page_url, method="POST", post_data=follow_post_data)
-    if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    follow_response = net.http_request(follow_api_url, method="POST", post_data=follow_post_data)
+    if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 0 未登录，11 关注成功，12 已关注
-        if int(follow_page_response.data) == 12:
+        if int(follow_response.data) == 12:
             return True
     return False
 
 
 # 取消关注指定账号
 def unfollow(account_id):
-    unfollow_page_url = "http://bcy.net/weibo/Operate/follow?"
+    unfollow_api_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_page_response = net.http_request(unfollow_page_url, method="POST", post_data=unfollow_post_data)
-    if unfollow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if int(unfollow_page_response.data) == 1:
+    unfollow_response = net.http_request(unfollow_api_url, method="POST", post_data=unfollow_post_data)
+    if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if int(unfollow_response.data) == 1:
             return True
     return False
 
@@ -115,37 +115,37 @@ def unfollow(account_id):
 # 获取指定页数的所有作品
 def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
-    index_page_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
-    index_page_response = net.http_request(index_page_url)
+    album_pagination_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
+    album_pagination_response = net.http_request(album_pagination_url)
     extra_info = {
         "coser_id": None,  # coser id
         "album_id_list": [],  # 页面解析出的所有作品id列表
         "album_title_list": [],  # 页面解析出的所有作品标题列表
         "is_over": False,  # 是不是最后一页作品
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取coser id
-        coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', index_page_response.data)
+        coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
         if len(coser_id_find) == 1:
             extra_info["coser_id"] = str(coser_id_find[0])
             # 获取作品id列表
-            extra_info["album_id_list"] = re.findall("/coser/detail/" + extra_info["coser_id"] + '/(\d+)"', index_page_response.data)
+            extra_info["album_id_list"] = re.findall("/coser/detail/" + extra_info["coser_id"] + '/(\d+)"', album_pagination_response.data)
             extra_info["album_id_list"] = map(str, extra_info["album_id_list"])
             # 获取作品标题列表
-            album_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', index_page_response.data)
+            album_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', album_pagination_response.data)
             if "${post.title}" in album_title_list:
                 album_title_list.remove("${post.title}")
             extra_info["album_title_list"] = map(str, album_title_list)
         # 检测是否还有下一页
-        page_count_find = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">', index_page_response.data)
+        page_count_find = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">', album_pagination_response.data)
         if len(page_count_find) > 0:
             max_page_count = max(map(int, page_count_find))
         else:
             max_page_count = 1
         if page_count >= max_page_count:
             extra_info["is_over"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    album_pagination_response.extra_info = extra_info
+    return album_pagination_response
 
 
 # 获取指定id的作品
@@ -153,25 +153,25 @@ def get_one_page_album(account_id, page_count):
 # album_id -> 36484
 def get_album_page(coser_id, album_id):
     # http://bcy.net/coser/detail/9299/36484
-    album_page_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
-    album_page_response = net.http_request(album_page_url, cookies_list=COOKIE_INFO)
+    album_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
+    album_response = net.http_request(album_url, cookies_list=COOKIE_INFO)
     extra_info = {
         "is_admin_locked": False,  # 是否被管理员锁定
         "is_only_follower": False,  # 是否只显示给粉丝
         "image_url_list": [],  # 页面解析出的所有图片地址列表
     }
-    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 检测作品是否被管理员锁定
-        if album_page_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
+        if album_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
             extra_info["is_admin_locked"] = True
         # 检测作品是否只对粉丝可见
-        if album_page_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
+        if album_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
             extra_info["is_only_follower"] = True
         # 获取作品页面内的所有图片地址列表
-        image_url_list = re.findall("src='([^']*)'", album_page_response.data)
+        image_url_list = re.findall("src='([^']*)'", album_response.data)
         extra_info["image_url_list"] = map(str, image_url_list)
-    album_page_response.extra_info = extra_info
-    return album_page_response
+    album_response.extra_info = extra_info
+    return album_response
 
 
 class Bcy(robot.Robot):
@@ -286,18 +286,18 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 
                 # 获取一页作品
-                index_page_response = get_one_page_album(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                album_pagination_response = get_one_page_album(account_id, page_count)
+                if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_pagination_response.status)))
                     tool.process_exit()
 
-                if len(index_page_response.extra_info["album_id_list"]) != len(index_page_response.extra_info["album_title_list"]):
+                if len(album_pagination_response.extra_info["album_id_list"]) != len(album_pagination_response.extra_info["album_title_list"]):
                     log.error(account_name + " 第%s页作品解析出的作品id和标题数量" % page_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, index_page_response.extra_info["album_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response.extra_info["album_id_list"]))
 
-                for album_id in index_page_response.extra_info["album_id_list"]:
+                for album_id in album_pagination_response.extra_info["album_id_list"]:
                     # 检查是否已下载到前一次的作品
                     if int(album_id) <= int(self.account_info[1]):
                         is_over = True
@@ -313,7 +313,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(album_id)
 
-                    album_title = index_page_response.extra_info["album_title_list"].pop(0)
+                    album_title = album_pagination_response.extra_info["album_title_list"].pop(0)
 
                     log.step(account_name + " 开始解析作品%s 《%s》" % (album_id, album_title))
 
@@ -337,35 +337,33 @@ class Download(threading.Thread):
                             log.error(account_name + " 创建作品目录 %s 失败" % album_path)
                             tool.process_exit()
 
-                    coser_id = index_page_response.extra_info["coser_id"]
-
                     # 获取作品
-                    album_page_response = get_album_page(coser_id, album_id)
-                    if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_page_response.status)))
+                    album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_id)
+                    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_response.status)))
                         tool.process_exit()
 
                     # 是不是已被管理员锁定
-                    if album_page_response.extra_info["is_admin_locked"]:
+                    if album_response.extra_info["is_admin_locked"]:
                         log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_id, album_title))
                         continue
 
                     # 是不是只对粉丝可见，并判断是否需要自动关注
-                    if album_page_response.extra_info["is_only_follower"] and IS_AUTO_FOLLOW:
+                    if album_response.extra_info["is_only_follower"] and IS_AUTO_FOLLOW:
                         log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_id, album_title))
                         if follow(account_id):
                             # 重新获取作品页面
-                            album_page_response = get_album_page(coser_id, album_id)
-                            if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                                log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_page_response.status)))
+                            album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_id)
+                            if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                                log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_response.status)))
                                 tool.process_exit()
 
-                    if len(album_page_response.extra_info["image_url_list"]) == 0:
+                    if len(album_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_id, album_title))
                         tool.process_exit()
 
                     image_count = 1
-                    for image_url in album_page_response.extra_info["image_url_list"]:
+                    for image_url in album_response.extra_info["image_url_list"]:
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
                         log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
@@ -391,7 +389,7 @@ class Download(threading.Thread):
                         total_album_count += 1
 
                 if not is_over:
-                    if index_page_response.extra_info["is_over"]:
+                    if album_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
