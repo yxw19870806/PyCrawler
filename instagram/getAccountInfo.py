@@ -12,33 +12,43 @@ import sys
 
 
 # 获取账号首页
-def get_index_page(account_name):
-    index_page_url = "https://www.instagram.com/%s/?hl=zh-cn" % account_name
-    index_page_response = net.http_request(index_page_url)
+def get_account_index_page(account_name):
+    account_index_url = "https://www.instagram.com/%s/?hl=zh-cn" % account_name
+    account_index_response = net.http_request(account_index_url)
     extra_info = {
         "account_info": "",  # 页面解析出的自我介绍
         "external_url": "",  # 页面解析出的外部地址
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        account_info = tool.find_sub_string(index_page_response.data, '"biography": "', '"')
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
         if account_info:
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
             account_info = eval("u'%s'" % account_info).replace(chr(1), "'").encode("utf-8")
             extra_info["account_info"] = account_info
-        extra_info["external_url"] = tool.find_sub_string(index_page_response.data, '"external_url": "', '"')
-    index_page_response.extra_info = extra_info
-    return index_page_response
+        extra_info["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
+    account_index_response.extra_info = extra_info
+    return account_index_response
 
 
-if __name__ == "__main__":
+def main():
     config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
     # 存档位置
     save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
+    # 设置代理
+    is_proxy = robot.get_config(config, "IS_PROXY", 2, 1)
+    if is_proxy == 1 or is_proxy == 2:
+        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
+        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        # 使用代理的线程池
+        net.set_proxy(proxy_ip, proxy_port)
 
     result_file_path = "info/account_info.data"
     for account in sorted(account_list.keys()):
-        account_page_response = get_index_page(account)
+        account_page_response = get_account_index_page(account)
         if account_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             tool.write_file("%s\t%s\t%s" % (account, account_page_response.extra_info["account_info"], account_page_response.extra_info["external_url"]), result_file_path)
+
+if __name__ == "__main__":
+    main()
