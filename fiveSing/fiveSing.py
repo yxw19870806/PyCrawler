@@ -28,29 +28,29 @@ NEW_SAVE_DATA_PATH = ""
 # account_id -> inory
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
-    index_page_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
-    index_page_response = net.http_request(index_page_url)
+    audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
+    audio_pagination_response = net.http_request(audio_pagination_url)
     extra_info = {
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的歌曲信息列表
         # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-        audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', index_page_response.data)
+        audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
         extra_info["audio_info_list"] = [map(str, key) for key in audio_info_list]
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    audio_pagination_response.extra_info = extra_info
+    return audio_pagination_response
 
 
 # 获取指定id的歌曲播放页
 def get_audio_play_page(audio_id, song_type):
-    audio_play_page_url = "http://5sing.kugou.com/%s/%s.html" % (song_type, audio_id)
-    audio_play_page_response = net.http_request(audio_play_page_url)
+    audio_play_url = "http://5sing.kugou.com/%s/%s.html" % (song_type, audio_id)
+    audio_play_response = net.http_request(audio_play_url)
     extra_info = {
         "audio_url": None,  # 页面解析出的歌曲下载地址
     }
-    if audio_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        audio_info = tool.find_sub_string(audio_play_page_response.data, '"ticket":', ",").strip().strip('"')
+    if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        audio_info = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
         try:
             audio_info = json.loads(base64.b64decode(audio_info))
         except TypeError:
@@ -60,8 +60,8 @@ def get_audio_play_page(audio_id, song_type):
         else:
             if robot.check_sub_key(("file",), audio_info):
                 extra_info["audio_url"] = str(audio_info["file"])
-    audio_play_page_response.extra_info = extra_info
-    return audio_play_page_response
+    audio_play_response.extra_info = extra_info
+    return audio_play_response
 
 
 class FiveSing(robot.Robot):
@@ -167,19 +167,19 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
 
                     # 获取一页歌曲
-                    index_page_response = get_one_page_audio(account_id, audio_type, page_count)
-                    if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 第%s页%s歌曲访问失败，原因：%s" % (page_count, audio_type_name, robot.get_http_request_failed_reason(index_page_response.status)))
+                    audio_pagination_response = get_one_page_audio(account_id, audio_type, page_count)
+                    if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 第%s页%s歌曲访问失败，原因：%s" % (page_count, audio_type_name, robot.get_http_request_failed_reason(audio_pagination_response.status)))
                         first_audio_id = "0"  # 存档恢复
                         break
 
                     # 如果为空，表示已经取完了
-                    if len(index_page_response.extra_info["audio_info_list"]) == 0:
+                    if len(audio_pagination_response.extra_info["audio_info_list"]) == 0:
                         break
 
-                    log.trace(account_name + " 第%s页%s解析的所有歌曲：%s" % (page_count, audio_type_name, index_page_response.extra_info["audio_info_list"]))
+                    log.trace(account_name + " 第%s页%s解析的所有歌曲：%s" % (page_count, audio_type_name, audio_pagination_response.extra_info["audio_info_list"]))
 
-                    for audio_info in index_page_response.extra_info["audio_info_list"]:
+                    for audio_info in audio_pagination_response.extra_info["audio_info_list"]:
                         audio_id = audio_info[0]
                         # 过滤标题中不支持的字符
                         audio_title = robot.filter_text(audio_info[1])
@@ -200,15 +200,15 @@ class Download(threading.Thread):
                             unique_list.append(audio_id)
 
                         # 获取歌曲的详情页
-                        audio_play_page_response = get_audio_play_page(audio_id, audio_type)
-                        if audio_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                            log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name, audio_id, audio_title, robot.get_http_request_failed_reason(audio_play_page_response.status)))
+                        audio_play_response = get_audio_play_page(audio_id, audio_type)
+                        if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                            log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name, audio_id, audio_title, robot.get_http_request_failed_reason(audio_play_response.status)))
                             is_over = True
                             first_audio_id = "0"  # 存档恢复
                             break
 
                         # 获取歌曲
-                        audio_url = audio_play_page_response.extra_info["audio_url"]
+                        audio_url = audio_play_response.extra_info["audio_url"]
                         if audio_url is None:
                             log.error(account_name + " %s歌曲%s《%s》下载地址解析失败" % (audio_type_name, audio_id, audio_title))
                             is_over = True
@@ -243,7 +243,7 @@ class Download(threading.Thread):
                             is_over = True
                         # 获取的歌曲数量少于1页的上限，表示已经到结束了
                         # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                        elif len(index_page_response.extra_info["audio_info_list"]) < 20:
+                        elif len(audio_pagination_response.extra_info["audio_info_list"]) < 20:
                             is_over = True
                         else:
                             page_count += 1
