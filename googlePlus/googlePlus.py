@@ -33,11 +33,11 @@ def get_one_page_blog(account_id, token):
     }
     script_data = []
     if token:
-        index_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
+        api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
-        index_page_response = net.http_request(index_page_url, method="POST", post_data=post_data)
-        if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data_string = tool.find_sub_string(index_page_response.data, ")]}'", None).strip()
+        blog_pagination_response = net.http_request(api_url, method="POST", post_data=post_data)
+        if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            script_data_string = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
             try:
                 script_data = json.loads(script_data_string)
             except ValueError:
@@ -49,10 +49,10 @@ def get_one_page_blog(account_id, token):
             else:
                 script_data = []
     else:
-        index_page_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
-        index_page_response = net.http_request(index_page_url)
-        if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data = tool.find_sub_string(index_page_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+        blog_pagination_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
+        blog_pagination_response = net.http_request(blog_pagination_url)
+        if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            script_data = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
             script_data_string = tool.find_sub_string(script_data, "return ", "}});")
             try:
                 script_data = json.loads(script_data_string)
@@ -84,44 +84,23 @@ def get_one_page_blog(account_id, token):
         else:
             extra_info["is_error"] = False
         extra_info["next_page_key"] = str(script_data[2])
-    index_page_response.extra_info = extra_info
-    return index_page_response
-
-
-# 获取日志页面
-def get_blog_page(account_id, picasaweb_url):
-    retry_count = 0
-    while True:
-        blog_page_response = net.http_request(picasaweb_url)
-        extra_info = {
-            "album_id": None,  # 页面解析出的相册id
-        }
-        if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            album_id = tool.find_sub_string(blog_page_response.data, 'href="https://get.google.com/albumarchive/pwa/%s/album/' % account_id, '"')
-            if album_id and robot.is_integer(album_id):
-                extra_info["album_id"] = str(album_id)
-        # 如果status==500，重试最多5次
-        elif blog_page_response.status == 500 and retry_count < 5:
-            retry_count += 1
-            continue
-        blog_page_response.extra_info = extra_info
-        return blog_page_response
+    blog_pagination_response.extra_info = extra_info
+    return blog_pagination_response
 
 
 # 获取指定id的相册页
 def get_album_page(account_id, album_id):
     # 图片只有一页：https://get.google.com/albumarchive/102249965218267255722/album/AF1QipPLt_v4vK2Jkqcm5DOtFl6aHWZMTdu0A4mOpOFN?source=pwa
     # 图片不止一页：https://get.google.com/albumarchive/109057690948151627836/album/AF1QipMg1hsC4teQFP5xaBioWo-1SCr4Hphh4mfc0ZZX?source=pwa
-    album_page_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
+    album_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
     extra_info = {
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
-    # retry_count = 0
     image_url_list = []
     while True:
-        album_page_response = net.http_request(album_page_url)
-        if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data = tool.find_sub_string(album_page_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+        album_response = net.http_request(album_url)
+        if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            script_data = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
             script_data = tool.find_sub_string(script_data, "return ", "}});")
             try:
                 script_data = json.loads(script_data)
@@ -135,9 +114,9 @@ def get_album_page(account_id, album_id):
             else:
                 # 如果不为空，说明还有下一页
                 while continue_token:
-                    continue_image_page_url = "https://get.google.com/_/AlbumArchiveUi/data"
+                    continue_image_url = "https://get.google.com/_/AlbumArchiveUi/data"
                     post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-                    continue_image_page_response = net.http_request(continue_image_page_url, method="POST", post_data=post_data, encode_multipart=False)
+                    continue_image_page_response = net.http_request(continue_image_url, method="POST", post_data=post_data, encode_multipart=False)
                     if continue_image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                         continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None).strip()
                         try:
@@ -150,8 +129,8 @@ def get_album_page(account_id, album_id):
                             continue_token = ""
             if len(image_url_list) > 0:
                 extra_info["image_url_list"] = image_url_list
-        album_page_response.extra_info = extra_info
-        return album_page_response
+        album_response.extra_info = extra_info
+        return album_response
 
 
 class GooglePlus(robot.Robot):
@@ -261,21 +240,21 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析 %s 相册页" % key)
 
                 # 获取一页相册
-                index_page_response = get_one_page_blog(account_id, key)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, robot.get_http_request_failed_reason(index_page_response.status)))
+                blog_pagination_response = get_one_page_blog(account_id, key)
+                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, robot.get_http_request_failed_reason(blog_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_error"]:
-                    if index_page_response.extra_info["json_data"] is None:
+                if blog_pagination_response.extra_info["is_error"]:
+                    if blog_pagination_response.extra_info["json_data"] is None:
                         log.error(account_name + " 相册页（token：%s）JSON数据解析失败" % key)
                     else:
-                        log.error(account_name + " 相册页（token：%s）%s解析失败" % (key, index_page_response.extra_info["json_data"]))
+                        log.error(account_name + " 相册页（token：%s）%s解析失败" % (key, blog_pagination_response.extra_info["json_data"]))
                     tool.process_exit()
 
-                log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, index_page_response.extra_info["blog_info_list"]))
+                log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, blog_pagination_response.extra_info["blog_info_list"]))
 
-                for blog_info in index_page_response.extra_info["blog_info_list"]:
+                for blog_info in blog_pagination_response.extra_info["blog_info_list"]:
                     if blog_info["blog_id"] is None:
                         log.error(account_name + " 日志信息%s的日志id解析失败" % blog_info["json_data"])
                         tool.process_exit()
@@ -296,19 +275,19 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析日志 %s" % blog_info["blog_id"])
                     
                     # 获取相册页
-                    album_page_response = get_album_page(account_id, blog_info["blog_id"])
-                    if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], robot.get_http_request_failed_reason(album_page_response.status)))
+                    album_response = get_album_page(account_id, blog_info["blog_id"])
+                    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], robot.get_http_request_failed_reason(album_response.status)))
                         tool.process_exit()
 
-                    if len(album_page_response.extra_info["image_url_list"]) == 0:
+                    if len(album_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
                         # tool.process_exit()
                         continue
 
-                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_page_response.extra_info["image_url_list"]))
+                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_response.extra_info["image_url_list"]))
 
-                    for image_url in album_page_response.extra_info["image_url_list"]:
+                    for image_url in album_response.extra_info["image_url_list"]:
                         # 视频跳过
                         if image_url.find("video.googleusercontent.com") != -1:
                             continue
@@ -344,13 +323,13 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if index_page_response.extra_info["next_page_key"]:
-                        key = index_page_response.extra_info["next_page_key"]
+                    if blog_pagination_response.extra_info["next_page_key"]:
+                        key = blog_pagination_response.extra_info["next_page_key"]
                     else:
                         # 不是第一次下载
                         if self.account_info[2] != "0":
                             log.error(account_name + " 没有找到下一页的token，将该页保存：")
-                            log.error(index_page_response.data)
+                            log.error(blog_pagination_response.data)
                         is_over = True
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
