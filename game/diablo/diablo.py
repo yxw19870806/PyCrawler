@@ -66,11 +66,11 @@ for item_path, item_position in item_list.items():
             for item_info in item_info_list:
                 if item_info.find('<em class="transmog-s"></em>') >= 0:
                     continue
-                item_page_url = tool.find_sub_string(item_info, '<a href="', '"')
+                item_url = tool.find_sub_string(item_info, '<a href="', '"')
                 item_name = tool.find_sub_string(item_info, 'class="diablo3tip">', "</a>")
                 item_name = item_name.replace("'", "’")
-                item_page_url = base_host + item_page_url
-                item_page_response = net.http_request(item_page_url)
+                item_url = base_host + item_url
+                item_page_response = net.http_request(item_url)
                 if item_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     item_detail = tool.find_sub_string(item_page_response.data, '<div class="content-right-bdl clearfix">', '<dl class="content-right-bdr">')
                     item_detail = item_detail.decode("GBK").encode("utf-8")
@@ -85,7 +85,7 @@ for item_path, item_position in item_list.items():
                     print item_position, item_name, special_attribute, item_introduction
                     item_attribute_list[item_path].append([item_name, special_attribute, item_introduction])
                 else:
-                    print "error get" + item_page_url
+                    print "error get" + item_url
         else:
             print "error get" + item_index_url
         pagination = tool.find_sub_string(item_index_page_response.data, '<ul class="ui-pagination">', "</ul>")
