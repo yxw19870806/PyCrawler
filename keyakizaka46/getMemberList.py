@@ -11,10 +11,10 @@ import re
 
 
 def get_member_list():
-    index_page_url = "http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member"
-    index_page_response = net.http_request(index_page_url)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        member_list_data = tool.find_sub_string(index_page_response.data, '<ul class="thumb">', "</ul>")
+    index_url = "http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member"
+    index_response = net.http_request(index_url)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        member_list_data = tool.find_sub_string(index_response.data, '<ul class="thumb">', "</ul>")
         if member_list_data:
             member_list_find = re.findall("<li ([\S|\s]*?)</li>", member_list_data)
             for member_info in member_list_find:
