@@ -26,23 +26,23 @@ IS_SORT = True
 
 # 获取指定页数的所有日志
 def get_one_page_blog(account_name, page_count):
-    index_page_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    index_page_response = net.http_request(index_page_url)
+    blog_pagination_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
+    blog_pagination_response = net.http_request(blog_pagination_url)
     extra_info = {
         "blog_id_list": [],  # 页面解析出的所有日志id列表
         "is_over": False,  # 是不是最后一页日志
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取日志id列表
-        blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', index_page_response.data)
+        blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
         if len(blog_id_list) == 0:
-            page_data = tool.find_sub_string(index_page_response.data, '<div amb-component="tiles" class="skin-tiles">', '<div amb-component="entryAd" class="skin-entryAd">')
+            page_data = tool.find_sub_string(blog_pagination_response.data, '<div amb-component="tiles" class="skin-tiles">', '<div amb-component="entryAd" class="skin-entryAd">')
             blog_id_list = re.findall('<a amb-component="imageFrameLink" href="http://ameblo.jp/' + account_name + '/entry-(\d*).html" rel="bookmark">', page_data)
         extra_info["blog_id_list"] = map(str, blog_id_list)
         # 检测是否还有下一页
         # 有页数选择的页面样式
-        if index_page_response.data.find('<div class="page topPaging">') >= 0:
-            paging_data = tool.find_sub_string(index_page_response.data, '<div class="page topPaging">', "</div>")
+        if blog_pagination_response.data.find('<div class="page topPaging">') >= 0:
+            paging_data = tool.find_sub_string(blog_pagination_response.data, '<div class="page topPaging">', "</div>")
             last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
             if len(last_page) == 1:
                 extra_info["is_over"] = page_count >= int(last_page[0])
@@ -50,36 +50,36 @@ def get_one_page_blog(account_name, page_count):
             if len(page_count_find) > 0:
                 extra_info["is_over"] = page_count >= max(map(int, page_count_find))
         # 只有下一页和上一页按钮的样式
-        elif index_page_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
-            if index_page_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
+        elif blog_pagination_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
+            if blog_pagination_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
                 extra_info["is_over"] = True
         # 只有下一页和上一页按钮的样式
-        elif index_page_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
-            if index_page_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
+        elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
+            if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
                 extra_info["is_over"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    blog_pagination_response.extra_info = extra_info
+    return blog_pagination_response
 
 
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
-    blog_page_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    blog_page_response = net.http_request(blog_page_url)
+    blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
+    blog_response = net.http_request(blog_url)
     extra_info = {
         "image_url_list": [],  # 页面解析出的所有图片地址列表
     }
-    if blog_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 日志正文部分（有多种页面模板）
-        article_data = tool.find_sub_string(blog_page_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
+        article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
         if not article_data:
-            article_data = tool.find_sub_string(blog_page_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
+            article_data = tool.find_sub_string(blog_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
         if not article_data:
-            article_data = tool.find_sub_string(blog_page_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
+            article_data = tool.find_sub_string(blog_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
         # 获取页面中所有的图片地址列表
         image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
         extra_info["image_url_list"] = map(str, image_url_list)
-    blog_page_response.extra_info = extra_info
-    return blog_page_response
+    blog_response.extra_info = extra_info
+    return blog_response
 
 
 # 过滤一些无效的地址
@@ -121,7 +121,7 @@ def get_origin_image_url(image_url):
                 image_url = "/".join(temp_list)
             else:
                 # todo 检测包含其他格式
-                log.step("无法解析的图片地址 %s" % image_url)
+                log.error("无法解析的图片地址 %s" % image_url)
     elif image_url.find("http://stat100.ameba.jp/blog/img/") == 0:
         pass
     else:
@@ -249,18 +249,18 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页日志
-                index_page_response = get_one_page_blog(account_name, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                blog_pagination_response = get_one_page_blog(account_name, page_count)
+                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
                     tool.process_exit()
 
-                if len(index_page_response.extra_info["blog_id_list"]) == 0:
+                if len(blog_pagination_response.extra_info["blog_id_list"]) == 0:
                     log.error(account_name + " 第%s页没有解析出日志" % page_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, index_page_response.extra_info["blog_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, blog_pagination_response.extra_info["blog_id_list"]))
 
-                for blog_id in index_page_response.extra_info["blog_id_list"]:
+                for blog_id in blog_pagination_response.extra_info["blog_id_list"]:
                     # 检查是否已下载到前一次的日志
                     if int(blog_id) <= int(self.account_info[2]):
                         is_over = True
@@ -279,12 +279,12 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析日志%s" % blog_id)
 
                     # 获取日志
-                    blog_page_response = get_blog_page(account_name, blog_id)
-                    if blog_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_page_response.status)))
+                    blog_response = get_blog_page(account_name, blog_id)
+                    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 日志%s访问失败，原因：%s" % (blog_id, robot.get_http_request_failed_reason(blog_response.status)))
                         tool.process_exit()
 
-                    for image_url in blog_page_response.extra_info["image_url_list"]:
+                    for image_url in blog_response.extra_info["image_url_list"]:
                         if filter_image_url(image_url):
                             continue
                         # 获取原始图片下载地址
@@ -324,7 +324,7 @@ class Download(threading.Thread):
                         is_over = True
                     else:
                         # 是否已经是最后一页了
-                        if index_page_response.extra_info["is_over"]:
+                        if blog_pagination_response.extra_info["is_over"]:
                             is_over = True
                         else:
                             page_count += 1
