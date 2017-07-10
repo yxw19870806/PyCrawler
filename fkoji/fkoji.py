@@ -11,13 +11,11 @@ from common import BeautifulSoup
 import os
 import time
 
-ALL_SIGN = "_____"
-
 
 # 获取指定页数的所有图片
-def get_one_page_image(page_count):
-    index_page_url = "http://jigadori.fkoji.com/?p=%s" % page_count
-    return net.http_request(index_page_url)
+def get_one_page_photo(page_count):
+    photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
+    return net.http_request(photo_pagination_url)
 
 
 # 从图片页面中解析获取推特发布时间的时间戳
@@ -82,12 +80,12 @@ class Fkoji(robot.Robot):
             log.step("开始解析第%s页图片" % page_count)
 
             # 获取一页图片
-            index_page_response = get_one_page_image(page_count)
-            if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+            photo_pagination_response = get_one_page_photo(page_count)
+            if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error("第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                 tool.process_exit()
 
-            index_page = BeautifulSoup.BeautifulSoup(index_page_response.data)
+            index_page = BeautifulSoup.BeautifulSoup(photo_pagination_response.data)
             photo_list = index_page.body.findAll("div", "photo")
             # 已经下载到最后一页
             if not photo_list:
