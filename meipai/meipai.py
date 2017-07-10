@@ -30,16 +30,16 @@ def get_follow_list(account_id):
     page_count = 1
     follow_list = {}
     while page_count <= max_page_count:
-        follow_page_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
-        follow_page_response = net.http_request(follow_page_url)
-        if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_page_response.data)
+        follow_pagination_url = "http://www.meipai.com/user/%s/friends?p=%s" % (account_id, page_count)
+        follow_pagination_response = net.http_request(follow_pagination_url)
+        if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            follow_list_find = re.findall('<div class="ucard-info">([\s|\S]*?)</div>', follow_pagination_response.data)
             for follow_info in follow_list_find:
                 follow_account_id = tool.find_sub_string(follow_info, '<a hidefocus href="/user/', '"').strip()
                 follow_account_name = tool.find_sub_string(follow_info, 'title="', '"')
                 follow_list[follow_account_id] = follow_account_name
             if max_page_count == 1:
-                page_info = tool.find_sub_string(follow_page_response.data, '<div class="paging-wrap">', "</div>")
+                page_info = tool.find_sub_string(follow_pagination_response.data, '<div class="paging-wrap">', "</div>")
                 if page_info:
                     page_count_find = re.findall("friends\?p=(\d*)", page_info)
                     max_page_count = max(map(int, page_count_find))
@@ -52,15 +52,15 @@ def get_follow_list(account_id):
 # 获取指定页数的所有视频
 def get_one_page_video(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
-    index_page_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
-    index_page_response = net.http_request(index_page_url, json_decode=True)
+    video_pagination_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
+    video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "video_info_list": [],  # 页面解析出的所有视频信息列表
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("medias",), index_page_response.json_data):
-            for media_data in index_page_response.json_data["medias"]:
+    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("medias",), video_pagination_response.json_data):
+            for media_data in video_pagination_response.json_data["medias"]:
                 extra_video_info = {
                     "video_id": None,  # 解析出的视频id
                     "video_url": None,  # 解析出的视频下载地址
@@ -82,8 +82,8 @@ def get_one_page_video(account_id, page_count):
                         if video_url.find("http") == 0:
                             extra_video_info["video_url"] = video_url
                 extra_info["video_info_list"].append(extra_video_info)
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    video_pagination_response.extra_info = extra_info
+    return video_pagination_response
 
 
 def get_hex(arg1):
@@ -208,18 +208,18 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
                 # 获取一页视频
-                index_page_response = get_one_page_video(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                video_pagination_response = get_one_page_video(account_id, page_count)
+                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error("第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(video_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_error"]:
+                if video_pagination_response.extra_info["is_error"]:
                     log.error(account_name + " 第%s页视频解析失败" % video_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, index_page_response.extra_info["video_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response.extra_info["video_info_list"]))
 
-                for video_info in index_page_response.extra_info["video_info_list"]:
+                for video_info in video_pagination_response.extra_info["video_info_list"]:
                     if video_info["video_id"] is None:
                         log.error(account_name + " 视频信息%s的视频id解析失败" % video_info["json_data"])
                         tool.process_exit()
@@ -266,7 +266,7 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if len(index_page_response.extra_info["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
+                    if len(video_pagination_response.extra_info["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
                         page_count += 1
                     else:
                         # 获取的数量小于请求的数量，已经没有剩余视频了
