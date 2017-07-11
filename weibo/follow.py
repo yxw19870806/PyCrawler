@@ -49,7 +49,7 @@ def follow_account(account_id):
     return False
 
 
-if __name__ == "__main__":
+def main():
     config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
@@ -93,3 +93,6 @@ if __name__ == "__main__":
             pass
 
     tool.print_msg("关注完成")
+
+if __name__ == "__main__":
+    main()
