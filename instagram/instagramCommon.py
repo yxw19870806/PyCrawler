@@ -18,22 +18,22 @@ def get_follow_by_list(account_id):
     cursor = None
     follow_by_list = []
     while True:
-        query_page_url = "https://www.instagram.com/query/"
+        api_url = "https://www.instagram.com/query/"
         # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
         if cursor is None:
             post_data = {"q": "ig_user(%s){followed_by.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
         else:
             post_data = {"q": "ig_user(%s){followed_by.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
-        follow_by_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
-        if follow_by_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("followed_by",), follow_by_page_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_by_page_response.json_data["followed_by"]):
-                for node in follow_by_page_response.json_data["followed_by"]["nodes"]:
+        follow_by_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+        if follow_by_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            if robot.check_sub_key(("followed_by",), follow_by_pagination_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_by_pagination_response.json_data["followed_by"]):
+                for node in follow_by_pagination_response.json_data["followed_by"]["nodes"]:
                     if robot.check_sub_key(("username",), node):
                         follow_by_list.append(node["username"])
-                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_by_page_response.json_data["followed_by"]["page_info"]):
-                    if follow_by_page_response.json_data["followed_by"]["page_info"]["has_next_page"]:
-                        cursor = follow_by_page_response.json_data["followed_by"]["page_info"]["end_cursor"]
+                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_by_pagination_response.json_data["followed_by"]["page_info"]):
+                    if follow_by_pagination_response.json_data["followed_by"]["page_info"]["has_next_page"]:
+                        cursor = follow_by_pagination_response.json_data["followed_by"]["page_info"]["end_cursor"]
                         continue
         break
     return follow_by_list
@@ -45,22 +45,22 @@ def get_follow_list(account_id):
     cursor = None
     follow_list = []
     while True:
-        query_page_url = "https://www.instagram.com/query/"
+        api_url = "https://www.instagram.com/query/"
         # node支持的字段：id,is_verified,followed_by_viewer,requested_by_viewer,full_name,profile_pic_url,username
         if cursor is None:
             post_data = {"q": "ig_user(%s){follows.first(%s){nodes{username},page_info}}" % (account_id, USER_COUNT_PER_PAGE)}
         else:
             post_data = {"q": "ig_user(%s){follows.after(%s,%s){nodes{username},page_info}}" % (account_id, cursor, USER_COUNT_PER_PAGE)}
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
-        follow_page_response = net.http_request(query_page_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
-        if follow_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("follows",), follow_page_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_page_response.json_data["follows"]):
-                for node in follow_page_response.json_data["follows"]["nodes"]:
+        follow_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+        if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            if robot.check_sub_key(("follows",), follow_pagination_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_pagination_response.json_data["follows"]):
+                for node in follow_pagination_response.json_data["follows"]["nodes"]:
                     if robot.check_sub_key(("username",), node):
                         follow_list.append(node["username"])
-                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_page_response.json_data["follows"]["page_info"]):
-                    if follow_page_response.json_data["follows"]["page_info"]["has_next_page"]:
-                        cursor = follow_page_response.json_data["follows"]["page_info"]["end_cursor"]
+                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_pagination_response.json_data["follows"]["page_info"]):
+                    if follow_pagination_response.json_data["follows"]["page_info"]["has_next_page"]:
+                        cursor = follow_pagination_response.json_data["follows"]["page_info"]["end_cursor"]
                         continue
         break
     return follow_list
