@@ -109,9 +109,9 @@ class Fkoji(robot.Robot):
                 log.error("第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                 tool.process_exit()
 
+            # 没有图片了
             if len(photo_pagination_response.extra_info["image_info_list"]) == 0:
-                log.error("第%s页图片解析失败" % page_count)
-                tool.process_exit()
+                break
 
             for image_info in photo_pagination_response.extra_info["image_info_list"]:
                 if image_info["is_error"]:
