@@ -29,19 +29,19 @@ IS_DOWNLOAD_VIDEO = True
 
 
 # 获取全部图片地址列表
-def get_image_url_list(account_id):
-    image_index_page_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
-    image_index_page_response = net.http_request(image_index_page_url)
+def get_image_index_page(account_id):
+    image_index_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
+    image_index_response = net.http_request(image_index_url)
     extra_info = {
         "is_exist": True,  # 是不是存在图片
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
-    if image_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["is_exist"] = image_index_page_response.data.find("还没有照片哦") == -1
-        image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_page_response.data)
+    if image_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        extra_info["is_exist"] = image_index_response.data.find("还没有照片哦") == -1
+        image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response.data)
         extra_info["image_url_list"] = map(str, image_url_list)
-    image_index_page_response.extra_info = extra_info
-    return image_index_page_response
+    image_index_response.extra_info = extra_info
+    return image_index_response
 
 
 #  获取图片的header
@@ -59,44 +59,44 @@ def get_image_header(image_url):
 
 
 # 获取全部视频ID列表
-def get_video_id_list(account_id):
-    video_index_page_url = "http://www.yizhibo.com/member/personel/user_videos?memberid=%s" % account_id
-    video_index_page_response = net.http_request(video_index_page_url)
+def get_video_index_page(account_id):
+    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos?memberid=%s" % account_id
+    video_pagination_response = net.http_request(video_pagination_url)
     extra_info = {
         "is_exist": True,  # 是不是存在视频
         "video_id_list": [],  # 页面解析出的视频id列表
     }
-    if video_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["is_exist"] = video_index_page_response.data.find("还没有直播哦") == -1
-        video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_index_page_response.data)
+    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        extra_info["is_exist"] = video_pagination_response.data.find("还没有直播哦") == -1
+        video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response.data)
         extra_info["video_id_list"] = map(str, video_id_list)
-    video_index_page_response.extra_info = extra_info
-    return video_index_page_response
+    video_pagination_response.extra_info = extra_info
+    return video_pagination_response
 
 
 # 根据video id获取指定视频的详细信息（上传时间、视频列表的下载地址等）
 # video_id -> qxonW5XeZru03nUB
 def get_video_info_page(video_id):
     # http://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
-    video_info_page_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
-    video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
+    video_info_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
+    video_info_response = net.http_request(video_info_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "video_time": False,  # 页面解析出的视频上传时间
         "video_file_url": None,  # 页面解析出的视频地址所在的文件地址
     }
-    if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
-            robot.check_sub_key(("result", "data"), video_info_page_response.json_data) and
-            int(video_info_page_response.json_data["result"]) == 1 and
-            robot.check_sub_key(("createtime", "linkurl"), video_info_page_response.json_data["data"])
+            robot.check_sub_key(("result", "data"), video_info_response.json_data) and
+            int(video_info_response.json_data["result"]) == 1 and
+            robot.check_sub_key(("createtime", "linkurl"), video_info_response.json_data["data"])
         ):
-            extra_info["video_time"] = int(video_info_page_response.json_data["data"]["createtime"])
-            extra_info["video_file_url"] = str(video_info_page_response.json_data["data"]["linkurl"])
+            extra_info["video_time"] = int(video_info_response.json_data["data"]["createtime"])
+            extra_info["video_file_url"] = str(video_info_response.json_data["data"]["linkurl"])
         else:
             extra_info["is_error"] = True
-    video_info_page_response.extra_info = extra_info
-    return video_info_page_response
+    video_info_response.extra_info = extra_info
+    return video_info_response
 
 
 # 根据视频对应index.m3u8地址获取所有ts文件的下载地址
@@ -228,20 +228,20 @@ class Download(threading.Thread):
             need_make_image_dir = True
             while IS_DOWNLOAD_IMAGE:
                 # 获取全部图片地址列表
-                image_index_page_response = get_image_url_list(account_id)
-                if image_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 图片首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(image_index_page_response.status))
+                image_index_response = get_image_index_page(account_id)
+                if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 图片首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(image_index_response.status))
                     break
 
                 # 没有图片
-                if not image_index_page_response.extra_info["is_exist"]:
+                if not image_index_response.extra_info["is_exist"]:
                     break
 
-                if len(image_index_page_response.extra_info["image_url_list"]) == 0:
+                if len(image_index_response.extra_info["image_url_list"]) == 0:
                     log.error(account_name + " 图片地址解析失败")
                     break
 
-                for image_url in image_index_page_response.extra_info["image_url_list"]:
+                for image_url in image_index_response.extra_info["image_url_list"]:
                     image_head_response = get_image_header(image_url)
 
                     if image_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -297,42 +297,42 @@ class Download(threading.Thread):
             need_make_video_dir = True
             while IS_DOWNLOAD_VIDEO:
                 # 获取全部视频ID列表
-                video_index_page_response = get_video_id_list(account_id)
-                if video_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 视频首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(video_index_page_response.status))
+                video_pagination_response = get_video_index_page(account_id)
+                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 视频首页访问失败，原因：%s" %  robot.get_http_request_failed_reason(video_pagination_response.status))
                     break
 
                 # 没有视频
-                if not video_index_page_response.extra_info["is_exist"]:
+                if not video_pagination_response.extra_info["is_exist"]:
                     break
 
-                if len(video_index_page_response.extra_info["video_id_list"]) == 0:
+                if len(video_pagination_response.extra_info["video_id_list"]) == 0:
                     log.error(account_name + " 视频id解析失败")
                     break
 
-                for video_id in video_index_page_response.extra_info["video_id_list"]:
+                for video_id in video_pagination_response.extra_info["video_id_list"]:
                     # 获取视频的时间和下载地址
-                    video_info_page_response = get_video_info_page(video_id)
-                    if video_info_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 视频%s的视频信息访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_info_page_response.status)))
+                    video_info_response = get_video_info_page(video_id)
+                    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 视频%s的视频信息访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_info_response.status)))
                         is_error = True
                         break
 
-                    if video_info_page_response.extra_info["is_error"]:
-                        log.error(account_name + " 视频信息%s解析失败" % video_info_page_response.json_data)
+                    if video_info_response.extra_info["is_error"]:
+                        log.error(account_name + " 视频信息%s解析失败" % video_info_response.json_data)
                         is_error = True
                         break
 
                     # 检查是否已下载到前一次的视频
-                    if video_info_page_response.extra_info["video_time"] <= int(self.account_info[2]):
+                    if video_info_response.extra_info["video_time"] <= int(self.account_info[2]):
                         break
 
                     # 将第一个视频的上传时间做为新的存档记录
                     if first_video_time == "0":
-                        first_video_time = str(video_info_page_response.extra_info["video_time"])
+                        first_video_time = str(video_info_response.extra_info["video_time"])
 
                     # 获取视频m3u8文件（存放分割的ts文件地址）
-                    video_file_response = get_video_m3u8_file(video_info_page_response.extra_info["video_file_url"])
+                    video_file_response = get_video_m3u8_file(video_info_response.extra_info["video_file_url"])
                     if video_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 视频%s的视频m3u8文件访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_file_response.status)))
                         is_error = True
