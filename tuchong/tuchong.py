@@ -24,19 +24,19 @@ IS_DOWNLOAD_IMAGE = True
 
 
 # 获取账号首页
-def get_home_page(account_name):
+def get_account_index_page(account_name):
     if robot.is_integer(account_name):
-        home_page_url = "https://www.tuchong.com/%s" % account_name
+        account_index_url = "https://www.tuchong.com/%s" % account_name
     else:
-        home_page_url = "https://%s.tuchong.com" % account_name
-    home_page_url_response = net.http_request(home_page_url)
+        account_index_url = "https://%s.tuchong.com" % account_name
+    account_index_response = net.http_request(account_index_url)
     extra_info = {
         "account_id": None,  # account id（字母账号->数字账号)
     }
-    if home_page_url_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["account_id"] = tool.find_sub_string(home_page_url_response.data, 'site_id":"', '",')
-    home_page_url_response.extra_info = extra_info
-    return home_page_url_response
+    account_index_response.extra_info = extra_info
+    return account_index_response
 
 
 # 获取指定时间点起的一页相册信息列表
@@ -45,15 +45,15 @@ def get_home_page(account_name):
 # post_time -> 2016-11-11 11:11:11
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
-    index_page_url = "https://www.tuchong.com/rest/sites/%s/posts/%s?limit=%s" % (account_id, post_time, IMAGE_COUNT_PER_PAGE)
-    index_page_response = net.http_request(index_page_url, json_decode=True)
+    album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s?limit=%s" % (account_id, post_time, IMAGE_COUNT_PER_PAGE)
+    album_pagination_response = net.http_request(album_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "album_info_list": [],  # 页面解析出的图片信息列表
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("posts", "result"), index_page_response.json_data) and index_page_response.json_data["result"] == "SUCCESS":
-            for album_info in index_page_response.json_data["posts"]:
+    if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("posts", "result"), album_pagination_response.json_data) and album_pagination_response.json_data["result"] == "SUCCESS":
+            for album_info in album_pagination_response.json_data["posts"]:
                 extra_image_info = {
                     "album_id": None,  # 页面解析出的相册id
                     "album_time": None,  # 页面解析出的相册创建时间
@@ -80,8 +80,8 @@ def get_one_page_album(account_id, post_time):
                 extra_info["album_info_list"].append(extra_image_info)
         else:
             extra_info["is_error"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    album_pagination_response.extra_info = extra_info
+    return album_pagination_response
 
 
 class TuChong(robot.Robot):
@@ -171,14 +171,14 @@ class Download(threading.Thread):
             if account_name.isdigit():
                 account_id = account_name
             else:
-                home_page_response = get_home_page(account_name)
-                if home_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 主页无法访问，原因：%s" % robot.get_http_request_failed_reason(home_page_response.status))
+                account_index_response = get_account_index_page(account_name)
+                if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 主页无法访问，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
                     tool.process_exit()
-                if not home_page_response.extra_info["account_id"]:
+                if not account_index_response.extra_info["account_id"]:
                     log.error(account_name + " account id解析失败")
                     tool.process_exit()
-                account_id = home_page_response.extra_info["account_id"]
+                account_id = account_index_response.extra_info["account_id"]
 
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
 
@@ -191,22 +191,22 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析%s后的一页相册" % post_time)
 
                 # 获取一页相册
-                index_page_response = get_one_page_album(account_id, post_time)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " %s后的一页相册访问失败，原因：%s" % (post_time, robot.get_http_request_failed_reason(index_page_response.status)))
+                album_pagination_response = get_one_page_album(account_id, post_time)
+                if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " %s后的一页相册访问失败，原因：%s" % (post_time, robot.get_http_request_failed_reason(album_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_error"]:
-                    log.error(account_name + " %s后的一页相册 %s 解析失败" % (post_time, index_page_response.json_data))
+                if album_pagination_response.extra_info["is_error"]:
+                    log.error(account_name + " %s后的一页相册 %s 解析失败" % (post_time, album_pagination_response.json_data))
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if len(index_page_response.extra_info["album_info_list"]) == 0:
+                if len(album_pagination_response.extra_info["album_info_list"]) == 0:
                     break
 
-                log.trace(account_name + " %s后的一页相册：%s" % (post_time, index_page_response.extra_info["album_info_list"]))
+                log.trace(account_name + " %s后的一页相册：%s" % (post_time, album_pagination_response.extra_info["album_info_list"]))
 
-                for album_info in index_page_response.extra_info["album_info_list"]:
+                for album_info in album_pagination_response.extra_info["album_info_list"]:
                     if album_info["album_id"] is None:
                         log.error(account_name + " 相册信息%s解析相册id失败" % album_info["json_data"])
                         tool.process_exit()
