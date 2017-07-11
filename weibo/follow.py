@@ -16,7 +16,7 @@ COOKIE_INFO = {"SUB": ""}
 
 # 关注指定账号
 def follow_account(account_id):
-    follow_api_url = "http://weibo.com/aj/f/followed?ajwvr=6"
+    api_url = "http://weibo.com/aj/f/followed?ajwvr=6"
     post_data = {
         "uid": account_id,
         "refer_flag": "1005050001_",
@@ -25,26 +25,26 @@ def follow_account(account_id):
         "Referer": "http://weibo.com/%s/follow" % account_id,
     }
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    follow_api_response = net.http_request(follow_api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
-    if follow_api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("code",), follow_api_response.json_data) and robot.is_integer(follow_api_response.json_data["code"]):
-            if int(follow_api_response.json_data["code"]) == 100000:
+    follow_response = net.http_request(api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
+    if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("code",), follow_response.json_data) and robot.is_integer(follow_response.json_data["code"]):
+            if int(follow_response.json_data["code"]) == 100000:
                 tool.print_msg("关注%s成功" % account_id)
                 time.sleep(5)
                 return True
-            elif int(follow_api_response.json_data["code"]) == 100027:
+            elif int(follow_response.json_data["code"]) == 100027:
                 tool.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
                 # sleep 一段时间后再试
                 time.sleep(60)
-            elif int(follow_api_response.json_data["code"]) == 100001:
+            elif int(follow_response.json_data["code"]) == 100001:
                 tool.print_msg("达到今日关注上限，退出程序" % account_id)
                 tool.process_exit()
             else:
-                tool.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_api_response.json_data))
+                tool.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
                 tool.process_exit()
             return False
     else:
-        tool.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, robot.get_http_request_failed_reason(follow_api_response.status)))
+        tool.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()
     return False
 
