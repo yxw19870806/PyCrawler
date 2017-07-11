@@ -35,16 +35,16 @@ def get_album_page(page_count):
             key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
             is_error = True
             if key:
-                media_page_url = "http://zz.meituzz.com/ab/bd"
+                media_url = "http://zz.meituzz.com/ab/bd"
                 post_data = {"y": page_count, "s": key}
-                media_page_response = net.http_request(media_page_url, method="POST", post_data=post_data, json_decode=True)
-                if media_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
+                if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     # 检测是否是图片相册
-                    if robot.check_sub_key(("i",), media_page_response.json_data) and isinstance(media_page_response.json_data["i"], list):
+                    if robot.check_sub_key(("i",), media_response.json_data) and isinstance(media_response.json_data["i"], list):
                         is_error = False
-                        if len(media_page_response.json_data["i"]) > 0:
+                        if len(media_response.json_data["i"]) > 0:
                             image_url_list = []
-                            for image_info in media_page_response.json_data["i"]:
+                            for image_info in media_response.json_data["i"]:
                                 if robot.check_sub_key(("url",), image_info):
                                     image_url_list.append(str(image_info["url"]))
                                 else:
@@ -52,9 +52,9 @@ def get_album_page(page_count):
                                     break
                             extra_info["image_url_list"] = image_url_list
                     # 检测是否是视频相册
-                    if robot.check_sub_key(("v",), media_page_response.json_data):
+                    if robot.check_sub_key(("v",), media_response.json_data):
                         is_error = False
-                        extra_info["video_url"] = str(media_page_response.json_data["v"])
+                        extra_info["video_url"] = str(media_response.json_data["v"])
             extra_info["is_error"] = is_error
     album_response.extra_info = extra_info
     return album_response
