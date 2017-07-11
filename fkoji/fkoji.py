@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from common import BeautifulSoup
+from pyquery import PyQuery as pq
 import os
 import time
 
@@ -15,7 +15,42 @@ import time
 # 获取指定页数的所有图片
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
-    return net.http_request(photo_pagination_url)
+    photo_pagination_response = net.http_request(photo_pagination_url)
+    extra_info = {
+        "image_info_list": [],  # 页面解析出的图片信息列表
+    }
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        photo_list_selector = pq(photo_pagination_response.data).find("#wrapper .row .photo")
+        for photo_index in range(0, photo_list_selector.size()):
+            photo_selector = photo_list_selector.eq(photo_index)
+            extra_photo_info = {
+                "is_error": False,  # 是不是格式不符合
+                "account_name": "",  # 页面解析出的账号名字
+                "image_url": "",  # 页面解析出的图片地址
+                "time": 0,  # 页面解析出的图片上传时间
+                "html": photo_selector.html(),  # 原始页面
+            }
+            account_name = photo_selector.find(".user-info .user-name .screen-name").text()
+            if account_name:
+                extra_photo_info["account_name"] = account_name.strip().replace("@", "")
+            else:
+                extra_photo_info["is_error"] = True
+                continue
+            tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text()
+            if tweet_time:
+                extra_photo_info["time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
+            else:
+                extra_photo_info["is_error"] = True
+                continue
+            image_url = photo_selector.find(".photo-link-outer a img").attr("src")
+            if image_url:
+                extra_photo_info["image_url"] = image_url
+            else:
+                extra_photo_info["is_error"] = True
+                continue
+            extra_info["image_info_list"].append(extra_photo_info)
+    photo_pagination_response.extra_info = extra_info
+    return photo_pagination_response
 
 
 # 从图片页面中解析获取推特发布时间的时间戳
@@ -24,17 +59,6 @@ def get_tweet_created_time(photo_info):
     if len(tweet_created_time_find) == 1:
         tweet_created_time_string = tweet_created_time_find[0].text
         return int(time.mktime(time.strptime(tweet_created_time_string, "%Y-%m-%d %H:%M:%S")))
-    return None
-
-
-# 从图片页面中解析获取推特发布账号
-def get_tweet_account_id(photo_info):
-    span_tags = photo_info.findAll("span")
-    for tag in span_tags:
-        sub_tag = tag.next.next
-        if isinstance(sub_tag, BeautifulSoup.NavigableString):
-            if sub_tag.find("@") == 0:
-                return sub_tag[1:].encode("GBK")
     return None
 
 
@@ -85,64 +109,42 @@ class Fkoji(robot.Robot):
                 log.error("第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                 tool.process_exit()
 
-            index_page = BeautifulSoup.BeautifulSoup(photo_pagination_response.data)
-            photo_list = index_page.body.findAll("div", "photo")
-            # 已经下载到最后一页
-            if not photo_list:
-                break
+            if len(photo_pagination_response.extra_info["image_info_list"]) == 0:
+                log.error("第%s页图片解析失败" % page_count)
+                tool.process_exit()
 
-            for photo_info in photo_list:
-                if isinstance(photo_info, BeautifulSoup.NavigableString):
-                    continue
-
-                # 从图片页面中解析获取推特发布时间的时间戳
-                tweet_created_time = get_tweet_created_time(photo_info)
-                if tweet_created_time is None:
-                    log.error("第%s张图片 图片上传时间解析失败" % image_count)
-                    continue
+            for image_info in photo_pagination_response.extra_info["image_info_list"]:
+                if image_info["is_error"]:
+                    log.error("第%s张图片所在页面%s解析失败" % (page_count, image_info["html"]))
+                    tool.process_exit()
 
                 # 检查是否已下载到前一次的图片
-                if tweet_created_time <= last_blog_time:
+                if image_info["time"] <= last_blog_time:
                     is_over = True
                     break
 
                 # 将第一张图片的上传时间做为新的存档记录
                 if new_last_blog_time == "":
-                    new_last_blog_time = str(tweet_created_time)
+                    new_last_blog_time = str(image_info["time"])
 
-                # 从图片页面中解析获取推特发布账号
-                account_id = get_tweet_account_id(photo_info)
-                if account_id is None:
-                    log.error("第%s张图片 解析Twitter账号失败" % image_count)
+                # 新增图片导致的重复判断
+                if image_info["image_url"] in unique_list:
                     continue
+                else:
+                    unique_list.append(image_info["image_url"])
 
-                # 找图片
-                img_tags = photo_info.findAll("img")
-                for tag in img_tags:
-                    tag_attr = dict(tag.attrs)
-                    if robot.check_sub_key(("src", "alt"), tag_attr):
-                        image_url = str(tag_attr["src"]).replace(" ", "")
+                log.step("开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
-                        # 新增图片导致的重复判断
-                        if image_url in unique_list:
-                            continue
-                        else:
-                            unique_list.append(image_url)
-
-                        log.step("开始下载第%s张图片 %s" % (image_count, image_url))
-
-                        file_type = image_url.split(".")[-1]
-                        if file_type.find("/") != -1:
-                            file_type = "jpg"
-                        file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, account_id, file_type))
-                        save_file_return = net.save_net_file(image_url, file_path)
-                        if save_file_return["status"] == 1:
-                            log.step("第%s张图片下载成功" % image_count)
-                            image_count += 1
-                        else:
-                            log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_count, account_id, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                if is_over:
-                    break
+                file_type = image_info["image_url"].split(".")[-1]
+                if file_type.find("/") != -1:
+                    file_type = "jpg"
+                file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, image_info["account_name"], file_type))
+                save_file_return = net.save_net_file(image_info["image_url"], file_path)
+                if save_file_return["status"] == 1:
+                    log.step("第%s张图片下载成功" % image_count)
+                    image_count += 1
+                else:
+                    log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_count, image_info["account_name"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
             if not is_over:
                 page_count += 1
