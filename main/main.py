@@ -232,6 +232,14 @@ def weishi():
     weishi.WeiShi().main()
 
 
+# 看了又看
+def yasaxi():
+    from yasaxi import yasaxi
+    yasaxi_path = os.path.join(os.path.abspath(".."), "yasaxi")
+    os.chdir(yasaxi_path)
+    yasaxi.Yasaxi().main()
+
+
 # 一直播
 def yizhibo():
     from yizhibo import yizhibo
@@ -277,6 +285,7 @@ def zunguang():
 # twitter()
 # weibo()
 # weibo_article()
+# yasaxi()
 # yizhibo()
 # ywkb()
 # zunguang()
