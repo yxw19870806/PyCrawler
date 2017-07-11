@@ -66,13 +66,13 @@ def get_follow_list(account_name):
     if auth_token is None:
         return None
     while True:
-        follow_page_data = get_one_page_follow(account_name, auth_token, position_id)
-        if follow_page_data is not None:
-            profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_page_data["items_html"])
+        follow_pagination_data = get_one_page_follow(account_name, auth_token, position_id)
+        if follow_pagination_data is not None:
+            profile_list = re.findall('<div class="ProfileCard[^>]*data-screen-name="([^"]*)"[^>]*>', follow_pagination_data["items_html"])
             if len(profile_list) > 0:
                 follow_list += profile_list
-            if follow_page_data["has_more_items"]:
-                position_id = follow_page_data["min_position"]
+            if follow_pagination_data["has_more_items"]:
+                position_id = follow_pagination_data["min_position"]
                 continue
         break
     return follow_list
@@ -80,10 +80,10 @@ def get_follow_list(account_name):
 
 # 获取一页的关注列表
 def get_one_page_follow(account_name, auth_token, position_id):
-    follow_list_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
+    follow_pagination_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
     cookies_list = {"auth_token": auth_token}
-    follow_list_response = net.http_request(follow_list_url, cookies_list=cookies_list, json_decode=True)
-    if follow_list_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_list_response.json_data):
-            return follow_list_response.json_data
+    follow_pagination_response = net.http_request(follow_pagination_url, cookies_list=cookies_list, json_decode=True)
+    if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_pagination_response.json_data):
+            return follow_pagination_response.json_data
     return None
