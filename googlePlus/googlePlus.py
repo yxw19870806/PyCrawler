@@ -114,11 +114,11 @@ def get_album_page(account_id, album_id):
             else:
                 # 如果不为空，说明还有下一页
                 while continue_token:
-                    continue_image_url = "https://get.google.com/_/AlbumArchiveUi/data"
+                    api_url = "https://get.google.com/_/AlbumArchiveUi/data"
                     post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-                    continue_image_page_response = net.http_request(continue_image_url, method="POST", post_data=post_data, encode_multipart=False)
-                    if continue_image_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                        continue_data = tool.find_sub_string(continue_image_page_response.data, ")]}'", None).strip()
+                    image_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, encode_multipart=False)
+                    if image_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                        continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
                         try:
                             continue_data = json.loads(continue_data)
                             continue_token = continue_data[0][2]["113305010"][3]
