@@ -37,22 +37,22 @@ COOKIE_INFO = {"SUB": ""}
 
 # 获取一页的图片信息
 def get_one_page_photo(account_id, page_count):
-    index_page_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
+    photo_pagination_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": True,  # 是不是格式不符合
         "image_info_list": [],  # 页面解析出的所有图片信息列表
         "is_over": False,  # 是不是最后一页图片
     }
-    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list, json_decode=True)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    photo_pagination_response = net.http_request(photo_pagination_url, cookies_list=cookies_list, json_decode=True)
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
-            robot.check_sub_key(("data",), index_page_response.json_data) and
-            robot.check_sub_key(("total", "photo_list"), index_page_response.json_data["data"]) and
-            robot.is_integer(index_page_response.json_data["data"]["total"])
+            robot.check_sub_key(("data",), photo_pagination_response.json_data) and
+            robot.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]) and
+            robot.is_integer(photo_pagination_response.json_data["data"]["total"])
         ):
             extra_info["is_error"] = False
-            for image_info in index_page_response.json_data["data"]["photo_list"]:
+            for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
                 extra_image_info = {
                     "image_time": None,  # 页面解析出的图片上传时间
                     "image_url": None,  # 页面解析出的图片地址
@@ -73,31 +73,31 @@ def get_one_page_photo(account_id, page_count):
 
                 extra_info["image_info_list"].append(extra_image_info)
             # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-            extra_info["is_over"] = page_count >= (index_page_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
-    index_page_response.extra_info = extra_info
-    return index_page_response
+            extra_info["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
+    photo_pagination_response.extra_info = extra_info
+    return photo_pagination_response
 
 
 # 获取一页的视频信息
 # page_id -> 1005052535836307
 def get_one_page_video(account_page_id, since_id):
     # http://weibo.com/p/aj/album/loading?type=video&since_id=9999999999999999&page_id=1005052535836307&page=1&ajax_call=1
-    index_page_url = "http://weibo.com/p/aj/album/loading"
-    index_page_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1&__rnd=%s" % (since_id, account_page_id, int(time.time() * 1000))
+    video_pagination_url = "http://weibo.com/p/aj/album/loading"
+    video_pagination_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1&__rnd=%s" % (since_id, account_page_id, int(time.time() * 1000))
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "video_play_url_list": [],  # 页面解析出的所有视频地址列表
         "next_page_since_id": None,  # 页面解析出的下一页视频的指针
     }
-    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list, json_decode=True)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    video_pagination_response = net.http_request(video_pagination_url, cookies_list=cookies_list, json_decode=True)
+    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if(
-            robot.check_sub_key(("code", "data"), index_page_response.json_data) and
-            robot.is_integer(index_page_response.json_data["code"]) and
-            int(index_page_response.json_data["code"]) == 100000
+            robot.check_sub_key(("code", "data"), video_pagination_response.json_data) and
+            robot.is_integer(video_pagination_response.json_data["code"]) and
+            int(video_pagination_response.json_data["code"]) == 100000
         ):
-            page_html = index_page_response.json_data["data"].encode("utf-8")
+            page_html = video_pagination_response.json_data["data"].encode("utf-8")
             # 获取视频播放地址类别
             video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
             if len(video_play_url_list) == 0:
@@ -111,16 +111,16 @@ def get_one_page_video(account_page_id, since_id):
                 extra_info["next_page_since_id"] = next_page_since_id
         else:
             extra_info["is_error"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    video_pagination_response.extra_info = extra_info
+    return video_pagination_response
 
 
 # 从视频播放页面中提取下载地址
-def get_video_url(video_play_page_url):
+def get_video_url(video_play_url):
     video_url = None
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
-    if video_play_page_url.find("miaopai.com/show/") >= 0:  # 秒拍
-        video_id = tool.find_sub_string(video_play_page_url, "miaopai.com/show/", ".")
+    if video_play_url.find("miaopai.com/show/") >= 0:  # 秒拍
+        video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".")
         video_info_page_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
         video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
         if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -134,9 +134,9 @@ def get_video_url(video_play_page_url):
                         video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
                         break
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
-    elif video_play_page_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
+    elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-        video_play_page_response = net.http_request(video_play_page_url, cookies_list=cookies_list)
+        video_play_page_response = net.http_request(video_play_url, cookies_list=cookies_list)
         if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url = tool.find_sub_string(video_play_page_response.data, "video_src=", "&")
             if not video_url:
@@ -148,8 +148,8 @@ def get_video_url(video_play_page_url):
         elif video_play_page_response.status == 404:
             video_url = ""
     # http://www.meipai.com/media/98089758
-    elif video_play_page_url.find("www.meipai.com/media") >= 0:  # 美拍
-        video_play_page_response = net.http_request(video_play_page_url)
+    elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
+        video_play_page_response = net.http_request(video_play_url)
         if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_page_response.data)
             if len(video_url_find) == 1:
@@ -164,23 +164,23 @@ def get_video_url(video_play_page_url):
                     if video_url.find("http") != 0:
                         video_url = None
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
-    elif video_play_page_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
-        video_id = video_play_page_url.split("/")[-1].split(".")[0]
+    elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
+        video_id = video_play_url.split("/")[-1].split(".")[0]
         video_url = "http://gslb.miaopai.com/stream/%s.mp4" % video_id
     # http://www.weishi.com/t/2000546051794045
-    elif video_play_page_url.find("www.weishi.com/t/") >= 0:  # 微视
-        video_play_page_response = net.http_request(video_play_page_url)
+    elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
+        video_play_page_response = net.http_request(video_play_url)
         if video_play_page_response == net.HTTP_RETURN_CODE_SUCCEED:
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_page_response.data)
             if len(video_id_find) == 1:
-                video_id = video_play_page_url.split("/")[-1]
+                video_id = video_play_url.split("/")[-1]
                 video_info_page_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
                 video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
                 if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     if robot.check_sub_key(("data",), video_info_page_response.json_data) and robot.check_sub_key(("url",), video_info_page_response.json_data["data"]):
                         video_url = str(random.choice(video_info_page_response.json_data["data"]["url"]))
     else:  # 其他视频，暂时不支持，收集看看有没有
-        log.error("其他第三方视频：" + video_play_page_url)
+        log.error("其他第三方视频：" + video_play_url)
         video_url = ""
     return video_url
 
@@ -340,20 +340,20 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取指定一页图片的信息
-                index_page_response = get_one_page_photo(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                photo_pagination_response = get_one_page_photo(account_id, page_count)
+                if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页图片%s解析失败" % (page_count, index_page_response.json_data))
+                if photo_pagination_response.extra_info["is_error"]:
+                    log.error(account_name + " 第%s页图片%s解析失败" % (page_count, photo_pagination_response.json_data))
                     tool.process_exit()
 
-                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, index_page_response.extra_info["image_info_list"]))
+                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
 
-                for image_info in index_page_response.extra_info["image_info_list"]:
+                for image_info in photo_pagination_response.extra_info["image_info_list"]:
                     if image_info["image_time"] is None:
-                        log.error(account_name + " 第%s页图片%s解析失败" % (page_count, index_page_response.json_data))
+                        log.error(account_name + " 第%s页图片%s解析失败" % (page_count, photo_pagination_response.json_data))
                         tool.process_exit()
 
                     # 检查是否图片时间小于上次的记录
@@ -401,7 +401,7 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if index_page_response.extra_info["is_over"]:
+                    if photo_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
@@ -427,36 +427,36 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析%s后一页视频" % since_id)
 
                     # 获取指定时间点后的一页视频信息
-                    index_page_response = get_one_page_video(home_page_response.extra_info["account_page_id"], since_id)
-                    if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, robot.get_http_request_failed_reason(index_page_response.status)))
+                    video_pagination_response = get_one_page_video(home_page_response.extra_info["account_page_id"], since_id)
+                    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, robot.get_http_request_failed_reason(video_pagination_response.status)))
                         first_video_url = ""  # 存档恢复
                         break
 
-                    if index_page_response.extra_info["is_error"]:
-                        log.error(account_name + " %s后的一页视频%s解析失败" % (since_id, index_page_response.json_data))
+                    if video_pagination_response.extra_info["is_error"]:
+                        log.error(account_name + " %s后的一页视频%s解析失败" % (since_id, video_pagination_response.json_data))
                         first_video_url = ""  # 存档恢复
                         break
 
                     # 匹配获取全部的视频页面
-                    log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, index_page_response.extra_info["video_play_url_list"]))
+                    log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_pagination_response.extra_info["video_play_url_list"]))
 
-                    for video_play_page_url in index_page_response.extra_info["video_play_url_list"]:
+                    for video_play_url in video_pagination_response.extra_info["video_play_url_list"]:
                         # 检查是否是上一次的最后视频
-                        if self.account_info[4] == video_play_page_url:
+                        if self.account_info[4] == video_play_url:
                             is_over = True
                             break
 
                         # 将第一个视频的地址做为新的存档记录
                         if first_video_url == "":
-                            first_video_url = video_play_page_url
+                            first_video_url = video_play_url
 
-                        log.step(account_name + " 开始解析第%s个视频 %s" % (video_count, video_play_page_url))
+                        log.step(account_name + " 开始解析第%s个视频 %s" % (video_count, video_play_url))
 
                         # 获取这个视频的下载地址
-                        video_url = get_video_url(video_play_page_url)
+                        video_url = get_video_url(video_play_url)
                         if video_url is None:
-                            log.error(account_name + " 第%s个视频 %s 没有解析到下载地址" % (video_count, video_play_page_url))
+                            log.error(account_name + " 第%s个视频 %s 没有解析到下载地址" % (video_count, video_play_url))
                             continue
 
                         if video_url is "":
@@ -477,7 +477,7 @@ class Download(threading.Thread):
                             log.step(account_name + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
-                            log.error(account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_count, video_play_page_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_count, video_play_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                         # 达到配置文件中的下载数量，结束
                         if 0 < GET_VIDEO_COUNT < video_count:
@@ -486,7 +486,7 @@ class Download(threading.Thread):
 
                     if not is_over:
                         # 获取下一页的since_id
-                        since_id = index_page_response.extra_info["next_page_since_id"]
+                        since_id = video_pagination_response.extra_info["next_page_since_id"]
                         if not since_id:
                             break
 
