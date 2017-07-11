@@ -68,7 +68,7 @@ def get_account_from_api():
     return account_list
 
 
-if __name__ == "__main__":
+def main():
     if get_token_from_file():
         save_data_path = os.path.join("info/save.data")
         account_list_from_api = get_account_from_api()
@@ -79,3 +79,6 @@ if __name__ == "__main__":
                     account_list_from_save_data[account_id] = "%s\t\t%s" % (account_id, account_list_from_api[account_id])
             temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
             tool.write_file(tool.list_to_string(temp_list, "\n", ""), save_data_path, 2)
+
+if __name__ == "__main__":
+    main()
