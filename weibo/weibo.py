@@ -121,15 +121,15 @@ def get_video_url(video_play_url):
     # http://miaopai.com/show/Gmd7rwiNrc84z5h6S9DhjQ__.htm
     if video_play_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".")
-        video_info_page_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
-        video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
-        if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
+        video_info_response = net.http_request(video_info_url, json_decode=True)
+        if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if (
-                robot.check_sub_key(("status", "result"), video_info_page_response.json_data) and
-                robot.is_integer(video_info_page_response.json_data["status"]) and
-                int(video_info_page_response.json_data["status"]) == 200
+                robot.check_sub_key(("status", "result"), video_info_response.json_data) and
+                robot.is_integer(video_info_response.json_data["status"]) and
+                int(video_info_response.json_data["status"]) == 200
             ):
-                for video_info in video_info_page_response.json_data["result"]:
+                for video_info in video_info_response.json_data["result"]:
                     if robot.check_sub_key(("path", "host", "scheme"), video_info):
                         video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
                         break
@@ -174,11 +174,11 @@ def get_video_url(video_play_url):
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_page_response.data)
             if len(video_id_find) == 1:
                 video_id = video_play_url.split("/")[-1]
-                video_info_page_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
-                video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
-                if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                    if robot.check_sub_key(("data",), video_info_page_response.json_data) and robot.check_sub_key(("url",), video_info_page_response.json_data["data"]):
-                        video_url = str(random.choice(video_info_page_response.json_data["data"]["url"]))
+                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
+                video_info_response = net.http_request(video_info_url, json_decode=True)
+                if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                    if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_info_page_response.json_data["data"]):
+                        video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
     else:  # 其他视频，暂时不支持，收集看看有没有
         log.error("其他第三方视频：" + video_play_url)
         video_url = ""
