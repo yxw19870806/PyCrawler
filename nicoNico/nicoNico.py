@@ -23,12 +23,12 @@ IS_SORT = True
 
 # 获取所有的视频信息列表
 # account_id => 15614906
-def get_video_page(account_id):
+def get_account_index_page(account_id):
     # http://www.nicovideo.jp/mylist/15614906#+page=1
-    video_page_url = "http://www.nicovideo.jp/mylist/%s" % account_id
-    video_page_response = net.http_request(video_page_url)
-    if video_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        all_video_info = tool.find_sub_string(video_page_response.data, "Mylist.preload(%s," % account_id, ");").strip()
+    account_index_url = "http://www.nicovideo.jp/mylist/%s" % account_id
+    account_index_response = net.http_request(account_index_url)
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
         try:
             all_video_info = json.loads(all_video_info)
         except ValueError:
@@ -40,7 +40,7 @@ def get_video_page(account_id):
                 if robot.check_sub_key(("item_data", "item_id"), video_info) and robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
                     print video_info["item_data"]["item_id"]  # 投稿时间
                     print video_info["item_data"]["watch_id"]
-    return video_page_response
+    return account_index_response
 
 
 # 根据视频id，获取视频的下载地址
@@ -208,15 +208,15 @@ class Download(threading.Thread):
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
 
             # 获取视频信息列表
-            video_page_response = get_video_page(account_id)
-            if video_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 视频列表访问失败，原因：%s" % robot.get_http_request_failed_reason(video_page_response.status))
+            account_index_response = get_account_index_page(account_id)
+            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(account_name + " 视频列表访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
                 tool.process_exit()
 
             video_count = 1
             first_video_id = "0"
             need_make_video_dir = True
-            for video_info in video_page_response.extra_info["video_info_list"]:
+            for video_info in account_index_response.extra_info["video_info_list"]:
                 if not robot.check_sub_key(("item_data",), video_info) or \
                         not robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
                     log.error(account_name + " 视频信息%s解析失败" % video_info)
