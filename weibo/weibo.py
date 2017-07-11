@@ -136,22 +136,22 @@ def get_video_url(video_play_url):
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-        video_play_page_response = net.http_request(video_play_url, cookies_list=cookies_list)
-        if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            video_url = tool.find_sub_string(video_play_page_response.data, "video_src=", "&")
+        video_play_response = net.http_request(video_play_url, cookies_list=cookies_list)
+        if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            video_url = tool.find_sub_string(video_play_response.data, "video_src=", "&")
             if not video_url:
-                video_url = tool.find_sub_string(video_play_page_response.data, 'flashvars="list=', '"')
+                video_url = tool.find_sub_string(video_play_response.data, 'flashvars="list=', '"')
             if video_url:
                 video_url = str(urllib2.unquote(video_url))
             else:
                 video_url = None
-        elif video_play_page_response.status == 404:
+        elif video_play_response.status == 404:
             video_url = ""
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
-        video_play_page_response = net.http_request(video_play_url)
-        if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_page_response.data)
+        video_play_response = net.http_request(video_play_url)
+        if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
             if len(video_url_find) == 1:
                 loc1 = meipai_get_hex(video_url_find[0])
                 loc2 = meipai_get_dec(loc1["hex"])
@@ -169,15 +169,15 @@ def get_video_url(video_play_url):
         video_url = "http://gslb.miaopai.com/stream/%s.mp4" % video_id
     # http://www.weishi.com/t/2000546051794045
     elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
-        video_play_page_response = net.http_request(video_play_url)
-        if video_play_page_response == net.HTTP_RETURN_CODE_SUCCEED:
-            video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_page_response.data)
+        video_play_response = net.http_request(video_play_url)
+        if video_play_response == net.HTTP_RETURN_CODE_SUCCEED:
+            video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_response.data)
             if len(video_id_find) == 1:
                 video_id = video_play_url.split("/")[-1]
                 video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
                 video_info_response = net.http_request(video_info_url, json_decode=True)
                 if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                    if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_info_page_response.json_data["data"]):
+                    if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_play_response.json_data["data"]):
                         video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
     else:  # 其他视频，暂时不支持，收集看看有没有
         log.error("其他第三方视频：" + video_play_url)
