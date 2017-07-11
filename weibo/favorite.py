@@ -18,16 +18,16 @@ COOKIE_INFO = {"SUB": ""}
 # 获取一页的收藏微博ge
 def get_one_page_favorite(page_count):
     # http://www.weibo.com/fav?page=1
-    index_page_url = "http://www.weibo.com/fav?page=%s" % page_count
+    favorite_pagination_url = "http://www.weibo.com/fav?page=%s" % page_count
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list)
+    favorite_pagination_response = net.http_request(favorite_pagination_url, cookies_list=cookies_list)
     extra_info = {
         "is_error": False,  # 是不是不符合格式
         "is_over": False,  # 是不是最后一页收藏
         "blog_info_list": [],  # 页面解析出的微博信息列表
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        html_data = tool.find_sub_string(index_page_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
+    if favorite_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        html_data = tool.find_sub_string(favorite_pagination_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
         html_data = tool.find_sub_string(html_data, '"html":"', '"})')
         # 替换全部转义斜杠以及没有用的换行符等
         html_data = html_data.replace("\\\\", chr(1))
@@ -84,8 +84,8 @@ def get_one_page_favorite(page_count):
             if len(page_count_find) > 0:
                 page_count_find = map(int, page_count_find)
                 extra_info["is_over"] = page_count >= max(page_count_find)
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    favorite_pagination_response.extra_info = extra_info
+    return favorite_pagination_response
 
 
 class Favorite(robot.Robot):
@@ -123,16 +123,16 @@ class Favorite(robot.Robot):
         while not is_over:
             log.step("开始解析第%s页收藏" % page_count)
 
-            index_page_response = get_one_page_favorite(page_count)
-            if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页收藏访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+            favorite_pagination_response = get_one_page_favorite(page_count)
+            if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error("第%s页收藏访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(favorite_pagination_response.status)))
                 tool.process_exit()
 
-            if index_page_response.extra_info["is_error"]:
+            if favorite_pagination_response.extra_info["is_error"]:
                 log.error("第%s页收藏解析失败" % page_count)
                 tool.process_exit()
 
-            for blog_info in index_page_response.extra_info["blog_info_list"]:
+            for blog_info in favorite_pagination_response.extra_info["blog_info_list"]:
                 log.step("开始解析微博%s" % blog_info["blog_id"])
 
                 image_path = os.path.join(self.image_download_path, blog_info["blog_id"])
@@ -159,7 +159,7 @@ class Favorite(robot.Robot):
                     else:
                         log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-            if index_page_response.extra_info["is_over"]:
+            if favorite_pagination_response.extra_info["is_over"]:
                 is_over = True
             else:
                 page_count += 1
