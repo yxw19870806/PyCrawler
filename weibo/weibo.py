@@ -411,12 +411,12 @@ class Download(threading.Thread):
             first_video_url = ""
             while IS_DOWNLOAD_VIDEO:
                 # 获取账号首页
-                home_page_response = weiboCommon.get_home_page(account_id)
-                if home_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(home_page_response.status))
+                account_index_response = weiboCommon.get_account_index_page(account_id)
+                if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
                     break
 
-                if home_page_response.extra_info["account_page_id"] is None:
+                if account_index_response.extra_info["account_page_id"] is None:
                     log.error(account_name + " 账号page id解析失败")
                     break
 
@@ -427,7 +427,7 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析%s后一页视频" % since_id)
 
                     # 获取指定时间点后的一页视频信息
-                    video_pagination_response = get_one_page_video(home_page_response.extra_info["account_page_id"], since_id)
+                    video_pagination_response = get_one_page_video(account_index_response.extra_info["account_page_id"], since_id)
                     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, robot.get_http_request_failed_reason(video_pagination_response.status)))
                         first_video_url = ""  # 存档恢复

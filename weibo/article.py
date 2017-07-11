@@ -222,12 +222,12 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 获取账号首页
-            home_page_response = weiboCommon.get_home_page(account_id)
-            if home_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(home_page_response.status))
+            account_index_response = weiboCommon.get_account_index_page(account_id)
+            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
                 tool.process_exit()
 
-            if home_page_response.extra_info["account_page_id"] is None:
+            if account_index_response.extra_info["account_page_id"] is None:
                 log.error(account_name + " 账号page id解析失败")
                 tool.process_exit()
 
@@ -238,7 +238,7 @@ class Download(threading.Thread):
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 # 获取一页文章预览页面
-                article_pagination_response = get_one_page_article(home_page_response.extra_info["account_page_id"], page_count)
+                article_pagination_response = get_one_page_article(account_index_response.extra_info["account_page_id"], page_count)
 
                 if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     log.error(account_name + " 第%s页文章访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(article_pagination_response.status)))

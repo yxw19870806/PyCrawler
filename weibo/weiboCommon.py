@@ -35,20 +35,20 @@ def generate_login_cookie(cookie_info):
 
 
 # 获取账号首页
-def get_home_page(account_id):
-    home_page_url = "http://weibo.com/u/%s?is_all=1" % account_id
+def get_account_index_page(account_id):
+    account_index_url = "http://weibo.com/u/%s?is_all=1" % account_id
     cookies_list = {"SUB": tool.generate_random_string(30)}
     extra_info = {
         "account_page_id": None,  # 页面解析出的账号page id
     }
-    home_page_response = net.http_request(home_page_url, cookies_list=cookies_list)
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    account_index_response = net.http_request(account_index_url, cookies_list=cookies_list)
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
-        account_page_id = tool.find_sub_string(home_page_response.data, "$CONFIG['page_id']='", "'")
+        account_page_id = tool.find_sub_string(account_index_response.data, "$CONFIG['page_id']='", "'")
         if account_page_id and robot.is_integer(account_page_id):
             extra_info["account_page_id"] = account_page_id
-    home_page_response.extra_info = extra_info
-    return home_page_response
+    account_index_response.extra_info = extra_info
+    return account_index_response
 
 
 # 检测图片是不是被微博自动删除的文件
