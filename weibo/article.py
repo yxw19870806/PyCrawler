@@ -25,17 +25,17 @@ COOKIE_INFO = {"SUB": ""}
 
 # 获取一页的预览文章
 # page_id -> 1005052212970554
-def get_one_page_preview_article(page_id, page_count):
+def get_one_page_article(page_id, page_count):
     # http://weibo.com/p/1005052212970554/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=1&ajaxpagelet=1
-    index_page_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
+    preview_article_pagination_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "article_info_list": [],  # 页面解析出的文章信息列表
         "is_over": False,  # 是不是最后一页文章
     }
-    index_page_response = net.http_request(index_page_url, cookies_list=cookies_list)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        article_data = tool.find_sub_string(index_page_response.data, '"html":"', '"})')
+    article_pagination_response = net.http_request(preview_article_pagination_url, cookies_list=cookies_list)
+    if article_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        article_data = tool.find_sub_string(article_pagination_response.data, '"html":"', '"})')
         article_data = article_data.replace("\\t", "").replace("\\n", "").replace("\\r", "")
         preview_article_data_list = re.findall("<li([\S|\s]*?)<\\\\/li>", article_data)
         if len(preview_article_data_list) > 0:
@@ -55,16 +55,16 @@ def get_one_page_preview_article(page_id, page_count):
                     extra_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
                 extra_info["article_info_list"].append(extra_article_info)
             # 检测是否还有下一页
-            page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', index_page_response.data)
+            page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response.data)
             extra_info["is_over"] = page_count >= max(map(int, page_count_find))
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    article_pagination_response.extra_info = extra_info
+    return article_pagination_response
 
 
 # 获取文章页面
-def get_article_page(article_page_url):
+def get_article_page(article_url):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    article_page_response = net.http_request(article_page_url, cookies_list=cookies_list)
+    article_response = net.http_request(article_url, cookies_list=cookies_list)
     extra_info = {
         "is_error": False,  # 是不是页面格式不符合
         "is_pay": False,  # 是否需要购买
@@ -73,38 +73,38 @@ def get_article_page(article_page_url):
         "top_image_url": None,  # 页面解析出的文章顶部图片
         "image_url_list": [],  # 页面解析出的文章信息列表
     }
-    if article_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["is_pay"] = article_page_response.data.find("购买继续阅读") >= 0
+    if article_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        extra_info["is_pay"] = article_response.data.find("购买继续阅读") >= 0
         article_type = None
-        article_id = tool.find_sub_string(article_page_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
+        article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
         if article_id:
             article_type = "t"
             extra_info["article_id"] = "t_" + article_id
         else:
-            article_id = tool.find_sub_string(article_page_url, "http://weibo.com/p/", "?mod=zwenzhang")
+            article_id = tool.find_sub_string(article_url, "http://weibo.com/p/", "?mod=zwenzhang")
             if article_id:
                 article_type = "p"
                 extra_info["article_id"] = "p_" + article_id
         if article_type is not None:
             # 获取文章标题
             if article_type == "t":
-                extra_info["article_title"] = tool.find_sub_string(article_page_response.data, '<div class="title" node-type="articleTitle">', "</div>")
+                extra_info["article_title"] = tool.find_sub_string(article_response.data, '<div class="title" node-type="articleTitle">', "</div>")
             elif article_type == "p":
-                extra_info["article_title"] = tool.find_sub_string(article_page_response.data, '<h1 class=\\"title\\">', "<\\/h1>")
+                extra_info["article_title"] = tool.find_sub_string(article_response.data, '<h1 class=\\"title\\">', "<\\/h1>")
             # 获取文章顶部图片地址
-            article_top_image_html = tool.find_sub_string(article_page_response.data, '<div class="main_toppic">', '<div class="main_editor')
+            article_top_image_html = tool.find_sub_string(article_response.data, '<div class="main_toppic">', '<div class="main_editor')
             if article_top_image_html:
                 extra_info["top_image_url"] = tool.find_sub_string(article_top_image_html, 'src="', '" />')
             # 获取文章图片地址列表
             article_body = None
             if article_type == "t":
                 # 正文到作者信息间的页面
-                article_body = tool.find_sub_string(article_page_response.data, '<div class="WB_editor_iframe', '<div class="artical_add_box')
+                article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div class="artical_add_box')
                 if not article_body:
                     # 正文到打赏按钮间的页面（未登录不显示关注界面）
-                    article_body = tool.find_sub_string(article_page_response.data, '<div class="WB_editor_iframe', '<div node-type="fanService">')
+                    article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div node-type="fanService">')
             elif article_type == "p":
-                article_body = tool.find_sub_string(article_page_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
+                article_body = tool.find_sub_string(article_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
             if article_body is not None:
                 image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
                 extra_info["image_url_list"] = map(str, image_url_list)
@@ -112,8 +112,8 @@ def get_article_page(article_page_url):
                 extra_info["is_error"] = True
         else:
             extra_info["is_error"] = True
-    article_page_response.extra_info = extra_info
-    return article_page_response
+    article_response.extra_info = extra_info
+    return article_response
 
 
 class Article(robot.Robot):
@@ -238,17 +238,17 @@ class Download(threading.Thread):
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 # 获取一页文章预览页面
-                index_page_response = get_one_page_preview_article(home_page_response.extra_info["account_page_id"], page_count)
+                article_pagination_response = get_one_page_article(home_page_response.extra_info["account_page_id"], page_count)
 
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页文章访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页文章访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(article_pagination_response.status)))
                     tool.process_exit()
 
-                if len(index_page_response.extra_info["article_info_list"]) == 0:
+                if len(article_pagination_response.extra_info["article_info_list"]) == 0:
                     log.error(account_name + " 第%s页文章解析失败" % page_count)
                     tool.process_exit()
 
-                for article_info in index_page_response.extra_info["article_info_list"]:
+                for article_info in article_pagination_response.extra_info["article_info_list"]:
                     # 文章的发布时间
                     if article_info["article_time"] is None:
                         log.error(account_name + " 文章预览 %s 中的发布时间解析失败" % article_info["article_html"])
@@ -271,20 +271,20 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析文章%s" % article_info["article_url"])
 
                     # 获取文章页面内容
-                    article_page_response = get_article_page(article_info["article_url"])
-                    if article_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    article_response = get_article_page(article_info["article_url"])
+                    if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 文章 %s 访问失败" % article_info["article_url"])
                         tool.process_exit()
 
-                    if article_page_response.extra_info["is_error"]:
+                    if article_response.extra_info["is_error"]:
                         log.error(account_name + " 文章 %s 解析失败" % article_info["article_url"])
                         tool.process_exit()
 
-                    if article_page_response.extra_info["is_pay"]:
+                    if article_response.extra_info["is_pay"]:
                         log.error(account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
 
-                    article_id = article_page_response.extra_info["article_id"]
-                    article_title = article_page_response.extra_info["article_title"]
+                    article_id = article_response.extra_info["article_id"]
+                    article_title = article_response.extra_info["article_title"]
                     # 过滤标题中不支持的字符
                     title = robot.filter_text(article_title)
                     if title:
@@ -300,25 +300,25 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     # 文章顶部图片
-                    if article_page_response.extra_info["top_image_url"] is not None:
-                        log.step(account_name + " 文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_page_response.extra_info["top_image_url"]))
+                    if article_response.extra_info["top_image_url"] is not None:
+                        log.step(account_name + " 文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response.extra_info["top_image_url"]))
 
-                        file_type = article_page_response.extra_info["top_image_url"].split(".")[-1]
+                        file_type = article_response.extra_info["top_image_url"].split(".")[-1]
                         file_path = os.path.join(article_path, "000.%s" % file_type)
-                        save_file_return = net.save_net_file(article_page_response.extra_info["top_image_url"], file_path)
+                        save_file_return = net.save_net_file(article_response.extra_info["top_image_url"], file_path)
                         if save_file_return["status"] == 1:
                             if weiboCommon.check_image_invalid(file_path):
                                 os.remove(tool.change_path_encoding(file_path))
-                                log.error(account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_page_response.extra_info["top_image_url"]))
+                                log.error(account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response.extra_info["top_image_url"]))
                             else:
                                 log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
                                 this_account_total_image_count += 1
                         else:
-                            log.error(account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_page_response.extra_info["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response.extra_info["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     # 文章正文图片
                     image_count = 1
-                    for image_url in article_page_response.extra_info["image_url_list"]:
+                    for image_url in article_response.extra_info["image_url_list"]:
                         if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
                             continue
                         log.step(account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_count, image_url))
@@ -341,7 +341,7 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取文章总页数
-                    if index_page_response.extra_info["is_over"]:
+                    if article_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
