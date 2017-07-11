@@ -9,37 +9,36 @@ email: hikaru870806@hotmail.com
 from common import *
 import os
 
-
 ERROR_PAGE_COUNT_CHECK = 10
 
 
 # 根据页面内容获取图片地址列表
 def get_album_page(page_count):
-    album_page_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
+    album_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
-    album_page_response = net.http_request(album_page_url, method="POST", post_data=post_data, json_decode=True, is_random_ip=False)
+    album_response = net.http_request(album_url, method="POST", post_data=post_data, json_decode=True, is_random_ip=False)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
         "title": "",  # 页面解析出的相册标题
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
-    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
-            robot.check_sub_key(("body",), album_page_response.json_data) and
-            robot.check_sub_key(("blog",), album_page_response.json_data["body"])
+            robot.check_sub_key(("body",), album_response.json_data) and
+            robot.check_sub_key(("blog",), album_response.json_data["body"])
         ):
             # 判断是不是需要跳过
-            if album_page_response.json_data["body"]["blog"] is False:
+            if album_response.json_data["body"]["blog"] is False:
                 extra_info["is_skip"] = True
-            elif isinstance(album_page_response.json_data["body"]["blog"], list) and len(album_page_response.json_data["body"]["blog"]) == 1:
-                if robot.check_sub_key(("type",), album_page_response.json_data["body"]["blog"][0]):
+            elif isinstance(album_response.json_data["body"]["blog"], list) and len(album_response.json_data["body"]["blog"]) == 1:
+                if robot.check_sub_key(("type",), album_response.json_data["body"]["blog"][0]):
                     # 获取相册类型
-                    album_type = int(album_page_response.json_data["body"]["blog"][0]["type"])
+                    album_type = int(album_response.json_data["body"]["blog"][0]["type"])
                     if album_type == 2:  # 歌曲类型的相册
                         extra_info["is_skip"] = True
                     elif album_type == 3:  # 图片类型的相册
-                        album_body = album_page_response.json_data["body"]["blog"][0]
+                        album_body = album_response.json_data["body"]["blog"][0]
                         if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
                             # 获取相册标题
                             if album_body["title"]:
@@ -62,8 +61,8 @@ def get_album_page(page_count):
                 extra_info["is_error"] = True
         else:
             extra_info["is_error"] = True
-    album_page_response.extra_info = extra_info
-    return album_page_response
+    album_response.extra_info = extra_info
+    return album_response
 
 
 class ZunGuang(robot.Robot):
@@ -93,23 +92,23 @@ class ZunGuang(robot.Robot):
 
             # 获取相册
             try:
-                album_page_response = get_album_page(page_count)
+                album_response = get_album_page(page_count)
             except SystemExit:
                 log.step("提前退出")
                 page_count -= error_count
                 break
 
-            if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_page_response.status)))
+            if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error("第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_response.status)))
                 page_count -= error_count
                 break
 
-            if album_page_response.extra_info["is_error"]:
+            if album_response.extra_info["is_error"]:
                 log.error("第%s页相册解析失败" % page_count)
                 page_count -= error_count
                 break
 
-            if album_page_response.extra_info["is_skip"]:
+            if album_response.extra_info["is_skip"]:
                 error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
@@ -125,9 +124,9 @@ class ZunGuang(robot.Robot):
 
             # 下载目录标题
             title = ""
-            if album_page_response.extra_info["title"]:
+            if album_response.extra_info["title"]:
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(album_page_response.extra_info["title"])
+                title = robot.filter_text(album_response.extra_info["title"])
             if title:
                 image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, title))
             else:
@@ -140,9 +139,9 @@ class ZunGuang(robot.Robot):
                     log.error("创建第%s页相册目录 %s 失败" % (page_count, image_path))
                     break
 
-            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_page_response.extra_info["image_url_list"]))
+            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_response.extra_info["image_url_list"]))
             image_count = 1
-            for image_url in album_page_response.extra_info["image_url_list"]:
+            for image_url in album_response.extra_info["image_url_list"]:
                 log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
