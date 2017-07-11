@@ -24,12 +24,12 @@ def get_account_id_from_file():
 
 # 获取指定账号的全部游戏ud列表
 def get_account_owned_app_list(user_id):
-    game_index_page_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_page_response = net.http_request(game_index_page_url)
-    if game_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_response = net.http_request(game_index_url)
+    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         tool.print_msg("所有游戏页访问失败")
         tool.process_exit()
-    owned_all_game_data = tool.find_sub_string(game_index_page_response.data, "var rgGames = ", ";")
+    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", ";")
     try:
         owned_all_game_data = json.loads(owned_all_game_data)
     except ValueError:
@@ -48,16 +48,16 @@ def get_discount_game_list(login_cookie):
     discount_game_list = []
     app_id_list = []
     while True:
-        discount_game_page_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
+        discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         cookies_list = {
             "steamLogin": login_cookie,
         }
-        discount_game_page_response = net.http_request(discount_game_page_url, cookies_list=cookies_list)
-        if discount_game_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        discount_game_pagination_response = net.http_request(discount_game_pagination_url, cookies_list=cookies_list)
+        if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             tool.print_msg("第%s页打折游戏列表访问失败" % page_count)
             break
 
-        search_result_selector = pq(discount_game_page_response.data).find("#search_result_container")
+        search_result_selector = pq(discount_game_pagination_response.data).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
         for game_index in range(0, game_list_selector.size()):
             game_selector = game_list_selector.eq(game_index)
@@ -135,17 +135,17 @@ def get_discount_game_list(login_cookie):
 # 获取所有已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
 def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
-    badges_index_page_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
+    badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
     cookies_list = {
         "steamLogin": login_cookie,
     }
-    badges_index_page_response = net.http_request(badges_index_page_url, cookies_list=cookies_list)
-    if badges_index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    badges_index_response = net.http_request(badges_index_url, cookies_list=cookies_list)
+    if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         tool.print_msg("第一页徽章访问失败")
         tool.process_exit()
     badges_detail_url_list = []
     # 所有徽章div
-    badges_selector = pq(badges_index_page_response.data).find(".maincontent .badges_sheet .badge_row")
+    badges_selector = pq(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
     for index in range(0, badges_selector.size()):
         badge_html = badges_selector.eq(index).html().encode("utf-8")
         # 已经掉落全部卡牌的徽章
@@ -163,16 +163,16 @@ def get_self_account_badges(account_id, login_cookie):
 
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
 # badge_detail_page_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
-def get_self_account_badge_card(badge_detail_page_url, login_cookie):
+def get_self_account_badge_card(badge_detail_url, login_cookie):
     cookies_list = {
         "steamLogin": login_cookie,
     }
-    badge_detail_page_response = net.http_request(badge_detail_page_url, cookies_list=cookies_list)
-    if badge_detail_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        tool.print_msg("徽章详细页%s访问失败" % badge_detail_page_url)
+    badge_detail_response = net.http_request(badge_detail_url, cookies_list=cookies_list)
+    if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        tool.print_msg("徽章详细页%s访问失败" % badge_detail_url)
         tool.process_exit()
     wanted_card_list = {}
-    page_selector = pq(badge_detail_page_response.data)
+    page_selector = pq(badge_detail_response.data)
     # 徽章等级
     badge_level = 0
     badge_selector = page_selector.find(".maincontent .badge_current .badge_info")
@@ -182,7 +182,7 @@ def get_self_account_badge_card(badge_detail_page_url, login_cookie):
         if len(badge_level_find) == 1 and robot.is_integer(badge_level_find[0]):
             badge_level = int(badge_level_find[0])
         else:
-            tool.print_msg("徽章详细页%s等级解析失败" % badge_detail_page_url)
+            tool.print_msg("徽章详细页%s等级解析失败" % badge_detail_url)
             tool.process_exit()
     wanted_count = 5 - badge_level
     # 所有集换式卡牌div
@@ -206,15 +206,15 @@ def get_market_game_trade_card_price(game_id, login_cookie):
     cookies_list = {
         "steamLogin": login_cookie,
     }
-    market_search_page_url = "http://steamcommunity.com/market/search/render/"
-    market_search_page_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
-    market_search_page_response = net.http_request(market_search_page_url, cookies_list=cookies_list, json_decode=True)
-    if market_search_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    market_search_url = "http://steamcommunity.com/market/search/render/"
+    market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
+    market_search_response = net.http_request(market_search_url, cookies_list=cookies_list, json_decode=True)
+    if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         tool.print_msg("游戏%s市场页访问失败" % game_id)
         tool.process_exit()
     market_item_list = {}
-    if "success" in market_search_page_response.json_data and market_search_page_response.json_data["success"] and "results_html" in market_search_page_response.json_data:
-        card_selector = pq(market_search_page_response.json_data["results_html"]).find(".market_listing_row_link")
+    if "success" in market_search_response.json_data and market_search_response.json_data["success"] and "results_html" in market_search_response.json_data:
+        card_selector = pq(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
         for index in range(0, card_selector.size()):
             card_name = card_selector.eq(index).find(".market_listing_item_name").text()
             card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().encode("utf-8").replace("¥ ", "")
