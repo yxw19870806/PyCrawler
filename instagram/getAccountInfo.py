@@ -46,9 +46,9 @@ def main():
 
     result_file_path = "info/account_info.data"
     for account in sorted(account_list.keys()):
-        account_page_response = get_account_index_page(account)
-        if account_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            tool.write_file("%s\t%s\t%s" % (account, account_page_response.extra_info["account_info"], account_page_response.extra_info["external_url"]), result_file_path)
+        account_index_response = get_account_index_page(account)
+        if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            tool.write_file("%s\t%s\t%s" % (account, account_index_response.extra_info["account_info"], account_index_response.extra_info["external_url"]), result_file_path)
 
 if __name__ == "__main__":
     main()
