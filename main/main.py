@@ -123,6 +123,14 @@ def nana_go_go():
     nanaGoGo.NanaGoGo().main()
 
 
+# 网易摄影
+def netease_photographer():
+    from netEase import photographer
+    netease_photographer_path = os.path.join(os.path.abspath(".."), "netEase")
+    os.chdir(netease_photographer_path)
+    photographer.Photographer().main()
+
+
 # 乃木坂46公式Blog
 def nogizaka46_blog():
     from nogizaka46 import blog
@@ -261,6 +269,7 @@ def zunguang():
 # meituzz()
 # miaopai()
 # nana_go_go()
+# netease_photographer()
 # nogizaka46_blog()
 # shinoda_blog()
 # tuchong()
