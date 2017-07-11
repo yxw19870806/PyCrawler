@@ -23,18 +23,18 @@ NEW_SAVE_DATA_PATH = ""
 
 
 # 获取账号主页
-def get_home_page(account_name):
-    home_page_url = "http://%s.pp.163.com/" % account_name
-    home_page_response = net.http_request(home_page_url)
+def get_account_index_page(account_name):
+    account_index_url = "http://%s.pp.163.com/" % account_name
+    account_index_response = net.http_request(account_index_url)
     extra_info = {
         "album_url_list": [],  # 页面解析出的所有相册地址列表
     }
-    if home_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_result_selector = pq(home_page_response.data).find("#p_contents li")
+    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        album_result_selector = pq(account_index_response.data).find("#p_contents li")
         for album_index in range(0, album_result_selector.size()):
             extra_info["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
-    home_page_response.extra_info = extra_info
-    return home_page_response
+    account_index_response.extra_info = extra_info
+    return account_index_response
 
 
 # 解析相册id
@@ -46,21 +46,21 @@ def get_album_id(album_url):
 
 
 # 获取相册页
-def get_album_page(album_page_url):
-    album_page_response = net.http_request(album_page_url)
+def get_album_page(album_url):
+    album_response = net.http_request(album_url)
     extra_info = {
         "album_title": "",  # 页面解析出的相册标题
         "image_url_list": [],  # 页面解析出的所有相册地址列表
     }
-    if album_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_title = tool.find_sub_string(album_page_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
+    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
         if album_title:
             extra_info["album_title"] = album_title.decode("GBK").encode("UTF-8")
-        image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_page_response.data)
+        image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
         if len(image_url_list) > 0:
             extra_info["image_url_list"] = map(str, image_url_list)
-        album_page_response.extra_info = extra_info
-    return album_page_response
+        album_response.extra_info = extra_info
+    return album_response
 
 
 class Photographer(robot.Robot):
@@ -146,16 +146,16 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 获取主页
-            home_page_response = get_home_page(account_name)
-            if home_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 账号主页访问失败，原因：%s" % home_page_response.status)
+            account_index_response = get_account_index_page(account_name)
+            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(account_name + " 账号主页访问失败，原因：%s" % account_index_response.status)
                 tool.process_exit()
 
-            if len(home_page_response.extra_info["album_url_list"]) == 0:
+            if len(account_index_response.extra_info["album_url_list"]) == 0:
                 log.error(account_name + " 没有获得相册信息")
                 tool.process_exit()
 
-            log.step(account_name + " 解析的所有相册地址：%s" % home_page_response.extra_info["album_url_list"])
+            log.step(account_name + " 解析的所有相册地址：%s" % account_index_response.extra_info["album_url_list"])
 
             # 下载
             total_image_count = 0
@@ -163,7 +163,7 @@ class Download(threading.Thread):
             first_album_id = "0"
             need_make_download_dir = True
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-            for album_url in home_page_response.extra_info["album_url_list"]:
+            for album_url in account_index_response.extra_info["album_url_list"]:
                 album_id = get_album_id(album_url)
                 if album_id is None:
                     log.error(account_name + " 相册地址 %s 解析相册id失败" % album_url)
@@ -179,16 +179,16 @@ class Download(threading.Thread):
 
                 log.step(account_name + " 开始解析第相册%s" % album_id)
 
-                album_page_response = get_album_page(album_url)
-                if album_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, home_page_response.status))
+                album_response = get_album_page(album_url)
+                if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, account_index_response.status))
                     tool.process_exit()
 
-                if len(album_page_response.extra_info["image_url_list"]) == 0:
+                if len(album_response.extra_info["image_url_list"]) == 0:
                     log.error(account_name + " 相册 %s 解析图片地址失败" % album_url)
                     tool.process_exit()
 
-                log.step(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_page_response.extra_info["image_url_list"]))
+                log.step(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
                 if need_make_download_dir:
                     if not tool.make_dir(image_path, 0):
@@ -197,7 +197,7 @@ class Download(threading.Thread):
                     need_make_download_dir = False
 
                 # 过滤标题中不支持的字符
-                album_title = robot.filter_text(album_page_response.extra_info["album_title"])
+                album_title = robot.filter_text(album_response.extra_info["album_title"])
                 if album_title:
                     album_path = os.path.join(image_path, "%s %s" % (album_id, album_title))
                 else:
@@ -211,7 +211,7 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                 image_count = 1
-                for image_url in album_page_response.extra_info["image_url_list"]:
+                for image_url in album_response.extra_info["image_url_list"]:
                     log.step(account_name + " 相册%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                     file_type = image_url.split(".")[-1]
