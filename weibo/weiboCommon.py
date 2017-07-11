@@ -16,10 +16,10 @@ def check_login(cookie_info):
     if "SUB" not in cookie_info or not cookie_info["SUB"]:
         return False
     cookies_list = {"SUB": cookie_info["SUB"]}
-    weibo_index_page_url = "http://weibo.com/"
-    weibo_index_page_response = net.http_request(weibo_index_page_url, cookies_list=cookies_list)
-    if weibo_index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return weibo_index_page_response.data.find("$CONFIG['islogin']='1';") >= 0
+    index_url = "http://weibo.com/"
+    index_response = net.http_request(index_url, cookies_list=cookies_list)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.find("$CONFIG['islogin']='1';") >= 0
     return False
 
 
