@@ -151,9 +151,9 @@ def get_self_account_badges(account_id, login_cookie):
         # 已经掉落全部卡牌的徽章
         if badge_html.find("无剩余卡牌掉落") >= 0:
             # 徽章详细信息页面地址
-            badge_detail_page_url = tool.find_sub_string(badge_html, '<a class="badge_row_overlay" href="', '"/>')
-            if badge_detail_page_url:
-                badges_detail_url_list.append(badge_detail_page_url)
+            badge_detail_url = tool.find_sub_string(badge_html, '<a class="badge_row_overlay" href="', '"/>')
+            if badge_detail_url:
+                badges_detail_url_list.append(badge_detail_url)
             else:
                 tool.print_msg("%s 没有解析到徽章详细界面地址" % badge_html)
                 tool.process_exit()
@@ -162,7 +162,7 @@ def get_self_account_badges(account_id, login_cookie):
 
 
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
-# badge_detail_page_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
+# badge_detail_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
 def get_self_account_badge_card(badge_detail_url, login_cookie):
     cookies_list = {
         "steamLogin": login_cookie,
