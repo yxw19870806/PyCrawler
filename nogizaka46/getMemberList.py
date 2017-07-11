@@ -11,10 +11,10 @@ import re
 
 
 def get_member_list():
-    index_page_url = "http://blog.nogizaka46.com/"
-    index_page_response = net.http_request(index_page_url)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_page_response.data)
+    index_url = "http://blog.nogizaka46.com/"
+    index_response = net.http_request(index_url)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_response.data)
         for member_info in member_list_find:
             tool.print_msg("%s\t\t\t%s" % (member_info[0], member_info[1].replace(" ", "")), False)
         if len(member_list_find) > 0:
