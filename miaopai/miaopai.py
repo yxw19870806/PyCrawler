@@ -80,19 +80,19 @@ def get_one_page_video(suid, page_count):
 
 # 获取指定id视频的详情页
 def get_video_info_page(video_id):
-    video_info_page_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
-    video_info_page_response = net.http_request(video_info_page_url, json_decode=True)
+    video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
+    video_info_response = net.http_request(video_info_url, json_decode=True)
     extra_info = {
         "video_url": None,  # 页面解析出的视频下载地址
     }
-    if video_info_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("result",), video_info_page_response.json_data):
-            for result in video_info_page_response.json_data["result"]:
+    if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("result",), video_info_response.json_data):
+            for result in video_info_response.json_data["result"]:
                 if robot.check_sub_key(("path", "host", "scheme"), result):
                     extra_info["video_url"] = str(result["scheme"]) + str(result["host"]) + str(result["path"])
                     break
-    video_info_page_response.extra_info = extra_info
-    return video_info_page_response
+    video_info_response.extra_info = extra_info
+    return video_info_response
 
 
 class MiaoPai(robot.Robot):
@@ -242,15 +242,15 @@ class Download(threading.Thread):
                         unique_list.append(video_id)
 
                     # 获取视频下载地址
-                    video_info_page_response = get_video_info_page(video_id)
-                    if video_info_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_info_page_response.status)))
+                    video_info_response = get_video_info_page(video_id)
+                    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_info_response.status)))
                         tool.process_exit()
-                    if video_info_page_response.extra_info["video_url"] is None:
+                    if video_info_response.extra_info["video_url"] is None:
                         log.error(account_name + " 视频%s下载地址解析失败" % video_id)
                         tool.process_exit()
 
-                    video_url = video_info_page_response.extra_info["video_url"]
+                    video_url = video_info_response.extra_info["video_url"]
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     # 第一个视频，创建目录
