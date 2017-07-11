@@ -11,15 +11,15 @@ import re
 
 
 # 获取一页图片信息列表
-def get_one_page_image(page_count):
-    index_page_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
-    index_page_response = net.http_request(index_page_url)
+def get_one_page_photo(page_count):
+    photo_pagination_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
+    photo_pagination_response = net.http_request(photo_pagination_url)
     extra_info = {
         "is_over": False,  # 是不是已经没有新的相册
         "image_info_list": [],  # 是不是已经没有新的相册
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        article_data = tool.find_sub_string(index_page_response.data, '<section id="primary"', "</section>")
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        article_data = tool.find_sub_string(photo_pagination_response.data, '<section id="primary"', "</section>")
         image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
         image_id_2_url_list = {}
         for image_id, image_url in image_info_list:
@@ -30,10 +30,10 @@ def get_one_page_image(page_count):
                 "image_url": image_id_2_url_list[image_id],  # 页面解析出的图片地址
             }
             extra_info["image_info_list"].append(extra_image_info)
-    elif index_page_response.status == 404:
+    elif photo_pagination_response.status == 404:
         extra_info["is_over"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    photo_pagination_response.extra_info = extra_info
+    return photo_pagination_response
 
 
 class YWKB(robot.Robot):
@@ -62,15 +62,15 @@ class YWKB(robot.Robot):
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
-            index_page_response = get_one_page_image(page_count)
-            if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(" 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+            photo_pagination_response = get_one_page_photo(page_count)
+            if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                log.error(" 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                 tool.process_exit()
 
-            if index_page_response.extra_info["is_over"]:
+            if photo_pagination_response.extra_info["is_over"]:
                 break
 
-            for image_info in index_page_response.extra_info["image_info_list"]:
+            for image_info in photo_pagination_response.extra_info["image_info_list"]:
                 # 检查是否图片时间小于上次的记录
                 if image_info["image_id"] <= save_image_id:
                     is_over = True
