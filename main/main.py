@@ -123,14 +123,6 @@ def nana_go_go():
     nanaGoGo.NanaGoGo().main()
 
 
-# nico nico
-def nico_nico():
-    from nicoNico import nicoNico
-    nico_nico_path = os.path.join(os.path.abspath(".."), "nicoNico")
-    os.chdir(nico_nico_path)
-    nicoNico.NicoNico().main()
-
-
 # 乃木坂46公式Blog
 def nogizaka46_blog():
     from nogizaka46 import blog
