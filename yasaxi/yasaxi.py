@@ -14,7 +14,6 @@ import threading
 import time
 import traceback
 
-
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 GET_IMAGE_COUNT = 0
@@ -59,7 +58,7 @@ def get_token_from_file():
 
 # 获取指定页数的所有日志
 def get_one_page_photo(account_id, cursor):
-    index_page_url = "https://api.yasaxi.com/statuses/user?userId=%s&cursor=%s&count=20" % (account_id, cursor)
+    photo_pagination_url = "https://api.yasaxi.com/statuses/user?userId=%s&cursor=%s&count=20" % (account_id, cursor)
     header_list = {
         "x-access-token": ACCESS_TOKEN,
         "x-auth-token": AUTH_TOKEN,
@@ -72,22 +71,22 @@ def get_one_page_photo(account_id, cursor):
         "next_page_cursor": None,  # 页面解析出的下一页图片的指针
         "status_list": [],  # 页面解析出的所有状态列表
     }
-    index_page_response = net.http_request(index_page_url, header_list=header_list, is_random_ip=False, json_decode=True)
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    photo_pagination_response = net.http_request(photo_pagination_url, header_list=header_list, is_random_ip=False, json_decode=True)
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
-            robot.check_sub_key(("meta",), index_page_response.json_data) and
-            robot.check_sub_key(("code",), index_page_response.json_data["meta"]) and
-            len(index_page_response.json_data["meta"]["code"]) > 0
+            robot.check_sub_key(("meta",), photo_pagination_response.json_data) and
+            robot.check_sub_key(("code",), photo_pagination_response.json_data["meta"]) and
+            len(photo_pagination_response.json_data["meta"]["code"]) > 0
         ):
-            if index_page_response.json_data["meta"]["code"] == "NoMoreDataError":
+            if photo_pagination_response.json_data["meta"]["code"] == "NoMoreDataError":
                 extra_info["is_over"] = True
-            elif index_page_response.json_data["meta"]["code"] == "TooManyRequests":
+            elif photo_pagination_response.json_data["meta"]["code"] == "TooManyRequests":
                 time.sleep(30)
                 return get_one_page_photo(account_id, cursor)
             else:
                 extra_info["is_error"] = True
-        elif robot.check_sub_key(("data", "next"), index_page_response.json_data):
-            for media_info in index_page_response.json_data["data"]:
+        elif robot.check_sub_key(("data", "next"), photo_pagination_response.json_data):
+            for media_info in photo_pagination_response.json_data["data"]:
                 media_extra_info = {
                     "id": None,  # 页面解析出的状态id
                     "image_url_list": [],  # 页面解析出的所有图片地址
@@ -126,12 +125,12 @@ def get_one_page_photo(account_id, cursor):
                     if not is_error:
                         media_extra_info["id"] = str(media_info["statusId"])
                 extra_info["status_list"].append(media_extra_info)
-            if index_page_response.json_data["next"] and robot.is_integer(index_page_response.json_data["next"]):
-                extra_info["next_page_cursor"] = int(index_page_response.json_data["next"])
+            if photo_pagination_response.json_data["next"] and robot.is_integer(photo_pagination_response.json_data["next"]):
+                extra_info["next_page_cursor"] = int(photo_pagination_response.json_data["next"])
         else:
             extra_info["is_error"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    photo_pagination_response.extra_info = extra_info
+    return photo_pagination_response
 
 
 class Yasaxi(robot.Robot):
@@ -246,19 +245,19 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析cursor '%s'的图片" % cursor)
 
-                index_page_response = get_one_page_photo(account_id, cursor)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(index_page_response.status)))
+                photo_pagination_response = get_one_page_photo(account_id, cursor)
+                if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_over"]:
+                if photo_pagination_response.extra_info["is_over"]:
                     break
 
-                if index_page_response.extra_info["is_error"]:
-                    log.error(account_name + " cursor '%s'的图片信息%s解析失败" % (cursor, index_page_response.json_data))
+                if photo_pagination_response.extra_info["is_error"]:
+                    log.error(account_name + " cursor '%s'的图片信息%s解析失败" % (cursor, photo_pagination_response.json_data))
                     tool.process_exit()
 
-                for status_info in index_page_response.extra_info["status_list"]:
+                for status_info in photo_pagination_response.extra_info["status_list"]:
                     if status_info["id"] is None:
                         log.error(account_name + " 状态%s解析失败" % status_info["json_data"])
                         tool.process_exit()
@@ -302,8 +301,8 @@ class Download(threading.Thread):
                     #     pass
 
                 if not is_over:
-                    if index_page_response.extra_info["next_page_cursor"]:
-                        cursor = index_page_response.extra_info["next_page_cursor"]
+                    if photo_pagination_response.extra_info["next_page_cursor"]:
+                        cursor = photo_pagination_response.extra_info["next_page_cursor"]
                     else:
                         is_over = True
 
