@@ -28,15 +28,15 @@ IS_SORT = True
 # account_id -> asuka.saito
 def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
-    index_page_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
-    index_page_response = net.http_request(index_page_url)
+    blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
+    blog_pagination_response = net.http_request(blog_pagination_url)
     extra_info = {
         "blog_info_list": [],  # 页面解析出的所有图片信息列表
         "is_over": False,  # 是不是最后一页日志
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取日志中文，并分组
-        page_html = tool.find_sub_string(index_page_response.data, '<div class="paginate">', '<div class="paginate">', 1)
+        page_html = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', '<div class="paginate">', 1)
         blog_data_list = page_html.split('<h1 class="clearfix">')
         if len(blog_data_list) > 0:
             # 第一位不是日志内容，没有用
@@ -65,16 +65,16 @@ def get_one_page_blog(account_id, page_count):
 
             extra_info["blog_info_list"].append(extra_image_info)
         # 检测是否还有下一页
-        paginate_data = tool.find_sub_string(index_page_response.data, '<div class="paginate">', "</div>")
+        paginate_data = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', "</div>")
         page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
         extra_info["is_over"] = page_count >= max(map(int, page_count_find))
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    blog_pagination_response.extra_info = extra_info
+    return blog_pagination_response
 
 
 # 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
 def check_big_image(image_url, big_2_small_list):
-    big_image_response = net.ErrorResponse(net.HTTP_RETURN_CODE_EXCEPTION_CATCH)
+    big_image_response = net.ErrorResponse(net.HTTP_RETURN_CODE_RETRY)
     extra_info = {
         "image_url": None,  # 页面解析出的大图地址
         "is_over": False,  # 是不是已经没有还生效的大图了
@@ -216,18 +216,18 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页图片
-                index_page_response = get_one_page_blog(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                blog_pagination_response = get_one_page_blog(account_id, page_count)
+                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
                     tool.process_exit()
 
-                if len(index_page_response.extra_info["blog_info_list"]) == 0:
-                    log.error(account_name + " 第%s页日志%s分组失败" % (page_count, index_page_response.data))
+                if len(blog_pagination_response.extra_info["blog_info_list"]) == 0:
+                    log.error(account_name + " 第%s页日志%s分组失败" % (page_count, blog_pagination_response.data))
                     tool.process_exit()
 
-                log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, index_page_response.extra_info["blog_info_list"]))
+                log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response.extra_info["blog_info_list"]))
 
-                for blog_info in index_page_response.extra_info["blog_info_list"]:
+                for blog_info in blog_pagination_response.extra_info["blog_info_list"]:
                     # 获取日志id
                     if blog_info["blog_id"] is None:
                         log.error(account_name + " 日志id解析失败")
@@ -290,7 +290,7 @@ class Download(threading.Thread):
                     # 达到配置文件中的下载页数，结束
                     if 0 < GET_PAGE_COUNT <= page_count:
                         is_over = True
-                    elif index_page_response.extra_info["is_over"]:
+                    elif blog_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
