@@ -34,7 +34,7 @@ def get_account_index_page(account_name):
         "account_id": None,  # account id（字母账号->数字账号)
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        extra_info["account_id"] = tool.find_sub_string(home_page_url_response.data, 'site_id":"', '",')
+        extra_info["account_id"] = tool.find_sub_string(account_index_response.data, 'site_id":"', '",')
     account_index_response.extra_info = extra_info
     return account_index_response
 
