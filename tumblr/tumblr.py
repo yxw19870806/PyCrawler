@@ -33,15 +33,15 @@ IS_DOWNLOAD_VIDEO = True
 # 获取一页的日志地址列表
 def get_one_page_post(account_id, page_count):
     host = "http://%s.tumblr.com" % account_id
-    index_page_url = "%s/page/%s" % (host, page_count)
-    index_page_response = net.http_request(index_page_url)
+    post_pagination_url = "%s/page/%s" % (host, page_count)
+    post_pagination_response = net.http_request(post_pagination_url)
     extra_info = {
         "is_error": True,  # 是不是格式不符合
         "post_url_list": [],  # 页面解析出的日志地址列表
         "is_over": [],  # 是不是已经没有日志了
     }
-    if index_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        page_data = tool.find_sub_string(index_page_response.data, '<script type="application/ld+json">', "</script>").strip()
+    if post_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        page_data = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
         if page_data:
             try:
                 page_data = json.loads(page_data)
@@ -66,20 +66,20 @@ def get_one_page_post(account_id, page_count):
 
         else:
             extra_info["is_over"] = True
-    index_page_response.extra_info = extra_info
-    return index_page_response
+    post_pagination_response.extra_info = extra_info
+    return post_pagination_response
 
 
 # 获取日志页面
 def get_post_page(post_url):
-    post_page_response = net.http_request(post_url)
+    post_response = net.http_request(post_url)
     extra_info = {
         "is_error": True,  # 是不是格式不符合
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 页面解析出的图片地址列表
     }
-    if post_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        post_page_head = tool.find_sub_string(post_page_response.data, "<head", "</head>", 3)
+    if post_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
         if post_page_head:
             # 获取og_type（页面类型的是视频还是图片或其他）
             og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
@@ -121,20 +121,20 @@ def get_post_page(post_url):
                                     continue
                             new_image_url_list[image_id] = image_url
                         extra_info["image_url_list"] = new_image_url_list.values()
-    post_page_response.extra_info = extra_info
-    return post_page_response
+    post_response.extra_info = extra_info
+    return post_response
 
 
 # 获取视频播放页面
 def get_video_play_page(account_id, post_id):
-    video_play_page_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
-    video_play_page_response = net.http_request(video_play_page_url)
+    video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+    video_play_response = net.http_request(video_play_url)
     extra_info = {
         "video_url": None,  # 页面解析出的视频地址
         "is_skip": False,  # 是不是第三方的视频地址需要跳过
     }
-    if video_play_page_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_page_response.data)
+    if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
         if len(video_url_find) == 1:
             video_response = net.http_request(video_url_find[0], redirect=False)
             # 获取视频重定向页面
@@ -156,8 +156,8 @@ def get_video_play_page(account_id, post_id):
                 extra_info["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
         elif len(video_url_find) == 0:
             extra_info["is_skip"] = True
-    video_play_page_response.extra_info = extra_info
-    return video_play_page_response
+    video_play_response.extra_info = extra_info
+    return video_play_response
 
 
 class Tumblr(robot.Robot):
@@ -273,21 +273,21 @@ class Download(threading.Thread):
                 log.step(account_id + " 开始解析第%s页相册" % page_count)
 
                 # 获取一页的日志地址
-                index_page_response = get_one_page_post(account_id, page_count)
-                if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_id + " 第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(index_page_response.status)))
+                post_pagination_response = get_one_page_post(account_id, page_count)
+                if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    log.error(account_id + " 第%s页相册访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(post_pagination_response.status)))
                     tool.process_exit()
 
-                if index_page_response.extra_info["is_over"]:
+                if post_pagination_response.extra_info["is_over"]:
                     break
 
-                if index_page_response.extra_info["is_error"]:
+                if post_pagination_response.extra_info["is_error"]:
                     log.error(account_id + " 第%s页相册解析失败" % page_count)
                     tool.process_exit()
 
-                log.trace(account_id + " 第%s页相册解析的所有日志：%s" % (page_count, index_page_response.extra_info["post_url_list"]))
+                log.trace(account_id + " 第%s页相册解析的所有日志：%s" % (page_count, post_pagination_response.extra_info["post_url_list"]))
 
-                for post_url in index_page_response.extra_info["post_url_list"]:
+                for post_url in post_pagination_response.extra_info["post_url_list"]:
                     post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
 
                     # 检查信息页id是否小于上次的记录
@@ -308,32 +308,32 @@ class Download(threading.Thread):
                     log.step(account_id + " 开始解析日志 %s" % post_url)
 
                     # 获取日志
-                    post_page_response = get_post_page(post_url)
-                    if post_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_id + " 日志 %s 访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(post_page_response.status)))
+                    post_response = get_post_page(post_url)
+                    if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                        log.error(account_id + " 日志 %s 访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(post_response.status)))
                         tool.process_exit()
 
-                    if post_page_response.extra_info["is_error"]:
+                    if post_response.extra_info["is_error"]:
                         log.error(account_id + " 日志 %s 解析失败")
                         tool.process_exit()
 
                     # 视频下载
-                    while IS_DOWNLOAD_VIDEO and post_page_response.extra_info["has_video"]:
-                        video_play_page_response = get_video_play_page(account_id, post_id)
-                        if video_play_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                            log.error(account_id + " 日志 %s 的视频播放页面访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(video_play_page_response.status)))
+                    while IS_DOWNLOAD_VIDEO and post_response.extra_info["has_video"]:
+                        video_play_response = get_video_play_page(account_id, post_id)
+                        if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                            log.error(account_id + " 日志 %s 的视频播放页面访问失败，原因：%s" % (post_url, robot.get_http_request_failed_reason(video_play_response.status)))
                             tool.process_exit()
 
                         # 第三方视频，跳过
-                        if video_play_page_response.extra_info["is_skip"]:
+                        if video_play_response.extra_info["is_skip"]:
                             log.error(account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
                             break
 
-                        if video_play_page_response.extra_info["video_url"] is None:
+                        if video_play_response.extra_info["video_url"] is None:
                             log.error(account_id + " 日志 %s 的视频下载地址解析失败" % post_url)
                             tool.process_exit()
 
-                        video_url = video_play_page_response.extra_info["video_url"]
+                        video_url = video_play_response.extra_info["video_url"]
 
                         log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
@@ -355,9 +355,9 @@ class Download(threading.Thread):
                         break
 
                     # 图片下载
-                    if IS_DOWNLOAD_IMAGE and len(post_page_response.extra_info["image_url_list"]) > 0:
-                        log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_page_response.extra_info["image_url_list"]))
-                        for image_url in post_page_response.extra_info["image_url_list"]:
+                    if IS_DOWNLOAD_IMAGE and len(post_response.extra_info["image_url_list"]) > 0:
+                        log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_response.extra_info["image_url_list"]))
+                        for image_url in post_response.extra_info["image_url_list"]:
                             log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                             # 第一张图片，创建目录
