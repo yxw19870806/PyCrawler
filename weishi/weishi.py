@@ -76,19 +76,20 @@ def get_one_page_video(account_id, page_time):
 
 
 # 根据视频id和vid获取视频下载地址
-def get_video_url(video_vid, video_id):
+def get_video_info_page(video_vid, video_id):
     video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&id=%s" % (video_vid, video_id)
-    video_info_page_response = net.http_request(video_info_url)
-    if video_info_page_response.status == 200:
-        try:
-            video_info_page = json.loads(video_info_page_response.data)
-        except ValueError:
-            pass
+    video_info_response = net.http_request(video_info_url, json_decode=True)
+    extra_info = {
+        "is_error": False,  # 是不是格式不符合
+        "video_url": "",  # 页面解析出的视频地址
+    }
+    if video_info_response.status == 200:
+        if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_info_response.json_data["data"]):
+            extra_info["video_url"] = str(random.choice(video_info_response.json_data["data"]["url"]))
         else:
-            if robot.check_sub_key(("data",), video_info_page):
-                if robot.check_sub_key(("url",), video_info_page["data"]):
-                    return str(random.choice(video_info_page["data"]["url"]))
-    return None
+            extra_info["is_error"] = True
+    video_info_response.extra_info = extra_info
+    return video_info_response
 
 
 class WeiShi(robot.Robot):
@@ -227,8 +228,15 @@ class Download(threading.Thread):
 
                     for video_part_id in video_info["video_part_id_list"]:
                         # 获取视频下载地址
-                        video_url = get_video_url(video_part_id, video_info["video_id"])
-                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                        video_info_response = get_video_info_page(video_part_id, video_info["video_id"])
+                        if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                            log.error(account_name + " 第%s个视频%s %s的详细页访问失败" % (video_count, video_part_id, video_info["json_data"]))
+                            tool.process_exit()
+                        if video_info_response.extra_info["is_error"]:
+                            log.error(account_name + " 第%s个视频信息页面%s的下载地址解析失败" % (video_count, video_info_response.json_data))
+                            tool.process_exit()
+
+                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_info_response.extra_info["video_url"]))
 
                         # 第一个视频，创建目录
                         if need_make_video_dir:
@@ -237,14 +245,14 @@ class Download(threading.Thread):
                                 tool.process_exit()
                             need_make_video_dir = False
 
-                        file_type = video_url.split(".")[-1].split("?")[0]
+                        file_type = video_info_response.extra_info["video_url"].split(".")[-1].split("?")[0]
                         file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                        save_file_return = net.save_net_file(video_url, file_path)
+                        save_file_return = net.save_net_file(video_info_response.extra_info["video_url"], file_path)
                         if save_file_return["status"] == 1:
                             log.step(account_name + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
-                            log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
+                            log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_info_response.extra_info["video_url"]))
 
                     # 达到配置文件中的下载数量，结束
                     if 0 < GET_VIDEO_COUNT < video_count:
