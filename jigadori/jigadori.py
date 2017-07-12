@@ -26,28 +26,31 @@ def get_one_page_photo(page_count):
             extra_photo_info = {
                 "is_error": False,  # 是不是格式不符合
                 "account_name": "",  # 页面解析出的账号名字
-                "image_url": "",  # 页面解析出的图片地址
+                "tweet_id": 0,  # 页面解析出的tweet id
+                "image_url_list": [],  # 页面解析出的图片地址
                 "time": 0,  # 页面解析出的图片上传时间
                 "html": photo_selector.html(),  # 原始页面
             }
             account_name = photo_selector.find(".user-info .user-name .screen-name").text()
-            if account_name:
-                extra_photo_info["account_name"] = account_name.strip().replace("@", "")
-            else:
-                extra_photo_info["is_error"] = True
-                continue
             tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text()
-            if tweet_time:
+            tweet_url = photo_selector.find(".photo-link-outer a").eq(0).attr("href")
+            if tweet_url:
+                tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
+            else:
+                tweet_id = None
+            if account_name and tweet_time and tweet_id and robot.is_integer(tweet_id):
+                extra_photo_info["account_name"] = account_name.strip().replace("@", "")
                 extra_photo_info["time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
+                extra_photo_info["tweet_id"] = int(tweet_id)
+                image_list_selector = photo_selector.find(".photo-link-outer a img")
+                for image_index in range(0, image_list_selector.size()):
+                    image_url = image_list_selector.eq(image_index).attr("src")
+                    if image_url:
+                        extra_photo_info["image_url_list"].append(str(image_url).strip())
+                    else:
+                        extra_photo_info["is_error"] = True
             else:
                 extra_photo_info["is_error"] = True
-                continue
-            image_url = photo_selector.find(".photo-link-outer a img").attr("src")
-            if image_url:
-                extra_photo_info["image_url"] = image_url
-            else:
-                extra_photo_info["is_error"] = True
-                continue
             extra_info["image_info_list"].append(extra_photo_info)
     photo_pagination_response.extra_info = extra_info
     return photo_pagination_response
@@ -128,23 +131,24 @@ class Jigadori(robot.Robot):
                     new_last_blog_time = str(image_info["time"])
 
                 # 新增图片导致的重复判断
-                if image_info["image_url"] in unique_list:
+                if image_info["tweet_id"] in unique_list:
                     continue
                 else:
-                    unique_list.append(image_info["image_url"])
+                    unique_list.append(image_info["tweet_id"])
 
-                log.step("开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
+                for image_url in image_info["image_url_list"]:
+                    log.step("开始下载第%s张图片 %s" % (image_count, image_url))
 
-                file_type = image_info["image_url"].split(".")[-1]
-                if file_type.find("/") != -1:
-                    file_type = "jpg"
-                file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, image_info["account_name"], file_type))
-                save_file_return = net.save_net_file(image_info["image_url"], file_path)
-                if save_file_return["status"] == 1:
-                    log.step("第%s张图片下载成功" % image_count)
-                    image_count += 1
-                else:
-                    log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_count, image_info["account_name"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    file_type = image_url.split(".")[-1]
+                    if file_type.find("/") != -1:
+                        file_type = "jpg"
+                    file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, image_info["account_name"], file_type))
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        log.step("第%s张图片下载成功" % image_count)
+                        image_count += 1
+                    else:
+                        log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_count, image_info["account_name"], image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
             if not is_over:
                 page_count += 1
