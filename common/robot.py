@@ -275,7 +275,7 @@ class Robot(object):
 # 读取配置文件
 def read_config(config_path):
     config = ConfigParser.SafeConfigParser()
-    with codecs.open(config_path, encoding="utf-8-sig") as file_handle:
+    with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
         config.readfp(file_handle)
     return config
 
@@ -288,7 +288,7 @@ def read_config(config_path):
 # mode=3 : 文件路径，以"\"开头的为当前目录下创建
 def get_config(config, key, default_value, mode):
     if config.has_option("setting", key):
-        value = config.get("setting", key).encode("utf-8")
+        value = config.get("setting", key).encode("UTF-8")
     else:
         tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value

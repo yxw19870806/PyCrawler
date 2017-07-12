@@ -42,7 +42,7 @@ def get_album_page(page_count):
                         if robot.check_sub_key(("title", "attr"), album_body) and robot.check_sub_key(("img",), album_body["attr"]):
                             # 获取相册标题
                             if album_body["title"]:
-                                extra_info["title"] = str(album_body["title"].encode("utf-8"))
+                                extra_info["title"] = str(album_body["title"].encode("UTF-8"))
                             # 获取图片地址列表
                             image_url_list = []
                             for image_data in album_body["attr"]["img"]:

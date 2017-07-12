@@ -185,18 +185,18 @@ def print_msg(msg, is_time=True):
     thread_lock.acquire()
     # 终端输出编码
     output_encoding = sys.stdout.encoding
-    if output_encoding == "utf-8":
+    if output_encoding == "UTF-8":
         print msg
     else:
-        print msg.decode("utf-8").encode(output_encoding)
+        print msg.decode("UTF-8").encode(output_encoding)
     thread_lock.release()
 
 
 # 控制台输入
 def console_input(msg):
     output_encoding = sys.stdout.encoding
-    if output_encoding != "utf-8":
-        msg = msg.decode("utf-8").encode(output_encoding)
+    if output_encoding != "UTF-8":
+        msg = msg.decode("UTF-8").encode(output_encoding)
     return raw_input(msg)
 
 

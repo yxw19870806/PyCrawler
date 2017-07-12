@@ -73,7 +73,7 @@ def get_one_page_media(account_name, position_blog_id):
                 for tweet_data in temp_tweet_data_list:
                     if len(tweet_data) < 50:
                         continue
-                    tweet_data = tweet_data.encode("utf-8")
+                    tweet_data = tweet_data.encode("UTF-8")
                     # 被圈出来的用户，追加到前面的页面中
                     if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
                         tweet_data_list[-1] += tweet_data

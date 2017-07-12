@@ -1,4 +1,4 @@
-# -*- coding:utf-8  -*-
+# -*- coding:UTF-8  -*-
 """
 7gogo图片&视频爬虫
 https://7gogo.jp/

@@ -1,4 +1,4 @@
-# -*- coding:utf-8  -*-
+# -*- coding:UTF-8  -*-
 """
 Instagram图片&视频爬虫
 https://www.instagram.com/

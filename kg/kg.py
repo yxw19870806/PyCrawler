@@ -44,7 +44,7 @@ def get_one_page_audio(account_id, page_count):
                     # 获取歌曲访问token
                     audio_extra_info["audio_key"] = str(audio_info["shareid"])
                     # 获取歌曲标题
-                    audio_extra_info["audio_title"] = str(audio_info["title"].encode("utf-8"))
+                    audio_extra_info["audio_title"] = str(audio_info["title"].encode("UTF-8"))
                     # 获取歌曲上传时间
                     if robot.is_integer(audio_info["time"]):
                         audio_extra_info["audio_time"] = str(audio_info["time"])

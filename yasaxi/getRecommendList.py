@@ -64,7 +64,7 @@ def get_account_from_api():
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data",), api_response.json_data):
             for account_info in api_response.json_data["data"]:
-                account_list[str(account_info["userId"].encode("utf-8"))] = str(robot.filter_emoji(account_info["nick"]).encode("utf-8")).strip()
+                account_list[str(account_info["userId"].encode("UTF-8"))] = str(robot.filter_emoji(account_info["nick"]).encode("UTF-8")).strip()
     return account_list
 
 

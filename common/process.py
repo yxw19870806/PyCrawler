@@ -68,7 +68,7 @@ def continue_process():
 def _print_msg(msg):
     # 终端输出编码
     output_encoding = sys.stdout.encoding
-    if output_encoding == "utf-8":
+    if output_encoding == "UTF-8":
         print msg
     else:
-        print msg.decode("utf-8").encode(output_encoding)
+        print msg.decode("UTF-8").encode(output_encoding)

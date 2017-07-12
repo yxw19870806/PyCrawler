@@ -97,7 +97,7 @@ def get_one_page_video(account_page_id, since_id):
             robot.is_integer(video_pagination_response.json_data["code"]) and
             int(video_pagination_response.json_data["code"]) == 100000
         ):
-            page_html = video_pagination_response.json_data["data"].encode("utf-8")
+            page_html = video_pagination_response.json_data["data"].encode("UTF-8")
             # 获取视频播放地址类别
             video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
             if len(video_play_url_list) == 0:

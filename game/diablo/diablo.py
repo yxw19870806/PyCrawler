@@ -57,9 +57,9 @@ for item_path, item_position in item_list.items():
             item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
         item_index_response = net.http_request(item_index_url)
         if item_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            # item_index = item_index.decode("utf-8")
+            # item_index = item_index.decode("UTF-8")
             item_index_page = tool.find_sub_string(item_index_response.data, '<div class="cizhui-c-m', '<div class="data-options', 1)
-            item_index_page = item_index_page.decode("GBK").encode("utf-8")
+            item_index_page = item_index_page.decode("GBK").encode("UTF-8")
             item_info_list = re.findall('<tr class="[\s|\S]*?</tr>', item_index_page)
             if len(item_info_list) == 0:
                 continue
@@ -73,7 +73,7 @@ for item_path, item_position in item_list.items():
                 item_response = net.http_request(item_url)
                 if item_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     item_detail = tool.find_sub_string(item_response.data, '<div class="content-right-bdl clearfix">', '<dl class="content-right-bdr">')
-                    item_detail = item_detail.decode("GBK").encode("utf-8")
+                    item_detail = item_detail.decode("GBK").encode("UTF-8")
                     attribute = tool.find_sub_string(item_detail, "<!-- 主要属性-->", "<!-- 华丽丽的分割线 -->").strip()
                     special_attribute = tool.find_sub_string(attribute, '<li class="d3-color-orange">', "</li>")
                     if special_attribute:

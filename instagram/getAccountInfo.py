@@ -1,4 +1,4 @@
-# -*- coding:utf-8  -*-
+# -*- coding:UTF-8  -*-
 """
 Instagram批量获取账号介绍
 https://www.instagram.com/
@@ -23,7 +23,7 @@ def get_account_index_page(account_name):
         account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
         if account_info:
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
-            account_info = eval("u'%s'" % account_info).replace(chr(1), "'").encode("utf-8")
+            account_info = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
             extra_info["account_info"] = account_info
         extra_info["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
     account_index_response.extra_info = extra_info

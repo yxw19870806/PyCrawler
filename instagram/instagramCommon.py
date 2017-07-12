@@ -1,4 +1,4 @@
-# -*- coding:utf-8  -*-
+# -*- coding:UTF-8  -*-
 """
 Instagram公共方法
 https://www.instagram.com/

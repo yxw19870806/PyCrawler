@@ -66,7 +66,7 @@ def get_one_page_album(account_id, post_time):
                     if robot.is_integer(album_info["post_id"]):
                         extra_image_info["album_id"] = str(album_info["post_id"])
                     # 获取相册标题
-                    extra_image_info["album_title"] = str(album_info["title"].encode("utf-8"))
+                    extra_image_info["album_title"] = str(album_info["title"].encode("UTF-8"))
                     # 获取图片下载地址
                     for image_info in album_info["images"]:
                         if robot.check_sub_key(("img_id",), image_info):

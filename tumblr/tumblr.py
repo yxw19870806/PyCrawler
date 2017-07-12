@@ -54,7 +54,7 @@ def get_one_page_post(account_id, page_count):
                     # 获取日志地址列表
                     for post_info in page_data["itemListElement"]:
                         if robot.check_sub_key(("url",), post_info):
-                            post_url_split = urlparse.urlsplit(post_info["url"].encode("utf-8"))
+                            post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
                             post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
                             post_url_list.append(str(post_url))
                         else:

@@ -58,7 +58,7 @@ def get_one_page_audio(user_id, page_count):
                 if robot.is_integer(audio_info["workid"]):
                     extra_audio_info["audio_id"] = str(audio_info["workid"])
                 # 获取歌曲标题
-                extra_audio_info["audio_title"] = str(audio_info["songname"].encode("utf-8"))
+                extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
                 # 获取歌曲key
                 extra_audio_info["audio_key"] = str(audio_info["enworkid"])
             extra_info["audio_info_list"].append(extra_audio_info)
