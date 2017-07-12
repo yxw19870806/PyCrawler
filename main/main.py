@@ -35,14 +35,6 @@ def five_sing():
     fiveSing.FiveSing().main()
 
 
-# fkoji
-def fkoji():
-    from fkoji import fkoji
-    fkoji_path = os.path.join(os.path.abspath(".."), "fkoji")
-    os.chdir(fkoji_path)
-    fkoji.Fkoji().main()
-
-
 # GooglePlus
 def google_plus():
     from googlePlus import googlePlus
@@ -73,6 +65,14 @@ def instagram():
             "video_temp_path": video_temp_path,
         }
         instagram.Instagram(extra_config).main()
+
+
+# Jigadori
+def jigadori():
+    from jigadori import jigadori
+    jigadori_path = os.path.join(os.path.abspath(".."), "jigadori")
+    os.chdir(jigadori_path)
+    jigadori.Jigadori().main()
 
 
 # 欅坂46公式Blog
@@ -268,9 +268,9 @@ def zunguang():
 # bcy()
 # chang_ba()
 # five_sing()
-# fkoji()
 # google_plus()
 # instagram()
+# jigadori()
 # keyakizaka46_diary()
 # lofter()
 # meipai()
