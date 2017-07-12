@@ -276,7 +276,7 @@ def change_path_encoding(path):
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
     thread_lock.acquire()
-    make_dir(os.path.dirname(file_path), 0)
+    make_dir(os.path.dirname(os.path.realpath(file_path)), 0)
     if append_type == 1:
         file_handle = open(file_path, "a")
     else:
