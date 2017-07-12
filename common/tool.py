@@ -281,6 +281,8 @@ def write_file(msg, file_path, append_type=1):
         file_handle = open(file_path, "a")
     else:
         file_handle = open(file_path, "w")
+    if isinstance(msg, unicode):
+        msg = msg.encode("UTF-8")
     file_handle.write(msg + "\n")
     file_handle.close()
     thread_lock.release()
