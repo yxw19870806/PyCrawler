@@ -6,9 +6,10 @@ http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import net, tool
+from common import net, robot, tool
 import os
 import re
+import sys
 
 
 # 获取存档文件
@@ -43,7 +44,9 @@ def get_account_from_index():
 
 
 def main():
-    save_data_path = os.path.join("info/save.data")
+    config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
+    # 存档位置
+    save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         account_list_from_save_data = get_account_from_save_data(save_data_path)
