@@ -234,9 +234,10 @@ def weishi():
 
 # 看了又看
 def yasaxi():
-    from yasaxi import yasaxi
+    from yasaxi import getRecommendList, yasaxi
     yasaxi_path = os.path.join(os.path.abspath(".."), "yasaxi")
     os.chdir(yasaxi_path)
+    getRecommendList.main()
     yasaxi.Yasaxi().main()
 
 
