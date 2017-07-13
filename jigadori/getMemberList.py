@@ -10,13 +10,16 @@ from common import net, tool
 from pyquery import PyQuery as pq
 import os
 
+# Twitter存档文件目录
+SAVE_DATA_PATH = os.path.join("../twitter/info/jigadori.data")
+
 
 # 获取存档文件
-def get_account_from_save_data(file_path):
+def get_account_from_save_data():
     account_list = {}
-    if not os.path.exists(file_path):
+    if not os.path.exists(SAVE_DATA_PATH):
         return account_list
-    file_handle = open(file_path, "r")
+    file_handle = open(SAVE_DATA_PATH, "r")
     lines = file_handle.readlines()
     file_handle.close()
     for line in lines:
@@ -59,15 +62,14 @@ def get_one_page_account(page_count):
 
 
 def main():
-    save_data_path = os.path.join("../twitter/info/save_5.data")
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
-        account_list_from_save_data = get_account_from_save_data(save_data_path)
+        account_list_from_save_data = get_account_from_save_data()
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = "%s\t\t\t\t\t%s" % (account_id, account_list_from_api[account_id])
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file(tool.list_to_string(temp_list, "\n", ""), save_data_path, 2)
+        tool.write_file(tool.list_to_string(temp_list, "\n", ""), SAVE_DATA_PATH, 2)
 
 
 if __name__ == "__main__":
