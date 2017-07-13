@@ -9,6 +9,7 @@ from common import *
 import base64
 import json
 import os
+import sys
 
 
 AUTH_TOKEN = ""
@@ -70,7 +71,9 @@ def get_account_from_api():
 
 def main():
     if get_token_from_file():
-        save_data_path = os.path.join("info/save.data")
+        config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
+        # 存档位置
+        save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
         account_list_from_api = get_account_from_api()
         if len(account_list_from_api) > 0:
             account_list_from_save_data = get_account_from_save_data(save_data_path)
