@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+import base64
 import os
 import re
 import threading
@@ -40,7 +41,7 @@ def get_account_index_page(account_id):
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
-    audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count)
+    audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count - 1)
     audit_pagination_response = net.http_request(audit_pagination_url, json_decode=True)
     extra_info = {
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
@@ -51,16 +52,22 @@ def get_one_page_audio(user_id, page_count):
                 "audio_id": None,  # 视频自增id
                 "audio_title": "",  # 视频标题
                 "audio_key": None,  # 视频唯一key
+                "type": None,  # 类型，0 MV，1 歌曲
                 "json_data": audio_info,  # 原始数据
             }
-            if robot.check_sub_key(("workid", "songname", "enworkid"), audio_info):
+            if (
+                robot.check_sub_key(("workid", "songname", "enworkid", "type"), audio_info) and
+                robot.is_integer(audio_info["workid"]) and
+                robot.is_integer(audio_info["type"]) and int(audio_info["type"]) in (0, 1)
+            ):
                 # 获取歌曲id
-                if robot.is_integer(audio_info["workid"]):
-                    extra_audio_info["audio_id"] = str(audio_info["workid"])
+                extra_audio_info["audio_id"] = str(audio_info["workid"])
                 # 获取歌曲标题
                 extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
                 # 获取歌曲key
                 extra_audio_info["audio_key"] = str(audio_info["enworkid"])
+                # 类型
+                extra_audio_info["type"] = int(audio_info["type"])
             extra_info["audio_info_list"].append(extra_audio_info)
     audit_pagination_response.extra_info = extra_info
     return audit_pagination_response
@@ -68,28 +75,43 @@ def get_one_page_audio(user_id, page_count):
 
 # 获取指定id的歌曲播放页
 # audio_en_word_id => w-ptydrV23KVyIPbWPoKsA
-def get_audio_play_page(audio_en_word_id):
+def get_audio_play_page(audio_en_word_id, type):
     audio_play_url = "http://changba.com/s/%s" % audio_en_word_id
     extra_info = {
         "audio_url": None,  # 页面解析出的user id
+        "is_delete": False,  # 是不是已经被删除
     }
     audio_play_response = net.http_request(audio_play_url)
     if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取歌曲下载地址
-        audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
-        if audio_source_url:
-            # 从JS处解析的规则
-            special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
-            if len(special_find) == 0:
-                extra_info["audio_url"] = str(audio_source_url)
-            elif len(special_find) == 1:
-                e = int(special_find[0][1], 8)
-                f = int(special_find[0][2], 16) / e / e
-                g = int(special_find[0][3], 16) / e / e
-                if "a" == special_find[0][0] and g % 1000 == f:
-                    extra_info["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
+        if audio_play_response.data.find("该作品可能含有不恰当内容将不能显示。") > -1:
+            extra_info["is_delete"] = True
+        else:
+            # 获取歌曲下载地址
+            if type == 1:
+                audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
+                if audio_source_url:
+                    # 从JS处解析的规则
+                    special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
+                    if len(special_find) == 0:
+                        extra_info["audio_url"] = str(audio_source_url)
+                    elif len(special_find) == 1:
+                        e = int(special_find[0][1], 8)
+                        f = int(special_find[0][2], 16) / e / e
+                        g = int(special_find[0][3], 16) / e / e
+                        if "a" == special_find[0][0] and g % 1000 == f:
+                            extra_info["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
+                        else:
+                            extra_info["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+            # MV
+            else:
+                video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
+                try:
+                    video_url = base64.b64decode(video_source_string)
+                except TypeError:
+                    pass
                 else:
-                    extra_info["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+                    if video_url:
+                        extra_info["audio_url"] = video_url
     audio_play_response.extra_info = extra_info
     return audio_play_response
 
@@ -188,7 +210,7 @@ class Download(threading.Thread):
                 log.error(account_name + " user id解析失败")
                 tool.process_exit()
 
-            page_count = 0
+            page_count = 1
             video_count = 1
             first_audio_id = "0"
             unique_list = []
@@ -230,10 +252,13 @@ class Download(threading.Thread):
                         unique_list.append(audio_info["audio_id"])
 
                     # 获取歌曲播放页
-                    audio_play_response = get_audio_play_page(audio_info["audio_key"])
+                    audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["type"])
                     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 歌曲%s《%s》播放页面访问失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], robot.get_http_request_failed_reason(audio_play_response.status)))
                         tool.process_exit()
+
+                    if audio_play_response.extra_info["is_delete"]:
+                        continue
 
                     if audio_play_response.extra_info["audio_url"] is None:
                         log.error(account_name + " 歌曲%s《%s》下载地址解析失败" % (audio_info["audio_key"], audio_info["audio_title"]))
