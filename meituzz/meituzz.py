@@ -17,7 +17,7 @@ def get_album_page(page_count):
     if page_count <= 25000:
         album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
     else:
-        album_url = "http://zz.meituzz.com/ab/brV9?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
+        album_url = "http://zz.mt27z.cn/ab/brVv22?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
     album_response = net.http_request(album_url)
     extra_info = {
         "is_delete": False,  # 相册是不是已被删除（或还没有内容）
@@ -35,7 +35,7 @@ def get_album_page(page_count):
             key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
             is_error = True
             if key:
-                media_url = "http://zz.meituzz.com/ab/bd"
+                media_url = "http://zz.mt27z.cn/ab/bd"
                 post_data = {"y": page_count, "s": key}
                 media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
                 if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
