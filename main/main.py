@@ -83,6 +83,14 @@ def keyakizaka46_diary():
     diary.Diary().main()
 
 
+# 全面K歌
+def kg():
+    from kg import kg
+    kg_diary_path = os.path.join(os.path.abspath(".."), "kg")
+    os.chdir(kg_diary_path)
+    kg.KG().main()
+
+
 # Lofter
 def lofter():
     from lofter import lofter
@@ -273,6 +281,7 @@ def zunguang():
 # instagram()
 # jigadori()
 # keyakizaka46_diary()
+# kg()
 # lofter()
 # meipai()
 # meituzz()
