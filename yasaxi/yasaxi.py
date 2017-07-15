@@ -263,7 +263,7 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                     # 检查是否已下载到前一次的日志
-                    if status_info["id"] == int(self.account_info[1]):
+                    if status_info["id"] == self.account_info[1]:
                         is_over = True
                         break
 
