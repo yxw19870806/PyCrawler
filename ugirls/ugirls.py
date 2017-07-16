@@ -44,6 +44,18 @@ def get_album_page(album_id):
     return album_response
 
 
+# 从专辑首页获取最新的专辑id
+def get_newest_album_id():
+    index_url = "http://www.ugirls.com/Content/"
+    index_response = net.http_request(index_url)
+    max_album_id = None
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        album_list_html = tool.find_sub_string(index_response.data, '<div class="magazine_list_wrap">', '<div class="xfenye">')
+        album_id_find = re.findall('href="http://www.ugirls.com/Shop/Detail/Product-(\d*).html" target="_blank"', album_list_html)
+        max_album_id = max(map(int, list(set(album_id_find))))
+    return max_album_id
+
+
 class UGirls(robot.Robot):
     def __init__(self):
         sys_config = {
@@ -54,17 +66,22 @@ class UGirls(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        album_id = 2
+        album_id = 1
         if os.path.exists(self.save_data_path):
             save_file = open(self.save_data_path, "r")
             save_info = save_file.read()
             save_file.close()
             album_id = int(save_info.strip())
 
+        newest_album_id = get_newest_album_id()
+
+        if newest_album_id is None:
+            log.error("最新专辑id获取失败")
+            tool.process_exit()
+
         total_image_count = 0
         album_count = 0
-        is_over = False
-        while not is_over:
+        while album_id <= newest_album_id:
             log.step("开始解析第%s页专辑" % album_id)
 
             # 获取相册
