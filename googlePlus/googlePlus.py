@@ -289,7 +289,7 @@ class Download(threading.Thread):
 
                     for image_url in album_response.extra_info["image_url_list"]:
                         # 视频跳过
-                        if image_url.find("video.googleusercontent.com") != -1:
+                        if image_url.find("video.googleusercontent.com") != -1 or image_url.find("video-downloads.googleusercontent.com") != -1:
                             continue
 
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
