@@ -11,7 +11,6 @@ import json
 import os
 import sys
 
-COOKIE_INFO = {}
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.join("info/account.data")
 
