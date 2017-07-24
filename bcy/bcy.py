@@ -340,14 +340,17 @@ class Download(threading.Thread):
                         continue
 
                     # 是不是只对粉丝可见，并判断是否需要自动关注
-                    if album_response.extra_info["is_only_follower"] and IS_AUTO_FOLLOW:
-                        log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
-                        if follow(account_id):
-                            # 重新获取作品页面
-                            album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
-                            if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                                log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_info["album_id"], album_info["album_title"], robot.get_http_request_failed_reason(album_response.status)))
-                                tool.process_exit()
+                    if album_response.extra_info["is_only_follower"]:
+                        if IS_AUTO_FOLLOW:
+                            log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
+                            if follow(account_id):
+                                # 重新获取作品页面
+                                album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
+                                if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                                    log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_info["album_id"], album_info["album_title"], robot.get_http_request_failed_reason(album_response.status)))
+                                    tool.process_exit()
+                        else:
+                            continue
 
                     if len(album_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_info["album_id"], album_info["album_title"]))
