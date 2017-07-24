@@ -217,6 +217,8 @@ class Bcy(robot.Robot):
                 elif input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
+                    global IS_AUTO_FOLLOW
+                    IS_AUTO_FOLLOW = False
                     break
 
         # 解析存档文件
