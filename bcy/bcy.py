@@ -328,26 +328,6 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
 
-                    if need_make_download_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_download_dir = False
-
-                    # 过滤标题中不支持的字符
-                    filtered_title = robot.filter_text(album_info["album_title"])
-                    if filtered_title:
-                        album_path = os.path.join(image_path, "%s %s" % (album_info["album_id"], filtered_title))
-                    else:
-                        album_path = os.path.join(image_path, album_info["album_id"])
-                    if not tool.make_dir(album_path, 0):
-                        # 目录出错，把title去掉后再试一次，如果还不行退出
-                        log.error(account_name + " 创建作品目录 %s 失败，尝试不使用title" % album_path)
-                        album_path = os.path.join(image_path, album_info["album_id"])
-                        if not tool.make_dir(album_path, 0):
-                            log.error(account_name + " 创建作品目录 %s 失败" % album_path)
-                            tool.process_exit()
-
                     # 获取作品
                     album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
                     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -372,6 +352,26 @@ class Download(threading.Thread):
                     if len(album_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_info["album_id"], album_info["album_title"]))
                         tool.process_exit()
+
+                    if need_make_download_dir:
+                        if not tool.make_dir(image_path, 0):
+                            log.error(account_name + " 创建下载目录 %s 失败" % image_path)
+                            tool.process_exit()
+                        need_make_download_dir = False
+
+                    # 过滤标题中不支持的字符
+                    filtered_title = robot.filter_text(album_info["album_title"])
+                    if filtered_title:
+                        album_path = os.path.join(image_path, "%s %s" % (album_info["album_id"], filtered_title))
+                    else:
+                        album_path = os.path.join(image_path, album_info["album_id"])
+                    if not tool.make_dir(album_path, 0):
+                        # 目录出错，把title去掉后再试一次，如果还不行退出
+                        log.error(account_name + " 创建作品目录 %s 失败，尝试不使用title" % album_path)
+                        album_path = os.path.join(image_path, album_info["album_id"])
+                        if not tool.make_dir(album_path, 0):
+                            log.error(account_name + " 创建作品目录 %s 失败" % album_path)
+                            tool.process_exit()
 
                     image_count = 1
                     for image_url in album_response.extra_info["image_url_list"]:
