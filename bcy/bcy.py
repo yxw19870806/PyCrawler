@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from pyquery import PyQuery as pq
 import os
 import re
 import threading
@@ -119,31 +120,37 @@ def get_one_page_album(account_id, page_count):
     album_pagination_response = net.http_request(album_pagination_url)
     extra_info = {
         "coser_id": None,  # coser id
-        "album_id_list": [],  # 页面解析出的所有作品id列表
-        "album_title_list": [],  # 页面解析出的所有作品标题列表
+        "album_info_list": [],  # 页面解析出的所有作品信息列表
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取coser id
         coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
-        if len(coser_id_find) == 1:
-            extra_info["coser_id"] = str(coser_id_find[0])
-            # 获取作品id列表
-            extra_info["album_id_list"] = re.findall("/coser/detail/" + extra_info["coser_id"] + '/(\d+)"', album_pagination_response.data)
-            extra_info["album_id_list"] = map(str, extra_info["album_id_list"])
-            # 获取作品标题列表
-            album_title_list = re.findall('<img src="\S*" alt="([\S ]*)" />', album_pagination_response.data)
-            if "${post.title}" in album_title_list:
-                album_title_list.remove("${post.title}")
-            extra_info["album_title_list"] = map(str, album_title_list)
-        # 检测是否还有下一页
-        page_count_find = re.findall('<a href="/u/' + account_id + '/post/cos\?&p=(\d+)">', album_pagination_response.data)
-        if len(page_count_find) > 0:
-            max_page_count = max(map(int, page_count_find))
-        else:
-            max_page_count = 1
-        if page_count >= max_page_count:
-            extra_info["is_over"] = True
+        if len(coser_id_find) == 1 and robot.is_integer(coser_id_find[0]):
+            extra_info["coser_id"] = coser_id_find[0]
+            album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
+            for album_index in range(0, album_list_selector.size()):
+                album_selector = album_list_selector.eq(album_index)
+                extra_album_info = {
+                    "album_id": None,  # 页面解析出的作品id
+                    "album_title": None,  # 页面解析出的作品标题
+                    "html": album_selector.html(),  # 原始页面
+                }
+                album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
+                album_title = album_selector.find(".postWorkCard__img footer").text()
+                album_id = None
+                if album_url:
+                    album_id = str(album_url).split("/")[-1]
+                if robot.is_integer(album_id) and album_title:
+                    extra_album_info["album_id"] = int(album_id)
+                    extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
+                extra_info["album_info_list"].append(extra_album_info)
+            # 检测是否还有下一页
+            last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
+            if last_pagination_selector.size() == 1:
+                max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
+                extra_info["is_over"] = page_count >= max_page_count
+            else:
+                extra_info["is_over"] = True
     album_pagination_response.extra_info = extra_info
     return album_pagination_response
 
@@ -278,7 +285,7 @@ class Download(threading.Thread):
             this_account_total_image_count = 0
             page_count = 1
             total_album_count = 1
-            first_album_id = ""
+            first_album_id = "0"
             unique_list = []
             is_over = False
             need_make_download_dir = True
@@ -291,31 +298,33 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_pagination_response.status)))
                     tool.process_exit()
 
-                if len(album_pagination_response.extra_info["album_id_list"]) != len(album_pagination_response.extra_info["album_title_list"]):
-                    log.error(account_name + " 第%s页作品解析出的作品id和标题数量" % page_count)
+                if album_pagination_response.extra_info["coser_id"] is None:
+                    log.error(account_name + " 第%s页作品coser_id解析失败" % page_count)
                     tool.process_exit()
 
-                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response.extra_info["album_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response.extra_info["album_info_list"]))
 
-                for album_id in album_pagination_response.extra_info["album_id_list"]:
+                for album_info in album_pagination_response.extra_info["album_info_list"]:
+                    if album_info["album_id"] is None:
+                        log.error(account_name + " 作品页面%s作品id解析失败" % album_info["html"])
+                        tool.process_exit()
+
                     # 检查是否已下载到前一次的作品
-                    if int(album_id) <= int(self.account_info[1]):
+                    if album_info["album_id"] <= int(self.account_info[1]):
                         is_over = True
                         break
 
                     # 将第一个作品的id做为新的存档记录
-                    if first_album_id == "":
-                        first_album_id = album_id
+                    if first_album_id == "0":
+                        first_album_id = str(album_info["album_id"])
 
                     # 新增作品导致的重复判断
-                    if album_id in unique_list:
+                    if album_info["album_id"] in unique_list:
                         continue
                     else:
-                        unique_list.append(album_id)
+                        unique_list.append(album_info["album_id"])
 
-                    album_title = album_pagination_response.extra_info["album_title_list"].pop(0)
-
-                    log.step(account_name + " 开始解析作品%s 《%s》" % (album_id, album_title))
+                    log.step(account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
 
                     if need_make_download_dir:
                         if not tool.make_dir(image_path, 0):
@@ -324,49 +333,49 @@ class Download(threading.Thread):
                         need_make_download_dir = False
 
                     # 过滤标题中不支持的字符
-                    filtered_title = robot.filter_text(album_title)
+                    filtered_title = robot.filter_text(album_info["album_title"])
                     if filtered_title:
-                        album_path = os.path.join(image_path, "%s %s" % (album_id, filtered_title))
+                        album_path = os.path.join(image_path, "%s %s" % (album_info["album_id"], filtered_title))
                     else:
-                        album_path = os.path.join(image_path, album_id)
+                        album_path = os.path.join(image_path, album_info["album_id"])
                     if not tool.make_dir(album_path, 0):
                         # 目录出错，把title去掉后再试一次，如果还不行退出
                         log.error(account_name + " 创建作品目录 %s 失败，尝试不使用title" % album_path)
-                        album_path = os.path.join(image_path, album_id)
+                        album_path = os.path.join(image_path, album_info["album_id"])
                         if not tool.make_dir(album_path, 0):
                             log.error(account_name + " 创建作品目录 %s 失败" % album_path)
                             tool.process_exit()
 
                     # 获取作品
-                    album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_id)
+                    album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
                     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_response.status)))
+                        log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_info["album_id"], album_info["album_title"], robot.get_http_request_failed_reason(album_response.status)))
                         tool.process_exit()
 
                     # 是不是已被管理员锁定
                     if album_response.extra_info["is_admin_locked"]:
-                        log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_id, album_title))
+                        log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_info["album_id"], album_info["album_title"]))
                         continue
 
                     # 是不是只对粉丝可见，并判断是否需要自动关注
                     if album_response.extra_info["is_only_follower"] and IS_AUTO_FOLLOW:
-                        log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_id, album_title))
+                        log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
                         if follow(account_id):
                             # 重新获取作品页面
-                            album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_id)
+                            album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
                             if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                                log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_id, album_title, robot.get_http_request_failed_reason(album_response.status)))
+                                log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_info["album_id"], album_info["album_title"], robot.get_http_request_failed_reason(album_response.status)))
                                 tool.process_exit()
 
                     if len(album_response.extra_info["image_url_list"]) == 0:
-                        log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_id, album_title))
+                        log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_info["album_id"], album_info["album_title"]))
                         tool.process_exit()
 
                     image_count = 1
                     for image_url in album_response.extra_info["image_url_list"]:
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
-                        log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+                        log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
 
                         if image_url.rfind("/") < image_url.rfind("."):
                             file_type = image_url.split(".")[-1]
@@ -375,10 +384,10 @@ class Download(threading.Thread):
                         file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_id, album_title, image_count))
+                            log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_count))
                             image_count += 1
                         else:
-                            log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     this_account_total_image_count += image_count - 1
 
@@ -397,7 +406,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 
             # 新的存档记录
-            if first_album_id != "":
+            if first_album_id != "0":
                 self.account_info[1] = first_album_id
 
             # 保存最后的信息
