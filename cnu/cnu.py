@@ -24,7 +24,7 @@ def get_album_page(album_id):
         # 获取作品标题
         album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
         if album_title:
-            extra_info["album_title"] = album_title.strip()
+            extra_info["album_title"] = album_title
         # 获取图片地址
         image_info_string = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
         try:
