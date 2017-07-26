@@ -11,7 +11,7 @@ import os
 import re
 
 
-# 获取作品页面
+# 获取指定一页的图集
 def get_one_page_album(album_id, page_count):
     album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)
     album_pagination_response = net.http_request(album_pagination_url)
@@ -37,6 +37,18 @@ def get_one_page_album(album_id, page_count):
     return album_pagination_response
 
 
+# 从专辑首页获取最新的专辑id
+def get_newest_album_id():
+    index_url = "https://www.nvshens.com/gallery/"
+    index_response = net.http_request(index_url)
+    max_album_id = None
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
+        if len(album_id_find) > 0:
+            max_album_id = max(map(int, album_id_find))
+    return max_album_id
+
+
 class Nvshens(robot.Robot):
     def __init__(self):
         sys_config = {
@@ -54,10 +66,15 @@ class Nvshens(robot.Robot):
             save_file.close()
             album_id = int(save_info.strip())
 
+        newest_album_id = get_newest_album_id()
+
+        if newest_album_id is None:
+            log.error("最新图集id获取失败")
+            tool.process_exit()
+
         total_image_count = 0
         album_count = 0
-        is_over = False
-        while not is_over:
+        while album_id <= newest_album_id:
             log.step("开始解析%s号图集" % album_id)
 
             page_count = 1
