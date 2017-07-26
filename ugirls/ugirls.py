@@ -52,7 +52,8 @@ def get_newest_album_id():
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         album_list_html = tool.find_sub_string(index_response.data, '<div class="magazine_list_wrap">', '<div class="xfenye">')
         album_id_find = re.findall('href="http://www.ugirls.com/Shop/Detail/Product-(\d*).html" target="_blank"', album_list_html)
-        max_album_id = max(map(int, list(set(album_id_find))))
+        if len(album_id_find) > 0:
+            max_album_id = max(map(int, list(set(album_id_find))))
     return max_album_id
 
 
