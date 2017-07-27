@@ -5,4 +5,5 @@ log/
 project/*/photo/
 project/*/video/
 project/yasaxi/account.data
-steam/account.data
+game/steam/account.data
+game/steam/discount.txt
