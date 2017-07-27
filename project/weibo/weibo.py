@@ -6,8 +6,6 @@ http://www.weibo.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-import weiboCommon
 import base64
 import os
 import random
@@ -16,6 +14,9 @@ import threading
 import time
 import traceback
 import urllib2
+
+from common import *
+import weiboCommon
 
 ACCOUNTS = []
 INIT_SINCE_ID = "9999999999999999"
