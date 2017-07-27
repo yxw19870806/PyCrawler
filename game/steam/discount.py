@@ -14,19 +14,19 @@ import steamCommon
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
+DISCOUNT_DATA_PATH = os.path.join("discount.txt")
 
 
 # 打折游戏列表保存到文件
 def save_discount_list(discount_game_list):
-    tool.write_file(json.dumps(discount_game_list), "discount.txt", 2)
+    tool.write_file(json.dumps(discount_game_list), DISCOUNT_DATA_PATH, 2)
 
 
 # 获取文件中的打折列表
 def load_discount_list():
-    file_path = os.path.join("discount.txt")
-    if not os.path.exists(file_path):
+    if not os.path.exists(DISCOUNT_DATA_PATH):
         return []
-    file_handle = open("discount.txt", "r")
+    file_handle = open(DISCOUNT_DATA_PATH, "r")
     discount_game_list = []
     try:
         discount_game_list = json.loads(file_handle.read())
