@@ -77,7 +77,7 @@ class MeiTuLu(robot.Robot):
                     break
 
                 if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("第%s页作品访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_pagination_response.status)))
+                    log.error("第%s页图集访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_pagination_response.status)))
                     break
 
                 log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response.extra_info["image_url_list"]))

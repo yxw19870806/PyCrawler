@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-尤果专辑预览图片爬虫
+尤果图集预览图片爬虫
 http://www.ugirls.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
@@ -11,7 +11,7 @@ import os
 import re
 
 
-# 获取指定页数的专辑
+# 获取指定页数的图集
 def get_album_page(album_id):
     album_url = "http://www.ugirls.com/Content/List/Magazine-%s.html" % album_id
     album_response = net.http_request(album_url)
@@ -44,7 +44,7 @@ def get_album_page(album_id):
     return album_response
 
 
-# 从专辑首页获取最新的专辑id
+# 从图集首页获取最新的图集id
 def get_newest_album_id():
     index_url = "http://www.ugirls.com/Content/"
     index_response = net.http_request(index_url)
@@ -77,12 +77,12 @@ class UGirls(robot.Robot):
         newest_album_id = get_newest_album_id()
 
         if newest_album_id is None:
-            log.error("最新专辑id获取失败")
+            log.error("最新图集id获取失败")
             tool.process_exit()
 
         total_image_count = 0
         while album_id <= newest_album_id:
-            log.step("开始解析第%s页专辑" % album_id)
+            log.step("开始解析第%s页图集" % album_id)
 
             # 获取相册
             try:
@@ -92,37 +92,37 @@ class UGirls(robot.Robot):
                 break
 
             if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页专辑访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_response.status)))
+                log.error("第%s页图集访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_response.status)))
                 break
 
             if album_response.extra_info["is_error"]:
-                log.error("第%s页专辑解析失败" % album_id)
+                log.error("第%s页图集解析失败" % album_id)
                 break
 
             if album_response.extra_info["is_delete"]:
-                log.step("第%s页专辑已被删除，跳过" % album_id)
+                log.step("第%s页图集已被删除，跳过" % album_id)
                 album_id += 1
                 continue
 
-            log.trace("第%s页专辑解析的所有图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
+            log.trace("第%s页图集解析的所有图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
             album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response.extra_info["model_name"]))
             if not tool.make_dir(album_path, 0):
-                log.error("创建专辑目录 %s 失败" % album_path)
+                log.error("创建图集目录 %s 失败" % album_path)
                 tool.process_exit()
 
             image_count = 1
             for image_url in album_response.extra_info["image_url_list"]:
-                log.step("开始下载第%s页专辑的第%s张图片 %s" % (album_id, image_count, image_url))
+                log.step("开始下载第%s页图集的第%s张图片 %s" % (album_id, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
                 file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                 save_file_return = net.save_net_file(image_url, file_path)
                 if save_file_return["status"] == 1:
-                    log.step("第%s页专辑的第%s张图片下载成功" % (album_id, image_count))
+                    log.step("第%s页图集的第%s张图片下载成功" % (album_id, image_count))
                     image_count += 1
                 else:
-                     log.error("第%s页专辑的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                     log.error("第%s页图集的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 total_image_count += image_count - 1
 
             album_id += 1
