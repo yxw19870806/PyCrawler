@@ -23,8 +23,6 @@ INIT_SINCE_ID = "9999999999999999"
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-GET_IMAGE_COUNT = 0
-GET_VIDEO_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -208,8 +206,6 @@ def meipai_get_pos(arg1, arg2):
 
 class Weibo(robot.Robot):
     def __init__(self, extra_config=None):
-        global GET_IMAGE_COUNT
-        global GET_VIDEO_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -231,8 +227,6 @@ class Weibo(robot.Robot):
         robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
-        GET_VIDEO_COUNT = self.get_video_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
@@ -396,11 +390,6 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_IMAGE_COUNT < image_count:
-                        is_over = True
-                        break
-
                 if not is_over:
                     if photo_pagination_response.extra_info["is_over"]:
                         is_over = True
@@ -479,11 +468,6 @@ class Download(threading.Thread):
                             video_count += 1
                         else:
                             log.error(account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_count, video_play_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_VIDEO_COUNT < video_count:
-                            is_over = True
-                            break
 
                     if not is_over:
                         # 获取下一页的since_id

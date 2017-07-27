@@ -15,7 +15,6 @@ import traceback
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 TOTAL_IMAGE_COUNT = 0
-GET_PAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -86,7 +85,6 @@ def get_one_page_album(account_id, post_time):
 
 class TuChong(robot.Robot):
     def __init__(self):
-        global GET_PAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -99,7 +97,6 @@ class TuChong(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_PAGE_COUNT = self.get_page_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
@@ -254,13 +251,9 @@ class Download(threading.Thread):
                     this_account_total_image_count += image_count
 
                     if not is_over:
-                        # 达到配置文件中的下载页数，结束
-                        if 0 < GET_PAGE_COUNT < post_count:
-                            is_over = True
-                        else:
-                            # 相册创建时间
-                            post_time = album_info["album_time"]
-                            post_count += 1
+                        # 相册创建时间
+                        post_time = album_info["album_time"]
+                        post_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 

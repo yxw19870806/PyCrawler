@@ -17,8 +17,6 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_VIDEO_COUNT = 0
-GET_VIDEO_COUNT = 0
-GET_PAGE_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
@@ -66,8 +64,6 @@ def get_audio_play_page(audio_id, song_type):
 
 class FiveSing(robot.Robot):
     def __init__(self):
-        global GET_VIDEO_COUNT
-        global GET_PAGE_COUNT
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -77,8 +73,6 @@ class FiveSing(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_VIDEO_COUNT = self.get_video_count
-        GET_PAGE_COUNT = self.get_page_count
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -138,7 +132,6 @@ class Download(threading.Thread):
 
     def run(self):
         global TOTAL_VIDEO_COUNT
-        global GET_PAGE_COUNT
 
         account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
@@ -232,18 +225,10 @@ class Download(threading.Thread):
                         else:
                             log.error(account_name + " 第%s首%s歌曲《%s》%s下载失败，原因：%s" % (video_count, audio_type_name, audio_title, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_VIDEO_COUNT < video_count:
-                            is_over = True
-                            break
-
                     if not is_over:
-                        # 达到配置文件中的下载页数，结束
-                        if 0 < GET_PAGE_COUNT <= page_count:
-                            is_over = True
                         # 获取的歌曲数量少于1页的上限，表示已经到结束了
                         # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                        elif len(audio_pagination_response.extra_info["audio_info_list"]) < 20:
+                        if len(audio_pagination_response.extra_info["audio_info_list"]) < 20:
                             is_over = True
                         else:
                             page_count += 1

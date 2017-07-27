@@ -19,8 +19,6 @@ ACCOUNTS = []
 INIT_MAX_ID = "999999999999999999"
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-GET_IMAGE_COUNT = 0
-GET_VIDEO_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -165,8 +163,6 @@ def get_video_play_page(tweet_id):
 
 class Twitter(robot.Robot):
     def __init__(self, extra_config=None):
-        global GET_IMAGE_COUNT
-        global GET_VIDEO_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -184,8 +180,6 @@ class Twitter(robot.Robot):
         robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
-        GET_VIDEO_COUNT = self.get_video_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
@@ -287,8 +281,6 @@ class Download(threading.Thread):
             position_blog_id = INIT_MAX_ID
             first_tweet_id = "0"
             is_over = False
-            is_download_image = IS_DOWNLOAD_IMAGE
-            is_download_video = IS_DOWNLOAD_VIDEO
             need_make_image_dir = True
             need_make_video_dir = True
             while not is_over:
@@ -363,10 +355,6 @@ class Download(threading.Thread):
                         else:
                             log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
-                        # 达到配置文件中的下载数量，结束图片下载
-                        if 0 < GET_IMAGE_COUNT < image_count:
-                            is_download_image = False
-
                     # 图片
                     if is_download_image:
                         for image_url in media_info["image_url_list"]:
@@ -394,15 +382,6 @@ class Download(threading.Thread):
                                 else:
                                     log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                                 break
-
-                        # 达到配置文件中的下载数量，结束视频下载
-                        if 0 < GET_VIDEO_COUNT < video_count:
-                            is_download_video = False
-
-                    # 全部达到配置文件中的下载数量，结束
-                    if not is_download_image and not is_download_video:
-                        is_over = True
-                        break
 
                 if not is_over:
                     # 下一页的指针

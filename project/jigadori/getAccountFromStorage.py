@@ -3,7 +3,7 @@
 グラドル自画撮り部 已下载文件中提取所有成员账号
 http://jigadori.fkoji.com/users
 @author: hikaru
-:email: hikaru870806@hotmail.com
+email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import tool

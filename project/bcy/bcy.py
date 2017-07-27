@@ -16,7 +16,6 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
-GET_PAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
@@ -183,7 +182,6 @@ def get_album_page(coser_id, album_id):
 
 class Bcy(robot.Robot):
     def __init__(self):
-        global GET_PAGE_COUNT
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global COOKIE_INFO
@@ -195,7 +193,6 @@ class Bcy(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_PAGE_COUNT = self.get_page_count
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         COOKIE_INFO["LOGGED_USER"] = self.cookie_value["LOGGED_USER"]
@@ -286,7 +283,6 @@ class Download(threading.Thread):
             # 图片下载
             this_account_total_image_count = 0
             page_count = 1
-            total_album_count = 1
             first_album_id = "0"
             unique_list = []
             is_over = False
@@ -396,13 +392,8 @@ class Download(threading.Thread):
 
                     this_account_total_image_count += image_count - 1
 
-                    if 0 < GET_PAGE_COUNT < total_album_count:
-                        is_over = True
-                        break
-                    else:
-                        total_album_count += 1
-
                 if not is_over:
+                    # 达到配置文件中的下载数量，结束
                     if album_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:

@@ -81,7 +81,6 @@ class UGirls(robot.Robot):
             tool.process_exit()
 
         total_image_count = 0
-        album_count = 0
         while album_id <= newest_album_id:
             log.step("开始解析第%s页专辑" % album_id)
 
@@ -126,12 +125,6 @@ class UGirls(robot.Robot):
                      log.error("第%s页专辑的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 total_image_count += image_count - 1
 
-            # 达到配置文件中的下载数量，结束
-            if 0 < self.get_image_count < total_image_count:
-                break
-            if 0 < self.get_page_count <= album_count:
-                break
-            album_count += 1
             album_id += 1
 
         # 重新保存存档文件

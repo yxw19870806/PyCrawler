@@ -16,6 +16,5 @@ save.data格式（每一行代表一条记录，每条记录包含以下内容�
 
 配置参数（config.ini）：
 	1.可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO
-	2.可配置下载指定数量的图片和视频后结束程序，参数：GET_IMAGE_COUNT、GET_VIDEO_COUNT
 	2.需配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE
 	并使用该浏览器登陆自己的微博账号，否则无法下载

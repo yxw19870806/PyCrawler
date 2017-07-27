@@ -16,7 +16,6 @@ import traceback
 ACCOUNTS = []
 GET_IMAGE_URL_COUNT = 100  # 单次获取最新的N张照片,G+ 限制最多1000张
 TOTAL_IMAGE_COUNT = 0
-GET_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -135,7 +134,6 @@ def get_album_page(account_id, album_id):
 
 class GooglePlus(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -148,7 +146,6 @@ class GooglePlus(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort
@@ -315,10 +312,6 @@ class Download(threading.Thread):
                                 log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                             break
 
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_IMAGE_COUNT < image_count:
-                            is_over = True
-                            break
                     if is_over:
                         break
 

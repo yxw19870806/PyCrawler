@@ -16,15 +16,11 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
-GET_IMAGE_COUNT = 0
-GET_VIDEO_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_DOWNLOAD_IMAGE = True
-IS_DOWNLOAD_VIDEO = True
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""
 ZHEZHE_INFO = ""
@@ -135,15 +131,11 @@ def get_one_page_photo(account_id, cursor):
 
 class Yasaxi(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
-        global GET_VIDEO_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_DOWNLOAD_IMAGE
-        global IS_DOWNLOAD_VIDEO
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
@@ -155,14 +147,10 @@ class Yasaxi(robot.Robot):
         self.thread_count = 1
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
-        GET_VIDEO_COUNT = self.get_video_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
-        IS_DOWNLOAD_IMAGE = self.is_download_image
-        IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
@@ -236,12 +224,10 @@ class Download(threading.Thread):
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
 
             image_count = 1
-            # video_count = 1
             cursor = 0
             first_status_id = ""
             is_over = False
             need_make_image_dir = True
-            # need_make_video_dir = True
             while not is_over:
                 log.step(account_name + " 开始解析cursor '%s'的图片" % cursor)
 
@@ -272,33 +258,29 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析状态%s的图片" % status_info["id"])
 
-                    if IS_DOWNLOAD_IMAGE:
-                        for image_url in status_info["image_url_list"]:
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not (tool.make_dir(image_path, 0) and tool.make_dir(os.path.join(image_path, "origin"), 0) and tool.make_dir(os.path.join(image_path, "other"), 0)):
-                                    log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                    tool.process_exit()
-                                need_make_image_dir = False
+                    for image_url in status_info["image_url_list"]:
+                        # 第一张图片，创建目录
+                        if need_make_image_dir:
+                            if not (tool.make_dir(image_path, 0) and tool.make_dir(os.path.join(image_path, "origin"), 0) and tool.make_dir(os.path.join(image_path, "other"), 0)):
+                                log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
+                                tool.process_exit()
+                            need_make_image_dir = False
 
-                            file_name_and_type = image_url.split("?")[0].split("/")[-1]
-                            resolution = image_url.split("?")[0].split("/")[-2]
-                            file_name = file_name_and_type.split(".")[0]
-                            file_type = file_name_and_type.split(".")[1]
-                            if file_name[-2:] != "_b" and resolution == "1080":
-                                image_file_path = os.path.join(image_path, "origin/%s.%s" % (file_name, file_type))
-                            else:
-                                image_file_path = os.path.join(image_path, "other/%s.%s" % (file_name, file_type))
-                            log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-                            save_file_return = net.save_net_file(image_url, image_file_path)
-                            if save_file_return["status"] == 1:
-                                log.step(account_name + " 第%s张图片下载成功" % image_count)
-                                image_count += 1
-                            else:
-                                log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                    # if IS_DOWNLOAD_VIDEO:
-                    #     pass
+                        file_name_and_type = image_url.split("?")[0].split("/")[-1]
+                        resolution = image_url.split("?")[0].split("/")[-2]
+                        file_name = file_name_and_type.split(".")[0]
+                        file_type = file_name_and_type.split(".")[1]
+                        if file_name[-2:] != "_b" and resolution == "1080":
+                            image_file_path = os.path.join(image_path, "origin/%s.%s" % (file_name, file_type))
+                        else:
+                            image_file_path = os.path.join(image_path, "other/%s.%s" % (file_name, file_type))
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                        save_file_return = net.save_net_file(image_url, image_file_path)
+                        if save_file_return["status"] == 1:
+                            log.step(account_name + " 第%s张图片下载成功" % image_count)
+                            image_count += 1
+                        else:
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
                     if photo_pagination_response.extra_info["next_page_cursor"]:

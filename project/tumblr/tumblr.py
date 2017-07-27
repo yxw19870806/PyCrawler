@@ -19,7 +19,6 @@ import urlparse
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-GET_PAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -162,7 +161,6 @@ def get_video_play_page(account_id, post_id):
 
 class Tumblr(robot.Robot):
     def __init__(self):
-        global GET_PAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -180,7 +178,6 @@ class Tumblr(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_PAGE_COUNT = self.get_page_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
@@ -384,11 +381,7 @@ class Download(threading.Thread):
                                 break
 
                 if not is_over:
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_PAGE_COUNT <= page_count:
-                        is_over = True
-                    else:
-                        page_count += 1
+                    page_count += 1
 
             log.step(account_id + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 

@@ -73,7 +73,6 @@ class Nvshens(robot.Robot):
             tool.process_exit()
 
         total_image_count = 0
-        album_count = 0
         while album_id <= newest_album_id:
             log.step("开始解析%s号图集" % album_id)
 
@@ -129,10 +128,6 @@ class Nvshens(robot.Robot):
                 else:
                     page_count += 1
 
-            # 达到配置文件中的下载数量，结束
-            if 0 < self.get_page_count <= album_count:
-                break
-            album_count += 1
             album_id += 1
 
         # 重新保存存档文件

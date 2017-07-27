@@ -156,11 +156,9 @@ class Robot(object):
             else:
                 self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
             # 图片下载数量，0为下载全部可用资源
-            self.get_image_count = get_config(config, "GET_IMAGE_COUNT", 0, 1)
         else:
             self.image_download_path = ""
             self.image_temp_path = ""
-            self.get_image_count = 0
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
@@ -178,15 +176,11 @@ class Robot(object):
                 self.video_temp_path = extra_config["video_temp_path"]
             else:
                 self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
-            # 视频下载数量，0为下载全部可用资源
-            self.get_video_count = get_config(config, "GET_VIDEO_COUNT", 0, 1)
         else:
             self.video_download_path = ""
             self.video_temp_path = ""
-            self.get_video_count = 0
         # 是否需要重新排序图片
         self.is_sort = get_config(config, "IS_SORT", True, 2)
-        self.get_page_count = get_config(config, "GET_PAGE_COUNT", 0, 1)
 
         # 代理
         is_proxy = get_config(config, "IS_PROXY", 2, 1)

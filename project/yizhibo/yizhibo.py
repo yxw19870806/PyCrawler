@@ -16,8 +16,6 @@ import traceback
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-GET_IMAGE_COUNT = 0
-GET_VIDEO_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
@@ -118,8 +116,6 @@ def get_video_m3u8_file(video_file_url):
 
 class YiZhiBo(robot.Robot):
     def __init__(self):
-        global GET_IMAGE_COUNT
-        global GET_VIDEO_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global VIDEO_TEMP_PATH
@@ -136,8 +132,6 @@ class YiZhiBo(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
-        GET_VIDEO_COUNT = self.get_video_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
@@ -281,10 +275,6 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                         continue
 
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_IMAGE_COUNT < image_count:
-                        break
-
                 # 存档恢复
                 if is_error:
                     first_image_time = "0"
@@ -358,10 +348,6 @@ class Download(threading.Thread):
                         video_count += 1
                     else:
                         log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_file_response.extra_info["video_url_list"]))
-
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_VIDEO_COUNT < video_count:
-                        break
 
                 # 存档恢复
                 if is_error:
