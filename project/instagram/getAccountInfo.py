@@ -31,7 +31,7 @@ def get_account_index_page(account_name):
 
 
 def main():
-    config = robot.read_config(os.path.join(tool.PROJECT_CONFIG_PATH))
+    config = config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
     save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
     # 读取存档文件

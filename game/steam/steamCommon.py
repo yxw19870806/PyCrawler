@@ -225,7 +225,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
 
 # 从浏览器中获取登录cookies
 def get_login_cookie_from_browser():
-    config = robot.read_config(os.path.join(tool.PROJECT_CONFIG_PATH))
+    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 操作系统&浏览器
     browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
     # cookie

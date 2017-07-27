@@ -59,7 +59,7 @@ class Robot(object):
             os.chdir(application_path)
             config_path = os.path.join(os.getcwd(), "data/config.ini")
         else:
-            config_path = os.path.join(tool.PROJECT_CONFIG_PATH)
+            config_path = tool.PROJECT_CONFIG_PATH
 
         config = read_config(config_path)
 

@@ -51,7 +51,7 @@ def get_member_from_talk(talk_id):
 
 
 def main():
-    config = robot.read_config(os.path.join(tool.PROJECT_CONFIG_PATH))
+    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
     save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
     account_list_from_save_data = get_account_from_save_data(save_data_path)

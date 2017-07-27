@@ -71,7 +71,7 @@ def get_account_from_api():
 
 def main():
     if get_token_from_file():
-        config = robot.read_config(os.path.join(tool.PROJECT_CONFIG_PATH))
+        config = robot.read_config(tool.PROJECT_CONFIG_PATH)
         # 存档位置
         save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
         account_list_from_api = get_account_from_api()
