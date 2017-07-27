@@ -30,7 +30,7 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 # 项目根目录
-PROJECT_ROOT_PATH = os.path.abspath(os.path.join(sys._getframe().f_code.co_filename, ".."))
+PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), ".."))
 # common目录
 PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
 # config.ini路径
