@@ -212,11 +212,6 @@ class Download(threading.Thread):
                         else:
                             log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                        # 达到配置文件中的下载数量，结束
-                        if 0 < GET_IMAGE_COUNT < image_count:
-                            is_over = True
-                            break
-
                     if is_over:
                         break
 

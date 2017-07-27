@@ -119,7 +119,6 @@ def get_article_page(article_url):
 
 class Article(robot.Robot):
     def __init__(self, extra_config=None):
-        global GET_IMAGE_COUNT
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -136,7 +135,6 @@ class Article(robot.Robot):
         robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        GET_IMAGE_COUNT = self.get_image_count
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         IS_SORT = self.is_sort

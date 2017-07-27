@@ -15,7 +15,6 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_VIDEO_COUNT = 0
-GET_VIDEO_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
@@ -64,7 +63,6 @@ def get_audio_info_page(audio_id):
 
 class XiMaLaYa(robot.Robot):
     def __init__(self):
-        global GET_VIDEO_COUNT
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -74,7 +72,6 @@ class XiMaLaYa(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_VIDEO_COUNT = self.get_video_count
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -217,11 +214,6 @@ class Download(threading.Thread):
                         video_count += 1
                     else:
                         log.error(account_name + " 第%s首音频《%s》 %s 下载失败，原因：%s" % (video_count, audio_title, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                    # 达到配置文件中的下载数量，结束
-                    if 0 < GET_VIDEO_COUNT < video_count:
-                        is_over = True
-                        break
 
                 if not is_over:
                     # 获取的音频数量少于1页的上限，表示已经到结束了
