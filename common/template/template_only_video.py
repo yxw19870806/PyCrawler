@@ -15,7 +15,6 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_VIDEO_COUNT = 0
-GET_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -24,7 +23,6 @@ IS_SORT = True
 
 class Template(robot.Robot):
     def __init__(self):
-        global GET_VIDEO_COUNT
         global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
@@ -39,7 +37,6 @@ class Template(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        GET_VIDEO_COUNT = self.get_video_count
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_SORT = self.is_sort
