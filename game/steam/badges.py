@@ -5,9 +5,10 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import urllib
+
 from common import tool
 import steamCommon
-import urllib
 
 
 # 获取当前account正在收集的徽章进度
