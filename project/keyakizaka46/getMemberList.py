@@ -44,7 +44,7 @@ def get_account_from_index():
 
 
 def main():
-    config = robot.read_config(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..\\common\\config.ini"))
+    config = robot.read_config(os.path.join(tool.PROJECT_CONFIG_PATH))
     # 存档位置
     save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
     account_list_from_api = get_account_from_index()

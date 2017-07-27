@@ -29,6 +29,12 @@ if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
     IS_EXECUTABLE = False
+# 项目根目录
+PROJECT_ROOT_PATH = os.path.abspath(os.path.join(sys._getframe().f_code.co_filename, ".."))
+# common目录
+PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
+# config.ini路径
+PROJECT_CONFIG_PATH = os.path.join(PROJECT_ROOT_PATH, "common/config.ini")
 
 
 # 根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
