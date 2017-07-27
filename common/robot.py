@@ -311,7 +311,7 @@ def get_config(config, key, default_value, mode):
         if value[:2] == "\\\\":  # \\ 开头，程序所在目录
             value = os.path.join(os.path.abspath(""), value[2:])  # \\ 仅做标记使用，实际需要去除
         elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
-            value = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "..", value[1:])  # \ 仅做标记使用，实际需要去除
+            value = os.path.join(tool.PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
         value = os.path.realpath(value)
     return value
 
