@@ -1,0 +1,2 @@
+install all dependent package for this project
+please run win32.bat or win64.bat as administrator(important!) according to your Python 32-bit or 64-bit version(not system version)
