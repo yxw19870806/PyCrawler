@@ -195,7 +195,7 @@ class Download(threading.Thread):
                 if album_title:
                     album_path = os.path.join(image_path, "%s %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(image_path, album_id)
+                    album_path = os.path.join(image_path, str(album_id))
                 if not tool.make_dir(album_path, 0):
                     # 目录出错，把title去掉后再试一次，如果还不行退出
                     log.error(account_name + " 创建相册目录 %s 失败，尝试不使用title" % album_path)
