@@ -24,15 +24,16 @@ def get_one_page_album(album_id, page_count):
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断图集是否已经被删除
         extra_info["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
-        # 获取图集标题
-        extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
-        # 获取图集图片地址
-        image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
-        extra_info["image_url_list"] = map(str, image_url_list)
-        # 判断是不是最后一页
-        page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
-        max_page_count = max(map(int, page_count_find))
-        extra_info['is_over'] = page_count >= max_page_count
+        if not extra_info["is_delete"]:
+            # 获取图集标题
+            extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
+            # 获取图集图片地址
+            image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
+            extra_info["image_url_list"] = map(str, image_url_list)
+            # 判断是不是最后一页
+            page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
+            max_page_count = max(map(int, page_count_find))
+            extra_info['is_over'] = page_count >= max_page_count
     album_pagination_response.extra_info = extra_info
     return album_pagination_response
 
@@ -59,7 +60,7 @@ class Nvshens(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        album_id = 1
+        album_id = 10000
         if os.path.exists(self.save_data_path):
             save_file = open(self.save_data_path, "r")
             save_info = save_file.read()
@@ -90,8 +91,16 @@ class Nvshens(robot.Robot):
                     break
 
                 if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("第%s页图集访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_pagination_response.status)))
+                    log.error("%s号图集第%s页访问失败，原因：%s" % (album_id, page_count, robot.get_http_request_failed_reason(album_pagination_response.status)))
                     break
+
+                if album_pagination_response.extra_info["is_delete"]:
+                    if page_count == 1:
+                        log.step("%s号图集不存在，跳过" % album_id)
+                        break
+                    else:
+                        log.error("%s号图集第%s页已删除" % (album_id, page_count))
+                        break
 
                 log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response.extra_info["image_url_list"]))
 
