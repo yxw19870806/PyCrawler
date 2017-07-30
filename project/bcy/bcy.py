@@ -139,7 +139,7 @@ def get_one_page_album(account_id, page_count):
                 album_id = None
                 if album_url:
                     album_id = str(album_url).split("/")[-1]
-                if robot.is_integer(album_id) and album_title:
+                if robot.is_integer(album_id):
                     extra_album_info["album_id"] = int(album_id)
                     extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
                 extra_info["album_info_list"].append(extra_album_info)
