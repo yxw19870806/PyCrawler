@@ -132,7 +132,7 @@ def get_one_page_album(account_id, page_count):
                 extra_album_info = {
                     "album_id": None,  # 页面解析出的作品id
                     "album_title": None,  # 页面解析出的作品标题
-                    "html": album_selector.html(),  # 原始页面
+                    "html": str(album_selector.html().encode("UTF-8")),  # 原始页面
                 }
                 album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
                 album_title = album_selector.find(".postWorkCard__img footer").text()

@@ -34,7 +34,7 @@ def get_one_page_audio(account_id, page_count):
                 audio_info = {
                     "audio_id": None,  # 页面解析出的音频id
                     "audio_title": "",  # 页面解析出的音频标题
-                    "html": audio_list_selector.html(),  # 原始页面
+                    "html": audio_list_selector.html().encode("UTF-8"),  # 原始页面
                 }
                 audio_selector = audio_list_selector.eq(audio_index)
                 audio_id = audio_selector.find(".content_wrap").attr("sound_id")

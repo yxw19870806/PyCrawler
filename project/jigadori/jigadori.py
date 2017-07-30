@@ -29,7 +29,7 @@ def get_one_page_photo(page_count):
                 "tweet_id": 0,  # 页面解析出的tweet id
                 "image_url_list": [],  # 页面解析出的图片地址
                 "time": 0,  # 页面解析出的图片上传时间
-                "html": photo_selector.html(),  # 原始页面
+                "html": photo_selector.html().encode("UTF-8"),  # 原始页面
             }
             account_name = photo_selector.find(".user-info .user-name .screen-name").text()
             tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text()
