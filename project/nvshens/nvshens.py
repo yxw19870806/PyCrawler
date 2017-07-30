@@ -25,6 +25,8 @@ def get_one_page_album(album_id, page_count):
         # 判断图集是否已经被删除
         extra_info["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
         if not extra_info["is_delete"]:
+            album_pagination_response.data.find('<span style="color: #DB0909">0张照片</span>') >= 0
+        if not extra_info["is_delete"]:
             # 获取图集标题
             extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
             # 获取图集图片地址
