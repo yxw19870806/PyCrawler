@@ -318,7 +318,7 @@ class Download(threading.Thread):
                         first_tweet_id = media_info["blog_id"]
 
                     # 视频
-                    if is_download_video and media_info["has_video"]:
+                    if IS_DOWNLOAD_VIDEO and media_info["has_video"]:
                         # 获取视频播放地址
                         video_play_response = get_video_play_page(media_info["blog_id"])
                         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -356,7 +356,7 @@ class Download(threading.Thread):
                             log.error(account_name + " 第%s个视频 %s 下载失败" % (video_count, video_url))
 
                     # 图片
-                    if is_download_image:
+                    if IS_DOWNLOAD_IMAGE:
                         for image_url in media_info["image_url_list"]:
                             log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
