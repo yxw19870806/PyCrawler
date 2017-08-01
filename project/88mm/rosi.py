@@ -71,14 +71,15 @@ class Rosi(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        last_album_id = 1
         if os.path.exists(self.save_data_path):
             save_file = open(self.save_data_path, "r")
             save_info = save_file.read()
             save_file.close()
             last_album_id = int(save_info.strip())
+        else:
+            last_album_id = 0
 
-        new_last_album_id = "0"
+        new_last_album_id = ""
         total_image_count = 0
         page_count = 1
         is_over = False
@@ -103,7 +104,7 @@ class Rosi(robot.Robot):
                     is_over = True
                     break
 
-                if new_last_album_id == "0":
+                if new_last_album_id == "":
                     new_last_album_id = album_info["album_id"]
 
                 album_page_count = 1
@@ -162,12 +163,8 @@ class Rosi(robot.Robot):
                     page_count += 1
 
         # 重新保存存档文件
-        save_data_dir = os.path.dirname(self.save_data_path)
-        if not os.path.exists(save_data_dir):
-            tool.make_dir(save_data_dir, 0)
-        save_file = open(self.save_data_path, "w")
-        save_file.write(str(new_last_album_id))
-        save_file.close()
+        if new_last_album_id != "":
+            tool.write_file(str(new_last_album_id), self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
