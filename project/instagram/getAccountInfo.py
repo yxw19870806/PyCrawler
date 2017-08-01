@@ -13,7 +13,7 @@ import sys
 
 # 获取账号首页
 def get_account_index_page(account_name):
-    account_index_url = "https://www.instagram.com/%s/?hl=zh-cn" % account_name
+    account_index_url = "https://www.instagram.com/%s/" % account_name
     account_index_response = net.http_request(account_index_url)
     extra_info = {
         "account_info": "",  # 页面解析出的自我介绍
