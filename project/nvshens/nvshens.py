@@ -18,19 +18,22 @@ def get_one_page_album(album_id, page_count):
     extra_info = {
         "is_delete": False,  # 是不是已经被删除
         "is_over": False,  # 是不是图集的最后一页
+        "image_count": 0,  # 页面解析出的图集总图片数
         "album_title": "",  # 页面解析出的图集标题
         "image_url_list": [],  # 页面解析出的所有图片地址列表
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断图集是否已经被删除
         extra_info["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
-        if not extra_info["is_delete"]:
-            extra_info["is_delete"] = album_pagination_response.data.find("<span style='color: #DB0909'>0张照片</span>") >= 0
+        image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
+        if robot.is_integer(image_count):
+            extra_info["image_count"] = int(image_count)
+        else:
+            extra_info["image_count"] = 0
         if not extra_info["is_delete"]:
             # 获取图集标题
             extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
             # 获取图集图片地址
-            image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
             if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
                 image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
             else:
@@ -88,6 +91,8 @@ class Nvshens(robot.Robot):
 
             page_count = 1
             image_count = 1
+            this_album_image_count = 0
+            this_album_total_image_count = 0
             album_title = ""
             album_path = os.path.join(self.image_download_path, str(album_id))
             while True:
@@ -127,7 +132,12 @@ class Nvshens(robot.Robot):
                         if not tool.make_dir(album_path, 0):
                             log.error("创建图集目录 %s 失败" % album_path)
                             tool.process_exit()
+                    this_album_total_image_count = album_pagination_response.extra_info["image_count"]
+                else:
+                    if this_album_total_image_count != album_pagination_response.extra_info["image_count"]:
+                        log.error("%s号图集第%s页获取的总图片数不一致" % (album_id, page_count))
 
+                this_album_image_count += len(album_pagination_response.extra_info["image_url_list"])
                 for image_url in album_pagination_response.extra_info["image_url_list"]:
                     log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
@@ -142,6 +152,8 @@ class Nvshens(robot.Robot):
                     total_image_count += image_count - 1
 
                 if album_pagination_response.extra_info["is_over"]:
+                    if this_album_image_count != this_album_total_image_count:
+                        log.error("%s号图集获取的图片有缺失" % album_id)
                     break
                 else:
                     page_count += 1
