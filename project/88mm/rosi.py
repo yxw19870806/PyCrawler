@@ -71,7 +71,7 @@ class Rosi(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        last_album_id = 0
+        last_album_id = 1
         if os.path.exists(self.save_data_path):
             save_file = open(self.save_data_path, "r")
             save_info = save_file.read()
@@ -131,26 +131,35 @@ class Rosi(robot.Robot):
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, file_path)
-                        if save_file_return["status"] == 1:
-                            log.step("%s号图集 第%s张图片下载成功" % (album_info["album_id"], image_count))
-                            image_count += 1
-                        else:
-                             log.error("%s号图集 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                        total_image_count += image_count - 1
 
-                    if photo_pagination_response.extra_info["is_over"]:
+                        try:
+                            save_file_return = net.save_net_file(image_url, file_path)
+                            if save_file_return["status"] == 1:
+                                log.step("%s号图集 第%s张图片下载成功" % (album_info["album_id"], image_count))
+                                image_count += 1
+                            else:
+                                 log.error("%s号图集 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        except SystemExit:
+                            log.step("提前退出")
+                            tool.remove_dir_or_file(album_path)
+                            is_over = True
+                            break
+
+                    if is_over or photo_pagination_response.extra_info["is_over"]:
                         break
                     else:
                         album_page_count += 1
 
+                if is_over:
+                    break
+                else:
+                    total_image_count += image_count
+
+            if not is_over:
                 if album_pagination_response.extra_info["is_over"]:
                     break
                 else:
                     page_count += 1
-
-            if not is_over:
-                page_count += 1
 
         # 重新保存存档文件
         save_data_dir = os.path.dirname(self.save_data_path)
