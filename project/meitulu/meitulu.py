@@ -57,7 +57,6 @@ class MeiTuLu(robot.Robot):
             save_file.close()
             album_id = int(save_info.strip())
 
-
         total_image_count = 0
         is_over = False
         while not is_over:

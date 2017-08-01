@@ -87,7 +87,8 @@ class Nvshens(robot.Robot):
             tool.process_exit()
 
         total_image_count = 0
-        while album_id <= newest_album_id:
+        is_over = False
+        while not is_over and album_id <= newest_album_id:
             log.step("开始解析%s号图集" % album_id)
 
             page_count = 1
@@ -96,7 +97,6 @@ class Nvshens(robot.Robot):
             this_album_total_image_count = 0
             album_title = ""
             album_path = os.path.join(self.image_download_path, str(album_id))
-            is_over = False
             while not is_over:
                 log.step("开始解析%s号图集第%s页" % (album_id, page_count))
 
@@ -159,16 +159,15 @@ class Nvshens(robot.Robot):
                         is_over = True
                         break
 
-                if album_pagination_response.extra_info["is_over"]:
-                    if this_album_image_count != this_album_total_image_count:
-                        log.error("%s号图集获取的图片有缺失" % album_id)
-                    break
-                else:
-                    page_count += 1
+                if not is_over:
+                    if album_pagination_response.extra_info["is_over"]:
+                        if this_album_image_count != this_album_total_image_count:
+                            log.error("%s号图集获取的图片有缺失" % album_id)
+                        break
+                    else:
+                        page_count += 1
 
-            if is_over:
-                break
-            else:
+            if not is_over:
                 total_image_count += image_count - 1
                 album_id += 1
 
