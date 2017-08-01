@@ -152,7 +152,7 @@ class MeiTuZZ(robot.Robot):
                             log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                     except SystemExit:
                         log.step("提前退出")
-                        tool.remove_dir(image_path)
+                        tool.remove_dir_or_file(image_path)
                         is_over = True
                         break
 

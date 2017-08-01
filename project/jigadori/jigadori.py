@@ -178,7 +178,7 @@ class Jigadori(robot.Robot):
             log.step("图片从下载目录移动到保存目录成功")
 
             # 删除临时文件夹
-            tool.remove_dir(self.image_temp_path)
+            tool.remove_dir_or_file(self.image_temp_path)
 
         # 保存新的存档文件
         if new_last_blog_time != "":

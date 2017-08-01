@@ -18,8 +18,8 @@ def create_exe(py_file_path, need_config=False, need_zip=False):
     py_file_name = ".".join(os.path.basename(py_file_path).split(".")[:-1])
 
     # 旧目录删除
-    tool.remove_dir(build_path)
-    tool.remove_dir(build_dist_path)
+    tool.remove_dir_or_file(build_path)
+    tool.remove_dir_or_file(build_dist_path)
 
     # 打包
     setup(console=[py_file_path])
@@ -30,12 +30,12 @@ def create_exe(py_file_path, need_config=False, need_zip=False):
         tool.copy_files(os.path.join(tool.PROJECT_COMMON_PATH, "config_exe.ini"), os.path.join(build_dist_path, "data\\config.ini"))
 
     # 删除临时目录
-    tool.remove_dir(build_path)
+    tool.remove_dir_or_file(build_path)
 
     # 是否需要压缩
     if need_zip:
         extraTool.zip_dir(build_dist_path, os.path.realpath("%s.zip" % py_file_name))
-        tool.remove_dir(build_dist_path)
+        tool.remove_dir_or_file(build_dist_path)
     else:
         shutil.move(build_dist_path, os.path.realpath(".\\%s" % py_file_name))
 
