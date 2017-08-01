@@ -31,6 +31,10 @@ def get_one_page_album(album_id, page_count):
             extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
             # 获取图集图片地址
             image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
+            if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
+                image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
+            else:
+                image_url_list = re.findall("src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>"))
             extra_info["image_url_list"] = map(str, image_url_list)
             # 判断是不是最后一页
             page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
