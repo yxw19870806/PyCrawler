@@ -267,7 +267,7 @@ class Download(threading.Thread):
                         save_file_return = net.save_net_file(image_url, file_path, cookies_list=cookies_list)
                         if save_file_return["status"] == 1:
                             if check_image_invalid(file_path):
-                                os.remove(tool.change_path_encoding(file_path))
+                                tool.remove_dir_or_file(file_path)
                                 log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_count, image_url))
                             else:
                                 log.step(account_name + " 第%s张图片下载成功" % image_count)

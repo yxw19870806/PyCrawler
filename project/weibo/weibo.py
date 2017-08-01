@@ -382,7 +382,7 @@ class Download(threading.Thread):
                     save_file_return = net.save_net_file(image_info["image_url"], image_file_path)
                     if save_file_return["status"] == 1:
                         if weiboCommon.check_image_invalid(image_file_path):
-                            os.remove(tool.change_path_encoding(image_file_path))
+                            tool.remove_dir_or_file(image_file_path)
                             log.error(account_name + " 第%s张图片 %s 资源已被删除，跳过" % (image_count, image_info["image_url"]))
                         else:
                             log.step(account_name + " 第%s张图片下载成功" % image_count)

@@ -307,7 +307,7 @@ class Download(threading.Thread):
                         save_file_return = net.save_net_file(article_response.extra_info["top_image_url"], file_path)
                         if save_file_return["status"] == 1:
                             if weiboCommon.check_image_invalid(file_path):
-                                os.remove(tool.change_path_encoding(file_path))
+                                tool.remove_dir_or_file(file_path)
                                 log.error(account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response.extra_info["top_image_url"]))
                             else:
                                 log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
@@ -327,7 +327,7 @@ class Download(threading.Thread):
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
                             if weiboCommon.check_image_invalid(file_path):
-                                os.remove(tool.change_path_encoding(file_path))
+                                tool.remove_dir_or_file(file_path)
                                 log.error(account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_title, image_count, image_url))
                             else:
                                 log.step(account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_count))
