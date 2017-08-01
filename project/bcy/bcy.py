@@ -254,6 +254,9 @@ class Bcy(robot.Robot):
                 new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
+        # 删除临时文件夹
+        self.finish_task()
+
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
@@ -413,8 +416,11 @@ class Download(threading.Thread):
             self.thread_lock.release()
 
             log.step(account_name + " 完成")
-        except SystemExit:
-            log.error(account_name + " 异常退出")
+        except SystemExit, se:
+            if se.code == 0:
+                log.step(account_name + " 提前退出")
+            else:
+                log.error(account_name + " 异常退出")
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
