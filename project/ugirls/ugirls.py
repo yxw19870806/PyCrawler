@@ -67,12 +67,13 @@ class UGirls(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-        album_id = 1
         if os.path.exists(self.save_data_path):
             save_file = open(self.save_data_path, "r")
             save_info = save_file.read()
             save_file.close()
             album_id = int(save_info.strip())
+        else:
+            album_id = 1
 
         newest_album_id = get_newest_album_id()
 
@@ -81,7 +82,8 @@ class UGirls(robot.Robot):
             tool.process_exit()
 
         total_image_count = 0
-        while album_id <= newest_album_id:
+        is_over = False
+        while not is_over and album_id <= newest_album_id:
             log.step("开始解析第%s页图集" % album_id)
 
             # 获取相册
@@ -117,15 +119,22 @@ class UGirls(robot.Robot):
 
                 file_type = image_url.split(".")[-1]
                 file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                save_file_return = net.save_net_file(image_url, file_path)
-                if save_file_return["status"] == 1:
-                    log.step("第%s页图集的第%s张图片下载成功" % (album_id, image_count))
-                    image_count += 1
-                else:
-                     log.error("第%s页图集的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                total_image_count += image_count - 1
+                try:
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        log.step("第%s页图集的第%s张图片下载成功" % (album_id, image_count))
+                        image_count += 1
+                    else:
+                         log.error("第%s页图集的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                except SystemExit:
+                    log.step("提前退出")
+                    tool.remove_dir_or_file(album_path)
+                    is_over = True
+                    break
 
-            album_id += 1
+            if not is_over:
+                total_image_count += image_count - 1
+                album_id += 1
 
         # 重新保存存档文件
         save_data_dir = os.path.dirname(self.save_data_path)
