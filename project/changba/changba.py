@@ -51,13 +51,13 @@ def get_one_page_audio(user_id, page_count):
                 "audio_id": None,  # 视频自增id
                 "audio_title": "",  # 视频标题
                 "audio_key": None,  # 视频唯一key
-                "type": None,  # 类型，0 MV，1 歌曲
+                "type": None,  # 类型，0 MV，1/3 歌曲
                 "json_data": audio_info,  # 原始数据
             }
             if (
                 robot.check_sub_key(("workid", "songname", "enworkid", "type"), audio_info) and
                 robot.is_integer(audio_info["workid"]) and
-                robot.is_integer(audio_info["type"]) and int(audio_info["type"]) in (0, 1)
+                robot.is_integer(audio_info["type"]) and int(audio_info["type"]) in (0, 1, 3)
             ):
                 # 获取歌曲id
                 extra_audio_info["audio_id"] = str(audio_info["workid"])
@@ -86,7 +86,7 @@ def get_audio_play_page(audio_en_word_id, type):
             extra_info["is_delete"] = True
         else:
             # 获取歌曲下载地址
-            if type == 1:
+            if type == 1 or type == 3:
                 audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
                 if audio_source_url:
                     # 从JS处解析的规则
