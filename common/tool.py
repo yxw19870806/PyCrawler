@@ -257,24 +257,8 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
 
 
 # 文件路径编码转换
-# todo 优化
 def change_path_encoding(path):
-    try:
-        if isinstance(path, unicode):
-            path = path.encode("GBK")
-        else:
-            path = path.decode("UTF-8").encode("GBK")
-    except UnicodeEncodeError:
-        if isinstance(path, unicode):
-            path = path.encode("UTF-8")
-        else:
-            path = path.decode("UTF-8")
-    except UnicodeDecodeError:
-        if isinstance(path, unicode):
-            path = path.encode("UTF-8")
-        else:
-            path = path.decode("UTF-8")
-    return path
+    return unicode(path, sys.stdin.encoding)
 
 
 # 写文件
