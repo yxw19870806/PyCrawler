@@ -64,7 +64,6 @@ class CNU(robot.Robot):
 
         # http://www.cnu.cc/about/ 所有作品
         total_image_count = 0
-        album_count = 0
         is_over = False
         while not is_over:
             log.step("开始解析第%s页作品" % album_id)
@@ -106,16 +105,22 @@ class CNU(robot.Robot):
 
                 file_type = image_url.split(".")[-1]
                 file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                save_file_return = net.save_net_file(image_url, file_path)
-                if save_file_return["status"] == 1:
-                    log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
-                    image_count += 1
-                else:
-                     log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                total_image_count += image_count - 1
+                try:
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
+                        image_count += 1
+                    else:
+                         log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                except SystemExit:
+                    log.step("提前退出")
+                    tool.remove_dir_or_file(album_path)
+                    is_over = True
+                    break
 
-            album_count += 1
-            album_id += 1
+            if not is_over:
+                total_image_count += image_count - 1
+                album_id += 1
 
         # 重新保存存档文件
         save_data_dir = os.path.dirname(self.save_data_path)
