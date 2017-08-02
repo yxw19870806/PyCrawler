@@ -19,12 +19,7 @@ ACCOUNT_ID_FILE_PATH = os.path.join("info/account.data")
 # 获取账号存档文件
 def get_account_from_save_data():
     account_list = []
-    if not os.path.exists(ACCOUNT_ID_FILE_PATH):
-        return account_list
-    file_handle = open(ACCOUNT_ID_FILE_PATH, "r")
-    lines = file_handle.readlines()
-    file_handle.close()
-    for line in lines:
+    for line in tool.read_file(ACCOUNT_ID_FILE_PATH, 2):
         account_list.append(line.replace("\n", "").split("\t")[0])
     return account_list
 

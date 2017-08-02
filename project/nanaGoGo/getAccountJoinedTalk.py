@@ -19,12 +19,7 @@ TALK_ID_FILE_PATH = os.path.join("info/talk.data")
 # 获取account id文件
 def get_account_from_file():
     account_list = {}
-    if not os.path.exists(ACCOUNT_ID_FILE_PATH):
-        return account_list
-    file_handle = open(ACCOUNT_ID_FILE_PATH, "r")
-    lines = file_handle.readlines()
-    file_handle.close()
-    for line in lines:
+    for line in tool.read_file(ACCOUNT_ID_FILE_PATH, 2):
         split_temp = line.replace("\n", "").split("\t")
         account_list[split_temp[0]] = split_temp[1]
     return account_list

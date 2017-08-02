@@ -11,11 +11,8 @@ import yasaxiCommon
 
 # 获取存档文件
 def get_account_from_save_data(file_path):
-    file_handle = open(file_path, "r")
-    lines = file_handle.readlines()
-    file_handle.close()
     account_list = {}
-    for line in lines:
+    for line in tool.read_file(file_path, 2):
         line = line.replace("\n", "")
         account_info_temp = line.split("\t")
         account_list[account_info_temp[0]] = line

@@ -333,10 +333,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 def read_save_data(save_data_path, key_index, default_value_list):
     result_list = {}
     if os.path.exists(save_data_path):
-        save_data_file = open(save_data_path, "r")
-        save_list = save_data_file.readlines()
-        save_data_file.close()
-        for single_save_data in save_list:
+        for single_save_data in tool.read_file(save_data_path, 2):
             single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
             if len(single_save_data) == 0:
                 continue
