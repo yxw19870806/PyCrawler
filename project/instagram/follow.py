@@ -87,7 +87,7 @@ def main():
         net.set_proxy(proxy_ip, proxy_port)
 
     # 存档位置
-    save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
+    save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
 
