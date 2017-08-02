@@ -53,13 +53,10 @@ def instagram():
     instagram_path = os.path.join(ROOT_PATH, "instagram")
     os.chdir(instagram_path)
     for i in range(1, 4):
-        save_file_name = "info\\save_%s.data" % i
-        image_download_dir_name = "photo\\instagram%s" % i
-        save_data_path = os.path.join(instagram_path, save_file_name)
-        image_download_path = os.path.join(instagram_path, image_download_dir_name)
+        save_data_path = os.path.join(instagram_path, "info\\save_%s.data" % i)
+        image_download_path = os.path.join(instagram_path, "photo\\instagram%s" % i)
         image_temp_path = os.path.join(image_download_path, "tempImage")
-        video_download_dir_name = "video\\instagram%s" % i
-        video_download_path = os.path.join(instagram_path, video_download_dir_name)
+        video_download_path = os.path.join(instagram_path, "video\\instagram%s" % i)
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
@@ -181,13 +178,10 @@ def twitter():
     twitter_path = os.path.join(ROOT_PATH, "twitter")
     os.chdir(twitter_path)
     for i in range(1, 5):
-        save_file_name = "info\\save_%s.data" % i
-        image_download_dir_name = "photo\\twitter%s" % i
-        save_data_path = os.path.join(twitter_path, save_file_name)
-        image_download_path = os.path.join(twitter_path, image_download_dir_name)
+        save_data_path = os.path.join(twitter_path, "info\\save_%s.data" % i)
+        image_download_path = os.path.join(twitter_path, "photo\\twitter%s" % i)
         image_temp_path = os.path.join(image_download_path, "tempImage")
-        video_download_dir_name = "video\\twitter%s" % i
-        video_download_path = os.path.join(twitter_path, video_download_dir_name)
+        video_download_path = os.path.join(twitter_path, "video\\twitter%s" % i)
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
@@ -205,13 +199,10 @@ def weibo():
     weibo_path = os.path.join(ROOT_PATH, "weibo")
     os.chdir(weibo_path)
     for save_file in ["ATF", "lunar", "save_1", "save_2", "snh48"]:
-        save_file_name = "info\\%s.data" % save_file
-        image_download_dir_name = "photo\\%s" % save_file
-        save_data_path = os.path.join(weibo_path, save_file_name)
-        image_download_path = os.path.join(weibo_path, image_download_dir_name)
+        save_data_path = os.path.join(weibo_path, "info\\%s.data" % save_file)
+        image_download_path = os.path.join(weibo_path, "photo\\%s" % save_file)
         image_temp_path = os.path.join(image_download_path, "tempImage")
-        video_download_dir_name = "video\\%s" % save_file
-        video_download_path = os.path.join(weibo_path, video_download_dir_name)
+        video_download_path = os.path.join(weibo_path, "video\\%s" % save_file)
         video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
