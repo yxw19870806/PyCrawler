@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+import yasaxiCommon
 import base64
 import json
 import os
@@ -21,40 +22,15 @@ IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-ACCESS_TOKEN = ""
-AUTH_TOKEN = ""
-ZHEZHE_INFO = ""
-
-
-# 从文件中获取用户信息
-def get_token_from_file():
-    account_file_path = os.path.realpath("account.data")
-    if not os.path.exists(account_file_path):
-        return False
-    try:
-        account_data = json.loads(base64.b64decode(tool.read_file(account_file_path)))
-    except TypeError:
-        return False
-    except ValueError:
-        return False
-    if robot.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
-        global ACCESS_TOKEN
-        global AUTH_TOKEN
-        global ZHEZHE_INFO
-        ACCESS_TOKEN = account_data["access_token"]
-        AUTH_TOKEN = account_data["auth_token"]
-        ZHEZHE_INFO = account_data["zhezhe_info"]
-        return True
-    return False
 
 
 # 获取指定页数的所有日志
 def get_one_page_photo(account_id, cursor):
     photo_pagination_url = "https://api.yasaxi.com/statuses/user?userId=%s&cursor=%s&count=20" % (account_id, cursor)
     header_list = {
-        "x-access-token": ACCESS_TOKEN,
-        "x-auth-token": AUTH_TOKEN,
-        "x-zhezhe-info": ZHEZHE_INFO,
+        "x-access-token": yasaxiCommon.ACCESS_TOKEN,
+        "x-auth-token": yasaxiCommon.AUTH_TOKEN,
+        "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO,
         "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     extra_info = {
@@ -153,7 +129,7 @@ class Yasaxi(robot.Robot):
         global ACCOUNTS
 
         # 从文件中宏读取账号信息（访问token）
-        if not get_token_from_file():
+        if not yasaxiCommon.get_token_from_file():
             log.error("保存的账号信息读取失败")
             tool.process_exit()
 
