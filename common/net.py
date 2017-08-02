@@ -246,9 +246,8 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 if content_type and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
-            file_handle = open(file_path, "wb")
-            file_handle.write(response.data)
-            file_handle.close()
+            with open(file_path, "wb") as file_handle:
+                file_handle.write(response.data)
             create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
             if "Content-Length" in response.headers:
@@ -290,22 +289,19 @@ def save_net_file_list(file_url_list, file_path, header_list=None):
     file_path = tool.change_path_encoding(file_path)
     for retry_count in range(0, 5):
         # 下载
-        file_handle = open(file_path, "wb")
-        for file_url in file_url_list:
-            response = http_request(file_url, header_list=header_list, read_timeout=60)
-            if response.status == HTTP_RETURN_CODE_SUCCEED:
-                file_handle.write(response.data)
-            # 超过重试次数，直接退出
-            elif response.status == HTTP_RETURN_CODE_RETRY:
-                file_handle.close()
-                os.remove(file_path)
-                return {"status": 0, "code": -1}
-            # 其他http code，退出
-            else:
-                file_handle.close()
-                os.remove(file_path)
-                return {"status": 0, "code": response.status}
-        file_handle.close()
+        with open(file_path, "wb") as file_handle:
+            for file_url in file_url_list:
+                response = http_request(file_url, header_list=header_list, read_timeout=60)
+                if response.status == HTTP_RETURN_CODE_SUCCEED:
+                    file_handle.write(response.data)
+                # 超过重试次数，直接退出
+                elif response.status == HTTP_RETURN_CODE_RETRY:
+                    os.remove(file_path)
+                    return {"status": 0, "code": -1}
+                # 其他http code，退出
+                else:
+                    os.remove(file_path)
+                    return {"status": 0, "code": response.status}
         return {"status": 1, "code": 0}
     # os.remove(file_path)
     return {"status": 0, "code": -2}

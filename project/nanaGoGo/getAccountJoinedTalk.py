@@ -63,10 +63,9 @@ def main():
     for account_id in account_list:
         get_account_talks(account_id, account_list[account_id], talk_list)
     if len(talk_list) > 0:
-        file_handle = open(TALK_ID_FILE_PATH, "w")
-        for talk_id in talk_list:
-            file_handle.write("%s\t%s\t%s\t%s\n" % (talk_id, talk_list[talk_id]["talk_name"], talk_list[talk_id]["talk_description"], " & ".join(talk_list[talk_id]["account_list"])))
-        file_handle.close()
+        with open(TALK_ID_FILE_PATH, "w") as file_handle:
+            for talk_id in talk_list:
+                file_handle.write("%s\t%s\t%s\t%s\n" % (talk_id, talk_list[talk_id]["talk_name"], talk_list[talk_id]["talk_description"], " & ".join(talk_list[talk_id]["account_list"])))
 
 
 if __name__ == "__main__":

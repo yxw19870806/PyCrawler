@@ -173,13 +173,12 @@ def jkt(file_handle):
 
 
 def get_all_member_list():
-    file_handle = open("member.txt", "w")
-    akb(file_handle)
-    ske(file_handle)
-    nmb(file_handle)
-    hkt(file_handle)
-    jkt(file_handle)
-    file_handle.close()
+    with open("member.txt", "w") as file_handle:
+        akb(file_handle)
+        ske(file_handle)
+        nmb(file_handle)
+        hkt(file_handle)
+        jkt(file_handle)
 
 if __name__ == "__main__":
     get_all_member_list()

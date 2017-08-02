@@ -271,12 +271,11 @@ def read_file(file_path, read_type=1):
             return ""
         else:
             return []
-    file_handle = open(file_path, "r")
-    if read_type == 1:
-        result = file_handle.read()
-    else:
-        result = file_handle.readlines()
-    file_handle.close()
+    with open(file_path, "r") as file_handle:
+        if read_type == 1:
+            result = file_handle.read()
+        else:
+            result = file_handle.readlines()
     return result
 
 
@@ -286,15 +285,15 @@ def read_file(file_path, read_type=1):
 def write_file(msg, file_path, append_type=1):
     file_path = change_path_encoding(file_path)
     thread_lock.acquire()
-    make_dir(os.path.dirname(file_path), 0)
-    if append_type == 1:
-        file_handle = open(file_path, "a")
-    else:
-        file_handle = open(file_path, "w")
-    if isinstance(msg, unicode):
-        msg = msg.encode("UTF-8")
-    file_handle.write(msg + "\n")
-    file_handle.close()
+    if make_dir(os.path.dirname(file_path), 0):
+        if append_type == 1:
+            open_type = "a"
+        else:
+            open_type = "w"
+        with open(file_path, open_type) as file_handle:
+            if isinstance(msg, unicode):
+                msg = msg.encode("UTF-8")
+            file_handle.write(msg + "\n")
     thread_lock.release()
 
 
@@ -446,10 +445,9 @@ def get_file_md5(file_path):
     file_path = change_path_encoding(file_path)
     if not os.path.exists(file_path):
         return None
-    file_handle = open(file_path, "rb")
     md5_obj = hashlib.md5()
-    md5_obj.update(file_handle.read())
-    file_handle.close()
+    with open(file_path, "rb") as file_handle:
+        md5_obj.update(file_handle.read())
     return md5_obj.hexdigest()
 
 
