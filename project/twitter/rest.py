@@ -52,7 +52,7 @@ def get_user_info_by_user_id(user_id):
 
 if ACCESS_TOKEN is None:
     while True:
-        api_info = tool.read_file(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "api.data"))
+        api_info = tool.read_file(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token.data"))
         if api_info:
             api_info = base64.b64decode(api_info)
             if robot.check_sub_key(("api_key", "api_secret"), api_info):
