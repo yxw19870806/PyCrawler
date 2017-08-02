@@ -76,13 +76,11 @@ class ZunGuang(robot.Robot):
         tool.print_msg("配置文件读取完成")
 
     def main(self):
-        # 解析存档文件，获取上一次的album id
-        page_count = 1
+        # 解析存档文件，获取上一次的page count
         if os.path.exists(self.save_data_path):
-            save_file = open(self.save_data_path, "r")
-            save_info = save_file.read()
-            save_file.close()
-            page_count = int(save_info.strip())
+            page_count = int(tool.read_file(self.save_data_path))
+        else:
+            page_count = 1
 
         total_image_count = 0
         error_count = 0

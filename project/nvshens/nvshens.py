@@ -73,10 +73,7 @@ class Nvshens(robot.Robot):
     def main(self):
         # 解析存档文件，获取上一次的album id
         if os.path.exists(self.save_data_path):
-            save_file = open(self.save_data_path, "r")
-            save_info = save_file.read()
-            save_file.close()
-            album_id = int(save_info.strip())
+            album_id = int(tool.read_file(self.save_data_path))
         else:
             album_id = 10000
 

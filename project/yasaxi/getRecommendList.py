@@ -21,12 +21,8 @@ def get_token_from_file():
     account_file_path = os.path.realpath("account.data")
     if not os.path.exists(account_file_path):
         return False
-    file_handle = open(account_file_path, "r")
-    file_string = file_handle.read()
-    file_handle.close()
-    file_string.replace("\n", "")
     try:
-        account_data = json.loads(base64.b64decode(file_string))
+        account_data = json.loads(base64.b64decode(tool.read_file(account_file_path)))
     except TypeError:
         return False
     except ValueError:

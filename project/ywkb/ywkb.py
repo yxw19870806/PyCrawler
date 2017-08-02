@@ -45,12 +45,11 @@ class YWKB(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
     def main(self):
-        save_image_id = 1
+        # 解析存档文件，获取上一次的image id
         if os.path.exists(self.save_data_path):
-            save_file = open(self.save_data_path, "r")
-            save_info = save_file.read()
-            save_file.close()
-            save_image_id = int(save_info.strip())
+            image_id = int(tool.read_file(self.save_data_path))
+        else:
+            image_id = 1
 
         # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
         tool.make_dir(self.image_download_path, 0)
@@ -72,7 +71,7 @@ class YWKB(robot.Robot):
 
             for image_info in photo_pagination_response.extra_info["image_info_list"]:
                 # 检查是否图片时间小于上次的记录
-                if image_info["image_id"] <= save_image_id:
+                if image_info["image_id"] <= image_id:
                     is_over = True
                     break
 

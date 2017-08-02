@@ -79,10 +79,7 @@ class Jigadori(robot.Robot):
         last_blog_time = 0
         image_start_index = 0
         if os.path.exists(self.save_data_path):
-            save_file = open(self.save_data_path, "r")
-            save_info = save_file.read()
-            save_file.close()
-            save_info = save_info.replace("\n", "").split("\t")
+            save_info = tool.read_file(self.save_data_path).split("\t")
             if len(save_info) >= 2:
                 image_start_index = int(save_info[0])
                 last_blog_time = int(save_info[1])
