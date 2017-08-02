@@ -260,7 +260,10 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
 
 # 文件路径编码转换
 def change_path_encoding(path):
-    return unicode(path, sys.stdin.encoding)
+    if isinstance(path, str):
+        return unicode(path, "UTF-8")
+    else:
+        return path
 
 
 # 读取文件
@@ -342,6 +345,7 @@ def remove_dir_or_file(dir_path):
 
 # 删除指定目录下的全部空文件夹
 def delete_null_dir(dir_path):
+    dir_path = change_path_encoding(dir_path)
     if os.path.isdir(dir_path):
         for file_name in os.listdir(dir_path):
             sub_path = os.path.join(dir_path, file_name)
@@ -375,7 +379,7 @@ def make_dir(dir_path, create_mode):
             else:
                 is_delete = False
                 while not is_delete:
-                    input_str = console_input(get_time() + " 目录：" + dir_path + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input_str = console_input(get_time() + " 目录：" + str(dir_path) + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
                         is_delete = True
@@ -431,14 +435,11 @@ def generate_random_string(string_length, char_lib_type=7):
         if char_lib_type & i == i:
             for char in char_lib[i]:
                 random_string += char
-
     if not random_string:
         return result
-
     length = len(random_string) - 1
     for i in range(0, string_length):
         result += random_string[random.randint(0, length)]
-
     return result
 
 
