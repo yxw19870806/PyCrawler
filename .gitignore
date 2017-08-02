@@ -4,6 +4,7 @@ log/
 *-*_*_*.data
 project/*/photo/
 project/*/video/
-project/yasaxi/account.data
+project/twitter/token.data
+project/yasaxi/token.data
 game/steam/account.data
 game/steam/discount.txt
