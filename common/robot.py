@@ -70,7 +70,7 @@ class Robot(object):
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", True, 2)
         self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 2)
         self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 2)
-        error_log_path = get_config(config, "ERROR_LOG_PATH", "log/errorLog.txt", 3)
+        error_log_path = get_config(config, "ERROR_LOG_PATH", "\\log/errorLog.txt", 3)
         self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
@@ -82,7 +82,7 @@ class Robot(object):
         if not is_log_step:
             self.step_log_path = ""
         else:
-            step_log_path = get_config(config, "STEP_LOG_PATH", "log/stepLog.txt", 3)
+            step_log_path = get_config(config, "STEP_LOG_PATH", "\\log/stepLog.txt", 3)
             self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
@@ -94,7 +94,7 @@ class Robot(object):
         if not is_log_trace:
             self.trace_log_path = ""
         else:
-            trace_log_path = get_config(config, "TRACE_LOG_PATH", "log/traceLog.txt", 3)
+            trace_log_path = get_config(config, "TRACE_LOG_PATH", "\\log/traceLog.txt", 3)
             self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
@@ -131,7 +131,7 @@ class Robot(object):
         if "save_data_path" in extra_config:
             self.save_data_path = extra_config["save_data_path"]
         else:
-            self.save_data_path = get_config(config, "SAVE_DATA_PATH", "info/save.data", 3)
+            self.save_data_path = get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
             # 存档文件不存在
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
@@ -144,7 +144,7 @@ class Robot(object):
             if "image_download_path" in extra_config:
                 self.image_download_path = extra_config["image_download_path"]
             else:
-                self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "photo", 3)
+                self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", 3)
             if not tool.make_dir(self.image_download_path, 0):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
@@ -154,7 +154,7 @@ class Robot(object):
             if "image_temp_path" in extra_config:
                 self.image_temp_path = extra_config["image_temp_path"]
             else:
-                self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "tempImage", 3)
+                self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "\\\\tempImage", 3)
             # 图片下载数量，0为下载全部可用资源
         else:
             self.image_download_path = ""
@@ -165,7 +165,7 @@ class Robot(object):
             if "video_download_path" in extra_config:
                 self.video_download_path = extra_config["video_download_path"]
             else:
-                self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "video", 3)
+                self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", 3)
             if not tool.make_dir(self.video_download_path, 0):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
@@ -175,7 +175,7 @@ class Robot(object):
             if "video_temp_path" in extra_config:
                 self.video_temp_path = extra_config["video_temp_path"]
             else:
-                self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "tempVideo", 3)
+                self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "\\\\tempVideo", 3)
         else:
             self.video_download_path = ""
             self.video_temp_path = ""
