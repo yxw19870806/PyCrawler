@@ -19,8 +19,6 @@ ZHEZHE_INFO = ""
 # 从文件中获取用户信息
 def get_token_from_file():
     account_file_path = os.path.realpath("account.data")
-    if not os.path.exists(account_file_path):
-        return False
     try:
         account_data = json.loads(base64.b64decode(tool.read_file(account_file_path)))
     except TypeError:

@@ -12,9 +12,8 @@ NEW_SAVE_FILE_PATH = os.path.join("new_save.data")
 
 # 修改存档文件列的顺序并保存
 def reformat_save():
-    lines = tool.read_file(OLD_SAVE_FILE_PATH, 2)
     new_lines = []
-    for line in lines:
+    for line in tool.read_file(OLD_SAVE_FILE_PATH, 2):
         temp_list = line.replace("\n", "").split("\t")
         new_list = list([])
         # 新旧字段逻辑
