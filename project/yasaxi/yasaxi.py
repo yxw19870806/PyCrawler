@@ -8,8 +8,6 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 import yasaxiCommon
-import base64
-import json
 import os
 import threading
 import time
@@ -19,8 +17,6 @@ ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
-VIDEO_TEMP_PATH = ""
-VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
@@ -105,8 +101,6 @@ class Yasaxi(robot.Robot):
     def __init__(self):
         global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global VIDEO_TEMP_PATH
-        global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
         sys_config = {
@@ -121,8 +115,6 @@ class Yasaxi(robot.Robot):
         # 设置全局变量，供子线程调用
         IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
-        VIDEO_TEMP_PATH = self.video_temp_path
-        VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
