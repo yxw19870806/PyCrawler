@@ -261,6 +261,17 @@ def change_path_encoding(path):
     return unicode(path, sys.stdin.encoding)
 
 
+# 读取文件
+def read_file(file_path):
+    file_path = change_path_encoding(file_path)
+    if not os.path.exists(file_path):
+        return ""
+    file_handle = open(file_path, "r")
+    file_string = file_handle.read()
+    file_handle.close()
+    return file_string
+
+
 # 写文件
 # type=1: 追加
 # type=2: 覆盖
