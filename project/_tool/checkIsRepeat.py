@@ -1,5 +1,6 @@
 # -*- coding:UTF-8  -*-
 # 获取指定存档文件中是否存在重复的主键
+from common import tool
 import os
 
 
@@ -11,9 +12,7 @@ NAME_COLUMN = 0
 
 # 检测存档文件中是否有相同的主键
 def check_is_repeat():
-    file_handle = open(SAVE_FILE_PATH, "r")
-    lines = file_handle.readlines()
-    file_handle.close()
+    lines = tool.read_file(SAVE_FILE_PATH)
     history = []
     for line in lines:
         temp_list = line.replace("\n", "").split("\t")

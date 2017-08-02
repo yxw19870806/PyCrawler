@@ -26,15 +26,13 @@ def save_discount_list(discount_game_list):
 def load_discount_list():
     if not os.path.exists(DISCOUNT_DATA_PATH):
         return []
-    file_handle = open(DISCOUNT_DATA_PATH, "r")
     discount_game_list = []
     try:
-        discount_game_list = json.loads(file_handle.read())
+        discount_game_list = json.loads(tool.read_file(DISCOUNT_DATA_PATH))
     except ValueError:
         pass
     except TypeError:
         pass
-    file_handle.close()
     return discount_game_list
 
 

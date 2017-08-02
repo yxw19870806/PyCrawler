@@ -1,5 +1,6 @@
 # -*- coding:UTF-8  -*-
 # 判断存档文件中的数量和保存目录中的数量是否一致
+from common import tool
 import os
 
 
@@ -43,9 +44,7 @@ def get_save_data_file_count():
     if not os.path.exists(SAVE_DATA_FILE_PATH):
         print "save data %s not exist" % SAVE_DATA_FILE_PATH
         return {}
-    save_data_file_handle = open(SAVE_DATA_FILE_PATH, "r")
-    lines = save_data_file_handle.readlines()
-    save_data_file_handle.close()
+    lines = tool.read_file(SAVE_DATA_FILE_PATH, 2)
     account_list = {}
     for line in lines:
         temp_list = line.replace("\n", "").split("\t")

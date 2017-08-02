@@ -1,5 +1,6 @@
 # -*- coding:UTF-8  -*-
 # 获取指定存档文件中所有毕业成员的名字
+from common import tool
 import os
 
 
@@ -11,9 +12,7 @@ NAME_COLUMN = 4
 
 # 从现役成员名单中获取所有成员名字（由get48GroupMember.py生成）
 def get_member_list():
-    file_handle = open("member.txt", "r")
-    lines = file_handle.readlines()
-    file_handle.close()
+    lines = tool.read_file("member.txt", 2)
     member = []
     for line in lines:
         temp_list = line.replace("\n", "").split("\t")
@@ -23,9 +22,7 @@ def get_member_list():
 
 # 从存档文件中获取所有名字（NAME_COLUMN对应的名字必须和从官网获取的成员本名一致）
 def get_save_file_name_list():
-    file_handle = open(SAVE_FILE_PATH, "r")
-    lines = file_handle.readlines()
-    file_handle.close()
+    lines = tool.read_file(SAVE_FILE_PATH, 2)
     member = []
     for line in lines:
         temp_list = line.replace("\n", "").split("\t")
