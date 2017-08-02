@@ -10,7 +10,7 @@ from common import tool
 import os
 
 # Twitter存档文件目录
-SAVE_DATA_PATH = os.path.join("../twitter/info/save_5.data")
+SAVE_DATA_PATH = os.path.join(tool.PROJECT_APP_PATH, "twitter/info/save_5.data")
 # 图片下载后的保存目录
 FILE_STORAGE_PATH = os.path.join("photo")
 

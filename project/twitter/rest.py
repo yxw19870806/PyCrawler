@@ -8,7 +8,8 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 import base64
-
+import os
+import sys
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
@@ -51,7 +52,7 @@ def get_user_info_by_user_id(user_id):
 
 if ACCESS_TOKEN is None:
     while True:
-        api_info = tool.read_file("api.data")
+        api_info = tool.read_file(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "api.data"))
         if api_info:
             api_info = base64.b64decode(api_info)
             if robot.check_sub_key(("api_key", "api_secret"), api_info):

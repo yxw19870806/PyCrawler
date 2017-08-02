@@ -10,6 +10,7 @@ from common import *
 import base64
 import json
 import os
+import sys
 
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""
@@ -18,7 +19,7 @@ ZHEZHE_INFO = ""
 
 # 从文件中获取用户信息
 def get_token_from_file():
-    account_file_path = os.path.realpath("account.data")
+    account_file_path = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token.data"))
     try:
         account_data = json.loads(base64.b64decode(tool.read_file(account_file_path)))
     except TypeError:

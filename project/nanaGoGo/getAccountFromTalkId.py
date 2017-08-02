@@ -12,7 +12,7 @@ import os
 import sys
 
 # 存放解析出的账号文件路径
-ACCOUNT_ID_FILE_PATH = os.path.join("info/account.data")
+ACCOUNT_ID_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/account.data")
 
 
 # 获取存档文件
