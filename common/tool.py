@@ -31,6 +31,8 @@ else:
     IS_EXECUTABLE = False
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), ".."))
+# 项目程序目录
+PROJECT_APP_PATH = os.path.join(PROJECT_ROOT_PATH, "project")
 # common目录
 PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
 # config.ini路径
