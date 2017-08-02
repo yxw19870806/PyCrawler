@@ -47,16 +47,16 @@ class YWKB(robot.Robot):
     def main(self):
         # 解析存档文件，获取上一次的image id
         if os.path.exists(self.save_data_path):
-            image_id = int(tool.read_file(self.save_data_path))
+            last_image_id = int(tool.read_file(self.save_data_path))
         else:
-            image_id = 1
+            last_image_id = 1
 
         # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
         tool.make_dir(self.image_download_path, 0)
 
         page_count = 1
         image_count = 1
-        first_image_id = 0
+        image_id = 0
         is_over = False
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
@@ -71,13 +71,13 @@ class YWKB(robot.Robot):
 
             for image_info in photo_pagination_response.extra_info["image_info_list"]:
                 # 检查是否图片时间小于上次的记录
-                if image_info["image_id"] <= image_id:
+                if image_info["image_id"] <= last_image_id:
                     is_over = True
                     break
 
                 # 将第一张图片的post id做为新的存档记录
-                if first_image_id == 0:
-                    first_image_id = str(image_info["image_id"])
+                if image_id == 0:
+                    image_id = image_info["image_id"]
 
                 log.step("开始下载%s的图片 %s" % (image_info["image_id"], image_info["image_url"]))
 
@@ -95,13 +95,8 @@ class YWKB(robot.Robot):
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 
         # 重新保存存档文件
-        if first_image_id != "0":
-            save_data_dir = os.path.dirname(self.save_data_path)
-            if not os.path.exists(save_data_dir):
-                tool.make_dir(save_data_dir, 0)
-            save_file = open(self.save_data_path, "w")
-            save_file.write(str(first_image_id))
-            save_file.close()
+        if image_id > 0:
+            tool.write_file(str(image_id), self.save_data_path, 2)
 
 
 if __name__ == "__main__":

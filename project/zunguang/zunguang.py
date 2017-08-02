@@ -162,12 +162,8 @@ class ZunGuang(robot.Robot):
                 page_count += 1
 
         # 重新保存存档文件
-        save_data_dir = os.path.dirname(self.save_data_path)
-        if not os.path.exists(save_data_dir):
-            tool.make_dir(save_data_dir, 0)
-        save_file = open(self.save_data_path, "w")
-        save_file.write(str(page_count))
-        save_file.close()
+        if total_image_count > 0:
+            tool.write_file(str(page_count), self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
