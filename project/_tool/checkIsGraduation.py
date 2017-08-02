@@ -2,10 +2,11 @@
 # 获取指定存档文件中所有毕业成员的名字
 from common import tool
 import os
+import sys
 
 
 # 存档路径
-SAVE_FILE_PATH = os.path.join("save.data")
+SAVE_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "save.data")
 # 存档中记录成员名字的字段下标
 NAME_COLUMN = 4
 

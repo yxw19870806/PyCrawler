@@ -2,12 +2,13 @@
 # 判断存档文件中的数量和保存目录中的数量是否一致
 from common import tool
 import os
+import sys
 
 
 # 文件保存目录
 FILE_STORAGE_PATH = os.path.join("photo")
 # 存档文件所在路径
-SAVE_DATA_FILE_PATH = os.path.join("info/save.data")
+SAVE_DATA_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "save.data")
 # 存档中作为保存文件夹名字所在字段所在数组下标，从0开始
 PRIME_KEY_INDEX = 0
 # 存档中记录已下载文件数的字段所在数组下标，从0开始
