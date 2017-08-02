@@ -262,14 +262,22 @@ def change_path_encoding(path):
 
 
 # 读取文件
-def read_file(file_path):
+# type=1: 读取整个文件，同 .read()，返回string
+# type=2: 按行读取整个文件，同 .readlines()，返回list
+def read_file(file_path, read_type=1):
     file_path = change_path_encoding(file_path)
     if not os.path.exists(file_path):
-        return ""
+        if read_type == 1:
+            return ""
+        else:
+            return []
     file_handle = open(file_path, "r")
-    file_string = file_handle.read()
+    if read_type == 1:
+        result = file_handle.read()
+    else:
+        result = file_handle.readlines()
     file_handle.close()
-    return file_string
+    return result
 
 
 # 写文件
