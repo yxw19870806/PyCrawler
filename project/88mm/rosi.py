@@ -30,7 +30,7 @@ def get_one_page_album(page_count):
             }
             extra_info["album_info_list"].append(extra_album_info)
         # 判断是不是最后一页
-        max_page_find = re.findall("<a href='list_1_(\d)*.html'>末页</a>", album_pagination_response.data.decode("GBK").encode("UTF-8"))
+        max_page_find = re.findall("<a href='list_1_(\d*).html'>末页</a>", album_pagination_response.data.decode("GBK").encode("UTF-8"))
         if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and robot.is_integer(max_page_find[0]):
             extra_info['is_over'] = page_count >= int(max_page_find[0])
     album_pagination_response.extra_info = extra_info
@@ -55,7 +55,9 @@ def get_one_page_photo(page_id, page_count):
             extra_info["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
         # 判断是不是最后一页
         max_page_count = tool.find_sub_string(photo_pagination_response.data.decode("GBK").encode("UTF-8"), '<div class="page"><span>共 <strong>', '</strong> 页')
-        if robot.is_integer(max_page_count):
+        if not max_page_count:
+            extra_info['is_over'] = True
+        elif robot.is_integer(max_page_count):
             extra_info['is_over'] = page_count >= int(max_page_count)
     photo_pagination_response.extra_info = extra_info
     return photo_pagination_response
