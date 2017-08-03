@@ -97,21 +97,18 @@ class Rosi(robot.Robot):
             log.trace("第%s页获取的所有图集：%s" % (page_count, album_pagination_response.extra_info["album_info_list"]))
 
             for album_info in album_pagination_response.extra_info["album_info_list"]:
+                # 检查是否图集id小于上次的记录
                 if int(album_info["album_id"]) <= last_album_id:
                     is_over = True
                     break
 
+                # 将第一个图集的id做为新的存档记录
                 if new_last_album_id == "":
                     new_last_album_id = album_info["album_id"]
 
                 album_page_count = 1
                 image_count = 1
                 album_path = os.path.join(self.image_download_path, album_info["album_id"])
-                if not tool.make_dir(album_path, 0):
-                    # 图片保存目录创建失败
-                    self.print_msg("图片下载目录%s创建失败！" % album_path)
-                    tool.process_exit()
-
                 while True:
                     try:
                         photo_pagination_response = get_one_page_photo(album_info["page_id"], album_page_count)
@@ -130,12 +127,17 @@ class Rosi(robot.Robot):
 
                     log.trace("%s号图集第%s页获取的所有图集：%s" % (album_info["album_id"], album_page_count, album_pagination_response.extra_info["album_info_list"]))
 
+                    # 第一页图片，创建目录
+                    if album_page_count == 1 and not tool.make_dir(album_path, 0):
+                        # 图片保存目录创建失败
+                        self.print_msg("图片下载目录%s创建失败！" % album_path)
+                        tool.process_exit()
+
                     for image_url in photo_pagination_response.extra_info["image_url_list"]:
                         log.step("%s号图集 开始下载第%s张图片 %s" % (album_info["album_id"], image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-
                         try:
                             save_file_return = net.save_net_file(image_url, file_path)
                             if save_file_return["status"] == 1:
