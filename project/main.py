@@ -202,14 +202,14 @@ def weibo():
         save_data_path = os.path.join(weibo_path, "info\\%s.data" % save_file)
         image_download_path = os.path.join(weibo_path, "photo\\%s" % save_file)
         image_temp_path = os.path.join(image_download_path, "tempImage")
-        video_download_path = os.path.join(weibo_path, "video\\%s" % save_file)
-        video_temp_path = os.path.join(video_download_path, "tempVideo")
+        # video_download_path = os.path.join(weibo_path, "video\\%s" % save_file)
+        # video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
             "image_download_path": image_download_path,
             "image_temp_path": image_temp_path,
-            "video_download_path": video_download_path,
-            "video_temp_path": video_temp_path,
+            # "video_download_path": video_download_path,
+            # "video_temp_path": video_temp_path,
         }
         weibo.Weibo(extra_config).main()
 
