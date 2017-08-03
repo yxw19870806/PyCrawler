@@ -413,10 +413,14 @@ def make_dir(dir_path, create_mode):
 
 
 # 复制文件
-def copy_files(source_path, destination_path):
-    source_path = change_path_encoding(source_path)
-    destination_path = change_path_encoding(destination_path)
-    shutil.copyfile(source_path, destination_path)
+# source_file_path      源文件路径
+# destination_file_path 目标文件路径
+def copy_files(source_file_path, destination_file_path):
+    source_file_path = change_path_encoding(source_file_path)
+    if not make_dir(os.path.dirname(destination_file_path), 0):
+        return
+    destination_file_path = change_path_encoding(destination_file_path)
+    shutil.copyfile(source_file_path, destination_file_path)
 
 
 # 生成指定长度的随机字符串
