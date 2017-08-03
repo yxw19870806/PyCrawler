@@ -124,12 +124,7 @@ class MeiTuLu(robot.Robot):
                 album_id += 1
 
         # 重新保存存档文件
-        save_data_dir = os.path.dirname(self.save_data_path)
-        if not os.path.exists(save_data_dir):
-            tool.make_dir(save_data_dir, 0)
-        save_file = open(self.save_data_path, "w")
-        save_file.write(str(album_id))
-        save_file.close()
+        tool.write_file(str(album_id), self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
