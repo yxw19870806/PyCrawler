@@ -25,11 +25,14 @@ def get_one_page_album(album_id, page_count):
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断图集是否已经被删除
         extra_info["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
+        # 获取图集图片总数
         image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
         if robot.is_integer(image_count):
             extra_info["image_count"] = int(image_count)
         else:
             extra_info["image_count"] = 0
+        if extra_info["image_count"] == 0:
+            extra_info["is_delete"] = True
         if not extra_info["is_delete"]:
             # 获取图集标题
             extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
