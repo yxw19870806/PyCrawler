@@ -88,7 +88,7 @@ class Rosi(robot.Robot):
                 album_pagination_response = get_one_page_album(page_count)
             except SystemExit:
                 log.step("提前退出")
-                break
+                tool.process_exit()
 
             if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error("第%s页图集访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_pagination_response.status)))
@@ -113,7 +113,13 @@ class Rosi(robot.Robot):
                     tool.process_exit()
 
                 while True:
-                    photo_pagination_response = get_one_page_photo(album_info["page_id"], album_page_count)
+                    try:
+                        photo_pagination_response = get_one_page_photo(album_info["page_id"], album_page_count)
+                    except SystemExit:
+                        log.step("提前退出")
+                        tool.remove_dir_or_file(album_path)
+                        tool.process_exit()
+
                     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error("%s号图集第%s页访问失败，原因：%s" % (album_info["album_id"], album_page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
                         break
@@ -140,8 +146,7 @@ class Rosi(robot.Robot):
                         except SystemExit:
                             log.step("提前退出")
                             tool.remove_dir_or_file(album_path)
-                            is_over = True
-                            break
+                            tool.process_exit()
 
                     if is_over or photo_pagination_response.extra_info["is_over"]:
                         break
