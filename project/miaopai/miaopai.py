@@ -184,7 +184,6 @@ class Download(threading.Thread):
             video_count = 1
             unique_list = []
             is_over = False
-            need_make_download_dir = True
             first_video_id = None
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
@@ -241,13 +240,6 @@ class Download(threading.Thread):
 
                     video_url = video_info_response.extra_info["video_url"]
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                    # 第一个视频，创建目录
-                    if need_make_download_dir:
-                        if not tool.make_dir(video_path, 0):
-                            log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
-                            tool.process_exit()
-                        need_make_download_dir = False
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                     save_file_return = net.save_net_file(video_url, file_path)

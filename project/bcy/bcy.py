@@ -285,7 +285,6 @@ class Download(threading.Thread):
             page_count = 1
             unique_list = []
             is_over = False
-            need_make_download_dir = True
             first_album_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
@@ -352,12 +351,6 @@ class Download(threading.Thread):
                     if len(album_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_info["album_id"], album_info["album_title"]))
                         tool.process_exit()
-
-                    if need_make_download_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_download_dir = False
 
                     # 过滤标题中不支持的字符
                     filtered_title = robot.filter_text(album_info["album_title"])

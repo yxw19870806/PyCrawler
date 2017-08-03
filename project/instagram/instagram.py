@@ -284,8 +284,6 @@ class Download(threading.Thread):
             video_count = 1
             cursor = ""
             is_over = False
-            need_make_image_dir = True
-            need_make_video_dir = True
             first_created_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
@@ -355,13 +353,6 @@ class Download(threading.Thread):
                             image_url = "%s://%s//%s" % (image_url_protocol, image_url_host, image_url_name)
                             log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                            # 第一张图片，创建目录
-                            if need_make_image_dir:
-                                if not tool.make_dir(image_path, 0):
-                                    log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                    tool.process_exit()
-                                need_make_image_dir = False
-
                             file_type = image_url.split(".")[-1]
                             image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                             save_file_return = net.save_net_file(image_url, image_file_path)
@@ -389,13 +380,6 @@ class Download(threading.Thread):
 
                         for video_url in media_response.extra_info["video_url_list"]:
                             log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                            # 第一个视频，创建目录
-                            if need_make_video_dir:
-                                if not tool.make_dir(video_path, 0):
-                                    log.error(account_name + " 创建视频下载目录 %s 失败" % video_path)
-                                    tool.process_exit()
-                                need_make_video_dir = False
 
                             file_type = video_url.split(".")[-1]
                             video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))

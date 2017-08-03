@@ -192,7 +192,6 @@ class Download(threading.Thread):
 
             image_count = 1
             page_count = 1
-            need_make_image_dir = True
             is_over = False
             is_big_image_over = False
             first_blog_id = None
@@ -243,13 +242,6 @@ class Download(threading.Thread):
                                 cookies_list = net.get_cookies_from_response_header(big_image_response.headers)
                             is_big_image_over = big_image_response.extra_info["is_over"]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-
-                        # 第一张图片，创建目录
-                        if need_make_image_dir:
-                            if not tool.make_dir(image_path, 0):
-                                log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                tool.process_exit()
-                            need_make_image_dir = False
 
                         file_type = image_url.split(".")[-1]
                         if file_type.find("?") != -1:

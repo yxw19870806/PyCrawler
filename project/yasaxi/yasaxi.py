@@ -188,7 +188,6 @@ class Download(threading.Thread):
             image_count = 1
             cursor = 0
             is_over = False
-            need_make_image_dir = True
             first_status_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
@@ -222,13 +221,6 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析状态%s的图片" % status_info["id"])
 
                     for image_url in status_info["image_url_list"]:
-                        # 第一张图片，创建目录
-                        if need_make_image_dir:
-                            if not (tool.make_dir(image_path, 0) and tool.make_dir(os.path.join(image_path, "origin"), 0) and tool.make_dir(os.path.join(image_path, "other"), 0)):
-                                log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                tool.process_exit()
-                            need_make_image_dir = False
-
                         file_name_and_type = image_url.split("?")[0].split("/")[-1]
                         resolution = image_url.split("?")[0].split("/")[-2]
                         file_name = file_name_and_type.split(".")[0]

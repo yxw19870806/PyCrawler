@@ -318,7 +318,6 @@ class Download(threading.Thread):
             page_count = 1
             unique_list = []
             is_over = False
-            need_make_image_dir = True
             first_image_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while IS_DOWNLOAD_IMAGE and (not is_over):
@@ -358,13 +357,6 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
-                    # 第一张图片，创建目录
-                    if need_make_image_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_image_dir = False
-
                     file_type = image_info["image_url"].split(".")[-1]
                     if file_type.find("/") != -1:
                         file_type = "jpg"
@@ -402,7 +394,6 @@ class Download(threading.Thread):
                     break
 
                 is_over = False
-                need_make_video_dir = True
                 since_id = INIT_SINCE_ID
                 while not is_over:
                     log.step(account_name + " 开始解析%s后一页视频" % since_id)
@@ -444,13 +435,6 @@ class Download(threading.Thread):
                             continue
 
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                        # 第一个视频，创建目录
-                        if need_make_video_dir:
-                            if not tool.make_dir(video_path, 0):
-                                log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                                tool.process_exit()
-                            need_make_video_dir = False
 
                         video_file_path = os.path.join(video_path, "%04d.mp4" % video_count)
                         save_file_return = net.save_net_file(video_url, video_file_path)

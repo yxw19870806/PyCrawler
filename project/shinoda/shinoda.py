@@ -50,7 +50,6 @@ class Blog(robot.Robot):
         page_count = 1
         image_count = 1
         is_over = False
-        need_make_download_dir = True
         first_blog_time = None
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
@@ -83,12 +82,6 @@ class Blog(robot.Robot):
             for image_name in blog_pagination_response.extra_info["image_name_list"]:
                 image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                 log.step("开始下载第%s张图片 %s" % (image_count, image_url))
-
-                if need_make_download_dir:
-                    if not tool.make_dir(self.image_temp_path, 0):
-                        log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
-                        tool.process_exit()
-                    need_make_download_dir = False
 
                 file_type = image_url.split(".")[-1].split(":")[0]
                 file_path = os.path.join(self.image_temp_path, "%05d.%s" % (image_count, file_type))

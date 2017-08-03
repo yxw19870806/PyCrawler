@@ -153,7 +153,6 @@ class Download(threading.Thread):
                 page_count = 1
                 unique_list = []
                 is_over = False
-                need_make_download_dir = True
                 first_audio_id = None
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type)
                 while not is_over:
@@ -209,13 +208,6 @@ class Download(threading.Thread):
                             break
 
                         log.step(account_name + " 开始下载第%s首%s歌曲《%s》 %s" % (video_count, audio_type_name, audio_title, audio_url))
-
-                        # 第一首歌曲，创建目录
-                        if need_make_download_dir:
-                            if not tool.make_dir(video_path, 0):
-                                log.error(account_name + " 创建%s歌曲下载目录 %s 失败" % (audio_type_name, video_path))
-                                tool.process_exit()
-                            need_make_download_dir = False
 
                         file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_id, audio_title))
                         save_file_return = net.save_net_file(audio_url, file_path)

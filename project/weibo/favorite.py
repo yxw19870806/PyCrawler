@@ -137,13 +137,8 @@ class Favorite(robot.Robot):
             for blog_info in favorite_pagination_response.extra_info["blog_info_list"]:
                 log.step("开始解析微博%s" % blog_info["blog_id"])
 
-                image_path = os.path.join(self.image_download_path, blog_info["blog_id"])
-
-                if not tool.make_dir(image_path, 0):
-                    log.error("创建图片下载目录 %s 失败" % image_path)
-                    tool.process_exit()
-                
                 image_count = 1
+                image_path = os.path.join(self.image_download_path, blog_info["blog_id"])
                 for image_url in blog_info["image_url_list"]:
                     log.step("开始下载微博%s的第%s张图片 %s" % (blog_info["blog_id"], image_count, image_url))
 

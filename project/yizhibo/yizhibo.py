@@ -207,7 +207,6 @@ class Download(threading.Thread):
 
             image_count = 1
             is_error = False
-            need_make_image_dir = True
             first_image_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
@@ -249,13 +248,6 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
-                    # 第一张图片，创建目录
-                    if need_make_image_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_image_dir = False
-
                     file_type = image_url.split(".")[-1].split(":")[0]
                     image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
                     save_file_return = net.save_net_file(image_url, image_file_path)
@@ -274,7 +266,6 @@ class Download(threading.Thread):
             # 视频
             video_count = 1
             is_error = False
-            need_make_video_dir = True
             first_video_time = None
             while IS_DOWNLOAD_VIDEO:
                 # 获取全部视频ID列表
@@ -324,13 +315,6 @@ class Download(threading.Thread):
                         continue
 
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_file_response.extra_info["video_url_list"]))
-
-                    # 第一个视频，创建目录
-                    if need_make_video_dir:
-                        if not tool.make_dir(video_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                            tool.process_exit()
-                        need_make_video_dir = False
 
                     video_file_path = os.path.join(video_path, "%04d.ts" % video_count)
                     save_file_return = net.save_net_file_list(video_file_response.extra_info["video_url_list"], video_file_path)

@@ -84,11 +84,6 @@ class Jigadori(robot.Robot):
                 image_start_index = int(save_info[0])
                 last_blog_time = int(save_info[1])
 
-        if not tool.make_dir(self.image_temp_path, 0):
-            # 图片保存目录创建失败
-            self.print_msg("图片下载目录%s创建失败！" % self.image_download_path)
-            tool.process_exit()
-
         page_count = 1
         image_count = 1
         unique_list = []
@@ -148,10 +143,6 @@ class Jigadori(robot.Robot):
 
         # 排序复制到保存目录
         if image_count > 1:
-            if not tool.make_dir(self.image_download_path, 0):
-                log.error("创建目录 %s 失败" % self.image_download_path)
-                tool.process_exit()
-
             log.step("图片开始从下载目录移动到保存目录")
 
             file_list = tool.get_dir_files_name(self.image_temp_path, "desc")

@@ -54,7 +54,6 @@ class YWKB(robot.Robot):
         page_count = 1
         image_count = 1
         is_over = False
-        need_make_image_dir = True
         first_image_id = None
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
@@ -78,13 +77,6 @@ class YWKB(robot.Robot):
                     first_image_id = image_info["image_id"]
 
                 log.step("开始下载%s的图片 %s" % (image_info["image_id"], image_info["image_url"]))
-
-                # 第一张图片，创建目录
-                if need_make_image_dir:
-                    if not tool.make_dir(self.image_download_path, 0):
-                        log.error("创建图片下载目录 %s 失败" % self.image_download_path)
-                        tool.process_exit()
-                    need_make_image_dir = False
 
                 file_type = image_info["image_url"].split(".")[-1]
                 file_path = os.path.join(self.image_download_path, "%04d.%s" % (image_info["image_id"], file_type))

@@ -186,7 +186,6 @@ class Download(threading.Thread):
             image_count = 1
             page_count = 1
             is_over = False
-            need_make_image_dir = True
             first_image_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
@@ -222,12 +221,6 @@ class Download(threading.Thread):
                         log.error(account_name + "图片信息%s的下载地址解析失败" % image_info["json_data"])
                         tool.process_exit()
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
-
-                    if need_make_image_dir:
-                        if not tool.make_dir(image_path, 0):
-                            log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                            tool.process_exit()
-                        need_make_image_dir = False
 
                     file_type = image_info["image_url"].split(".")[-1]
                     file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))

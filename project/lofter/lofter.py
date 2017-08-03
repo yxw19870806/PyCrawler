@@ -132,7 +132,6 @@ class Download(threading.Thread):
             image_count = 1
             unique_list = []
             is_over = False
-            need_make_download_dir = True
             first_blog_id = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
@@ -186,13 +185,6 @@ class Download(threading.Thread):
                         if image_url.rfind("?") > image_url.rfind("."):
                             image_url = image_url.split("?")[0]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-
-                        # 第一张图片，创建目录
-                        if need_make_download_dir:
-                            if not tool.make_dir(image_path, 0):
-                                log.error(account_name + " 创建图片下载目录 %s 失败" % image_path)
-                                tool.process_exit()
-                            need_make_download_dir = False
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))

@@ -151,7 +151,6 @@ class Download(threading.Thread):
 
             total_image_count = 0
             album_count = 0
-            need_make_download_dir = True
             first_album_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             for album_url in account_index_response.extra_info["album_url_list"]:
@@ -180,12 +179,6 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 log.step(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response.extra_info["image_url_list"]))
-
-                if need_make_download_dir:
-                    if not tool.make_dir(image_path, 0):
-                        log.error(account_name + " 创建下载目录 %s 失败" % image_path)
-                        tool.process_exit()
-                    need_make_download_dir = False
 
                 # 过滤标题中不支持的字符
                 album_title = robot.filter_text(album_response.extra_info["album_title"])

@@ -105,12 +105,8 @@ class UGirls(robot.Robot):
 
             log.trace("第%s页图集解析的所有图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
-            album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response.extra_info["model_name"]))
-            if not tool.make_dir(album_path, 0):
-                log.error("创建图集目录 %s 失败" % album_path)
-                tool.process_exit()
-
             image_count = 1
+            album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response.extra_info["model_name"]))
             for image_url in album_response.extra_info["image_url_list"]:
                 log.step("开始下载第%s页图集的第%s张图片 %s" % (album_id, image_count, image_url))
 

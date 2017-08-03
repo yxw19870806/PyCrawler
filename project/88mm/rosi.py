@@ -127,12 +127,6 @@ class Rosi(robot.Robot):
 
                     log.trace("%s号图集第%s页获取的所有图集：%s" % (album_info["album_id"], album_page_count, album_pagination_response.extra_info["album_info_list"]))
 
-                    # 第一页图片，创建目录
-                    if album_page_count == 1 and not tool.make_dir(album_path, 0):
-                        # 图片保存目录创建失败
-                        self.print_msg("图片下载目录%s创建失败！" % album_path)
-                        tool.process_exit()
-
                     for image_url in photo_pagination_response.extra_info["image_url_list"]:
                         log.step("%s号图集 开始下载第%s张图片 %s" % (album_info["album_id"], image_count, image_url))
 

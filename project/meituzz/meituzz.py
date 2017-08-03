@@ -131,12 +131,8 @@ class MeiTuZZ(robot.Robot):
 
                 log.trace("第%s页解析的全部图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
-                image_path = os.path.join(self.image_download_path, "%04d" % album_id)
-                if not tool.make_dir(image_path, 0):
-                    log.error("创建图片下载目录 %s 失败" % image_path)
-                    break
-
                 image_count = 1
+                image_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 for image_url in album_response.extra_info["image_url_list"]:
                     log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
 
