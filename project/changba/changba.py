@@ -221,7 +221,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 如果为空，表示已经取完了
-                if audit_pagination_response.extra_info["audio_info_list"] is []:
+                if len(audit_pagination_response.extra_info["audio_info_list"]) == 0:
                     break
 
                 log.trace(account_name + " 第%s页解析的所有歌曲：%s" % (page_count, audit_pagination_response.extra_info["audio_info_list"]))
