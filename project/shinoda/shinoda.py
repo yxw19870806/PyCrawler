@@ -71,11 +71,11 @@ class Blog(robot.Robot):
                 # 获取blog时间
                 blog_time = int(blog_pagination_response.extra_info["image_name_list"][0].split("-")[0])
 
-                # 检查是否已下载到前一次的日志
+                # 检查是否达到存档记录
                 if blog_time <= last_blog_time:
                     break
 
-                # 将第一个日志的id做为新的存档记录
+                # 新的存档记录
                 if first_blog_time is None:
                     first_blog_time = str(blog_time)
 

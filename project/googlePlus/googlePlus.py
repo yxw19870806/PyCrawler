@@ -250,12 +250,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 日志信息%s的日志时间解析失败" % blog_info["json_data"])
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的日志
+                    # 检查是否达到存档记录
                     if blog_info["blog_time"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一个日志的id做为新的存档记录
+                    # 新的存档记录
                     if first_album_id is None:
                         first_album_id = str(blog_info["blog_time"])
 

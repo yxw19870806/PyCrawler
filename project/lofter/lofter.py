@@ -151,12 +151,12 @@ class Download(threading.Thread):
                 for blog_url in blog_pagination_response.extra_info["blog_url_list"]:
                     blog_id = blog_url.split("/")[-1].split("_")[-1]
 
-                    # 检查是否已下载到前一次的日志
+                    # 检查是否达到存档记录
                     if blog_id <= self.account_info[2]:
                         is_over = True
                         break
 
-                    # 将第一个日志的id做为新的存档记录
+                    # 新的存档记录
                     if first_blog_id is None:
                         first_blog_id = blog_id
 

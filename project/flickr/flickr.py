@@ -208,12 +208,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 图片信息%s的上传时间解析失败" % image_info["json_data"])
                         tool.process_exit()
 
-                    # 检查是否是上一次的最后视频
+                    # 检查是否达到存档记录
                     if int(self.account_info[2]) >= int(image_info["image_time"]):
                         is_over = True
                         break
 
-                    # 将第一张图片的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_image_time is None:
                         first_image_time = image_info["image_time"]
 

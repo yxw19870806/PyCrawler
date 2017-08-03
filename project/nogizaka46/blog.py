@@ -217,12 +217,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 日志id解析失败")
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的日志
+                    # 检查是否达到存档记录
                     if blog_info["blog_id"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一个日志的ID做为新的存档记录
+                    # 新的存档记录
                     if first_blog_id is None:
                         first_blog_id = str(blog_info["blog_id"])
 

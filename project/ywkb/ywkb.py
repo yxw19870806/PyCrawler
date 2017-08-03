@@ -67,12 +67,12 @@ class YWKB(robot.Robot):
                 break
 
             for image_info in photo_pagination_response.extra_info["image_info_list"]:
-                # 检查是否图片时间小于上次的记录
+                # 检查是否达到存档记录
                 if image_info["image_id"] <= last_image_id:
                     is_over = True
                     break
 
-                # 将第一张图片的post id做为新的存档记录
+                # 新的存档记录
                 if first_image_id is None:
                     first_image_id = image_info["image_id"]
 

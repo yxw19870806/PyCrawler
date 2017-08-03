@@ -97,12 +97,12 @@ class Rosi(robot.Robot):
             log.trace("第%s页获取的所有图集：%s" % (page_count, album_pagination_response.extra_info["album_info_list"]))
 
             for album_info in album_pagination_response.extra_info["album_info_list"]:
-                # 检查是否图集id小于上次的记录
+                # 检查是否达到存档记录
                 if int(album_info["album_id"]) <= last_album_id:
                     is_over = True
                     break
 
-                # 将第一个图集的id做为新的存档记录
+                # 新的存档记录
                 if first_album_id is None:
                     first_album_id = album_info["album_id"]
 

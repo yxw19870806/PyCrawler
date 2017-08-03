@@ -185,12 +185,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 歌曲信息%s的歌曲时间解析失败" % audio_info["json_data"])
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的歌曲
+                    # 检查是否达到存档记录
                     if int(audio_info["audio_time"]) <= int(self.account_info[1]):
                         is_over = True
                         break
 
-                    # 将第一首歌曲的id做为新的存档记录
+                    # 新的存档记录
                     if first_audio_time is None:
                         first_audio_time = audio_info["audio_time"]
 

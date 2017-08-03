@@ -208,12 +208,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 相册信息%s解析图片地址失败" % album_info["json_data"])
                         tool.process_exit()
 
-                    # 检查信息页id是否小于上次的记录
+                    # 检查是否达到存档记录
                     if int(album_info["album_id"]) <= int(self.account_info[1]):
                         is_over = True
                         break
 
-                    # 将第一个信息页的id做为新的存档记录
+                    # 新的存档记录
                     if first_post_id is None:
                         first_post_id = album_info["album_id"]
 

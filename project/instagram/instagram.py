@@ -307,12 +307,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 媒体信息%s解析失败" % media_info.extra_info["json_data"])
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的图片
+                    # 检查是否达到存档记录
                     if int(media_info["time"]) <= int(self.account_info[4]):
                         is_over = True
                         break
 
-                    # 将第一张图片的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_created_time is None:
                         first_created_time = media_info["time"]
 

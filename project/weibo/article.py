@@ -255,12 +255,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 文章预览 %s 中的地址解析失败" % article_info["article_html"])
                         tool.process_exit()
 
-                    # 检查是否是上一次的最后视频
+                    # 检查是否达到存档记录
                     if article_info["article_time"] <= int(self.account_info[1]):
                         is_over = True
                         break
 
-                    # 将第一个视频的地址做为新的存档记录
+                    # 新的存档记录
                     if first_article_time is None:
                         first_article_time = str(article_info["article_time"])
 

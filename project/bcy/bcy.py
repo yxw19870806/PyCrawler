@@ -307,12 +307,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 作品页面%s作品id解析失败" % album_info["html"])
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的作品
+                    # 检查是否达到存档记录
                     if album_info["album_id"] <= int(self.account_info[1]):
                         is_over = True
                         break
 
-                    # 将第一个作品的id做为新的存档记录
+                    # 新的存档记录
                     if first_album_id is None:
                         first_album_id = str(album_info["album_id"])
 

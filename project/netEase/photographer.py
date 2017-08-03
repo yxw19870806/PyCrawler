@@ -159,11 +159,11 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册地址 %s 解析相册id失败" % album_url)
                     tool.process_exit()
 
-                # 检查是否相册id小于上次的记录
+                # 检查是否达到存档记录
                 if int(album_id) <= int(self.account_info[1]):
                     break
 
-                # 将第一个相册的id做为新的存档记录
+                # 新的存档记录
                 if first_album_id is None:
                     first_album_id = album_id
 

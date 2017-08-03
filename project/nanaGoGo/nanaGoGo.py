@@ -173,12 +173,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 媒体信息%s的日志id解析失败" % media_info["json_data"])
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的记录
+                    # 检查是否达到存档记录
                     if int(media_info["blog_id"]) <= int(self.account_info[3]):
                         is_over = True
                         break
 
-                    # 将第一个媒体的postId做为新的存档记录
+                    # 新的存档记录
                     if first_post_id is None:
                         first_post_id = media_info["blog_id"]
 

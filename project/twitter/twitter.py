@@ -297,12 +297,12 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
 
-                    # 检查是否tweet的id小于上次的记录
+                    # 检查是否达到存档记录
                     if int(media_info["blog_id"]) <= int(self.account_info[4]):
                         is_over = True
                         break
 
-                    # 将第一个tweet的id做为新的存档记录
+                    # 新的存档记录
                     if first_tweet_id is None:
                         first_tweet_id = media_info["blog_id"]
 

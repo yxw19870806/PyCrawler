@@ -276,12 +276,12 @@ class Download(threading.Thread):
                 for post_url in post_pagination_response.extra_info["post_url_list"]:
                     post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
 
-                    # 检查信息页id是否小于上次的记录
+                    # 检查是否达到存档记录
                     if int(post_id) <= int(self.account_info[3]):
                         is_over = True
                         break
 
-                    # 将第一个信息页的id做为新的存档记录
+                    # 新的存档记录
                     if first_post_id is None:
                         first_post_id = post_id
 

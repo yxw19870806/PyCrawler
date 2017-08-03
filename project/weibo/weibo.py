@@ -414,12 +414,12 @@ class Download(threading.Thread):
                     log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_pagination_response.extra_info["video_play_url_list"]))
 
                     for video_play_url in video_pagination_response.extra_info["video_play_url_list"]:
-                        # 检查是否是上一次的最后视频
+                        # 检查是否达到存档记录
                         if self.account_info[4] == video_play_url:
                             is_over = True
                             break
 
-                        # 将第一个视频的地址做为新的存档记录
+                        # 新的存档记录
                         if first_video_url is None:
                             first_video_url = video_play_url
 

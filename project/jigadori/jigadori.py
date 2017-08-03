@@ -107,12 +107,12 @@ class Jigadori(robot.Robot):
                     log.error("第%s张图片所在页面%s解析失败" % (page_count, image_info["html"]))
                     tool.process_exit()
 
-                # 检查是否已下载到前一次的图片
+                # 检查是否达到存档记录
                 if image_info["time"] <= last_blog_time:
                     is_over = True
                     break
 
-                # 将第一张图片的上传时间做为新的存档记录
+                # 新的存档记录
                 if first_blog_time is None:
                     first_blog_time = str(image_info["time"])
 

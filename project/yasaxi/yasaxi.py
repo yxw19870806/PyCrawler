@@ -210,11 +210,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 状态%s解析失败" % status_info["json_data"])
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的日志
+                    # 检查是否达到存档记录
                     if status_info["id"] == self.account_info[1]:
                         is_over = True
                         break
 
+                    # 新的存档记录
                     if first_status_id is None:
                         first_status_id = status_info["id"]
 

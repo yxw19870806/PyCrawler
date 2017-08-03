@@ -214,12 +214,12 @@ class Download(threading.Thread):
                 for video_id in video_pagination_response.extra_info["video_id_list"]:
                     video_id = str(video_id)
 
-                    # 检查是否已下载到前一次的图片
+                    # 检查是否达到存档记录
                     if video_id == self.account_info[2]:
                         is_over = True
                         break
 
-                    # 将第一个视频的id做为新的存档记录
+                    # 新的存档记录
                     if first_video_id is None:
                         first_video_id = video_id
 

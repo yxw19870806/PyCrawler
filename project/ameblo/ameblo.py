@@ -246,12 +246,12 @@ class Download(threading.Thread):
                 log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, blog_pagination_response.extra_info["blog_id_list"]))
 
                 for blog_id in blog_pagination_response.extra_info["blog_id_list"]:
-                    # 检查是否已下载到前一次的日志
+                    # 检查是否达到存档记录
                     if int(blog_id) <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一个日志的时间做为新的存档记录
+                    # 新的存档记录
                     if first_blog_id is None:
                         first_blog_id = blog_id
 

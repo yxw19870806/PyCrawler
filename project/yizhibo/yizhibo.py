@@ -295,11 +295,11 @@ class Download(threading.Thread):
                         is_error = True
                         break
 
-                    # 检查是否已下载到前一次的视频
+                    # 检查是否达到存档记录
                     if video_info_response.extra_info["video_time"] <= int(self.account_info[2]):
                         break
 
-                    # 将第一个视频的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_video_time is None:
                         first_video_time = str(video_info_response.extra_info["video_time"])
 

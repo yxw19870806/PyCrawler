@@ -205,12 +205,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s个视频信息%s的视频时间解析失败" % (video_count, video_info["json_data"]))
                         tool.process_exit()
 
-                    # 检查是否已下载到前一次的视频
+                    # 检查是否达到存档记录
                     if video_info["video_time"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一个视频的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_video_time is None:
                         first_video_time = str(video_info["video_time"])
 
