@@ -321,7 +321,7 @@ def get_dir_files_name(path, order=None):
     path = change_path_encoding(path)
     if not os.path.exists(path):
         return []
-    files_list = os.listdir(path)
+    files_list = map(lambda file_name: file_name.encode("UTF-8"), os.listdir(path))
     # 升序
     if order == "asc":
         return sorted(files_list, reverse=False)
