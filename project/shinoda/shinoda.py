@@ -52,10 +52,7 @@ class Blog(robot.Robot):
         new_last_blog_time = ""
         is_over = False
         need_make_download_dir = True
-        if self.is_sort:
-            image_path = self.image_temp_path
-        else:
-            image_path = self.image_download_path
+
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
@@ -89,13 +86,13 @@ class Blog(robot.Robot):
                 log.step("开始下载第%s张图片 %s" % (image_count, image_url))
 
                 if need_make_download_dir:
-                    if not tool.make_dir(image_path, 0):
-                        log.error("创建图片下载目录 %s 失败" % image_path)
+                    if not tool.make_dir(self.image_temp_path, 0):
+                        log.error("创建图片下载目录 %s 失败" % self.image_temp_path)
                         tool.process_exit()
                     need_make_download_dir = False
 
                 file_type = image_url.split(".")[-1].split(":")[0]
-                file_path = os.path.join(image_path, "%05d.%s" % (image_count, file_type))
+                file_path = os.path.join(self.image_temp_path, "%05d.%s" % (image_count, file_type))
                 save_file_return = net.save_net_file(image_url, file_path)
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_count)
@@ -107,7 +104,7 @@ class Blog(robot.Robot):
         log.step("下载完毕，总共获得%s张图片" % (image_count - 1))
 
         # 排序复制到保存目录
-        if self.is_sort:
+        if image_count > 1:
             log.step("图片开始从下载目录移动到保存目录")
             if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
                 log.step("图片从下载目录移动到保存目录成功")

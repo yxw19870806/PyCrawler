@@ -18,7 +18,6 @@ TOTAL_VIDEO_COUNT = 0
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = True
 
 
 # 获取指定账号的所有关注列表
@@ -99,7 +98,6 @@ class MiaoPai(robot.Robot):
         global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_SORT
 
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
@@ -109,7 +107,6 @@ class MiaoPai(robot.Robot):
         # 设置全局变量，供子线程调用
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
-        IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
@@ -179,10 +176,7 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT:
-                video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-            else:
-                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
 
             user_id = get_user_id(account_id)
             if user_id is None:
@@ -271,7 +265,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
 
             # 排序
-            if IS_SORT and video_count > 1:
+            if video_count > 1:
                 log.step(account_name + " 视频开始从下载目录移动到保存目录")
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):

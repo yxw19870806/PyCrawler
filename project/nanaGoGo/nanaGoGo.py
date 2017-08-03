@@ -22,7 +22,6 @@ IMAGE_DOWNLOAD_PATH = ""
 VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-IS_SORT = True
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
@@ -64,7 +63,6 @@ class NanaGoGo(robot.Robot):
         global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_SORT
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
 
@@ -79,7 +77,6 @@ class NanaGoGo(robot.Robot):
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
-        IS_SORT = self.is_sort
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
@@ -147,13 +144,8 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            if IS_SORT:
-                image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-                video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-            else:
-                image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
 
             image_count = 1
             video_count = 1
@@ -264,23 +256,22 @@ class Download(threading.Thread):
                             tool.process_exit()
 
             # 排序
-            if IS_SORT:
-                if image_count > 1:
-                    log.step(account_name + " 图片开始从下载目录移动到保存目录")
-                    destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                        log.step(account_name + " 图片从下载目录移动到保存目录成功")
-                    else:
-                        log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
-                        tool.process_exit()
-                if video_count > 1:
-                    log.step(account_name + " 视频开始从下载目录移动到保存目录")
-                    destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                    if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
-                        log.step(account_name + " 视频从下载目录移动到保存目录成功")
-                    else:
-                        log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
-                        tool.process_exit()
+            if image_count > 1:
+                log.step(account_name + " 图片开始从下载目录移动到保存目录")
+                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
+                if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
+                    log.step(account_name + " 图片从下载目录移动到保存目录成功")
+                else:
+                    log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
+                    tool.process_exit()
+            if video_count > 1:
+                log.step(account_name + " 视频开始从下载目录移动到保存目录")
+                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
+                if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
+                    log.step(account_name + " 视频从下载目录移动到保存目录成功")
+                else:
+                    log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
+                    tool.process_exit()
 
             # 新的存档记录
             if first_post_id != "0":

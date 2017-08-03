@@ -84,12 +84,7 @@ class Jigadori(robot.Robot):
                 image_start_index = int(save_info[0])
                 last_blog_time = int(save_info[1])
 
-        if self.is_sort:
-            image_path = self.image_temp_path
-        else:
-            image_path = self.image_download_path
-
-        if not tool.make_dir(image_path, 0):
+        if not tool.make_dir(self.image_temp_path, 0):
             # 图片保存目录创建失败
             self.print_msg("图片下载目录%s创建失败！" % self.image_download_path)
             tool.process_exit()
@@ -139,7 +134,7 @@ class Jigadori(robot.Robot):
                     file_type = image_url.split(".")[-1]
                     if file_type.find("/") != -1:
                         file_type = "jpg"
-                    file_path = os.path.join(image_path, "%05d_%s.%s" % (image_count, image_info["account_name"], file_type))
+                    file_path = os.path.join(self.image_temp_path, "%05d_%s.%s" % (image_count, image_info["account_name"], file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step("第%s张图片下载成功" % image_count)
@@ -153,7 +148,7 @@ class Jigadori(robot.Robot):
         log.step("下载完毕")
 
         # 排序复制到保存目录
-        if self.is_sort:
+        if image_count > 1:
             if not tool.make_dir(self.image_download_path, 0):
                 log.error("创建目录 %s 失败" % self.image_download_path)
                 tool.process_exit()

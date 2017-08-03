@@ -65,7 +65,6 @@ class Photographer(robot.Robot):
     def __init__(self):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
-        global IS_SORT
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
@@ -74,7 +73,6 @@ class Photographer(robot.Robot):
 
         # 设置全局变量，供子线程调用
         IMAGE_DOWNLOAD_PATH = self.image_download_path
-        IS_SORT = self.is_sort
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
