@@ -195,8 +195,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             # 获取视频信息列表
             account_index_response = get_account_index_page(account_id)
             if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -204,8 +202,8 @@ class Download(threading.Thread):
                 tool.process_exit()
 
             video_count = 1
-            first_video_id = "0"
-            need_make_video_dir = True
+            first_video_id = None
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             for video_info in account_index_response.extra_info["video_info_list"]:
                 if not robot.check_sub_key(("item_data",), video_info) or \
                         not robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
@@ -217,13 +215,6 @@ class Download(threading.Thread):
 
                 # 过滤标题中不支持的字符
                 video_title = robot.filter_text(video_info["item_data"]["title"])
-
-                # 第一个视频，创建目录
-                if need_make_video_dir:
-                    if not tool.make_dir(video_path, 0):
-                        log.error(account_name + " 创建图片下载目录 %s 失败" % video_path)
-                        tool.process_exit()
-                    need_make_video_dir = False
 
                 # 获取视频下载地址
                 video_url = get_video_url(video_id)
@@ -250,7 +241,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_video_id != "0":
+            if first_video_id is not None:
                 self.account_info[1] = first_video_id
 
             # 保存最后的信息
