@@ -147,10 +147,10 @@ class Download(threading.Thread):
             image_count = 1
             video_count = 1
             target_id = INIT_TARGET_ID
-            first_post_id = "0"
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
+            first_post_id = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
@@ -181,7 +181,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个媒体的postId做为新的存档记录
-                    if first_post_id == "0":
+                    if first_post_id is None:
                         first_post_id = media_info["blog_id"]
 
                     # 设置target id，取下一页图片
@@ -272,7 +272,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_post_id != "0":
+            if first_post_id is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
                 self.account_info[3] = first_post_id

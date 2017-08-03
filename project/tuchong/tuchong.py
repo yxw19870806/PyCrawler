@@ -176,9 +176,9 @@ class Download(threading.Thread):
 
             this_account_total_image_count = 0
             post_count = 0
-            first_post_id = "0"
             post_time = time.strftime('%Y-%m-%d %H:%M:%S')
             is_over = False
+            first_post_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析%s后的一页相册" % post_time)
@@ -214,7 +214,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个信息页的id做为新的存档记录
-                    if first_post_id == "0":
+                    if first_post_id is None:
                         first_post_id = album_info["album_id"]
 
                     log.step(account_name + " 开始解析相册%s" % album_info["album_id"])
@@ -254,7 +254,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 
             # 新的存档记录
-            if first_post_id != "0":
+            if first_post_id is not None:
                 self.account_info[1] = first_post_id
 
             # 保存最后的信息

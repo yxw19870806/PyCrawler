@@ -220,9 +220,9 @@ class Download(threading.Thread):
 
             image_count = 1
             key = ""
-            first_album_id = "0"
             is_over = False
             need_make_download_dir = True
+            first_album_id = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析 %s 相册页" % key)
@@ -257,7 +257,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个日志的id做为新的存档记录
-                    if first_album_id == "0":
+                    if first_album_id is None:
                         first_album_id = str(blog_info["blog_time"])
 
                     log.step(account_name + " 开始解析日志 %s" % blog_info["blog_id"])
@@ -329,7 +329,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_album_id != "0":
+            if first_album_id is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_album_id
 

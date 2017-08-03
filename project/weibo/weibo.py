@@ -316,10 +316,10 @@ class Download(threading.Thread):
             # 图片下载
             image_count = 1
             page_count = 1
-            first_image_time = "0"
             unique_list = []
             is_over = False
             need_make_image_dir = True
+            first_image_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while IS_DOWNLOAD_IMAGE and (not is_over):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
@@ -347,7 +347,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一张图片的上传时间做为新的存档记录
-                    if first_image_time == "0":
+                    if first_image_time is None:
                         first_image_time = str(image_info["image_time"])
 
                     # 新增图片导致的重复判断
@@ -388,7 +388,7 @@ class Download(threading.Thread):
 
             # 视频
             video_count = 1
-            first_video_url = ""
+            first_video_url = None
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while IS_DOWNLOAD_VIDEO:
                 # 获取账号首页
@@ -411,12 +411,12 @@ class Download(threading.Thread):
                     video_pagination_response = get_one_page_video(account_index_response.extra_info["account_page_id"], since_id)
                     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, robot.get_http_request_failed_reason(video_pagination_response.status)))
-                        first_video_url = ""  # 存档恢复
+                        first_video_url = None  # 存档恢复
                         break
 
                     if video_pagination_response.extra_info["is_error"]:
                         log.error(account_name + " %s后的一页视频%s解析失败" % (since_id, video_pagination_response.json_data))
-                        first_video_url = ""  # 存档恢复
+                        first_video_url = None   # 存档恢复
                         break
 
                     # 匹配获取全部的视频页面
@@ -429,7 +429,7 @@ class Download(threading.Thread):
                             break
 
                         # 将第一个视频的地址做为新的存档记录
-                        if first_video_url == "":
+                        if first_video_url is None:
                             first_video_url = video_play_url
 
                         log.step(account_name + " 开始解析第%s个视频 %s" % (video_count, video_play_url))
@@ -467,7 +467,7 @@ class Download(threading.Thread):
                             break
 
                 # 有历史记录，并且此次没有获得正常结束的标记，说明历史最后的视频已经被删除了
-                if self.account_info[4] != "" and first_video_url != "" and not is_over:
+                if self.account_info[4] != "" and first_video_url is not None and not is_over:
                     log.error(account_name + " 没有找到上次下载的最后一个视频地址")
 
                 break
@@ -475,7 +475,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
-            if first_image_time != "0":
+            if first_image_time is not None:
                 log.step(account_name + " 图片开始从下载目录移动到保存目录")
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
@@ -483,7 +483,7 @@ class Download(threading.Thread):
                 else:
                     log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                     tool.process_exit()
-            if first_video_url != "":
+            if first_video_url is not None:
                 log.step(account_name + " 视频开始从下载目录移动到保存目录")
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
@@ -493,10 +493,10 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_image_time != "0":
+            if first_image_time is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_image_time
-            if first_video_url != "":
+            if first_video_url is not None:
                 self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
                 self.account_info[4] = first_video_url
 

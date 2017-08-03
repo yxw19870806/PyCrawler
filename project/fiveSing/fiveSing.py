@@ -151,10 +151,10 @@ class Download(threading.Thread):
                 audio_type_name = audio_type_name_dict[audio_type]
 
                 page_count = 1
-                first_audio_id = "0"
                 unique_list = []
                 is_over = False
                 need_make_download_dir = True
+                first_audio_id = None
                 video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type)
                 while not is_over:
                     log.step(account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
@@ -163,7 +163,7 @@ class Download(threading.Thread):
                     audio_pagination_response = get_one_page_audio(account_id, audio_type, page_count)
                     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                         log.error(account_name + " 第%s页%s歌曲访问失败，原因：%s" % (page_count, audio_type_name, robot.get_http_request_failed_reason(audio_pagination_response.status)))
-                        first_audio_id = "0"  # 存档恢复
+                        first_audio_id = None  # 存档恢复
                         break
 
                     # 如果为空，表示已经取完了
@@ -183,7 +183,7 @@ class Download(threading.Thread):
                             break
 
                         # 将第一首歌曲的id做为新的存档记录
-                        if first_audio_id == "0":
+                        if first_audio_id is None:
                             first_audio_id = audio_id
 
                         # 新增歌曲导致的重复判断
@@ -197,7 +197,7 @@ class Download(threading.Thread):
                         if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                             log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name, audio_id, audio_title, robot.get_http_request_failed_reason(audio_play_response.status)))
                             is_over = True
-                            first_audio_id = "0"  # 存档恢复
+                            first_audio_id = None  # 存档恢复
                             break
 
                         # 获取歌曲
@@ -205,7 +205,7 @@ class Download(threading.Thread):
                         if audio_url is None:
                             log.error(account_name + " %s歌曲%s《%s》下载地址解析失败" % (audio_type_name, audio_id, audio_title))
                             is_over = True
-                            first_audio_id = "0"  # 存档恢复
+                            first_audio_id = None  # 存档恢复
                             break
 
                         log.step(account_name + " 开始下载第%s首%s歌曲《%s》 %s" % (video_count, audio_type_name, audio_title, audio_url))
@@ -234,7 +234,7 @@ class Download(threading.Thread):
                             page_count += 1
 
                 # 新的存档记录
-                if first_audio_id != "0":
+                if first_audio_id is not None:
                     self.account_info[audio_type_index] = first_audio_id
 
             log.step(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))

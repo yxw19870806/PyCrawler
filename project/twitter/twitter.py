@@ -268,10 +268,10 @@ class Download(threading.Thread):
             image_count = 1
             video_count = 1
             position_blog_id = INIT_MAX_ID
-            first_tweet_id = "0"
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
+            first_tweet_id = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
@@ -305,7 +305,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个tweet的id做为新的存档记录
-                    if first_tweet_id == "0":
+                    if first_tweet_id is None:
                         first_tweet_id = media_info["blog_id"]
 
                     # 视频
@@ -402,7 +402,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_tweet_id != "0":
+            if first_tweet_id is not None:
                 self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
                 self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
                 self.account_info[4] = first_tweet_id

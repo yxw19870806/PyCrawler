@@ -182,10 +182,10 @@ class Download(threading.Thread):
 
             page_count = 1
             video_count = 1
-            first_video_id = ""
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            first_video_id = None
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
@@ -221,7 +221,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个视频的id做为新的存档记录
-                    if first_video_id == "":
+                    if first_video_id is None:
                         first_video_id = video_id
 
                     # 新增视频导致的重复判断
@@ -273,7 +273,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_video_id != "":
+            if first_video_id is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
                 self.account_info[2] = first_video_id
 

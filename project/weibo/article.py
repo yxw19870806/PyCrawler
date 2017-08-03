@@ -229,8 +229,8 @@ class Download(threading.Thread):
 
             page_count = 1
             this_account_total_image_count = 0
-            first_article_time = "0"
             is_over = False
+            first_article_time = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 # 获取一页文章预览页面
@@ -261,7 +261,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个视频的地址做为新的存档记录
-                    if first_article_time == "0":
+                    if first_article_time is None:
                         first_article_time = str(article_info["article_time"])
 
                     log.step(account_name + " 开始解析文章%s" % article_info["article_url"])
@@ -345,7 +345,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 
             # 新的存档记录
-            if first_article_time != "0":
+            if first_article_time is not None:
                 self.account_info[1] = first_article_time
 
             # 保存最后的信息

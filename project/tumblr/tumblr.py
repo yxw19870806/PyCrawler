@@ -250,11 +250,11 @@ class Download(threading.Thread):
             page_count = 1
             image_count = 1
             video_count = 1
-            first_post_id = ""
             unique_list = []
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
+            first_post_id = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_id)
             while not is_over:
@@ -284,7 +284,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个信息页的id做为新的存档记录
-                    if first_post_id == "":
+                    if first_post_id is None:
                         first_post_id = post_id
 
                     # 新增信息页导致的重复判断
@@ -395,7 +395,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_post_id != "":
+            if first_post_id is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
                 self.account_info[3] = first_post_id

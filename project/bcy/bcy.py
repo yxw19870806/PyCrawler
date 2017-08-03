@@ -283,10 +283,10 @@ class Download(threading.Thread):
 
             this_account_total_image_count = 0
             page_count = 1
-            first_album_id = "0"
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            first_album_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
@@ -314,7 +314,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个作品的id做为新的存档记录
-                    if first_album_id == "0":
+                    if first_album_id is None:
                         first_album_id = str(album_info["album_id"])
 
                     # 新增作品导致的重复判断
@@ -403,7 +403,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
 
             # 新的存档记录
-            if first_album_id != "0":
+            if first_album_id is not None:
                 self.account_info[1] = first_album_id
 
             # 保存最后的信息

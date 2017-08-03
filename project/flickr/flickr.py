@@ -185,9 +185,9 @@ class Download(threading.Thread):
 
             image_count = 1
             page_count = 1
-            first_image_time = "0"
             is_over = False
             need_make_image_dir = True
+            first_image_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
@@ -215,7 +215,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一张图片的上传时间做为新的存档记录
-                    if first_image_time == "0":
+                    if first_image_time is None:
                         first_image_time = image_info["image_time"]
 
                     if image_info["image_url"] is None:
@@ -256,7 +256,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_image_time != "0":
+            if first_image_time is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_image_time
 

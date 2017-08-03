@@ -174,9 +174,9 @@ class Download(threading.Thread):
 
             video_count = 1
             page_time = 0
-            first_video_time = "0"
             need_make_video_dir = True
             is_over = False
+            first_video_time = None
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % video_count)
@@ -212,7 +212,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个视频的上传时间做为新的存档记录
-                    if first_video_time == "0":
+                    if first_video_time is None:
                         first_video_time = str(video_info["video_time"])
 
                     for video_part_id in video_info["video_part_id_list"]:
@@ -262,7 +262,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_video_time != "0":
+            if first_video_time is not None:
                 self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
                 self.account_info[4] = first_video_time
 

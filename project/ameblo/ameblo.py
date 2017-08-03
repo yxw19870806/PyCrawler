@@ -226,10 +226,10 @@ class Download(threading.Thread):
 
             image_count = 1
             page_count = 1
-            first_blog_id = "0"
             unique_list = []
             is_over = False
             need_make_image_dir = True
+            first_blog_id = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
@@ -253,7 +253,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个日志的时间做为新的存档记录
-                    if first_blog_id == "0":
+                    if first_blog_id is None:
                         first_blog_id = blog_id
 
                     # 新增日志导致的重复判断
@@ -320,7 +320,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_blog_id != "0":
+            if first_blog_id is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_blog_id
 

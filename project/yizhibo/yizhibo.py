@@ -206,9 +206,9 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             image_count = 1
-            first_image_time = "0"
             is_error = False
             need_make_image_dir = True
+            first_image_time = None
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while IS_DOWNLOAD_IMAGE:
@@ -244,7 +244,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一张图片的上传时间做为新的存档记录
-                    if first_image_time == "0":
+                    if first_image_time is None:
                         first_image_time = str(image_head_response.extra_info["image_time"])
 
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
@@ -268,14 +268,14 @@ class Download(threading.Thread):
 
                 # 存档恢复
                 if is_error:
-                    first_image_time = "0"
+                    first_image_time = None
                 break
 
             # 视频
             video_count = 1
-            first_video_time = "0"
             is_error = False
             need_make_video_dir = True
+            first_video_time = None
             while IS_DOWNLOAD_VIDEO:
                 # 获取全部视频ID列表
                 video_pagination_response = get_video_index_page(account_id)
@@ -309,7 +309,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一个视频的上传时间做为新的存档记录
-                    if first_video_time == "0":
+                    if first_video_time is None:
                         first_video_time = str(video_info_response.extra_info["video_time"])
 
                     # 获取视频m3u8文件（存放分割的ts文件地址）
@@ -342,13 +342,13 @@ class Download(threading.Thread):
 
                 # 存档恢复
                 if is_error:
-                    first_video_time = "0"
+                    first_video_time = None
                 break
 
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 
             # 排序
-            if first_image_time != "0":
+            if first_image_time is not None:
                 log.step(account_name + " 图片开始从下载目录移动到保存目录")
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[3]), 4):
@@ -356,7 +356,7 @@ class Download(threading.Thread):
                 else:
                     log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
                     tool.process_exit()
-            if first_video_time != "0":
+            if first_video_time is not None:
                 log.step(account_name + " 视频开始从下载目录移动到保存目录")
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[1]), 4):
@@ -365,11 +365,11 @@ class Download(threading.Thread):
                     log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
                     tool.process_exit()
 
-            if first_image_time != "0":
+            if first_image_time is not None:
                 self.account_info[3] = str(int(self.account_info[3]) + image_count - 1)
                 self.account_info[4] = first_image_time
 
-            if first_video_time != "0":
+            if first_video_time is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + video_count - 1)
                 self.account_info[2] = first_video_time
 

@@ -49,9 +49,9 @@ class Blog(robot.Robot):
         # 下载
         page_count = 1
         image_count = 1
-        new_last_blog_time = ""
         is_over = False
         need_make_download_dir = True
+        first_blog_time = None
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
@@ -77,8 +77,8 @@ class Blog(robot.Robot):
                     break
 
                 # 将第一个日志的id做为新的存档记录
-                if new_last_blog_time == "":
-                    new_last_blog_time = str(blog_time)
+                if first_blog_time is None:
+                    first_blog_time = str(blog_time)
 
             for image_name in blog_pagination_response.extra_info["image_name_list"]:
                 image_url = "http://blog.mariko-shinoda.net/%s" % image_name
@@ -112,8 +112,8 @@ class Blog(robot.Robot):
                 tool.process_exit()
 
         # 保存新的存档文件
-        if new_last_blog_time != "":
-            tool.write_file(str(image_start_index) + "\t" + new_last_blog_time, self.save_data_path, 2)
+        if first_blog_time is not None:
+            tool.write_file(str(image_start_index) + "\t" + first_blog_time, self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 

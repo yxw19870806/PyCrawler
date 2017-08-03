@@ -53,9 +53,9 @@ class YWKB(robot.Robot):
 
         page_count = 1
         image_count = 1
-        image_id = 0
         is_over = False
         need_make_image_dir = True
+        first_image_id = None
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
@@ -74,8 +74,8 @@ class YWKB(robot.Robot):
                     break
 
                 # 将第一张图片的post id做为新的存档记录
-                if image_id == 0:
-                    image_id = image_info["image_id"]
+                if first_image_id is None:
+                    first_image_id = image_info["image_id"]
 
                 log.step("开始下载%s的图片 %s" % (image_info["image_id"], image_info["image_url"]))
 
@@ -100,8 +100,8 @@ class YWKB(robot.Robot):
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
 
         # 重新保存存档文件
-        if image_id > 0:
-            tool.write_file(str(image_id), self.save_data_path, 2)
+        if first_image_id is not None:
+            tool.write_file(str(first_image_id), self.save_data_path, 2)
 
 
 if __name__ == "__main__":

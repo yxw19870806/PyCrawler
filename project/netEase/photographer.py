@@ -151,8 +151,8 @@ class Download(threading.Thread):
 
             total_image_count = 0
             album_count = 0
-            first_album_id = "0"
             need_make_download_dir = True
+            first_album_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             for album_url in account_index_response.extra_info["album_url_list"]:
                 album_id = get_album_id(album_url)
@@ -165,7 +165,7 @@ class Download(threading.Thread):
                     break
 
                 # 将第一个相册的id做为新的存档记录
-                if first_album_id == "0":
+                if first_album_id is None:
                     first_album_id = album_id
 
                 log.step(account_name + " 开始解析第相册%s" % album_id)
@@ -219,7 +219,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
             # 新的存档记录
-            if first_album_id != "0":
+            if first_album_id is not None:
                 self.account_info[1] = first_album_id
 
             # 保存最后的信息

@@ -76,10 +76,10 @@ class Rosi(robot.Robot):
         else:
             last_album_id = 0
 
-        new_last_album_id = ""
         total_image_count = 0
         page_count = 1
         is_over = False
+        first_album_id = None
         while not is_over:
             log.step("开始解析第%s页图集" % page_count)
 
@@ -103,8 +103,8 @@ class Rosi(robot.Robot):
                     break
 
                 # 将第一个图集的id做为新的存档记录
-                if new_last_album_id == "":
-                    new_last_album_id = album_info["album_id"]
+                if first_album_id is None:
+                    first_album_id = album_info["album_id"]
 
                 album_page_count = 1
                 image_count = 1
@@ -167,8 +167,8 @@ class Rosi(robot.Robot):
                     page_count += 1
 
         # 重新保存存档文件
-        if new_last_album_id != "":
-            tool.write_file(str(new_last_album_id), self.save_data_path, 2)
+        if first_album_id is not None:
+            tool.write_file(str(first_album_id), self.save_data_path, 2)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 

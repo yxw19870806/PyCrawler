@@ -207,10 +207,10 @@ class Download(threading.Thread):
 
             page_count = 1
             video_count = 1
-            first_audio_id = "0"
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            first_audio_id = None
             video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
@@ -238,7 +238,7 @@ class Download(threading.Thread):
                         break
 
                     # 将第一首歌曲的id做为新的存档记录
-                    if first_audio_id == "0":
+                    if first_audio_id is None:
                         first_audio_id = audio_info["audio_id"]
 
                     # 新增歌曲导致的重复判断
@@ -289,7 +289,7 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
 
             # 新的存档记录
-            if first_audio_id != "0":
+            if first_audio_id is not None:
                 self.account_info[1] = first_audio_id
 
             # 保存最后的信息
