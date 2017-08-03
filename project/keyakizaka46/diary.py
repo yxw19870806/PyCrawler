@@ -40,7 +40,7 @@ def get_one_page_blog(account_id, page_count):
             }
             # 获取日志id
             blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
-            if blog_id and robot.is_integer(blog_id):
+            if robot.is_integer(blog_id):
                 extra_blog_info["blog_id"] = blog_id
             # 获取日志页面中所有的图片地址列表
             image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)

@@ -45,7 +45,7 @@ def get_one_page_media(account_name, target_id):
                 if robot.check_sub_key(("post",), media_info) and robot.check_sub_key(("body", "postId"), media_info["post"]):
                     # 获取日志id
                     blog_id = str(media_info["post"]["postId"])
-                    if blog_id and robot.is_integer(blog_id):
+                    if robot.is_integer(blog_id):
                         extra_media_info["blog_id"] = blog_id
                     # 获取日志内容
                     extra_media_info["blog_body"] = media_info["post"]["body"]

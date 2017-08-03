@@ -39,7 +39,7 @@ def get_one_page_audio(account_id, page_count):
                 audio_selector = audio_list_selector.eq(audio_index)
                 audio_id = audio_selector.find(".content_wrap").attr("sound_id")
                 audio_title = audio_selector.find(".sound_title").attr("title")
-                if audio_id and robot.is_integer(audio_id) and audio_title:
+                if robot.is_integer(audio_id) and audio_title:
                     audio_info["audio_id"] = int(audio_id)
                     audio_info["audio_title"] = str(audio_title.encode("UTF-8").strip())
                 extra_info["audio_info_list"].append(audio_info)

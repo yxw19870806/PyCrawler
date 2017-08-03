@@ -47,7 +47,7 @@ def get_one_page_blog(account_id, page_count):
             # 获取日志id
             blog_id = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
             blog_id = blog_id.split("/")[-1]
-            if blog_id and robot.is_integer(blog_id):
+            if robot.is_integer(blog_id):
                 # 获取日志id
                 extra_image_info["blog_id"] = int(blog_id)
             # 获取图片地址列表

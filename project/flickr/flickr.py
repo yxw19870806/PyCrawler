@@ -30,7 +30,7 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         user_id = tool.find_sub_string(account_index_response.data, '"nsid":"', '"')
-        if user_id and robot.is_integer(user_id):
+        if robot.is_integer(user_id):
             extra_info["user_id"] = user_id
         site_key = tool.find_sub_string(account_index_response.data, '"site_key":"', '"')
         if site_key:

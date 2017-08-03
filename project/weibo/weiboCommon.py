@@ -45,7 +45,7 @@ def get_account_index_page(account_id):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data, "$CONFIG['page_id']='", "'")
-        if account_page_id and robot.is_integer(account_page_id):
+        if robot.is_integer(account_page_id):
             extra_info["account_page_id"] = account_page_id
     account_index_response.extra_info = extra_info
     return account_index_response

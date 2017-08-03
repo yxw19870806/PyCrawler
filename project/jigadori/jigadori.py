@@ -38,7 +38,7 @@ def get_one_page_photo(page_count):
                 tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
             else:
                 tweet_id = None
-            if account_name and tweet_time and tweet_id and robot.is_integer(tweet_id):
+            if account_name and tweet_time and robot.is_integer(tweet_id):
                 extra_photo_info["account_name"] = account_name.strip().replace("@", "")
                 extra_photo_info["time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
                 extra_photo_info["tweet_id"] = int(tweet_id)

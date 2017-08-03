@@ -38,7 +38,7 @@ def get_account_index_page(account_name):
 # 解析相册id
 def get_album_id(album_url):
     album_id = tool.find_sub_string(album_url, "pp/", ".html")
-    if album_id and robot.is_integer(album_id):
+    if robot.is_integer(album_id):
         return str(album_id)
     return None
 

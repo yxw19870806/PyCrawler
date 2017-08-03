@@ -37,7 +37,7 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if account_id and robot.is_integer(account_id):
+        if robot.is_integer(account_id):
             extra_info["account_id"] = account_id
     account_index_response.extra_info = extra_info
     return account_index_response
@@ -85,7 +85,7 @@ def get_one_page_media(account_name, position_blog_id):
                         }
                         # 获取日志id
                         blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-                        if blog_id and robot.is_integer(blog_id):
+                        if robot.is_integer(blog_id):
                             extra_media_info["blog_id"] = str(blog_id)
                         else:
                             extra_info["is_error"] = True

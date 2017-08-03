@@ -26,7 +26,7 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
-        if account_id and robot.is_integer(account_id):
+        if robot.is_integer(account_id):
             extra_info["account_id"] = account_id
         extra_info["is_follow"] = tool.find_sub_string(account_index_response.data, '"followed_by_viewer": ', ",") == "true"
         extra_info["is_private"] = tool.find_sub_string(account_index_response.data, '"is_private": ', ",") == "true"
