@@ -98,6 +98,10 @@ class Nvshens(robot.Robot):
             album_title = ""
             album_path = os.path.join(self.image_download_path, str(album_id))
             while not is_over:
+                if page_count >= 100:
+                    log.error("%s号图集已解析到100页，可能有异常，退出" % album_id)
+                    break
+
                 log.step("开始解析%s号图集第%s页" % (album_id, page_count))
 
                 # 获取相册
