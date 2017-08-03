@@ -33,6 +33,8 @@ def get_one_page_album(page_count):
         max_page_find = re.findall("<a href='list_1_(\d*).html'>末页</a>", album_pagination_response.data.decode("GBK").encode("UTF-8"))
         if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and robot.is_integer(max_page_find[0]):
             extra_info['is_over'] = page_count >= int(max_page_find[0])
+        else:
+            extra_info['is_over'] = True
     album_pagination_response.extra_info = extra_info
     return album_pagination_response
 
