@@ -387,7 +387,6 @@ class Download(threading.Thread):
                     this_account_total_image_count += image_count - 1
 
                 if not is_over:
-                    # 达到配置文件中的下载数量，结束
                     if album_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:

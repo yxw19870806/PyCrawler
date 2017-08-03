@@ -104,18 +104,15 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-
             # todo 图片下载逻辑
-            # 图片
             image_count = 1
-            first_image_time = "0"
-            need_make_image_dir = True
+            first_image_time = None
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
 
             # 排序
-            if first_image_time != "0":
+            if image_count > 0:
                 destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
                     log.step(account_name + " 图片从下载目录移动到保存目录成功")
@@ -124,7 +121,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_image_time != "0":
+            if first_image_time is not None:
                 self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
                 self.account_info[2] = first_image_time
 

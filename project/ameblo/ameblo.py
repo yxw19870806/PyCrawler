@@ -294,7 +294,6 @@ class Download(threading.Thread):
                             log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    # 是否已经是最后一页了
                     if blog_pagination_response.extra_info["is_over"]:
                         is_over = True
                     else:

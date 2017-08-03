@@ -107,15 +107,13 @@ class Download(threading.Thread):
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
 
             # todo 视频下载逻辑
-            # 视频
             video_count = 1
-            first_video_time = "0"
-            need_make_video_dir = True
+            first_video_time = None
 
             log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
 
             # 排序
-            if first_video_time != "0":
+            if video_count > 1:
                 destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
                 if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
                     log.step(account_name + " 视频从下载目录移动到保存目录成功")
@@ -124,7 +122,7 @@ class Download(threading.Thread):
                     tool.process_exit()
 
             # 新的存档记录
-            if first_video_time != "0":
+            if first_video_time is not None:
                 self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
                 self.account_info[4] = first_video_time
 
