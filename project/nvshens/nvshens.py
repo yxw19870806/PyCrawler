@@ -119,6 +119,10 @@ class Nvshens(robot.Robot):
                         log.error("%s号图集第%s页已删除" % (album_id, page_count))
                         break
 
+                if len(album_pagination_response.extra_info["image_url_list"]) == 0:
+                    log.error("%s号图集第%s页没有获取到图片" % (album_id, page_count))
+                    break
+
                 log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response.extra_info["image_url_list"]))
 
                 # 过滤标题中不支持的字符
