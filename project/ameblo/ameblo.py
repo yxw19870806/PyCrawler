@@ -224,6 +224,7 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
+            image_count = 1
             page_count = 1
             first_blog_id = "0"
             unique_list = []
