@@ -401,8 +401,7 @@ def make_dir(dir_path, create_mode):
                     time.sleep(5)
             else:
                 return True
-    count = 0
-    while count <= 5:
+    for retry_count in range(0, 5):
         try:
             os.makedirs(dir_path)
             if os.path.isdir(dir_path):
@@ -410,7 +409,6 @@ def make_dir(dir_path, create_mode):
         except Exception, e:
             print_msg(str(e))
             time.sleep(5)
-        count += 1
     return False
 
 
