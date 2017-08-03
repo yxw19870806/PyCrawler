@@ -307,7 +307,7 @@ def get_config(config, key, default_value, mode):
     return value
 
 
-# 将制定文件夹内的所有文件排序重命名并复制到其他文件夹中
+# 将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
 def sort_file(source_path, destination_path, start_count, file_name_length):
     file_list = tool.get_dir_files_name(source_path, "desc")
     # 判断排序目标文件夹是否存在

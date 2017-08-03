@@ -218,15 +218,12 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-
-            # 图片下载
             image_count = 1
             key = ""
             first_album_id = "0"
             is_over = False
             need_make_download_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析 %s 相册页" % key)
 

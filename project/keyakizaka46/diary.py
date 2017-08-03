@@ -134,14 +134,12 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-
             image_count = 1
             page_count = 1
             first_blog_id = "0"
             is_over = False
             need_make_image_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 

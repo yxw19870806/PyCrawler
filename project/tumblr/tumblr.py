@@ -247,9 +247,6 @@ class Download(threading.Thread):
         try:
             log.step(account_id + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_id)
-
             page_count = 1
             image_count = 1
             video_count = 1
@@ -258,6 +255,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_id)
             while not is_over:
                 log.step(account_id + " 开始解析第%s页相册" % page_count)
 

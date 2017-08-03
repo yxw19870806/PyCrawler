@@ -186,15 +186,13 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             page_count = 1
             video_count = 1
             first_video_id = "0"
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 

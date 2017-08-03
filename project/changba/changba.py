@@ -195,8 +195,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-
             # 查找账号user id
             account_index_response = get_account_index_page(account_id)
             if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -213,6 +211,7 @@ class Download(threading.Thread):
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
 

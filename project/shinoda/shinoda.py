@@ -52,7 +52,6 @@ class Blog(robot.Robot):
         new_last_blog_time = ""
         is_over = False
         need_make_download_dir = True
-
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 

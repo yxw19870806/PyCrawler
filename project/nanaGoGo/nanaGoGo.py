@@ -144,9 +144,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             image_count = 1
             video_count = 1
             target_id = INIT_TARGET_ID
@@ -154,7 +151,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
-
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析target id %s后的一页视频" % target_id)
 

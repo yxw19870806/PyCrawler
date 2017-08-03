@@ -149,13 +149,13 @@ class Download(threading.Thread):
             for audio_type in audio_type_to_index_dict.keys():
                 audio_type_index = audio_type_to_index_dict[audio_type]
                 audio_type_name = audio_type_name_dict[audio_type]
-                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type)
 
                 page_count = 1
                 first_audio_id = "0"
                 unique_list = []
                 is_over = False
                 need_make_download_dir = True
+                video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type)
                 while not is_over:
                     log.step(account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
 

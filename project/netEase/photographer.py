@@ -149,7 +149,6 @@ class Download(threading.Thread):
 
             log.step(account_name + " 解析的所有相册地址：%s" % account_index_response.extra_info["album_url_list"])
 
-            # 下载
             total_image_count = 0
             album_count = 0
             first_album_id = "0"

@@ -172,9 +172,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-
             # 获取相册首页页面
             account_index_response = get_account_index_page(account_name)
             if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -186,12 +183,12 @@ class Download(threading.Thread):
             # 生成一个随机的request id用作访问（模拟页面传入）
             request_id = tool.generate_random_string(8)
 
-            # 图片
             image_count = 1
             page_count = 1
             first_image_time = "0"
             is_over = False
             need_make_image_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 

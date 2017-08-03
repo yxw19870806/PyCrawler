@@ -250,9 +250,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             account_index_response = get_account_index_page(account_name)
             if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 log.error(account_name + " 首页访问访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
@@ -275,6 +272,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析position %s后的一页媒体列表" % position_blog_id)
 

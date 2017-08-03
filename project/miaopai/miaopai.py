@@ -175,9 +175,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             user_id = get_user_id(account_id)
             if user_id is None:
                 log.error(account_name + " suid解析失败")
@@ -189,6 +186,7 @@ class Download(threading.Thread):
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 

@@ -89,7 +89,6 @@ class Jigadori(robot.Robot):
             self.print_msg("图片下载目录%s创建失败！" % self.image_download_path)
             tool.process_exit()
 
-        # 下载
         page_count = 1
         image_count = 1
         new_last_blog_time = ""

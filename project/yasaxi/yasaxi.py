@@ -185,13 +185,12 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-
             image_count = 1
             cursor = 0
             first_status_id = ""
             is_over = False
             need_make_image_dir = True
+            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析cursor '%s'的图片" % cursor)
 

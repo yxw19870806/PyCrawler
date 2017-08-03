@@ -81,7 +81,6 @@ class Nvshens(robot.Robot):
             album_id = 10000
 
         newest_album_id = get_newest_album_id()
-
         if newest_album_id is None:
             log.error("最新图集id获取失败")
             tool.process_exit()

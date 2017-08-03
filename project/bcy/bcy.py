@@ -281,15 +281,13 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-
-            # 图片下载
             this_account_total_image_count = 0
             page_count = 1
             first_album_id = "0"
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 

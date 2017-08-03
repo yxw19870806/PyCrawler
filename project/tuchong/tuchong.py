@@ -174,13 +174,12 @@ class Download(threading.Thread):
                     tool.process_exit()
                 account_id = account_index_response.extra_info["account_id"]
 
-            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-
             this_account_total_image_count = 0
             post_count = 0
             first_post_id = "0"
             post_time = time.strftime('%Y-%m-%d %H:%M:%S')
             is_over = False
+            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析%s后的一页相册" % post_time)
 

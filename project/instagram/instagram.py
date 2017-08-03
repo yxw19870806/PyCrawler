@@ -260,9 +260,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             # 获取首页
             account_index_response = get_account_index_page(account_name)
             if account_index_response.status == 404:
@@ -290,6 +287,8 @@ class Download(threading.Thread):
             is_over = False
             need_make_image_dir = True
             need_make_video_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析cursor '%s'的媒体信息" % cursor)
 

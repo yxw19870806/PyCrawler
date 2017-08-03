@@ -205,14 +205,12 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             image_count = 1
             first_image_time = "0"
             is_error = False
             need_make_image_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while IS_DOWNLOAD_IMAGE:
                 # 获取全部图片地址列表
                 image_index_response = get_image_index_page(account_id)

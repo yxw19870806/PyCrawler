@@ -128,15 +128,13 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-
-            # 图片下载
             page_count = 1
             image_count = 1
             first_blog_id = ""
             unique_list = []
             is_over = False
             need_make_download_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 

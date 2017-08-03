@@ -313,16 +313,14 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
-            # 图片
+            # 图片下载
             image_count = 1
             page_count = 1
             first_image_time = "0"
             unique_list = []
             is_over = False
             need_make_image_dir = True
+            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             while IS_DOWNLOAD_IMAGE and (not is_over):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
@@ -391,6 +389,7 @@ class Download(threading.Thread):
             # 视频
             video_count = 1
             first_video_url = ""
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while IS_DOWNLOAD_VIDEO:
                 # 获取账号首页
                 account_index_response = weiboCommon.get_account_index_page(account_id)

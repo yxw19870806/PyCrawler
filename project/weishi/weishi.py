@@ -172,13 +172,12 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             video_count = 1
             page_time = 0
             first_video_time = "0"
             need_make_video_dir = True
             is_over = False
+            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % video_count)
 

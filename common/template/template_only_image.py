@@ -104,7 +104,6 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            # 如果需要重新排序则使用临时文件夹，否则直接下载到目标目录
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
 
             # todo 图片下载逻辑
