@@ -4,7 +4,6 @@ from common import tool
 import os
 import sys
 
-
 # 文件保存目录
 FILE_STORAGE_PATH = os.path.join("photo")
 # 存档文件所在路径

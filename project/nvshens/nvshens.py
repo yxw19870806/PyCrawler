@@ -143,6 +143,7 @@ class Nvshens(robot.Robot):
                         if not tool.make_dir(album_path, 0):
                             log.error("创建图集目录 %s 失败" % album_path)
                             tool.process_exit()
+                            
                     this_album_total_image_count = album_pagination_response.extra_info["image_count"]
                 else:
                     if this_album_total_image_count != album_pagination_response.extra_info["image_count"]:

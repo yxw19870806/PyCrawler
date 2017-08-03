@@ -3,7 +3,6 @@
 from common import tool
 import os
 
-
 # 旧存档路径
 OLD_SAVE_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "save.data")
 # 新存档路径
