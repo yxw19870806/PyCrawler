@@ -60,7 +60,7 @@ def get_one_page_media(account_id, cursor):
     }
     # Too Many Requests
     if media_pagination_response.status == 429:
-        time.sleep(30)
+        time.sleep(60)
         return get_one_page_media(account_id, cursor)
     elif media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("status", "data"), media_pagination_response.json_data):
