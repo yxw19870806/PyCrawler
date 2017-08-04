@@ -56,8 +56,6 @@ def get_one_page_photo(page_count):
 
             # 获取图片地址
             image_list_selector = photo_selector.find(".photo-link-outer a img")
-            if image_list_selector.size() == 0:
-                raise robot.RobotException("图片信息选择器获取图片列表失败\n%s" % photo_selector_html)
             for image_index in range(0, image_list_selector.size()):
                 image_url = image_list_selector.eq(image_index).attr("src")
                 if not image_url:
