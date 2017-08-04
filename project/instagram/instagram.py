@@ -33,7 +33,7 @@ def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
     account_index_response = net.http_request(account_index_url)
     extra_info = {
-        "account_id": None,  # 页面解析出的account id
+        "account_id": None,  # account id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
@@ -53,8 +53,8 @@ def get_one_page_media(account_id, cursor):
     media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "media_info_list": [],  # 页面解析出的媒体信息列表
-        "next_page_cursor": None,  # 页面解析出的下一页媒体信息的指针
+        "media_info_list": [],  # 所有媒体信息
+        "next_page_cursor": None,  # 下一页媒体信息的指针
     }
     # Too Many Requests
     if media_pagination_response.status == 429:
@@ -73,11 +73,11 @@ def get_one_page_media(account_id, cursor):
                 for media_info in media_node["edges"]:
                     media_extra_info = {
                         "is_error": False,  # 是不是格式不符合
-                        "image_url": None,  # 页面解析出的图片下载地址
-                        "is_group": False,  # 是不是图片组
+                        "image_url": None,  # 图片地址
+                        "is_group": False,  # 是不是图片/视频组
                         "is_video": False,  # 是不是视频
-                        "page_id": None,  # 页面解析出的媒体详情界面id
-                        "time": None,  # 页面解析出的媒体上传时间
+                        "page_id": None,  # 媒体详情界面id
+                        "time": None,  # 媒体上传时间
                         "json_data": media_info,  # 原始数据
                     }
                     if (
@@ -88,15 +88,15 @@ def get_one_page_media(account_id, cursor):
                         if media_info["node"]["__typename"] not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
                             media_extra_info["is_error"] = True
                             break
-                        # 获取图片下载地址
+                        # 获取图片地址
                         media_extra_info["image_url"] = str(media_info["node"]["display_url"])
-                        # 是不是图片/视频组
+                        # 判断是不是图片/视频组
                         media_extra_info["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
-                        # 检测是否有视频
+                        # 判断是否有视频
                         media_extra_info["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
                         # 获取图片上传时间
                         media_extra_info["time"] = str(int(media_info["node"]["taken_at_timestamp"]))
-                        # 获取媒体id
+                        # 获取媒体详情界面id
                         media_extra_info["page_id"] = str(media_info["node"]["shortcode"])
                     else:
                         media_extra_info["is_error"] = True
@@ -117,9 +117,9 @@ def get_media_page(page_id):
     media_response = net.http_request(media_url)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "image_url_list": [],  # 页面解析出的所有图片下载地址
-        "video_url_list": [],  # 页面解析出的所有视频下载地址
-        "json_data": None,  # 页面解析出的视频下载地址
+        "image_url_list": [],  # 所有图片地址
+        "video_url_list": [],  # 所有视频地址
+        "json_data": None,  # 原始数据
     }
     if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         try:

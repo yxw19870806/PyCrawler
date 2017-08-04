@@ -25,17 +25,17 @@ def get_one_page_audio(account_id, page_count):
     audio_pagination_response = net.http_request(audio_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "audio_info_list": [],  # 页面解析出的歌曲信息列表
+        "audio_info_list": [],  # 所有歌曲信息
         "is_over": False,  # 是不是最后一页歌曲
     }
     if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data",), audio_pagination_response.json_data) and robot.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
             for audio_info in audio_pagination_response.json_data["data"]["ugclist"]:
                 audio_extra_info = {
-                    "audio_id": None,  # 页面解析出的歌曲id
-                    "audio_key": None,  # 页面解析出的歌曲访问token
-                    "audio_title": "",  # 页面解析出的歌曲标题
-                    "audio_time": None,  # 页面解析出的歌曲上传时间
+                    "audio_id": None,  # 歌曲id
+                    "audio_key": None,  # 歌曲访问token
+                    "audio_title": "",  # 歌曲标题
+                    "audio_time": None,  # 歌曲上传时间
                     "json_data": audio_info,  # 原始数据
                 }
                 if robot.check_sub_key(("title", "shareid", "ksong_mid", "time"), audio_info):
@@ -61,9 +61,10 @@ def get_audio_play_page(audio_id):
     audio_play_url = "http://kg.qq.com/node/play?s=%s" % audio_id
     audio_play_response = net.http_request(audio_play_url)
     extra_info = {
-        "audio_url": None,  # 页面解析出的歌曲地址
+        "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取歌曲地址
         audio_url = tool.find_sub_string(audio_play_response.data, '"playurl":"', '"')
         if audio_url:
             extra_info["audio_url"] = audio_url

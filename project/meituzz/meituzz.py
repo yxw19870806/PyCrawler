@@ -21,9 +21,9 @@ def get_album_page(page_count):
     album_response = net.http_request(album_url)
     extra_info = {
         "is_delete": False,  # 相册是不是已被删除（或还没有内容）
-        "image_url_list": None,  # 页面解析出的所有图片地址列表
-        "video_url": None,  # 页面解析出的所有视频地址
-        "title": "",  # 页面解析出的相册标题
+        "image_url_list": None,  # 所有图片地址
+        "video_url": None,  # 所有视频地址
+        "title": "",  # 相册标题
         "is_error": False,  # 是不是没有任何图片或视频
     }
     if album_response.status == 200:

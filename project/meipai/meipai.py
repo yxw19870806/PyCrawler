@@ -54,14 +54,14 @@ def get_one_page_video(account_id, page_count):
     video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "video_info_list": [],  # 页面解析出的所有视频信息列表
+        "video_info_list": [],  # 所有视频信息
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("medias",), video_pagination_response.json_data):
             for media_data in video_pagination_response.json_data["medias"]:
                 extra_video_info = {
-                    "video_id": None,  # 解析出的视频id
-                    "video_url": None,  # 解析出的视频下载地址
+                    "video_id": None,  # 视频id
+                    "video_url": None,  # 视频下载地址
                     "json_data": media_data,  # 原始数据
                 }
                 if robot.check_sub_key(("video", "id"), media_data):

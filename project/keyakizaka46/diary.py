@@ -27,7 +27,7 @@ def get_one_page_blog(account_id, page_count):
     blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
     blog_pagination_response = net.http_request(blog_pagination_url)
     extra_info = {
-        "blog_info_list": [],  # 页面解析出的日志信息
+        "blog_info_list": [],  # 所有日志信息
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 日志正文部分
@@ -35,14 +35,14 @@ def get_one_page_blog(account_id, page_count):
         blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
         for blog_info in blog_list:
             extra_blog_info = {
-                "blog_id" : None,  # 页面解析出的日志id
-                "image_url_list": [],  # 页面解析出的图片下载地址列表
+                "blog_id" : None,  # 日志id
+                "image_url_list": [],  # 所有图片地址
             }
             # 获取日志id
             blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
             if robot.is_integer(blog_id):
                 extra_blog_info["blog_id"] = blog_id
-            # 获取日志页面中所有的图片地址列表
+            # 获取所有图片地址
             image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
             extra_blog_info["image_url_list"] = map(str, image_url_list)
 

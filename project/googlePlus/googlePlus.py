@@ -25,8 +25,8 @@ NEW_SAVE_DATA_PATH = ""
 def get_one_page_blog(account_id, token):
     extra_info = {
         "is_error": True,  # 是不是格式不符合
-        "blog_info_list": [],  # 页面解析出的日志信息列表
-        "next_page_key": None,  # 页面解析出的下一页token
+        "blog_info_list": [],  # 所有日志信息
+        "next_page_key": None,  # 下一页token
         "json_data": None,  # 原始数据
     }
     script_data = []
@@ -63,8 +63,8 @@ def get_one_page_blog(account_id, token):
             extra_info["is_error"] = False
             for data in script_data[1]:
                 extra_blog_info = {
-                    "blog_id": None,  # 页面解析出的日志id
-                    "blog_time": None,  # 页面解析出的日志上传时间
+                    "blog_id": None,  # 日志id
+                    "blog_time": None,  # 日志发布时间
                     "json_data": data,  # 原始数据
                 }
                 blog_data = []
@@ -75,7 +75,7 @@ def get_one_page_blog(account_id, token):
                 if len(blog_data) >= 5:
                     # 获取日志id
                     extra_blog_info["blog_id"] = str(blog_data[0])
-                    # 获取日志创建时间
+                    # 获取日志发布时间
                     if robot.is_integer(blog_data[4]):
                         extra_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
                 extra_info["blog_info_list"].append(extra_blog_info)
@@ -92,7 +92,7 @@ def get_album_page(account_id, album_id):
     # 图片不止一页：https://get.google.com/albumarchive/109057690948151627836/album/AF1QipMg1hsC4teQFP5xaBioWo-1SCr4Hphh4mfc0ZZX?source=pwa
     album_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
     extra_info = {
-        "image_url_list": [],  # 页面解析出的图片地址列表
+        "image_url_list": [],  # 所有图片地址
     }
     image_url_list = []
     while True:

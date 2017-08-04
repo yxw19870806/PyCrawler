@@ -21,8 +21,8 @@ def get_one_page_album(album_id, page_count):
     extra_info = {
         "is_delete": False,  # 是不是已经被删除
         "is_over": False,  # 是不是图集的最后一页
-        "album_title": "",  # 页面解析出的图集标题
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "album_title": "",  # 图集标题
+        "image_url_list": [],  # 所有图片地址
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断图集是否已经被删除
