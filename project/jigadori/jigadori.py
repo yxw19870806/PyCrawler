@@ -23,50 +23,52 @@ def get_one_page_photo(page_count):
         photo_list_selector = pq(photo_pagination_response.data).find("#wrapper .row .photo")
         for photo_index in range(0, photo_list_selector.size()):
             photo_selector = photo_list_selector.eq(photo_index)
+            photo_selector_html = photo_selector.html().encode("UTF-8")
             extra_photo_info = {
-                "is_error": False,  # 是不是格式不符合
-                "account_name": "",  # twitter账号名字
+                "account_name": "",  # twitter账号
                 "tweet_id": 0,  # tweet id
                 "image_url_list": [],  # 图片地址
-                "time": 0,  # 图片上传时间
-                "html": photo_selector.html().encode("UTF-8"),  # 原始页面
+                "time": None,  # tweet发布时间
             }
-            account_name = photo_selector.find(".user-info .user-name .screen-name").text()
-            tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text()
+            # 获取tweet id
             tweet_url = photo_selector.find(".photo-link-outer a").eq(0).attr("href")
-            if tweet_url:
-                tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
-            else:
-                tweet_id = None
-            if account_name and tweet_time and robot.is_integer(tweet_id):
-                # 获取twitter账号名字
-                extra_photo_info["account_name"] = account_name.strip().replace("@", "")
-                # 获取图片上传时间
-                extra_photo_info["time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
-                # 获取tweet id
-                extra_photo_info["tweet_id"] = int(tweet_id)
-                # 获取 图片地址
-                image_list_selector = photo_selector.find(".photo-link-outer a img")
-                for image_index in range(0, image_list_selector.size()):
-                    image_url = image_list_selector.eq(image_index).attr("src")
-                    if image_url:
-                        extra_photo_info["image_url_list"].append(str(image_url).strip())
-                    else:
-                        extra_photo_info["is_error"] = True
-            else:
-                extra_photo_info["is_error"] = True
+            if not tweet_url:
+                raise robot.RobotException("图片信息选择器获取tweet地址失败\n%s" % photo_selector_html)
+            tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
+            if not robot.is_integer(tweet_id):
+                raise robot.RobotException("tweet地址获取tweet id失败\n%s" % tweet_url)
+            extra_photo_info["tweet_id"] = int(tweet_id)
+
+            # 获取twitter账号
+            account_name = photo_selector.find(".user-info .user-name .screen-name").text()
+            if not account_name:
+                raise robot.RobotException("图片信息选择器获取twitter账号失败\n%s" % photo_selector_html)
+            extra_photo_info["account_name"] = str(account_name).strip().replace("@", "")
+
+            # 获取tweet发布时间
+            tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text().strip()
+            if not tweet_time:
+                raise robot.RobotException("图片信息选择器获取tweet发布时间失败\n%s" % photo_selector_html)
+            try:
+                extra_photo_info["time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
+            except ValueError:
+                raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % tweet_time)
+
+            # 获取图片地址
+            image_list_selector = photo_selector.find(".photo-link-outer a img")
+            if image_list_selector.size() == 0:
+                raise robot.RobotException("图片信息选择器获取图片列表失败\n%s" % photo_selector_html)
+            for image_index in range(0, image_list_selector.size()):
+                image_url = image_list_selector.eq(image_index).attr("src")
+                if not image_url:
+                    raise robot.RobotException("图片列表获取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
+                extra_photo_info["image_url_list"].append(str(image_url).strip())
+
             extra_info["image_info_list"].append(extra_photo_info)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     photo_pagination_response.extra_info = extra_info
     return photo_pagination_response
-
-
-# 从图片页面中解析获取推特发布时间的时间戳
-def get_tweet_created_time(photo_info):
-    tweet_created_time_find = photo_info.findAll("div", "tweet-created-at")
-    if len(tweet_created_time_find) == 1:
-        tweet_created_time_string = tweet_created_time_find[0].text
-        return int(time.mktime(time.strptime(tweet_created_time_string, "%Y-%m-%d %H:%M:%S")))
-    return None
 
 
 class Jigadori(robot.Robot):
@@ -97,9 +99,10 @@ class Jigadori(robot.Robot):
             log.step("开始解析第%s页图片" % page_count)
 
             # 获取一页图片
-            photo_pagination_response = get_one_page_photo(page_count)
-            if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
+            try:
+                photo_pagination_response = get_one_page_photo(page_count)
+            except robot.RobotException, e:
+                log.error("第%s页图片访问失败，原因：%s" % (page_count, e.message))
                 tool.process_exit()
 
             # 没有图片了
@@ -107,10 +110,6 @@ class Jigadori(robot.Robot):
                 break
 
             for image_info in photo_pagination_response.extra_info["image_info_list"]:
-                if image_info["is_error"]:
-                    log.error("第%s张图片所在页面%s解析失败" % (page_count, image_info["html"]))
-                    tool.process_exit()
-
                 # 检查是否达到存档记录
                 if image_info["time"] <= last_blog_time:
                     is_over = True
