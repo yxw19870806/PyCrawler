@@ -123,33 +123,44 @@ def get_one_page_album(account_id, page_count):
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取coser id
         coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
-        if len(coser_id_find) == 1 and robot.is_integer(coser_id_find[0]):
-            extra_info["coser_id"] = coser_id_find[0]
-            album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
-            for album_index in range(0, album_list_selector.size()):
-                album_selector = album_list_selector.eq(album_index)
-                extra_album_info = {
-                    "album_id": None,  # 页面解析出的作品id
-                    "album_title": None,  # 页面解析出的作品标题
-                    "html": str(album_selector.html().encode("UTF-8")),  # 原始页面
-                }
-                album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
-                album_title = album_selector.find(".postWorkCard__img footer").text()
-                album_id = None
-                if album_url:
-                    album_id = str(album_url).split("/")[-1]
-                if robot.is_integer(album_id):
-                    extra_album_info["album_id"] = int(album_id)
-                    extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
-                extra_info["album_info_list"].append(extra_album_info)
-            # 检测是否还有下一页
-            last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
-            if last_pagination_selector.size() == 1:
-                max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
-                extra_info["is_over"] = page_count >= max_page_count
-            else:
-                extra_info["is_over"] = True
+        if not (len(coser_id_find) == 1 and robot.is_integer(coser_id_find[0])):
+            raise robot.RobotException("页面获取coser id失败\n%s" % album_pagination_response.data)
+        extra_info["coser_id"] = coser_id_find[0]
+
+        # 获取作品信息
+        album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
+        for album_index in range(0, album_list_selector.size()):
+            album_selector = album_list_selector.eq(album_index)
+            extra_album_info = {
+                "album_id": None,  # 页面解析出的作品id
+                "album_title": None,  # 页面解析出的作品标题
+                "html": str(album_selector.html().encode("UTF-8")),  # 原始页面
+            }
+            # 作品id
+            album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
+            if not album_url:
+                raise robot.RobotException("作品获取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
+            album_id = str(album_url).split("/")[-1]
+            if not robot.is_integer(album_id):
+                raise robot.RobotException("作品地址获取作品id失败\n%s" % album_url)
+
+            # 作品标题
+            album_title = album_selector.find(".postWorkCard__img footer").text()
+            extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
+
+            extra_info["album_info_list"].append(extra_album_info)
+
+        # 检测是否还有下一页
+        last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
+        if last_pagination_selector.size() == 1:
+            max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
+            extra_info["is_over"] = page_count >= max_page_count
+        else:
+            extra_info["is_over"] = True
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
     album_pagination_response.extra_info = extra_info
     return album_pagination_response
 
@@ -170,12 +181,18 @@ def get_album_page(coser_id, album_id):
         # 检测作品是否被管理员锁定
         if album_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
             extra_info["is_admin_locked"] = True
+
         # 检测作品是否只对粉丝可见
         if album_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
             extra_info["is_only_follower"] = True
+
         # 获取作品页面内的所有图片地址列表
         image_url_list = re.findall("src='([^']*)'", album_response.data)
+        if not extra_info["is_admin_locked"] and not extra_info["is_only_follower"] and len(image_url_list) == 0:
+            raise robot.RobotException("页面获取图片地址失败\n%s" % album_response.data)
         extra_info["image_url_list"] = map(str, image_url_list)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
     album_response.extra_info = extra_info
     return album_response
 
@@ -291,22 +308,15 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 
                 # 获取一页作品
-                album_pagination_response = get_one_page_album(account_id, page_count)
-                if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页作品访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(album_pagination_response.status)))
-                    tool.process_exit()
-
-                if album_pagination_response.extra_info["coser_id"] is None:
-                    log.error(account_name + " 第%s页作品coser_id解析失败" % page_count)
-                    tool.process_exit()
+                try:
+                    album_pagination_response = get_one_page_album(account_id, page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页作品解析失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response.extra_info["album_info_list"]))
 
                 for album_info in album_pagination_response.extra_info["album_info_list"]:
-                    if album_info["album_id"] is None:
-                        log.error(account_name + " 作品页面%s作品id解析失败" % album_info["html"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if album_info["album_id"] <= int(self.account_info[1]):
                         is_over = True
@@ -325,10 +335,11 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
 
                     # 获取作品
-                    album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
-                    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_info["album_id"], album_info["album_title"], robot.get_http_request_failed_reason(album_response.status)))
-                        tool.process_exit()
+                    try:
+                        album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
+                    except robot.RobotException, e:
+                        log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+                        raise
 
                     # 是不是已被管理员锁定
                     if album_response.extra_info["is_admin_locked"]:
@@ -341,16 +352,13 @@ class Download(threading.Thread):
                             log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
                             if follow(account_id):
                                 # 重新获取作品页面
-                                album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
-                                if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                                    log.error(account_name + " 作品%s 《%s》访问失败，原因：%s" % (album_info["album_id"], album_info["album_title"], robot.get_http_request_failed_reason(album_response.status)))
-                                    tool.process_exit()
+                                try:
+                                    album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
+                                except robot.RobotException, e:
+                                    log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+                                    raise
                         else:
                             continue
-
-                    if len(album_response.extra_info["image_url_list"]) == 0:
-                        log.error(account_name + " 作品%s 《%s》解析图片失败" % (album_info["album_id"], album_info["album_title"]))
-                        tool.process_exit()
 
                     # 过滤标题中不支持的字符
                     filtered_title = robot.filter_text(album_info["album_title"])
