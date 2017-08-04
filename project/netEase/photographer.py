@@ -28,7 +28,7 @@ def get_account_index_page(account_name):
         "album_url_list": [],  # 页面解析出的所有相册地址列表
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_result_selector = pq(account_index_response.data).find("#p_contents li")
+        album_result_selector = pq(account_index_response.data.decode("UTF-8")).find("#p_contents li")
         for album_index in range(0, album_result_selector.size()):
             extra_info["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     account_index_response.extra_info = extra_info

@@ -35,7 +35,7 @@ def get_one_page_favorite(page_count):
             html_data = html_data.replace(replace_string, "")
         html_data = html_data.replace(chr(1), "\\")
         # 解析页面
-        children_selector = pq(html_data).find('div.WB_feed').children()
+        children_selector = pq(html_data.decode("UTF-8")).find('div.WB_feed').children()
         if children_selector.size() <= 1:
             extra_info["is_error"] = True
         else:
