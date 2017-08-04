@@ -26,11 +26,11 @@ def get_one_page_blog(account_name, page_count):
     blog_pagination_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     extra_info = {
-        "blog_id_list": [],  # 页面解析出的所有日志id列表
+        "blog_id_list": [],  # 所有日志id
         "is_over": False,  # 是不是最后一页日志
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取日志id列表
+        # 获取日志id
         blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
         if len(blog_id_list) == 0:
             page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
@@ -39,7 +39,7 @@ def get_one_page_blog(account_name, page_count):
             raise robot.RobotException("页面获取日志id失败\n%s" % blog_pagination_response.data)
         extra_info["blog_id_list"] = map(str, blog_id_list)
 
-        # 检测是否还有下一页
+        # 判断是不是最后一页
         # 有页数选择的页面样式
         if blog_pagination_response.data.find('<div class="page topPaging">') >= 0:
             paging_data = tool.find_sub_string(blog_pagination_response.data, '<div class="page topPaging">', "</div>")
@@ -68,10 +68,10 @@ def get_blog_page(account_name, blog_id):
     blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
     blog_response = net.http_request(blog_url)
     extra_info = {
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "image_url_list": [],  # 所有图片地址
     }
     if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 日志正文部分（有多种页面模板）
+        # 截取日志正文部分（有多种页面模板）
         article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
         if not article_data:
             article_data = tool.find_sub_string(blog_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
@@ -80,7 +80,7 @@ def get_blog_page(account_name, blog_id):
         if not article_data:
             raise robot.RobotException("页面截取日志正文失败\n%s" % blog_response.data)
 
-        # 获取页面中所有的图片地址列表
+        # 获取图片地址
         image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
         extra_info["image_url_list"] = map(str, image_url_list)
     else:

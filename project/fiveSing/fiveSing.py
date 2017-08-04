@@ -29,10 +29,10 @@ def get_one_page_audio(account_id, page_type, page_count):
     audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
     audio_pagination_response = net.http_request(audio_pagination_url)
     extra_info = {
-        "audio_info_list": [],  # 页面解析出的歌曲信息列表
+        "audio_info_list": [],  # 所有歌曲信息
     }
     if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中所有的歌曲信息列表
+        # 获取歌曲信息
         # 单首歌曲信息的格式：[歌曲id，歌曲标题]
         audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
         extra_info["audio_info_list"] = [map(str, key) for key in audio_info_list]
@@ -47,7 +47,7 @@ def get_audio_play_page(audio_id, song_type):
     audio_play_url = "http://5sing.kugou.com/%s/%s.html" % (song_type, audio_id)
     audio_play_response = net.http_request(audio_play_url)
     extra_info = {
-        "audio_url": None,  # 页面解析出的歌曲下载地址
+        "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取歌曲地址

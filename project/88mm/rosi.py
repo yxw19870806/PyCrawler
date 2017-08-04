@@ -17,12 +17,13 @@ def get_one_page_album(page_count):
     album_pagination_response = net.http_request(album_pagination_url)
     extra_info = {
         "is_over": False,  # 是不是最后一页图集
-        "album_info_list": [],  # 页面解析出的所有图集信息列表
+        "album_info_list": [],  # 所有图集信息
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 页面编码
         album_pagination_html = album_pagination_response.data.decode("GBK").encode("UTF-8")
 
-        # 获取图集图片地址
+        # 获取图集信息
         album_info_html = tool.find_sub_string(album_pagination_html, '<div class="xxx">', "</div>")
         if not album_info_html:
             raise robot.RobotException("页面截取图集列表失败\n%s" % album_pagination_html)
@@ -31,8 +32,8 @@ def get_one_page_album(page_count):
             raise robot.RobotException("页面获取图集信息失败\n%s" % album_info_html)
         for page_id, album_id in album_info_list:
             extra_album_info = {
-                "page_id": str(page_id),  # 页面解析出的图集地址页面id
-                "album_id": str(album_id),  # 页面解析出的图集id
+                "page_id": str(page_id),  # 图集页面id
+                "album_id": str(album_id),  # 图集id
             }
             extra_info["album_info_list"].append(extra_album_info)
 
@@ -57,9 +58,10 @@ def get_one_page_photo(page_id, page_count):
     photo_pagination_response = net.http_request(photo_pagination_url)
     extra_info = {
         "is_over": False,  # 是不是图集的最后一页
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "image_url_list": [],  # 所有图片地址
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 页面编码
         photo_pagination_html = photo_pagination_response.data.decode("GBK").encode("UTF-8")
 
         # 获取图片地址

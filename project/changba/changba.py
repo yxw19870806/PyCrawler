@@ -25,7 +25,7 @@ def get_account_index_page(account_id):
     account_index_url = "http://changba.com/u/%s" % account_id
     account_index_response = net.http_request(account_index_url)
     extra_info = {
-        "user_id": None,  # 页面解析出的user id
+        "user_id": None,  # user id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
@@ -46,18 +46,17 @@ def get_one_page_audio(user_id, page_count):
     audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count - 1)
     audit_pagination_response = net.http_request(audit_pagination_url, json_decode=True)
     extra_info = {
-        "audio_info_list": [],  # 页面解析出的歌曲信息列表
+        "audio_info_list": [],  # 所有歌曲信息
     }
     if audit_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not isinstance(audit_pagination_response.json_data, list):
             raise robot.RobotException("返回数据类型不正确\n%s" % audit_pagination_response.json_data)
         for audio_info in audit_pagination_response.json_data:
             extra_audio_info = {
-                "audio_id": None,  # 视频自增id
-                "audio_title": "",  # 视频标题
-                "audio_key": None,  # 视频唯一key
-                "type": None,  # 类型，0 MV，1/3 歌曲
-                "json_data": audio_info,  # 原始数据
+                "audio_id": None,  # 歌曲id
+                "audio_title": "",  # 歌曲标题
+                "audio_key": None,  # 歌曲唯一key
+                "type": None,  # 歌曲类型，0 MV，1/3 歌曲
             }
             # 获取歌曲id
             if not robot.check_sub_key(("workid",), audio_info):
@@ -97,7 +96,7 @@ def get_one_page_audio(user_id, page_count):
 def get_audio_play_page(audio_en_word_id, type):
     audio_play_url = "http://changba.com/s/%s" % audio_en_word_id
     extra_info = {
-        "audio_url": None,  # 页面解析出的user id
+        "audio_url": None,  # 歌曲地址
         "is_delete": False,  # 是不是已经被删除
     }
     audio_play_response = net.http_request(audio_play_url)
@@ -105,7 +104,7 @@ def get_audio_play_page(audio_en_word_id, type):
         if audio_play_response.data.find("该作品可能含有不恰当内容将不能显示。") > -1:
             extra_info["is_delete"] = True
         else:
-            # 获取歌曲下载地址
+            # 获取歌曲地址
             if type == 1 or type == 3:
                 audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
                 if not audio_source_url:

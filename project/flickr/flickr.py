@@ -25,8 +25,8 @@ def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
     account_index_response = net.http_request(account_index_url)
     extra_info = {
-        "user_id": None,  # 页面解析出的user id
-        "site_key": None,  # 页面解析出的site key
+        "user_id": None,  # user id
+        "site_key": None,  # site key
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
@@ -66,7 +66,7 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
     }
     photo_pagination_response = net.http_request(api_url, post_data, json_decode=True)
     extra_info = {
-        "image_info_list": [],  # 页面解析出的图片信息列表
+        "image_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页图片
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -78,11 +78,11 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
             raise robot.RobotException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
         if not robot.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
             raise robot.RobotException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        # 获取图片信息
         for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
             extra_image_info = {
-                "image_url": None,  # 图片下载地址
+                "image_url": None,  # 图片地址
                 "image_time": None,  # 图片上传时间
-                "json_data": photo_info,  # 原始数据
             }
             # 获取图片上传时间
             if not robot.check_sub_key(("dateupload",), photo_info):
@@ -98,7 +98,10 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
                 extra_image_info["image_url"] = str(photo_info["url_o"])
             else:
                 raise robot.RobotException("图片信息'url_o_cdn'或者'url_o'字段不存在\n%s" % photo_info)
+
             extra_info["image_info_list"].append(extra_image_info)
+
+        # 判断是不是最后一页
         if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
             extra_info["is_over"] = True
     else:

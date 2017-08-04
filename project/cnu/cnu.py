@@ -16,8 +16,8 @@ def get_album_page(album_id):
     album_url = "http://www.cnu.cc/works/%s" % album_id
     album_response = net.http_request(album_url)
     extra_info = {
-        "album_title": "",  # 页面解析出的作品标题
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "album_title": "",  # 作品标题
+        "image_url_list": [],  # 所有图片地址
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取作品标题

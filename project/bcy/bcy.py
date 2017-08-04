@@ -119,7 +119,7 @@ def get_one_page_album(account_id, page_count):
     album_pagination_response = net.http_request(album_pagination_url)
     extra_info = {
         "coser_id": None,  # coser id
-        "album_info_list": [],  # 页面解析出的所有作品信息列表
+        "album_info_list": [],  # 所有作品信息
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -134,10 +134,10 @@ def get_one_page_album(account_id, page_count):
         for album_index in range(0, album_list_selector.size()):
             album_selector = album_list_selector.eq(album_index)
             extra_album_info = {
-                "album_id": None,  # 页面解析出的作品id
-                "album_title": None,  # 页面解析出的作品标题
+                "album_id": None,  # 作品id
+                "album_title": None,  # 作品标题
             }
-            # 作品id
+            # 获取作品id
             album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
             if not album_url:
                 raise robot.RobotException("作品获取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
@@ -145,13 +145,13 @@ def get_one_page_album(account_id, page_count):
             if not robot.is_integer(album_id):
                 raise robot.RobotException("作品地址获取作品id失败\n%s" % album_url)
 
-            # 作品标题
+            # 获取作品标题
             album_title = album_selector.find(".postWorkCard__img footer").text()
             extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
 
             extra_info["album_info_list"].append(extra_album_info)
 
-        # 检测是否还有下一页
+        # 判断是不是最后一页
         last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
         if last_pagination_selector.size() == 1:
             max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
