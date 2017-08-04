@@ -30,8 +30,11 @@ def get_account_index_page(account_id):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
         user_id = tool.find_sub_string(account_index_response.data, "var userid = '", "'")
-        if robot.is_integer(user_id):
-            extra_info["user_id"] = str(user_id)
+        if not robot.is_integer(user_id):
+            raise robot.RobotException("页面获取userid失败\n%s" % account_index_response.data)
+        extra_info["user_id"] = str(user_id)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     account_index_response.extra_info = extra_info
     return account_index_response
 
@@ -46,6 +49,8 @@ def get_one_page_audio(user_id, page_count):
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
     }
     if audit_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if not isinstance(audit_pagination_response.json_data, list):
+            raise robot.RobotException("返回数据类型不正确\n%s" % audit_pagination_response.json_data)
         for audio_info in audit_pagination_response.json_data:
             extra_audio_info = {
                 "audio_id": None,  # 视频自增id
@@ -54,20 +59,35 @@ def get_one_page_audio(user_id, page_count):
                 "type": None,  # 类型，0 MV，1/3 歌曲
                 "json_data": audio_info,  # 原始数据
             }
-            if (
-                robot.check_sub_key(("workid", "songname", "enworkid", "type"), audio_info) and
-                robot.is_integer(audio_info["workid"]) and
-                robot.is_integer(audio_info["type"]) and int(audio_info["type"]) in (0, 1, 3)
-            ):
-                # 获取歌曲id
-                extra_audio_info["audio_id"] = str(audio_info["workid"])
-                # 获取歌曲标题
-                extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
-                # 获取歌曲key
-                extra_audio_info["audio_key"] = str(audio_info["enworkid"])
-                # 类型
-                extra_audio_info["type"] = int(audio_info["type"])
+            # 获取歌曲id
+            if not robot.check_sub_key(("workid",), audio_info):
+                raise robot.RobotException("歌曲信息'workid'字段不存在\n%s" % audio_info)
+            if not robot.is_integer(audio_info["workid"]):
+                raise robot.RobotException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
+            extra_audio_info["audio_id"] = str(audio_info["workid"])
+
+            # 获取歌曲标题
+            if not robot.check_sub_key(("songname",), audio_info):
+                raise robot.RobotException("歌曲信息'songname'字段不存在\n%s" % audio_info)
+            extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
+
+            # 获取歌曲key
+            if not robot.check_sub_key(("enworkid",), audio_info):
+                raise robot.RobotException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
+            extra_audio_info["audio_key"] = str(audio_info["enworkid"])
+
+            # 获取歌曲类型
+            if not robot.check_sub_key(("type",), audio_info):
+                raise robot.RobotException("歌曲信息'type'字段不存在\n%s" % audio_info)
+            if not robot.is_integer(audio_info["type"]):
+                raise robot.RobotException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
+            if int(audio_info["type"]) not in (0, 1, 3):
+                raise robot.RobotException("歌曲信息'type'字段范围不正确\n%s" % audio_info)
+            extra_audio_info["type"] = int(audio_info["type"])
+
             extra_info["audio_info_list"].append(extra_audio_info)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(audit_pagination_response.status))
     audit_pagination_response.extra_info = extra_info
     return audit_pagination_response
 
@@ -88,29 +108,34 @@ def get_audio_play_page(audio_en_word_id, type):
             # 获取歌曲下载地址
             if type == 1 or type == 3:
                 audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
-                if audio_source_url:
-                    # 从JS处解析的规则
-                    special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
-                    if len(special_find) == 0:
-                        extra_info["audio_url"] = str(audio_source_url)
-                    elif len(special_find) == 1:
-                        e = int(special_find[0][1], 8)
-                        f = int(special_find[0][2], 16) / e / e
-                        g = int(special_find[0][3], 16) / e / e
-                        if "a" == special_find[0][0] and g % 1000 == f:
-                            extra_info["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
-                        else:
-                            extra_info["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+                if not audio_source_url:
+                    raise robot.RobotException("页面获取歌曲原始地址失败\n%s" % audio_play_response.data)
+                # 从JS处解析的规则
+                special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
+                if len(special_find) == 0:
+                    extra_info["audio_url"] = str(audio_source_url)
+                elif len(special_find) == 1:
+                    e = int(special_find[0][1], 8)
+                    f = int(special_find[0][2], 16) / e / e
+                    g = int(special_find[0][3], 16) / e / e
+                    if "a" == special_find[0][0] and g % 1000 == f:
+                        extra_info["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
+                    else:
+                        extra_info["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+                else:
+                    raise robot.RobotException("歌曲原始地址获取歌曲地址失败\n%s" % audio_source_url)
             # MV
             else:
                 video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
+                if not video_source_string:
+                    raise robot.RobotException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
                 try:
                     video_url = base64.b64decode(video_source_string)
                 except TypeError:
-                    pass
-                else:
-                    if video_url:
-                        extra_info["audio_url"] = video_url
+                    raise robot.RobotException("歌曲加密地址解密失败\n%s" % video_source_string)
+                extra_info["audio_url"] = video_url
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
     audio_play_response.extra_info = extra_info
     return audio_play_response
 
@@ -196,14 +221,11 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 查找账号user id
-            account_index_response = get_account_index_page(account_id)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 主页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
-                tool.process_exit()
-
-            if not account_index_response.extra_info["user_id"]:
-                log.error(account_name + " user id解析失败")
-                tool.process_exit()
+            try:
+                account_index_response = get_account_index_page(account_id)
+            except robot.RobotException, e:
+                log.error(account_name + " 主页访问失败，原因：%s" % e.message)
+                raise
 
             page_count = 1
             video_count = 1
@@ -215,10 +237,11 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
 
                 # 获取一页歌曲
-                audit_pagination_response = get_one_page_audio(account_index_response.extra_info["user_id"], page_count)
-                if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(audit_pagination_response.status)))
-                    tool.process_exit()
+                try:
+                    audit_pagination_response = get_one_page_audio(account_index_response.extra_info["user_id"], page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 # 如果为空，表示已经取完了
                 if len(audit_pagination_response.extra_info["audio_info_list"]) == 0:
@@ -227,10 +250,6 @@ class Download(threading.Thread):
                 log.trace(account_name + " 第%s页解析的所有歌曲：%s" % (page_count, audit_pagination_response.extra_info["audio_info_list"]))
 
                 for audio_info in audit_pagination_response.extra_info["audio_info_list"]:
-                    if audio_info["audio_id"] is None or audio_info["audio_key"] is None:
-                        log.error(account_name + " 歌曲信息%s解析失败" % audio_info["json_data"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if int(audio_info["audio_id"]) <= int(self.account_info[1]):
                         is_over = True
@@ -247,28 +266,24 @@ class Download(threading.Thread):
                         unique_list.append(audio_info["audio_id"])
 
                     # 获取歌曲播放页
-                    audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["type"])
-                    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 歌曲%s《%s》播放页面访问失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], robot.get_http_request_failed_reason(audio_play_response.status)))
+                    try:
+                        audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["type"])
+                    except robot.RobotException, e:
+                        log.error(account_name + " 歌曲%s《%s》播放页面解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
                         tool.process_exit()
 
                     if audio_play_response.extra_info["is_delete"]:
                         continue
 
-                    if audio_play_response.extra_info["audio_url"] is None:
-                        log.error(account_name + " 歌曲%s《%s》下载地址解析失败" % (audio_info["audio_key"], audio_info["audio_title"]))
-                        tool.process_exit()
-
-                    audio_url = audio_play_response.extra_info["audio_url"]
-                    log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_info["audio_title"], audio_url))
+                    log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_info["audio_title"], audio_play_response.extra_info["audio_url"]))
 
                     file_path = os.path.join(video_path, "%s - %s.mp3" % (audio_info["audio_id"], audio_info["audio_title"]))
-                    save_file_return = net.save_net_file(audio_url, file_path)
+                    save_file_return = net.save_net_file(audio_play_response.extra_info["audio_url"], file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " 第%s首歌曲下载成功" % video_count)
                         video_count += 1
                     else:
-                        log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_info["audio_title"], audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_info["audio_title"], audio_play_response.extra_info["audio_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
                     # 获取的歌曲数量少于1页的上限，表示已经到结束了
