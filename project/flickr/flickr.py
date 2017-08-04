@@ -29,12 +29,19 @@ def get_account_index_page(account_name):
         "site_key": None,  # 页面解析出的site key
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取user id
         user_id = tool.find_sub_string(account_index_response.data, '"nsid":"', '"')
-        if robot.is_integer(user_id):
-            extra_info["user_id"] = user_id
+        if not robot.is_integer(user_id):
+            raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
+        extra_info["user_id"] = user_id
+
+        # 获取site key
         site_key = tool.find_sub_string(account_index_response.data, '"site_key":"', '"')
-        if site_key:
-            extra_info["site_key"] = site_key
+        if not site_key:
+            raise robot.RobotException("页面截取site key失败\n%s" % account_index_response.data)
+        extra_info["site_key"] = site_key
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     account_index_response.extra_info = extra_info
     return account_index_response
 
@@ -59,36 +66,43 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
     }
     photo_pagination_response = net.http_request(api_url, post_data, json_decode=True)
     extra_info = {
-        "is_error": False,  # 是不是格式不符合
         "image_info_list": [],  # 页面解析出的图片信息列表
         "is_over": False,  # 是不是最后一页图片
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if (
-            robot.check_sub_key(("photos",), photo_pagination_response.json_data) and
-            robot.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]) and
-            len(photo_pagination_response.json_data["photos"]["photo"]) > 0 and
-            robot.is_integer(photo_pagination_response.json_data["photos"]["pages"])
-        ):
-            for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
-                extra_image_info = {
-                    "image_url": None,  # 图片下载地址
-                    "image_time": None,  # 图片上传时间
-                    "json_data": photo_info,  # 原始数据
-                }
-                # 获取视频上传时间
-                if robot.check_sub_key(("dateupload",), photo_info) and robot.is_integer(photo_info["dateupload"]):
-                    extra_image_info["image_time"] = str(photo_info["dateupload"])
-                # 获取视频下载地址
-                if robot.check_sub_key(("url_o_cdn",), photo_info):
-                    extra_image_info["image_url"] = str(photo_info["url_o_cdn"])
-                elif robot.check_sub_key(("url_o",), photo_info):
-                    extra_image_info["image_url"] = str(photo_info["url_o"])
-                extra_info["image_info_list"].append(extra_image_info)
-            if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
-                extra_info["is_over"] = True
-        else:
-            extra_info["is_error"] = True
+        if not robot.check_sub_key(("photos",), photo_pagination_response.json_data):
+            raise robot.RobotException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
+        if not robot.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
+            raise robot.RobotException("返回数据'photo'或者'pages'字段不存在\n%s" % photo_pagination_response.json_data)
+        if not isinstance(photo_pagination_response.json_data["photos"]["photo"], list) or len(photo_pagination_response.json_data["photos"]["photo"]) == 0:
+            raise robot.RobotException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        if not robot.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
+            raise robot.RobotException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
+            extra_image_info = {
+                "image_url": None,  # 图片下载地址
+                "image_time": None,  # 图片上传时间
+                "json_data": photo_info,  # 原始数据
+            }
+            # 获取图片上传时间
+            if not robot.check_sub_key(("dateupload",), photo_info):
+                raise robot.RobotException("图片信息'dateupload'字段不存在\n%s" % photo_info)
+            if not robot.is_integer(photo_info["dateupload"]):
+                raise robot.RobotException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
+            extra_image_info["image_time"] = str(photo_info["dateupload"])
+
+            # 获取图片地址
+            if robot.check_sub_key(("url_o_cdn",), photo_info):
+                extra_image_info["image_url"] = str(photo_info["url_o_cdn"])
+            elif robot.check_sub_key(("url_o",), photo_info):
+                extra_image_info["image_url"] = str(photo_info["url_o"])
+            else:
+                raise robot.RobotException("图片信息'url_o_cdn'或者'url_o'字段不存在\n%s" % photo_info)
+            extra_info["image_info_list"].append(extra_image_info)
+        if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
+            extra_info["is_over"] = True
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     photo_pagination_response.extra_info = extra_info
     return photo_pagination_response
 
@@ -173,13 +187,12 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 获取相册首页页面
-            account_index_response = get_account_index_page(account_name)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 相册首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
-                tool.process_exit()
-            if account_index_response.extra_info["user_id"] is None or account_index_response.extra_info["site_key"] is None:
-                log.error(account_name + " user_id或site_key解析失败")
-                tool.process_exit()
+            try:
+                account_index_response = get_account_index_page(account_name)
+            except robot.RobotException, e:
+                log.error(account_name + " 相册首页访问失败，原因：%s" % e.message)
+                raise
+
             # 生成一个随机的request id用作访问（模拟页面传入）
             request_id = tool.generate_random_string(8)
 
@@ -192,22 +205,15 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取一页图片
-                photo_pagination_response = get_one_page_photo(account_index_response.extra_info["user_id"], page_count, account_index_response.extra_info["site_key"], request_id)
-                if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
-                    tool.process_exit()
-
-                if photo_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页图片信息%s解析失败" % (page_count, photo_pagination_response.json_data))
-                    tool.process_exit()
+                try:
+                    photo_pagination_response = get_one_page_photo(account_index_response.extra_info["user_id"], page_count, account_index_response.extra_info["site_key"], request_id)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
 
                 for image_info in photo_pagination_response.extra_info["image_info_list"]:
-                    if image_info["image_time"] is None:
-                        log.error(account_name + " 图片信息%s的上传时间解析失败" % image_info["json_data"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if int(self.account_info[2]) >= int(image_info["image_time"]):
                         is_over = True
@@ -217,9 +223,6 @@ class Download(threading.Thread):
                     if first_image_time is None:
                         first_image_time = image_info["image_time"]
 
-                    if image_info["image_url"] is None:
-                        log.error(account_name + "图片信息%s的下载地址解析失败" % image_info["json_data"])
-                        tool.process_exit()
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_info["image_url"]))
 
                     file_type = image_info["image_url"].split(".")[-1]
