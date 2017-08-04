@@ -139,7 +139,7 @@ def get_media_page(page_id):
             raise robot.RobotException("返回数据'entry_data'字段不存在\n%s" % media_info_data)
         if not robot.check_sub_key(("PostPage",), media_info_data["entry_data"]):
             raise robot.RobotException("返回数据'PostPage'字段不存在\n%s" % media_info_data)
-        if not (isinstance(len(media_info_data["entry_data"]["PostPage"]), list) and len(media_info_data["entry_data"]["PostPage"]) == 1):
+        if not (isinstance(media_info_data["entry_data"]["PostPage"], list) and len(media_info_data["entry_data"]["PostPage"]) == 1):
             raise robot.RobotException("返回数据'PostPage'字段类型不正确\n%s" % media_info_data)
         if not robot.check_sub_key(("graphql",), media_info_data["entry_data"]["PostPage"][0]):
             raise robot.RobotException("返回数据'graphql'字段不存在\n%s" % media_info_data)
@@ -161,7 +161,7 @@ def get_media_page(page_id):
             for edge in media_info["edge_sidecar_to_children"]["edges"]:
                 if not robot.check_sub_key(("node",), edge):
                     raise robot.RobotException("媒体节点'node'字段不存在\n%s" % edge)
-                if robot.check_sub_key(("__typename", "display_url"), edge["node"]):
+                if not robot.check_sub_key(("__typename", "display_url"), edge["node"]):
                     raise robot.RobotException("媒体节点'__typename'或'display_url'字段不存在\n%s" % edge)
 
                 # 获取图片地址
