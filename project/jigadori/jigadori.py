@@ -20,7 +20,7 @@ def get_one_page_photo(page_count):
         "image_info_list": [],  # 所有图片信息
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        photo_list_selector = pq(photo_pagination_response.data).find("#wrapper .row .photo")
+        photo_list_selector = pq(photo_pagination_response.data.decode("UTF-8")).find("#wrapper .row .photo")
         for photo_index in range(0, photo_list_selector.size()):
             photo_selector = photo_list_selector.eq(photo_index)
             photo_selector_html = photo_selector.html().encode("UTF-8")
