@@ -187,12 +187,12 @@ class Download(threading.Thread):
                 log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
 
                 for image_info in photo_pagination_response.extra_info["image_info_list"]:
-                    # 检查是否图片时间小于上次的记录
+                    # 检查是否达到存档记录
                     if image_info["image_time"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一张图片的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_image_time is None:
                         first_image_time = str(image_info["image_time"])
 

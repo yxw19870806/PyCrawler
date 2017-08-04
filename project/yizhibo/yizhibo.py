@@ -238,11 +238,11 @@ class Download(threading.Thread):
                         is_error = True
                         break
 
-                    # 检查是否已下载到前一次的图片
+                    # 检查是否达到存档记录
                     if int(image_head_response.extra_info["image_time"]) <= int(self.account_info[4]):
                         break
 
-                    # 将第一张图片的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_image_time is None:
                         first_image_time = str(image_head_response.extra_info["image_time"])
 

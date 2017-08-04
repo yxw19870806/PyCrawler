@@ -26,7 +26,7 @@ def get_one_page_blog(account_name, page_count):
     blog_pagination_url = "http://%s.lofter.com/?page=%s" % (account_name, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     extra_info = {
-        "blog_url_list": [],  # 页面解析出的所有日志列表
+        "blog_url_list": [],  # 所有日志地址
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取页面中所有的日志地址列表
@@ -41,7 +41,7 @@ def get_one_page_blog(account_name, page_count):
 def get_blog_page(blog_url):
     blog_response = net.http_request(blog_url)
     extra_info = {
-        "image_url_list": [],  # 页面解析出的所有图片列表
+        "image_url_list": [],  # 所有图片地址
     }
     if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)

@@ -17,7 +17,7 @@ def get_one_page_photo(page_count):
     photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
     extra_info = {
-        "image_info_list": [],  # 页面解析出的图片信息列表
+        "image_info_list": [],  # 所有图片信息
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         photo_list_selector = pq(photo_pagination_response.data).find("#wrapper .row .photo")
@@ -25,10 +25,10 @@ def get_one_page_photo(page_count):
             photo_selector = photo_list_selector.eq(photo_index)
             extra_photo_info = {
                 "is_error": False,  # 是不是格式不符合
-                "account_name": "",  # 页面解析出的账号名字
-                "tweet_id": 0,  # 页面解析出的tweet id
-                "image_url_list": [],  # 页面解析出的图片地址
-                "time": 0,  # 页面解析出的图片上传时间
+                "account_name": "",  # twitter账号名字
+                "tweet_id": 0,  # tweet id
+                "image_url_list": [],  # 图片地址
+                "time": 0,  # 图片上传时间
                 "html": photo_selector.html().encode("UTF-8"),  # 原始页面
             }
             account_name = photo_selector.find(".user-info .user-name .screen-name").text()
@@ -39,9 +39,13 @@ def get_one_page_photo(page_count):
             else:
                 tweet_id = None
             if account_name and tweet_time and robot.is_integer(tweet_id):
+                # 获取twitter账号名字
                 extra_photo_info["account_name"] = account_name.strip().replace("@", "")
+                # 获取图片上传时间
                 extra_photo_info["time"] = int(time.mktime(time.strptime(tweet_time.strip(), "%Y-%m-%d %H:%M:%S")))
+                # 获取tweet id
                 extra_photo_info["tweet_id"] = int(tweet_id)
+                # 获取 图片地址
                 image_list_selector = photo_selector.find(".photo-link-outer a img")
                 for image_index in range(0, image_list_selector.size()):
                     image_url = image_list_selector.eq(image_index).attr("src")
