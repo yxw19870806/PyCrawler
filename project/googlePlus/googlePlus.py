@@ -24,64 +24,74 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定token后的一页相册
 def get_one_page_blog(account_id, token):
     extra_info = {
-        "is_error": True,  # 是不是格式不符合
         "blog_info_list": [],  # 所有日志信息
         "next_page_key": None,  # 下一页token
-        "json_data": None,  # 原始数据
     }
-    script_data = []
+    # 截取页面中的JS数据
     if token:
         api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
         blog_pagination_response = net.http_request(api_url, method="POST", post_data=post_data)
         if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data_string = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
+            script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
+            if not script_data_html:
+                raise robot.RobotException("页面截取首页信息失败\n%s" % blog_pagination_response.data)
             try:
-                script_data = json.loads(script_data_string)
+                script_data = json.loads(script_data_html)
             except ValueError:
-                script_data = []
-            else:
-                extra_info["json_data"] = script_data_string
-            if len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2]):
-                script_data = script_data[0][2]["113305009"]
-            else:
-                script_data = []
+                raise robot.RobotException("首页信息加载失败\n%s" % script_data_html)
+            if not (len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2])):
+                raise robot.RobotException("首页信息格式不正确\n%s" % script_data)
+            script_data = script_data[0][2]["113305009"]
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     else:
         blog_pagination_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
         blog_pagination_response = net.http_request(blog_pagination_url)
         if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
-            script_data_string = tool.find_sub_string(script_data, "return ", "}});")
+            script_data_html = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+            script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
+            if not script_data_html:
+                raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
             try:
-                script_data = json.loads(script_data_string)
+                script_data = json.loads(script_data_html)
             except ValueError:
-                script_data = []
-            else:
-                extra_info["json_data"] = script_data_string
-    if len(script_data) == 3:
-        if script_data[1] is not None:
-            extra_info["is_error"] = False
-            for data in script_data[1]:
-                extra_blog_info = {
-                    "blog_id": None,  # 日志id
-                    "blog_time": None,  # 日志发布时间
-                    "json_data": data,  # 原始数据
-                }
-                blog_data = []
-                for temp_data in data:
-                    if robot.check_sub_key(("113305016",), temp_data):
-                        blog_data = temp_data["113305016"][0]
-                        break
-                if len(blog_data) >= 5:
-                    # 获取日志id
-                    extra_blog_info["blog_id"] = str(blog_data[0])
-                    # 获取日志发布时间
-                    if robot.is_integer(blog_data[4]):
-                        extra_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
-                extra_info["blog_info_list"].append(extra_blog_info)
+                raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
         else:
-            extra_info["is_error"] = False
-        extra_info["next_page_key"] = str(script_data[2])
+            raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+
+    if len(script_data) != 3:
+        raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
+
+    # 获取下一页token
+    extra_info["next_page_key"] = str(script_data[2])
+
+    # 获取日志信息
+    if script_data[1] is not None:
+        for data in script_data[1]:
+            extra_blog_info = {
+                "blog_id": None,  # 日志id
+                "blog_time": None,  # 日志发布时间
+                "json_data": data,  # 原始数据
+            }
+            blog_data = []
+            for temp_data in data:
+                if robot.check_sub_key(("113305016",), temp_data):
+                    blog_data = temp_data["113305016"][0]
+                    break
+            if len(blog_data) >= 5:
+                # 获取日志id
+                extra_blog_info["blog_id"] = str(blog_data[0])
+
+                # 获取日志发布时间
+                if not robot.is_integer(blog_data[4]):
+                    raise robot.RobotException("日志时间类型不正确\n%s" % blog_data)
+                extra_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
+            else:
+                raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
+            extra_info["blog_info_list"].append(extra_blog_info)
+    else:
+        extra_info["is_error"] = False
     blog_pagination_response.extra_info = extra_info
     return blog_pagination_response
 
@@ -94,39 +104,46 @@ def get_album_page(account_id, album_id):
     extra_info = {
         "image_url_list": [],  # 所有图片地址
     }
-    image_url_list = []
     while True:
         album_response = net.http_request(album_url)
         if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
-            script_data = tool.find_sub_string(script_data, "return ", "}});")
+            script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+            script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
+            if not script_data_html:
+                raise robot.RobotException("页面截取相册信息失败\n%s" % album_response.data)
             try:
-                script_data = json.loads(script_data)
+                script_data = json.loads(script_data_html)
+            except ValueError:
+                raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
+            try:
                 user_key = script_data[4][0]
                 continue_token = script_data[3]
-                if len(script_data[4]) >= 2:
-                    for data in script_data[4][1]:
-                        image_url_list.append(str(data[1]))
+                for data in script_data[4][1]:
+                    extra_info["image_url_list"].append(str(data[1]))
             except ValueError:
-                pass
-            else:
-                # 如果不为空，说明还有下一页
-                while continue_token:
-                    api_url = "https://get.google.com/_/AlbumArchiveUi/data"
-                    post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-                    image_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, encode_multipart=False)
-                    if image_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                        continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
-                        try:
-                            continue_data = json.loads(continue_data)
-                            continue_token = continue_data[0][2]["113305010"][3]
-                            for data in continue_data[0][2]["113305010"][4][1]:
-                                image_url_list.append(str(data[1]))
-                        except ValueError:
-                            image_url_list = []
-                            continue_token = ""
-            if len(image_url_list) > 0:
-                extra_info["image_url_list"] = image_url_list
+                raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
+
+            # 判断是不是还有下一页
+            while continue_token:
+                api_url = "https://get.google.com/_/AlbumArchiveUi/data"
+                post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
+                image_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, encode_multipart=False)
+                if image_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                    continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
+                    try:
+                        continue_data = json.loads(continue_data)
+                    except ValueError:
+                        raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
+                    try:
+                        continue_token = continue_data[0][2]["113305010"][3]
+                        for data in continue_data[0][2]["113305010"][4][1]:
+                            extra_info["image_url_list"].append(str(data[1]))
+                    except ValueError:
+                        raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
+                else:
+                    raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
         album_response.extra_info = extra_info
         return album_response
 
@@ -227,29 +244,15 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析 %s 相册页" % key)
 
                 # 获取一页相册
-                blog_pagination_response = get_one_page_blog(account_id, key)
-                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, robot.get_http_request_failed_reason(blog_pagination_response.status)))
-                    tool.process_exit()
-
-                if blog_pagination_response.extra_info["is_error"]:
-                    if blog_pagination_response.extra_info["json_data"] is None:
-                        log.error(account_name + " 相册页（token：%s）JSON数据解析失败" % key)
-                    else:
-                        log.error(account_name + " 相册页（token：%s）%s解析失败" % (key, blog_pagination_response.extra_info["json_data"]))
-                    tool.process_exit()
+                try:
+                    blog_pagination_response = get_one_page_blog(account_id, key)
+                except robot.RobotException, e:
+                    log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, e.message))
+                    raise
 
                 log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, blog_pagination_response.extra_info["blog_info_list"]))
 
                 for blog_info in blog_pagination_response.extra_info["blog_info_list"]:
-                    if blog_info["blog_id"] is None:
-                        log.error(account_name + " 日志信息%s的日志id解析失败" % blog_info["json_data"])
-                        tool.process_exit()
-
-                    if blog_info["blog_time"] is None:
-                        log.error(account_name + " 日志信息%s的日志时间解析失败" % blog_info["json_data"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if blog_info["blog_time"] <= int(self.account_info[2]):
                         is_over = True
@@ -262,14 +265,14 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析日志 %s" % blog_info["blog_id"])
                     
                     # 获取相册页
-                    album_response = get_album_page(account_id, blog_info["blog_id"])
-                    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], robot.get_http_request_failed_reason(album_response.status)))
-                        tool.process_exit()
+                    try:
+                        album_response = get_album_page(account_id, blog_info["blog_id"])
+                    except robot.RobotException, e:
+                        log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], e.message))
+                        raise
 
                     if len(album_response.extra_info["image_url_list"]) == 0:
                         log.error(account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
-                        # tool.process_exit()
                         continue
 
                     log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_response.extra_info["image_url_list"]))
