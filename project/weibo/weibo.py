@@ -27,40 +27,42 @@ def get_one_page_photo(account_id, page_count):
     photo_pagination_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
-        "is_error": True,  # 是不是格式不符合
         "image_info_list": [],  # 页面解析出的所有图片信息列表
         "is_over": False,  # 是不是最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, cookies_list=cookies_list, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if (
-            robot.check_sub_key(("data",), photo_pagination_response.json_data) and
-            robot.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]) and
-            robot.is_integer(photo_pagination_response.json_data["data"]["total"])
-        ):
-            extra_info["is_error"] = False
-            for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
-                extra_image_info = {
-                    "image_time": None,  # 页面解析出的图片上传时间
-                    "image_url": None,  # 页面解析出的图片地址
-                    "json_data": image_info,  # 原始数据
-                }
-                # 获取图片上传时间
-                if robot.check_sub_key(("timestamp",), image_info) and robot.is_integer(image_info["timestamp"]):
-                    extra_image_info["image_time"] = int(image_info["timestamp"])
-                else:
-                    extra_info["is_error"] = True
-                    break
-                # 获取图片地址
-                if robot.check_sub_key(("pic_host", "pic_name"), image_info):
-                    extra_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
-                else:
-                    extra_info["is_error"] = True
-                    break
+        if not robot.check_sub_key(("data",), photo_pagination_response.json_data):
+            raise robot.RobotException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)
+        if not robot.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]):
+            raise robot.RobotException("返回数据'data'字段格式不正确\n%s" % photo_pagination_response.json_data)
+        if not robot.is_integer(photo_pagination_response.json_data["data"]["total"]):
+            raise robot.RobotException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
+            raise robot.RobotException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
+            extra_image_info = {
+                "image_time": None,  # 页面解析出的图片上传时间
+                "image_url": None,  # 页面解析出的图片地址
+            }
 
-                extra_info["image_info_list"].append(extra_image_info)
-            # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-            extra_info["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
+            # 获取图片上传时间
+            if not robot.check_sub_key(("timestamp",), image_info):
+                raise robot.RobotException("图片信息'timestamp'字段不存在\n%s" % image_info)
+            if not robot.check_sub_key(("timestamp",), image_info):
+                raise robot.RobotException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
+            extra_image_info["image_time"] = int(image_info["timestamp"])
+
+            # 获取图片地址
+            if not robot.check_sub_key(("pic_host", "pic_name"), image_info):
+                raise robot.RobotException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
+            extra_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
+
+            extra_info["image_info_list"].append(extra_image_info)
+        # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
+        extra_info["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     photo_pagination_response.extra_info = extra_info
     return photo_pagination_response
 
@@ -176,22 +178,15 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取指定一页图片的信息
-                photo_pagination_response = get_one_page_photo(account_id, page_count)
-                if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
-                    tool.process_exit()
-
-                if photo_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页图片%s解析失败" % (page_count, photo_pagination_response.json_data))
-                    tool.process_exit()
+                try:
+                    photo_pagination_response = get_one_page_photo(account_id, page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
 
                 for image_info in photo_pagination_response.extra_info["image_info_list"]:
-                    if image_info["image_time"] is None:
-                        log.error(account_name + " 第%s页图片%s解析失败" % (page_count, photo_pagination_response.json_data))
-                        tool.process_exit()
-
                     # 检查是否图片时间小于上次的记录
                     if image_info["image_time"] <= int(self.account_info[2]):
                         is_over = True
