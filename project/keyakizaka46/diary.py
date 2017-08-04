@@ -32,6 +32,8 @@ def get_one_page_blog(account_id, page_count):
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 日志正文部分
         blog_article_html = tool.find_sub_string(blog_pagination_response.data, '<div class="box-main">', '<div class="box-sideMember">')
+        if not blog_article_html:
+            raise robot.RobotException("页面正文截取失败\n%s" % blog_pagination_response.data)
         blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
         for blog_info in blog_list:
             extra_blog_info = {
@@ -40,13 +42,17 @@ def get_one_page_blog(account_id, page_count):
             }
             # 获取日志id
             blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
-            if robot.is_integer(blog_id):
-                extra_blog_info["blog_id"] = blog_id
+            if not robot.is_integer(blog_id):
+                raise robot.RobotException("日志正文截取日志id失败\n%s" % blog_info)
+            extra_blog_info["blog_id"] = blog_id
+
             # 获取所有图片地址
             image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
             extra_blog_info["image_url_list"] = map(str, image_url_list)
 
             extra_info["blog_info_list"].append(extra_blog_info)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     blog_pagination_response.extra_info = extra_info
     return blog_pagination_response
 
@@ -143,9 +149,10 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页博客信息
-                blog_pagination_response = get_one_page_blog(account_id, page_count)
-                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
+                try:
+                    blog_pagination_response = get_one_page_blog(account_id, page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, e.message))
                     tool.process_exit()
 
                 # 没有获取到任何日志，所有日志已经全部获取完毕了
@@ -153,10 +160,6 @@ class Download(threading.Thread):
                     break
 
                 for blog_data in blog_pagination_response.extra_info["blog_info_list"]:
-                    if blog_data["blog_id"] is None:
-                        log.error(account_name + " 日志信息%s解析日志id失败" % blog_data)
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if int(blog_data["blog_id"]) <= int(self.account_info[2]):
                         is_over = True
