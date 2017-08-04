@@ -192,12 +192,12 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s页图片%s解析失败" % (page_count, photo_pagination_response.json_data))
                         tool.process_exit()
 
-                    # 检查是否图片时间小于上次的记录
+                    # 检查是否达到存档记录
                     if image_info["image_time"] <= int(self.account_info[2]):
                         is_over = True
                         break
 
-                    # 将第一张图片的上传时间做为新的存档记录
+                    # 新的存档记录
                     if first_image_time is None:
                         first_image_time = str(image_info["image_time"])
 
