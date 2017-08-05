@@ -43,14 +43,21 @@ def get_follow_list(suid):
 
 # 获取用户的suid，作为查找指定用户的视频页的凭证
 # account_id -> mi9wmdhhof
-def get_user_id(account_id):
+def get_account_index_page(account_id):
     account_index_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
     account_index_response = net.http_request(account_index_url)
+    extra_info = {
+        "user_id": None,  # 账号user id
+    }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
-        if user_id:
-            return user_id
-    return None
+        if not user_id:
+            raise robot.RobotException("页面截取user id失败\n%s" % account_index_response.data)
+        extra_info["user_id"] = user_id
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+    account_index_response.extra_info = extra_info
+    return account_index_response
 
 
 # 获取指定页数的所有视频
@@ -60,18 +67,24 @@ def get_one_page_video(suid, page_count):
     video_pagination_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
     extra_info = {
-        "is_error": False,  # 是不是格式不符合
         "video_id_list": [],  # 页面解析出的所有视频id
         "is_over": False  # 是不是最后一页视频
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中的所有视频id列表
-        if robot.check_sub_key(("isall", "msg"), video_pagination_response.json_data):
-            extra_info["is_over"] = bool(video_pagination_response.json_data["isall"])
-            video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
-            extra_info["video_id_list"] = map(str, video_id_list)
-        else:
-            extra_info["is_error"] = True
+        # 判断是不是最后一页
+        if not robot.check_sub_key(("isall",), video_pagination_response.json_data):
+            raise robot.RobotException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
+        extra_info["is_over"] = bool(video_pagination_response.json_data["isall"])
+
+        # 获取所有视频id
+        if not robot.check_sub_key(("msg",), video_pagination_response.json_data):
+            raise robot.RobotException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
+        video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
+        if not extra_info["is_over"] and len(video_id_list) == 0:
+            raise robot.RobotException("所有视频id获取失败\n%s" % video_pagination_response.json_data)
+        extra_info["video_id_list"] = map(str, video_id_list)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
     video_pagination_response.extra_info = extra_info
     return video_pagination_response
 
@@ -84,11 +97,18 @@ def get_video_info_page(video_id):
         "video_url": None,  # 页面解析出的视频下载地址
     }
     if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("result",), video_info_response.json_data):
-            for result in video_info_response.json_data["result"]:
-                if robot.check_sub_key(("path", "host", "scheme"), result):
-                    extra_info["video_url"] = str(result["scheme"]) + str(result["host"]) + str(result["path"])
-                    break
+        # 获取视频地址
+        if not robot.check_sub_key(("result",), video_info_response.json_data):
+            raise robot.RobotException("返回信息'result'字段不存在\n%s" % video_info_response.json_data)
+        # 存在多个CDN地址，任意一个匹配即可
+        for result in video_info_response.json_data["result"]:
+            if robot.check_sub_key(("path", "host", "scheme"), result):
+                extra_info["video_url"] = str(result["scheme"]) + str(result["host"]) + str(result["path"])
+                break
+        if extra_info["video_url"] is None:
+            raise robot.RobotException("获取视频地址失败\n%s" % video_info_response.json_data)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
     video_info_response.extra_info = extra_info
     return video_info_response
 
@@ -175,10 +195,11 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            user_id = get_user_id(account_id)
-            if user_id is None:
-                log.error(account_name + " suid解析失败")
-                tool.process_exit()
+            try:
+                account_index_response = get_account_index_page(account_id)
+            except robot.RobotException, e:
+                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                raise
 
             page_count = 1
             video_count = 1
@@ -190,24 +211,11 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
                 # 获取指定一页的视频信息
-                video_pagination_response = get_one_page_video(user_id, page_count)
-                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(video_pagination_response.status)))
-                    tool.process_exit()
-
-                if video_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页视频解析失败" % page_count)
-                    tool.process_exit()
-
-                # 没有视频了
-                if video_pagination_response.extra_info["is_over"] and len(video_pagination_response.extra_info["video_id_list"]) == 0:
-                    if self.account_info[2] != "":
-                        log.error(account_name + " 没有找到上次下载的最后一个视频地址")
-                    break
-
-                if len(video_pagination_response.extra_info["video_id_list"]) == 0:
-                    log.error(account_name + " 第%s页没有找到视频" % page_count)
-                    tool.process_exit()
+                try:
+                    video_pagination_response = get_one_page_video(account_index_response.extra_info["user_id"], page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response.extra_info["video_id_list"]))
 
@@ -230,13 +238,11 @@ class Download(threading.Thread):
                         unique_list.append(video_id)
 
                     # 获取视频下载地址
-                    video_info_response = get_video_info_page(video_id)
-                    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, robot.get_http_request_failed_reason(video_info_response.status)))
-                        tool.process_exit()
-                    if video_info_response.extra_info["video_url"] is None:
-                        log.error(account_name + " 视频%s下载地址解析失败" % video_id)
-                        tool.process_exit()
+                    try:
+                        video_info_response = get_video_info_page(video_id)
+                    except robot.RobotException, e:
+                        log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, e.message))
+                        raise
 
                     video_url = video_info_response.extra_info["video_url"]
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
@@ -249,7 +255,12 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                if not is_over:
+                # 没有视频了
+                if video_pagination_response.extra_info["is_over"]:
+                    if self.account_info[2] != "":
+                        log.error(account_name + " 没有找到上次下载的最后一个视频地址")
+                    is_over = True
+                else:
                     page_count += 1
 
             log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
