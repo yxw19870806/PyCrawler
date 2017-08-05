@@ -25,6 +25,7 @@ def get_one_page_album(album_id, page_count):
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断图集是否已经被删除
         extra_info["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
+
         # 获取图集图片总数
         image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
         if robot.is_integer(image_count):
@@ -33,15 +34,18 @@ def get_one_page_album(album_id, page_count):
             extra_info["image_count"] = 0
         if extra_info["image_count"] == 0:
             extra_info["is_delete"] = True
+
         if not extra_info["is_delete"]:
             # 获取图集标题
             extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
+
             # 获取图集图片地址
             if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
                 image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
             else:
                 image_url_list = re.findall("src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>"))
             extra_info["image_url_list"] = map(str, image_url_list)
+
             # 判断是不是最后一页
             page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
             if len(page_count_find) > 0:
@@ -49,6 +53,8 @@ def get_one_page_album(album_id, page_count):
             else:
                 max_page_count = 1
             extra_info['is_over'] = page_count >= max_page_count
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
     album_pagination_response.extra_info = extra_info
     return album_pagination_response
 
@@ -106,12 +112,14 @@ class Nvshens(robot.Robot):
                 # 获取相册
                 try:
                     album_pagination_response = get_one_page_album(album_id, page_count)
+                except robot.RobotException, e:
+                    log.error("%s号图集第%s页获取失败，原因：%s" % (album_id, page_count, e.message))
+                    tool.remove_dir_or_file(album_path)
+                    break
                 except SystemExit:
                     log.step("提前退出")
-                    break
-
-                if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("%s号图集第%s页访问失败，原因：%s" % (album_id, page_count, robot.get_http_request_failed_reason(album_pagination_response.status)))
+                    tool.remove_dir_or_file(album_path)
+                    is_over = True
                     break
 
                 if album_pagination_response.extra_info["is_delete"]:
