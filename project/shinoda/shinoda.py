@@ -16,14 +16,18 @@ def get_one_page_blog(page_count):
     blog_pagination_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
     extra_info = {
         "is_over": False,  # 是不是最后一页日志
-        "image_name_list": [],  # 页面解析出的所有图片名字列表
+        "image_name_list": [],  # 所有图片名字
     }
     blog_pagination_response = net.http_request(blog_pagination_url)
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 检测是否是最后一页
         extra_info["is_over"] = blog_pagination_response.data == "記事が存在しません。"
+
+        # 获取图片名字
         image_name_list = re.findall('data-original="./([^"]*)"', blog_pagination_response.data)
         extra_info["image_name_list"] = map(str, image_name_list)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     blog_pagination_response.extra_info = extra_info
     return blog_pagination_response
 
@@ -55,9 +59,10 @@ class Blog(robot.Robot):
             log.step("开始解析第%s页日志" % page_count)
 
             # 获取一页日志
-            blog_pagination_response = get_one_page_blog(page_count)
-            if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
+            try:
+                blog_pagination_response = get_one_page_blog(page_count)
+            except robot.RobotException, e:
+                log.error("第%s页日志访问失败，原因：%s" % (page_count, e.message))
                 tool.process_exit()
 
             # 是否已经获取完毕
@@ -67,8 +72,8 @@ class Blog(robot.Robot):
             # 获取页面内的所有图片
             log.trace("第%s页解析的全部图片：%s" % (page_count, blog_pagination_response.extra_info["image_name_list"]))
 
-            if len(blog_pagination_response.extra_info["image_name_list"]) >= 1:
-                # 获取blog时间
+            if len(blog_pagination_response.extra_info["image_name_list"]) > 0:
+                # 获取日志时间
                 blog_time = int(blog_pagination_response.extra_info["image_name_list"][0].split("-")[0])
 
                 # 检查是否达到存档记录
