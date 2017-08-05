@@ -20,42 +20,41 @@ def get_album_page(page_count):
         album_url = "http://zz.mt27z.cn/ab/brVv22?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
     album_response = net.http_request(album_url)
     extra_info = {
-        "is_delete": False,  # 相册是不是已被删除（或还没有内容）
+        "is_delete": False,  # 是不是相册已被删除（或还没有内容）
         "image_url_list": None,  # 所有图片地址
         "video_url": None,  # 所有视频地址
         "title": "",  # 相册标题
-        "is_error": False,  # 是不是没有任何图片或视频
     }
-    if album_response.status == 200:
+    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取相册标题
         extra_info["title"] = tool.find_sub_string(album_response.data, "<title>", "</title>").replace("\n", "")
         # 检测相册是否已被删除
         extra_info["is_delete"] = extra_info["title"] == "作品已被删除"
         if not extra_info["is_delete"]:
             key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
-            is_error = True
-            if key:
-                media_url = "http://zz.mt27z.cn/ab/bd"
-                post_data = {"y": page_count, "s": key}
-                media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
-                if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                    # 检测是否是图片相册
-                    if robot.check_sub_key(("i",), media_response.json_data) and isinstance(media_response.json_data["i"], list):
-                        is_error = False
-                        if len(media_response.json_data["i"]) > 0:
-                            image_url_list = []
-                            for image_info in media_response.json_data["i"]:
-                                if robot.check_sub_key(("url",), image_info):
-                                    image_url_list.append(str(image_info["url"]))
-                                else:
-                                    image_url_list = []
-                                    break
-                            extra_info["image_url_list"] = image_url_list
-                    # 检测是否是视频相册
-                    if robot.check_sub_key(("v",), media_response.json_data):
-                        is_error = False
-                        extra_info["video_url"] = str(media_response.json_data["v"])
-            extra_info["is_error"] = is_error
+            if not key:
+                raise robot.RobotException("页面截取媒体key失败\n%s" % album_response.data)
+            media_url = "http://zz.mt27z.cn/ab/bd"
+            post_data = {"y": page_count, "s": key}
+            media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
+            if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                # 检测是否是图片相册
+                if robot.check_sub_key(("i",), media_response.json_data):
+                    if not (isinstance(media_response.json_data["i"], list) and len(media_response.json_data["i"]) > 0):
+                        raise robot.RobotException("图片相册'i'字段格式不正确\n%s" % album_response.json_data)
+                    extra_info["image_url_list"] = []
+                    for image_info in media_response.json_data["i"]:
+                        if not robot.check_sub_key(("url",), image_info):
+                            raise robot.RobotException("图片相册'url'字段不存在\n%s" % album_response.json_data)
+                        extra_info["image_url_list"].append(str(image_info["url"]))
+
+                # 检测是否是视频相册
+                if robot.check_sub_key(("v",), media_response.json_data):
+                    extra_info["video_url"] = str(media_response.json_data["v"])
+            else:
+                raise robot.RobotException("媒体" + robot.get_http_request_failed_reason(media_response.status))
+    elif album_response.status != 500:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
     album_response.extra_info = extra_info
     return album_response
 
@@ -88,6 +87,9 @@ class MeiTuZZ(robot.Robot):
             # 获取相册
             try:
                 album_response = get_album_page(album_id)
+            except robot.RobotException, e:
+                log.error("第%s页相册访问失败，原因：%s" % (album_id, e.message))
+                break
             except SystemExit:
                 log.step("提前退出")
                 break
@@ -96,9 +98,6 @@ class MeiTuZZ(robot.Robot):
                 log.step("第%s页相册内部错误，跳过" % album_id)
                 album_id += 1
                 continue
-            elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页相册访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_response.status)))
-                break
 
             if album_response.extra_info["is_delete"]:
                 error_count += 1
@@ -111,10 +110,6 @@ class MeiTuZZ(robot.Robot):
                     album_id += 1
                     continue
 
-            if album_response.extra_info["is_error"]:
-                log.step("第%s页相册解析失败" % album_id)
-                break
-
             # 错误数量重置
             error_count = 0
 
@@ -125,10 +120,6 @@ class MeiTuZZ(robot.Robot):
 
             # 图片下载
             if self.is_download_image and album_response.extra_info["image_url_list"] is not None:
-                if len(album_response.extra_info["image_url_list"]) == 0:
-                    log.error("第%s页相册图片解析失败" % album_id)
-                    break
-
                 log.trace("第%s页解析的全部图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
                 image_count = 1
