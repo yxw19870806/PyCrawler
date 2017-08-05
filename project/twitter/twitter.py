@@ -37,8 +37,13 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if robot.is_integer(account_id):
-            extra_info["account_id"] = account_id
+        if not account_id:
+            raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
+        if not robot.is_integer(account_id):
+            raise robot.RobotException("获取的用户id类型不正确\n%s" % account_index_response.data)
+        extra_info["account_id"] = account_id
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     account_index_response.extra_info = extra_info
     return account_index_response
 
@@ -55,56 +60,64 @@ def get_one_page_media(account_name, position_blog_id):
         "next_page_position": None  # 页面解析出的下一页指针
     }
     if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if (
-            robot.check_sub_key(("has_more_items", "items_html", "new_latent_count", "min_position"), media_pagination_response.json_data) and
-            robot.is_integer(media_pagination_response.json_data["new_latent_count"]) and
-            (robot.is_integer(media_pagination_response.json_data["min_position"]) or media_pagination_response.json_data["min_position"] is None)
-        ):
-            # 没有任何内容
-            if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
-                extra_info["is_skip"] = True
-            else:
-                # tweet信息分组
-                temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
-                tweet_data_list = []
-                for tweet_data in temp_tweet_data_list:
-                    if len(tweet_data) < 50:
-                        continue
-                    tweet_data = tweet_data.encode("UTF-8")
-                    # 被圈出来的用户，追加到前面的页面中
-                    if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
-                        tweet_data_list[-1] += tweet_data
-                    else:
-                        tweet_data_list.append(tweet_data)
-                if int(media_pagination_response.json_data["new_latent_count"]) == len(tweet_data_list) > 0:
-                    for tweet_data in tweet_data_list:
-                        extra_media_info = {
-                            "blog_id": None,  # 页面解析出的日志id
-                            "has_video": False,  # 是不是包含视频
-                            "image_url_list": [],  # 页面解析出的图片地址列表
-                        }
-                        # 获取日志id
-                        blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-                        if robot.is_integer(blog_id):
-                            extra_media_info["blog_id"] = str(blog_id)
-                        else:
-                            extra_info["is_error"] = True
-                            extra_info["media_info_list"] = []
-                            break
-                        # 获取图片地址列表
-                        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
-                        extra_media_info["image_url_list"] = map(str, image_url_list)
-                        # 判断是不是有视频
-                        extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
-
-                        extra_info["media_info_list"].append(extra_media_info)
-                    # 判断有没有下一页
-                    if media_pagination_response.json_data["has_more_items"]:
-                        extra_info["next_page_position"] = str(media_pagination_response.json_data["min_position"])
-                else:
-                    extra_info["is_error"] = True
+        if not robot.check_sub_key(("has_more_items",), media_pagination_response.json_data):
+            raise robot.RobotException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
+        if not robot.check_sub_key(("items_html",), media_pagination_response.json_data):
+            raise robot.RobotException("返回信息'items_html'字段不存在\n%s" % media_pagination_response.json_data)
+        if not robot.check_sub_key(("new_latent_count",), media_pagination_response.json_data):
+            raise robot.RobotException("返回信息'new_latent_count'字段不存在\n%s" % media_pagination_response.json_data)
+        if not robot.is_integer(media_pagination_response.json_data["new_latent_count"]):
+            raise robot.RobotException("返回信息'new_latent_count'字段类型不正确\n%s" % media_pagination_response.json_data)
+        if not robot.check_sub_key(("min_position",), media_pagination_response.json_data):
+            raise robot.RobotException("返回信息'min_position'字段不存在\n%s" % media_pagination_response.json_data)
+        if not robot.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
+            raise robot.RobotException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
+        # 没有任何内容
+        if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
+            extra_info["is_skip"] = True
         else:
-            extra_info["is_error"] = True
+            # tweet信息分组
+            temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
+            tweet_data_list = []
+            for tweet_data in temp_tweet_data_list:
+                if len(tweet_data) < 50:
+                    continue
+                tweet_data = tweet_data.encode("UTF-8")
+                # 被圈出来的用户，追加到前面的页面中
+                if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
+                    tweet_data_list[-1] += tweet_data
+                else:
+                    tweet_data_list.append(tweet_data)
+            if len(tweet_data_list) == 0:
+                raise robot.RobotException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
+            if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
+                raise robot.RobotException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
+            for tweet_data in tweet_data_list:
+                extra_media_info = {
+                    "blog_id": None,  # 日志id
+                    "has_video": False,  # 是不是包含视频
+                    "image_url_list": [],  # 所有图片地址
+                }
+                # 获取日志id
+                blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
+                if not robot.is_integer(blog_id):
+                    raise robot.RobotException("tweet内容中获取tweet id失败\n%s" % tweet_data)
+                extra_media_info["blog_id"] = str(blog_id)
+
+                # 获取图片地址
+                image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
+                extra_media_info["image_url_list"] = map(str, image_url_list)
+
+                # 判断是不是有视频
+                extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
+
+                extra_info["media_info_list"].append(extra_media_info)
+
+            # 判断是不是还有下一页
+            if media_pagination_response.json_data["has_more_items"]:
+                extra_info["next_page_position"] = str(media_pagination_response.json_data["min_position"])
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
     media_pagination_response.extra_info = extra_info
     return media_pagination_response
 
@@ -125,22 +138,24 @@ def get_video_play_page(tweet_id):
             file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
             file_url_host = urllib.splithost(file_url_path)[0]
             m3u8_file_response = net.http_request(m3u8_file_url)
-            while m3u8_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                # 是否包含的是m3u8文件（不同分辨率）
-                include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
-                if len(include_m3u8_file_list) > 0:
-                    # 生成最高分辨率视频所在的m3u8文件地址
-                    m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
-                    m3u8_file_response = net.http_request(m3u8_file_url)
-                    if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        break
-                ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
-                if len(ts_url_find) > 0:
-                    ts_url_list = []
-                    for ts_file_path in ts_url_find:
-                        ts_url_list.append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
-                    extra_info["video_url"] = ts_url_list
-                break
+            if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise robot.RobotException("m3u8文件 %s 获取失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
+            # 是否包含的是m3u8文件（不同分辨率）
+            include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
+            if len(include_m3u8_file_list) > 0:
+                # 生成最高分辨率视频所在的m3u8文件地址
+                m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
+                m3u8_file_response = net.http_request(m3u8_file_url)
+                if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    raise robot.RobotException("最高分辨率m3u8文件 %s 访问失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
+
+            # 包含分P视频文件名的m3u8文件
+            ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
+            if len(ts_url_find) == 0:
+                raise robot.RobotException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
+            extra_info["video_url"] = []
+            for ts_file_path in ts_url_find:
+                extra_info["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
         else:
             # 直接包含视频播放地址的处理
             video_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
@@ -149,13 +164,18 @@ def get_video_play_page(tweet_id):
             else:
                 # 直接包含视频播放地址的处理
                 vmap_file_url = tool.find_sub_string(video_play_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
-                if vmap_file_url:
-                    vmap_file_url = vmap_file_url.replace("\\/", "/")
-                    vmap_file_response = net.http_request(vmap_file_url)
-                    if vmap_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                        video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
-                        if video_url:
-                            extra_info["video_url"] = str(video_url.replace("\\/", "/"))
+                if not vmap_file_url:
+                    raise robot.RobotException("页面截取视频播放地址失败\n%s" % video_play_response.data)
+                vmap_file_url = vmap_file_url.replace("\\/", "/")
+                vmap_file_response = net.http_request(vmap_file_url)
+                if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    raise robot.RobotException("视频播放页 %s 访问失败\n%s" % (vmap_file_url, robot.get_http_request_failed_reason(vmap_file_response.status)))
+                video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
+                if not video_url:
+                    raise robot.RobotException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
+                extra_info["video_url"] = str(video_url.replace("\\/", "/"))
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     video_play_response.extra_info = extra_info
     return video_play_response
 
@@ -250,13 +270,11 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            account_index_response = get_account_index_page(account_name)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 首页访问访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
-                tool.process_exit()
-            if account_index_response.extra_info["account_id"] is None:
-                log.error(account_name + " account id 解析失败")
-                tool.process_exit()
+            try:
+                account_index_response = get_account_index_page(account_name)
+            except robot.RobotException, e:
+                log.error(account_name + " 首页访问访问失败，原因：%s" % e.message)
+                raise
 
             if self.account_info[1] == "":
                 self.account_info[1] = account_index_response.extra_info["account_id"]
@@ -276,13 +294,10 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析position %s后的一页媒体列表" % position_blog_id)
 
                 # 获取指定时间点后的一页图片信息
-                media_pagination_response = get_one_page_media(account_name, position_blog_id)
-                if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " position %s后的一页媒体列表访问失败，原因：%s" % (position_blog_id, robot.get_http_request_failed_reason(media_pagination_response.status)))
-                    tool.process_exit()
-
-                if media_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " position %s后的一页媒体列表解析失败" % position_blog_id)
+                try:
+                    media_pagination_response = get_one_page_media(account_name, position_blog_id)
+                except robot.RobotException, e:
+                    log.error(account_name + " position %s后的一页媒体列表访问失败，原因：%s" % (position_blog_id, e.message))
                     tool.process_exit()
 
                 if media_pagination_response.extra_info["is_over"]:
@@ -291,10 +306,6 @@ class Download(threading.Thread):
                 log.step(account_name + " position %s后一页解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response.extra_info["media_info_list"]))
 
                 for media_info in media_pagination_response.extra_info["media_info_list"]:
-                    if media_info["blog_id"] is None:
-                        log.error(account_name + " 媒体数据里的日志id解析失败%s" % media_info)
-                        continue
-
                     log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
 
                     # 检查是否达到存档记录
@@ -309,14 +320,11 @@ class Download(threading.Thread):
                     # 视频
                     if IS_DOWNLOAD_VIDEO and media_info["has_video"]:
                         # 获取视频播放地址
-                        video_play_response = get_video_play_page(media_info["blog_id"])
-                        if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                            log.error(account_name + " 日志%s的视频播放页访问失败，原因：%s" % (media_info["blog_id"], robot.get_http_request_failed_reason(video_play_response.status)))
-                            tool.process_exit()
-
-                        if video_play_response.extra_info["video_url"] is None:
-                            log.error(account_name + " 日志%s的视频下载地址解析失败" % media_info["blog_id"])
-                            tool.process_exit()
+                        try:
+                            video_play_response = get_video_play_page(media_info["blog_id"])
+                        except robot.RobotException, e:
+                            log.error(account_name + " 日志%s的视频播放页访问失败，原因：%s" % (media_info["blog_id"], e.message))
+                            raise
 
                         video_url = video_play_response.extra_info["video_url"]
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
