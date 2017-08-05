@@ -10,7 +10,7 @@ import threading
 
 
 PROCESS_SERVER_IP = "localhost"  # 监听服务器IP
-PROCESS_SERVER_PORT = 54321  # 监听服务器端口
+PROCESS_SERVER_PORT = 12345  # 监听服务器端口
 PROCESS_STATUS = 0  # 服务器当前状态
 PROCESS_STATUS_RUN = 0  # 进程运行中
 PROCESS_STATUS_PAUSE = 1  # 进程暂停，知道状态变为0时才继续下载
