@@ -57,29 +57,38 @@ def get_one_page_video(account_id, page_count):
         "video_info_list": [],  # 所有视频信息
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("medias",), video_pagination_response.json_data):
-            for media_data in video_pagination_response.json_data["medias"]:
-                extra_video_info = {
-                    "video_id": None,  # 视频id
-                    "video_url": None,  # 视频下载地址
-                    "json_data": media_data,  # 原始数据
-                }
-                if robot.check_sub_key(("video", "id"), media_data):
-                    # 获取视频id
-                    extra_video_info["video_id"] = str(media_data["id"])
-                    # 获取视频下载地址
-                    # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
-                    loc1 = get_hex(str(media_data["video"]))
-                    loc2 = get_dec(loc1["hex"])
-                    loc3 = sub_str(loc1["str"], loc2["pre"])
-                    try:
-                        video_url = base64.b64decode(sub_str(loc3, get_pos(loc3, loc2["tail"])))
-                    except TypeError:
-                        pass
-                    else:
-                        if video_url.find("http") == 0:
-                            extra_video_info["video_url"] = video_url
-                extra_info["video_info_list"].append(extra_video_info)
+        for media_data in video_pagination_response.json_data["medias"]:
+            # 历史直播，跳过
+            if robot.check_sub_key(("lives",), media_data):
+                continue
+            extra_video_info = {
+                "video_id": None,  # 视频id
+                "video_url": None,  # 视频下载地址
+            }
+            # 获取视频id
+            if not robot.check_sub_key(("id",), media_data):
+                raise robot.RobotException("视频信息'id'字段不存在\n%s" % media_data)
+            extra_video_info["video_id"] = str(media_data["id"])
+
+            # 获取视频下载地址
+            if not robot.check_sub_key(("video",), media_data):
+                raise robot.RobotException("视频信息'video'字段不存在\n%s" % media_data)
+            # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
+            loc1 = get_hex(str(media_data["video"]))
+            loc2 = get_dec(loc1["hex"])
+            loc3 = sub_str(loc1["str"], loc2["pre"])
+            video_url_string = sub_str(loc3, get_pos(loc3, loc2["tail"]))
+            try:
+                video_url = base64.b64decode(video_url_string)
+            except TypeError:
+                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
+            if video_url.find("http") != 0:
+                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
+            extra_video_info["video_url"] = video_url
+
+            extra_info["video_info_list"].append(extra_video_info)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
     video_pagination_response.extra_info = extra_info
     return video_pagination_response
 
@@ -196,22 +205,19 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
                 # 获取一页视频
-                video_pagination_response = get_one_page_video(account_id, page_count)
-                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("第%s页视频访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(video_pagination_response.status)))
-                    tool.process_exit()
+                try:
+                    video_pagination_response = get_one_page_video(account_id, page_count)
+                except robot.RobotException, e:
+                    log.error("第%s页视频访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
-                if video_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " 第%s页视频解析失败" % video_count)
-                    tool.process_exit()
+                # 已经没有视频了
+                if len(video_pagination_response.extra_info["video_info_list"]) == 0:
+                    break
 
                 log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response.extra_info["video_info_list"]))
 
                 for video_info in video_pagination_response.extra_info["video_info_list"]:
-                    if video_info["video_id"] is None:
-                        log.error(account_name + " 视频信息%s的视频id解析失败" % video_info["json_data"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if int(video_info["video_id"]) <= int(self.account_info[2]):
                         is_over = True
@@ -226,10 +232,6 @@ class Download(threading.Thread):
                         continue
                     else:
                         unique_list.append(video_info["video_id"])
-
-                    if video_info["video_url"] is None:
-                        log.error(account_name + " 视频信息%s的视频地址解析失败" % video_info["json_data"])
-                        tool.process_exit()
 
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_info["video_url"]))
 
