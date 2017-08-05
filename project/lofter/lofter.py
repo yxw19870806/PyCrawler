@@ -33,6 +33,8 @@ def get_one_page_blog(account_name, page_count):
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data)
         # 去重排序
         extra_info["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     blog_pagination_response.extra_info = extra_info
     return blog_pagination_response
 
@@ -46,6 +48,8 @@ def get_blog_page(blog_url):
     if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
         extra_info["image_url_list"] = map(str, image_url_list)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
     blog_response.extra_info = extra_info
     return blog_response
 
@@ -137,13 +141,14 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
-                blog_pagination_response = get_one_page_blog(account_name, page_count)
-                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
-                    tool.process_exit()
+                try:
+                    blog_pagination_response = get_one_page_blog(account_name, page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
+                # 下载完毕了
                 if len(blog_pagination_response.extra_info["blog_url_list"]) == 0:
-                    # 下载完毕了
                     break
 
                 log.trace(account_name + " 第%s页去重排序后的日志：%s" % (page_count, blog_pagination_response.extra_info["blog_url_list"]))
@@ -169,10 +174,11 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析日志 %s" % blog_url)
 
                     # 获取日志
-                    blog_response = get_blog_page(blog_url)
-                    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 日志 %s 访问失败，原因：%s" % (blog_url, robot.get_http_request_failed_reason(blog_response.status)))
-                        continue
+                    try:
+                        blog_response = get_blog_page(blog_url)
+                    except robot.RobotException, e:
+                        log.error(account_name + " 日志 %s 访问失败，原因：%s" % (blog_url, e.message))
+                        raise
 
                     # 获取图片下载地址列表
                     if len(blog_response.extra_info["image_url_list"]) == 0:
