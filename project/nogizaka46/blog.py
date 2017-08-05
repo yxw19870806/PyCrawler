@@ -32,27 +32,34 @@ def get_one_page_blog(account_id, page_count):
         "is_over": False,  # 是不是最后一页日志
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取日志中文，并分组
+        # 获取日志正文，并分组
         page_html = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', '<div class="paginate">', 1)
+        if not page_html:
+            raise robot.RobotException("页面截取正文失败\n%s" % blog_pagination_response.data)
         blog_data_list = page_html.split('<h1 class="clearfix">')
-        if len(blog_data_list) > 0:
-            # 第一位不是日志内容，没有用
-            blog_data_list.pop(0)
+        if len(blog_data_list) == 0:
+            raise robot.RobotException("正文分割日志失败\n%s" % page_html)
+        # 第一位不是日志内容，没有用
+        blog_data_list.pop(0)
         for blog_data in blog_data_list:
             extra_image_info = {
-                "blog_id": None,  # 页面解析出的日志id
-                "image_url_list": [],  # 页面解析出的所有图片地址列表
-                "big_2_small_image_lust": {},  # 页面解析出的所有含有大图的图片列表
+                "blog_id": None,  # 日志id
+                "image_url_list": [],  # 所有图片地址
+                "big_2_small_image_lust": {},  # 所有含有大图的图片
             }
             # 获取日志id
-            blog_id = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
-            blog_id = blog_id.split("/")[-1]
-            if robot.is_integer(blog_id):
-                # 获取日志id
-                extra_image_info["blog_id"] = int(blog_id)
+            blog_id_html = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
+            if not blog_id_html:
+                raise robot.RobotException("日志内容截取日志id失败\n%s" % blog_data)
+            blog_id = blog_id_html.split("/")[-1]
+            if not robot.is_integer(blog_id):
+                raise robot.RobotException("日志内容截取日志id失败\n%s" % blog_data)
+            extra_image_info["blog_id"] = int(blog_id)
+
             # 获取图片地址列表
             image_url_list = re.findall('src="([^"]*)"', blog_data)
             extra_image_info["image_url_list"] = map(str, image_url_list)
+
             # 获取所有的大图对应的小图
             big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
             big_2_small_image_lust = {}
@@ -61,10 +68,17 @@ def get_one_page_blog(account_id, page_count):
             extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
 
             extra_info["blog_info_list"].append(extra_image_info)
-        # 检测是否还有下一页
+
+        # 判断是不是最后一页
         paginate_data = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', "</div>")
+        if not paginate_data:
+            raise robot.RobotException("页面截取分页信息失败\n%s" % blog_pagination_response.data)
         page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
+        if len(page_count_find) == 0:
+            raise robot.RobotException("分页信息获取页码失败\n%s" % paginate_data)
         extra_info["is_over"] = page_count >= max(map(int, page_count_find))
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     blog_pagination_response.extra_info = extra_info
     return blog_pagination_response
 
@@ -73,7 +87,7 @@ def get_one_page_blog(account_id, page_count):
 def check_big_image(image_url, big_2_small_list):
     big_image_response = net.ErrorResponse(net.HTTP_RETURN_CODE_RETRY)
     extra_info = {
-        "image_url": None,  # 页面解析出的大图地址
+        "image_url": None,  # 大图地址
         "is_over": False,  # 是不是已经没有还生效的大图了
     }
     if image_url in big_2_small_list:
