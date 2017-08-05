@@ -303,7 +303,7 @@ class Download(threading.Thread):
                 if media_pagination_response.extra_info["is_over"]:
                     break
 
-                log.step(account_name + " position %s后一页解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response.extra_info["media_info_list"]))
+                log.trace(account_name + " position %s后一页解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response.extra_info["media_info_list"]))
 
                 for media_info in media_pagination_response.extra_info["media_info_list"]:
                     log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
