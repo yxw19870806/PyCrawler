@@ -57,6 +57,8 @@ def get_one_page_video(account_id, page_count):
         "video_info_list": [],  # 所有视频信息
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if not robot.check_sub_key(("medias",), video_pagination_response.json_data):
+            raise robot.RobotException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
         for media_data in video_pagination_response.json_data["medias"]:
             # 历史直播，跳过
             if robot.check_sub_key(("lives",), media_data):
