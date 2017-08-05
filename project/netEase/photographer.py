@@ -28,9 +28,13 @@ def get_account_index_page(account_name):
         "album_url_list": [],  # 页面解析出的所有相册地址列表
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_result_selector = pq(account_index_response.data.decode("UTF-8")).find("#p_contents li")
+        album_result_selector = pq(account_index_response.data.decode("GBK").encode("UTF-8")).find("#p_contents li")
+        if album_result_selector.size() == 0:
+            raise robot.RobotException("页面获取相册列表失败\n%s" % account_index_response.data.decode("UTF-8"))
         for album_index in range(0, album_result_selector.size()):
             extra_info["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     account_index_response.extra_info = extra_info
     return account_index_response
 
@@ -47,17 +51,23 @@ def get_album_id(album_url):
 def get_album_page(album_url):
     album_response = net.http_request(album_url)
     extra_info = {
-        "album_title": "",  # 页面解析出的相册标题
-        "image_url_list": [],  # 页面解析出的所有相册地址列表
+        "album_title": "",  # 相册标题
+        "image_url_list": [],  # 所有图片地址
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取相册标题
         album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
         if album_title:
             extra_info["album_title"] = album_title.decode("GBK").encode("UTF-8")
+
+        # 获取图片地址
         image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
-        if len(image_url_list) > 0:
-            extra_info["image_url_list"] = map(str, image_url_list)
-        album_response.extra_info = extra_info
+        if len(image_url_list) == 0:
+            raise robot.RobotException("获取图片地址失败\n%s" % album_response.data)
+        extra_info["image_url_list"] = map(str, image_url_list)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+    album_response.extra_info = extra_info
     return album_response
 
 
@@ -138,14 +148,11 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 获取主页
-            account_index_response = get_account_index_page(account_name)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 账号主页访问失败，原因：%s" % account_index_response.status)
-                tool.process_exit()
-
-            if len(account_index_response.extra_info["album_url_list"]) == 0:
-                log.error(account_name + " 没有获得相册信息")
-                tool.process_exit()
+            try:
+                account_index_response = get_account_index_page(account_name)
+            except robot.RobotException, e:
+                log.error(account_name + " 主页访问失败，原因：%s" % e.message)
+                raise
 
             log.step(account_name + " 解析的所有相册地址：%s" % account_index_response.extra_info["album_url_list"])
 
@@ -169,14 +176,11 @@ class Download(threading.Thread):
 
                 log.step(account_name + " 开始解析第相册%s" % album_id)
 
-                album_response = get_album_page(album_url)
-                if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, account_index_response.status))
-                    tool.process_exit()
-
-                if len(album_response.extra_info["image_url_list"]) == 0:
-                    log.error(account_name + " 相册 %s 解析图片地址失败" % album_url)
-                    tool.process_exit()
+                try:
+                    album_response = get_album_page(album_url)
+                except robot.RobotException, e:
+                    log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, e.message))
+                    raise
 
                 log.step(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
