@@ -154,7 +154,7 @@ class Download(threading.Thread):
                 log.error(account_name + " 主页访问失败，原因：%s" % e.message)
                 raise
 
-            log.step(account_name + " 解析的所有相册地址：%s" % account_index_response.extra_info["album_url_list"])
+            log.trace(account_name + " 解析的所有相册地址：%s" % account_index_response.extra_info["album_url_list"])
 
             total_image_count = 0
             album_count = 0
@@ -182,7 +182,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, e.message))
                     raise
 
-                log.step(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response.extra_info["image_url_list"]))
+                log.trace(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response.extra_info["image_url_list"]))
 
                 # 过滤标题中不支持的字符
                 album_title = robot.filter_text(album_response.extra_info["album_title"])
