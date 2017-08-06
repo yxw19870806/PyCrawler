@@ -34,7 +34,10 @@ def get_one_page_album(album_id, page_count):
         extra_info["image_url_list"] = map(str, image_url_list)
         # 判断是不是最后一页
         page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
-        max_page_count = max(map(int, page_count_find))
+        if len(page_count_find) == 0:
+            max_page_count = 1
+        else:
+            max_page_count = max(map(int, page_count_find))
         extra_info['is_over'] = page_count >= max_page_count
     album_pagination_response.extra_info = extra_info
     return album_pagination_response
