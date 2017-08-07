@@ -18,7 +18,7 @@ def get_one_page_album(album_id, page_count):
     else:
         album_pagination_url = "https://www.meitulu.com/item/%s_%s.html" % (album_id, page_count)
     album_pagination_response = net.http_request(album_pagination_url)
-    extra_info = {
+    result = {
         "is_delete": False,  # 是不是已经被删除
         "is_over": False,  # 是不是图集的最后一页
         "album_title": "",  # 图集标题
@@ -26,18 +26,23 @@ def get_one_page_album(album_id, page_count):
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断图集是否已经被删除
-        extra_info["is_delete"] = album_pagination_response.data.find("全站内容整理中, 请从首页重新访问!") >= 0
+        result["is_delete"] = album_pagination_response.data.find("全站内容整理中, 请从首页重新访问!") >= 0
+
         # 获取图集标题
-        extra_info["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
+        result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
+
         # 获取图集图片地址
         image_url_list = re.findall('<img src="([^"]*)"', tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>"))
-        extra_info["image_url_list"] = map(str, image_url_list)
+        result["image_url_list"] = map(str, image_url_list)
+
         # 判断是不是最后一页
         page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
         max_page_count = max(map(int, page_count_find))
-        extra_info['is_over'] = page_count >= max_page_count
-    album_pagination_response.extra_info = extra_info
-    return album_pagination_response
+
+        result['is_over'] = page_count >= max_page_count
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
+    return result
 
 
 class MeiTuLu(robot.Robot):
@@ -70,20 +75,24 @@ class MeiTuLu(robot.Robot):
                 # 获取相册
                 try:
                     album_pagination_response = get_one_page_album(album_id, page_count)
-                except SystemExit:
+                except robot.RobotException,e:
+                    log.error("第%s页图集访问失败，原因：%s" % (album_id, e.message))
                     is_over = True
+                    if page_count != 1:
+                        tool.remove_dir_or_file(album_path)
+                    break
+                except SystemExit:
                     log.step("提前退出")
+                    is_over = True
+                    if page_count != 1:
+                        tool.remove_dir_or_file(album_path)
                     break
 
-                if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error("第%s页图集访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_pagination_response.status)))
-                    break
-
-                log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response.extra_info["image_url_list"]))
+                log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response["image_url_list"]))
 
                 # 过滤标题中不支持的字符
                 if page_count == 1:
-                    album_title = robot.filter_text(album_pagination_response.extra_info["album_title"])
+                    album_title = robot.filter_text(album_pagination_response["album_title"])
                     if album_title:
                         album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
                     else:
@@ -96,7 +105,7 @@ class MeiTuLu(robot.Robot):
                             log.error("创建图集目录 %s 失败" % album_path)
                             tool.process_exit()
 
-                for image_url in album_pagination_response.extra_info["image_url_list"]:
+                for image_url in album_pagination_response["image_url_list"]:
                     log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                     file_type = image_url.split(".")[-1]
@@ -114,7 +123,7 @@ class MeiTuLu(robot.Robot):
                         is_over = True
                         break
 
-                if is_over or album_pagination_response.extra_info["is_over"]:
+                if is_over or album_pagination_response["is_over"]:
                     break
                 else:
                     page_count += 1
