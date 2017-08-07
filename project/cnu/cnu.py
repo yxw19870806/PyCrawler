@@ -24,7 +24,7 @@ def get_album_page(album_id):
         # 获取作品标题
         album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
         if not album_title:
-            raise robot.RobotException("页面获取作品标题失败\n%s" % album_response.data)
+            raise robot.RobotException("页面截取作品标题失败\n%s" % album_response.data)
         result["album_title"] = album_title
 
         # 获取图片地址
@@ -34,7 +34,7 @@ def get_album_page(album_id):
         try:
             image_info_data = json.loads(image_info_html)
         except ValueError:
-            raise robot.RobotException("图片列表decode失败\n%s" % image_info_html)
+            raise robot.RobotException("图片列表加载失败\n%s" % image_info_html)
         image_url_list = []
         for image_info in image_info_data:
             if not robot.check_sub_key(("img",), image_info):

@@ -51,13 +51,15 @@ def get_audio_play_page(audio_id, song_type):
         # 获取歌曲地址
         audio_info_string = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
         if not audio_info_string:
-            raise robot.RobotException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
+            raise robot.RobotException("页面截取加密歌曲信息失败\n%s" % audio_play_response.data)
         try:
-            audio_info = json.loads(base64.b64decode(audio_info_string))
+            audio_info_string = base64.b64decode(audio_info_string)
         except TypeError:
-            raise robot.RobotException("歌曲加密地址解密失败\n%s" % audio_info_string)
+            raise robot.RobotException("加密歌曲信息解密失败\n%s" % audio_info_string)
+        try:
+            audio_info = json.loads(audio_info_string)
         except ValueError:
-            raise robot.RobotException("歌曲加密地址解密失败\n%s" % audio_info_string)
+            raise robot.RobotException("歌曲信息加载失败\n%s" % audio_info_string)
         if not robot.check_sub_key(("file",), audio_info):
             raise robot.RobotException("歌曲信息'file'字段不存在\n%s" % audio_info)
         result["audio_url"] = str(audio_info["file"])

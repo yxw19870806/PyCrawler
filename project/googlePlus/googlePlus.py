@@ -35,13 +35,13 @@ def get_one_page_blog(account_id, token):
         if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
             if not script_data_html:
-                raise robot.RobotException("页面截取首页信息失败\n%s" % blog_pagination_response.data)
+                raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
             try:
                 script_data = json.loads(script_data_html)
             except ValueError:
-                raise robot.RobotException("首页信息加载失败\n%s" % script_data_html)
+                raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
             if not (len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2])):
-                raise robot.RobotException("首页信息格式不正确\n%s" % script_data)
+                raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
             script_data = script_data[0][2]["113305009"]
         else:
             raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
@@ -72,7 +72,6 @@ def get_one_page_blog(account_id, token):
             extra_blog_info = {
                 "blog_id": None,  # 日志id
                 "blog_time": None,  # 日志发布时间
-                "json_data": data,  # 原始数据
             }
             blog_data = []
             for temp_data in data:

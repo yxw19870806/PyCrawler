@@ -31,7 +31,7 @@ def get_account_index_page(account_id):
         # 获取user id
         user_id = tool.find_sub_string(account_index_response.data, "var userid = '", "'")
         if not robot.is_integer(user_id):
-            raise robot.RobotException("页面获取userid失败\n%s" % account_index_response.data)
+            raise robot.RobotException("页面截取userid失败\n%s" % account_index_response.data)
         result["user_id"] = str(user_id)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
@@ -48,8 +48,6 @@ def get_one_page_audio(user_id, page_count):
         "audio_info_list": [],  # 所有歌曲信息
     }
     if audit_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not isinstance(audit_pagination_response.json_data, list):
-            raise robot.RobotException("返回数据类型不正确\n%s" % audit_pagination_response.json_data)
         for audio_info in audit_pagination_response.json_data:
             extra_audio_info = {
                 "audio_id": None,  # 歌曲id
@@ -106,7 +104,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
             if audio_type == 1 or audio_type == 3:
                 audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
                 if not audio_source_url:
-                    raise robot.RobotException("页面获取歌曲原始地址失败\n%s" % audio_play_response.data)
+                    raise robot.RobotException("页面截取歌曲原始地址失败\n%s" % audio_play_response.data)
                 # 从JS处解析的规则
                 special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
                 if len(special_find) == 0:
