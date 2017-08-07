@@ -13,7 +13,7 @@ import re
 
 # 获取指定一页的图集
 def get_one_page_album(page_count):
-    album_pagination_url = "http://www.88mmw.com/Rosi/list_1_%s.html" % (page_count)
+    album_pagination_url = "http://www.88mmw.com/Rosi/list_1_%s.html" % page_count
     album_pagination_response = net.http_request(album_pagination_url)
     result = {
         "is_over": False,  # 是不是最后一页图集
