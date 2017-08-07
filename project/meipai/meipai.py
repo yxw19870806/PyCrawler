@@ -52,7 +52,7 @@ def get_one_page_video(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
     video_pagination_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
     video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
-    extra_info = {
+    result = {
         "is_error": False,  # 是不是格式不符合
         "video_info_list": [],  # 所有视频信息
     }
@@ -88,11 +88,10 @@ def get_one_page_video(account_id, page_count):
                 raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
             extra_video_info["video_url"] = video_url
 
-            extra_info["video_info_list"].append(extra_video_info)
+            result["video_info_list"].append(extra_video_info)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
-    video_pagination_response.extra_info = extra_info
-    return video_pagination_response
+    return result
 
 
 def get_hex(arg1):
@@ -214,12 +213,12 @@ class Download(threading.Thread):
                     raise
 
                 # 已经没有视频了
-                if len(video_pagination_response.extra_info["video_info_list"]) == 0:
+                if len(video_pagination_response["video_info_list"]) == 0:
                     break
 
-                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response.extra_info["video_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_info_list"]))
 
-                for video_info in video_pagination_response.extra_info["video_info_list"]:
+                for video_info in video_pagination_response["video_info_list"]:
                     # 检查是否达到存档记录
                     if int(video_info["video_id"]) <= int(self.account_info[2]):
                         is_over = True
@@ -246,7 +245,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_info["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    if len(video_pagination_response.extra_info["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
+                    if len(video_pagination_response["video_info_list"]) >= VIDEO_COUNT_PER_PAGE:
                         page_count += 1
                     else:
                         # 获取的数量小于请求的数量，已经没有剩余视频了
