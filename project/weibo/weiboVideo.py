@@ -75,15 +75,22 @@ def get_video_url(video_play_url):
         video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
         video_info_response = net.http_request(video_info_url, json_decode=True)
         if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if (
-                robot.check_sub_key(("status", "result"), video_info_response.json_data) and
-                robot.is_integer(video_info_response.json_data["status"]) and
-                int(video_info_response.json_data["status"]) == 200
-            ):
-                for video_info in video_info_response.json_data["result"]:
-                    if robot.check_sub_key(("path", "host", "scheme"), video_info):
-                        video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
-                        break
+            if not robot.check_sub_key(("status", "result"), video_info_response.json_data):
+                raise robot.RobotException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
+            if not robot.is_integer(video_info_response.json_data["status"]):
+                raise robot.RobotException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
+            if int(video_info_response.json_data["status"]) != 200:
+                raise robot.RobotException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
+            if len(video_info_response.json_data["result"]) == 0:
+                raise robot.RobotException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
+            for video_info in video_info_response.json_data["result"]:
+                if robot.check_sub_key(("path", "host", "scheme"), video_info):
+                    video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
+                    break
+            if video_url is None:
+                raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
@@ -92,28 +99,32 @@ def get_video_url(video_play_url):
             video_url = tool.find_sub_string(video_play_response.data, "video_src=", "&")
             if not video_url:
                 video_url = tool.find_sub_string(video_play_response.data, 'flashvars="list=', '"')
-            if video_url:
-                video_url = str(urllib2.unquote(video_url))
-            else:
-                video_url = None
+            if not video_url:
+                raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
+            video_url = str(urllib2.unquote(video_url))
         elif video_play_response.status == 404:
             video_url = ""
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
         video_play_response = net.http_request(video_play_url)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
-            if len(video_url_find) == 1:
-                loc1 = meipai_get_hex(video_url_find[0])
-                loc2 = meipai_get_dec(loc1["hex"])
-                loc3 = meipai_sub_str(loc1["str"], loc2["pre"])
-                try:
-                    video_url = base64.b64decode(meipai_sub_str(loc3, meipai_get_pos(loc3, loc2["tail"])))
-                except TypeError:
-                    pass
-                else:
-                    if video_url.find("http") != 0:
-                        video_url = None
+            if len(video_url_find) != 1:
+                raise robot.RobotException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
+            loc1 = meipai_get_hex(video_url_find[0])
+            loc2 = meipai_get_dec(loc1["hex"])
+            loc3 = meipai_sub_str(loc1["str"], loc2["pre"])
+            video_url_string = meipai_sub_str(loc3, meipai_get_pos(loc3, loc2["tail"]))
+            try:
+                video_url = base64.b64decode(video_url_string)
+            except TypeError:
+                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(video_url_find[0]), video_url_string))
+            if video_url.find("http") != 0:
+                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(video_url_find[0]), video_url_string))
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
@@ -123,16 +134,23 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url)
         if video_play_response == net.HTTP_RETURN_CODE_SUCCEED:
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_response.data)
-            if len(video_id_find) == 1:
-                video_id = video_play_url.split("/")[-1]
-                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
-                video_info_response = net.http_request(video_info_url, json_decode=True)
-                if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                    if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_play_response.json_data["data"]):
-                        video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
+            if len(video_id_find) != 1:
+                raise robot.RobotException("页面匹配视频id失败\n%s" % video_play_response.data)
+            video_id = video_play_url.split("/")[-1]
+            video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
+            video_info_response = net.http_request(video_info_url, json_decode=True)
+            if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                if not robot.check_sub_key(("data",), video_info_response.json_data):
+                    raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
+                if not robot.check_sub_key(("url",), video_play_response.json_data["data"]):
+                    raise robot.RobotException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
+                video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
+            else:
+                raise robot.RobotException("API " + robot.get_http_request_failed_reason(video_info_response.status))
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     else:  # 其他视频，暂时不支持，收集看看有没有
-        log.error("其他第三方视频：" + video_play_url)
-        video_url = ""
+        raise robot.RobotException("未知的第三方视频\n%s" % video_play_url)
     return video_url
 
 
@@ -295,10 +313,11 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析第%s个视频 %s" % (video_count, video_play_url))
 
                     # 获取这个视频的下载地址
-                    video_url = get_video_url(video_play_url)
-                    if video_url is None:
-                        log.error(account_name + " 第%s个视频 %s 没有解析到下载地址" % (video_count, video_play_url))
-                        continue
+                    try:
+                        video_url = get_video_url(video_play_url)
+                    except robot.RobotException, e:
+                        log.error(account_name + " 第%s个视频 %s 没有解析到下载地址，原因：%s" % (video_count, video_play_url, e.message))
+                        raise
 
                     if video_url is "":
                         continue
