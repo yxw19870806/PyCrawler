@@ -16,7 +16,7 @@ import time
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
-    extra_info = {
+    result = {
         "image_info_list": [],  # 所有图片信息
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -62,11 +62,10 @@ def get_one_page_photo(page_count):
                     raise robot.RobotException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
                 extra_photo_info["image_url_list"].append(str(image_url).strip())
 
-            extra_info["image_info_list"].append(extra_photo_info)
+            result["image_info_list"].append(extra_photo_info)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    return result
 
 
 class Jigadori(robot.Robot):
@@ -101,13 +100,13 @@ class Jigadori(robot.Robot):
                 photo_pagination_response = get_one_page_photo(page_count)
             except robot.RobotException, e:
                 log.error("第%s页图片访问失败，原因：%s" % (page_count, e.message))
-                tool.process_exit()
+                raise 
 
             # 没有图片了
-            if len(photo_pagination_response.extra_info["image_info_list"]) == 0:
+            if len(photo_pagination_response["image_info_list"]) == 0:
                 break
 
-            for image_info in photo_pagination_response.extra_info["image_info_list"]:
+            for image_info in photo_pagination_response["image_info_list"]:
                 # 检查是否达到存档记录
                 if image_info["time"] <= last_blog_time:
                     is_over = True
