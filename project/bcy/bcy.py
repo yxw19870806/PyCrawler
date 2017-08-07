@@ -146,6 +146,7 @@ def get_one_page_album(account_id, page_count):
             album_id = str(album_url).split("/")[-1]
             if not robot.is_integer(album_id):
                 raise robot.RobotException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
+            extra_album_info['album_id'] = int(album_id)
 
             # 获取作品标题
             album_title = album_selector.find(".postWorkCard__img footer").text()
@@ -317,13 +318,13 @@ class Download(threading.Thread):
 
                 for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
-                    if album_info["album_id"] <= int(self.account_info[1]):
+                    if int(album_info["album_id"]) <= int(self.account_info[1]):
                         is_over = True
                         break
 
                     # 新的存档记录
                     if first_album_id is None:
-                        first_album_id = str(album_info["album_id"])
+                        first_album_id = album_info["album_id"]
 
                     # 新增作品导致的重复判断
                     if album_info["album_id"] in unique_list:
