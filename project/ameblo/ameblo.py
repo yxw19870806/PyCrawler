@@ -32,6 +32,7 @@ def get_one_page_blog(account_name, page_count):
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取日志id
         blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
+        # 另一种页面格式
         if len(blog_id_list) == 0:
             page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
             blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="http://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
@@ -53,7 +54,7 @@ def get_one_page_blog(account_name, page_count):
         elif blog_pagination_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
             if blog_pagination_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
                 result["is_over"] = True
-        # 只有下一页和上一页按钮的样式
+        # 另一种只有下一页和上一页按钮的样式
         elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
             if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
                 result["is_over"] = True
