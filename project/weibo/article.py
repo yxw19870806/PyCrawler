@@ -232,14 +232,11 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             # 获取账号首页
-            account_index_response = weiboCommon.get_account_index_page(account_id)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
-                tool.process_exit()
-
-            if account_index_response["account_page_id"] is None:
-                log.error(account_name + " 账号page id解析失败")
-                tool.process_exit()
+            try:
+                account_index_response = weiboCommon.get_account_index_page(account_id)
+            except robot.RobotException, e:
+                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                raise
 
             page_count = 1
             this_account_total_image_count = 0
