@@ -14,22 +14,21 @@ import re
 # 获取指定页数的所有日志
 def get_one_page_blog(page_count):
     blog_pagination_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
-    extra_info = {
+    result = {
         "is_over": False,  # 是不是最后一页日志
         "image_name_list": [],  # 所有图片名字
     }
     blog_pagination_response = net.http_request(blog_pagination_url)
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 检测是否是最后一页
-        extra_info["is_over"] = blog_pagination_response.data == "記事が存在しません。"
+        result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
 
         # 获取图片名字
         image_name_list = re.findall('data-original="./([^"]*)"', blog_pagination_response.data)
-        extra_info["image_name_list"] = map(str, image_name_list)
+        result["image_name_list"] = map(str, image_name_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
-    blog_pagination_response.extra_info = extra_info
-    return blog_pagination_response
+    return result
 
 
 class Blog(robot.Robot):
@@ -66,15 +65,15 @@ class Blog(robot.Robot):
                 tool.process_exit()
 
             # 是否已经获取完毕
-            if blog_pagination_response.extra_info["is_over"]:
+            if blog_pagination_response["is_over"]:
                 break
 
             # 获取页面内的所有图片
-            log.trace("第%s页解析的全部图片：%s" % (page_count, blog_pagination_response.extra_info["image_name_list"]))
+            log.trace("第%s页解析的全部图片：%s" % (page_count, blog_pagination_response["image_name_list"]))
 
-            if len(blog_pagination_response.extra_info["image_name_list"]) > 0:
+            if len(blog_pagination_response["image_name_list"]) > 0:
                 # 获取日志时间
-                blog_time = int(blog_pagination_response.extra_info["image_name_list"][0].split("-")[0])
+                blog_time = int(blog_pagination_response["image_name_list"][0].split("-")[0])
 
                 # 检查是否达到存档记录
                 if blog_time <= last_blog_time:
@@ -84,7 +83,7 @@ class Blog(robot.Robot):
                 if first_blog_time is None:
                     first_blog_time = str(blog_time)
 
-            for image_name in blog_pagination_response.extra_info["image_name_list"]:
+            for image_name in blog_pagination_response["image_name_list"]:
                 image_url = "http://blog.mariko-shinoda.net/%s" % image_name
                 log.step("开始下载第%s张图片 %s" % (image_count, image_url))
 
