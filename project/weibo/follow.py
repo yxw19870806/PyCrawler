@@ -35,15 +35,12 @@ def follow_account(account_id):
                 # sleep 一段时间后再试
                 time.sleep(60)
             elif int(follow_response.json_data["code"]) == 100001:
-                tool.print_msg("达到今日关注上限，退出程序" % account_id)
-                tool.process_exit()
+                raise robot.RobotException("达到今日关注上限，退出程序" % account_id)
             else:
-                tool.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
-                tool.process_exit()
+                raise robot.RobotException("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
             return False
     else:
-        tool.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
-        tool.process_exit()
+        raise robot.RobotException("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
     return False
 
 
