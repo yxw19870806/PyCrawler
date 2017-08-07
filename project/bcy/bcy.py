@@ -117,7 +117,7 @@ def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     album_pagination_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
     album_pagination_response = net.http_request(album_pagination_url)
-    extra_info = {
+    result = {
         "coser_id": None,  # coser id
         "album_info_list": [],  # 所有作品信息
         "is_over": False,  # 是不是最后一页作品
@@ -129,7 +129,7 @@ def get_one_page_album(account_id, page_count):
             raise robot.RobotException("页面截取coser id失败\n%s" % album_pagination_response.data)
         if not robot.is_integer(coser_id_find[0]):
             raise robot.RobotException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
-        extra_info["coser_id"] = coser_id_find[0]
+        result["coser_id"] = coser_id_find[0]
 
         # 获取作品信息
         album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
@@ -151,19 +151,18 @@ def get_one_page_album(account_id, page_count):
             album_title = album_selector.find(".postWorkCard__img footer").text()
             extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
 
-            extra_info["album_info_list"].append(extra_album_info)
+            result["album_info_list"].append(extra_album_info)
 
         # 判断是不是最后一页
         last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
         if last_pagination_selector.size() == 1:
             max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
-            extra_info["is_over"] = page_count >= max_page_count
+            result["is_over"] = page_count >= max_page_count
         else:
-            extra_info["is_over"] = True
+            result["is_over"] = True
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
-    album_pagination_response.extra_info = extra_info
-    return album_pagination_response
+    return result
 
 
 # 获取指定id的作品
@@ -173,7 +172,7 @@ def get_album_page(coser_id, album_id):
     # http://bcy.net/coser/detail/9299/36484
     album_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
     album_response = net.http_request(album_url, cookies_list=COOKIE_INFO)
-    extra_info = {
+    result = {
         "is_admin_locked": False,  # 是否被管理员锁定
         "is_only_follower": False,  # 是否只显示给粉丝
         "image_url_list": [],  # 页面解析出的所有图片地址列表
@@ -181,21 +180,20 @@ def get_album_page(coser_id, album_id):
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 检测作品是否被管理员锁定
         if album_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
-            extra_info["is_admin_locked"] = True
+            result["is_admin_locked"] = True
 
         # 检测作品是否只对粉丝可见
         if album_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
-            extra_info["is_only_follower"] = True
+            result["is_only_follower"] = True
 
         # 获取作品页面内的所有图片地址列表
         image_url_list = re.findall("src='([^']*)'", album_response.data)
-        if not extra_info["is_admin_locked"] and not extra_info["is_only_follower"] and len(image_url_list) == 0:
+        if not result["is_admin_locked"] and not result["is_only_follower"] and len(image_url_list) == 0:
             raise robot.RobotException("页面获取图片地址失败\n%s" % album_response.data)
-        extra_info["image_url_list"] = map(str, image_url_list)
+        result["image_url_list"] = map(str, image_url_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
-    album_response.extra_info = extra_info
-    return album_response
+    return result
 
 
 class Bcy(robot.Robot):
@@ -315,9 +313,9 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页作品解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response.extra_info["album_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response["album_info_list"]))
 
-                for album_info in album_pagination_response.extra_info["album_info_list"]:
+                for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
                     if album_info["album_id"] <= int(self.account_info[1]):
                         is_over = True
@@ -337,13 +335,13 @@ class Download(threading.Thread):
 
                     # 获取作品
                     try:
-                        album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
+                        album_response = get_album_page(album_pagination_response["coser_id"], album_info["album_id"])
                     except robot.RobotException, e:
                         log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
                         raise
 
                     # 是不是已被管理员锁定
-                    if album_response.extra_info["is_admin_locked"]:
+                    if album_response["is_admin_locked"]:
                         log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_info["album_id"], album_info["album_title"]))
                         continue
 
@@ -376,7 +374,7 @@ class Download(threading.Thread):
                             tool.process_exit()
 
                     image_count = 1
-                    for image_url in album_response.extra_info["image_url_list"]:
+                    for image_url in album_response["image_url_list"]:
                         # 禁用指定分辨率
                         image_url = "/".join(image_url.split("/")[0:-1])
                         log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
@@ -396,7 +394,7 @@ class Download(threading.Thread):
                     this_account_total_image_count += image_count - 1
 
                 if not is_over:
-                    if album_pagination_response.extra_info["is_over"]:
+                    if album_pagination_response["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
