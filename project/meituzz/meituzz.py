@@ -89,9 +89,11 @@ class MeiTuZZ(robot.Robot):
                 album_response = get_album_page(album_id)
             except robot.RobotException, e:
                 log.error("第%s页相册访问失败，原因：%s" % (album_id, e.message))
+                album_id -= error_count
                 break
             except SystemExit:
                 log.step("提前退出")
+                album_id -= error_count
                 break
 
             if album_response.status == 500:
