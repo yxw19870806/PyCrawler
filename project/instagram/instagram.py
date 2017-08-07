@@ -39,7 +39,7 @@ def get_account_index_page(account_name):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
         if not robot.is_integer(account_id):
-            raise robot.RobotException("页面解析账号id失败\n%s" % account_index_response.data)
+            raise robot.RobotException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
     elif account_index_response.status == 404:
         result["is_delete"] = True
@@ -136,19 +136,19 @@ def get_media_page(page_id):
         except ValueError:
             raise robot.RobotException("媒体信息加载失败\n%s" % media_info_html)
         if not robot.check_sub_key(("entry_data",), media_info_data):
-            raise robot.RobotException("返回数据'entry_data'字段不存在\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'entry_data'字段不存在\n%s" % media_info_data)
         if not robot.check_sub_key(("PostPage",), media_info_data["entry_data"]):
-            raise robot.RobotException("返回数据'PostPage'字段不存在\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'PostPage'字段不存在\n%s" % media_info_data)
         if not (isinstance(media_info_data["entry_data"]["PostPage"], list) and len(media_info_data["entry_data"]["PostPage"]) == 1):
-            raise robot.RobotException("返回数据'PostPage'字段类型不正确\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'PostPage'字段类型不正确\n%s" % media_info_data)
         if not robot.check_sub_key(("graphql",), media_info_data["entry_data"]["PostPage"][0]):
-            raise robot.RobotException("返回数据'graphql'字段不存在\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'graphql'字段不存在\n%s" % media_info_data)
         if not robot.check_sub_key(("shortcode_media",), media_info_data["entry_data"]["PostPage"][0]["graphql"]):
-            raise robot.RobotException("返回数据'shortcode_media'字段不存在\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'shortcode_media'字段不存在\n%s" % media_info_data)
         if not robot.check_sub_key(("__typename",), media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]):
-            raise robot.RobotException("返回数据'__typename'字段不存在\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'__typename'字段不存在\n%s" % media_info_data)
         if media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["__typename"] not in ["GraphSidecar", "GraphVideo"]:
-            raise robot.RobotException("返回数据'__typename'取值范围不正确\n%s" % media_info_data)
+            raise robot.RobotException("媒体信息'__typename'取值范围不正确\n%s" % media_info_data)
         media_info = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]
         # 多张图片/视频
         if media_info["__typename"] == "GraphSidecar":

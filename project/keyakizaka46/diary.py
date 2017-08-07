@@ -43,7 +43,7 @@ def get_one_page_blog(account_id, page_count):
             # 获取日志id
             blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
             if not robot.is_integer(blog_id):
-                raise robot.RobotException("日志正文截取日志id失败\n%s" % blog_info)
+                raise robot.RobotException("日志页面截取日志id失败\n%s" % blog_info)
             extra_blog_info["blog_id"] = str(blog_id)
 
             # 获取所有图片地址

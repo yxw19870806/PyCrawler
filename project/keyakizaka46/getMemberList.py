@@ -40,7 +40,7 @@ def get_account_from_index():
             # 获取成员名字
             account_name = tool.find_sub_string(member_info, '<p class="name">', "</p>").strip().replace(" ", "")
             if not account_name:
-                raise robot.RobotException("账号信息截取账号id失败\n%s" % member_info)
+                raise robot.RobotException("账号信息截取成员名字失败\n%s" % member_info)
             
             account_list[account_id] = account_name
     else:

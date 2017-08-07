@@ -29,7 +29,7 @@ def get_one_page_blog(account_name, page_count):
         "blog_url_list": [],  # 所有日志地址
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中所有的日志地址列表
+        # 获取所有日志地址
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data)
         # 去重排序
         result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
@@ -45,6 +45,7 @@ def get_blog_page(blog_url):
         "image_url_list": [],  # 所有图片地址
     }
     if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取所有图片地址
         image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
         result["image_url_list"] = map(str, image_url_list)
     else:
