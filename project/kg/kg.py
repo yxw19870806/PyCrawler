@@ -23,8 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 def get_one_page_audio(account_id, page_count):
     audio_pagination_url = "http://kg.qq.com/cgi/kg_ugc_get_homepage?type=get_ugc&format=json&share_uid=%s&start=%s&num=%s" % (account_id, page_count, AUDIO_COUNT_PER_PAGE)
     audio_pagination_response = net.http_request(audio_pagination_url, json_decode=True)
-    extra_info = {
-        "is_error": False,  # 是不是格式不符合
+    result = {
         "audio_info_list": [],  # 所有歌曲信息
         "is_over": False,  # 是不是最后一页歌曲
     }
@@ -34,7 +33,7 @@ def get_one_page_audio(account_id, page_count):
         if not robot.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
             raise robot.RobotException("返回数据'has_more'或者'ugclist'字段不存在\n%s" % audio_pagination_response.json_data)
         for audio_info in audio_pagination_response.json_data["data"]["ugclist"]:
-            audio_extra_info = {
+            audio_result = {
                 "audio_id": None,  # 歌曲id
                 "audio_key": None,  # 歌曲访问token
                 "audio_title": "",  # 歌曲标题
@@ -43,40 +42,39 @@ def get_one_page_audio(account_id, page_count):
             # 获取歌曲id
             if not robot.check_sub_key(("ksong_mid",), audio_info):
                 raise robot.RobotException("返回数据'ksong_mid'字段不存在\n%s" % audio_info)
-            audio_extra_info["audio_id"] = str(audio_info["ksong_mid"])
+            audio_result["audio_id"] = str(audio_info["ksong_mid"])
 
             # 获取歌曲访问token
             if not robot.check_sub_key(("shareid",), audio_info):
                 raise robot.RobotException("返回数据'shareid'字段不存在\n%s" % audio_info)
-            audio_extra_info["audio_key"] = str(audio_info["shareid"])
+            audio_result["audio_key"] = str(audio_info["shareid"])
 
             # 获取歌曲标题
             if not robot.check_sub_key(("title",), audio_info):
                 raise robot.RobotException("返回数据'title'字段不存在\n%s" % audio_info)
-            audio_extra_info["audio_title"] = str(audio_info["title"].encode("UTF-8"))
+            audio_result["audio_title"] = str(audio_info["title"].encode("UTF-8"))
 
             # 获取歌曲上传时间
             if not robot.check_sub_key(("time",), audio_info):
                 raise robot.RobotException("返回数据'time'字段不存在\n%s" % audio_info)
             if not robot.is_integer(audio_info["time"]):
                 raise robot.RobotException("返回数据'time'字段类型不正确\n%s" % audio_info)
-            audio_extra_info["audio_time"] = str(audio_info["time"])
+            audio_result["audio_time"] = str(audio_info["time"])
 
-            extra_info["audio_info_list"].append(audio_extra_info)
+            result["audio_info_list"].append(audio_result)
 
         # 判断是不是最后一页
-        extra_info["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
+        result["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_pagination_response.status))
-    audio_pagination_response.extra_info = extra_info
-    return audio_pagination_response
+    return result
 
 
 # 获取歌曲播放地址
 def get_audio_play_page(audio_id):
     audio_play_url = "http://kg.qq.com/node/play?s=%s" % audio_id
     audio_play_response = net.http_request(audio_play_url)
-    extra_info = {
+    result = {
         "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -86,11 +84,10 @@ def get_audio_play_page(audio_id):
             audio_url = tool.find_sub_string(audio_play_response.data, '"playurl_video":"', '"')
         if not audio_url:
             raise robot.RobotException("页面截取歌曲地址失败\n%s" % audio_play_response.data)
-        extra_info["audio_url"] = audio_url
+        result["audio_url"] = audio_url
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
-    audio_play_response.extra_info = extra_info
-    return audio_play_response
+    return result
 
 
 class KG(robot.Robot):
@@ -190,9 +187,9 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有歌曲信息：%s" % (page_count, audio_pagination_response.extra_info["audio_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有歌曲信息：%s" % (page_count, audio_pagination_response["audio_info_list"]))
 
-                for audio_info in audio_pagination_response.extra_info["audio_info_list"]:
+                for audio_info in audio_pagination_response["audio_info_list"]:
                     # 检查是否达到存档记录
                     if int(audio_info["audio_time"]) <= int(self.account_info[1]):
                         is_over = True
@@ -215,7 +212,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 歌曲%s《%s》播放页面访问失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], e.message))
                         raise
 
-                    audio_url = audio_play_response.extra_info["audio_url"]
+                    audio_url = audio_play_response["audio_url"]
                     log.step(account_name + " 开始下载第%s首歌曲《%s》 %s" % (video_count, audio_info["audio_title"], audio_url))
 
                     file_type = audio_url.split(".")[-1].split("?")[0]
@@ -227,7 +224,7 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 第%s首歌曲《%s》 %s 下载失败，原因：%s" % (video_count, audio_info["audio_title"], audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                if audio_pagination_response.extra_info["is_over"]:
+                if audio_pagination_response["is_over"]:
                     is_over = True
                 else:
                     page_count += 1

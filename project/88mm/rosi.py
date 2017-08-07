@@ -13,9 +13,9 @@ import re
 
 # 获取指定一页的图集
 def get_one_page_album(page_count):
-    album_pagination_url = "http://www.88mmw.com/Rosi/list_1_%s.html" % (page_count)
+    album_pagination_url = "http://www.88mmw.com/Rosi/list_1_%s.html" % page_count
     album_pagination_response = net.http_request(album_pagination_url)
-    extra_info = {
+    result = {
         "is_over": False,  # 是不是最后一页图集
         "album_info_list": [],  # 所有图集信息
     }
@@ -29,24 +29,23 @@ def get_one_page_album(page_count):
             raise robot.RobotException("页面截取图集列表失败\n%s" % album_pagination_html)
         album_info_list = re.findall('<a href="/Rosi/(\d*)/" title="ROSI套图No.(\d*)', album_info_html)
         if len(album_info_list) == 0:
-            raise robot.RobotException("页面获取图集信息失败\n%s" % album_info_html)
+            raise robot.RobotException("页面匹配图集信息失败\n%s" % album_info_html)
         for page_id, album_id in album_info_list:
             extra_album_info = {
                 "page_id": str(page_id),  # 图集页面id
                 "album_id": str(album_id),  # 图集id
             }
-            extra_info["album_info_list"].append(extra_album_info)
+            result["album_info_list"].append(extra_album_info)
 
         # 判断是不是最后一页
         max_page_find = re.findall("<a href='list_1_(\d*).html'>末页</a>", album_pagination_html)
         if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and robot.is_integer(max_page_find[0]):
-            extra_info['is_over'] = page_count >= int(max_page_find[0])
+            result['is_over'] = page_count >= int(max_page_find[0])
         else:
-            extra_info['is_over'] = True
+            result['is_over'] = True
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
-    album_pagination_response.extra_info = extra_info
-    return album_pagination_response
+    return result
 
 
 # 获取图集一页的图片
@@ -56,7 +55,7 @@ def get_one_page_photo(page_id, page_count):
     else:
         photo_pagination_url = "http://www.88mmw.com/Rosi/%s/index_%s.html" % (page_id, page_count)
     photo_pagination_response = net.http_request(photo_pagination_url)
-    extra_info = {
+    result = {
         "is_over": False,  # 是不是图集的最后一页
         "image_url_list": [],  # 所有图片地址
     }
@@ -70,20 +69,19 @@ def get_one_page_photo(page_id, page_count):
             raise robot.RobotException("页面截取图片列表失败\n%s" % photo_pagination_html)
         image_url_list = re.findall('<img src="([^"]*)"', image_info_html)
         if len(image_url_list) == 0:
-            raise robot.RobotException("页面获取图片地址失败\n%s" % image_info_html)
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % image_info_html)
         for image_url in image_url_list:
-            extra_info["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
+            result["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
 
         # 判断是不是最后一页
         max_page_count = tool.find_sub_string(photo_pagination_html, '<div class="page"><span>共 <strong>', '</strong> 页')
         if not max_page_count:
-            extra_info['is_over'] = True
+            result['is_over'] = True
         elif robot.is_integer(max_page_count):
-            extra_info['is_over'] = page_count >= int(max_page_count)
+            result['is_over'] = page_count >= int(max_page_count)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    return result
 
 
 class Rosi(robot.Robot):
@@ -118,9 +116,9 @@ class Rosi(robot.Robot):
                 log.step("提前退出")
                 raise
 
-            log.trace("第%s页获取的所有图集：%s" % (page_count, album_pagination_response.extra_info["album_info_list"]))
+            log.trace("第%s页获取的所有图集：%s" % (page_count, album_pagination_response["album_info_list"]))
 
-            for album_info in album_pagination_response.extra_info["album_info_list"]:
+            for album_info in album_pagination_response["album_info_list"]:
                 # 检查是否达到存档记录
                 if int(album_info["album_id"]) <= last_album_id:
                     is_over = True
@@ -143,9 +141,9 @@ class Rosi(robot.Robot):
                         log.step("提前退出")
                         raise
 
-                    log.trace("%s号图集第%s页获取的所有图集：%s" % (album_info["album_id"], album_page_count, album_pagination_response.extra_info["album_info_list"]))
+                    log.trace("%s号图集第%s页获取的所有图集：%s" % (album_info["album_id"], album_page_count, album_pagination_response["album_info_list"]))
 
-                    for image_url in photo_pagination_response.extra_info["image_url_list"]:
+                    for image_url in photo_pagination_response["image_url_list"]:
                         log.step("%s号图集 开始下载第%s张图片 %s" % (album_info["album_id"], image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
@@ -162,7 +160,7 @@ class Rosi(robot.Robot):
                             tool.remove_dir_or_file(album_path)
                             tool.process_exit()
 
-                    if is_over or photo_pagination_response.extra_info["is_over"]:
+                    if is_over or photo_pagination_response["is_over"]:
                         break
                     else:
                         album_page_count += 1
@@ -173,7 +171,7 @@ class Rosi(robot.Robot):
                     total_image_count += image_count
 
             if not is_over:
-                if album_pagination_response.extra_info["is_over"]:
+                if album_pagination_response["is_over"]:
                     break
                 else:
                     page_count += 1

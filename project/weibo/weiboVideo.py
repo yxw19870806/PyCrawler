@@ -33,34 +33,37 @@ def get_one_page_video(account_page_id, since_id):
     video_pagination_url = "http://weibo.com/p/aj/album/loading"
     video_pagination_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1&__rnd=%s" % (since_id, account_page_id, int(time.time() * 1000))
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    extra_info = {
+    result = {
         "is_error": False,  # 是不是格式不符合
-        "video_play_url_list": [],  # 页面解析出的所有视频地址列表
-        "next_page_since_id": None,  # 页面解析出的下一页视频的指针
+        "video_play_url_list": [],  # 所有视频地址
+        "next_page_since_id": None,  # 下一页视频指针
     }
     video_pagination_response = net.http_request(video_pagination_url, cookies_list=cookies_list, json_decode=True)
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if(
-            robot.check_sub_key(("code", "data"), video_pagination_response.json_data) and
-            robot.is_integer(video_pagination_response.json_data["code"]) and
-            int(video_pagination_response.json_data["code"]) == 100000
-        ):
-            page_html = video_pagination_response.json_data["data"].encode("UTF-8")
-            # 获取视频播放地址类别
-            video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
-            if len(video_play_url_list) == 0:
-                if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
-                    extra_info["is_error"] = True
-            else:
-                extra_info["video_play_url_list"] = map(str, video_play_url_list)
-            # 获取下一页视频的指针
-            next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
-            if robot.is_integer(next_page_since_id):
-                extra_info["next_page_since_id"] = next_page_since_id
+        if not robot.check_sub_key(("code", "data"), video_pagination_response.json_data):
+            raise robot.RobotException("返回信息'code'或'data'字段不存在\n%s" % video_pagination_response.json_data)
+        if not robot.is_integer(video_pagination_response.json_data["code"]):
+            raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % video_pagination_response.json_data)
+        if int(video_pagination_response.json_data["code"]) != 100000:
+            raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
+        page_html = video_pagination_response.json_data["data"].encode("UTF-8")
+
+        # 获取视频播放地址
+        video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
+        if len(video_play_url_list) == 0:
+            if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
+                raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
         else:
-            extra_info["is_error"] = True
-    video_pagination_response.extra_info = extra_info
-    return video_pagination_response
+            result["video_play_url_list"] = map(str, video_play_url_list)
+
+        # 获取下一页视频的指针
+        next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
+        if not robot.is_integer(next_page_since_id):
+            raise robot.RobotException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
+        result["next_page_since_id"] = next_page_since_id
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+    return result
 
 
 # 从视频播放页面中提取下载地址
@@ -72,15 +75,22 @@ def get_video_url(video_play_url):
         video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
         video_info_response = net.http_request(video_info_url, json_decode=True)
         if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if (
-                robot.check_sub_key(("status", "result"), video_info_response.json_data) and
-                robot.is_integer(video_info_response.json_data["status"]) and
-                int(video_info_response.json_data["status"]) == 200
-            ):
-                for video_info in video_info_response.json_data["result"]:
-                    if robot.check_sub_key(("path", "host", "scheme"), video_info):
-                        video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
-                        break
+            if not robot.check_sub_key(("status", "result"), video_info_response.json_data):
+                raise robot.RobotException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
+            if not robot.is_integer(video_info_response.json_data["status"]):
+                raise robot.RobotException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
+            if int(video_info_response.json_data["status"]) != 200:
+                raise robot.RobotException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
+            if len(video_info_response.json_data["result"]) == 0:
+                raise robot.RobotException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
+            for video_info in video_info_response.json_data["result"]:
+                if robot.check_sub_key(("path", "host", "scheme"), video_info):
+                    video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
+                    break
+            if video_url is None:
+                raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
@@ -89,28 +99,32 @@ def get_video_url(video_play_url):
             video_url = tool.find_sub_string(video_play_response.data, "video_src=", "&")
             if not video_url:
                 video_url = tool.find_sub_string(video_play_response.data, 'flashvars="list=', '"')
-            if video_url:
-                video_url = str(urllib2.unquote(video_url))
-            else:
-                video_url = None
+            if not video_url:
+                raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
+            video_url = str(urllib2.unquote(video_url))
         elif video_play_response.status == 404:
             video_url = ""
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
         video_play_response = net.http_request(video_play_url)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
-            if len(video_url_find) == 1:
-                loc1 = meipai_get_hex(video_url_find[0])
-                loc2 = meipai_get_dec(loc1["hex"])
-                loc3 = meipai_sub_str(loc1["str"], loc2["pre"])
-                try:
-                    video_url = base64.b64decode(meipai_sub_str(loc3, meipai_get_pos(loc3, loc2["tail"])))
-                except TypeError:
-                    pass
-                else:
-                    if video_url.find("http") != 0:
-                        video_url = None
+            if len(video_url_find) != 1:
+                raise robot.RobotException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
+            loc1 = meipai_get_hex(video_url_find[0])
+            loc2 = meipai_get_dec(loc1["hex"])
+            loc3 = meipai_sub_str(loc1["str"], loc2["pre"])
+            video_url_string = meipai_sub_str(loc3, meipai_get_pos(loc3, loc2["tail"]))
+            try:
+                video_url = base64.b64decode(video_url_string)
+            except TypeError:
+                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(video_url_find[0]), video_url_string))
+            if video_url.find("http") != 0:
+                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(video_url_find[0]), video_url_string))
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
@@ -120,16 +134,23 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url)
         if video_play_response == net.HTTP_RETURN_CODE_SUCCEED:
             video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_response.data)
-            if len(video_id_find) == 1:
-                video_id = video_play_url.split("/")[-1]
-                video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
-                video_info_response = net.http_request(video_info_url, json_decode=True)
-                if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                    if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_play_response.json_data["data"]):
-                        video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
+            if len(video_id_find) != 1:
+                raise robot.RobotException("页面匹配视频id失败\n%s" % video_play_response.data)
+            video_id = video_play_url.split("/")[-1]
+            video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
+            video_info_response = net.http_request(video_info_url, json_decode=True)
+            if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                if not robot.check_sub_key(("data",), video_info_response.json_data):
+                    raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
+                if not robot.check_sub_key(("url",), video_play_response.json_data["data"]):
+                    raise robot.RobotException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
+                video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
+            else:
+                raise robot.RobotException("API " + robot.get_http_request_failed_reason(video_info_response.status))
+        else:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     else:  # 其他视频，暂时不支持，收集看看有没有
-        log.error("其他第三方视频：" + video_play_url)
-        video_url = ""
+        raise robot.RobotException("未知的第三方视频\n%s" % video_play_url)
     return video_url
 
 
@@ -258,14 +279,11 @@ class Download(threading.Thread):
             first_video_url = None
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             # 获取账号首页
-            account_index_response = weiboCommon.get_account_index_page(account_id)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 首页访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
-                tool.process_exit()
-
-            if account_index_response.extra_info["account_page_id"] is None:
-                log.error(account_name + " 账号page id解析失败")
-                tool.process_exit()
+            try:
+                account_index_response = weiboCommon.get_account_index_page(account_id)
+            except robot.RobotException, e:
+                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                raise
 
             is_over = False
             since_id = INIT_SINCE_ID
@@ -273,19 +291,16 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析%s后一页视频" % since_id)
 
                 # 获取指定时间点后的一页视频信息
-                video_pagination_response = get_one_page_video(account_index_response.extra_info["account_page_id"], since_id)
-                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, robot.get_http_request_failed_reason(video_pagination_response.status)))
-                    tool.process_exit()
-
-                if video_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " %s后的一页视频%s解析失败" % (since_id, video_pagination_response.json_data))
-                    tool.process_exit()
+                try:
+                    video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
+                except robot.RobotException, e:
+                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, e.message))
+                    raise
 
                 # 匹配获取全部的视频页面
-                log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_pagination_response.extra_info["video_play_url_list"]))
+                log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_pagination_response["video_play_url_list"]))
 
-                for video_play_url in video_pagination_response.extra_info["video_play_url_list"]:
+                for video_play_url in video_pagination_response["video_play_url_list"]:
                     # 检查是否达到存档记录
                     if self.account_info[4] == video_play_url:
                         is_over = True
@@ -298,10 +313,11 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析第%s个视频 %s" % (video_count, video_play_url))
 
                     # 获取这个视频的下载地址
-                    video_url = get_video_url(video_play_url)
-                    if video_url is None:
-                        log.error(account_name + " 第%s个视频 %s 没有解析到下载地址" % (video_count, video_play_url))
-                        continue
+                    try:
+                        video_url = get_video_url(video_play_url)
+                    except robot.RobotException, e:
+                        log.error(account_name + " 第%s个视频 %s 没有解析到下载地址，原因：%s" % (video_count, video_play_url, e.message))
+                        raise
 
                     if video_url is "":
                         continue
@@ -318,7 +334,7 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取下一页的since_id
-                    since_id = video_pagination_response.extra_info["next_page_since_id"]
+                    since_id = video_pagination_response["next_page_since_id"]
                     if not since_id:
                         break
 

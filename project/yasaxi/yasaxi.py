@@ -32,8 +32,8 @@ def get_one_page_photo(account_id, cursor):
     extra_info = {
         "is_over": False,  # 是不是已经没有新的图片
         "is_error": False,  # 是不是格式不符合
-        "next_page_cursor": None,  # 页面解析出的下一页图片的指针
-        "status_list": [],  # 页面解析出的所有状态列表
+        "next_page_cursor": None,  # 下一页图片的指针
+        "status_list": [],  # 所有状态信息
     }
     photo_pagination_response = net.http_request(photo_pagination_url, header_list=header_list, is_random_ip=False, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -52,8 +52,8 @@ def get_one_page_photo(account_id, cursor):
         elif robot.check_sub_key(("data", "next"), photo_pagination_response.json_data):
             for media_info in photo_pagination_response.json_data["data"]:
                 media_extra_info = {
-                    "id": None,  # 页面解析出的状态id
-                    "image_url_list": [],  # 页面解析出的所有图片地址
+                    "id": None,  # 状态id
+                    "image_url_list": [],  # 所有图片地址
                     "json_data": media_info,  # 原始数据
                 }
                 if robot.check_sub_key(("medias", "createAt", "statusId"), media_info):

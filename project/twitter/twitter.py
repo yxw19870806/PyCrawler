@@ -32,8 +32,8 @@ IS_DOWNLOAD_VIDEO = True
 def get_account_index_page(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
     account_index_response = net.http_request(account_index_url)
-    extra_info = {
-        "account_id": None,  # 页面解析出的account id
+    result = {
+        "account_id": None,  # account id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
@@ -41,11 +41,10 @@ def get_account_index_page(account_name):
             raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
         if not robot.is_integer(account_id):
             raise robot.RobotException("获取的用户id类型不正确\n%s" % account_index_response.data)
-        extra_info["account_id"] = account_id
+        result["account_id"] = account_id
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
-    account_index_response.extra_info = extra_info
-    return account_index_response
+    return result
 
 
 # 获取一页的媒体信息
@@ -53,11 +52,11 @@ def get_one_page_media(account_name, position_blog_id):
     media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     media_pagination_url += "?include_available_features=1&include_entities=1&max_position=%s" % position_blog_id
     media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
-    extra_info = {
+    result = {
         "is_error": False,  # 是不是格式不符合
-        "is_over": False,  # 是不是已经结束（没有获取到任何内容）
-        "media_info_list": [],  # 页面解析出的媒体信息列表
-        "next_page_position": None  # 页面解析出的下一页指针
+        "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
+        "media_info_list": [],  # 所有媒体信息
+        "next_page_position": None  # 下一页指针
     }
     if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("has_more_items",), media_pagination_response.json_data):
@@ -74,7 +73,7 @@ def get_one_page_media(account_name, position_blog_id):
             raise robot.RobotException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
         # 没有任何内容
         if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
-            extra_info["is_skip"] = True
+            result["is_skip"] = True
         else:
             # tweet信息分组
             temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
@@ -111,23 +110,22 @@ def get_one_page_media(account_name, position_blog_id):
                 # 判断是不是有视频
                 extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
 
-                extra_info["media_info_list"].append(extra_media_info)
+                result["media_info_list"].append(extra_media_info)
 
             # 判断是不是还有下一页
             if media_pagination_response.json_data["has_more_items"]:
-                extra_info["next_page_position"] = str(media_pagination_response.json_data["min_position"])
+                result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
-    media_pagination_response.extra_info = extra_info
-    return media_pagination_response
+    return result
 
 
 # 根据视频所在推特的ID，获取视频的下载地址
 def get_video_play_page(tweet_id):
     video_play_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
     video_play_response = net.http_request(video_play_url)
-    extra_info = {
-        "video_url": None,  # 页面解析出的视频地址
+    result = {
+        "video_url": None,  # 视频地址
     }
     if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 包含m3u8文件地址的处理
@@ -153,14 +151,14 @@ def get_video_play_page(tweet_id):
             ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
             if len(ts_url_find) == 0:
                 raise robot.RobotException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
-            extra_info["video_url"] = []
+            result["video_url"] = []
             for ts_file_path in ts_url_find:
-                extra_info["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
+                result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
         else:
             # 直接包含视频播放地址的处理
             video_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
             if video_url:
-                extra_info["video_url"] = video_url.replace("\\/", "/")
+                result["video_url"] = video_url.replace("\\/", "/")
             else:
                 # 直接包含视频播放地址的处理
                 vmap_file_url = tool.find_sub_string(video_play_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
@@ -173,11 +171,10 @@ def get_video_play_page(tweet_id):
                 video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
                 if not video_url:
                     raise robot.RobotException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
-                extra_info["video_url"] = str(video_url.replace("\\/", "/"))
+                result["video_url"] = str(video_url.replace("\\/", "/"))
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
-    video_play_response.extra_info = extra_info
-    return video_play_response
+    return result
 
 
 class Twitter(robot.Robot):
@@ -277,9 +274,9 @@ class Download(threading.Thread):
                 raise
 
             if self.account_info[1] == "":
-                self.account_info[1] = account_index_response.extra_info["account_id"]
+                self.account_info[1] = account_index_response["account_id"]
             else:
-                if self.account_info[1] != account_index_response.extra_info["account_id"]:
+                if self.account_info[1] != account_index_response["account_id"]:
                     log.error(account_name + " account id 不符合，原账号已改名")
                     tool.process_exit()
 
@@ -300,12 +297,12 @@ class Download(threading.Thread):
                     log.error(account_name + " position %s后的一页媒体列表访问失败，原因：%s" % (position_blog_id, e.message))
                     tool.process_exit()
 
-                if media_pagination_response.extra_info["is_over"]:
+                if media_pagination_response["is_over"]:
                     break
 
-                log.trace(account_name + " position %s后一页解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response.extra_info["media_info_list"]))
+                log.trace(account_name + " position %s后一页解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
 
-                for media_info in media_pagination_response.extra_info["media_info_list"]:
+                for media_info in media_pagination_response["media_info_list"]:
                     log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
 
                     # 检查是否达到存档记录
@@ -326,7 +323,7 @@ class Download(threading.Thread):
                             log.error(account_name + " 日志%s的视频播放页访问失败，原因：%s" % (media_info["blog_id"], e.message))
                             raise
 
-                        video_url = video_play_response.extra_info["video_url"]
+                        video_url = video_play_response["video_url"]
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                         # 分割后的ts格式视频
@@ -368,10 +365,10 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 下一页的指针
-                    if media_pagination_response.extra_info["next_page_position"] is None:
+                    if media_pagination_response["next_page_position"] is None:
                         is_over = True
                     else:
-                        position_blog_id = media_pagination_response.extra_info["next_page_position"]
+                        position_blog_id = media_pagination_response["next_page_position"]
 
             log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
 

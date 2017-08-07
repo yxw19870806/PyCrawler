@@ -25,33 +25,32 @@ def get_one_page_blog(account_name, page_count):
     # http://moexia.lofter.com/?page=1
     blog_pagination_url = "http://%s.lofter.com/?page=%s" % (account_name, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
-    extra_info = {
+    result = {
         "blog_url_list": [],  # 所有日志地址
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中所有的日志地址列表
+        # 获取所有日志地址
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data)
         # 去重排序
-        extra_info["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
+        result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
-    blog_pagination_response.extra_info = extra_info
-    return blog_pagination_response
+    return result
 
 
 # 获取日志
 def get_blog_page(blog_url):
     blog_response = net.http_request(blog_url)
-    extra_info = {
+    result = {
         "image_url_list": [],  # 所有图片地址
     }
     if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取所有图片地址
         image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
-        extra_info["image_url_list"] = map(str, image_url_list)
+        result["image_url_list"] = map(str, image_url_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
-    blog_response.extra_info = extra_info
-    return blog_response
+    return result
 
 
 class Lofter(robot.Robot):
@@ -148,12 +147,12 @@ class Download(threading.Thread):
                     raise
 
                 # 下载完毕了
-                if len(blog_pagination_response.extra_info["blog_url_list"]) == 0:
+                if len(blog_pagination_response["blog_url_list"]) == 0:
                     break
 
-                log.trace(account_name + " 第%s页去重排序后的日志：%s" % (page_count, blog_pagination_response.extra_info["blog_url_list"]))
+                log.trace(account_name + " 第%s页去重排序后的日志：%s" % (page_count, blog_pagination_response["blog_url_list"]))
 
-                for blog_url in blog_pagination_response.extra_info["blog_url_list"]:
+                for blog_url in blog_pagination_response["blog_url_list"]:
                     blog_id = blog_url.split("/")[-1].split("_")[-1]
 
                     # 检查是否达到存档记录
@@ -181,13 +180,13 @@ class Download(threading.Thread):
                         raise
 
                     # 获取图片下载地址列表
-                    if len(blog_response.extra_info["image_url_list"]) == 0:
+                    if len(blog_response["image_url_list"]) == 0:
                         log.error(account_name + " 日志 %s 中没有找到图片" % blog_url)
                         continue
 
-                    log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_response.extra_info["image_url_list"]))
+                    log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_response["image_url_list"]))
 
-                    for image_url in blog_response.extra_info["image_url_list"]:
+                    for image_url in blog_response["image_url_list"]:
                         if image_url.rfind("?") > image_url.rfind("."):
                             image_url = image_url.split("?")[0]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))

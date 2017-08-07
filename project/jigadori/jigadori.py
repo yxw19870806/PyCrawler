@@ -16,7 +16,7 @@ import time
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
-    extra_info = {
+    result = {
         "image_info_list": [],  # 所有图片信息
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -33,22 +33,22 @@ def get_one_page_photo(page_count):
             # 获取tweet id
             tweet_url = photo_selector.find(".photo-link-outer a").eq(0).attr("href")
             if not tweet_url:
-                raise robot.RobotException("图片信息选择器获取tweet地址失败\n%s" % photo_selector_html)
+                raise robot.RobotException("图片信息截取tweet地址失败\n%s" % photo_selector_html)
             tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
             if not robot.is_integer(tweet_id):
-                raise robot.RobotException("tweet地址获取tweet id失败\n%s" % tweet_url)
+                raise robot.RobotException("tweet地址截取tweet id失败\n%s" % tweet_url)
             extra_photo_info["tweet_id"] = int(tweet_id)
 
             # 获取twitter账号
             account_name = photo_selector.find(".user-info .user-name .screen-name").text()
             if not account_name:
-                raise robot.RobotException("图片信息选择器获取twitter账号失败\n%s" % photo_selector_html)
+                raise robot.RobotException("图片信息截取twitter账号失败\n%s" % photo_selector_html)
             extra_photo_info["account_name"] = str(account_name).strip().replace("@", "")
 
             # 获取tweet发布时间
             tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text().strip()
             if not tweet_time:
-                raise robot.RobotException("图片信息选择器获取tweet发布时间失败\n%s" % photo_selector_html)
+                raise robot.RobotException("图片信息截取tweet发布时间失败\n%s" % photo_selector_html)
             try:
                 extra_photo_info["time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
             except ValueError:
@@ -59,14 +59,13 @@ def get_one_page_photo(page_count):
             for image_index in range(0, image_list_selector.size()):
                 image_url = image_list_selector.eq(image_index).attr("src")
                 if not image_url:
-                    raise robot.RobotException("图片列表获取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
+                    raise robot.RobotException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
                 extra_photo_info["image_url_list"].append(str(image_url).strip())
 
-            extra_info["image_info_list"].append(extra_photo_info)
+            result["image_info_list"].append(extra_photo_info)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    return result
 
 
 class Jigadori(robot.Robot):
@@ -101,13 +100,13 @@ class Jigadori(robot.Robot):
                 photo_pagination_response = get_one_page_photo(page_count)
             except robot.RobotException, e:
                 log.error("第%s页图片访问失败，原因：%s" % (page_count, e.message))
-                tool.process_exit()
+                raise 
 
             # 没有图片了
-            if len(photo_pagination_response.extra_info["image_info_list"]) == 0:
+            if len(photo_pagination_response["image_info_list"]) == 0:
                 break
 
-            for image_info in photo_pagination_response.extra_info["image_info_list"]:
+            for image_info in photo_pagination_response["image_info_list"]:
                 # 检查是否达到存档记录
                 if image_info["time"] <= last_blog_time:
                     is_over = True

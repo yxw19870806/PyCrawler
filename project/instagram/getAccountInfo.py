@@ -15,19 +15,24 @@ import sys
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s/" % account_name
     account_index_response = net.http_request(account_index_url)
-    extra_info = {
+    result = {
         "account_info": "",  # 页面解析出的自我介绍
         "external_url": "",  # 页面解析出的外部地址
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取账号信息
         account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
-        if account_info:
-            account_info = account_info.replace(r"\n", "").replace("'", chr(1))
-            account_info = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
-            extra_info["account_info"] = account_info
-        extra_info["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
-    account_index_response.extra_info = extra_info
-    return account_index_response
+        if not account_info:
+            raise robot.RobotException("页面截取账号信息失败\n%s" % account_info)
+        account_info = account_info.replace(r"\n", "").replace("'", chr(1))
+        account_info = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
+        result["account_info"] = account_info
+
+        # 获取外部链接地址
+        result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+    return result
 
 
 def main():
@@ -47,8 +52,7 @@ def main():
     result_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/account_info.data")
     for account in sorted(account_list.keys()):
         account_index_response = get_account_index_page(account)
-        if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            tool.write_file("%s\t%s\t%s" % (account, account_index_response.extra_info["account_info"], account_index_response.extra_info["external_url"]), result_file_path)
+        tool.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
 
 if __name__ == "__main__":
     main()

@@ -46,18 +46,17 @@ def get_follow_list(suid):
 def get_account_index_page(account_id):
     account_index_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
     account_index_response = net.http_request(account_index_url)
-    extra_info = {
+    result = {
         "user_id": None,  # 账号user id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
         if not user_id:
             raise robot.RobotException("页面截取user id失败\n%s" % account_index_response.data)
-        extra_info["user_id"] = user_id
+        result["user_id"] = user_id
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
-    account_index_response.extra_info = extra_info
-    return account_index_response
+    return result
 
 
 # 获取指定页数的所有视频
@@ -66,35 +65,34 @@ def get_one_page_video(suid, page_count):
     # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
     video_pagination_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
-    extra_info = {
-        "video_id_list": [],  # 页面解析出的所有视频id
+    result = {
+        "video_id_list": [],  # 所有视频id
         "is_over": False  # 是不是最后一页视频
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断是不是最后一页
         if not robot.check_sub_key(("isall",), video_pagination_response.json_data):
             raise robot.RobotException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
-        extra_info["is_over"] = bool(video_pagination_response.json_data["isall"])
+        result["is_over"] = bool(video_pagination_response.json_data["isall"])
 
         # 获取所有视频id
         if not robot.check_sub_key(("msg",), video_pagination_response.json_data):
             raise robot.RobotException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
         video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
-        if not extra_info["is_over"] and len(video_id_list) == 0:
+        if not result["is_over"] and len(video_id_list) == 0:
             raise robot.RobotException("所有视频id获取失败\n%s" % video_pagination_response.json_data)
-        extra_info["video_id_list"] = map(str, video_id_list)
+        result["video_id_list"] = map(str, video_id_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
-    video_pagination_response.extra_info = extra_info
-    return video_pagination_response
+    return result
 
 
 # 获取指定id视频的详情页
 def get_video_info_page(video_id):
     video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
     video_info_response = net.http_request(video_info_url, json_decode=True)
-    extra_info = {
-        "video_url": None,  # 页面解析出的视频下载地址
+    result = {
+        "video_url": None,  # 视频地址
     }
     if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取视频地址
@@ -103,13 +101,12 @@ def get_video_info_page(video_id):
         # 存在多个CDN地址，任意一个匹配即可
         for result in video_info_response.json_data["result"]:
             if robot.check_sub_key(("path", "host", "scheme"), result):
-                extra_info["video_url"] = str(result["scheme"]) + str(result["host"]) + str(result["path"])
+                result["video_url"] = str(result["scheme"]) + str(result["host"]) + str(result["path"])
                 break
-        if extra_info["video_url"] is None:
-            raise robot.RobotException("获取视频地址失败\n%s" % video_info_response.json_data)
+        if result["video_url"] is None:
+            raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
-    video_info_response.extra_info = extra_info
     return video_info_response
 
 
@@ -212,14 +209,14 @@ class Download(threading.Thread):
 
                 # 获取指定一页的视频信息
                 try:
-                    video_pagination_response = get_one_page_video(account_index_response.extra_info["user_id"], page_count)
+                    video_pagination_response = get_one_page_video(account_index_response["user_id"], page_count)
                 except robot.RobotException, e:
                     log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response.extra_info["video_id_list"]))
+                log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response["video_id_list"]))
 
-                for video_id in video_pagination_response.extra_info["video_id_list"]:
+                for video_id in video_pagination_response["video_id_list"]:
                     video_id = str(video_id)
 
                     # 检查是否达到存档记录
@@ -244,7 +241,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, e.message))
                         raise
 
-                    video_url = video_info_response.extra_info["video_url"]
+                    video_url = video_info_response["video_url"]
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                     file_path = os.path.join(video_path, "%04d.mp4" % video_count)
@@ -256,7 +253,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 # 没有视频了
-                if video_pagination_response.extra_info["is_over"]:
+                if video_pagination_response["is_over"]:
                     if self.account_info[2] != "":
                         log.error(account_name + " 没有找到上次下载的最后一个视频地址")
                     is_over = True

@@ -24,19 +24,19 @@ NEW_SAVE_DATA_PATH = ""
 def get_account_index_page(account_name):
     account_index_url = "http://%s.pp.163.com/" % account_name
     account_index_response = net.http_request(account_index_url)
-    extra_info = {
-        "album_url_list": [],  # 页面解析出的所有相册地址列表
+    result = {
+        "album_url_list": [],  # 所有相册地址
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 获取所有相册地址
         album_result_selector = pq(account_index_response.data.decode("GBK").encode("UTF-8")).find("#p_contents li")
         if album_result_selector.size() == 0:
             raise robot.RobotException("页面获取相册列表失败\n%s" % account_index_response.data.decode("UTF-8"))
         for album_index in range(0, album_result_selector.size()):
-            extra_info["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
+            result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
-    account_index_response.extra_info = extra_info
-    return account_index_response
+    return result
 
 
 # 解析相册id
@@ -50,7 +50,7 @@ def get_album_id(album_url):
 # 获取相册页
 def get_album_page(album_url):
     album_response = net.http_request(album_url)
-    extra_info = {
+    result = {
         "album_title": "",  # 相册标题
         "image_url_list": [],  # 所有图片地址
     }
@@ -58,17 +58,16 @@ def get_album_page(album_url):
         # 获取相册标题
         album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
         if album_title:
-            extra_info["album_title"] = album_title.decode("GBK").encode("UTF-8")
+            result["album_title"] = album_title.decode("GBK").encode("UTF-8")
 
         # 获取图片地址
         image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
         if len(image_url_list) == 0:
             raise robot.RobotException("获取图片地址失败\n%s" % album_response.data)
-        extra_info["image_url_list"] = map(str, image_url_list)
+        result["image_url_list"] = map(str, image_url_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
-    album_response.extra_info = extra_info
-    return album_response
+    return result
 
 
 class Photographer(robot.Robot):
@@ -154,13 +153,13 @@ class Download(threading.Thread):
                 log.error(account_name + " 主页访问失败，原因：%s" % e.message)
                 raise
 
-            log.trace(account_name + " 解析的所有相册地址：%s" % account_index_response.extra_info["album_url_list"])
+            log.trace(account_name + " 解析的所有相册地址：%s" % account_index_response["album_url_list"])
 
             total_image_count = 0
             album_count = 0
             first_album_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-            for album_url in account_index_response.extra_info["album_url_list"]:
+            for album_url in account_index_response["album_url_list"]:
                 album_id = get_album_id(album_url)
                 if album_id is None:
                     log.error(account_name + " 相册地址 %s 解析相册id失败" % album_url)
@@ -182,10 +181,10 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, e.message))
                     raise
 
-                log.trace(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response.extra_info["image_url_list"]))
+                log.trace(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response["image_url_list"]))
 
                 # 过滤标题中不支持的字符
-                album_title = robot.filter_text(album_response.extra_info["album_title"])
+                album_title = robot.filter_text(album_response["album_title"])
                 if album_title:
                     album_path = os.path.join(image_path, "%s %s" % (album_id, album_title))
                 else:
@@ -199,7 +198,7 @@ class Download(threading.Thread):
                         tool.process_exit()
 
                 image_count = 1
-                for image_url in album_response.extra_info["image_url_list"]:
+                for image_url in album_response["image_url_list"]:
                     log.step(account_name + " 相册%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                     file_type = image_url.split(".")[-1]

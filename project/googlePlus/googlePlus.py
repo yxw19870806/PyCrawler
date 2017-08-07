@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 
 # 获取指定token后的一页相册
 def get_one_page_blog(account_id, token):
-    extra_info = {
+    result = {
         "blog_info_list": [],  # 所有日志信息
         "next_page_key": None,  # 下一页token
     }
@@ -35,13 +35,13 @@ def get_one_page_blog(account_id, token):
         if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
             if not script_data_html:
-                raise robot.RobotException("页面截取首页信息失败\n%s" % blog_pagination_response.data)
+                raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
             try:
                 script_data = json.loads(script_data_html)
             except ValueError:
-                raise robot.RobotException("首页信息加载失败\n%s" % script_data_html)
+                raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
             if not (len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2])):
-                raise robot.RobotException("首页信息格式不正确\n%s" % script_data)
+                raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
             script_data = script_data[0][2]["113305009"]
         else:
             raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
@@ -64,7 +64,7 @@ def get_one_page_blog(account_id, token):
         raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
 
     # 获取下一页token
-    extra_info["next_page_key"] = str(script_data[2])
+    result["next_page_key"] = str(script_data[2])
 
     # 获取日志信息
     if script_data[1] is not None:
@@ -72,7 +72,6 @@ def get_one_page_blog(account_id, token):
             extra_blog_info = {
                 "blog_id": None,  # 日志id
                 "blog_time": None,  # 日志发布时间
-                "json_data": data,  # 原始数据
             }
             blog_data = []
             for temp_data in data:
@@ -89,11 +88,10 @@ def get_one_page_blog(account_id, token):
                 extra_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
             else:
                 raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
-            extra_info["blog_info_list"].append(extra_blog_info)
+            result["blog_info_list"].append(extra_blog_info)
     else:
-        extra_info["is_error"] = False
-    blog_pagination_response.extra_info = extra_info
-    return blog_pagination_response
+        result["is_error"] = False
+    return result
 
 
 # 获取指定id的相册页
@@ -101,7 +99,7 @@ def get_album_page(account_id, album_id):
     # 图片只有一页：https://get.google.com/albumarchive/102249965218267255722/album/AF1QipPLt_v4vK2Jkqcm5DOtFl6aHWZMTdu0A4mOpOFN?source=pwa
     # 图片不止一页：https://get.google.com/albumarchive/109057690948151627836/album/AF1QipMg1hsC4teQFP5xaBioWo-1SCr4Hphh4mfc0ZZX?source=pwa
     album_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
-    extra_info = {
+    result = {
         "image_url_list": [],  # 所有图片地址
     }
     while True:
@@ -119,7 +117,7 @@ def get_album_page(account_id, album_id):
                 user_key = script_data[4][0]
                 continue_token = script_data[3]
                 for data in script_data[4][1]:
-                    extra_info["image_url_list"].append(str(data[1]))
+                    result["image_url_list"].append(str(data[1]))
             except ValueError:
                 raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
 
@@ -137,15 +135,14 @@ def get_album_page(account_id, album_id):
                     try:
                         continue_token = continue_data[0][2]["113305010"][3]
                         for data in continue_data[0][2]["113305010"][4][1]:
-                            extra_info["image_url_list"].append(str(data[1]))
+                            result["image_url_list"].append(str(data[1]))
                     except ValueError:
                         raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
                 else:
                     raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
         else:
             raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
-        album_response.extra_info = extra_info
-        return album_response
+        return result
 
 
 class GooglePlus(robot.Robot):
@@ -250,9 +247,9 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, e.message))
                     raise
 
-                log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, blog_pagination_response.extra_info["blog_info_list"]))
+                log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, blog_pagination_response["blog_info_list"]))
 
-                for blog_info in blog_pagination_response.extra_info["blog_info_list"]:
+                for blog_info in blog_pagination_response["blog_info_list"]:
                     # 检查是否达到存档记录
                     if blog_info["blog_time"] <= int(self.account_info[2]):
                         is_over = True
@@ -271,13 +268,13 @@ class Download(threading.Thread):
                         log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], e.message))
                         raise
 
-                    if len(album_response.extra_info["image_url_list"]) == 0:
+                    if len(album_response["image_url_list"]) == 0:
                         log.error(account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
                         continue
 
-                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_response.extra_info["image_url_list"]))
+                    log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
 
-                    for image_url in album_response.extra_info["image_url_list"]:
+                    for image_url in album_response["image_url_list"]:
                         # 视频跳过
                         if image_url.find("video.googleusercontent.com") != -1 or image_url.find("video-downloads.googleusercontent.com") != -1:
                             continue
@@ -302,13 +299,12 @@ class Download(threading.Thread):
                         break
 
                 if not is_over:
-                    if blog_pagination_response.extra_info["next_page_key"]:
-                        key = blog_pagination_response.extra_info["next_page_key"]
+                    if blog_pagination_response["next_page_key"]:
+                        key = blog_pagination_response["next_page_key"]
                     else:
                         # 不是第一次下载
                         if self.account_info[2] != "0":
-                            log.error(account_name + " 没有找到下一页的token，将该页保存：")
-                            log.error(blog_pagination_response.data)
+                            log.error(account_name + " 没有找到下一页的token")
                         is_over = True
 
             log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))

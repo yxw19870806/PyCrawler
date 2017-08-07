@@ -15,33 +15,36 @@ import re
 def get_album_page(album_id):
     album_url = "http://www.ugirls.com/Content/List/Magazine-%s.html" % album_id
     album_response = net.http_request(album_url)
-    extra_info = {
-        "is_error": False,  # 是不是格式不符合
+    result = {
         "is_delete": False,  # 是不是已经被删除
-        "model_name": "",  # 页面解析出的模特名字
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "model_name": "",  # 模特名字
+        "image_url_list": [],  # 所有图片地址
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
-            extra_info["is_delete"] = True
+            result["is_delete"] = True
         else:
-            model_name_data = tool.find_sub_string(album_response.data, '<div class="ren_head">', "</div>")
-            model_name = tool.find_sub_string(model_name_data, 'title="', '"')
-            if model_name:
-                extra_info["model_name"] = model_name.strip()
+            # 获取模特名字
+            model_info_html = tool.find_sub_string(album_response.data, '<div class="ren_head">', "</div>")
+            if not model_info_html:
+                raise robot.RobotException("页面截取模特信息失败\n%s" % album_response.data)
+            model_name = tool.find_sub_string(model_info_html, 'title="', '"')
+            if not model_name:
+                raise robot.RobotException("模特信息截取模特名字失败\n%s" % model_info_html)
+            result["model_name"] = str(model_name).strip()
+
+            # 获取所有图片地址
             image_info_data = tool.find_sub_string(album_response.data, '<ul id="myGallery">', "</ul>")
             image_url_list = re.findall('<img src="([^"]*)"', image_info_data)
-            if len(image_url_list) > 0:
-                for image_url in image_url_list:
-                    if image_url.find("_magazine_web_m.") >= 0:
-                        extra_info["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
-                    else:
-                        extra_info["is_error"] = True
-                        break
-            else:
-                extra_info["is_error"] = True
-    album_response.extra_info = extra_info
-    return album_response
+            if len(image_url_list) == 0:
+                raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
+            for image_url in image_url_list:
+                if image_url.find("_magazine_web_m.") == -1:
+                    raise robot.RobotException("图片地址不符合规则\n%s" % image_url)
+                result["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+    return result
 
 
 # 从图集首页获取最新的图集id
@@ -86,28 +89,23 @@ class UGirls(robot.Robot):
             # 获取相册
             try:
                 album_response = get_album_page(album_id)
+            except robot.RobotException, e:
+                log.error("第%s页图集访问失败，原因：%s" % (album_id, e.message))
+                break
             except SystemExit:
                 log.step("提前退出")
                 break
 
-            if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页图集访问失败，原因：%s" % (album_id, robot.get_http_request_failed_reason(album_response.status)))
-                break
-
-            if album_response.extra_info["is_error"]:
-                log.error("第%s页图集解析失败" % album_id)
-                break
-
-            if album_response.extra_info["is_delete"]:
+            if album_response["is_delete"]:
                 log.step("第%s页图集已被删除，跳过" % album_id)
                 album_id += 1
                 continue
 
-            log.trace("第%s页图集解析的所有图片：%s" % (album_id, album_response.extra_info["image_url_list"]))
+            log.trace("第%s页图集解析的所有图片：%s" % (album_id, album_response["image_url_list"]))
 
             image_count = 1
-            album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response.extra_info["model_name"]))
-            for image_url in album_response.extra_info["image_url_list"]:
+            album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response["model_name"]))
+            for image_url in album_response["image_url_list"]:
                 log.step("开始下载第%s页图集的第%s张图片 %s" % (album_id, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]

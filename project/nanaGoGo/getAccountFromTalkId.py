@@ -32,16 +32,22 @@ def get_member_from_talk(talk_id):
     account_list = {}
     if talk_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         talk_data_string = tool.find_sub_string(talk_index_response.data, "window.__STATES__ = ", "</script>")
-        talk_data = None
-        if talk_data_string:
-            try:
-                talk_data = json.loads(talk_data_string)
-            except ValueError:
-                pass
-        if talk_data is not None:
-            if robot.check_sub_key(("TalkStore",), talk_data) and robot.check_sub_key(("memberList",), talk_data["TalkStore"]):
-                for member_info in talk_data["TalkStore"]["memberList"]:
-                    account_list[str(member_info["userId"])] = str(member_info["name"].encode("UTF-8")).replace(" ", "")
+        if not talk_data_string:
+            raise robot.RobotException("页面截取talk信息失败\n%s" % talk_index_response.data)
+        try:
+            talk_data = json.loads(talk_data_string)
+        except ValueError:
+            raise robot.RobotException("talk信息加载失败\n%s" % talk_data_string)
+        if not robot.check_sub_key(("TalkStore",), talk_data):
+            raise robot.RobotException("talk信息'TalkStore'字段不存在\n%s" % talk_data)
+        if not robot.check_sub_key(("memberList",), talk_data["TalkStore"]):
+            raise robot.RobotException("talk信息'memberList'字段不存在\n%s" % talk_data)
+        for member_info in talk_data["TalkStore"]["memberList"]:
+            if not robot.check_sub_key(("userId", "name"), member_info):
+                raise robot.RobotException("参与者信息'userId'或'name'字段不存在\n%s" % talk_data)
+            account_list[str(member_info["userId"])] = str(member_info["name"].encode("UTF-8")).replace(" ", "")
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(talk_index_response.status))
     return account_list
 
 

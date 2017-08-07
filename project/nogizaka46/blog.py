@@ -27,8 +27,8 @@ def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
     blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
-    extra_info = {
-        "blog_info_list": [],  # 页面解析出的所有图片信息列表
+    result = {
+        "blog_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页日志
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -67,7 +67,7 @@ def get_one_page_blog(account_id, page_count):
                 big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
             extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
 
-            extra_info["blog_info_list"].append(extra_image_info)
+            result["blog_info_list"].append(extra_image_info)
 
         # 判断是不是最后一页
         paginate_data = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', "</div>")
@@ -76,19 +76,18 @@ def get_one_page_blog(account_id, page_count):
         page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
         if len(page_count_find) == 0:
             raise robot.RobotException("分页信息获取页码失败\n%s" % paginate_data)
-        extra_info["is_over"] = page_count >= max(map(int, page_count_find))
+        result["is_over"] = page_count >= max(map(int, page_count_find))
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
-    blog_pagination_response.extra_info = extra_info
-    return blog_pagination_response
+    return result
 
 
 # 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
 def check_big_image(image_url, big_2_small_list):
-    big_image_response = net.ErrorResponse(net.HTTP_RETURN_CODE_RETRY)
-    extra_info = {
+    result = {
         "image_url": None,  # 大图地址
         "is_over": False,  # 是不是已经没有还生效的大图了
+        "cookies": None,  # 页面返回的cookies
     }
     if image_url in big_2_small_list:
         if big_2_small_list[image_url].find("http://dcimg.awalker.jp") == 0:
@@ -97,13 +96,15 @@ def check_big_image(image_url, big_2_small_list):
                 # 检测是不是已经过期删除
                 temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')
                 if temp_image_url != "/img/expired.gif":
-                    extra_info["image_url"] = temp_image_url
+                    result["image_url"] = temp_image_url
                 else:
-                    extra_info["is_over"] = True
+                    result["is_over"] = True
+
+                # 获取cookies
+                result["cookies"] = net.get_cookies_from_response_header(big_image_response.headers)
         else:
-            extra_info["image_url"] = big_2_small_list[image_url]
-    big_image_response.extra_info = extra_info
-    return big_image_response
+            result["image_url"] = big_2_small_list[image_url]
+    return result
 
 
 # 检测图片是否有效
@@ -219,13 +220,13 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
                     tool.process_exit()
 
-                if len(blog_pagination_response.extra_info["blog_info_list"]) == 0:
+                if len(blog_pagination_response["blog_info_list"]) == 0:
                     log.error(account_name + " 第%s页日志%s分组失败" % (page_count, blog_pagination_response.data))
                     tool.process_exit()
 
-                log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response.extra_info["blog_info_list"]))
+                log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
-                for blog_info in blog_pagination_response.extra_info["blog_info_list"]:
+                for blog_info in blog_pagination_response["blog_info_list"]:
                     # 获取日志id
                     if blog_info["blog_id"] is None:
                         log.error(account_name + " 日志id解析失败")
@@ -251,10 +252,10 @@ class Download(threading.Thread):
                         # 检查是否存在大图可以下载
                         if not is_big_image_over:
                             big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
-                            if big_image_response.extra_info["image_url"] is not None:
-                                image_url = big_image_response.extra_info["image_url"]
-                                cookies_list = net.get_cookies_from_response_header(big_image_response.headers)
-                            is_big_image_over = big_image_response.extra_info["is_over"]
+                            if big_image_response["image_url"] is not None:
+                                image_url = big_image_response["image_url"]
+                                big_image_response = big_image_response["cookies"]
+                            is_big_image_over = big_image_response["is_over"]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
@@ -273,7 +274,7 @@ class Download(threading.Thread):
                             log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    if blog_pagination_response.extra_info["is_over"]:
+                    if blog_pagination_response["is_over"]:
                         is_over = True
                     else:
                         page_count += 1

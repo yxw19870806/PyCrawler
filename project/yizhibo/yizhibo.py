@@ -31,7 +31,7 @@ def get_image_index_page(account_id):
     image_index_response = net.http_request(image_index_url)
     extra_info = {
         "is_exist": True,  # 是不是存在图片
-        "image_url_list": [],  # 页面解析出的图片地址列表
+        "image_url_list": [],  # 所有图片地址
     }
     if image_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["is_exist"] = image_index_response.data.find("还没有照片哦") == -1
@@ -45,7 +45,7 @@ def get_image_index_page(account_id):
 def get_image_header(image_url):
     image_head_response = net.http_request(image_url, method="HEAD")
     extra_info = {
-        "image_time": None, # header解析出的图片上传时间
+        "image_time": None, # 图片上传时间
     }
     if image_head_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if "Last-Modified" in image_head_response.headers:
@@ -61,7 +61,7 @@ def get_video_index_page(account_id):
     video_pagination_response = net.http_request(video_pagination_url)
     extra_info = {
         "is_exist": True,  # 是不是存在视频
-        "video_id_list": [],  # 页面解析出的视频id列表
+        "video_id_list": [],  # 所有视频id
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["is_exist"] = video_pagination_response.data.find("还没有直播哦") == -1
@@ -79,8 +79,8 @@ def get_video_info_page(video_id):
     video_info_response = net.http_request(video_info_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "video_time": False,  # 页面解析出的视频上传时间
-        "video_file_url": None,  # 页面解析出的视频地址所在的文件地址
+        "video_time": False,  # 视频上传时间
+        "video_file_url": None,  # 视频地址所在的文件地址
     }
     if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if (
@@ -101,7 +101,7 @@ def get_video_info_page(video_id):
 def get_video_m3u8_file(video_file_url):
     video_file_response = net.http_request(video_file_url)
     extra_info = {
-        "video_url_list": [],  # 页面解析出的视频切割地址列表
+        "video_url_list": [],  # 视频切割地址
     }
     if video_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         ts_id_list = re.findall("([\S]*.ts)", video_file_response.data)

@@ -26,7 +26,7 @@ def get_one_page_blog(account_id, page_count):
     # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
     blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
     blog_pagination_response = net.http_request(blog_pagination_url)
-    extra_info = {
+    result = {
         "blog_info_list": [],  # 所有日志信息
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -43,18 +43,17 @@ def get_one_page_blog(account_id, page_count):
             # 获取日志id
             blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
             if not robot.is_integer(blog_id):
-                raise robot.RobotException("日志正文截取日志id失败\n%s" % blog_info)
-            extra_blog_info["blog_id"] = blog_id
+                raise robot.RobotException("日志页面截取日志id失败\n%s" % blog_info)
+            extra_blog_info["blog_id"] = str(blog_id)
 
             # 获取所有图片地址
             image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
             extra_blog_info["image_url_list"] = map(str, image_url_list)
 
-            extra_info["blog_info_list"].append(extra_blog_info)
+            result["blog_info_list"].append(extra_blog_info)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
-    blog_pagination_response.extra_info = extra_info
-    return blog_pagination_response
+    return result
 
 
 class Diary(robot.Robot):
@@ -156,10 +155,10 @@ class Download(threading.Thread):
                     tool.process_exit()
 
                 # 没有获取到任何日志，所有日志已经全部获取完毕了
-                if len(blog_pagination_response.extra_info["blog_info_list"]) == 0:
+                if len(blog_pagination_response["blog_info_list"]) == 0:
                     break
 
-                for blog_data in blog_pagination_response.extra_info["blog_info_list"]:
+                for blog_data in blog_pagination_response["blog_info_list"]:
                     # 检查是否达到存档记录
                     if int(blog_data["blog_id"]) <= int(self.account_info[2]):
                         is_over = True
