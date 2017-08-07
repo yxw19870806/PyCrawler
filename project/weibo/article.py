@@ -34,28 +34,42 @@ def get_one_page_article(page_id, page_count):
     }
     article_pagination_response = net.http_request(preview_article_pagination_url, cookies_list=cookies_list)
     if article_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        article_data = tool.find_sub_string(article_pagination_response.data, '"html":"', '"})')
-        article_data = article_data.replace("\\t", "").replace("\\n", "").replace("\\r", "")
+        # 截取文章数据
+        article_list_html = tool.find_sub_string(article_pagination_response.data, '"html":"', '"})')
+        article_data = article_list_html.replace("\\t", "").replace("\\n", "").replace("\\r", "")
+        if not article_data:
+            raise robot.RobotException("页面截取文章预信息失败\n%s" % article_pagination_response.data)
+        # 文章分组
         preview_article_data_list = re.findall("<li([\S|\s]*?)<\\\\/li>", article_data)
-        if len(preview_article_data_list) > 0:
-            for preview_article_data in preview_article_data_list:
-                extra_article_info = {
-                    "article_time": None,  # 文章发布时间
-                    "article_url": None,  # 文章地址
-                    "article_html": preview_article_data,  # 原始数据
-                }
-                # 获取文章上传时间
-                article_time_string = tool.find_sub_string(preview_article_data, '<span class=\\"subinfo S_txt2\\">', "<\/span>")
-                if article_time_string:
-                    extra_article_info["article_time"] = int(time.mktime(time.strptime(article_time_string, "%Y 年 %m 月 %d 日 %H:%M")))
-                # 获取文章地址
-                article_path = tool.find_sub_string(preview_article_data, '<a target=\\"_blank\\" href=\\"', '\\">')
-                if article_path:
-                    extra_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
-                extra_info["article_info_list"].append(extra_article_info)
-            # 检测是否还有下一页
-            page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response.data)
-            extra_info["is_over"] = page_count >= max(map(int, page_count_find))
+        if len(preview_article_data_list) == 0:
+            raise robot.RobotException("文章分组失败\n%s" % article_data)
+
+        for preview_article_data in preview_article_data_list:
+            extra_article_info = {
+                "article_time": None,  # 文章发布时间
+                "article_url": None,  # 文章地址
+            }
+            # 获取文章上传时间
+            article_time = tool.find_sub_string(preview_article_data, '<span class=\\"subinfo S_txt2\\">', "<\/span>")
+            if not article_time:
+                raise robot.RobotException("文章预览截取文章时间失败\n%s" % preview_article_data)
+            try:
+                extra_article_info["article_time"] = int(time.mktime(time.strptime(article_time, "%Y 年 %m 月 %d 日 %H:%M")))
+            except ValueError:
+                raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % article_time)
+
+            # 获取文章地址
+            article_path = tool.find_sub_string(preview_article_data, '<a target=\\"_blank\\" href=\\"', '\\">')
+            if not article_time:
+                raise robot.RobotException("文章预览截取文章地址失败\n%s" % preview_article_data)
+            extra_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
+
+            extra_info["article_info_list"].append(extra_article_info)
+        # 检测是否还有下一页
+        page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response.data)
+        extra_info["is_over"] = page_count >= max(map(int, page_count_find))
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(article_pagination_response.status))
     article_pagination_response.extra_info = extra_info
     return article_pagination_response
 
@@ -65,7 +79,6 @@ def get_article_page(article_url):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     article_response = net.http_request(article_url, cookies_list=cookies_list)
     extra_info = {
-        "is_error": False,  # 是不是页面格式不符合
         "is_pay": False,  # 是否需要购买
         "article_id": "",  # 文章id
         "article_title": "",  # 文章标题
@@ -73,45 +86,49 @@ def get_article_page(article_url):
         "image_url_list": [],  # 所有图片地址
     }
     if article_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 判断是否需要购买
         extra_info["is_pay"] = article_response.data.find("购买继续阅读") >= 0
-        article_type = None
+
         article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
         if article_id:
             article_type = "t"
             extra_info["article_id"] = "t_" + article_id
         else:
             article_id = tool.find_sub_string(article_url, "http://weibo.com/p/", "?mod=zwenzhang")
-            if article_id:
-                article_type = "p"
-                extra_info["article_id"] = "p_" + article_id
-        if article_type is not None:
-            # 获取文章标题
-            if article_type == "t":
-                extra_info["article_title"] = tool.find_sub_string(article_response.data, '<div class="title" node-type="articleTitle">', "</div>")
-            elif article_type == "p":
-                extra_info["article_title"] = tool.find_sub_string(article_response.data, '<h1 class=\\"title\\">', "<\\/h1>")
-            # 获取文章顶部图片地址
-            article_top_image_html = tool.find_sub_string(article_response.data, '<div class="main_toppic">', '<div class="main_editor')
-            if article_top_image_html:
-                extra_info["top_image_url"] = tool.find_sub_string(article_top_image_html, 'src="', '" />')
-            # 获取文章图片地址列表
-            article_body = None
-            if article_type == "t":
-                # 正文到作者信息间的页面
-                article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div class="artical_add_box')
-                if not article_body:
-                    # 正文到打赏按钮间的页面（未登录不显示关注界面）
-                    article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div node-type="fanService">')
-            elif article_type == "p":
-                article_body = tool.find_sub_string(article_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
-            if article_body is not None:
-                image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
-                extra_info["image_url_list"] = map(str, image_url_list)
-            else:
-                extra_info["is_error"] = True
-        else:
-            extra_info["is_error"] = True
-    article_response.extra_info = extra_info
+            if not article_id:
+                raise robot.RobotException("文章地址截取文章类型失败\n%s" % article_url)
+            article_type = "p"
+            extra_info["article_id"] = "p_" + article_id
+
+        # 获取文章标题
+        if article_type == "t":
+            extra_info["article_title"] = tool.find_sub_string(article_response.data, '<div class="title" node-type="articleTitle">', "</div>")
+        else:  # p
+            extra_info["article_title"] = tool.find_sub_string(article_response.data, '<h1 class=\\"title\\">', "<\\/h1>")
+        if not extra_info["article_title"]:
+            raise robot.RobotException("页面截取文章标题失败\n%s" % article_url)
+
+        # 获取文章顶部图片地址
+        article_top_image_html = tool.find_sub_string(article_response.data, '<div class="main_toppic">', '<div class="main_editor')
+        if article_top_image_html:
+            extra_info["top_image_url"] = tool.find_sub_string(article_top_image_html, 'src="', '" />')
+
+        # 获取文章图片地址列表
+        if article_type == "t":
+            # 正文到作者信息间的页面
+            article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div class="artical_add_box')
+            if not article_body:
+                # 正文到打赏按钮间的页面（未登录不显示关注界面）
+                article_body = tool.find_sub_string(article_response.data, '<div class="WB_editor_iframe', '<div node-type="fanService">')
+        else:  # p
+            article_body = tool.find_sub_string(article_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
+        if not article_body:
+            raise robot.RobotException("页面截取文章正文失败\n%s" % article_response.data)
+        image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
+
+        extra_info["image_url_list"] = map(str, image_url_list)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(article_response.status))
     return article_response
 
 
@@ -233,27 +250,13 @@ class Download(threading.Thread):
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
                 # 获取一页文章预览页面
-                article_pagination_response = get_one_page_article(account_index_response.extra_info["account_page_id"], page_count)
-
-                if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页文章访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(article_pagination_response.status)))
-                    tool.process_exit()
-
-                if len(article_pagination_response.extra_info["article_info_list"]) == 0:
-                    log.error(account_name + " 第%s页文章解析失败" % page_count)
-                    tool.process_exit()
+                try:
+                    article_pagination_response = get_one_page_article(account_index_response.extra_info["account_page_id"], page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页文章访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 for article_info in article_pagination_response.extra_info["article_info_list"]:
-                    # 文章的发布时间
-                    if article_info["article_time"] is None:
-                        log.error(account_name + " 文章预览 %s 中的发布时间解析失败" % article_info["article_html"])
-                        tool.process_exit()
-
-                    # 文章的地址
-                    if article_info["article_url"] is None:
-                        log.error(account_name + " 文章预览 %s 中的地址解析失败" % article_info["article_html"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if article_info["article_time"] <= int(self.account_info[1]):
                         is_over = True
@@ -266,14 +269,11 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始解析文章%s" % article_info["article_url"])
 
                     # 获取文章页面内容
-                    article_response = get_article_page(article_info["article_url"])
-                    if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                        log.error(account_name + " 文章 %s 访问失败" % article_info["article_url"])
-                        tool.process_exit()
-
-                    if article_response.extra_info["is_error"]:
-                        log.error(account_name + " 文章 %s 解析失败" % article_info["article_url"])
-                        tool.process_exit()
+                    try:
+                        article_response = get_article_page(article_info["article_url"])
+                    except robot.RobotException, e:
+                        log.error(account_name + " 文章 %s 获取失败，原因：%s" % (article_info["article_url"], e.message))
+                        raise
 
                     if article_response.extra_info["is_pay"]:
                         log.error(account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
