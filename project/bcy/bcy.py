@@ -125,8 +125,10 @@ def get_one_page_album(account_id, page_count):
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取coser id
         coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
-        if not (len(coser_id_find) == 1 and robot.is_integer(coser_id_find[0])):
-            raise robot.RobotException("页面获取coser id失败\n%s" % album_pagination_response.data)
+        if len(coser_id_find) != 1:
+            raise robot.RobotException("页面截取coser id失败\n%s" % album_pagination_response.data)
+        if not robot.is_integer(coser_id_find[0]):
+            raise robot.RobotException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
         extra_info["coser_id"] = coser_id_find[0]
 
         # 获取作品信息
@@ -140,10 +142,10 @@ def get_one_page_album(account_id, page_count):
             # 获取作品id
             album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
             if not album_url:
-                raise robot.RobotException("作品获取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
+                raise robot.RobotException("作品信息截取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
             album_id = str(album_url).split("/")[-1]
             if not robot.is_integer(album_id):
-                raise robot.RobotException("作品地址获取作品id失败\n%s" % album_url)
+                raise robot.RobotException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
 
             # 获取作品标题
             album_title = album_selector.find(".postWorkCard__img footer").text()
