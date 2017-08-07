@@ -26,7 +26,7 @@ COOKIE_INFO = {"SUB": ""}
 def get_one_page_photo(account_id, page_count):
     photo_pagination_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    extra_info = {
+    result = {
         "image_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页图片
     }
@@ -58,13 +58,12 @@ def get_one_page_photo(account_id, page_count):
                 raise robot.RobotException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
             extra_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
 
-            extra_info["image_info_list"].append(extra_image_info)
+            result["image_info_list"].append(extra_image_info)
         # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-        extra_info["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
+        result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    return result
 
 
 class Weibo(robot.Robot):
@@ -184,9 +183,9 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
+                log.trace(account_name + "第%s页解析的全部图片信息：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
-                for image_info in photo_pagination_response.extra_info["image_info_list"]:
+                for image_info in photo_pagination_response["image_info_list"]:
                     # 检查是否达到存档记录
                     if image_info["image_time"] <= int(self.account_info[2]):
                         is_over = True
@@ -220,7 +219,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    if photo_pagination_response.extra_info["is_over"]:
+                    if photo_pagination_response["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
