@@ -24,7 +24,7 @@ NEW_SAVE_DATA_PATH = ""
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
     account_index_response = net.http_request(account_index_url)
-    extra_info = {
+    result = {
         "user_id": None,  # user id
         "site_key": None,  # site key
     }
@@ -33,17 +33,16 @@ def get_account_index_page(account_name):
         user_id = tool.find_sub_string(account_index_response.data, '"nsid":"', '"')
         if not robot.is_integer(user_id):
             raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
-        extra_info["user_id"] = user_id
+        result["user_id"] = user_id
 
         # 获取site key
         site_key = tool.find_sub_string(account_index_response.data, '"site_key":"', '"')
         if not site_key:
             raise robot.RobotException("页面截取site key失败\n%s" % account_index_response.data)
-        extra_info["site_key"] = site_key
+        result["site_key"] = site_key
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
-    account_index_response.extra_info = extra_info
-    return account_index_response
+    return result
 
 
 # 获取指定页数的所有图片
@@ -65,7 +64,7 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
         "sort": "use_pref", "method": "flickr.people.getPhotos", "api_key": api_key, "format": "json", "hermes": 1, "reqId": request_id, "nojsoncallback": 1,
     }
     photo_pagination_response = net.http_request(api_url, post_data, json_decode=True)
-    extra_info = {
+    result = {
         "image_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页图片
     }
@@ -99,15 +98,14 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
             else:
                 raise robot.RobotException("图片信息'url_o_cdn'或者'url_o'字段不存在\n%s" % photo_info)
 
-            extra_info["image_info_list"].append(extra_image_info)
+            result["image_info_list"].append(extra_image_info)
 
         # 判断是不是最后一页
         if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
-            extra_info["is_over"] = True
+            result["is_over"] = True
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    return result
 
 
 class Flickr(robot.Robot):
@@ -209,14 +207,14 @@ class Download(threading.Thread):
 
                 # 获取一页图片
                 try:
-                    photo_pagination_response = get_one_page_photo(account_index_response.extra_info["user_id"], page_count, account_index_response.extra_info["site_key"], request_id)
+                    photo_pagination_response = get_one_page_photo(account_index_response["user_id"], page_count, account_index_response["site_key"], request_id)
                 except robot.RobotException, e:
                     log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response.extra_info["image_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
-                for image_info in photo_pagination_response.extra_info["image_info_list"]:
+                for image_info in photo_pagination_response["image_info_list"]:
                     # 检查是否达到存档记录
                     if int(self.account_info[2]) >= int(image_info["image_time"]):
                         is_over = True
@@ -238,7 +236,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    if photo_pagination_response.extra_info["is_over"]:
+                    if photo_pagination_response["is_over"]:
                         is_over = True
                     else:
                         page_count += 1
