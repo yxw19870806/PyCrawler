@@ -346,17 +346,20 @@ class Download(threading.Thread):
                         continue
 
                     # 是不是只对粉丝可见，并判断是否需要自动关注
-                    if album_response.extra_info["is_only_follower"]:
-                        if IS_AUTO_FOLLOW:
-                            log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
-                            if follow(account_id):
-                                # 重新获取作品页面
-                                try:
-                                    album_response = get_album_page(album_pagination_response.extra_info["coser_id"], album_info["album_id"])
-                                except robot.RobotException, e:
-                                    log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
-                                    raise
+                    if album_response["is_only_follower"]:
+                        if not IS_AUTO_FOLLOW:
+                            continue
+                        log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
+                        if follow(account_id):
+                            # 重新获取作品页面
+                            try:
+                                album_response = get_album_page(album_pagination_response["coser_id"], album_info["album_id"])
+                            except robot.RobotException, e:
+                                log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+                                raise
                         else:
+                            # 关注失败
+                            log.error(account_name + " 关注失败，跳过作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
                             continue
 
                     # 过滤标题中不支持的字符
