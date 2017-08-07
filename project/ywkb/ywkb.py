@@ -26,8 +26,8 @@ def get_one_page_photo(page_count):
             image_id_2_url_list[int(image_id)] = str(image_url)
         for image_id in sorted(image_id_2_url_list.keys(), reverse=True):
             extra_image_info = {
-                "image_id": image_id,  # 页面解析出的图片id
-                "image_url": image_id_2_url_list[image_id],  # 页面解析出的图片地址
+                "image_id": image_id,  # 图片id
+                "image_url": image_id_2_url_list[image_id],  # 图片地址
             }
             extra_info["image_info_list"].append(extra_image_info)
     elif photo_pagination_response.status == 404:

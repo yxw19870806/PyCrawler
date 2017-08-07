@@ -18,8 +18,8 @@ def get_album_page(album_id):
     extra_info = {
         "is_error": False,  # 是不是格式不符合
         "is_delete": False,  # 是不是已经被删除
-        "model_name": "",  # 页面解析出的模特名字
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "model_name": "",  # 模特名字
+        "image_url_list": [],  # 所有图片地址
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:

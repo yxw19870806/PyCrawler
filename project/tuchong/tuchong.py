@@ -54,7 +54,7 @@ def get_one_page_album(account_id, post_time):
     album_pagination_response = net.http_request(album_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "album_info_list": [],  # 页面解析出的图片信息列表
+        "album_info_list": [],  # 所有图片信息
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("posts", "result"), album_pagination_response.json_data):

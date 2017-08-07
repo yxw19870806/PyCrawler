@@ -28,7 +28,7 @@ def get_one_page_blog(account_id, page_count):
     blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
-        "blog_info_list": [],  # 页面解析出的所有图片信息列表
+        "blog_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页日志
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:

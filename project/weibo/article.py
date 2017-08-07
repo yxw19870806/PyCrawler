@@ -29,7 +29,7 @@ def get_one_page_article(page_id, page_count):
     preview_article_pagination_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
-        "article_info_list": [],  # 页面解析出的文章信息列表
+        "article_info_list": [],  # 所有文章信息
         "is_over": False,  # 是不是最后一页文章
     }
     article_pagination_response = net.http_request(preview_article_pagination_url, cookies_list=cookies_list)
@@ -40,8 +40,8 @@ def get_one_page_article(page_id, page_count):
         if len(preview_article_data_list) > 0:
             for preview_article_data in preview_article_data_list:
                 extra_article_info = {
-                    "article_time": None,  # 页面解析出的文章发布时间
-                    "article_url": None,  # 页面解析出的文章地址
+                    "article_time": None,  # 文章发布时间
+                    "article_url": None,  # 文章地址
                     "article_html": preview_article_data,  # 原始数据
                 }
                 # 获取文章上传时间
@@ -67,10 +67,10 @@ def get_article_page(article_url):
     extra_info = {
         "is_error": False,  # 是不是页面格式不符合
         "is_pay": False,  # 是否需要购买
-        "article_id": "",  # 文章地址解析出的文章id
-        "article_title": "",  # 页面解析出的文章标题
-        "top_image_url": None,  # 页面解析出的文章顶部图片
-        "image_url_list": [],  # 页面解析出的文章信息列表
+        "article_id": "",  # 文章id
+        "article_title": "",  # 文章标题
+        "top_image_url": None,  # 文章顶部图片
+        "image_url_list": [],  # 所有图片地址
     }
     if article_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         extra_info["is_pay"] = article_response.data.find("购买继续阅读") >= 0

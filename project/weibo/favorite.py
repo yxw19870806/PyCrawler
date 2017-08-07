@@ -24,7 +24,7 @@ def get_one_page_favorite(page_count):
     extra_info = {
         "is_error": False,  # 是不是不符合格式
         "is_over": False,  # 是不是最后一页收藏
-        "blog_info_list": [],  # 页面解析出的微博信息列表
+        "blog_info_list": [],  # 所有微博信息
     }
     if favorite_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         html_data = tool.find_sub_string(favorite_pagination_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)

@@ -92,7 +92,7 @@ def get_video_info_page(video_id):
     video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
     video_info_response = net.http_request(video_info_url, json_decode=True)
     result = {
-        "video_url": None,  # 页面解析出的视频下载地址
+        "video_url": None,  # 视频地址
     }
     if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取视频地址

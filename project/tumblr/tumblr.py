@@ -34,8 +34,8 @@ def get_one_page_post(account_id, page_count):
     post_pagination_url = "%s/page/%s" % (host, page_count)
     post_pagination_response = net.http_request(post_pagination_url)
     extra_info = {
-        "post_url_list": [],  # 页面解析出的日志地址列表
-        "is_over": [],  # 是不是已经没有日志了
+        "post_url_list": [],  # 所有日志地址
+        "is_over": [],  # 是不是最后一页日志
     }
     if post_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
@@ -69,7 +69,7 @@ def get_post_page(post_url):
     post_response = net.http_request(post_url)
     extra_info = {
         "has_video": False,  # 是不是包含视频
-        "image_url_list": [],  # 页面解析出的图片地址列表
+        "image_url_list": [],  # 所有图片地址
     }
     if post_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)

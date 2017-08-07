@@ -33,7 +33,7 @@ def get_account_index_page(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
     account_index_response = net.http_request(account_index_url)
     extra_info = {
-        "account_id": None,  # 页面解析出的account id
+        "account_id": None,  # account id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
@@ -55,9 +55,9 @@ def get_one_page_media(account_name, position_blog_id):
     media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "is_over": False,  # 是不是已经结束（没有获取到任何内容）
-        "media_info_list": [],  # 页面解析出的媒体信息列表
-        "next_page_position": None  # 页面解析出的下一页指针
+        "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
+        "media_info_list": [],  # 所有媒体信息
+        "next_page_position": None  # 下一页指针
     }
     if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("has_more_items",), media_pagination_response.json_data):
@@ -127,7 +127,7 @@ def get_video_play_page(tweet_id):
     video_play_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
     video_play_response = net.http_request(video_play_url)
     extra_info = {
-        "video_url": None,  # 页面解析出的视频地址
+        "video_url": None,  # 视频地址
     }
     if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 包含m3u8文件地址的处理

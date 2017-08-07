@@ -25,7 +25,7 @@ def get_account_index_page(account_name):
     account_index_url = "http://%s.pp.163.com/" % account_name
     account_index_response = net.http_request(account_index_url)
     result = {
-        "album_url_list": [],  # 页面解析出的所有相册地址列表
+        "album_url_list": [],  # 所有相册地址
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取所有相册地址

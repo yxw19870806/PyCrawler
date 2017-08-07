@@ -35,8 +35,8 @@ def get_one_page_video(account_page_id, since_id):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "video_play_url_list": [],  # 页面解析出的所有视频地址列表
-        "next_page_since_id": None,  # 页面解析出的下一页视频的指针
+        "video_play_url_list": [],  # 所有视频地址
+        "next_page_since_id": None,  # 下一页视频指针
     }
     video_pagination_response = net.http_request(video_pagination_url, cookies_list=cookies_list, json_decode=True)
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:

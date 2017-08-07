@@ -27,7 +27,7 @@ def get_one_page_photo(account_id, page_count):
     photo_pagination_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     extra_info = {
-        "image_info_list": [],  # 页面解析出的所有图片信息列表
+        "image_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, cookies_list=cookies_list, json_decode=True)
@@ -42,8 +42,8 @@ def get_one_page_photo(account_id, page_count):
             raise robot.RobotException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
         for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
             extra_image_info = {
-                "image_time": None,  # 页面解析出的图片上传时间
-                "image_url": None,  # 页面解析出的图片地址
+                "image_time": None,  # 图片上传时间
+                "image_url": None,  # 图片地址
             }
 
             # 获取图片上传时间

@@ -31,7 +31,7 @@ def get_one_page_video(account_id, page_time):
         video_pagination_url += "&pageflag=0"
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "video_info_list": [],  # 页面解析出的视频信息列表
+        "video_info_list": [],  # 所有视频信息
         "is_over": False,  # 是不是最后一页视频
     }
     header_list = {"Referer": "http://weishi.qq.com/"}
@@ -79,7 +79,7 @@ def get_video_info_page(video_vid, video_id):
     video_info_response = net.http_request(video_info_url, json_decode=True)
     extra_info = {
         "is_error": False,  # 是不是格式不符合
-        "video_url": "",  # 页面解析出的视频地址
+        "video_url": "",  # 视频地址
     }
     if video_info_response.status == 200:
         if robot.check_sub_key(("data",), video_info_response.json_data) and robot.check_sub_key(("url",), video_info_response.json_data["data"]):
