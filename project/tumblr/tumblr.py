@@ -33,7 +33,7 @@ def get_one_page_post(account_id, page_count):
     host = "http://%s.tumblr.com" % account_id
     post_pagination_url = "%s/page/%s" % (host, page_count)
     post_pagination_response = net.http_request(post_pagination_url)
-    extra_info = {
+    result = {
         "post_url_list": [],  # 所有日志地址
         "is_over": [],  # 是不是最后一页日志
     }
@@ -53,21 +53,20 @@ def get_one_page_post(account_id, page_count):
                     raise robot.RobotException("日志信息'url'字段不存在\n%s" % page_data)
                 post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
                 post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
-                extra_info["post_url_list"].append(str(post_url))
-            if len(extra_info["post_url_list"]) == 0:
+                result["post_url_list"].append(str(post_url))
+            if len(result["post_url_list"]) == 0:
                 raise robot.RobotException("获取日志地址失败\n%s" % page_html)
         else:
-            extra_info["is_over"] = True
+            result["is_over"] = True
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_pagination_response.status))
-    post_pagination_response.extra_info = extra_info
-    return post_pagination_response
+    return result
 
 
 # 获取日志页面
 def get_post_page(post_url):
     post_response = net.http_request(post_url)
-    extra_info = {
+    result = {
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 所有图片地址
     }
@@ -85,11 +84,11 @@ def get_post_page(post_url):
         else:
             # 视频
             if og_type == "tumblr-feed:video":
-                extra_info["has_video"] = True
+                result["has_video"] = True
                 # 获取图片地址
                 image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
                 if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
-                    extra_info["image_url_list"].append(image_url)
+                    result["image_url_list"].append(image_url)
             else:
                 # 获取所有图片地址
                 image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
@@ -114,18 +113,17 @@ def get_post_page(post_url):
                         if resolution < old_resolution:
                             continue
                     new_image_url_list[image_id] = image_url
-                extra_info["image_url_list"] = new_image_url_list.values()
+                result["image_url_list"] = new_image_url_list.values()
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_response.status))
-    post_response.extra_info = extra_info
-    return post_response
+    return result
 
 
 # 获取视频播放页面
 def get_video_play_page(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_play_response = net.http_request(video_play_url)
-    extra_info = {
+    result = {
         "video_url": None,  # 视频地址
         "is_skip": False,  # 是不是第三方视频
     }
@@ -138,7 +136,7 @@ def get_video_play_page(account_id, post_id):
                 # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
                 # ->
                 # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
-                extra_info["video_url"] = video_response.headers["Location"].replace("#_=_", "").replace("_r1_480", "_r1_720")
+                result["video_url"] = video_response.headers["Location"].replace("#_=_", "").replace("_r1_480", "_r1_720")
             else:
                 # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
                 # ->
@@ -149,16 +147,15 @@ def get_video_play_page(account_id, post_id):
                     video_id = temp_list[-2]
                 else:
                     video_id = temp_list[-1]
-                extra_info["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
+                result["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
         elif len(video_url_find) == 0:
             # 第三方视频
-            extra_info["is_skip"] = True
+            result["is_skip"] = True
         else:
             raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
-    video_play_response.extra_info = extra_info
-    return video_play_response
+    return result
 
 
 class Tumblr(robot.Robot):
@@ -268,12 +265,12 @@ class Download(threading.Thread):
                     log.error(account_id + " 第%s页相册访问失败，原因：%s" % (page_count, e.message))
                     raise
 
-                if post_pagination_response.extra_info["is_over"]:
+                if post_pagination_response["is_over"]:
                     break
 
-                log.trace(account_id + " 第%s页相册解析的所有日志：%s" % (page_count, post_pagination_response.extra_info["post_url_list"]))
+                log.trace(account_id + " 第%s页相册解析的所有日志：%s" % (page_count, post_pagination_response["post_url_list"]))
 
-                for post_url in post_pagination_response.extra_info["post_url_list"]:
+                for post_url in post_pagination_response["post_url_list"]:
                     post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
 
                     # 检查是否达到存档记录
@@ -301,7 +298,7 @@ class Download(threading.Thread):
                         raise
 
                     # 视频下载
-                    while IS_DOWNLOAD_VIDEO and post_response.extra_info["has_video"]:
+                    while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
                         try:
                             video_play_response = get_video_play_page(account_id, post_id)
                         except robot.RobotException, e:
@@ -309,11 +306,11 @@ class Download(threading.Thread):
                             raise
 
                         # 第三方视频，跳过
-                        if video_play_response.extra_info["is_skip"]:
+                        if video_play_response["is_skip"]:
                             log.error(account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
                             break
 
-                        video_url = video_play_response.extra_info["video_url"]
+                        video_url = video_play_response["video_url"]
                         log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
 
                         file_type = video_url.split(".")[-1]
@@ -327,9 +324,9 @@ class Download(threading.Thread):
                         break
 
                     # 图片下载
-                    if IS_DOWNLOAD_IMAGE and len(post_response.extra_info["image_url_list"]) > 0:
-                        log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_response.extra_info["image_url_list"]))
-                        for image_url in post_response.extra_info["image_url_list"]:
+                    if IS_DOWNLOAD_IMAGE and len(post_response["image_url_list"]) > 0:
+                        log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_response["image_url_list"]))
+                        for image_url in post_response["image_url_list"]:
                             log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
                             file_type = image_url.split(".")[-1]
