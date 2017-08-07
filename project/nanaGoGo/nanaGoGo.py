@@ -30,7 +30,7 @@ IS_DOWNLOAD_VIDEO = True
 def get_one_page_media(account_name, target_id):
     media_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
     media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
-    extra_info = {
+    result = {
         "media_info_list": [],  # 页面解析出的所有媒体信息列表
     }
     if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -57,10 +57,9 @@ def get_one_page_media(account_name, target_id):
                 raise robot.RobotException("媒体信息'body'字段不存在\n%s" % media_info)
             extra_media_info["blog_body"] = media_info["post"]["body"]
 
-            extra_info["media_info_list"].append(extra_media_info)
+            result["media_info_list"].append(extra_media_info)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
-    media_pagination_response.extra_info = extra_info
     return media_pagination_response
 
 
@@ -170,10 +169,10 @@ class Download(threading.Thread):
                     raise
 
                 # 如果为空，表示已经取完了
-                if len(media_pagination_response.extra_info["media_info_list"]) == 0:
+                if len(media_pagination_response["media_info_list"]) == 0:
                     break
 
-                for media_info in media_pagination_response.extra_info["media_info_list"]:
+                for media_info in media_pagination_response["media_info_list"]:
                     # 检查是否达到存档记录
                     if int(media_info["blog_id"]) <= int(self.account_info[3]):
                         is_over = True
