@@ -33,34 +33,37 @@ def get_one_page_video(account_page_id, since_id):
     video_pagination_url = "http://weibo.com/p/aj/album/loading"
     video_pagination_url += "?type=video&since_id=%s&page_id=%s&page=1&ajax_call=1&__rnd=%s" % (since_id, account_page_id, int(time.time() * 1000))
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    extra_info = {
+    result = {
         "is_error": False,  # 是不是格式不符合
         "video_play_url_list": [],  # 所有视频地址
         "next_page_since_id": None,  # 下一页视频指针
     }
     video_pagination_response = net.http_request(video_pagination_url, cookies_list=cookies_list, json_decode=True)
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if(
-            robot.check_sub_key(("code", "data"), video_pagination_response.json_data) and
-            robot.is_integer(video_pagination_response.json_data["code"]) and
-            int(video_pagination_response.json_data["code"]) == 100000
-        ):
-            page_html = video_pagination_response.json_data["data"].encode("UTF-8")
-            # 获取视频播放地址类别
-            video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
-            if len(video_play_url_list) == 0:
-                if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
-                    extra_info["is_error"] = True
-            else:
-                extra_info["video_play_url_list"] = map(str, video_play_url_list)
-            # 获取下一页视频的指针
-            next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
-            if robot.is_integer(next_page_since_id):
-                extra_info["next_page_since_id"] = next_page_since_id
+        if not robot.check_sub_key(("code", "data"), video_pagination_response.json_data):
+            raise robot.RobotException("返回信息'code'或'data'字段不存在\n%s" % video_pagination_response.json_data)
+        if not robot.is_integer(video_pagination_response.json_data["code"]):
+            raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % video_pagination_response.json_data)
+        if int(video_pagination_response.json_data["code"]) != 100000:
+            raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
+        page_html = video_pagination_response.json_data["data"].encode("UTF-8")
+
+        # 获取视频播放地址
+        video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
+        if len(video_play_url_list) == 0:
+            if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
+                raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
         else:
-            extra_info["is_error"] = True
-    video_pagination_response.extra_info = extra_info
-    return video_pagination_response
+            result["video_play_url_list"] = map(str, video_play_url_list)
+
+        # 获取下一页视频的指针
+        next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
+        if not robot.is_integer(next_page_since_id):
+            raise robot.RobotException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
+        result["next_page_since_id"] = next_page_since_id
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+    return result
 
 
 # 从视频播放页面中提取下载地址
@@ -270,19 +273,16 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析%s后一页视频" % since_id)
 
                 # 获取指定时间点后的一页视频信息
-                video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
-                if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, robot.get_http_request_failed_reason(video_pagination_response.status)))
-                    tool.process_exit()
-
-                if video_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " %s后的一页视频%s解析失败" % (since_id, video_pagination_response.json_data))
-                    tool.process_exit()
+                try:
+                    video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
+                except robot.RobotException, e:
+                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, e.message))
+                    raise
 
                 # 匹配获取全部的视频页面
-                log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_pagination_response.extra_info["video_play_url_list"]))
+                log.trace(account_name + "since_id：%s中的全部视频：%s" % (since_id, video_pagination_response["video_play_url_list"]))
 
-                for video_play_url in video_pagination_response.extra_info["video_play_url_list"]:
+                for video_play_url in video_pagination_response["video_play_url_list"]:
                     # 检查是否达到存档记录
                     if self.account_info[4] == video_play_url:
                         is_over = True
@@ -315,7 +315,7 @@ class Download(threading.Thread):
 
                 if not is_over:
                     # 获取下一页的since_id
-                    since_id = video_pagination_response.extra_info["next_page_since_id"]
+                    since_id = video_pagination_response["next_page_since_id"]
                     if not since_id:
                         break
 
