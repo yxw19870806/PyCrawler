@@ -29,7 +29,7 @@ def get_one_page_album(page_count):
             raise robot.RobotException("页面截取图集列表失败\n%s" % album_pagination_html)
         album_info_list = re.findall('<a href="/Rosi/(\d*)/" title="ROSI套图No.(\d*)', album_info_html)
         if len(album_info_list) == 0:
-            raise robot.RobotException("页面获取图集信息失败\n%s" % album_info_html)
+            raise robot.RobotException("页面匹配图集信息失败\n%s" % album_info_html)
         for page_id, album_id in album_info_list:
             extra_album_info = {
                 "page_id": str(page_id),  # 图集页面id
@@ -69,7 +69,7 @@ def get_one_page_photo(page_id, page_count):
             raise robot.RobotException("页面截取图片列表失败\n%s" % photo_pagination_html)
         image_url_list = re.findall('<img src="([^"]*)"', image_info_html)
         if len(image_url_list) == 0:
-            raise robot.RobotException("页面获取图片地址失败\n%s" % image_info_html)
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % image_info_html)
         for image_url in image_url_list:
             result["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
 

@@ -35,9 +35,11 @@ def get_one_page_blog(account_name, page_count):
         # 另一种页面格式
         if len(blog_id_list) == 0:
             page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
+            if not page_data:
+                raise robot.RobotException("页面截取正文失败\n%s" % blog_pagination_response.data)
             blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="http://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
         if len(blog_id_list) == 0:
-            raise robot.RobotException("页面获取日志id失败\n%s" % blog_pagination_response.data)
+            raise robot.RobotException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
         result["blog_id_list"] = map(str, blog_id_list)
 
         # 判断是不是最后一页
@@ -78,7 +80,7 @@ def get_blog_page(account_name, blog_id):
         if not article_data:
             article_data = tool.find_sub_string(blog_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
         if not article_data:
-            raise robot.RobotException("页面截取日志正文失败\n%s" % blog_response.data)
+            raise robot.RobotException("页面截取正文失败\n%s" % blog_response.data)
 
         # 获取图片地址
         image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
