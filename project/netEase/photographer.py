@@ -28,10 +28,14 @@ def get_account_index_page(account_name):
         "album_url_list": [],  # 所有相册地址
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        # 页面编码
+        account_index_html = account_index_response.data.decode("GBK").encode("UTF-8")
+        if account_index_html.find("<title>该页面不存在</title>") >= 0:
+            raise robot.RobotException("账号不存在")
         # 获取所有相册地址
-        album_result_selector = pq(account_index_response.data.decode("GBK").encode("UTF-8")).find("#p_contents li")
+        album_result_selector = pq(account_index_response).find("#p_contents li")
         if album_result_selector.size() == 0:
-            raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_response.data.decode("UTF-8"))
+            raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_html)
         for album_index in range(0, album_result_selector.size()):
             result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     else:
