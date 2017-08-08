@@ -57,6 +57,8 @@ def get_one_page_blog(account_id, token):
                 script_data = json.loads(script_data_html)
             except ValueError:
                 raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
+        elif blog_pagination_response.status == 400:
+            raise robot.RobotException("账号不存在")
         else:
             raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
 
