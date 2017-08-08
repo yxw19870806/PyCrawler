@@ -99,7 +99,7 @@ class Jigadori(robot.Robot):
             try:
                 photo_pagination_response = get_one_page_photo(page_count)
             except robot.RobotException, e:
-                log.error("第%s页图片访问失败，原因：%s" % (page_count, e.message))
+                log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise 
 
             # 没有图片了

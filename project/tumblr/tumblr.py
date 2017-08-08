@@ -46,6 +46,8 @@ def get_one_page_post(account_id, page_count):
                 raise robot.RobotException("日志信息加载失败\n%s" % page_html)
             if not robot.check_sub_key(("itemListElement",), page_data):
                 raise robot.RobotException("日志信息'itemListElement'字段不存在\n%s" % page_data)
+            if len(page_data["itemListElement"]) == 0:
+                raise robot.RobotException("日志信息'itemListElement'字段长度不正确\n%s" % page_data)
 
             # 获取所有日志地址
             for post_info in page_data["itemListElement"]:
@@ -54,8 +56,6 @@ def get_one_page_post(account_id, page_count):
                 post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
                 post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
                 result["post_url_list"].append(str(post_url))
-            if len(result["post_url_list"]) == 0:
-                raise robot.RobotException("获取日志地址失败\n%s" % page_html)
         else:
             result["is_over"] = True
     else:
@@ -262,7 +262,7 @@ class Download(threading.Thread):
                 try:
                     post_pagination_response = get_one_page_post(account_id, page_count)
                 except robot.RobotException, e:
-                    log.error(account_id + " 第%s页相册访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_id + " 第%s页相册解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 if post_pagination_response["is_over"]:
@@ -294,7 +294,7 @@ class Download(threading.Thread):
                     try:
                         post_response = get_post_page(post_url)
                     except robot.RobotException, e:
-                        log.error(account_id + " 日志 %s 访问失败，原因：%s" % (post_url, e.message))
+                        log.error(account_id + " 日志 %s 解析失败，原因：%s" % (post_url, e.message))
                         raise
 
                     # 视频下载
@@ -302,7 +302,7 @@ class Download(threading.Thread):
                         try:
                             video_play_response = get_video_play_page(account_id, post_id)
                         except robot.RobotException, e:
-                            log.error(account_id + " 日志 %s 的视频播放页面访问失败，原因：%s" % (post_url, e.message))
+                            log.error(account_id + " 日志 %s 的视频解析失败，原因：%s" % (post_url, e.message))
                             raise
 
                         # 第三方视频，跳过

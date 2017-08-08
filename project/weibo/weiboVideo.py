@@ -208,7 +208,7 @@ class Weibo(robot.Robot):
                 COOKIE_INFO.update(new_cookies_list)
             # 再次检测登录状态
             if not weiboCommon.check_login(COOKIE_INFO):
-                log.error("没有检测到您的登录信息，无法获取图片或视频，自动退出程序！")
+                log.error("没有检测到登录信息")
                 tool.process_exit()
 
         # 解析存档文件
@@ -282,7 +282,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = weiboCommon.get_account_index_page(account_id)
             except robot.RobotException, e:
-                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
             is_over = False
@@ -294,7 +294,7 @@ class Download(threading.Thread):
                 try:
                     video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
                 except robot.RobotException, e:
-                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (since_id, e.message))
+                    log.error(account_name + " %s后的一页视频解析失败，原因：%s" % (since_id, e.message))
                     raise
 
                 # 匹配获取全部的视频页面
@@ -316,7 +316,7 @@ class Download(threading.Thread):
                     try:
                         video_url = get_video_url(video_play_url)
                     except robot.RobotException, e:
-                        log.error(account_name + " 第%s个视频 %s 没有解析到下载地址，原因：%s" % (video_count, video_play_url, e.message))
+                        log.error(account_name + " 视频 %s 解析失败，原因：%s" % (video_play_url, e.message))
                         raise
 
                     if video_url is "":

@@ -212,7 +212,7 @@ class Download(threading.Thread):
                 try:
                     photo_pagination_response = get_one_page_photo(account_id, cursor)
                 except robot.RobotException, e:
-                    log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, e.message))
+                    log.error(account_name + " cursor '%s'后的一页图片解析失败，原因：%s" % (cursor, e.message))
                     raise
 
                 if photo_pagination_response["is_over"]:

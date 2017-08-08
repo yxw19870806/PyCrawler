@@ -143,7 +143,7 @@ class Download(threading.Thread):
                 try:
                     blog_pagination_response = get_one_page_blog(account_name, page_count)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 # 下载完毕了
@@ -176,7 +176,7 @@ class Download(threading.Thread):
                     try:
                         blog_response = get_blog_page(blog_url)
                     except robot.RobotException, e:
-                        log.error(account_name + " 日志 %s 访问失败，原因：%s" % (blog_url, e.message))
+                        log.error(account_name + " 日志 %s 解析失败，原因：%s" % (blog_url, e.message))
                         raise
 
                     # 获取图片下载地址列表

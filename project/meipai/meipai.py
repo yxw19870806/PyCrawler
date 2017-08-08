@@ -209,7 +209,7 @@ class Download(threading.Thread):
                 try:
                     video_pagination_response = get_one_page_video(account_id, page_count)
                 except robot.RobotException, e:
-                    log.error("第%s页视频访问失败，原因：%s" % (page_count, e.message))
+                    log.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 # 已经没有视频了

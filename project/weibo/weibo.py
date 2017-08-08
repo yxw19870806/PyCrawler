@@ -100,7 +100,7 @@ class Weibo(robot.Robot):
                 COOKIE_INFO.update(new_cookies_list)
             # 再次检测登录状态
             if not weiboCommon.check_login(COOKIE_INFO):
-                log.error("没有检测到您的登录信息，无法获取图片或视频，自动退出程序！")
+                log.error("没有检测到登录信息")
                 tool.process_exit()
 
         # 解析存档文件

@@ -121,7 +121,7 @@ class Favorite(robot.Robot):
                 COOKIE_INFO.update(new_cookies_list)
             # 再次检测登录状态
             if not weiboCommon.check_login(COOKIE_INFO):
-                log.error("没有检测到您的登录信息，无法获取图片或视频，自动退出程序！")
+                log.error("没有检测到登录信息")
                 tool.process_exit()
 
         page_count = 1
@@ -133,7 +133,7 @@ class Favorite(robot.Robot):
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
             except robot.RobotException, e:
-                log.error("第%s页收藏访问失败，原因：%s" % (page_count, e.message))
+                log.error("第%s页收藏解析失败，原因：%s" % (page_count, e.message))
                 raise
 
             for blog_info in favorite_pagination_response["blog_info_list"]:

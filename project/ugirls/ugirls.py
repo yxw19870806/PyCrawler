@@ -78,7 +78,7 @@ class UGirls(robot.Robot):
         newest_album_id = get_newest_album_id()
 
         if newest_album_id is None:
-            log.error("最新图集id获取失败")
+            log.error("最新图集id解析失败")
             tool.process_exit()
 
         total_image_count = 0
@@ -90,7 +90,7 @@ class UGirls(robot.Robot):
             try:
                 album_response = get_album_page(album_id)
             except robot.RobotException, e:
-                log.error("第%s页图集访问失败，原因：%s" % (album_id, e.message))
+                log.error("第%s页图集解析失败，原因：%s" % (album_id, e.message))
                 break
             except SystemExit:
                 log.step("提前退出")

@@ -81,7 +81,7 @@ def main():
         for cookie_key in all_cookie_from_browser["www.instagram.com"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser["www.instagram.com"][cookie_key]
     else:
-        tool.print_msg("没有获取到登录信息，退出！")
+        tool.print_msg("没有检测到登录信息")
         tool.process_exit()
     # 设置代理
     is_proxy = robot.get_config(config, "IS_PROXY", 2, 1)
@@ -101,7 +101,7 @@ def main():
         try:
             account_index_response = get_account_index_page(account_name)
         except robot.RobotException, e:
-            log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+            log.error(account_name + " 首页解析失败，原因：%s" % e.message)
             continue
 
         if account_index_response["is_follow"]:

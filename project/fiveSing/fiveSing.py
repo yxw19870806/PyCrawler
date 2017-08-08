@@ -202,7 +202,7 @@ class Download(threading.Thread):
                         try:
                             audio_play_response = get_audio_play_page(audio_id, audio_type)
                         except robot.RobotException, e:
-                            log.error(account_name + " %s歌曲%s《%s》播放页访问失败，原因：%s" % (audio_type_name, audio_id, audio_title, e.message))
+                            log.error(account_name + " %s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_id, audio_title, e.message))
                             is_over = True
                             first_audio_id = None  # 存档恢复
                             break

@@ -64,7 +64,7 @@ def main():
         for cookie_key in all_cookie_from_browser[".7gogo.jp"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".7gogo.jp"][cookie_key]
     else:
-        tool.print_msg("没有获取到登录信息，退出！")
+        tool.print_msg("没有检测到登录信息")
         tool.process_exit()
 
     # 读取存档文件

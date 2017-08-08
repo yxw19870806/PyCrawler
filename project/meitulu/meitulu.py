@@ -78,7 +78,7 @@ class MeiTuLu(robot.Robot):
                 try:
                     album_pagination_response = get_one_page_album(album_id, page_count)
                 except robot.RobotException,e:
-                    log.error("第%s页图集访问失败，原因：%s" % (album_id, e.message))
+                    log.error("第%s页图集解析失败，原因：%s" % (album_id, e.message))
                     is_over = True
                     if page_count != 1:
                         tool.remove_dir_or_file(album_path)

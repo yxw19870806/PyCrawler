@@ -31,7 +31,7 @@ def get_account_index_page(account_name):
         # 获取所有相册地址
         album_result_selector = pq(account_index_response.data.decode("GBK").encode("UTF-8")).find("#p_contents li")
         if album_result_selector.size() == 0:
-            raise robot.RobotException("页面获取相册列表失败\n%s" % account_index_response.data.decode("UTF-8"))
+            raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_response.data.decode("UTF-8"))
         for album_index in range(0, album_result_selector.size()):
             result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     else:
@@ -63,7 +63,7 @@ def get_album_page(album_url):
         # 获取图片地址
         image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
         if len(image_url_list) == 0:
-            raise robot.RobotException("获取图片地址失败\n%s" % album_response.data)
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
         result["image_url_list"] = map(str, image_url_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
@@ -150,7 +150,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = get_account_index_page(account_name)
             except robot.RobotException, e:
-                log.error(account_name + " 主页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 主页解析失败，原因：%s" % e.message)
                 raise
 
             log.trace(account_name + " 解析的所有相册地址：%s" % account_index_response["album_url_list"])
@@ -178,7 +178,7 @@ class Download(threading.Thread):
                 try:
                     album_response = get_album_page(album_url)
                 except robot.RobotException, e:
-                    log.error(account_name + " 相册 %s 访问失败，原因：%s" % (album_url, e.message))
+                    log.error(account_name + " 相册 %s 解析失败，原因：%s" % (album_url, e.message))
                     raise
 
                 log.trace(account_name + " 相册%s解析的所有图片地址：%s" % (album_id, album_response["image_url_list"]))

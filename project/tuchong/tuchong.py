@@ -83,7 +83,7 @@ def get_one_page_album(account_id, post_time):
                     raise robot.RobotException("相册信息'img_id'字段不存在\n%s" % album_info)
                 extra_image_info["image_url_list"].append("https://photo.tuchong.com/%s/f/%s.jpg" % (account_id, str(image_info["img_id"])))
             if len(extra_image_info["image_url_list"]) == 0:
-                raise robot.RobotException("相册信息获取图片地址失败\n%s" % album_info)
+                raise robot.RobotException("相册信息匹配图片地址失败\n%s" % album_info)
 
             # 获取相册创建时间
             if not robot.check_sub_key(("published_at",), album_info):
@@ -182,7 +182,7 @@ class Download(threading.Thread):
                 try:
                     account_index_response = get_account_index_page(account_name)
                 except robot.RobotException, e:
-                    log.error(account_name + " 主页无法访问，原因：%s" % e.message)
+                    log.error(account_name + " 主页解析失败，原因：%s" % e.message)
                     raise
                 account_id = account_index_response["account_id"]
 
@@ -199,7 +199,7 @@ class Download(threading.Thread):
                 try:
                     album_pagination_response = get_one_page_album(account_id, post_time)
                 except robot.RobotException, e:
-                    log.error(account_name + " %s后的一页相册访问失败，原因：%s" % (post_time, e.message))
+                    log.error(account_name + " %s后的一页相册解析失败，原因：%s" % (post_time, e.message))
                     raise
 
                 # 如果为空，表示已经取完了

@@ -80,7 +80,7 @@ def get_one_page_video(suid, page_count):
             raise robot.RobotException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
         video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
         if not result["is_over"] and len(video_id_list) == 0:
-            raise robot.RobotException("所有视频id获取失败\n%s" % video_pagination_response.json_data)
+            raise robot.RobotException("页面匹配视频id失败\n%s" % video_pagination_response.json_data)
         result["video_id_list"] = map(str, video_id_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
@@ -195,7 +195,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = get_account_index_page(account_id)
             except robot.RobotException, e:
-                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
             page_count = 1
@@ -211,7 +211,7 @@ class Download(threading.Thread):
                 try:
                     video_pagination_response = get_one_page_video(account_index_response["user_id"], page_count)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页视频访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response["video_id_list"]))
@@ -238,7 +238,7 @@ class Download(threading.Thread):
                     try:
                         video_info_response = get_video_info_page(video_id)
                     except robot.RobotException, e:
-                        log.error(account_name + " 视频%s信息页访问失败，原因：%s" % (video_id, e.message))
+                        log.error(account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
                         raise
 
                     video_url = video_info_response["video_url"]

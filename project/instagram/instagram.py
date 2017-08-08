@@ -275,7 +275,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = get_account_index_page(account_name)
             except robot.RobotException, e:
-                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
             if self.account_info[1] == "":
@@ -299,7 +299,7 @@ class Download(threading.Thread):
                 try:
                     media_pagination_response = get_one_page_media(account_index_response["account_id"], cursor)
                 except robot.RobotException, e:
-                    log.error(account_name + " cursor '%s'的媒体信息访问失败，原因：%s" % (cursor, e.message))
+                    log.error(account_name + " cursor '%s'的一页媒体信息解析失败，原因：%s" % (cursor, e.message))
                     raise 
 
                 log.trace(account_name + " cursor '%s'解析的所有媒体信息：%s" % (cursor, media_pagination_response["media_info_list"]))
@@ -325,7 +325,7 @@ class Download(threading.Thread):
                             try:
                                 media_response = get_media_page(media_info["page_id"])
                             except robot.RobotException, e:
-                                log.error(account_name + " 媒体%s的详细页访问失败，原因：%s" % (media_info["page_id"], e.message))
+                                log.error(account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
                                 raise
 
                             image_url_list = media_response["image_url_list"]
@@ -357,7 +357,7 @@ class Download(threading.Thread):
                             try:
                                 media_response = get_media_page(media_info["page_id"])
                             except robot.RobotException, e:
-                                log.error(account_name + " 媒体%s的详细页访问失败，原因：%s" % (media_info["page_id"], e.message))
+                                log.error(account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
                                 raise
 
                         for video_url in media_response["video_url_list"]:

@@ -165,7 +165,7 @@ class Download(threading.Thread):
                 try:
                     media_pagination_response = get_one_page_media(account_name, target_id)
                 except robot.RobotException, e:
-                    log.error(account_name + " target id %s的媒体信息访问失败，原因：%s" % (target_id, e.message))
+                    log.error(account_name + " target id %s的一页媒体信息解析失败，原因：%s" % (target_id, e.message))
                     raise
 
                 # 如果为空，表示已经取完了

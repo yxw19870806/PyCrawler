@@ -118,7 +118,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                     else:
                         result["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
                 else:
-                    raise robot.RobotException("歌曲原始地址获取歌曲地址失败\n%s" % audio_source_url)
+                    raise robot.RobotException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
             # MV
             else:
                 video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
@@ -218,7 +218,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = get_account_index_page(account_id)
             except robot.RobotException, e:
-                log.error(account_name + " 主页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 主页解析失败，原因：%s" % e.message)
                 raise
 
             page_count = 1
@@ -234,7 +234,7 @@ class Download(threading.Thread):
                 try:
                     audit_pagination_response = get_one_page_audio(account_index_response["user_id"], page_count)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 # 如果为空，表示已经取完了
@@ -263,7 +263,7 @@ class Download(threading.Thread):
                     try:
                         audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["type"])
                     except robot.RobotException, e:
-                        log.error(account_name + " 歌曲%s《%s》播放页面解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
+                        log.error(account_name + " 歌曲%s《%s》解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
                         raise
 
                     if audio_play_response["is_delete"]:

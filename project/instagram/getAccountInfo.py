@@ -16,8 +16,8 @@ def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s/" % account_name
     account_index_response = net.http_request(account_index_url)
     result = {
-        "account_info": "",  # 页面解析出的自我介绍
-        "external_url": "",  # 页面解析出的外部地址
+        "account_info": "",  # 自我介绍
+        "external_url": "",  # 外部链接地址
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号信息
@@ -61,7 +61,7 @@ def main():
         try:
             account_index_response = get_account_index_page(account)
         except robot.RobotException, e:
-            tool.print_msg(account + "获取信息失败，原因：%s" % "")
+            tool.print_msg(account + "解析信息失败，原因：%s" % "")
             continue
         tool.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
 

@@ -192,7 +192,7 @@ class Download(threading.Thread):
                 try:
                     video_pagination_response = get_one_page_video(account_id, page_time)
                 except robot.RobotException, e:
-                    log.error(account_name + " %s后的一页视频访问失败，原因：%s" % (page_time, e.message))
+                    log.error(account_name + " %s后的一页视频解析失败，原因：%s" % (page_time, e.message))
                     raise
 
                 log.step(account_name + " 第%s页解析的所有视频信息：%s" % (video_count, video_pagination_response["video_info_list"]))
@@ -212,7 +212,7 @@ class Download(threading.Thread):
                         try:
                             video_info_response = get_video_info_page(video_part_id, video_info["video_id"])
                         except robot.RobotException, e:
-                            log.error(account_name + " 视频%s %s的地址获取失败，原因：%s" % (video_part_id, video_info["video_id"], e.message))
+                            log.error(account_name + " 视频%s（%s）解析失败，原因：%s" % (video_part_id, video_info["video_id"], e.message))
                             raise
 
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_info_response["video_url"]))

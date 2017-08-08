@@ -190,7 +190,7 @@ def get_album_page(coser_id, album_id):
         # 获取作品页面内的所有图片地址列表
         image_url_list = re.findall("src='([^']*)'", album_response.data)
         if not result["is_admin_locked"] and not result["is_only_follower"] and len(image_url_list) == 0:
-            raise robot.RobotException("页面获取图片地址失败\n%s" % album_response.data)
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
         result["image_url_list"] = map(str, image_url_list)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
@@ -221,7 +221,7 @@ class Bcy(robot.Robot):
         # 未登录时提示可能无法获取粉丝指定的作品
         if not check_login():
             while True:
-                input_str = tool.console_input(tool.get_time() + " 没有检测到您的账号信息，可能无法获取那些只对粉丝开放的隐藏作品，是否手动输入账号密码登录(Y)es？ 或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = tool.console_input(tool.get_time() + " 没有检测到您的账号信息，可能无法解析那些只对粉丝开放的隐藏作品，是否手动输入账号密码登录(Y)es？ 或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     if login():

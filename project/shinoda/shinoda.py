@@ -61,7 +61,7 @@ class Blog(robot.Robot):
             try:
                 blog_pagination_response = get_one_page_blog(page_count)
             except robot.RobotException, e:
-                log.error("第%s页日志访问失败，原因：%s" % (page_count, e.message))
+                log.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
             # 是否已经获取完毕

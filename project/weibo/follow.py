@@ -59,13 +59,13 @@ def main():
         for cookie_key in all_cookie_from_browser[".sina.com.cn"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
     else:
-        tool.print_msg("没有获取到登录信息，退出！")
+        tool.print_msg("没有检测到登录信息")
         tool.process_exit()
     if ".login.sina.com.cn" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser[".login.sina.com.cn"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".login.sina.com.cn"][cookie_key]
     else:
-        tool.print_msg("没有获取到登录信息，退出！")
+        tool.print_msg("没有检测到登录信息")
         tool.process_exit()
 
     # 检测登录状态

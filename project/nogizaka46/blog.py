@@ -75,7 +75,7 @@ def get_one_page_blog(account_id, page_count):
             raise robot.RobotException("页面截取分页信息失败\n%s" % blog_pagination_response.data)
         page_count_find = re.findall('"\?p=(\d+)"', paginate_data)
         if len(page_count_find) == 0:
-            raise robot.RobotException("分页信息获取页码失败\n%s" % paginate_data)
+            raise robot.RobotException("分页信息匹配页码失败\n%s" % paginate_data)
         result["is_over"] = page_count >= max(map(int, page_count_find))
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
@@ -218,7 +218,7 @@ class Download(threading.Thread):
                 try:
                     blog_pagination_response = get_one_page_blog(account_id, page_count)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))

@@ -37,10 +37,8 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if not account_id:
-            raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
         if not robot.is_integer(account_id):
-            raise robot.RobotException("获取的用户id类型不正确\n%s" % account_index_response.data)
+            raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
@@ -100,7 +98,7 @@ def get_one_page_media(account_name, position_blog_id):
                 # 获取日志id
                 blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
                 if not robot.is_integer(blog_id):
-                    raise robot.RobotException("tweet内容中获取tweet id失败\n%s" % tweet_data)
+                    raise robot.RobotException("tweet内容中截取tweet id失败\n%s" % tweet_data)
                 extra_media_info["blog_id"] = str(blog_id)
 
                 # 获取图片地址
@@ -137,7 +135,7 @@ def get_video_play_page(tweet_id):
             file_url_host = urllib.splithost(file_url_path)[0]
             m3u8_file_response = net.http_request(m3u8_file_url)
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise robot.RobotException("m3u8文件 %s 获取失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
+                raise robot.RobotException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
             # 是否包含的是m3u8文件（不同分辨率）
             include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
             if len(include_m3u8_file_list) > 0:
@@ -145,7 +143,7 @@ def get_video_play_page(tweet_id):
                 m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
                 m3u8_file_response = net.http_request(m3u8_file_url)
                 if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise robot.RobotException("最高分辨率m3u8文件 %s 访问失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
+                    raise robot.RobotException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
 
             # 包含分P视频文件名的m3u8文件
             ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
@@ -167,7 +165,7 @@ def get_video_play_page(tweet_id):
                 vmap_file_url = vmap_file_url.replace("\\/", "/")
                 vmap_file_response = net.http_request(vmap_file_url)
                 if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise robot.RobotException("视频播放页 %s 访问失败\n%s" % (vmap_file_url, robot.get_http_request_failed_reason(vmap_file_response.status)))
+                    raise robot.RobotException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, robot.get_http_request_failed_reason(vmap_file_response.status)))
                 video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
                 if not video_url:
                     raise robot.RobotException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
@@ -270,7 +268,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = get_account_index_page(account_name)
             except robot.RobotException, e:
-                log.error(account_name + " 首页访问访问失败，原因：%s" % e.message)
+                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
             if self.account_info[1] == "":
@@ -294,13 +292,13 @@ class Download(threading.Thread):
                 try:
                     media_pagination_response = get_one_page_media(account_name, position_blog_id)
                 except robot.RobotException, e:
-                    log.error(account_name + " position %s后的一页媒体列表访问失败，原因：%s" % (position_blog_id, e.message))
+                    log.error(account_name + " position %s后的一页媒体信息解析失败，原因：%s" % (position_blog_id, e.message))
                     raise
 
                 if media_pagination_response["is_over"]:
                     break
 
-                log.trace(account_name + " position %s后一页解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
+                log.trace(account_name + " position %s解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
 
                 for media_info in media_pagination_response["media_info_list"]:
                     log.step(account_name + " 开始解析日志 %s" % media_info["blog_id"])
@@ -320,7 +318,7 @@ class Download(threading.Thread):
                         try:
                             video_play_response = get_video_play_page(media_info["blog_id"])
                         except robot.RobotException, e:
-                            log.error(account_name + " 日志%s的视频播放页访问失败，原因：%s" % (media_info["blog_id"], e.message))
+                            log.error(account_name + " 日志%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
                             raise
 
                         video_url = video_play_response["video_url"]

@@ -244,7 +244,7 @@ class Download(threading.Thread):
                 try:
                     blog_pagination_response = get_one_page_blog(account_id, key)
                 except robot.RobotException, e:
-                    log.error(account_name + " 相册页（token：%s）访问失败，原因：%s" % (key, e.message))
+                    log.error(account_name + " 相册页（token：%s）解析失败，原因：%s" % (key, e.message))
                     raise
 
                 log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, blog_pagination_response["blog_info_list"]))
@@ -265,7 +265,7 @@ class Download(threading.Thread):
                     try:
                         album_response = get_album_page(account_id, blog_info["blog_id"])
                     except robot.RobotException, e:
-                        log.error(account_name + " 相册%s访问失败，原因：%s" % (blog_info["blog_id"], e.message))
+                        log.error(account_name + " 相册%s解析失败，原因：%s" % (blog_info["blog_id"], e.message))
                         raise
 
                     if len(album_response["image_url_list"]) == 0:

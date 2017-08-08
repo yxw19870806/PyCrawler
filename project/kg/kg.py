@@ -184,7 +184,7 @@ class Download(threading.Thread):
                 try:
                     audio_pagination_response = get_one_page_audio(account_id, page_count)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页歌曲访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 log.trace(account_name + " 第%s页解析的所有歌曲信息：%s" % (page_count, audio_pagination_response["audio_info_list"]))
@@ -209,7 +209,7 @@ class Download(threading.Thread):
                     try:
                         audio_play_response = get_audio_play_page(audio_info["audio_key"])
                     except robot.RobotException, e:
-                        log.error(account_name + " 歌曲%s《%s》播放页面访问失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], e.message))
+                        log.error(account_name + " 歌曲%s《%s》解析失败，原因：%s" % (audio_info["audio_id"], audio_info["audio_title"], e.message))
                         raise
 
                     audio_url = audio_play_response["audio_url"]

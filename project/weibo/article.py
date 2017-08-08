@@ -163,7 +163,7 @@ class Article(robot.Robot):
             # 再次检测登录状态
             if not weiboCommon.check_login(COOKIE_INFO):
                 while True:
-                    input_str = tool.console_input(tool.get_time() + " 没有检测到您的登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
+                    input_str = tool.console_input(tool.get_time() + " 没有检测到登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
                         COOKIE_INFO["SUB"] = tool.generate_random_string(50)
@@ -235,7 +235,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = weiboCommon.get_account_index_page(account_id)
             except robot.RobotException, e:
-                log.error(account_name + " 首页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
             page_count = 1
@@ -248,7 +248,7 @@ class Download(threading.Thread):
                 try:
                     article_pagination_response = get_one_page_article(account_index_response["account_page_id"], page_count)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页文章访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页文章解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 for article_info in article_pagination_response["article_info_list"]:
@@ -267,7 +267,7 @@ class Download(threading.Thread):
                     try:
                         article_response = get_article_page(article_info["article_url"])
                     except robot.RobotException, e:
-                        log.error(account_name + " 文章 %s 获取失败，原因：%s" % (article_info["article_url"], e.message))
+                        log.error(account_name + " 文章 %s 解析失败，原因：%s" % (article_info["article_url"], e.message))
                         raise
 
                     if article_response["is_pay"]:

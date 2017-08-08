@@ -228,14 +228,14 @@ class Download(threading.Thread):
                 try:
                     image_index_response = get_image_index_page(account_id)
                 except robot.RobotException, e:
-                    log.error(account_name + " 图片首页获取失败，原因：%s" %  e.message)
+                    log.error(account_name + " 图片首页解析失败，原因：%s" %  e.message)
                     break
 
                 for image_url in image_index_response["image_url_list"]:
                     try:
                         image_head_response = get_image_header(image_url)
                     except robot.RobotException, e:
-                        log.error(account_name + " 图片%s访问失败，原因：%s" % (image_url, e.message))
+                        log.error(account_name + " 图片%s解析失败，原因：%s" % (image_url, e.message))
                         is_error = True
                         break
 
@@ -273,7 +273,7 @@ class Download(threading.Thread):
                 try:
                     video_pagination_response = get_video_index_page(account_id)
                 except robot.RobotException, e:
-                    log.error(account_name + " 视频首页访问失败，原因：%s" %  e.message)
+                    log.error(account_name + " 视频首页解析失败，原因：%s" %  e.message)
                     break
 
                 for video_id in video_pagination_response["video_id_list"]:
@@ -281,7 +281,7 @@ class Download(threading.Thread):
                     try:
                         video_info_response = get_video_info_page(video_id)
                     except robot.RobotException, e:
-                        log.error(account_name + " 视频%s的视频信息获取失败，原因：%s" % (video_id, e.message))
+                        log.error(account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
                         is_error = True
                         break
 
@@ -292,7 +292,6 @@ class Download(threading.Thread):
                     # 新的存档记录
                     if first_video_time is None:
                         first_video_time = str(video_info_response["video_time"])
-
 
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_info_response["video_url_list"]))
 

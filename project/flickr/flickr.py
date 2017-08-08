@@ -191,7 +191,7 @@ class Download(threading.Thread):
             try:
                 account_index_response = get_account_index_page(account_name)
             except robot.RobotException, e:
-                log.error(account_name + " 相册首页访问失败，原因：%s" % e.message)
+                log.error(account_name + " 相册首页解析失败，原因：%s" % e.message)
                 raise
 
             # 生成一个随机的request id用作访问（模拟页面传入）
@@ -209,7 +209,7 @@ class Download(threading.Thread):
                 try:
                     photo_pagination_response = get_one_page_photo(account_index_response["user_id"], page_count, account_index_response["site_key"], request_id)
                 except robot.RobotException, e:
-                    log.error(account_name + " 第%s页图片信息访问失败，原因：%s" % (page_count, e.message))
+                    log.error(account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response["image_info_list"]))

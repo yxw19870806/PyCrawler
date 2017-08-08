@@ -55,12 +55,12 @@ def get_album_page(page_count):
                     raise robot.RobotException("返回数据'attr'字段不存在\n%s" % album_response.json_data)
                 if not robot.check_sub_key(("img",), album_body["attr"]):
                     raise robot.RobotException("返回数据'img'字段不存在\n%s" % album_response.json_data)
+                if len(album_body["attr"]["img"]) == 0:
+                    raise robot.RobotException("返回数据'img'字段长度不正确\n%s" % album_response.json_data)
                 for image_data in album_body["attr"]["img"]:
                     if not robot.check_sub_key(("url",), image_data):
                         raise robot.RobotException("返回数据'url'字段不存在\n%s" % album_response.json_data)
                     result["image_url_list"].append("http://www.zunguang.com/%s" % str(image_data["url"]))
-                if len(result["image_url_list"]) == 0:
-                    raise robot.RobotException("返回数据获取图片地址失败\n%s" % album_response.json_data)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
     return result
@@ -93,7 +93,7 @@ class ZunGuang(robot.Robot):
             try:
                 album_response = get_album_page(page_count)
             except robot.RobotException, e:
-                log.error("第%s页相册访问失败，原因：%s" % (page_count, e.message))
+                log.error("第%s页相册解析失败，原因：%s" % (page_count, e.message))
                 page_count -= error_count
                 break
             except SystemExit:

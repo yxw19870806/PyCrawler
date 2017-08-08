@@ -116,7 +116,7 @@ class Rosi(robot.Robot):
                 log.step("提前退出")
                 raise
 
-            log.trace("第%s页获取的所有图集：%s" % (page_count, album_pagination_response["album_info_list"]))
+            log.trace("第%s页解析的所有图集：%s" % (page_count, album_pagination_response["album_info_list"]))
 
             for album_info in album_pagination_response["album_info_list"]:
                 # 检查是否达到存档记录
@@ -141,7 +141,7 @@ class Rosi(robot.Robot):
                         log.step("提前退出")
                         raise
 
-                    log.trace("%s号图集第%s页获取的所有图集：%s" % (album_info["album_id"], album_page_count, album_pagination_response["album_info_list"]))
+                    log.trace("%s号图集第%s页解析的所有图集：%s" % (album_info["album_id"], album_page_count, album_pagination_response["album_info_list"]))
 
                     for image_url in photo_pagination_response["image_url_list"]:
                         log.step("%s号图集 开始下载第%s张图片 %s" % (album_info["album_id"], image_count, image_url))
