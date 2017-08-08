@@ -28,6 +28,9 @@ def get_one_page_audio(account_id, page_count):
         "is_over": False,  # 是不是最后一页歌曲
     }
     if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if robot.check_sub_key(("code",), audio_pagination_response.json_data) and robot.is_integer(audio_pagination_response.json_data["code"]):
+            if int(audio_pagination_response.json_data["code"]) == 1101:
+                raise robot.RobotException("账号不存在")
         if not robot.check_sub_key(("data",), audio_pagination_response.json_data):
             raise robot.RobotException("返回数据'data'字段不存在\n%s" % audio_pagination_response.json_data)
         if not robot.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
