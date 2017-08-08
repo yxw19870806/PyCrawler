@@ -33,7 +33,6 @@ def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
     account_index_response = net.http_request(account_index_url)
     result = {
-        "is_delete": False,  # 账号是否存在
         "account_id": None,  # account id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -42,7 +41,7 @@ def get_account_index_page(account_name):
             raise robot.RobotException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
     elif account_index_response.status == 404:
-        result["is_delete"] = True
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
@@ -278,10 +277,6 @@ class Download(threading.Thread):
             except robot.RobotException, e:
                 log.error(account_name + " 首页访问失败，原因：%s" % e.message)
                 raise
-
-            if account_index_response["is_delete"]:
-                log.error(account_name + " 账号不存在")
-                tool.process_exit()
 
             if self.account_info[1] == "":
                 self.account_info[1] = account_index_response["account_id"]

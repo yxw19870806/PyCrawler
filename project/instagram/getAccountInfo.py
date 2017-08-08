@@ -35,6 +35,8 @@ def get_account_index_page(account_name):
             result["external_url"] = ""
         else:
             result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
+    elif account_index_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
