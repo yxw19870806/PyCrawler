@@ -21,22 +21,27 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号信息
-        account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
-        if not account_info:
-            raise robot.RobotException("页面截取账号信息失败\n%s" % account_info)
-        account_info = account_info.replace(r"\n", "").replace("'", chr(1))
-        account_info = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
-        result["account_info"] = account_info
+        if account_index_response.data.find('"biography": null,') >= 0:
+            result["account_info"] = ""
+        else:
+            account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
+            if not account_info:
+                raise robot.RobotException("页面截取账号信息失败\n%s" % account_index_response.data)
+            account_info = account_info.replace(r"\n", "").replace("'", chr(1))
+            result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
 
         # 获取外部链接地址
-        result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
+        if account_index_response.data.find('"external_url": null,') >= 0:
+            result["external_url"] = ""
+        else:
+            result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
 
 
 def main():
-    config = config = robot.read_config(tool.PROJECT_CONFIG_PATH)
+    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
     save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
     # 读取存档文件
