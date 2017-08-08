@@ -31,7 +31,7 @@ def get_account_index_page(account_name):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
         user_id = tool.find_sub_string(account_index_response.data, '"nsid":"', '"')
-        if not robot.is_integer(user_id):
+        if not user_id:
             raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
         result["user_id"] = user_id
 
@@ -63,7 +63,7 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
         "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "extras": "date_upload,url_o", "get_user_info": 0, "user_id": user_id, "view_as": "use_pref",
         "sort": "use_pref", "method": "flickr.people.getPhotos", "api_key": api_key, "format": "json", "hermes": 1, "reqId": request_id, "nojsoncallback": 1,
     }
-    photo_pagination_response = net.http_request(api_url, post_data, json_decode=True)
+    photo_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, json_decode=True)
     result = {
         "image_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页图片
