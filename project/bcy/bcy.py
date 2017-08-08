@@ -123,6 +123,9 @@ def get_one_page_album(account_id, page_count):
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if page_count == 1 and album_pagination_response.data.find("<h2>用户不存在</h2>") >= 0:
+            raise robot.RobotException("账号不存在")
+
         # 获取coser id
         coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
         if len(coser_id_find) != 1:
