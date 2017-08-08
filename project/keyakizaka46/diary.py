@@ -152,7 +152,7 @@ class Download(threading.Thread):
                     blog_pagination_response = get_one_page_blog(account_id, page_count)
                 except robot.RobotException, e:
                     log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, e.message))
-                    tool.process_exit()
+                    raise
 
                 # 没有获取到任何日志，所有日志已经全部获取完毕了
                 if len(blog_pagination_response["blog_info_list"]) == 0:

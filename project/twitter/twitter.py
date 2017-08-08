@@ -295,7 +295,7 @@ class Download(threading.Thread):
                     media_pagination_response = get_one_page_media(account_name, position_blog_id)
                 except robot.RobotException, e:
                     log.error(account_name + " position %s后的一页媒体列表访问失败，原因：%s" % (position_blog_id, e.message))
-                    tool.process_exit()
+                    raise
 
                 if media_pagination_response["is_over"]:
                     break

@@ -264,7 +264,7 @@ class Download(threading.Thread):
                         audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["type"])
                     except robot.RobotException, e:
                         log.error(account_name + " 歌曲%s《%s》播放页面解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
-                        tool.process_exit()
+                        raise
 
                     if audio_play_response["is_delete"]:
                         continue

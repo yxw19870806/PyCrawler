@@ -158,7 +158,7 @@ class Rosi(robot.Robot):
                         except SystemExit:
                             log.step("提前退出")
                             tool.remove_dir_or_file(album_path)
-                            tool.process_exit()
+                            raise
 
                     if is_over or photo_pagination_response["is_over"]:
                         break
