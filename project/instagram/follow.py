@@ -48,7 +48,8 @@ def follow_account(account_name, account_id):
     follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("status", "result"), follow_response.json_data):
-            raise robot.RobotException("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data))
+            tool.print_msg(robot.RobotException("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data)))
+            tool.process_exit()
         if follow_response.json_data["result"] == "following":
             tool.print_msg("关注%s成功" % account_name)
             return True
@@ -58,9 +59,11 @@ def follow_account(account_name, account_id):
         else:
             return False
     elif follow_response.status == 403 and follow_response.data == "Please wait a few minutes before you try again.":
-        raise robot.RobotException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name)
+        tool.print_msg(robot.RobotException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
+        tool.process_exit()
     else:
-        raise robot.RobotException("关注%s失败，请求返回结果：%s，退出程序！" % (account_name, robot.get_http_request_failed_reason(follow_response.status)))
+        tool.print_msg(robot.RobotException("关注%s失败，请求返回结果：%s" % (account_name, robot.get_http_request_failed_reason(follow_response.status))))
+        tool.process_exit()
 
 
 def main():
