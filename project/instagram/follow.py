@@ -18,7 +18,6 @@ def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
     account_index_response = net.http_request(account_index_url, cookies_list=COOKIE_INFO)
     result = {
-        "is_delete": False,  # 账号是否存在
         "is_follow": False,  # 是否已经关注
         "is_private": False,  # 是否是私密账号
         "account_id": None,  # account id
@@ -36,7 +35,7 @@ def get_account_index_page(account_name):
         # 判断是不是私密账号
         result["is_private"] = tool.find_sub_string(account_index_response.data, '"is_private": ', ",") == "true"
     elif account_index_response.status == 404:
-        result["is_delete"] = True
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
@@ -100,10 +99,6 @@ def main():
             account_index_response = get_account_index_page(account_name)
         except robot.RobotException, e:
             log.error(account_name + " 首页访问失败，原因：%s" % e.message)
-            raise
-
-        if account_index_response["is_delete"]:
-            log.error(account_name + " 账号不存在")
             continue
 
         if account_index_response["is_follow"]:
