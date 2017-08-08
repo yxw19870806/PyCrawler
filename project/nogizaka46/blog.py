@@ -215,23 +215,15 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页图片
-                blog_pagination_response = get_one_page_blog(account_id, page_count)
-                if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(blog_pagination_response.status)))
-                    tool.process_exit()
-
-                if len(blog_pagination_response["blog_info_list"]) == 0:
-                    log.error(account_name + " 第%s页日志%s分组失败" % (page_count, blog_pagination_response.data))
-                    tool.process_exit()
+                try:
+                    blog_pagination_response = get_one_page_blog(account_id, page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页日志访问失败，原因：%s" % (page_count, e.message))
+                    raise
 
                 log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
                 for blog_info in blog_pagination_response["blog_info_list"]:
-                    # 获取日志id
-                    if blog_info["blog_id"] is None:
-                        log.error(account_name + " 日志id解析失败")
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if blog_info["blog_id"] <= int(self.account_info[2]):
                         is_over = True
@@ -242,9 +234,6 @@ class Download(threading.Thread):
                         first_blog_id = str(blog_info["blog_id"])
 
                     log.step(account_name + " 开始解析日志%s" % blog_info["blog_id"])
-
-                    if len(blog_info["image_url_list"]) == 0:
-                        continue
 
                     # 下载图片
                     for image_url in blog_info["image_url_list"]:
