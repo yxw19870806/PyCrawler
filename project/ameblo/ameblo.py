@@ -60,6 +60,8 @@ def get_one_page_blog(account_name, page_count):
         elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
             if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
                 result["is_over"] = True
+    elif page_count == 1 and blog_pagination_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     return result
