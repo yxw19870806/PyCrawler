@@ -14,13 +14,17 @@ import re
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
-    extra_info = {
+    result = {
         "is_over": False,  # 是不是已经没有新的相册
         "image_info_list": [],  # 是不是已经没有新的相册
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         article_data = tool.find_sub_string(photo_pagination_response.data, '<section id="primary"', "</section>")
+        if not article_data:
+            raise robot.RobotException("页面截取正文失败\n%s" % photo_pagination_response.data)
         image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
+        if len(image_info_list) == 0:
+            raise robot.RobotException("正文匹配图片信息失败\n%s" % photo_pagination_response.data)
         image_id_2_url_list = {}
         for image_id, image_url in image_info_list:
             image_id_2_url_list[int(image_id)] = str(image_url)
@@ -29,10 +33,11 @@ def get_one_page_photo(page_count):
                 "image_id": image_id,  # 图片id
                 "image_url": image_id_2_url_list[image_id],  # 图片地址
             }
-            extra_info["image_info_list"].append(extra_image_info)
+            result["image_info_list"].append(extra_image_info)
     elif photo_pagination_response.status == 404:
-        extra_info["is_over"] = True
-    photo_pagination_response.extra_info = extra_info
+        result["is_over"] = True
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     return photo_pagination_response
 
 
@@ -58,15 +63,16 @@ class YWKB(robot.Robot):
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
-            photo_pagination_response = get_one_page_photo(page_count)
-            if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(" 第%s页图片访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
-                tool.process_exit()
+            try:
+                photo_pagination_response = get_one_page_photo(page_count)
+            except robot.RobotException, e:
+                log.error(" 第%s页图片访问失败，原因：%s" % (page_count, e.message))
+                raise 
 
-            if photo_pagination_response.extra_info["is_over"]:
+            if photo_pagination_response["is_over"]:
                 break
 
-            for image_info in photo_pagination_response.extra_info["image_info_list"]:
+            for image_info in photo_pagination_response["image_info_list"]:
                 # 检查是否达到存档记录
                 if image_info["image_id"] <= last_image_id:
                     is_over = True
