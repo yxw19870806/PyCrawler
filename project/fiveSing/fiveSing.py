@@ -31,6 +31,8 @@ def get_one_page_audio(account_id, page_type, page_count):
         "audio_info_list": [],  # 所有歌曲信息
     }
     if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if audio_pagination_response.data.find("var OwnerNickName = '';") >= 0:
+            raise robot.RobotException("账号不存在")
         # 获取歌曲信息
         # 单首歌曲信息的格式：[歌曲id，歌曲标题]
         audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
