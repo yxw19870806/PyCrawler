@@ -40,6 +40,8 @@ def get_account_index_page(account_name):
         if not site_key:
             raise robot.RobotException("页面截取site key失败\n%s" % account_index_response.data)
         result["site_key"] = site_key
+    elif account_index_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
