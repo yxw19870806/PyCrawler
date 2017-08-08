@@ -140,14 +140,7 @@ class Nvshens(robot.Robot):
                         album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
                     else:
                         album_path = os.path.join(self.image_download_path, str(album_id))
-                    if not tool.make_dir(album_path, 0):
-                        # 目录出错，把title去掉后再试一次，如果还不行退出
-                        log.error("创建图集目录 %s 失败，尝试不使用title" % album_path)
-                        album_path = os.path.join(self.image_download_path, album_id)
-                        if not tool.make_dir(album_path, 0):
-                            log.error("创建图集目录 %s 失败" % album_path)
-                            tool.process_exit()
-                            
+
                     this_album_total_image_count = album_pagination_response["image_count"]
                 else:
                     if this_album_total_image_count != album_pagination_response["image_count"]:

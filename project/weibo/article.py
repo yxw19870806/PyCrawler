@@ -281,13 +281,6 @@ class Download(threading.Thread):
                         article_path = os.path.join(image_path, "%s %s" % (article_id, title))
                     else:
                         article_path = os.path.join(image_path, article_id)
-                    if not tool.make_dir(article_path, 0):
-                        # 目录出错，把title去掉后再试一次，如果还不行退出
-                        log.error(account_name + " 创建文章目录 %s 失败，尝试不使用title" % article_path)
-                        article_path = os.path.join(image_path, article_id)
-                        if not tool.make_dir(article_path, 0):
-                            log.error(account_name + " 创建文章目录 %s 失败" % article_path)
-                            tool.process_exit()
 
                     # 文章顶部图片
                     if article_response["top_image_url"] is not None:
