@@ -37,62 +37,79 @@ def get_one_page_photo(account_id, cursor):
     }
     photo_pagination_response = net.http_request(photo_pagination_url, header_list=header_list, is_random_ip=False, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if (
-            robot.check_sub_key(("meta",), photo_pagination_response.json_data) and
-            robot.check_sub_key(("code",), photo_pagination_response.json_data["meta"]) and
-            len(photo_pagination_response.json_data["meta"]["code"]) > 0
-        ):
+        # 异常返回
+        if robot.check_sub_key(("meta",), photo_pagination_response.json_data) and robot.check_sub_key(("code",), photo_pagination_response.json_data["meta"]):
             if photo_pagination_response.json_data["meta"]["code"] == "NoMoreDataError":
                 extra_info["is_over"] = True
             elif photo_pagination_response.json_data["meta"]["code"] == "TooManyRequests":
                 time.sleep(30)
                 return get_one_page_photo(account_id, cursor)
             else:
-                extra_info["is_error"] = True
-        elif robot.check_sub_key(("data", "next"), photo_pagination_response.json_data):
-            for media_info in photo_pagination_response.json_data["data"]:
-                media_extra_info = {
+                raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % photo_pagination_response.json_data)
+        # 正常数据返回
+        elif robot.check_sub_key(("data"), photo_pagination_response.json_data):
+            if not isinstance(photo_pagination_response.json_data["data"], list):
+                raise robot.RobotException("返回信息'data'字段类型不正确\n%s" % photo_pagination_response.json_data)
+            if len(photo_pagination_response.json_data["data"]) == 0:
+                raise robot.RobotException("返回信息'data'字段长度不正确\n%s" % photo_pagination_response.json_data)
+            for status_info in photo_pagination_response.json_data["data"]:
+                status_extra_info = {
                     "id": None,  # 状态id
                     "image_url_list": [],  # 所有图片地址
-                    "json_data": media_info,  # 原始数据
                 }
-                if robot.check_sub_key(("medias", "createAt", "statusId"), media_info):
-                    is_error = False
-                    # 获取图片地址
-                    for media in media_info["medias"]:
-                        # 带模糊效果的，XXXXX_b.webp
-                        # https://s3-us-west-2.amazonaws.com/ysx.status.2/1080/baf196caa043a88ecf35a4652fa6017648aa5a02_b.webp?AWSAccessKeyId=AKIAJGLBMFWYTNLTZTOA&Expires=1498737886&Signature=%2F5Gmp5HRNXkGnlwJ2aulGfEqhh8%3D
-                        # 原始图的，XXXXX.webp
-                        # https://s3-us-west-2.amazonaws.com/ysx.status.2/1080/7ec8bccbbf0d618d67170f77054e3931220e3c14.webp?AWSAccessKeyId=AKIAJGLBMFWYTNLTZTOA&Expires=1498737886&Signature=9hvWk62TmAAPq67Rn577WU8NyYI%3D
-                        if robot.check_sub_key(("origin", "downloadUrl", "thumb", "mediaType"), media) and robot.is_integer(media["mediaType"]):
-                            if media["downloadUrl"]:
-                                media_extra_info["image_url_list"].append(str(media["downloadUrl"]))
-                            elif media["origin"]:
-                                media_extra_info["image_url_list"].append(str(media["origin"]))
-                            else:
-                                # 视频，可能只有预览图
-                                if int(media["mediaType"]) == 2:
-                                    if media["thumb"]:
-                                        media_extra_info["image_url_list"].append(str(media["thumb"]))
-                                # 图片，不存在origin和downloadUrl，抛出异常
-                                elif int(media["mediaType"]) == 1:
-                                    is_error = True
-                                    break
-                                # 未知类型，抛出异常
-                                else:
-                                    is_error = True
-                                    break
-                        else:
-                            is_error = True
-                            break
-                    # 获取状态id
-                    if not is_error:
-                        media_extra_info["id"] = str(media_info["statusId"])
-                extra_info["status_list"].append(media_extra_info)
+                # 获取状态id
+                if not robot.check_sub_key(("statusId",), status_info):
+                    raise robot.RobotException("状态信息'statusId'字段不存在\n%s" % status_info)
+                status_extra_info["id"] = str(status_info["statusId"])
+
+                # 获取图片、视频地址
+                if not robot.check_sub_key(("medias",), status_info):
+                    raise robot.RobotException("状态信息'medias'字段不存在\n%s" % status_info)
+                if not isinstance(status_info["medias"], list):
+                    raise robot.RobotException("状态信息'medias'字段类型不正确\n%s" % status_info)
+                if len(status_info["medias"]) == 0:
+                    raise robot.RobotException("状态信息'medias'字段长度不正确\n%s" % status_info)
+                for media_info in status_info["medias"]:
+                    # 带模糊效果的，XXXXX_b.webp
+                    # https://s3-us-west-2.amazonaws.com/ysx.status.2/1080/baf196caa043a88ecf35a4652fa6017648aa5a02_b.webp?AWSAccessKeyId=AKIAJGLBMFWYTNLTZTOA&Expires=1498737886&Signature=%2F5Gmp5HRNXkGnlwJ2aulGfEqhh8%3D
+                    # 原始图的，XXXXX.webp
+                    # https://s3-us-west-2.amazonaws.com/ysx.status.2/1080/7ec8bccbbf0d618d67170f77054e3931220e3c14.webp?AWSAccessKeyId=AKIAJGLBMFWYTNLTZTOA&Expires=1498737886&Signature=9hvWk62TmAAPq67Rn577WU8NyYI%3D
+                    if not robot.check_sub_key(("origin", "downloadUrl", "thumb"), media_info):
+                        raise robot.RobotException("媒体信息'origin'、'downloadUrl'、'thumb'字段不存在\n%s" % media_info)
+
+                    if not robot.check_sub_key(("mediaType",), media_info):
+                        raise robot.RobotException("媒体信息'mediaType'字段不存在\n%s" % media_info)
+                    if not robot.is_integer(media_info["mediaType"]):
+                        raise robot.RobotException("媒体信息'mediaType'字段不存在\n%s" % media_info)
+                    if int(robot.is_integer(media_info["mediaType"])) not in [1, 2]:
+                        raise robot.RobotException("媒体信息'mediaType'取值不正确\n%s" % media_info)
+                    # 优先使用downloadUrl
+                    if media_info["downloadUrl"]:
+                        status_extra_info["image_url_list"].append(str(media_info["downloadUrl"]))
+                    # 前次使用downloadUrl
+                    elif media_info["origin"]:
+                        status_extra_info["image_url_list"].append(str(media_info["origin"]))
+                    else:
+                        # 视频，可能只有预览图
+                        if int(media_info["mediaType"]) == 2:
+                            if not media_info["thumb"]:
+                                raise robot.RobotException("媒体信息'downloadUrl'、'origin'、'thumb'字段都没有值\n%s" % media_info)
+                            status_extra_info["image_url_list"].append(str(media_info["thumb"]))
+                        # 图片，不存在origin和downloadUrl，抛出异常
+                        elif int(media_info["mediaType"]) == 1:
+                            raise robot.RobotException("媒体信息'origin'和'downloadUrl'字段都没有值\n%s" % media_info)
+
+                extra_info["status_list"].append(status_extra_info)
+
+            # 获取下一页指针
+            if not robot.check_sub_key(("next",), photo_pagination_response.json_data):
+                raise robot.RobotException("返回信息'next'字段不存在\n%s" % photo_pagination_response.json_data)
             if photo_pagination_response.json_data["next"] and robot.is_integer(photo_pagination_response.json_data["next"]):
                 extra_info["next_page_cursor"] = int(photo_pagination_response.json_data["next"])
         else:
-            extra_info["is_error"] = True
+            raise robot.RobotException("返回信息'code'或'data'字段不存在\n%s" % photo_pagination_response.json_data)
+    else:
+        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     photo_pagination_response.extra_info = extra_info
     return photo_pagination_response
 
@@ -193,23 +210,16 @@ class Download(threading.Thread):
             while not is_over:
                 log.step(account_name + " 开始解析cursor '%s'的图片" % cursor)
 
-                photo_pagination_response = get_one_page_photo(account_id, cursor)
-                if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, robot.get_http_request_failed_reason(photo_pagination_response.status)))
-                    tool.process_exit()
+                try:
+                    photo_pagination_response = get_one_page_photo(account_id, cursor)
+                except robot.RobotException, e:
+                    log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, e.message))
+                    raise
 
                 if photo_pagination_response.extra_info["is_over"]:
                     break
 
-                if photo_pagination_response.extra_info["is_error"]:
-                    log.error(account_name + " cursor '%s'的图片信息%s解析失败" % (cursor, photo_pagination_response.json_data))
-                    tool.process_exit()
-
                 for status_info in photo_pagination_response.extra_info["status_list"]:
-                    if status_info["id"] is None:
-                        log.error(account_name + " 状态%s解析失败" % status_info["json_data"])
-                        tool.process_exit()
-
                     # 检查是否达到存档记录
                     if status_info["id"] == self.account_info[1]:
                         is_over = True
@@ -239,7 +249,7 @@ class Download(threading.Thread):
                             log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    if photo_pagination_response.extra_info["next_page_cursor"]:
+                    if photo_pagination_response.extra_info["next_page_cursor"] is not None:
                         cursor = photo_pagination_response.extra_info["next_page_cursor"]
                     else:
                         is_over = True
