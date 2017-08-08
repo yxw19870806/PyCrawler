@@ -51,7 +51,11 @@ def main():
 
     result_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/account_info.data")
     for account in sorted(account_list.keys()):
-        account_index_response = get_account_index_page(account)
+        try:
+            account_index_response = get_account_index_page(account)
+        except robot.RobotException, e:
+            tool.print_msg(account + "获取信息失败，原因：%s" % "")
+            continue
         tool.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)
 
 if __name__ == "__main__":
