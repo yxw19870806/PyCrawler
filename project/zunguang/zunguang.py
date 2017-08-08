@@ -17,7 +17,7 @@ def get_album_page(page_count):
     album_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
     album_response = net.http_request(album_url, method="POST", post_data=post_data, json_decode=True, is_random_ip=False)
-    extra_info = {
+    result = {
         "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
         "title": "",  # 相册标题
         "image_url_list": [],  # 所有图片地址
@@ -29,7 +29,7 @@ def get_album_page(page_count):
             raise robot.RobotException("返回数据'blog'字段不存在\n%s" % album_response.json_data)
         # 判断是不是需要跳过
         if album_response.json_data["body"]["blog"] is False:
-            extra_info["is_skip"] = True
+            result["is_skip"] = True
         else:
             if not isinstance(album_response.json_data["body"]["blog"], list):
                 raise robot.RobotException("返回数据'blog'字段类型不正确\n%s" % album_response.json_data)
@@ -42,13 +42,13 @@ def get_album_page(page_count):
             if album_type not in [2, 3]:
                 raise robot.RobotException("返回数据'type'字段取值不正确\n%s" % album_response.json_data)
             if album_type == 2:  # 歌曲类型的相册
-                extra_info["is_skip"] = True
+                result["is_skip"] = True
             elif album_type == 3:  # 图片类型的相册
                 album_body = album_response.json_data["body"]["blog"][0]
                 # 获取相册标题
                 if not robot.check_sub_key(("title",), album_body):
                     raise robot.RobotException("返回数据'title'字段不存在\n%s" % album_response.json_data)
-                extra_info["title"] = str(album_body["title"].encode("UTF-8"))
+                result["title"] = str(album_body["title"].encode("UTF-8"))
 
                 # 获取图片地址
                 if not robot.check_sub_key(("attr",), album_body):
@@ -58,13 +58,12 @@ def get_album_page(page_count):
                 for image_data in album_body["attr"]["img"]:
                     if not robot.check_sub_key(("url",), image_data):
                         raise robot.RobotException("返回数据'url'字段不存在\n%s" % album_response.json_data)
-                    extra_info["image_url_list"].append("http://www.zunguang.com/%s" % str(image_data["url"]))
-                if len(extra_info["image_url_list"]) == 0:
+                    result["image_url_list"].append("http://www.zunguang.com/%s" % str(image_data["url"]))
+                if len(result["image_url_list"]) == 0:
                     raise robot.RobotException("返回数据获取图片地址失败\n%s" % album_response.json_data)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
-    album_response.extra_info = extra_info
-    return album_response
+    return result
 
 
 class ZunGuang(robot.Robot):
@@ -102,7 +101,7 @@ class ZunGuang(robot.Robot):
                 page_count -= error_count
                 break
 
-            if album_response.extra_info["is_skip"]:
+            if album_response["is_skip"]:
                 error_count += 1
                 if error_count >= ERROR_PAGE_COUNT_CHECK:
                     log.error("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
@@ -118,9 +117,9 @@ class ZunGuang(robot.Robot):
 
             # 下载目录标题
             title = ""
-            if album_response.extra_info["title"]:
+            if album_response["title"]:
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(album_response.extra_info["title"])
+                title = robot.filter_text(album_response["title"])
             if title:
                 image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, title))
             else:
@@ -133,9 +132,9 @@ class ZunGuang(robot.Robot):
                     log.error("创建第%s页相册目录 %s 失败" % (page_count, image_path))
                     break
 
-            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_response.extra_info["image_url_list"]))
+            log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_response["image_url_list"]))
             image_count = 1
-            for image_url in album_response.extra_info["image_url_list"]:
+            for image_url in album_response["image_url_list"]:
                 log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
