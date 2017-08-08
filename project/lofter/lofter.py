@@ -33,6 +33,8 @@ def get_one_page_blog(account_name, page_count):
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data)
         # 去重排序
         result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
+    elif page_count == 1 and blog_pagination_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     return result
