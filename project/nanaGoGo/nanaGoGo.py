@@ -58,6 +58,8 @@ def get_one_page_media(account_name, target_id):
             extra_media_info["blog_body"] = media_info["post"]["body"]
 
             result["media_info_list"].append(extra_media_info)
+    elif target_id == INIT_TARGET_ID and media_pagination_response.status == 400:
+        raise robot.RobotException("talk不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
     return media_pagination_response
