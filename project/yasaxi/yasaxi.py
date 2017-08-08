@@ -29,7 +29,7 @@ def get_one_page_photo(account_id, cursor):
         "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO,
         "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
-    extra_info = {
+    result = {
         "is_over": False,  # 是不是已经没有新的图片
         "is_error": False,  # 是不是格式不符合
         "next_page_cursor": None,  # 下一页图片的指针
@@ -40,7 +40,7 @@ def get_one_page_photo(account_id, cursor):
         # 异常返回
         if robot.check_sub_key(("meta",), photo_pagination_response.json_data) and robot.check_sub_key(("code",), photo_pagination_response.json_data["meta"]):
             if photo_pagination_response.json_data["meta"]["code"] == "NoMoreDataError":
-                extra_info["is_over"] = True
+                result["is_over"] = True
             elif photo_pagination_response.json_data["meta"]["code"] == "TooManyRequests":
                 time.sleep(30)
                 return get_one_page_photo(account_id, cursor)
@@ -53,14 +53,14 @@ def get_one_page_photo(account_id, cursor):
             if len(photo_pagination_response.json_data["data"]) == 0:
                 raise robot.RobotException("返回信息'data'字段长度不正确\n%s" % photo_pagination_response.json_data)
             for status_info in photo_pagination_response.json_data["data"]:
-                status_extra_info = {
+                status_result = {
                     "id": None,  # 状态id
                     "image_url_list": [],  # 所有图片地址
                 }
                 # 获取状态id
                 if not robot.check_sub_key(("statusId",), status_info):
                     raise robot.RobotException("状态信息'statusId'字段不存在\n%s" % status_info)
-                status_extra_info["id"] = str(status_info["statusId"])
+                status_result["id"] = str(status_info["statusId"])
 
                 # 获取图片、视频地址
                 if not robot.check_sub_key(("medias",), status_info):
@@ -85,33 +85,32 @@ def get_one_page_photo(account_id, cursor):
                         raise robot.RobotException("媒体信息'mediaType'取值不正确\n%s" % media_info)
                     # 优先使用downloadUrl
                     if media_info["downloadUrl"]:
-                        status_extra_info["image_url_list"].append(str(media_info["downloadUrl"]))
+                        status_result["image_url_list"].append(str(media_info["downloadUrl"]))
                     # 前次使用downloadUrl
                     elif media_info["origin"]:
-                        status_extra_info["image_url_list"].append(str(media_info["origin"]))
+                        status_result["image_url_list"].append(str(media_info["origin"]))
                     else:
                         # 视频，可能只有预览图
                         if int(media_info["mediaType"]) == 2:
                             if not media_info["thumb"]:
                                 raise robot.RobotException("媒体信息'downloadUrl'、'origin'、'thumb'字段都没有值\n%s" % media_info)
-                            status_extra_info["image_url_list"].append(str(media_info["thumb"]))
+                            status_result["image_url_list"].append(str(media_info["thumb"]))
                         # 图片，不存在origin和downloadUrl，抛出异常
                         elif int(media_info["mediaType"]) == 1:
                             raise robot.RobotException("媒体信息'origin'和'downloadUrl'字段都没有值\n%s" % media_info)
 
-                extra_info["status_list"].append(status_extra_info)
+                result["status_list"].append(status_result)
 
             # 获取下一页指针
             if not robot.check_sub_key(("next",), photo_pagination_response.json_data):
                 raise robot.RobotException("返回信息'next'字段不存在\n%s" % photo_pagination_response.json_data)
             if photo_pagination_response.json_data["next"] and robot.is_integer(photo_pagination_response.json_data["next"]):
-                extra_info["next_page_cursor"] = int(photo_pagination_response.json_data["next"])
+                result["next_page_cursor"] = int(photo_pagination_response.json_data["next"])
         else:
             raise robot.RobotException("返回信息'code'或'data'字段不存在\n%s" % photo_pagination_response.json_data)
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    return result
 
 
 class Yasaxi(robot.Robot):
@@ -216,10 +215,10 @@ class Download(threading.Thread):
                     log.error(account_name + " cursor '%s'的图片访问失败，原因：%s" % (cursor, e.message))
                     raise
 
-                if photo_pagination_response.extra_info["is_over"]:
+                if photo_pagination_response["is_over"]:
                     break
 
-                for status_info in photo_pagination_response.extra_info["status_list"]:
+                for status_info in photo_pagination_response["status_list"]:
                     # 检查是否达到存档记录
                     if status_info["id"] == self.account_info[1]:
                         is_over = True
@@ -249,8 +248,8 @@ class Download(threading.Thread):
                             log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
-                    if photo_pagination_response.extra_info["next_page_cursor"] is not None:
-                        cursor = photo_pagination_response.extra_info["next_page_cursor"]
+                    if photo_pagination_response["next_page_cursor"] is not None:
+                        cursor = photo_pagination_response["next_page_cursor"]
                     else:
                         is_over = True
 
