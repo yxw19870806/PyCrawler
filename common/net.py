@@ -140,8 +140,9 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                     response.json_data = json.loads(response.data)
                 except ValueError:
                     is_error = True
-                    if "Content-Type" in response.headers:
-                        charset = tool.find_sub_string(response.headers["Content-Type"], "charset=", None)
+                    content_type = response.getheader("Content-Type")
+                    if content_type is not None:
+                        charset = tool.find_sub_string(content_type, "charset=", None)
                         if charset:
                             if charset == "gb2312":
                                 charset = "GBK"
@@ -243,24 +244,23 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         response = http_request(file_url, header_list=header_list, cookies_list=cookies_list, read_timeout=60)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
-            if need_content_type and "Content-Type" in response.headers:
-                content_type = response.headers["Content-Type"]
-                if content_type and content_type != "octet-stream":
+            if need_content_type:
+                content_type = response.getheader("Content-Type")
+                if content_type is not None and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
             create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
-            if "Content-Length" in response.headers:
-                content_length = response.headers["Content-Length"]
-                file_size = os.path.getsize(file_path)
-                if int(content_length) == file_size:
-                    return {"status": 1, "code": 0}
-                else:
-                    tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
-            else:
+            content_length = response.getheader("Content-Length")
+            if content_length is None:
                 return {"status": 1, "code": 0}
+            file_size = os.path.getsize(file_path)
+            if int(content_length) == file_size:
+                return {"status": 1, "code": 0}
+            else:
+                tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         # 超过重试次数，直接退出
         elif response.status == HTTP_RETURN_CODE_RETRY:
             if create_file:

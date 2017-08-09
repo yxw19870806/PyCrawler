@@ -51,12 +51,13 @@ def get_image_header(image_url):
         "image_time": None, # 图片上传时间
     }
     if image_head_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if "Last-Modified" not in image_head_response.headers:
+        last_modified = image_head_response.getheadeer("Last-Modified")
+        if last_modified is None:
             raise robot.RobotException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
         try:
-            last_modified_time = time.strptime(image_head_response.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S %Z")
+            last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
         except ValueError:
-            raise robot.RobotException("图片上传时间文本格式不正确\n%s" % image_head_response.headers["Last-Modified"])
+            raise robot.RobotException("图片上传时间文本格式不正确\n%s" % last_modified)
         result["image_time"] = int(time.mktime(last_modified_time)) - time.timezone
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(image_head_response.status))

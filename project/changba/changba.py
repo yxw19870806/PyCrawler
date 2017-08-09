@@ -33,7 +33,7 @@ def get_account_index_page(account_id):
         if not robot.is_integer(user_id):
             raise robot.RobotException("页面截取userid失败\n%s" % account_index_response.data)
         result["user_id"] = str(user_id)
-    elif account_index_response.status == 302 and account_index_response.headers["Location"] == "http://changba.com":
+    elif account_index_response.status == 302 and account_index_response.getheader("Location") == "http://changba.com":
         raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))

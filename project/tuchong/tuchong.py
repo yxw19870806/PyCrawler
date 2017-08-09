@@ -38,7 +38,7 @@ def get_account_index_page(account_name):
         if not robot.is_integer(account_id):
             raise robot.RobotException("site id类型不正确\n%s" % account_index_response.data)
         result["account_id"] = account_id
-    elif account_index_response.status == 301 and account_index_response.headers["Location"] == "https://tuchong.com/":
+    elif account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":
         raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
