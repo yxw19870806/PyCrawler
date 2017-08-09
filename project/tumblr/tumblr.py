@@ -58,6 +58,8 @@ def get_one_page_post(account_id, page_count):
                 result["post_url_list"].append(str(post_url))
         else:
             result["is_over"] = True
+    elif page_count == 1 and post_pagination_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_pagination_response.status))
     return result
