@@ -40,6 +40,8 @@ def get_account_index_page(account_name):
         if not robot.is_integer(account_id):
             raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
+    elif account_index_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
