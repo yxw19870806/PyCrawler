@@ -30,6 +30,8 @@ def get_one_page_blog(account_id, page_count):
         "blog_info_list": [],  # 所有日志信息
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if len(tool.find_sub_string(blog_pagination_response.data, '<div class="box-profile">', "</div>").strip()) < 10:
+            raise robot.RobotException("账号不存在")
         # 日志正文部分
         blog_article_html = tool.find_sub_string(blog_pagination_response.data, '<div class="box-main">', '<div class="box-sideMember">')
         if not blog_article_html:
