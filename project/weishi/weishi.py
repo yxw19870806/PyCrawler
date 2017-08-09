@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 import random
 import threading
@@ -37,10 +36,15 @@ def get_one_page_video(account_id, page_time):
     header_list = {"Referer": "http://weishi.qq.com/"}
     video_pagination_response = net.http_request(video_pagination_url, header_list=header_list, json_decode=True)
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("ret", "data"), video_pagination_response.json_data):
-            raise robot.RobotException("返回信息'ret'或'data'字段不存在\n%s" % video_pagination_response.json_data)
+        if not robot.check_sub_key(("ret",), video_pagination_response.json_data):
+            raise robot.RobotException("返回信息'ret'字段不存在\n%s" % video_pagination_response.json_data)
         if int(video_pagination_response.json_data["ret"]) != 0:
-            raise robot.RobotException("返回信息'ret'字段取值不正确\n%s" % video_pagination_response.json_data)
+            if int(video_pagination_response.json_data["ret"]) == -6:
+                raise robot.RobotException("账号不存在")
+            else:
+                raise robot.RobotException("返回信息'ret'字段取值不正确\n%s" % video_pagination_response.json_data)
+        if not robot.check_sub_key(("data",), video_pagination_response.json_data):
+            raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_pagination_response.json_data)
         if not robot.check_sub_key(("info", "hasNext"), video_pagination_response.json_data["data"]):
             raise robot.RobotException("返回信息'info'或'hasNext'字段不存在\n%s" % video_pagination_response.json_data)
         for video_info in video_pagination_response.json_data["data"]["info"]:
