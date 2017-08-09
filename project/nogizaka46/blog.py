@@ -26,6 +26,7 @@ NEW_SAVE_DATA_PATH = ""
 def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
     blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
+    print blog_pagination_url
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
         "blog_info_list": [],  # 所有图片信息
@@ -55,20 +56,16 @@ def get_one_page_blog(account_id, page_count):
             if not robot.is_integer(blog_id):
                 raise robot.RobotException("日志内容截取日志id失败\n%s" % blog_data)
             extra_image_info["blog_id"] = int(blog_id)
-
             # 获取图片地址列表
             image_url_list = re.findall('src="([^"]*)"', blog_data)
             extra_image_info["image_url_list"] = map(str, image_url_list)
-
             # 获取所有的大图对应的小图
             big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
             big_2_small_image_lust = {}
             for big_image_url, small_image_url in big_image_list_find:
                 big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
             extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
-
             result["blog_info_list"].append(extra_image_info)
-
         # 判断是不是最后一页
         paginate_data = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', "</div>")
         if not paginate_data:
@@ -77,6 +74,8 @@ def get_one_page_blog(account_id, page_count):
         if len(page_count_find) == 0:
             raise robot.RobotException("分页信息匹配页码失败\n%s" % paginate_data)
         result["is_over"] = page_count >= max(map(int, page_count_find))
+    elif blog_pagination_response.status == 404:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     return result
@@ -99,7 +98,6 @@ def check_big_image(image_url, big_2_small_list):
                     result["image_url"] = temp_image_url
                 else:
                     result["is_over"] = True
-
                 # 获取cookies
                 result["cookies"] = net.get_cookies_from_response_header(big_image_response.headers)
         else:
