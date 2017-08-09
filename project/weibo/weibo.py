@@ -61,6 +61,8 @@ def get_one_page_photo(account_id, page_count):
             result["image_info_list"].append(extra_image_info)
         # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
         result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
+    elif photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     return result
