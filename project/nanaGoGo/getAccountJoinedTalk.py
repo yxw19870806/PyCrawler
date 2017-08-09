@@ -30,42 +30,38 @@ def get_account_from_file():
 def get_account_talks(account_id, account_name, talk_list):
     account_index = "https://7gogo.jp/users/%s" % account_id
     account_index_response = net.http_request(account_index)
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        talk_list_selector = PQ(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")
-        for talk_index in range(0, talk_list_selector.size()):
-            talk_selector = talk_list_selector.eq(talk_index)
-            # 获取talk地址
-            talk_url_path = talk_selector.attr("href")
-            if not talk_url_path:
-                raise robot.RobotException("talk信息截取talk地址失败\n%s" % talk_selector.html.encode("UTF-8"))
-            talk_id = str(talk_url_path.replace("/", ""))
-            if not talk_id:
-                raise robot.RobotException("talk地址截取talk id失败\n%s" % talk_url_path)
-
-            # 获取talk名字
-            talk_name = talk_selector.find(".UserTalk__talkname").text()
-            if not talk_name:
-                raise robot.RobotException("talk信息截取talk名字失败\n%s" % talk_selector.html.encode("UTF-8"))
-            talk_name = robot.filter_emoji(str(talk_name.encode("UTF-8")).strip())
-
-            # 获取talk描述
-            talk_description = robot.filter_emoji(talk_selector.find(".UserTalk__description").text())
-            if talk_description:
-                talk_description = robot.filter_emoji(str(talk_description.encode("UTF-8")).strip())
-            else:
-                talk_description = ""
-
-            if talk_id in talk_list:
-                talk_list[talk_id]["account_list"].append(account_name)
-            else:
-                talk_list[talk_id] = {
-                    "account_list": [account_name],
-                    "talk_name": talk_name,
-                    "talk_description": talk_description,
-                }
-            print account_id + ": " + talk_name + ", " + talk_description
-    else:
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+    talk_list_selector = PQ(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")
+    for talk_index in range(0, talk_list_selector.size()):
+        talk_selector = talk_list_selector.eq(talk_index)
+        # 获取talk地址
+        talk_url_path = talk_selector.attr("href")
+        if not talk_url_path:
+            raise robot.RobotException("talk信息截取talk地址失败\n%s" % talk_selector.html.encode("UTF-8"))
+        talk_id = str(talk_url_path.replace("/", ""))
+        if not talk_id:
+            raise robot.RobotException("talk地址截取talk id失败\n%s" % talk_url_path)
+        # 获取talk名字
+        talk_name = talk_selector.find(".UserTalk__talkname").text()
+        if not talk_name:
+            raise robot.RobotException("talk信息截取talk名字失败\n%s" % talk_selector.html.encode("UTF-8"))
+        talk_name = robot.filter_emoji(str(talk_name.encode("UTF-8")).strip())
+        # 获取talk描述
+        talk_description = robot.filter_emoji(talk_selector.find(".UserTalk__description").text())
+        if talk_description:
+            talk_description = robot.filter_emoji(str(talk_description.encode("UTF-8")).strip())
+        else:
+            talk_description = ""
+        if talk_id in talk_list:
+            talk_list[talk_id]["account_list"].append(account_name)
+        else:
+            talk_list[talk_id] = {
+                "account_list": [account_name],
+                "talk_name": talk_name,
+                "talk_description": talk_description,
+            }
+        print account_id + ": " + talk_name + ", " + talk_description
 
 
 def main():

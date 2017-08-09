@@ -27,49 +27,43 @@ def get_one_page_audio(account_id, page_count):
         "audio_info_list": [],  # 所有歌曲信息
         "is_over": False,  # 是不是最后一页歌曲
     }
-    if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("code",), audio_pagination_response.json_data) and robot.is_integer(audio_pagination_response.json_data["code"]):
-            if int(audio_pagination_response.json_data["code"]) == 1101:
-                raise robot.RobotException("账号不存在")
-        if not robot.check_sub_key(("data",), audio_pagination_response.json_data):
-            raise robot.RobotException("返回数据'data'字段不存在\n%s" % audio_pagination_response.json_data)
-        if not robot.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
-            raise robot.RobotException("返回数据'has_more'或者'ugclist'字段不存在\n%s" % audio_pagination_response.json_data)
-        for audio_info in audio_pagination_response.json_data["data"]["ugclist"]:
-            audio_result = {
-                "audio_id": None,  # 歌曲id
-                "audio_key": None,  # 歌曲访问token
-                "audio_title": "",  # 歌曲标题
-                "audio_time": None,  # 歌曲上传时间
-            }
-            # 获取歌曲id
-            if not robot.check_sub_key(("ksong_mid",), audio_info):
-                raise robot.RobotException("返回数据'ksong_mid'字段不存在\n%s" % audio_info)
-            audio_result["audio_id"] = str(audio_info["ksong_mid"])
-
-            # 获取歌曲访问token
-            if not robot.check_sub_key(("shareid",), audio_info):
-                raise robot.RobotException("返回数据'shareid'字段不存在\n%s" % audio_info)
-            audio_result["audio_key"] = str(audio_info["shareid"])
-
-            # 获取歌曲标题
-            if not robot.check_sub_key(("title",), audio_info):
-                raise robot.RobotException("返回数据'title'字段不存在\n%s" % audio_info)
-            audio_result["audio_title"] = str(audio_info["title"].encode("UTF-8"))
-
-            # 获取歌曲上传时间
-            if not robot.check_sub_key(("time",), audio_info):
-                raise robot.RobotException("返回数据'time'字段不存在\n%s" % audio_info)
-            if not robot.is_integer(audio_info["time"]):
-                raise robot.RobotException("返回数据'time'字段类型不正确\n%s" % audio_info)
-            audio_result["audio_time"] = str(audio_info["time"])
-
-            result["audio_info_list"].append(audio_result)
-
-        # 判断是不是最后一页
-        result["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
-    else:
+    if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_pagination_response.status))
+    if robot.check_sub_key(("code",), audio_pagination_response.json_data) and robot.is_integer(audio_pagination_response.json_data["code"]):
+        if int(audio_pagination_response.json_data["code"]) == 1101:
+            raise robot.RobotException("账号不存在")
+    if not robot.check_sub_key(("data",), audio_pagination_response.json_data):
+        raise robot.RobotException("返回数据'data'字段不存在\n%s" % audio_pagination_response.json_data)
+    if not robot.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
+        raise robot.RobotException("返回数据'has_more'或者'ugclist'字段不存在\n%s" % audio_pagination_response.json_data)
+    for audio_info in audio_pagination_response.json_data["data"]["ugclist"]:
+        audio_result = {
+            "audio_id": None,  # 歌曲id
+            "audio_key": None,  # 歌曲访问token
+            "audio_title": "",  # 歌曲标题
+            "audio_time": None,  # 歌曲上传时间
+        }
+        # 获取歌曲id
+        if not robot.check_sub_key(("ksong_mid",), audio_info):
+            raise robot.RobotException("返回数据'ksong_mid'字段不存在\n%s" % audio_info)
+        audio_result["audio_id"] = str(audio_info["ksong_mid"])
+        # 获取歌曲访问token
+        if not robot.check_sub_key(("shareid",), audio_info):
+            raise robot.RobotException("返回数据'shareid'字段不存在\n%s" % audio_info)
+        audio_result["audio_key"] = str(audio_info["shareid"])
+        # 获取歌曲标题
+        if not robot.check_sub_key(("title",), audio_info):
+            raise robot.RobotException("返回数据'title'字段不存在\n%s" % audio_info)
+        audio_result["audio_title"] = str(audio_info["title"].encode("UTF-8"))
+        # 获取歌曲上传时间
+        if not robot.check_sub_key(("time",), audio_info):
+            raise robot.RobotException("返回数据'time'字段不存在\n%s" % audio_info)
+        if not robot.is_integer(audio_info["time"]):
+            raise robot.RobotException("返回数据'time'字段类型不正确\n%s" % audio_info)
+        audio_result["audio_time"] = str(audio_info["time"])
+        result["audio_info_list"].append(audio_result)
+    # 判断是不是最后一页
+    result["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
     return result
 
 
@@ -80,16 +74,15 @@ def get_audio_play_page(audio_id):
     result = {
         "audio_url": None,  # 歌曲地址
     }
-    if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取歌曲地址
-        audio_url = tool.find_sub_string(audio_play_response.data, '"playurl":"', '"')
-        if not audio_url:
-            audio_url = tool.find_sub_string(audio_play_response.data, '"playurl_video":"', '"')
-        if not audio_url:
-            raise robot.RobotException("页面截取歌曲地址失败\n%s" % audio_play_response.data)
-        result["audio_url"] = audio_url
-    else:
+    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
+    # 获取歌曲地址
+    audio_url = tool.find_sub_string(audio_play_response.data, '"playurl":"', '"')
+    if not audio_url:
+        audio_url = tool.find_sub_string(audio_play_response.data, '"playurl_video":"', '"')
+    if not audio_url:
+        raise robot.RobotException("页面截取歌曲地址失败\n%s" % audio_play_response.data)
+    result["audio_url"] = audio_url
     return result
 
 

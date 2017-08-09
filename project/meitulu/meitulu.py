@@ -24,26 +24,22 @@ def get_one_page_album(album_id, page_count):
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 所有图片地址
     }
-    if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 判断图集是否已经被删除
-        result["is_delete"] = album_pagination_response.data.find("全站内容整理中, 请从首页重新访问!") >= 0
-
-        # 获取图集标题
-        result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
-
-        # 获取图集图片地址
-        image_url_list = re.findall('<img src="([^"]*)"', tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>"))
-        result["image_url_list"] = map(str, image_url_list)
-
-        # 判断是不是最后一页
-        page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
-        if len(page_count_find) > 0:
-            max_page_count = max(map(int, page_count_find))
-        else:
-            max_page_count = max(map(int, page_count_find))
-        result['is_over'] = page_count >= max_page_count
-    else:
+    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
+    # 判断图集是否已经被删除
+    result["is_delete"] = album_pagination_response.data.find("全站内容整理中, 请从首页重新访问!") >= 0
+    # 获取图集标题
+    result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
+    # 获取图集图片地址
+    image_url_list = re.findall('<img src="([^"]*)"', tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>"))
+    result["image_url_list"] = map(str, image_url_list)
+    # 判断是不是最后一页
+    page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
+    if len(page_count_find) > 0:
+        max_page_count = max(map(int, page_count_find))
+    else:
+        max_page_count = max(map(int, page_count_find))
+    result['is_over'] = page_count >= max_page_count
     return result
 
 

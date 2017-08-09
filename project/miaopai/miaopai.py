@@ -28,13 +28,12 @@ def get_account_index_page(account_id):
     result = {
         "user_id": None,  # 账号user id
     }
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
-        if not user_id:
-            raise robot.RobotException("页面截取user id失败\n%s" % account_index_response.data)
-        result["user_id"] = user_id
-    else:
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+    user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
+    if not user_id:
+        raise robot.RobotException("页面截取user id失败\n%s" % account_index_response.data)
+    result["user_id"] = user_id
     return result
 
 

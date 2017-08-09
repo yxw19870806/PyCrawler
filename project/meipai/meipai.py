@@ -30,41 +30,38 @@ def get_one_page_video(account_id, page_count):
         "is_error": False,  # 是不是格式不符合
         "video_info_list": [],  # 所有视频信息
     }
-    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("medias",), video_pagination_response.json_data):
-            raise robot.RobotException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
-        for media_data in video_pagination_response.json_data["medias"]:
-            # 历史直播，跳过
-            if robot.check_sub_key(("lives",), media_data):
-                continue
-            extra_video_info = {
-                "video_id": None,  # 视频id
-                "video_url": None,  # 视频下载地址
-            }
-            # 获取视频id
-            if not robot.check_sub_key(("id",), media_data):
-                raise robot.RobotException("视频信息'id'字段不存在\n%s" % media_data)
-            extra_video_info["video_id"] = str(media_data["id"])
-
-            # 获取视频下载地址
-            if not robot.check_sub_key(("video",), media_data):
-                raise robot.RobotException("视频信息'video'字段不存在\n%s" % media_data)
-            # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
-            loc1 = get_hex(str(media_data["video"]))
-            loc2 = get_dec(loc1["hex"])
-            loc3 = sub_str(loc1["str"], loc2["pre"])
-            video_url_string = sub_str(loc3, get_pos(loc3, loc2["tail"]))
-            try:
-                video_url = base64.b64decode(video_url_string)
-            except TypeError:
-                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
-            if video_url.find("http") != 0:
-                raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
-            extra_video_info["video_url"] = video_url
-
-            result["video_info_list"].append(extra_video_info)
-    else:
+    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+    if not robot.check_sub_key(("medias",), video_pagination_response.json_data):
+        raise robot.RobotException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
+    for media_data in video_pagination_response.json_data["medias"]:
+        # 历史直播，跳过
+        if robot.check_sub_key(("lives",), media_data):
+            continue
+        extra_video_info = {
+            "video_id": None,  # 视频id
+            "video_url": None,  # 视频下载地址
+        }
+        # 获取视频id
+        if not robot.check_sub_key(("id",), media_data):
+            raise robot.RobotException("视频信息'id'字段不存在\n%s" % media_data)
+        extra_video_info["video_id"] = str(media_data["id"])
+        # 获取视频下载地址
+        if not robot.check_sub_key(("video",), media_data):
+            raise robot.RobotException("视频信息'video'字段不存在\n%s" % media_data)
+        # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
+        loc1 = get_hex(str(media_data["video"]))
+        loc2 = get_dec(loc1["hex"])
+        loc3 = sub_str(loc1["str"], loc2["pre"])
+        video_url_string = sub_str(loc3, get_pos(loc3, loc2["tail"]))
+        try:
+            video_url = base64.b64decode(video_url_string)
+        except TypeError:
+            raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
+        if video_url.find("http") != 0:
+            raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
+        extra_video_info["video_url"] = video_url
+        result["video_info_list"].append(extra_video_info)
     return result
 
 

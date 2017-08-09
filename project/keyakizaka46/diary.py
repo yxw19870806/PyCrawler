@@ -29,32 +29,29 @@ def get_one_page_blog(account_id, page_count):
     result = {
         "blog_info_list": [],  # 所有日志信息
     }
-    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if len(tool.find_sub_string(blog_pagination_response.data, '<div class="box-profile">', "</div>").strip()) < 10:
-            raise robot.RobotException("账号不存在")
-        # 日志正文部分
-        blog_article_html = tool.find_sub_string(blog_pagination_response.data, '<div class="box-main">', '<div class="box-sideMember">')
-        if not blog_article_html:
-            raise robot.RobotException("页面正文截取失败\n%s" % blog_pagination_response.data)
-        blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
-        for blog_info in blog_list:
-            extra_blog_info = {
-                "blog_id" : None,  # 日志id
-                "image_url_list": [],  # 所有图片地址
-            }
-            # 获取日志id
-            blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
-            if not robot.is_integer(blog_id):
-                raise robot.RobotException("日志页面截取日志id失败\n%s" % blog_info)
-            extra_blog_info["blog_id"] = str(blog_id)
-
-            # 获取所有图片地址
-            image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
-            extra_blog_info["image_url_list"] = map(str, image_url_list)
-
-            result["blog_info_list"].append(extra_blog_info)
-    else:
+    if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+    if len(tool.find_sub_string(blog_pagination_response.data, '<div class="box-profile">', "</div>").strip()) < 10:
+        raise robot.RobotException("账号不存在")
+    # 日志正文部分
+    blog_article_html = tool.find_sub_string(blog_pagination_response.data, '<div class="box-main">', '<div class="box-sideMember">')
+    if not blog_article_html:
+        raise robot.RobotException("页面正文截取失败\n%s" % blog_pagination_response.data)
+    blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
+    for blog_info in blog_list:
+        extra_blog_info = {
+            "blog_id" : None,  # 日志id
+            "image_url_list": [],  # 所有图片地址
+        }
+        # 获取日志id
+        blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
+        if not robot.is_integer(blog_id):
+            raise robot.RobotException("日志页面截取日志id失败\n%s" % blog_info)
+        extra_blog_info["blog_id"] = str(blog_id)
+        # 获取所有图片地址
+        image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
+        extra_blog_info["image_url_list"] = map(str, image_url_list)
+        result["blog_info_list"].append(extra_blog_info)
     return result
 
 

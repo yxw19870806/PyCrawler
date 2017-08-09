@@ -46,12 +46,11 @@ def get_blog_page(blog_url):
     result = {
         "image_url_list": [],  # 所有图片地址
     }
-    if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取所有图片地址
-        image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
-        result["image_url_list"] = map(str, image_url_list)
-    else:
+    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
+    # 获取所有图片地址
+    image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
+    result["image_url_list"] = map(str, image_url_list)
     return result
 
 
