@@ -128,13 +128,10 @@ def get_discount_game_list(login_cookie):
 def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
     badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
-    cookies_list = {
-        "steamLogin": login_cookie,
-    }
+    cookies_list = {"steamLogin": login_cookie}
     badges_index_response = net.http_request(badges_index_url, cookies_list=cookies_list)
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        tool.print_msg("第一页徽章访问失败")
-        tool.process_exit()
+        raise robot.RobotException(robot.get_http_request_failed_reason(badges_index_response.status))
     badges_detail_url_list = []
     # 所有徽章div
     badges_selector = pq(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
@@ -144,11 +141,9 @@ def get_self_account_badges(account_id, login_cookie):
         if badge_html.find("无剩余卡牌掉落") >= 0:
             # 徽章详细信息页面地址
             badge_detail_url = tool.find_sub_string(badge_html, '<a class="badge_row_overlay" href="', '"/>')
-            if badge_detail_url:
-                badges_detail_url_list.append(badge_detail_url)
-            else:
-                tool.print_msg("%s 没有解析到徽章详细界面地址" % badge_html)
-                tool.process_exit()
+            if not badge_detail_url:
+                raise robot.RobotException("徽章信息截取徽章详细界面地址失败\n%s" % badge_html)
+            badges_detail_url_list.append(badge_detail_url)
     # ['http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/357200/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/502740/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/359600/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/354380/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/359670/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/525300/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/337980/', 'http://steamcommunity.com/profiles/76561198172925593/gamecards/591420/']
     return badges_detail_url_list
 
@@ -161,21 +156,25 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     }
     badge_detail_response = net.http_request(badge_detail_url, cookies_list=cookies_list)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        tool.print_msg("徽章详细页%s访问失败" % badge_detail_url)
-        tool.process_exit()
+        raise robot.RobotException(robot.get_http_request_failed_reason(badge_detail_response.status))
     wanted_card_list = {}
     page_selector = pq(badge_detail_response.data)
     # 徽章等级
-    badge_level = 0
     badge_selector = page_selector.find(".maincontent .badge_current .badge_info")
     # 有等级
     if badge_selector.find(".badge_info_description").size() == 1:
-        badge_level_find = re.findall("(\d) 级, [\d]00 点经验值", badge_selector.find(".badge_info_description div").eq(1).text().encode("UTF-8"))
-        if len(badge_level_find) == 1 and robot.is_integer(badge_level_find[0]):
-            badge_level = int(badge_level_find[0])
-        else:
-            tool.print_msg("徽章详细页%s等级解析失败" % badge_detail_url)
-            tool.process_exit()
+        badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
+        if not badge_level_html:
+            raise robot.RobotException("页面截取徽章等级信息失败\n%s" % badge_detail_response.data)
+        badge_level_html = badge_level_html.encode("UTF-8")
+        badge_level_find = re.findall("(\d) 级, [\d]00 点经验值", badge_level_html)
+        if len(badge_level_find) != 1:
+            raise robot.RobotException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
+        if not robot.is_integer(badge_level_find[0]):
+            raise robot.RobotException("徽章等级类型不正确\n%s" % badge_level_html)
+        badge_level = int(badge_level_find[0])
+    else:
+        badge_level = 0
     wanted_count = 5 - badge_level
     # 所有集换式卡牌div
     cards_selector = page_selector.find(".maincontent .badge_detail_tasks .badge_card_set_card")
@@ -195,22 +194,22 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
 
 # 获取某个游戏的集换式卡牌市场售价
 def get_market_game_trade_card_price(game_id, login_cookie):
-    cookies_list = {
-        "steamLogin": login_cookie,
-    }
+    cookies_list = {"steamLogin": login_cookie}
     market_search_url = "http://steamcommunity.com/market/search/render/"
     market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
     market_search_response = net.http_request(market_search_url, cookies_list=cookies_list, json_decode=True)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        tool.print_msg("游戏%s市场页访问失败" % game_id)
-        tool.process_exit()
+        raise robot.RobotException(robot.get_http_request_failed_reason(market_search_response.status))
     market_item_list = {}
-    if "success" in market_search_response.json_data and market_search_response.json_data["success"] and "results_html" in market_search_response.json_data:
-        card_selector = pq(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
-        for index in range(0, card_selector.size()):
-            card_name = card_selector.eq(index).find(".market_listing_item_name").text()
-            card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().encode("UTF-8").replace("¥ ", "")
-            market_item_list[card_name] = card_min_price
+    if not robot.check_sub_key(("success", "results_html"), market_search_response.json_data):
+        raise robot.RobotException("返回信息'success'或'results_html'字段不存在\n%s" % market_search_response.json_data)
+    if market_search_response.json_data["success"] is not True:
+        raise robot.RobotException("返回信息'success'字段取值不正确\n%s" % market_search_response.json_data)
+    card_selector = pq(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
+    for index in range(0, card_selector.size()):
+        card_name = card_selector.eq(index).find(".market_listing_item_name").text()
+        card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().encode("UTF-8").replace("¥ ", "")
+        market_item_list[card_name] = card_min_price
     # {'Pamu': '1.77', 'Fumi (Trading Card)': '2.14', 'Mio (Trading Card)': '1.33', 'Bonnibel (Trading Card)': '1.49', 'Groupshot': '1.87', 'Q-Piddy': '1.35', 'Elle (Trading Card)': '1.19', 'Quill': '1.50', 'Iro (Trading Card)': '1.42', 'Bearverly (Trading Card)': '1.27', 'Cassie (Trading Card)': '1.35'}
     return market_item_list
 
