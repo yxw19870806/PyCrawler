@@ -33,6 +33,8 @@ def get_image_index_page(account_id):
         "image_url_list": [],  # 所有图片地址
     }
     if image_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if image_index_response.data == '<script>window.location.href="/404.html";</script>':
+            raise robot.RobotException("账号不存在")
         # 获取所有图片地址
         if image_index_response.data.find("还没有照片哦") == -1:
             image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response.data)
@@ -73,6 +75,8 @@ def get_video_index_page(account_id):
         "video_id_list": [],  # 所有视频id
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if video_pagination_response.data == '<script>window.location.href="/404.html";</script>':
+            raise robot.RobotException("账号不存在")
         if video_pagination_response.data.find("还没有直播哦") == -1:
             video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response.data)
             if len(video_id_list) == 0:
