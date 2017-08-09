@@ -32,17 +32,16 @@ def get_image_index_page(account_id):
     result = {
         "image_url_list": [],  # 所有图片地址
     }
-    if image_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if image_index_response.data == '<script>window.location.href="/404.html";</script>':
-            raise robot.RobotException("账号不存在")
-        # 获取所有图片地址
-        if image_index_response.data.find("还没有照片哦") == -1:
-            image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response.data)
-            if len(result["image_url_list"]) == 0:
-                raise robot.RobotException("页面匹配图片地址失败\n%s" % image_index_response.data)
-            result["image_url_list"] = map(str, image_url_list)
-    else:
+    if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(image_index_response.status))
+    if image_index_response.data == '<script>window.location.href="/404.html";</script>':
+        raise robot.RobotException("账号不存在")
+    # 获取所有图片地址
+    if image_index_response.data.find("还没有照片哦") == -1:
+        image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response.data)
+        if len(result["image_url_list"]) == 0:
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % image_index_response.data)
+        result["image_url_list"] = map(str, image_url_list)
     return result
 
 
@@ -52,17 +51,16 @@ def get_image_header(image_url):
     result = {
         "image_time": None, # 图片上传时间
     }
-    if image_head_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        last_modified = image_head_response.getheadeer("Last-Modified")
-        if last_modified is None:
-            raise robot.RobotException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
-        try:
-            last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
-        except ValueError:
-            raise robot.RobotException("图片上传时间文本格式不正确\n%s" % last_modified)
-        result["image_time"] = int(time.mktime(last_modified_time)) - time.timezone
-    else:
+    if image_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(image_head_response.status))
+    last_modified = image_head_response.getheadeer("Last-Modified")
+    if last_modified is None:
+        raise robot.RobotException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
+    try:
+        last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
+    except ValueError:
+        raise robot.RobotException("图片上传时间文本格式不正确\n%s" % last_modified)
+    result["image_time"] = int(time.mktime(last_modified_time)) - time.timezone
     return result
 
 
@@ -74,16 +72,15 @@ def get_video_index_page(account_id):
         "is_exist": True,  # 是不是存在视频
         "video_id_list": [],  # 所有视频id
     }
-    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if video_pagination_response.data == '<script>window.location.href="/404.html";</script>':
-            raise robot.RobotException("账号不存在")
-        if video_pagination_response.data.find("还没有直播哦") == -1:
-            video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response.data)
-            if len(video_id_list) == 0:
-                raise robot.RobotException("页面匹配视频id失败\n%s" % video_pagination_response.data)
-            result["video_id_list"] = map(str, video_id_list)
-    else:
+    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+    if video_pagination_response.data == '<script>window.location.href="/404.html";</script>':
+        raise robot.RobotException("账号不存在")
+    if video_pagination_response.data.find("还没有直播哦") == -1:
+        video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response.data)
+        if len(video_id_list) == 0:
+            raise robot.RobotException("页面匹配视频id失败\n%s" % video_pagination_response.data)
+        result["video_id_list"] = map(str, video_id_list)
     return result
 
 
@@ -97,35 +94,33 @@ def get_video_info_page(video_id):
         "video_time": False,  # 视频上传时间
         "video_url_list": [],  # 所有视频分集地址
     }
-    if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("result", "data"), video_info_response.json_data):
-            raise robot.RobotException("返回信息'result'或'data'字段不存在\n%s" % video_info_response.json_data)
-        if not robot.is_integer(video_info_response.json_data["result"]):
-            raise robot.RobotException("返回信息'result'字段类型不正确\n%s" % video_info_response.json_data)
-        if int(video_info_response.json_data["result"]) != 1:
-            raise robot.RobotException("返回信息'result'字段取值不正确\n%s" % video_info_response.json_data)
-        # 获取视频上传时间
-        if not robot.check_sub_key(("createtime",), video_info_response.json_data["data"]):
-            raise robot.RobotException("返回信息'createtime'字段不存在\n%s" % video_info_response.json_data)
-        if not robot.is_integer(video_info_response.json_data["data"]["createtime"]):
-            raise robot.RobotException("返回信息'createtime'字段类型不正确\n%s" % video_info_response.json_data)
-        result["video_time"] = int(video_info_response.json_data["data"]["createtime"])
-
-        # 获取视频地址所在文件地址
-        if not robot.check_sub_key(("linkurl",), video_info_response.json_data["data"]):
-            raise robot.RobotException("返回信息'linkurl'字段不存在\n%s" % video_info_response.json_data)
-        video_file_url = str(video_info_response.json_data["data"]["linkurl"])
-        video_file_response = net.http_request(video_file_url)
-        if video_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            ts_id_list = re.findall("([\S]*.ts)", video_file_response.data)
-            if len(ts_id_list) == 0:
-                raise robot.RobotException("分集文件匹配视频地址失败\n%s" % video_info_response.json_data)
-            # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/
-            prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
-            for ts_id in ts_id_list:
-                result["video_url_list"].append(prefix_url + str(ts_id))
-        else:
-            raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
+    if not robot.check_sub_key(("result", "data"), video_info_response.json_data):
+        raise robot.RobotException("返回信息'result'或'data'字段不存在\n%s" % video_info_response.json_data)
+    if not robot.is_integer(video_info_response.json_data["result"]):
+        raise robot.RobotException("返回信息'result'字段类型不正确\n%s" % video_info_response.json_data)
+    if int(video_info_response.json_data["result"]) != 1:
+        raise robot.RobotException("返回信息'result'字段取值不正确\n%s" % video_info_response.json_data)
+    # 获取视频上传时间
+    if not robot.check_sub_key(("createtime",), video_info_response.json_data["data"]):
+        raise robot.RobotException("返回信息'createtime'字段不存在\n%s" % video_info_response.json_data)
+    if not robot.is_integer(video_info_response.json_data["data"]["createtime"]):
+        raise robot.RobotException("返回信息'createtime'字段类型不正确\n%s" % video_info_response.json_data)
+    result["video_time"] = int(video_info_response.json_data["data"]["createtime"])
+    # 获取视频地址所在文件地址
+    if not robot.check_sub_key(("linkurl",), video_info_response.json_data["data"]):
+        raise robot.RobotException("返回信息'linkurl'字段不存在\n%s" % video_info_response.json_data)
+    video_file_url = str(video_info_response.json_data["data"]["linkurl"])
+    video_file_response = net.http_request(video_file_url)
+    if video_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        ts_id_list = re.findall("([\S]*.ts)", video_file_response.data)
+        if len(ts_id_list) == 0:
+            raise robot.RobotException("分集文件匹配视频地址失败\n%s" % video_info_response.json_data)
+        # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/
+        prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
+        for ts_id in ts_id_list:
+            result["video_url_list"].append(prefix_url + str(ts_id))
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
     return result

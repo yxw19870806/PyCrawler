@@ -35,53 +35,49 @@ def get_one_page_video(account_id, page_time):
     }
     header_list = {"Referer": "http://weishi.qq.com/"}
     video_pagination_response = net.http_request(video_pagination_url, header_list=header_list, json_decode=True)
-    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("ret",), video_pagination_response.json_data):
-            raise robot.RobotException("返回信息'ret'字段不存在\n%s" % video_pagination_response.json_data)
-        if int(video_pagination_response.json_data["ret"]) != 0:
-            if int(video_pagination_response.json_data["ret"]) == -6:
-                raise robot.RobotException("账号不存在")
-            else:
-                raise robot.RobotException("返回信息'ret'字段取值不正确\n%s" % video_pagination_response.json_data)
-        if not robot.check_sub_key(("data",), video_pagination_response.json_data):
-            raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_pagination_response.json_data)
-        if not robot.check_sub_key(("info", "hasNext"), video_pagination_response.json_data["data"]):
-            raise robot.RobotException("返回信息'info'或'hasNext'字段不存在\n%s" % video_pagination_response.json_data)
-        for video_info in video_pagination_response.json_data["data"]["info"]:
-            extra_video_info = {
-                "video_id": None,  # 视频id
-                "video_part_id_list": [],  # 视频分集id
-                "video_time": None,  # 视频上传时间
-            }
-            # 获取视频id
-            if not robot.check_sub_key(("id",), video_info):
-                raise robot.RobotException("视频信息'id'字段不存在\n%s" % video_info)
-            extra_video_info["video_id"] = str(video_info["id"])
-
-            # 获取分集id
-            if not robot.check_sub_key(("newvideos",), video_info):
-                raise robot.RobotException("视频信息'newvideos'字段不存在\n%s" % video_info)
-            if not isinstance(video_info["newvideos"], list):
-                raise robot.RobotException("视频信息'newvideos'字段类型不正确\n%s" % video_info)
-            if len(video_info["newvideos"]) == 0:
-                raise robot.RobotException("视频信息'newvideos'字段长度不正确\n%s" % video_info)
-            for video_part_info in video_info["newvideos"]:
-                if not robot.check_sub_key(("vid",), video_part_info):
-                    raise robot.RobotException("视频分集信息'vid'字段不存在\n%s" % video_info)
-                extra_video_info["video_part_id_list"].append(str(video_part_info["vid"]))
-
-            # 获取视频id
-            if not robot.check_sub_key(("timestamp",), video_info):
-                raise robot.RobotException("视频信息'timestamp'字段不存在\n%s" % video_info)
-            if not robot.is_integer(video_info["timestamp"]):
-                raise robot.RobotException("视频信息'timestamp'字段类型不正确\n%s" % video_info)
-            extra_video_info["video_time"] = int(video_info["timestamp"])
-
-            result["video_info_list"].append(extra_video_info)
-        # 检测是否还有下一页
-        result["is_over"] = bool(video_pagination_response.json_data["data"]["hasNext"])
-    else:
+    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+    if not robot.check_sub_key(("ret",), video_pagination_response.json_data):
+        raise robot.RobotException("返回信息'ret'字段不存在\n%s" % video_pagination_response.json_data)
+    if int(video_pagination_response.json_data["ret"]) != 0:
+        if int(video_pagination_response.json_data["ret"]) == -6:
+            raise robot.RobotException("账号不存在")
+        else:
+            raise robot.RobotException("返回信息'ret'字段取值不正确\n%s" % video_pagination_response.json_data)
+    if not robot.check_sub_key(("data",), video_pagination_response.json_data):
+        raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_pagination_response.json_data)
+    if not robot.check_sub_key(("info", "hasNext"), video_pagination_response.json_data["data"]):
+        raise robot.RobotException("返回信息'info'或'hasNext'字段不存在\n%s" % video_pagination_response.json_data)
+    for video_info in video_pagination_response.json_data["data"]["info"]:
+        extra_video_info = {
+            "video_id": None,  # 视频id
+            "video_part_id_list": [],  # 视频分集id
+            "video_time": None,  # 视频上传时间
+        }
+        # 获取视频id
+        if not robot.check_sub_key(("id",), video_info):
+            raise robot.RobotException("视频信息'id'字段不存在\n%s" % video_info)
+        extra_video_info["video_id"] = str(video_info["id"])
+        # 获取分集id
+        if not robot.check_sub_key(("newvideos",), video_info):
+            raise robot.RobotException("视频信息'newvideos'字段不存在\n%s" % video_info)
+        if not isinstance(video_info["newvideos"], list):
+            raise robot.RobotException("视频信息'newvideos'字段类型不正确\n%s" % video_info)
+        if len(video_info["newvideos"]) == 0:
+            raise robot.RobotException("视频信息'newvideos'字段长度不正确\n%s" % video_info)
+        for video_part_info in video_info["newvideos"]:
+            if not robot.check_sub_key(("vid",), video_part_info):
+                raise robot.RobotException("视频分集信息'vid'字段不存在\n%s" % video_info)
+            extra_video_info["video_part_id_list"].append(str(video_part_info["vid"]))
+        # 获取视频id
+        if not robot.check_sub_key(("timestamp",), video_info):
+            raise robot.RobotException("视频信息'timestamp'字段不存在\n%s" % video_info)
+        if not robot.is_integer(video_info["timestamp"]):
+            raise robot.RobotException("视频信息'timestamp'字段类型不正确\n%s" % video_info)
+        extra_video_info["video_time"] = int(video_info["timestamp"])
+        result["video_info_list"].append(extra_video_info)
+    # 检测是否还有下一页
+    result["is_over"] = bool(video_pagination_response.json_data["data"]["hasNext"])
     return result
 
 
@@ -93,12 +89,13 @@ def get_video_info_page(video_vid, video_id):
         "is_error": False,  # 是不是格式不符合
         "video_url": "",  # 视频地址
     }
-    if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("data",), video_info_response.json_data):
-            raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
-        if not robot.check_sub_key(("url",), video_info_response.json_data["data"]):
-            raise robot.RobotException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
-        result["video_url"] = str(random.choice(video_info_response.json_data["data"]["url"]))
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
+    if not robot.check_sub_key(("data",), video_info_response.json_data):
+        raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
+    if not robot.check_sub_key(("url",), video_info_response.json_data["data"]):
+        raise robot.RobotException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
+    result["video_url"] = str(random.choice(video_info_response.json_data["data"]["url"]))
     return result
 
 

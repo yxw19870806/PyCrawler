@@ -22,47 +22,45 @@ def get_album_page(page_count):
         "title": "",  # 相册标题
         "image_url_list": [],  # 所有图片地址
     }
-    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("body",), album_response.json_data):
-            raise robot.RobotException("返回数据'body'字段不存在\n%s" % album_response.json_data)
-        if not robot.check_sub_key(("blog",), album_response.json_data["body"]):
-            raise robot.RobotException("返回数据'blog'字段不存在\n%s" % album_response.json_data)
-        # 判断是不是需要跳过
-        if album_response.json_data["body"]["blog"] is False:
-            result["is_skip"] = True
-        else:
-            if not isinstance(album_response.json_data["body"]["blog"], list):
-                raise robot.RobotException("返回数据'blog'字段类型不正确\n%s" % album_response.json_data)
-            if len(album_response.json_data["body"]["blog"]) != 1:
-                raise robot.RobotException("返回数据'blog'字段长度不正确\n%s" % album_response.json_data)
-            if not robot.check_sub_key(("type",), album_response.json_data["body"]["blog"][0]):
-                raise robot.RobotException("返回数据'type'字段不存在\n%s" % album_response.json_data)
-            # 获取相册类型
-            album_type = int(album_response.json_data["body"]["blog"][0]["type"])
-            if album_type not in [2, 3]:
-                raise robot.RobotException("返回数据'type'字段取值不正确\n%s" % album_response.json_data)
-            if album_type == 2:  # 歌曲类型的相册
-                result["is_skip"] = True
-            elif album_type == 3:  # 图片类型的相册
-                album_body = album_response.json_data["body"]["blog"][0]
-                # 获取相册标题
-                if not robot.check_sub_key(("title",), album_body):
-                    raise robot.RobotException("返回数据'title'字段不存在\n%s" % album_response.json_data)
-                result["title"] = str(album_body["title"].encode("UTF-8"))
-
-                # 获取图片地址
-                if not robot.check_sub_key(("attr",), album_body):
-                    raise robot.RobotException("返回数据'attr'字段不存在\n%s" % album_response.json_data)
-                if not robot.check_sub_key(("img",), album_body["attr"]):
-                    raise robot.RobotException("返回数据'img'字段不存在\n%s" % album_response.json_data)
-                if len(album_body["attr"]["img"]) == 0:
-                    raise robot.RobotException("返回数据'img'字段长度不正确\n%s" % album_response.json_data)
-                for image_data in album_body["attr"]["img"]:
-                    if not robot.check_sub_key(("url",), image_data):
-                        raise robot.RobotException("返回数据'url'字段不存在\n%s" % album_response.json_data)
-                    result["image_url_list"].append("http://www.zunguang.com/%s" % str(image_data["url"]))
-    else:
+    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+    if not robot.check_sub_key(("body",), album_response.json_data):
+        raise robot.RobotException("返回数据'body'字段不存在\n%s" % album_response.json_data)
+    if not robot.check_sub_key(("blog",), album_response.json_data["body"]):
+        raise robot.RobotException("返回数据'blog'字段不存在\n%s" % album_response.json_data)
+    # 判断是不是需要跳过
+    if album_response.json_data["body"]["blog"] is False:
+        result["is_skip"] = True
+    else:
+        if not isinstance(album_response.json_data["body"]["blog"], list):
+            raise robot.RobotException("返回数据'blog'字段类型不正确\n%s" % album_response.json_data)
+        if len(album_response.json_data["body"]["blog"]) != 1:
+            raise robot.RobotException("返回数据'blog'字段长度不正确\n%s" % album_response.json_data)
+        if not robot.check_sub_key(("type",), album_response.json_data["body"]["blog"][0]):
+            raise robot.RobotException("返回数据'type'字段不存在\n%s" % album_response.json_data)
+        # 获取相册类型
+        album_type = int(album_response.json_data["body"]["blog"][0]["type"])
+        if album_type not in [2, 3]:
+            raise robot.RobotException("返回数据'type'字段取值不正确\n%s" % album_response.json_data)
+        if album_type == 2:  # 歌曲类型的相册
+            result["is_skip"] = True
+        elif album_type == 3:  # 图片类型的相册
+            album_body = album_response.json_data["body"]["blog"][0]
+            # 获取相册标题
+            if not robot.check_sub_key(("title",), album_body):
+                raise robot.RobotException("返回数据'title'字段不存在\n%s" % album_response.json_data)
+            result["title"] = str(album_body["title"].encode("UTF-8"))
+            # 获取图片地址
+            if not robot.check_sub_key(("attr",), album_body):
+                raise robot.RobotException("返回数据'attr'字段不存在\n%s" % album_response.json_data)
+            if not robot.check_sub_key(("img",), album_body["attr"]):
+                raise robot.RobotException("返回数据'img'字段不存在\n%s" % album_response.json_data)
+            if len(album_body["attr"]["img"]) == 0:
+                raise robot.RobotException("返回数据'img'字段长度不正确\n%s" % album_response.json_data)
+            for image_data in album_body["attr"]["img"]:
+                if not robot.check_sub_key(("url",), image_data):
+                    raise robot.RobotException("返回数据'url'字段不存在\n%s" % album_response.json_data)
+                result["image_url_list"].append("http://www.zunguang.com/%s" % str(image_data["url"]))
     return result
 
 
