@@ -17,19 +17,19 @@ TOTAL_IMAGE_COUNT = 0
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://www.abase.me/movies.php?page=%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
-    extra_info = {
+    result = {
         "page_video_count": 0,  # 页面解析出的影片数量
         "image_info_list": [],  # 页面解析出的图片信息列表
     }
-    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取页面中的影片数量
-        extra_info["page_video_count"] = photo_pagination_response.data.count('<div class="item pull-left">')
-        # 获取页面中的所有图片信息列表
-        # 单张图片信息的格式：[image_url, title]
-        image_info_list = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', photo_pagination_response.data)
-        extra_info["image_info_list"] = [map(str, key) for key in image_info_list]
-    photo_pagination_response.extra_info = extra_info
-    return photo_pagination_response
+    if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+    # 获取页面中的影片数量
+    result["page_video_count"] = photo_pagination_response.data.count('<div class="item pull-left">')
+    # 获取页面中的所有图片信息列表
+    # 单张图片信息的格式：[image_url, title]
+    image_info_list = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', photo_pagination_response.data)
+    result["image_info_list"] = [map(str, key) for key in image_info_list]
+    return result
 
 
 # 获取图片原图的下载地址
@@ -78,18 +78,19 @@ class ABase(robot.Robot):
             log.step("开始解析第%s页图片" % page_count)
 
             # 获取一页图片
-            photo_pagination_response = get_one_page_photo(page_count)
-            if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error("第%s页访问失败，原因：%s" % (page_count, robot.get_http_request_failed_reason(photo_pagination_response.status)))
-                tool.process_exit()
+            try:
+                photo_pagination_response = get_one_page_photo(page_count)
+            except robot.RobotException, e:
+                log.error("第%s页解析失败，原因：%s" % (page_count, e.message))
+                raise 
 
             # 已经下载完毕了
-            if photo_pagination_response.extra_info["page_video_count"] == 0:
+            if photo_pagination_response["page_video_count"] == 0:
                 break
 
-            log.trace("第%s页解析到影片%s个，封面图片%s张" % (page_count, len(photo_pagination_response.extra_info["image_info_list"]), photo_pagination_response.extra_info["page_video_count"]))
+            log.trace("第%s页解析到影片%s个，封面图片%s张" % (page_count, len(photo_pagination_response["image_info_list"]), photo_pagination_response["page_video_count"]))
 
-            for small_image_url, title in photo_pagination_response.extra_info["image_info_list"]:
+            for small_image_url, title in photo_pagination_response["image_info_list"]:
                 # 达到线程上限，等待
                 while thread_type == 1 and threading.activeCount() >= self.thread_count + main_thread_count:
                     time.sleep(5)
