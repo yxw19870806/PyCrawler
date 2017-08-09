@@ -36,18 +36,20 @@ def generate_login_cookie(cookie_info):
 
 # 获取账号首页
 def get_account_index_page(account_id):
-    account_index_url = "http://weibo.com/u/%s?is_all=1" % account_id
+    account_index_url = "http://weibo.com/u/%s" % account_id
     cookies_list = {"SUB": tool.generate_random_string(30)}
     result = {
         "account_page_id": None,  # 页面解析出的账号page id
     }
-    account_index_response = net.http_request(account_index_url, cookies_list=cookies_list)
+    account_index_response = net.http_request(account_index_url, cookies_list=cookies_list, redirect=False)
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data, "$CONFIG['page_id']='", "'")
         if not robot.is_integer(account_page_id):
             raise robot.RobotException("页面截取page id失败\n%s" % account_index_response.data)
         result["account_page_id"] = account_page_id
+    elif account_index_response.status == 302 and account_index_response.getheader("Location") == "/":
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
