@@ -68,7 +68,10 @@ def main():
     account_list = get_account_from_file()
     talk_list = {}
     for account_id in account_list:
-        get_account_talks(account_id, account_list[account_id], talk_list)
+        try:
+            get_account_talks(account_id, account_list[account_id], talk_list)
+        except robot.RobotException, e:
+            tool.print_msg(account_id + " 获取talk列表失败，原因：%s" % e.message)
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w") as file_handle:
             for talk_id in talk_list:
