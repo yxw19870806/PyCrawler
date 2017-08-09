@@ -41,7 +41,6 @@ def get_one_page_blog(account_name, page_count):
         if len(blog_id_list) == 0:
             raise robot.RobotException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
         result["blog_id_list"] = map(str, blog_id_list)
-
         # 判断是不是最后一页
         # 有页数选择的页面样式
         if blog_pagination_response.data.find('<div class="page topPaging">') >= 0:
@@ -74,21 +73,19 @@ def get_blog_page(account_name, blog_id):
     result = {
         "image_url_list": [],  # 所有图片地址
     }
-    if blog_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 截取日志正文部分（有多种页面模板）
-        article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
-        if not article_data:
-            article_data = tool.find_sub_string(blog_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
-        if not article_data:
-            article_data = tool.find_sub_string(blog_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
-        if not article_data:
-            raise robot.RobotException("页面截取正文失败\n%s" % blog_response.data)
-
-        # 获取图片地址
-        image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
-        result["image_url_list"] = map(str, image_url_list)
-    else:
+    if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
+    # 截取日志正文部分（有多种页面模板）
+    article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
+    if not article_data:
+        article_data = tool.find_sub_string(blog_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
+    if not article_data:
+        article_data = tool.find_sub_string(blog_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
+    if not article_data:
+        raise robot.RobotException("页面截取正文失败\n%s" % blog_response.data)
+    # 获取图片地址
+    image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
+    result["image_url_list"] = map(str, image_url_list)
     return result
 
 

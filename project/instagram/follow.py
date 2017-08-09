@@ -28,10 +28,8 @@ def get_account_index_page(account_name):
         if not robot.is_integer(account_id):
             raise robot.RobotException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
-
         # 判断是不是已经关注
         result["is_follow"] = tool.find_sub_string(account_index_response.data, '"followed_by_viewer": ', ",") == "true"
-
         # 判断是不是私密账号
         result["is_private"] = tool.find_sub_string(account_index_response.data, '"is_private": ', ",") == "true"
     elif account_index_response.status == 404:

@@ -45,26 +45,22 @@ def get_one_page_account(page_count):
     account_pagination_url = "http://jigadori.fkoji.com/users?p=%s" % page_count
     account_pagination_response = net.http_request(account_pagination_url)
     pagination_account_list = {}
-    if account_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        account_list_selector = pq(account_pagination_response.data.decode("UTF-8")).find(".users-list li")
-        for account_index in range(0, account_list_selector.size()):
-            account_selector = account_list_selector.eq(account_index)
-
-            # 获取成员名字
-            account_name = account_selector.find(".profile-name").eq(0).text()
-            if not account_name:
-                raise robot.RobotException("成员信息截取成员名字失败\n\%s" % account_selector.html())
-            account_name = account_name.strip().encode("UTF-8")
-
-            # 获取twitter账号
-            account_id = account_selector.find(".screen-name a").text()
-            if not account_name:
-                raise robot.RobotException("成员信息截取twitter账号失败\n\%s" % account_selector.html())
-            account_id = account_id.strip().replace("@", "")
-
-            pagination_account_list[account_id] = account_name
-    else:
+    if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         robot.RobotException(robot.get_http_request_failed_reason(account_pagination_response.status))
+    account_list_selector = pq(account_pagination_response.data.decode("UTF-8")).find(".users-list li")
+    for account_index in range(0, account_list_selector.size()):
+        account_selector = account_list_selector.eq(account_index)
+        # 获取成员名字
+        account_name = account_selector.find(".profile-name").eq(0).text()
+        if not account_name:
+            raise robot.RobotException("成员信息截取成员名字失败\n\%s" % account_selector.html())
+        account_name = account_name.strip().encode("UTF-8")
+        # 获取twitter账号
+        account_id = account_selector.find(".screen-name a").text()
+        if not account_name:
+            raise robot.RobotException("成员信息截取twitter账号失败\n\%s" % account_selector.html())
+        account_id = account_id.strip().replace("@", "")
+        pagination_account_list[account_id] = account_name
     return pagination_account_list
 
 

@@ -34,7 +34,6 @@ def get_account_index_page(account_name):
         if not user_id:
             raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
         result["user_id"] = user_id
-
         # 获取site key
         site_key = tool.find_sub_string(account_index_response.data, '"site_key":"', '"')
         if not site_key:
@@ -70,43 +69,39 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
         "image_info_list": [],  # 所有图片信息
         "is_over": False,  # 是不是最后一页图片
     }
-    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("photos",), photo_pagination_response.json_data):
-            raise robot.RobotException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
-        if not robot.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
-            raise robot.RobotException("返回数据'photo'或者'pages'字段不存在\n%s" % photo_pagination_response.json_data)
-        if not isinstance(photo_pagination_response.json_data["photos"]["photo"], list) or len(photo_pagination_response.json_data["photos"]["photo"]) == 0:
-            raise robot.RobotException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
-        if not robot.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
-            raise robot.RobotException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
-        # 获取图片信息
-        for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
-            extra_image_info = {
-                "image_url": None,  # 图片地址
-                "image_time": None,  # 图片上传时间
-            }
-            # 获取图片上传时间
-            if not robot.check_sub_key(("dateupload",), photo_info):
-                raise robot.RobotException("图片信息'dateupload'字段不存在\n%s" % photo_info)
-            if not robot.is_integer(photo_info["dateupload"]):
-                raise robot.RobotException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
-            extra_image_info["image_time"] = str(photo_info["dateupload"])
-
-            # 获取图片地址
-            if robot.check_sub_key(("url_o_cdn",), photo_info):
-                extra_image_info["image_url"] = str(photo_info["url_o_cdn"])
-            elif robot.check_sub_key(("url_o",), photo_info):
-                extra_image_info["image_url"] = str(photo_info["url_o"])
-            else:
-                raise robot.RobotException("图片信息'url_o_cdn'或者'url_o'字段不存在\n%s" % photo_info)
-
-            result["image_info_list"].append(extra_image_info)
-
-        # 判断是不是最后一页
-        if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
-            result["is_over"] = True
-    else:
+    if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+    if not robot.check_sub_key(("photos",), photo_pagination_response.json_data):
+        raise robot.RobotException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
+    if not robot.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
+        raise robot.RobotException("返回数据'photo'或者'pages'字段不存在\n%s" % photo_pagination_response.json_data)
+    if not isinstance(photo_pagination_response.json_data["photos"]["photo"], list) or len(photo_pagination_response.json_data["photos"]["photo"]) == 0:
+        raise robot.RobotException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
+    if not robot.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
+        raise robot.RobotException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
+    # 获取图片信息
+    for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
+        extra_image_info = {
+            "image_url": None,  # 图片地址
+            "image_time": None,  # 图片上传时间
+        }
+        # 获取图片上传时间
+        if not robot.check_sub_key(("dateupload",), photo_info):
+            raise robot.RobotException("图片信息'dateupload'字段不存在\n%s" % photo_info)
+        if not robot.is_integer(photo_info["dateupload"]):
+            raise robot.RobotException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
+        extra_image_info["image_time"] = str(photo_info["dateupload"])
+        # 获取图片地址
+        if robot.check_sub_key(("url_o_cdn",), photo_info):
+            extra_image_info["image_url"] = str(photo_info["url_o_cdn"])
+        elif robot.check_sub_key(("url_o",), photo_info):
+            extra_image_info["image_url"] = str(photo_info["url_o"])
+        else:
+            raise robot.RobotException("图片信息'url_o_cdn'或者'url_o'字段不存在\n%s" % photo_info)
+        result["image_info_list"].append(extra_image_info)
+    # 判断是不是最后一页
+    if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
+        result["is_over"] = True
     return result
 
 

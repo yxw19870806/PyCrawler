@@ -26,7 +26,6 @@ def get_album_page(album_id):
         if not album_title:
             raise robot.RobotException("页面截取作品标题失败\n%s" % album_response.data)
         result["album_title"] = album_title
-
         # 获取图片地址
         image_info_html = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
         if not image_info_html:

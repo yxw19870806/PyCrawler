@@ -96,19 +96,14 @@ def get_one_page_media(account_id, cursor):
                 raise robot.RobotException("媒体信息'__typename'取值范围不正确\n%s" % media_info)
             # 获取图片地址
             media_result["image_url"] = str(media_info["node"]["display_url"])
-
             # 判断是不是图片/视频组
             media_result["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
-
             # 判断是否有视频
             media_result["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
-
             # 获取图片上传时间
             media_result["time"] = str(int(media_info["node"]["taken_at_timestamp"]))
-
             # 获取媒体详情界面id
             media_result["page_id"] = str(media_info["node"]["shortcode"])
-
             result["media_info_list"].append(media_result)
         # 获取下一页的指针
         if media_node["page_info"]["has_next_page"]:

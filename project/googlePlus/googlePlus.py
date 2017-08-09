@@ -33,18 +33,17 @@ def get_one_page_blog(account_id, token):
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
         blog_pagination_response = net.http_request(api_url, method="POST", post_data=post_data)
         if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
-            if not script_data_html:
-                raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
-            try:
-                script_data = json.loads(script_data_html)
-            except ValueError:
-                raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
-            if not (len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2])):
-                raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
-            script_data = script_data[0][2]["113305009"]
-        else:
             raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+        script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
+        if not script_data_html:
+            raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
+        try:
+            script_data = json.loads(script_data_html)
+        except ValueError:
+            raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
+        if not (len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2])):
+            raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
+        script_data = script_data[0][2]["113305009"]
     else:
         blog_pagination_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
         blog_pagination_response = net.http_request(blog_pagination_url)
@@ -61,13 +60,10 @@ def get_one_page_blog(account_id, token):
             raise robot.RobotException("账号不存在")
         else:
             raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
-
     if len(script_data) != 3:
         raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
-
     # 获取下一页token
     result["next_page_key"] = str(script_data[2])
-
     # 获取日志信息
     if script_data[1] is not None:
         for data in script_data[1]:
@@ -83,7 +79,6 @@ def get_one_page_blog(account_id, token):
             if len(blog_data) >= 5:
                 # 获取日志id
                 extra_blog_info["blog_id"] = str(blog_data[0])
-
                 # 获取日志发布时间
                 if not robot.is_integer(blog_data[4]):
                     raise robot.RobotException("日志时间类型不正确\n%s" % blog_data)
@@ -104,47 +99,43 @@ def get_album_page(account_id, album_id):
     result = {
         "image_url_list": [],  # 所有图片地址
     }
-    while True:
-        album_response = net.http_request(album_url)
-        if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
-            script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
-            if not script_data_html:
-                raise robot.RobotException("页面截取相册信息失败\n%s" % album_response.data)
-            try:
-                script_data = json.loads(script_data_html)
-            except ValueError:
-                raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
-            try:
-                user_key = script_data[4][0]
-                continue_token = script_data[3]
-                for data in script_data[4][1]:
-                    result["image_url_list"].append(str(data[1]))
-            except ValueError:
-                raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
-
-            # 判断是不是还有下一页
-            while continue_token:
-                api_url = "https://get.google.com/_/AlbumArchiveUi/data"
-                post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-                image_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, encode_multipart=False)
-                if image_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                    continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
-                    try:
-                        continue_data = json.loads(continue_data)
-                    except ValueError:
-                        raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
-                    try:
-                        continue_token = continue_data[0][2]["113305010"][3]
-                        for data in continue_data[0][2]["113305010"][4][1]:
-                            result["image_url_list"].append(str(data[1]))
-                    except ValueError:
-                        raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
-                else:
-                    raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
-        else:
+    album_response = net.http_request(album_url)
+    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+    script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+    script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
+    if not script_data_html:
+        raise robot.RobotException("页面截取相册信息失败\n%s" % album_response.data)
+    try:
+        script_data = json.loads(script_data_html)
+    except ValueError:
+        raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
+    try:
+        user_key = script_data[4][0]
+        continue_token = script_data[3]
+        for data in script_data[4][1]:
+            result["image_url_list"].append(str(data[1]))
+    except ValueError:
+        raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
+    # 判断是不是还有下一页
+    while continue_token:
+        api_url = "https://get.google.com/_/AlbumArchiveUi/data"
+        post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
+        image_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, encode_multipart=False)
+        if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
-        return result
+        continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
+        try:
+            continue_data = json.loads(continue_data)
+        except ValueError:
+            raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
+        try:
+            continue_token = continue_data[0][2]["113305010"][3]
+            for data in continue_data[0][2]["113305010"][4][1]:
+                result["image_url_list"].append(str(data[1]))
+        except ValueError:
+            raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
+    return result
 
 
 class GooglePlus(robot.Robot):

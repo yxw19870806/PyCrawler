@@ -49,43 +49,38 @@ def get_one_page_audio(user_id, page_count):
     result = {
         "audio_info_list": [],  # 所有歌曲信息
     }
-    if audit_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        for audio_info in audit_pagination_response.json_data:
-            extra_audio_info = {
-                "audio_id": None,  # 歌曲id
-                "audio_title": "",  # 歌曲标题
-                "audio_key": None,  # 歌曲唯一key
-                "type": None,  # 歌曲类型，0 MV，1/3 歌曲
-            }
-            # 获取歌曲id
-            if not robot.check_sub_key(("workid",), audio_info):
-                raise robot.RobotException("歌曲信息'workid'字段不存在\n%s" % audio_info)
-            if not robot.is_integer(audio_info["workid"]):
-                raise robot.RobotException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
-            extra_audio_info["audio_id"] = str(audio_info["workid"])
-
-            # 获取歌曲标题
-            if not robot.check_sub_key(("songname",), audio_info):
-                raise robot.RobotException("歌曲信息'songname'字段不存在\n%s" % audio_info)
-            extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
-
-            # 获取歌曲key
-            if not robot.check_sub_key(("enworkid",), audio_info):
-                raise robot.RobotException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
-            extra_audio_info["audio_key"] = str(audio_info["enworkid"])
-
-            # 获取歌曲类型
-            if not robot.check_sub_key(("type",), audio_info):
-                raise robot.RobotException("歌曲信息'type'字段不存在\n%s" % audio_info)
-            if not robot.is_integer(audio_info["type"]):
-                raise robot.RobotException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
-            if int(audio_info["type"]) not in (0, 1, 3):
-                raise robot.RobotException("歌曲信息'type'字段范围不正确\n%s" % audio_info)
-            extra_audio_info["type"] = int(audio_info["type"])
-
-            result["audio_info_list"].append(extra_audio_info)
-    else:
+    if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audit_pagination_response.status))
+    for audio_info in audit_pagination_response.json_data:
+        extra_audio_info = {
+            "audio_id": None,  # 歌曲id
+            "audio_title": "",  # 歌曲标题
+            "audio_key": None,  # 歌曲唯一key
+            "type": None,  # 歌曲类型，0 MV，1/3 歌曲
+        }
+        # 获取歌曲id
+        if not robot.check_sub_key(("workid",), audio_info):
+            raise robot.RobotException("歌曲信息'workid'字段不存在\n%s" % audio_info)
+        if not robot.is_integer(audio_info["workid"]):
+            raise robot.RobotException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
+        extra_audio_info["audio_id"] = str(audio_info["workid"])
+        # 获取歌曲标题
+        if not robot.check_sub_key(("songname",), audio_info):
+            raise robot.RobotException("歌曲信息'songname'字段不存在\n%s" % audio_info)
+        extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
+        # 获取歌曲key
+        if not robot.check_sub_key(("enworkid",), audio_info):
+            raise robot.RobotException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
+        extra_audio_info["audio_key"] = str(audio_info["enworkid"])
+        # 获取歌曲类型
+        if not robot.check_sub_key(("type",), audio_info):
+            raise robot.RobotException("歌曲信息'type'字段不存在\n%s" % audio_info)
+        if not robot.is_integer(audio_info["type"]):
+            raise robot.RobotException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
+        if int(audio_info["type"]) not in (0, 1, 3):
+            raise robot.RobotException("歌曲信息'type'字段范围不正确\n%s" % audio_info)
+        extra_audio_info["type"] = int(audio_info["type"])
+        result["audio_info_list"].append(extra_audio_info)
     return result
 
 
@@ -98,41 +93,40 @@ def get_audio_play_page(audio_en_word_id, audio_type):
         "is_delete": False,  # 是不是已经被删除
     }
     audio_play_response = net.http_request(audio_play_url)
-    if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if audio_play_response.data.find("该作品可能含有不恰当内容将不能显示。") > -1:
-            result["is_delete"] = True
-        else:
-            # 获取歌曲地址
-            if audio_type == 1 or audio_type == 3:
-                audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
-                if not audio_source_url:
-                    raise robot.RobotException("页面截取歌曲原始地址失败\n%s" % audio_play_response.data)
-                # 从JS处解析的规则
-                special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
-                if len(special_find) == 0:
-                    result["audio_url"] = str(audio_source_url)
-                elif len(special_find) == 1:
-                    e = int(special_find[0][1], 8)
-                    f = int(special_find[0][2], 16) / e / e
-                    g = int(special_find[0][3], 16) / e / e
-                    if "a" == special_find[0][0] and g % 1000 == f:
-                        result["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
-                    else:
-                        result["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
-                else:
-                    raise robot.RobotException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
-            # MV
-            else:
-                video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
-                if not video_source_string:
-                    raise robot.RobotException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
-                try:
-                    video_url = base64.b64decode(video_source_string)
-                except TypeError:
-                    raise robot.RobotException("歌曲加密地址解密失败\n%s" % video_source_string)
-                result["audio_url"] = video_url
-    else:
+    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
+    if audio_play_response.data.find("该作品可能含有不恰当内容将不能显示。") > -1:
+        result["is_delete"] = True
+    else:
+        # 获取歌曲地址
+        if audio_type == 1 or audio_type == 3:
+            audio_source_url = tool.find_sub_string(audio_play_response.data, 'var a="', '"')
+            if not audio_source_url:
+                raise robot.RobotException("页面截取歌曲原始地址失败\n%s" % audio_play_response.data)
+            # 从JS处解析的规则
+            special_find = re.findall("userwork/([abc])(\d+)/(\w+)/(\w+)\.mp3", audio_source_url)
+            if len(special_find) == 0:
+                result["audio_url"] = str(audio_source_url)
+            elif len(special_find) == 1:
+                e = int(special_find[0][1], 8)
+                f = int(special_find[0][2], 16) / e / e
+                g = int(special_find[0][3], 16) / e / e
+                if "a" == special_find[0][0] and g % 1000 == f:
+                    result["audio_url"] = "http://a%smp3.changba.com/userdata/userwork/%s/%g.mp3" % (e, f, g)
+                else:
+                    result["audio_url"] = "http://aliuwmp3.changba.com/userdata/userwork/%s.mp3" % g
+            else:
+                raise robot.RobotException("歌曲原始地址解密歌曲地址失败\n%s" % audio_source_url)
+        # MV
+        else:
+            video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
+            if not video_source_string:
+                raise robot.RobotException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
+            try:
+                video_url = base64.b64decode(video_source_string)
+            except TypeError:
+                raise robot.RobotException("歌曲加密地址解密失败\n%s" % video_source_string)
+            result["audio_url"] = video_url
     return result
 
 

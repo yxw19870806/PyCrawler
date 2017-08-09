@@ -30,15 +30,14 @@ def get_one_page_audio(account_id, page_type, page_count):
     result = {
         "audio_info_list": [],  # 所有歌曲信息
     }
-    if audio_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if audio_pagination_response.data.find("var OwnerNickName = '';") >= 0:
-            raise robot.RobotException("账号不存在")
-        # 获取歌曲信息
-        # 单首歌曲信息的格式：[歌曲id，歌曲标题]
-        audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
-        result["audio_info_list"] = [map(str, key) for key in audio_info_list]
-    else:
+    if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_pagination_response.status))
+    if audio_pagination_response.data.find("var OwnerNickName = '';") >= 0:
+        raise robot.RobotException("账号不存在")
+    # 获取歌曲信息
+    # 单首歌曲信息的格式：[歌曲id，歌曲标题]
+    audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
+    result["audio_info_list"] = [map(str, key) for key in audio_info_list]
     return result
 
 
@@ -49,24 +48,23 @@ def get_audio_play_page(audio_id, song_type):
     result = {
         "audio_url": None,  # 歌曲地址
     }
-    if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取歌曲地址
-        audio_info_string = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
-        if not audio_info_string:
-            raise robot.RobotException("页面截取加密歌曲信息失败\n%s" % audio_play_response.data)
-        try:
-            audio_info_string = base64.b64decode(audio_info_string)
-        except TypeError:
-            raise robot.RobotException("加密歌曲信息解密失败\n%s" % audio_info_string)
-        try:
-            audio_info = json.loads(audio_info_string)
-        except ValueError:
-            raise robot.RobotException("歌曲信息加载失败\n%s" % audio_info_string)
-        if not robot.check_sub_key(("file",), audio_info):
-            raise robot.RobotException("歌曲信息'file'字段不存在\n%s" % audio_info)
-        result["audio_url"] = str(audio_info["file"])
-    else:
+    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
+    # 获取歌曲地址
+    audio_info_string = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
+    if not audio_info_string:
+        raise robot.RobotException("页面截取加密歌曲信息失败\n%s" % audio_play_response.data)
+    try:
+        audio_info_string = base64.b64decode(audio_info_string)
+    except TypeError:
+        raise robot.RobotException("加密歌曲信息解密失败\n%s" % audio_info_string)
+    try:
+        audio_info = json.loads(audio_info_string)
+    except ValueError:
+        raise robot.RobotException("歌曲信息加载失败\n%s" % audio_info_string)
+    if not robot.check_sub_key(("file",), audio_info):
+        raise robot.RobotException("歌曲信息'file'字段不存在\n%s" % audio_info)
+    result["audio_url"] = str(audio_info["file"])
     return result
 
 
