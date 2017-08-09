@@ -24,10 +24,10 @@ IS_DOWNLOAD_IMAGE = True
 # 获取账号首页
 def get_account_index_page(account_name):
     if robot.is_integer(account_name):
-        account_index_url = "https://www.tuchong.com/%s" % account_name
+        account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, redirect=False)
     result = {
         "account_id": None,  # account id（字母账号->数字账号)
     }
@@ -38,6 +38,8 @@ def get_account_index_page(account_name):
         if not robot.is_integer(account_id):
             raise robot.RobotException("site id类型不正确\n%s" % account_index_response.data)
         result["account_id"] = account_id
+    elif account_index_response.status == 301 and account_index_response.headers["Location"] == "https://tuchong.com/":
+        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     return result
@@ -176,15 +178,12 @@ class Download(threading.Thread):
         try:
             log.step(account_name + " 开始")
 
-            if account_name.isdigit():
-                account_id = account_name
-            else:
-                try:
-                    account_index_response = get_account_index_page(account_name)
-                except robot.RobotException, e:
-                    log.error(account_name + " 主页解析失败，原因：%s" % e.message)
-                    raise
-                account_id = account_index_response["account_id"]
+            try:
+                account_index_response = get_account_index_page(account_name)
+            except robot.RobotException, e:
+                log.error(account_name + " 主页解析失败，原因：%s" % e.message)
+                raise
+            account_id = account_index_response["account_id"]
 
             this_account_total_image_count = 0
             post_count = 0
@@ -208,7 +207,7 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " %s后的一页相册：%s" % (post_time, album_pagination_response["album_info_list"]))
 
-                for album_info in album_pagination_response["album_inf  o_list"]:
+                for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
                     if int(album_info["album_id"]) <= int(self.account_info[1]):
                         is_over = True
