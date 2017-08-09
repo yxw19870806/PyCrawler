@@ -27,19 +27,18 @@ def get_account_index_page(account_name):
     result = {
         "album_url_list": [],  # 所有相册地址
     }
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 页面编码
-        account_index_html = account_index_response.data.decode("GBK").encode("UTF-8")
-        if account_index_html.find("<title>该页面不存在</title>") >= 0:
-            raise robot.RobotException("账号不存在")
-        # 获取所有相册地址
-        album_result_selector = pq(account_index_response).find("#p_contents li")
-        if album_result_selector.size() == 0:
-            raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_html)
-        for album_index in range(0, album_result_selector.size()):
-            result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
-    else:
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+    # 页面编码
+    account_index_html = account_index_response.data.decode("GBK").encode("UTF-8")
+    if account_index_html.find("<title>该页面不存在</title>") >= 0:
+        raise robot.RobotException("账号不存在")
+    # 获取所有相册地址
+    album_result_selector = pq(account_index_response).find("#p_contents li")
+    if album_result_selector.size() == 0:
+        raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_html)
+    for album_index in range(0, album_result_selector.size()):
+        result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     return result
 
 
@@ -58,19 +57,17 @@ def get_album_page(album_url):
         "album_title": "",  # 相册标题
         "image_url_list": [],  # 所有图片地址
     }
-    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取相册标题
-        album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
-        if album_title:
-            result["album_title"] = album_title.decode("GBK").encode("UTF-8")
-
-        # 获取图片地址
-        image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
-        if len(image_url_list) == 0:
-            raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
-        result["image_url_list"] = map(str, image_url_list)
-    else:
+    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+    # 获取相册标题
+    album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
+    if album_title:
+        result["album_title"] = album_title.decode("GBK").encode("UTF-8")
+    # 获取图片地址
+    image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
+    if len(image_url_list) == 0:
+        raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
+    result["image_url_list"] = map(str, image_url_list)
     return result
 
 

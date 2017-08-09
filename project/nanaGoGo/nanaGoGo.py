@@ -51,12 +51,10 @@ def get_one_page_media(account_name, target_id):
             if not robot.is_integer(media_info["post"]["postId"]):
                 raise robot.RobotException("媒体信息'postId'类型不正确n%s" % media_info)
             extra_media_info["blog_id"] = str(media_info["post"]["postId"])
-
             # 获取日志内容
             if not robot.check_sub_key(("body",), media_info["post"]):
                 raise robot.RobotException("媒体信息'body'字段不存在\n%s" % media_info)
             extra_media_info["blog_body"] = media_info["post"]["body"]
-
             result["media_info_list"].append(extra_media_info)
     elif target_id == INIT_TARGET_ID and media_pagination_response.status == 400:
         raise robot.RobotException("talk不存在")

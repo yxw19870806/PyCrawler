@@ -52,7 +52,6 @@ def get_one_page_video(suid, page_count):
         if not robot.check_sub_key(("isall",), video_pagination_response.json_data):
             raise robot.RobotException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
         result["is_over"] = bool(video_pagination_response.json_data["isall"])
-
         # 获取所有视频id
         if not robot.check_sub_key(("msg",), video_pagination_response.json_data):
             raise robot.RobotException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)

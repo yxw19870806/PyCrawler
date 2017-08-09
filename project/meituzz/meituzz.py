@@ -43,7 +43,6 @@ def get_album_page(page_count):
             if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 if not robot.check_sub_key(("i",), media_response.json_data) and not robot.check_sub_key(("v",), media_response.json_data):
                     raise robot.RobotException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
-
                 # 检测是否是图片相册
                 if robot.check_sub_key(("i",), media_response.json_data):
                     if not (isinstance(media_response.json_data["i"], list) and len(media_response.json_data["i"]) > 0):
@@ -53,7 +52,6 @@ def get_album_page(page_count):
                         if not robot.check_sub_key(("url",), image_info):
                             raise robot.RobotException("图片相册'url'字段不存在\n%s" % album_response.json_data)
                         result["image_url_list"].append(str(image_info["url"]))
-
                 # 检测是否是视频相册
                 if robot.check_sub_key(("v",), media_response.json_data):
                     result["video_url"] = str(media_response.json_data["v"])
