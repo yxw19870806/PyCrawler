@@ -5,6 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+from common import robot
 import json
 import os
 
@@ -43,12 +44,20 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
     login_cookie = steamCommon.get_login_cookie_from_browser()
     discount_game_list = load_discount_list()
     if not discount_game_list:
-        discount_game_list = steamCommon.get_discount_game_list(login_cookie)
+        try:
+            discount_game_list = steamCommon.get_discount_game_list(login_cookie)
+        except robot.RobotException, e:
+            tool.print_msg("所有打折游戏解析失败，原因：%s" % e.message)
+            raise
         save_discount_list(discount_game_list)
-        tool.print_msg("get discount game list from website", False)
+        tool.print_msg("get discount game list from website")
     else:
-        tool.print_msg("get discount game list from cache file", False)
-    owned_game_list = steamCommon.get_account_owned_app_list(account_id)
+        tool.print_msg("get discount game list from cache file")
+    try:
+        owned_game_list = steamCommon.get_account_owned_app_list(account_id)
+    except robot.RobotException, e:
+        tool.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
+        raise
     for discount_info in discount_game_list:
         if discount_info["now_price"] > 0 and discount_info["old_price"] > 0 and (discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent):
             # bundle 或者 package，都包含多个游戏

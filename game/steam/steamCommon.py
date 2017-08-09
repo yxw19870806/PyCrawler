@@ -23,18 +23,19 @@ def get_account_owned_app_list(user_id):
     game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
     game_index_response = net.http_request(game_index_url)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        tool.print_msg("所有游戏页访问失败")
-        tool.process_exit()
+        raise robot.RobotException(robot.get_http_request_failed_reason(game_index_response.status))
     owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", ";")
+    if not owned_all_game_data:
+        raise robot.RobotException("页面截取游戏列表失败\n%s" % game_index_response.data)
     try:
         owned_all_game_data = json.loads(owned_all_game_data)
     except ValueError:
-        tool.print_msg("所有游戏解析失败")
-        tool.process_exit()
+        raise robot.RobotException("游戏列表加载失败\n%s" % owned_all_game_data)
     app_id_list = []
     for game_data in owned_all_game_data:
-        if "appid" in game_data:
-            app_id_list.append(str(game_data["appid"]))
+        if not "appid" in game_data:
+            raise robot.RobotException("游戏信息'appid'字段不存在\n%s" % game_data)
+        app_id_list.append(str(game_data["appid"]))
     return app_id_list
 
 
@@ -45,14 +46,10 @@ def get_discount_game_list(login_cookie):
     app_id_list = []
     while True:
         discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
-        cookies_list = {
-            "steamLogin": login_cookie,
-        }
+        cookies_list = {"steamLogin": login_cookie}
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, cookies_list=cookies_list)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            tool.print_msg("第%s页打折游戏列表访问失败" % page_count)
-            break
-
+            raise robot.RobotException("第%s页打折游戏列表访问失败" % page_count)
         search_result_selector = pq(discount_game_pagination_response.data).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
         for game_index in range(0, game_list_selector.size()):
@@ -61,7 +58,6 @@ def get_discount_game_list(login_cookie):
             app_id = game_selector.attr("data-ds-appid")
             package_id = game_selector.attr("data-ds-packageid")
             bundle_id = game_selector.attr("data-ds-bundleid")
-
             # 不同类型取对应唯一id
             if bundle_id is not None:
                 prime_id = bundle_id
@@ -74,6 +70,8 @@ def get_discount_game_list(login_cookie):
                     for temp_id_list in app_id_find:
                         temp_id_list = temp_id_list.split(",")
                         app_id += temp_id_list
+                else:
+                    tool.print_msg("bundle_info not found\n%s" % game_selector.html().encode("UTF-8"))
             elif package_id is not None:
                 prime_id = package_id
                 game_type = "package"
@@ -83,19 +81,16 @@ def get_discount_game_list(login_cookie):
             else:
                 prime_id = app_id
                 game_type = "game"
-
             # 过滤那些重复的游戏
             if prime_id in app_id_list:
                 continue
             app_id_list.append(prime_id)
-
             # discount
             discount = filter(str.isdigit, game_selector.find(".search_discount span").text().encode("UTF-8"))
             # old price
             old_price = filter(str.isdigit, game_selector.find(".search_price span strike").text().encode("UTF-8"))
             # now price
             now_price = filter(str.isdigit, game_selector.find(".search_price").remove("span").text().encode("UTF-8"))
-
             # 如果没有取到，给个默认值
             if not robot.is_integer(old_price):
                 old_price = 0
@@ -112,19 +107,20 @@ def get_discount_game_list(login_cookie):
                     discount = int(now_price / old_price * 100)
             else:
                 discount = int(discount)
-
             # 游戏打折信息
             discount_info = {"type": game_type, "id": prime_id, "app_id": app_id, "discount": discount, "old_price": old_price, "now_price": now_price}
             discount_game_list.append(discount_info)
-
         # 下一页
         pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html().encode("UTF-8")
         page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html)
-        total_page_count = max(map(int, page_count_find))
-        if page_count < total_page_count:
-            page_count += 1
+        if len(page_count_find) > 0:
+            total_page_count = max(map(int, page_count_find))
+            if page_count < total_page_count:
+                page_count += 1
+            else:
+                break
         else:
-            break
+            raise robot.RobotException("分页信息没有找到\n%s" % discount_game_pagination_response.data)
     return discount_game_list
 
 
