@@ -19,15 +19,13 @@ def get_one_page_blog(page_count):
         "image_name_list": [],  # 所有图片名字
     }
     blog_pagination_response = net.http_request(blog_pagination_url)
-    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 检测是否是最后一页
-        result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
-
-        # 获取图片名字
-        image_name_list = re.findall('data-original="./([^"]*)"', blog_pagination_response.data)
-        result["image_name_list"] = map(str, image_name_list)
-    else:
+    if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+    # 检测是否是最后一页
+    result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
+    # 获取图片名字
+    image_name_list = re.findall('data-original="./([^"]*)"', blog_pagination_response.data)
+    result["image_name_list"] = map(str, image_name_list)
     return result
 
 

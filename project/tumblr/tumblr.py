@@ -72,52 +72,51 @@ def get_post_page(post_url):
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 所有图片地址
     }
-    if post_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
-        if not post_page_head:
-            raise robot.RobotException("页面截取正文失败\n%s" % post_response.data)
-        # 获取og_type（页面类型的是视频还是图片或其他）
-        og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
-        if not og_type:
-            raise robot.RobotException("正文截取og_type失败\n%s" % post_page_head)
-        # 空、音频、引用，跳过
-        if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote", "tumblr-feed:link"]:
-            pass
-        else:
-            # 视频
-            if og_type == "tumblr-feed:video":
-                result["has_video"] = True
-                # 获取图片地址
-                image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
-                if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
-                    result["image_url_list"].append(image_url)
-            else:
-                # 获取所有图片地址
-                image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-                new_image_url_list = {}
-                for image_url in image_url_list:
-                    # 头像，跳过
-                    if image_url.find("/avatar_") != -1:
-                        continue
-                    image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
-                    # 判断是否有分辨率更小的相同图片
-                    if image_id in new_image_url_list:
-                        resolution = image_url.split("_")[-1].split(".")[0]
-                        if resolution[-1] == "h":
-                            resolution = int(resolution[:-1])
-                        else:
-                            resolution = int(resolution)
-                        old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
-                        if old_resolution[-1] == "h":
-                            old_resolution = int(old_resolution[:-1])
-                        else:
-                            old_resolution = int(old_resolution)
-                        if resolution < old_resolution:
-                            continue
-                    new_image_url_list[image_id] = image_url
-                result["image_url_list"] = new_image_url_list.values()
-    else:
+    if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_response.status))
+    post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
+    if not post_page_head:
+        raise robot.RobotException("页面截取正文失败\n%s" % post_response.data)
+    # 获取og_type（页面类型的是视频还是图片或其他）
+    og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
+    if not og_type:
+        raise robot.RobotException("正文截取og_type失败\n%s" % post_page_head)
+    # 空、音频、引用，跳过
+    if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote", "tumblr-feed:link"]:
+        pass
+    else:
+        # 视频
+        if og_type == "tumblr-feed:video":
+            result["has_video"] = True
+            # 获取图片地址
+            image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
+            if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
+                result["image_url_list"].append(image_url)
+        else:
+            # 获取所有图片地址
+            image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+            new_image_url_list = {}
+            for image_url in image_url_list:
+                # 头像，跳过
+                if image_url.find("/avatar_") != -1:
+                    continue
+                image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
+                # 判断是否有分辨率更小的相同图片
+                if image_id in new_image_url_list:
+                    resolution = image_url.split("_")[-1].split(".")[0]
+                    if resolution[-1] == "h":
+                        resolution = int(resolution[:-1])
+                    else:
+                        resolution = int(resolution)
+                    old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
+                    if old_resolution[-1] == "h":
+                        old_resolution = int(old_resolution[:-1])
+                    else:
+                        old_resolution = int(old_resolution)
+                    if resolution < old_resolution:
+                        continue
+                new_image_url_list[image_id] = image_url
+            result["image_url_list"] = new_image_url_list.values()
     return result
 
 
@@ -129,34 +128,33 @@ def get_video_play_page(account_id, post_id):
         "video_url": None,  # 视频地址
         "is_skip": False,  # 是不是第三方视频
     }
-    if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
-        if len(video_url_find) == 1:
-            video_response = net.http_request(video_url_find[0], redirect=False)
-            # 获取视频重定向页面
-            if video_response.status == 302 and video_response.getheader("Location") is not None:
-                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
-                # ->
-                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
-                result["video_url"] = video_response.getheader("Location").replace("#_=_", "").replace("_r1_480", "_r1_720")
-            else:
-                # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
-                # ->
-                # http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
-                # 去除视频指定分辨率
-                temp_list = video_url_find[0].split("/")
-                if temp_list[-1].isdigit():
-                    video_id = temp_list[-2]
-                else:
-                    video_id = temp_list[-1]
-                result["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
-        elif len(video_url_find) == 0:
-            # 第三方视频
-            result["is_skip"] = True
-        else:
-            raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
-    else:
+    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
+    video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
+    if len(video_url_find) == 1:
+        video_response = net.http_request(video_url_find[0], redirect=False)
+        # 获取视频重定向页面
+        if video_response.status == 302 and video_response.getheader("Location") is not None:
+            # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
+            # ->
+            # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
+            result["video_url"] = video_response.getheader("Location").replace("#_=_", "").replace("_r1_480", "_r1_720")
+        else:
+            # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
+            # ->
+            # http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
+            # 去除视频指定分辨率
+            temp_list = video_url_find[0].split("/")
+            if temp_list[-1].isdigit():
+                video_id = temp_list[-2]
+            else:
+                video_id = temp_list[-1]
+            result["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
+    elif len(video_url_find) == 0:
+        # 第三方视频
+        result["is_skip"] = True
+    else:
+        raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
     return result
 
 

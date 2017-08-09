@@ -26,72 +26,68 @@ def get_one_page_favorite(page_count):
         "is_over": False,  # 是不是最后一页收藏
         "blog_info_list": [],  # 所有微博信息
     }
-    if favorite_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        favorite_data_html = tool.find_sub_string(favorite_pagination_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
-        favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
-        if not favorite_data_html:
-            raise robot.RobotException("页面截取收藏信息失败\n%s" % favorite_data_html)
-        # 替换全部转义斜杠以及没有用的换行符等
-        html_data = favorite_data_html.replace("\\\\", chr(1))
-        for replace_string in ["\\n", "\\r", "\\t", "\\"]:
-            html_data = html_data.replace(replace_string, "")
-        html_data = html_data.replace(chr(1), "\\")
-
-        # 解析页面
-        children_selector = pq(html_data.decode("UTF-8")).find('div.WB_feed').children()
-        if len(children_selector.size()) == 0:
-            raise robot.RobotException("匹配收藏信息失败\n%s" % favorite_data_html)
-        if len(children_selector.size()) == 1:
-            raise robot.RobotException("没有收藏了")
-
-        # 解析日志id和图片地址
-        for i in range(0, children_selector.size() - 1):
-            feed_selector = children_selector.eq(i)
-            # 已被删除的微博
-            if not feed_selector.has_class("WB_feed_type"):
-                continue
-            extra_blog_info = {
-                "blog_id": None,  # 页面解析出的日志id（mid）
-                "image_url_list": [],  # 页面解析出的微博图片地址列表
-            }
-            # 解析日志id
-            blog_id = feed_selector.attr("mid")
-            if not robot.is_integer(blog_id):
-                raise robot.RobotException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
-            extra_blog_info["blog_id"] = str(blog_id)
-            
-            # WB_text       微博文本
-            # WB_media_wrap 微博媒体（图片）
-            # .WB_feed_expand .WB_expand     转发的微博，下面同样包含WB_text、WB_media_wrap这些结构
-            # 包含转发微博
-            if feed_selector.find(".WB_feed_expand .WB_expand").size() == 0:
-                media_selector = feed_selector.find(".WB_media_wrap")
-            else:
-                media_selector = feed_selector.find(".WB_feed_expand .WB_expand .WB_media_wrap")
-            # 如果存在媒体
-            if media_selector.size() == 1:
-                thumb_image_url_list = re.findall('<img src="([^"]*)"/>', media_selector.html())
-                if len(thumb_image_url_list) > 0:
-                    image_url_list = []
-                    for image_url in thumb_image_url_list:
-                        temp_list = image_url.split("/")
-                        temp_list[3] = "large"
-                        image_url_list.append("http:" + str("/".join(temp_list)))
-                    extra_blog_info["image_url_list"] = image_url_list
-            if len(extra_blog_info["image_url_list"]) > 0:
-                result["blog_info_list"].append(extra_blog_info)
-        # 最后一条feed是分页信息
-        page_selector = children_selector.eq(children_selector.size() - 1)
-        
-        # 判断是不是最后一页
-        page_count_find = re.findall("第([\d]*)页",  page_selector.html())
-        if len(page_count_find) > 0:
-            page_count_find = map(int, page_count_find)
-            result["is_over"] = page_count >= max(page_count_find)
-        else:
-            result["is_over"] = True
-    else:
+    if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(favorite_pagination_response.status))
+    favorite_data_html = tool.find_sub_string(favorite_pagination_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
+    favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
+    if not favorite_data_html:
+        raise robot.RobotException("页面截取收藏信息失败\n%s" % favorite_data_html)
+    # 替换全部转义斜杠以及没有用的换行符等
+    html_data = favorite_data_html.replace("\\\\", chr(1))
+    for replace_string in ["\\n", "\\r", "\\t", "\\"]:
+        html_data = html_data.replace(replace_string, "")
+    html_data = html_data.replace(chr(1), "\\")
+    # 解析页面
+    children_selector = pq(html_data.decode("UTF-8")).find('div.WB_feed').children()
+    if len(children_selector.size()) == 0:
+        raise robot.RobotException("匹配收藏信息失败\n%s" % favorite_data_html)
+    if len(children_selector.size()) == 1:
+        raise robot.RobotException("没有收藏了")
+    # 解析日志id和图片地址
+    for i in range(0, children_selector.size() - 1):
+        feed_selector = children_selector.eq(i)
+        # 已被删除的微博
+        if not feed_selector.has_class("WB_feed_type"):
+            continue
+        extra_blog_info = {
+            "blog_id": None,  # 页面解析出的日志id（mid）
+            "image_url_list": [],  # 页面解析出的微博图片地址列表
+        }
+        # 解析日志id
+        blog_id = feed_selector.attr("mid")
+        if not robot.is_integer(blog_id):
+            raise robot.RobotException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
+        extra_blog_info["blog_id"] = str(blog_id)
+
+        # WB_text       微博文本
+        # WB_media_wrap 微博媒体（图片）
+        # .WB_feed_expand .WB_expand     转发的微博，下面同样包含WB_text、WB_media_wrap这些结构
+        # 包含转发微博
+        if feed_selector.find(".WB_feed_expand .WB_expand").size() == 0:
+            media_selector = feed_selector.find(".WB_media_wrap")
+        else:
+            media_selector = feed_selector.find(".WB_feed_expand .WB_expand .WB_media_wrap")
+        # 如果存在媒体
+        if media_selector.size() == 1:
+            thumb_image_url_list = re.findall('<img src="([^"]*)"/>', media_selector.html())
+            if len(thumb_image_url_list) > 0:
+                image_url_list = []
+                for image_url in thumb_image_url_list:
+                    temp_list = image_url.split("/")
+                    temp_list[3] = "large"
+                    image_url_list.append("http:" + str("/".join(temp_list)))
+                extra_blog_info["image_url_list"] = image_url_list
+        if len(extra_blog_info["image_url_list"]) > 0:
+            result["blog_info_list"].append(extra_blog_info)
+    # 最后一条feed是分页信息
+    page_selector = children_selector.eq(children_selector.size() - 1)
+    # 判断是不是最后一页
+    page_count_find = re.findall("第([\d]*)页",  page_selector.html())
+    if len(page_count_find) > 0:
+        page_count_find = map(int, page_count_find)
+        result["is_over"] = page_count >= max(page_count_find)
+    else:
+        result["is_over"] = True
     return result
 
 

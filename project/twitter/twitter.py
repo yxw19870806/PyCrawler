@@ -58,65 +58,60 @@ def get_one_page_media(account_name, position_blog_id):
         "media_info_list": [],  # 所有媒体信息
         "next_page_position": None  # 下一页指针
     }
-    if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("has_more_items",), media_pagination_response.json_data):
-            raise robot.RobotException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
-        if not robot.check_sub_key(("items_html",), media_pagination_response.json_data):
-            raise robot.RobotException("返回信息'items_html'字段不存在\n%s" % media_pagination_response.json_data)
-        if not robot.check_sub_key(("new_latent_count",), media_pagination_response.json_data):
-            raise robot.RobotException("返回信息'new_latent_count'字段不存在\n%s" % media_pagination_response.json_data)
-        if not robot.is_integer(media_pagination_response.json_data["new_latent_count"]):
-            raise robot.RobotException("返回信息'new_latent_count'字段类型不正确\n%s" % media_pagination_response.json_data)
-        if not robot.check_sub_key(("min_position",), media_pagination_response.json_data):
-            raise robot.RobotException("返回信息'min_position'字段不存在\n%s" % media_pagination_response.json_data)
-        if not robot.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
-            raise robot.RobotException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
-        # 没有任何内容
-        if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
-            result["is_skip"] = True
-        else:
-            # tweet信息分组
-            temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
-            tweet_data_list = []
-            for tweet_data in temp_tweet_data_list:
-                if len(tweet_data) < 50:
-                    continue
-                tweet_data = tweet_data.encode("UTF-8")
-                # 被圈出来的用户，追加到前面的页面中
-                if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
-                    tweet_data_list[-1] += tweet_data
-                else:
-                    tweet_data_list.append(tweet_data)
-            if len(tweet_data_list) == 0:
-                raise robot.RobotException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
-            if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
-                raise robot.RobotException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
-            for tweet_data in tweet_data_list:
-                extra_media_info = {
-                    "blog_id": None,  # 日志id
-                    "has_video": False,  # 是不是包含视频
-                    "image_url_list": [],  # 所有图片地址
-                }
-                # 获取日志id
-                blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-                if not robot.is_integer(blog_id):
-                    raise robot.RobotException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-                extra_media_info["blog_id"] = str(blog_id)
-
-                # 获取图片地址
-                image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
-                extra_media_info["image_url_list"] = map(str, image_url_list)
-
-                # 判断是不是有视频
-                extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
-
-                result["media_info_list"].append(extra_media_info)
-
-            # 判断是不是还有下一页
-            if media_pagination_response.json_data["has_more_items"]:
-                result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
-    else:
+    if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
+    if not robot.check_sub_key(("has_more_items",), media_pagination_response.json_data):
+        raise robot.RobotException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
+    if not robot.check_sub_key(("items_html",), media_pagination_response.json_data):
+        raise robot.RobotException("返回信息'items_html'字段不存在\n%s" % media_pagination_response.json_data)
+    if not robot.check_sub_key(("new_latent_count",), media_pagination_response.json_data):
+        raise robot.RobotException("返回信息'new_latent_count'字段不存在\n%s" % media_pagination_response.json_data)
+    if not robot.is_integer(media_pagination_response.json_data["new_latent_count"]):
+        raise robot.RobotException("返回信息'new_latent_count'字段类型不正确\n%s" % media_pagination_response.json_data)
+    if not robot.check_sub_key(("min_position",), media_pagination_response.json_data):
+        raise robot.RobotException("返回信息'min_position'字段不存在\n%s" % media_pagination_response.json_data)
+    if not robot.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
+        raise robot.RobotException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
+    # 没有任何内容
+    if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
+        result["is_skip"] = True
+    else:
+        # tweet信息分组
+        temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
+        tweet_data_list = []
+        for tweet_data in temp_tweet_data_list:
+            if len(tweet_data) < 50:
+                continue
+            tweet_data = tweet_data.encode("UTF-8")
+            # 被圈出来的用户，追加到前面的页面中
+            if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
+                tweet_data_list[-1] += tweet_data
+            else:
+                tweet_data_list.append(tweet_data)
+        if len(tweet_data_list) == 0:
+            raise robot.RobotException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
+        if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
+            raise robot.RobotException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
+        for tweet_data in tweet_data_list:
+            extra_media_info = {
+                "blog_id": None,  # 日志id
+                "has_video": False,  # 是不是包含视频
+                "image_url_list": [],  # 所有图片地址
+            }
+            # 获取日志id
+            blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
+            if not robot.is_integer(blog_id):
+                raise robot.RobotException("tweet内容中截取tweet id失败\n%s" % tweet_data)
+            extra_media_info["blog_id"] = str(blog_id)
+            # 获取图片地址
+            image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
+            extra_media_info["image_url_list"] = map(str, image_url_list)
+            # 判断是不是有视频
+            extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
+            result["media_info_list"].append(extra_media_info)
+        # 判断是不是还有下一页
+        if media_pagination_response.json_data["has_more_items"]:
+            result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
     return result
 
 

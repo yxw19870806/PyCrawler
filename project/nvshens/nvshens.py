@@ -22,41 +22,36 @@ def get_one_page_album(album_id, page_count):
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 页所有图片地址
     }
-    if album_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 判断图集是否已经被删除
-        result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
-
-        # 获取图集图片总数
-        image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
-        if robot.is_integer(image_count):
-            result["image_count"] = int(image_count)
-        else:
-            result["image_count"] = 0
-        if result["image_count"] == 0:
-            result["is_delete"] = True
-
-        if not result["is_delete"]:
-            # 获取图集标题
-            result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
-
-            # 获取图集图片地址
-            if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
-                image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
-            else:
-                image_url_list = re.findall("src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>"))
-            if len(image_url_list) == 0:
-                raise robot.RobotException("页面匹配图片地址失败\n%s" % album_pagination_response.data)
-            result["image_url_list"] = map(str, image_url_list)
-
-            # 判断是不是最后一页
-            page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
-            if len(page_count_find) > 0:
-                max_page_count = max(map(int, page_count_find))
-            else:
-                max_page_count = 1
-            result['is_over'] = page_count >= max_page_count
-    else:
+    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
+    # 判断图集是否已经被删除
+    result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
+    # 获取图集图片总数
+    image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
+    if robot.is_integer(image_count):
+        result["image_count"] = int(image_count)
+    else:
+        result["image_count"] = 0
+    if result["image_count"] == 0:
+        result["is_delete"] = True
+    if not result["is_delete"]:
+        # 获取图集标题
+        result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
+        # 获取图集图片地址
+        if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
+            image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
+        else:
+            image_url_list = re.findall("src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>"))
+        if len(image_url_list) == 0:
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % album_pagination_response.data)
+        result["image_url_list"] = map(str, image_url_list)
+        # 判断是不是最后一页
+        page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
+        if len(page_count_find) > 0:
+            max_page_count = max(map(int, page_count_find))
+        else:
+            max_page_count = 1
+        result['is_over'] = page_count >= max_page_count
     return result
 
 

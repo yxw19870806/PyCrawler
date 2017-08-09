@@ -20,30 +20,28 @@ def get_album_page(album_id):
         "model_name": "",  # 模特名字
         "image_url_list": [],  # 所有图片地址
     }
-    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
-            result["is_delete"] = True
-        else:
-            # 获取模特名字
-            model_info_html = tool.find_sub_string(album_response.data, '<div class="ren_head">', "</div>")
-            if not model_info_html:
-                raise robot.RobotException("页面截取模特信息失败\n%s" % album_response.data)
-            model_name = tool.find_sub_string(model_info_html, 'title="', '"')
-            if not model_name:
-                raise robot.RobotException("模特信息截取模特名字失败\n%s" % model_info_html)
-            result["model_name"] = str(model_name).strip()
-
-            # 获取所有图片地址
-            image_info_data = tool.find_sub_string(album_response.data, '<ul id="myGallery">', "</ul>")
-            image_url_list = re.findall('<img src="([^"]*)"', image_info_data)
-            if len(image_url_list) == 0:
-                raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
-            for image_url in image_url_list:
-                if image_url.find("_magazine_web_m.") == -1:
-                    raise robot.RobotException("图片地址不符合规则\n%s" % image_url)
-                result["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
-    else:
+    if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+    if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
+        result["is_delete"] = True
+    else:
+        # 获取模特名字
+        model_info_html = tool.find_sub_string(album_response.data, '<div class="ren_head">', "</div>")
+        if not model_info_html:
+            raise robot.RobotException("页面截取模特信息失败\n%s" % album_response.data)
+        model_name = tool.find_sub_string(model_info_html, 'title="', '"')
+        if not model_name:
+            raise robot.RobotException("模特信息截取模特名字失败\n%s" % model_info_html)
+        result["model_name"] = str(model_name).strip()
+        # 获取所有图片地址
+        image_info_data = tool.find_sub_string(album_response.data, '<ul id="myGallery">', "</ul>")
+        image_url_list = re.findall('<img src="([^"]*)"', image_info_data)
+        if len(image_url_list) == 0:
+            raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
+        for image_url in image_url_list:
+            if image_url.find("_magazine_web_m.") == -1:
+                raise robot.RobotException("图片地址不符合规则\n%s" % image_url)
+            result["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
     return result
 
 
