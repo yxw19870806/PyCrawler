@@ -139,21 +139,20 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                 try:
                     response.json_data = json.loads(response.data)
                 except ValueError:
-                    while True:
-                        if "Content-Type" in response.headers:
-                            charset = tool.find_sub_string(response.headers["Content-Type"], "charset=", None)
-                            if charset:
-                                if charset == "gb2312":
-                                    charset = "GBK"
-                                try:
-                                    response.json_data = json.loads(response.data.decode(charset))
-                                except ValueError:
-                                    pass
-                                except LookupError:
-                                    pass
-                                else:
-                                    break
-                        return ErrorResponse(HTTP_RETURN_CODE_JSON_DECODE_ERROR)
+                    is_error = True
+                    if "Content-Type" in response.headers:
+                        charset = tool.find_sub_string(response.headers["Content-Type"], "charset=", None)
+                        if charset:
+                            if charset == "gb2312":
+                                charset = "GBK"
+                            try:
+                                response.json_data = json.loads(response.data.decode(charset))
+                            except:
+                                pass
+                            else:
+                                is_error = False
+                    if is_error:
+                        response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
             return response
         except urllib3.exceptions.ProxyError:
             notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
