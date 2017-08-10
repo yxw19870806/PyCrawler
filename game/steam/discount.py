@@ -41,6 +41,7 @@ def load_discount_list():
 # min_discount_percent  最低折扣
 # min_discount_price    最低价格
 def main(account_id, include_type, min_discount_percent, min_discount_price):
+    # 获取登录状态
     try:
         login_cookie = steamCommon.get_login_cookie_from_browser()
     except robot.RobotException, e:
