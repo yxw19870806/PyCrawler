@@ -226,19 +226,16 @@ def get_login_cookie_from_browser():
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
     all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
-    if "store.steampowered.com" in all_cookie_from_browser:
-        if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
-            return all_cookie_from_browser["store.steampowered.com"]["steamLogin"]
-        else:
-            login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-            cookies_list = all_cookie_from_browser["store.steampowered.com"]
-            login_response = net.http_request(login_url, cookies_list=cookies_list, redirect=False)
-            if login_response.status == 302:
-                set_cookies = net.get_cookies_from_response_header(login_response.headers)
-                if "steamLogin" in set_cookies:
-                    return set_cookies["steamLogin"]
-            else:
-                tool.print_msg("登录失败")
-    tool.print_msg("登录cookie获取失败")
-    tool.process_exit()
-    return None
+    if "store.steampowered.com" not in all_cookie_from_browser:
+        raise robot.RobotException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
+    if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
+        return all_cookie_from_browser["store.steampowered.com"]["steamLogin"]
+    login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
+    login_response = net.http_request(login_url, cookies_list=all_cookie_from_browser["store.steampowered.com"], redirect=False)
+    if login_response.status == 302:
+        set_cookies = net.get_cookies_from_response_header(login_response.headers)
+        if "steamLogin" not in set_cookies:
+            raise robot.RobotException("登录返回cookies不正确，\n%s" % set_cookies)
+        return set_cookies["steamLogin"]
+    else:
+        raise robot.RobotException("登录返回code不正确，\n%s\n%s" % (login_response.status, login_response.data))
