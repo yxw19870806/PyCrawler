@@ -41,29 +41,43 @@ def load_discount_list():
 # min_discount_percent  最低折扣
 # min_discount_price    最低价格
 def main(account_id, include_type, min_discount_percent, min_discount_price):
-    login_cookie = steamCommon.get_login_cookie_from_browser()
+    try:
+        login_cookie = steamCommon.get_login_cookie_from_browser()
+    except robot.RobotException, e:
+        tool.print_msg("登录状态检测失败，原因：%s" % e.message)
+        raise
+    # 从文件里获取打折列表
     discount_game_list = load_discount_list()
     if not discount_game_list:
+        # 调用API获取打折列表
         try:
             discount_game_list = steamCommon.get_discount_game_list(login_cookie)
         except robot.RobotException, e:
             tool.print_msg("所有打折游戏解析失败，原因：%s" % e.message)
             raise
+        # 将打折列表写入文件
         save_discount_list(discount_game_list)
         tool.print_msg("get discount game list from website")
     else:
         tool.print_msg("get discount game list from cache file")
+    # 获取自己的所有游戏列表
     try:
         owned_game_list = steamCommon.get_account_owned_app_list(account_id)
     except robot.RobotException, e:
         tool.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
     for discount_info in discount_game_list:
-        if discount_info["now_price"] > 0 and discount_info["old_price"] > 0 and (discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent):
+        # 获取到的价格不大于0的跳过
+        if discount_info["now_price"] <= 0 or discount_info["old_price"] <= 0:
+            continue
+        # 只显示当前价格或折扣小等于限制的那些游戏
+        if discount_info["now_price"] <= min_discount_price or discount_info["discount"] >= min_discount_percent:
             # bundle 或者 package，都包含多个游戏
             if discount_info["type"] == "bundle" or discount_info["type"] == "package":
+                # 是否不显示package
                 if discount_info["type"] == "package" and include_type & 2 == 0:
                     continue
+                # 是否不显示bundle
                 if discount_info["type"] == "bundle" and include_type & 4 == 0:
                     continue
                 is_all = True
