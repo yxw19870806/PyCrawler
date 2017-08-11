@@ -11,47 +11,53 @@ import os
 import re
 
 
-# 获取指定一页的图集
-def get_one_page_album(album_id, page_count):
-    album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)
-    album_pagination_response = net.http_request(album_pagination_url)
+# 获取图集所有图片
+def get_album_photo(album_id):
+    page_count = max_page_count = 1
+    image_count = 0
     result = {
         "is_delete": False,  # 是不是已经被删除
-        "is_over": False,  # 是不是图集的最后一页
-        "image_count": 0,  # 页图集总图片数
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 页所有图片地址
     }
-    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
-    # 判断图集是否已经被删除
-    result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
-    # 获取图集图片总数
-    image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
-    if robot.is_integer(image_count):
-        result["image_count"] = int(image_count)
-    else:
-        result["image_count"] = 0
-    if result["image_count"] == 0:
-        result["is_delete"] = True
-    if not result["is_delete"]:
-        # 获取图集标题
-        result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
+    while page_count <= max_page_count:
+        album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)
+        album_pagination_response = net.http_request(album_pagination_url)
+        if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(album_pagination_response.status))
+        # 判断图集是否已经被删除
+        if page_count == 1:
+            result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
+            # 获取图集图片总数
+            image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
+            if not robot.is_integer(image_count):
+                raise robot.RobotException("页面截取图片总数失败\n%s" % album_pagination_response.data)
+            image_count = int(image_count)
+            if image_count == 0:
+                result["is_delete"] = True
+            if result["is_delete"]:
+                return result
+            # 获取图集标题
+            result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
+            if not result["album_title"]:
+                raise robot.RobotException("页面截取标题失败\n%s" % album_pagination_response.data)
         # 获取图集图片地址
         if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
             image_url_list = re.findall("<img src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>"))
         else:
             image_url_list = re.findall("src='([^']*)'", tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>"))
         if len(image_url_list) == 0:
-            raise robot.RobotException("页面匹配图片地址失败\n%s" % album_pagination_response.data)
-        result["image_url_list"] = map(str, image_url_list)
+            raise robot.RobotException("第%s页，页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+        result["image_url_list"] += map(str, image_url_list)
         # 判断是不是最后一页
         page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
         if len(page_count_find) > 0:
             max_page_count = max(map(int, page_count_find))
         else:
             max_page_count = 1
-        result['is_over'] = page_count >= max_page_count
+        page_count += 1
+    if image_count != len(result["image_url_list"]):
+        raise robot.RobotException("页面截取的图片数量 %s 和显示的总数 %s 不一致" % (image_count, len(result["image_url_list"])))
     return result
 
 
@@ -90,84 +96,50 @@ class Nvshens(robot.Robot):
         total_image_count = 0
         is_over = False
         while not is_over and album_id <= newest_album_id:
-            log.step("开始解析%s号图集" % album_id)
+            log.step("开始解析图集%s" % album_id)
 
-            page_count = 1
             image_count = 1
-            this_album_image_count = 0
-            this_album_total_image_count = 0
-            album_title = ""
-            album_path = os.path.join(self.image_download_path, str(album_id))
-            while not is_over:
-                if page_count >= 100:
-                    log.error("%s号图集已解析到100页，可能有异常，退出" % album_id)
-                    break
+            # 获取图集
+            try:
+                album_pagination_response = get_album_photo(album_id)
+            except robot.RobotException, e:
+                log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
+                break
+            except SystemExit:
+                log.step("提前退出")
+                break
 
-                log.step("开始解析%s号图集第%s页" % (album_id, page_count))
+            if album_pagination_response["is_delete"]:
+                log.step("图集%s不存在，跳过" % album_id)
+                break
 
-                # 获取相册
+            log.trace("图集%s解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
+
+            # 过滤标题中不支持的字符
+            album_title = robot.filter_text(album_pagination_response["album_title"])
+            if album_title:
+                album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
+            else:
+                album_path = os.path.join(self.image_download_path, str(album_id))
+
+            for image_url in album_pagination_response["image_url_list"]:
+                log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+
+                file_type = image_url.split(".")[-1]
+                file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                 try:
-                    album_pagination_response = get_one_page_album(album_id, page_count)
-                except robot.RobotException, e:
-                    log.error("%s号图集第%s页解析失败，原因：%s" % (album_id, page_count, e.message))
-                    tool.remove_dir_or_file(album_path)
-                    break
+                    header_list = {"Referer": "https://www.nvshens.com/g/%s/" % album_id}
+                    save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
+                    if save_file_return["status"] == 1:
+                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
+                        image_count += 1
+                    else:
+                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
                     tool.remove_dir_or_file(album_path)
                     is_over = True
                     break
-
-                if album_pagination_response["is_delete"]:
-                    if page_count == 1:
-                        log.step("%s号图集不存在，跳过" % album_id)
-                        break
-                    else:
-                        log.error("%s号图集第%s页已删除" % (album_id, page_count))
-                        break
-
-                log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response["image_url_list"]))
-
-                # 过滤标题中不支持的字符
-                if page_count == 1:
-                    album_title = robot.filter_text(album_pagination_response["album_title"])
-                    if album_title:
-                        album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
-                    else:
-                        album_path = os.path.join(self.image_download_path, str(album_id))
-
-                    this_album_total_image_count = album_pagination_response["image_count"]
-                else:
-                    if this_album_total_image_count != album_pagination_response["image_count"]:
-                        log.error("%s号图集第%s页解析的总图片数不一致" % (album_id, page_count))
-
-                this_album_image_count += len(album_pagination_response["image_url_list"])
-                for image_url in album_pagination_response["image_url_list"]:
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
-
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                    try:
-                        header_list = {"Referer": "https://www.nvshens.com/g/%s/" % page_count}
-                        save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
-                        if save_file_return["status"] == 1:
-                            log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
-                            image_count += 1
-                        else:
-                             log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                    except SystemExit:
-                        log.step("提前退出")
-                        tool.remove_dir_or_file(album_path)
-                        is_over = True
-                        break
-
-                if not is_over:
-                    if album_pagination_response["is_over"]:
-                        if this_album_image_count != this_album_total_image_count:
-                            log.error("%s号图集解析的图片有缺失" % album_id)
-                        break
-                    else:
-                        page_count += 1
 
             if not is_over:
                 total_image_count += image_count - 1
