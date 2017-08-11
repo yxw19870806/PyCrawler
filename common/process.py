@@ -64,6 +64,11 @@ def continue_process():
     set_process_status(PROCESS_STATUS_RUN)
 
 
+def stop_process():
+    _print_msg("stop process")
+    set_process_status(PROCESS_STATUS_STOP)
+
+
 # 控制台输出
 def _print_msg(msg):
     # 终端输出编码

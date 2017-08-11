@@ -235,11 +235,18 @@ class Robot(object):
         if get_config(config, "IS_KEYBOARD_EVENT", True, 2):
             keyboard_event_bind = {}
             pause_process_key = get_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9", 0)
+            # 暂停进程
             if pause_process_key:
                 keyboard_event_bind[pause_process_key] = process.pause_process
+            # 继续进程
             continue_process_key = get_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10", 0)
             if continue_process_key:
                 keyboard_event_bind[continue_process_key] = process.continue_process
+            # 结束进程（取消当前的线程，完成任务）
+            stop_process_key = get_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12", 0)
+            if stop_process_key:
+                keyboard_event_bind[stop_process_key] = process.stop_process
+
             if keyboard_event_bind:
                 keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
                 keyboard_control_thread.setDaemon(True)
