@@ -10,31 +10,68 @@ import pyHook
 import threading
 
 
+SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
+                       "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "F1", "F2",
+                       "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "NUMPAD0", "NUMPAD1", "NUMPAD2",
+                       "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9", "INSERT", "HOME",
+                       "PRIOR", "DELETE", "END", "NEXT", "OEM_1", "OEM_2", "OEM_3", "OEM_4", "OEM_5", "OEM_6", "OEM_7",
+                       "OEM_COMMA", "OEM_PERIOD", "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "DECIMAL"]
+
 class KeyboardEvent(threading.Thread):
+    key_down_list ={
+        "LSHIFT": False,
+        "RSHIFT": False,
+        "LCONTROL": False,
+        "RCONTROL": False,
+        "LMENU": False,
+        "RMENU": False,
+    }
+
     def __init__(self, event_list):
         threading.Thread.__init__(self)
         # 按键 => 回调方法名
         filter_event_list = {}
         for key, function in event_list.iteritems():
-            key = key.capitalize()
+            event_function = event_list[key]
+            key = str(key).upper()
+            # 如果使用+号连接的组合键
+            if key.find("+") >= 0:
+                sub_key, key = key.split("+", 1)
+                sub_key = sub_key.strip()
+                key = key.strip()
+            else:
+                sub_key = ""
             # 判断是否在支持的按键里
-            if key in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                       "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "F1", "F2",
-                       "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "Numpad0", "Numpad1", "Numpad2",
-                       "Numpad3", "Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8", "Numpad9", "Insert", "Home",
-                       "Prior", "Delete", "End", "Next", "Oem_1", "Oem_2", "Oem_3", "Oem_4", "Oem_5", "Oem_6", "Oem_7",
-                       "Oem_Comma", "Oem_Period", "Add", "Subtract", "Multiply", "Divide", "Decimal"]:
-                filter_event_list[key] = event_list[key]
+            if key in SUPPORT_KEYBOARD_LIST:
+                filter_event_list[sub_key + " " + key] = event_function
         self.event_key_list = filter_event_list
 
     # 按键判断并执行方法
-    def on_keyboard_event(self, event):
-        if event.Key in self.event_key_list:
-            self.event_key_list[event.Key]()
+    def on_keyboard_down(self, event):
+        key = str(event.Key).upper()
+        if key in self.key_down_list:
+            self.key_down_list[key] = True
+        else:
+            # 如果有任意功能键按下，那么只判断组合键
+            if True in self.key_down_list.values():
+                for sub_key in ["SHIFT", "CONTROL", "MENU"]:
+                    # 如果功能键有按下
+                    if self.key_down_list["L" + sub_key] or self.key_down_list["R" + sub_key]:
+                        if sub_key + " " + key in self.event_key_list:
+                            self.event_key_list[sub_key + " " + key]()
+            else:
+                if key in self.event_key_list:
+                    self.event_key_list[key]()
+
+    def on_keyboard_up(self, event):
+        key = str(event.Key).upper()
+        if key in self.key_down_list:
+            self.key_down_list[key] = False
 
     # 监听所有键盘事件
     def run(self):
         hook_manager = pyHook.HookManager()
-        hook_manager.KeyDown = self.on_keyboard_event
+        hook_manager.KeyDown = self.on_keyboard_down
+        hook_manager.KeyUp = self.on_keyboard_up
         hook_manager.HookKeyboard()
         pythoncom.PumpMessages()
