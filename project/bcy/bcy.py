@@ -148,7 +148,7 @@ def get_one_page_album(account_id, page_count):
         album_id = str(album_url).split("/")[-1]
         if not robot.is_integer(album_id):
             raise robot.RobotException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
-        extra_album_info['album_id'] = int(album_id)
+        extra_album_info['album_id'] = album_id
         # 获取作品标题
         album_title = album_selector.find(".postWorkCard__img footer").text()
         extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
