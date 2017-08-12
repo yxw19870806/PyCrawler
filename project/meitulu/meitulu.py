@@ -53,7 +53,7 @@ def get_one_page_album(album_id):
         page_count += 1
     # 判断页面上的总数和实际地址数量是否一致
     if image_count != len(result["image_url_list"]):
-        raise robot.RobotException("页面截取的图片数量 %s 和显示的总数 %s 不一致" % (image_count, len(result["image_url_list"])))
+        log.error("图集%s 页面截取的图片数量 %s 和显示的总数 %s 不一致" % (album_id, image_count, len(result["image_url_list"])))
     return result
 
 
@@ -83,7 +83,7 @@ class MeiTuLu(robot.Robot):
             try:
                 album_pagination_response = get_one_page_album(album_id)
             except robot.RobotException,e:
-                log.error("第%s页图集解析失败，原因：%s" % (album_id, e.message))
+                log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                 break
             except SystemExit:
                 log.step("提前退出")
@@ -94,7 +94,7 @@ class MeiTuLu(robot.Robot):
                 album_id += 1
                 continue
 
-            log.trace("%s号图集解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
+            log.trace("图集%s解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
 
             # 过滤标题中不支持的字符
             album_title = robot.filter_text(album_pagination_response["album_title"])
