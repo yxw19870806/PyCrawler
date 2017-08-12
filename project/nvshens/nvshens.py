@@ -45,17 +45,17 @@ def get_album_photo(album_id):
         if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
             image_list_html = tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>")
             if not image_list_html:
-                raise robot.RobotException("页面截取图片列表失败\n%s" % album_pagination_response.data)
+                raise robot.RobotException("第%s页 页面截取图片列表失败\n%s" % album_pagination_response.data)
             image_url_list = re.findall("<img src='([^']*)'", image_list_html)
         elif album_pagination_response.data.find('<div class="caroufredsel_wrapper">') >= 0:
             image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>")
             if not image_list_html:
-                raise robot.RobotException("页面截取图片列表失败\n%s" % album_pagination_response.data)
+                raise robot.RobotException("第%s页 页面截取图片列表失败\n%s" % album_pagination_response.data)
             image_url_list = re.findall("src='([^']*)'", image_list_html)
         else:
-            raise robot.RobotException("未知的图集样式\n%s" % album_pagination_response.data)
+            raise robot.RobotException("第%s页 未知的图集样式\n%s" % album_pagination_response.data)
         if len(image_url_list) == 0:
-            raise robot.RobotException("第%s页，页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+            raise robot.RobotException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         result["image_url_list"] += map(str, image_url_list)
         # 获取总页数
         pagination_html = tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>")
