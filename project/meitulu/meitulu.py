@@ -38,7 +38,7 @@ def get_one_page_album(album_id, page_count):
     if len(page_count_find) > 0:
         max_page_count = max(map(int, page_count_find))
     else:
-        max_page_count = max(map(int, page_count_find))
+        max_page_count = 1
     result['is_over'] = page_count >= max_page_count
     return result
 
