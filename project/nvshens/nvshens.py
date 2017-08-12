@@ -41,15 +41,6 @@ def get_album_photo(album_id):
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
             if not result["album_title"]:
                 raise robot.RobotException("页面截取标题失败\n%s" % album_pagination_response.data)
-            # 获取总页数
-            pagination_html = tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>")
-            if pagination_html:
-                page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', pagination_html)
-                if len(page_count_find) == 0:
-                    raise robot.RobotException("分页信息截取最大页数失败\n%s" % pagination_html)
-                max_page_count = max(map(int, page_count_find))
-            else:
-                max_page_count == 1
         # 获取图集图片地址，两种不同的页面样式
         if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
             image_list_html = tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>")
@@ -66,6 +57,15 @@ def get_album_photo(album_id):
         if len(image_url_list) == 0:
             raise robot.RobotException("第%s页，页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         result["image_url_list"] += map(str, image_url_list)
+        # 获取总页数
+        pagination_html = tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>")
+        if pagination_html:
+            page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', pagination_html)
+            if len(page_count_find) == 0:
+                raise robot.RobotException("第%s页 分页信息截取最大页数失败\n%s" % pagination_html)
+            max_page_count = max(map(int, page_count_find))
+        else:
+            max_page_count == 1
         page_count += 1
     # 判断页面上的总数和实际地址数量是否一致
     if image_count != len(result["image_url_list"]):
