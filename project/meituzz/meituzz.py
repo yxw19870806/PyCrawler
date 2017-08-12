@@ -20,6 +20,7 @@ def get_album_page(page_count):
         album_url = "http://zz.mt27z.cn/ab/brVv22?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
     album_response = net.http_request(album_url)
     result = {
+        "is_over": False,  # 是不是已经结束
         "is_delete": False,  # 是不是相册已被删除（或还没有内容）
         "image_url_list": None,  # 所有图片地址
         "video_url": None,  # 所有视频地址
@@ -27,36 +28,40 @@ def get_album_page(page_count):
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取相册标题
+        result["is_over"] = album_response.data.find("<p>视频正在审核中<br><b>精彩需要耐心等待</b></p>") >= 0
+        if result["is_over"]:
+            return result
+        # 获取相册标题
         result["title"] = tool.find_sub_string(album_response.data, "<title>", "</title>").replace("\n", "")
-
         # 检测相册是否已被删除
         result["is_delete"] = result["title"] == "作品已被删除"
-        if not result["is_delete"]:
-            # 截取key
-            key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
-            if not key:
-                raise robot.RobotException("页面截取媒体key失败\n%s" % album_response.data)
-            # 调用API，获取相册资源
-            media_url = "http://zz.mt27z.cn/ab/bd"
-            post_data = {"y": page_count, "s": key}
-            media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
-            if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                if not robot.check_sub_key(("i",), media_response.json_data) and not robot.check_sub_key(("v",), media_response.json_data):
-                    raise robot.RobotException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
-                # 检测是否是图片相册
-                if robot.check_sub_key(("i",), media_response.json_data):
-                    if not (isinstance(media_response.json_data["i"], list) and len(media_response.json_data["i"]) > 0):
-                        raise robot.RobotException("图片相册'i'字段格式不正确\n%s" % album_response.json_data)
-                    result["image_url_list"] = []
-                    for image_info in media_response.json_data["i"]:
-                        if not robot.check_sub_key(("url",), image_info):
-                            raise robot.RobotException("图片相册'url'字段不存在\n%s" % album_response.json_data)
-                        result["image_url_list"].append(str(image_info["url"]))
-                # 检测是否是视频相册
-                if robot.check_sub_key(("v",), media_response.json_data):
-                    result["video_url"] = str(media_response.json_data["v"])
-            else:
-                raise robot.RobotException("媒体" + robot.get_http_request_failed_reason(media_response.status))
+        if result["is_delete"]:
+            return result
+        # 截取key
+        key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
+        if not key:
+            raise robot.RobotException("页面截取媒体key失败\n%s" % album_response.data)
+        # 调用API，获取相册资源
+        media_url = "http://zz.mt27z.cn/ab/bd"
+        post_data = {"y": page_count, "s": key}
+        media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
+        if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            if not robot.check_sub_key(("i",), media_response.json_data) and not robot.check_sub_key(("v",), media_response.json_data):
+                raise robot.RobotException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
+            # 检测是否是图片相册
+            if robot.check_sub_key(("i",), media_response.json_data):
+                if not (isinstance(media_response.json_data["i"], list) and len(media_response.json_data["i"]) > 0):
+                    raise robot.RobotException("图片相册'i'字段格式不正确\n%s" % album_response.json_data)
+                result["image_url_list"] = []
+                for image_info in media_response.json_data["i"]:
+                    if not robot.check_sub_key(("url",), image_info):
+                        raise robot.RobotException("图片相册'url'字段不存在\n%s" % album_response.json_data)
+                    result["image_url_list"].append(str(image_info["url"]))
+            # 检测是否是视频相册
+            if robot.check_sub_key(("v",), media_response.json_data):
+                result["video_url"] = str(media_response.json_data["v"])
+        else:
+            raise robot.RobotException("媒体" + robot.get_http_request_failed_reason(media_response.status))
     elif album_response.status == 500:
         result["is_delete"] = True
     else:
@@ -98,6 +103,10 @@ class MeiTuZZ(robot.Robot):
                 break
             except SystemExit:
                 log.step("提前退出")
+                album_id -= error_count
+                break
+
+            if album_response["is_over"]:
                 album_id -= error_count
                 break
 
