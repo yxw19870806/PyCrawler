@@ -60,7 +60,7 @@ def get_one_page_media(account_name, target_id):
         raise robot.RobotException("talk不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
-    return media_pagination_response
+    return result
 
 
 class NanaGoGo(robot.Robot):
