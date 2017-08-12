@@ -71,7 +71,7 @@ class MeiTuLu(robot.Robot):
         if os.path.exists(self.save_data_path):
             album_id = int(tool.read_file(self.save_data_path))
         else:
-            album_id = 3
+            album_id = 1
 
         total_image_count = 0
         is_over = False
