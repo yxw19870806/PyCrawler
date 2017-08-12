@@ -67,7 +67,6 @@ class MeiTuLu(robot.Robot):
             page_count = 1
             image_count = 1
             album_title = ""
-            album_path = os.path.join(self.image_download_path, str(album_id))
             while True:
                 log.step("开始解析%s号图集第%s页" % (album_id, page_count))
                 # 获取相册
@@ -92,9 +91,9 @@ class MeiTuLu(robot.Robot):
                 if page_count == 1:
                     album_title = robot.filter_text(album_pagination_response["album_title"])
                     if album_title:
-                        album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
+                        album_path = os.path.join(self.image_download_path, "%03d %s" % (album_id, album_title))
                     else:
-                        album_path = os.path.join(self.image_download_path, str(album_id))
+                        album_path = os.path.join(self.image_download_path, "%03d" % album_id)
 
                 for image_url in album_pagination_response["image_url_list"]:
                     log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
