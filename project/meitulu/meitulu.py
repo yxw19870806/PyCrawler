@@ -12,34 +12,48 @@ import re
 
 
 # 获取指定一页的图集
-def get_one_page_album(album_id, page_count):
-    if page_count == 1:
-        album_pagination_url = "https://www.meitulu.com/item/%s.html" % album_id
-    else:
-        album_pagination_url = "https://www.meitulu.com/item/%s_%s.html" % (album_id, page_count)
-    album_pagination_response = net.http_request(album_pagination_url)
+def get_one_page_album(album_id):
+    page_count = max_page_count = 1
+    image_count = 0
     result = {
         "is_delete": False,  # 是不是已经被删除
-        "is_over": False,  # 是不是图集的最后一页
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 所有图片地址
     }
-    if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
-    # 判断图集是否已经被删除
-    result["is_delete"] = album_pagination_response.data.find("全站内容整理中, 请从首页重新访问!") >= 0
-    # 获取图集标题
-    result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
-    # 获取图集图片地址
-    image_url_list = re.findall('<img src="([^"]*)"', tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>"))
-    result["image_url_list"] = map(str, image_url_list)
-    # 判断是不是最后一页
-    page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
-    if len(page_count_find) > 0:
-        max_page_count = max(map(int, page_count_find))
-    else:
-        max_page_count = 1
-    result['is_over'] = page_count >= max_page_count
+    while page_count <= max_page_count:
+        if page_count == 1:
+            album_pagination_url = "https://www.meitulu.com/item/%s.html" % album_id
+        else:
+            album_pagination_url = "https://www.meitulu.com/item/%s_%s.html" % (album_id, page_count)
+        album_pagination_response = net.http_request(album_pagination_url)
+        if page_count == 1 and album_pagination_response.status == 404:
+            result["is_delete"] = True
+            return result
+        elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(album_pagination_response.status))
+        if page_count == 1:
+            # 获取图集图片总数
+            image_count = tool.find_sub_string(album_pagination_response.data, "<p>图片数量：", "张</p>").strip()
+            if not robot.is_integer(image_count):
+                raise robot.RobotException("页面截取图片总数失败\n%s" % album_pagination_response.data)
+            image_count = int(image_count)
+            # 获取图集标题
+            result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
+        # 获取图集图片地址
+        image_url_list = re.findall('<img src="([^"]*)"', tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>"))
+        if len(image_url_list) == 0:
+            raise robot.RobotException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+        result["image_url_list"] += map(str, image_url_list)
+        # 判断是不是最后一页
+        page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
+        if len(page_count_find) > 0:
+            max_page_count = max(map(int, page_count_find))
+        else:
+            max_page_count = 1
+        page_count += 1
+    # 判断页面上的总数和实际地址数量是否一致
+    if image_count != len(result["image_url_list"]):
+        raise robot.RobotException("页面截取的图片数量 %s 和显示的总数 %s 不一致" % (image_count, len(result["image_url_list"])))
     return result
 
 
@@ -57,66 +71,55 @@ class MeiTuLu(robot.Robot):
         if os.path.exists(self.save_data_path):
             album_id = int(tool.read_file(self.save_data_path))
         else:
-            album_id = 1
+            album_id = 3
 
         total_image_count = 0
         is_over = False
         while not is_over:
-            log.step("开始解析%s号图集" % album_id)
+            log.step("开始解析图集%s" % album_id)
 
-            page_count = 1
             image_count = 1
-            album_title = ""
-            while True:
-                log.step("开始解析%s号图集第%s页" % (album_id, page_count))
-                # 获取相册
+            # 获取相册
+            try:
+                album_pagination_response = get_one_page_album(album_id)
+            except robot.RobotException,e:
+                log.error("第%s页图集解析失败，原因：%s" % (album_id, e.message))
+                break
+            except SystemExit:
+                log.step("提前退出")
+                break
+
+            if album_pagination_response["is_delete"]:
+                log.step("图集%s不存在，跳过" % album_id)
+                album_id += 1
+                continue
+
+            log.trace("%s号图集解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
+
+            # 过滤标题中不支持的字符
+            album_title = robot.filter_text(album_pagination_response["album_title"])
+            if album_title:
+                album_path = os.path.join(self.image_download_path, "%03d %s" % (album_id, album_title))
+            else:
+                album_path = os.path.join(self.image_download_path, "%03d" % album_id)
+
+            for image_url in album_pagination_response["image_url_list"]:
+                log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+
+                file_type = image_url.split(".")[-1]
+                file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                 try:
-                    album_pagination_response = get_one_page_album(album_id, page_count)
-                except robot.RobotException,e:
-                    log.error("第%s页图集解析失败，原因：%s" % (album_id, e.message))
-                    is_over = True
-                    if page_count != 1:
-                        tool.remove_dir_or_file(album_path)
-                    break
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
+                        image_count += 1
+                    else:
+                         log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
+                    tool.remove_dir_or_file(album_path)
                     is_over = True
-                    if page_count != 1:
-                        tool.remove_dir_or_file(album_path)
                     break
-
-                log.trace("%s号图集第%s页的所有图片：%s" % (album_id, page_count, album_pagination_response["image_url_list"]))
-
-                # 过滤标题中不支持的字符
-                if page_count == 1:
-                    album_title = robot.filter_text(album_pagination_response["album_title"])
-                    if album_title:
-                        album_path = os.path.join(self.image_download_path, "%03d %s" % (album_id, album_title))
-                    else:
-                        album_path = os.path.join(self.image_download_path, "%03d" % album_id)
-
-                for image_url in album_pagination_response["image_url_list"]:
-                    log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
-
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                    try:
-                        save_file_return = net.save_net_file(image_url, file_path)
-                        if save_file_return["status"] == 1:
-                            log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
-                            image_count += 1
-                        else:
-                             log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                    except SystemExit:
-                        log.step("提前退出")
-                        tool.remove_dir_or_file(album_path)
-                        is_over = True
-                        break
-
-                if is_over or album_pagination_response["is_over"]:
-                    break
-                else:
-                    page_count += 1
 
             if not is_over:
                 total_image_count += image_count - 1
