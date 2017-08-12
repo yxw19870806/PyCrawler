@@ -123,7 +123,8 @@ class Nvshens(robot.Robot):
 
             if album_pagination_response["is_delete"]:
                 log.step("图集%s不存在，跳过" % album_id)
-                break
+                album_id += 1
+                continue
 
             log.trace("图集%s解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
 
