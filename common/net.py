@@ -22,8 +22,9 @@ HTTP_REQUEST_RETRY_COUNT = 10
 urllib3.disable_warnings()
 
 HTTP_RETURN_CODE_RETRY = 0
-HTTP_RETURN_CODE_URL_INVALID = -1
-HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2
+HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
+HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
+HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
 
@@ -164,7 +165,10 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                 tool.process_exit(0)
         except urllib3.exceptions.ReadTimeoutError:
             pass
-        except urllib3.exceptions.ConnectTimeoutError:
+        except urllib3.exceptions.ConnectTimeoutError, e:
+            # 域名无法解析
+            if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
+                return ErrorResponse(HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
             pass
         # except urllib3.exceptions.MaxRetryError, e:
         #     print_msg(url)

@@ -461,7 +461,9 @@ def get_http_request_failed_reason(return_code):
     elif return_code == net.HTTP_RETURN_CODE_URL_INVALID:
         return "URL格式错误"
     elif return_code == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR:
-        return "返回的不是一个有效的JSON格式"
+        return "返回信息不是一个有效的JSON格式"
+    elif return_code == net.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
+        return "域名无法解析"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
     else:
