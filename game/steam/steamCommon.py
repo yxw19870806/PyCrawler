@@ -45,11 +45,12 @@ def get_discount_game_list(login_cookie):
     discount_game_list = []
     app_id_list = []
     while True:
+        tool.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         cookies_list = {"steamLogin": login_cookie}
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, cookies_list=cookies_list)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException("第%s页打折游戏列表访问失败" % page_count)
+            raise robot.RobotException("第%s页打折游戏解析失败" % page_count)
         search_result_selector = pq(discount_game_pagination_response.data).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
         for game_index in range(0, game_list_selector.size()):
