@@ -22,16 +22,19 @@ def get_account_from_save_data(file_path):
 # 调用推荐API获取所有推荐账号
 def get_account_from_api():
     api_url = "https://api.yasaxi.com/users/recommend?tag="
-    header_list = {
-        "x-auth-token": yasaxiCommon.AUTH_TOKEN,
-        "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO,
-    }
+    header_list = {"x-auth-token": yasaxiCommon.AUTH_TOKEN, "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO}
     account_list = {}
     api_response = net.http_request(api_url, header_list=header_list, json_decode=True)
-    if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("data",), api_response.json_data):
-            for account_info in api_response.json_data["data"]:
-                account_list[str(account_info["userId"].encode("UTF-8"))] = str(robot.filter_emoji(account_info["nick"]).encode("UTF-8")).strip()
+    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
+    if not robot.check_sub_key(("data",), api_response.json_data):
+        raise robot.RobotException("返回信息'data'字段不存在\n%s" % api_response.json_data)
+    for account_info in api_response.json_data["data"]:
+        if not robot.check_sub_key(("userId",), account_info):
+            raise robot.RobotException("账号信息'userId'字段不存在\n%s" % account_info)
+        if not robot.check_sub_key(("nick",), account_info):
+            raise robot.RobotException("账号信息'nick'字段不存在\n%s" % account_info)
+        account_list[str(account_info["userId"].encode("UTF-8"))] = str(robot.filter_emoji(account_info["nick"]).encode("UTF-8")).strip()
     return account_list
 
 
@@ -40,7 +43,11 @@ def main():
         config = robot.read_config(tool.PROJECT_CONFIG_PATH)
         # 存档位置
         save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
-        account_list_from_api = get_account_from_api()
+        try:
+            account_list_from_api = get_account_from_api()
+        except robot.RobotException, e:
+            tool.print_msg("推荐账号解析失败，原因：%s" % e.message)
+            raise
         if len(account_list_from_api) > 0:
             account_list_from_save_data = get_account_from_save_data(save_data_path)
             for account_id in account_list_from_api:
