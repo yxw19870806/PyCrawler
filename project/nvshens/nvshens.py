@@ -73,16 +73,20 @@ def get_album_photo(album_id):
     return result
 
 
-# 从专辑首页获取最新的专辑id
-def get_newest_album_id():
+# 获取图集首页
+def get_index_page():
     index_url = "https://www.nvshens.com/gallery/"
     index_response = net.http_request(index_url)
-    max_album_id = None
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
-        if len(album_id_find) > 0:
-            max_album_id = max(map(int, album_id_find))
-    return max_album_id
+    result = {
+        "max_album_id": None,  # 最新图集id
+    }
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+    album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
+    if len(album_id_find) == 0:
+        raise robot.RobotException("页面匹配图集id失败\n%s" % index_response.data)
+    result["max_album_id"] = max(map(int, album_id_find))
+    return result
 
 
 class Nvshens(robot.Robot):
@@ -100,14 +104,16 @@ class Nvshens(robot.Robot):
         else:
             album_id = 10000
 
-        newest_album_id = get_newest_album_id()
-        if newest_album_id is None:
-            log.error("最新图集id解析失败")
-            tool.process_exit()
+        # 获取图集首页
+        try:
+            index_response = get_index_page()
+        except robot.RobotException, e:
+            log.error("图集首页解析失败，原因：%s" % e.message)
+            raise
 
         total_image_count = 0
         is_over = False
-        while not is_over and album_id <= newest_album_id:
+        while not is_over and album_id <= index_response["max_album_id"]:
             log.step("开始解析图集%s" % album_id)
 
             image_count = 1
