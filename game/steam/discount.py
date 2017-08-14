@@ -15,7 +15,7 @@ import steamCommon
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
-DISCOUNT_DATA_PATH = os.path.join("discount.txt")
+DISCOUNT_DATA_PATH = os.path.realpath(os.path.join("discount.txt"))
 
 
 # 打折游戏列表保存到文件
