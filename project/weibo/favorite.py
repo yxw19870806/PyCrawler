@@ -58,7 +58,6 @@ def get_one_page_favorite(page_count):
         if not robot.is_integer(blog_id):
             raise robot.RobotException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
         extra_blog_info["blog_id"] = str(blog_id)
-
         # WB_text       微博文本
         # WB_media_wrap 微博媒体（图片）
         # .WB_feed_expand .WB_expand     转发的微博，下面同样包含WB_text、WB_media_wrap这些结构
