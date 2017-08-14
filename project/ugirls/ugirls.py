@@ -46,16 +46,22 @@ def get_album_page(album_id):
 
 
 # 从图集首页获取最新的图集id
-def get_newest_album_id():
+def get_index_page():
     index_url = "http://www.ugirls.com/Content/"
     index_response = net.http_request(index_url)
-    max_album_id = None
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        album_list_html = tool.find_sub_string(index_response.data, '<div class="magazine_list_wrap">', '<div class="xfenye">')
-        album_id_find = re.findall('href="http://www.ugirls.com/Shop/Detail/Product-(\d*).html" target="_blank"', album_list_html)
-        if len(album_id_find) > 0:
-            max_album_id = max(map(int, list(set(album_id_find))))
-    return max_album_id
+    result = {
+        "max_album_id": None,  # 最新图集id
+    }
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+    album_list_html = tool.find_sub_string(index_response.data, '<div class="magazine_list_wrap">', '<div class="xfenye">')
+    if not album_list_html:
+        raise robot.RobotException("页面截取图集列表失败\n%s" % index_response.data)
+    album_id_find = re.findall('href="http://www.ugirls.com/Shop/Detail/Product-(\d*).html" target="_blank"', album_list_html)
+    if len(album_id_find) == 0:
+        raise robot.RobotException("图集列表匹配图集id失败\n%s" % index_response.data)
+    result["max_album_id"] = max(map(int, list(set(album_id_find))))
+    return result
 
 
 class UGirls(robot.Robot):
@@ -73,15 +79,16 @@ class UGirls(robot.Robot):
         else:
             album_id = 1
 
-        newest_album_id = get_newest_album_id()
-
-        if newest_album_id is None:
-            log.error("最新图集id解析失败")
-            tool.process_exit()
+        # 获取图集首页
+        try:
+            index_response = get_index_page()
+        except robot.RobotException, e:
+            log.error("图集首页解析失败，原因：%s" % e.message)
+            raise
 
         total_image_count = 0
         is_over = False
-        while not is_over and album_id <= newest_album_id:
+        while not is_over and album_id <= index_response["max_album_id"]:
             log.step("开始解析第%s页图集" % album_id)
 
             # 获取相册
