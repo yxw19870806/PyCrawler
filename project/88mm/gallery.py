@@ -71,36 +71,42 @@ def get_one_page_album(sub_path, page_count):
     return result
 
 
-# 获取图集一页的图片
-def get_one_page_photo(sub_path, page_id, page_count):
-    if page_count == 1:
-        photo_pagination_url = "http://www.88mmw.com/%s/%s" % (sub_path, page_id)
-    else:
-        photo_pagination_url = "http://www.88mmw.com/%s/%s/index_%s.html" % (sub_path, page_id, page_count)
-    photo_pagination_response = net.http_request(photo_pagination_url)
+# 获取图集所有图片
+def get_album_photo(sub_path, page_id):
+    page_count = 1
     result = {
-        "is_over": False,  # 是不是图集的最后一页
         "image_url_list": [],  # 所有图片地址
     }
-    if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    # 页面编码
-    photo_pagination_html = photo_pagination_response.data.decode("GBK").encode("UTF-8")
-    # 获取图片地址
-    image_info_html = tool.find_sub_string(photo_pagination_html, '<div class="zzz">', "</div>")
-    if not image_info_html:
-        raise robot.RobotException("页面截取图片列表失败\n%s" % photo_pagination_html)
-    image_url_list = re.findall('<img src="([^"]*)"', image_info_html)
-    if len(image_url_list) == 0:
-        raise robot.RobotException("页面匹配图片地址失败\n%s" % image_info_html)
-    for image_url in image_url_list:
-        result["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
-    # 判断是不是最后一页
-    max_page_count = tool.find_sub_string(photo_pagination_html, '<div class="page"><span>共 <strong>', '</strong> 页')
-    if not max_page_count:
-        result['is_over'] = True
-    elif robot.is_integer(max_page_count):
-        result['is_over'] = page_count >= int(max_page_count)
+    while True:
+        if page_count == 1:
+            photo_pagination_url = "http://www.88mmw.com/%s/%s" % (sub_path, page_id)
+        else:
+            photo_pagination_url = "http://www.88mmw.com/%s/%s/index_%s.html" % (sub_path, page_id, page_count)
+        photo_pagination_response = net.http_request(photo_pagination_url)
+        if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(photo_pagination_response.status))
+        # 页面编码
+        photo_pagination_html = photo_pagination_response.data.decode("GBK").encode("UTF-8")
+        # 获取图片地址
+        image_info_html = tool.find_sub_string(photo_pagination_html, '<div class="zzz">', "</div>")
+        if not image_info_html:
+            raise robot.RobotException("第%s页，页面截取图片列表失败\n%s" % (page_count, photo_pagination_html))
+        image_url_list = re.findall('<img src="([^"]*)"', image_info_html)
+        if len(image_url_list) == 0:
+            raise robot.RobotException("第%s页，页面匹配图片地址失败\n%s" % (page_count, image_info_html))
+        for image_url in image_url_list:
+            result["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
+        # 判断是不是最后一页
+        is_over = False
+        max_page_count = tool.find_sub_string(photo_pagination_html, '<div class="page"><span>共 <strong>', '</strong> 页')
+        if not max_page_count:
+            is_over = True
+        elif robot.is_integer(max_page_count):
+            is_over = page_count >= int(max_page_count)
+        if is_over:
+            break
+        else:
+            page_count += 1
     return result
 
 
@@ -206,46 +212,34 @@ class Download(threading.Thread):
                     if first_page_id is None:
                         first_page_id = album_info["page_id"]
 
-                    album_page_count = 1
                     image_count = 1
                     album_path = os.path.join(IMAGE_DOWNLOAD_PATH, sub_path, album_info["album_title"])
-                    while True:
-                        try:
-                            photo_pagination_response = get_one_page_photo(sub_path, album_info["page_id"], album_page_count)
-                        except robot.RobotException, e:
-                            log.error(sub_path + " %s号图集第%s页解析失败，原因：%s" % (album_info["page_id"], album_page_count, e.message))
-                            raise
-                        except SystemExit:
-                            log.step("提前退出")
-                            raise
+                    # 获取图集所有图片
+                    try:
+                        photo_pagination_response = get_album_photo(sub_path, album_info["page_id"])
+                    except robot.RobotException, e:
+                        log.error(sub_path + " %s号图集解析失败，原因：%s" % (album_info["page_id"], e.message))
+                        raise
 
-                        log.trace(sub_path + " %s号图集第%s页解析的所有图集：%s" % (album_info["page_id"], album_page_count, album_pagination_response["album_info_list"]))
+                    log.trace(sub_path + " %s号图集解析的所有图集：%s" % (album_info["page_id"], album_pagination_response["album_info_list"]))
 
-                        for image_url in photo_pagination_response["image_url_list"]:
-                            log.step(sub_path + " %s号图集 开始下载第%s张图片 %s" % (album_info["page_id"], image_count, image_url))
+                    for image_url in photo_pagination_response["image_url_list"]:
+                        log.step(sub_path + " %s号图集 开始下载第%s张图片 %s" % (album_info["page_id"], image_count, image_url))
 
-                            file_type = image_url.split(".")[-1]
-                            file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                            save_file_return = net.save_net_file(image_url, file_path)
-                            if save_file_return["status"] == 1:
-                                log.step(sub_path + " %s号图集 第%s张图片下载成功" % (album_info["page_id"], image_count))
-                                image_count += 1
-                            else:
-                                 log.error(sub_path + " %s号图集 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                        if is_over or photo_pagination_response["is_over"]:
-                            break
+                        file_type = image_url.split(".")[-1]
+                        file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
+                        save_file_return = net.save_net_file(image_url, file_path)
+                        if save_file_return["status"] == 1:
+                            log.step(sub_path + " %s号图集 第%s张图片下载成功" % (album_info["page_id"], image_count))
+                            image_count += 1
                         else:
-                            album_page_count += 1
+                            log.error(sub_path + " %s号图集 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                    if is_over:
-                        break
-                    else:
-                        total_image_count += image_count
+                    total_image_count += image_count
 
                 if not is_over:
                     if album_pagination_response["is_over"]:
-                        break
+                        is_over = True
                     else:
                         page_count += 1
 
