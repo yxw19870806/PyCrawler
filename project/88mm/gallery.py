@@ -90,10 +90,10 @@ def get_album_photo(sub_path, page_id):
         # 获取图片地址
         image_info_html = tool.find_sub_string(photo_pagination_html, '<div class="zzz">', "</div>")
         if not image_info_html:
-            raise robot.RobotException("第%s页，页面截取图片列表失败\n%s" % (page_count, photo_pagination_html))
+            raise robot.RobotException("第%s页 页面截取图片列表失败\n%s" % (page_count, photo_pagination_html))
         image_url_list = re.findall('<img src="([^"]*)"', image_info_html)
         if len(image_url_list) == 0:
-            raise robot.RobotException("第%s页，页面匹配图片地址失败\n%s" % (page_count, image_info_html))
+            raise robot.RobotException("第%s页 页面匹配图片地址失败\n%s" % (page_count, image_info_html))
         for image_url in image_url_list:
             result["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
         # 判断是不是最后一页
