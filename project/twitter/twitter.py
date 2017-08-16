@@ -351,7 +351,7 @@ class Download(threading.Thread):
                                     image_count += 1
                                 elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
                                     log.error(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_count, image_url))
-                                elif save_file_return["status"] == 0 and save_file_return["code"] == 500:
+                                elif save_file_return["status"] == 0 and save_file_return["code"] in [500, 503, 504]:
                                     log.step(account_name + " 第%s张图片 %s 下载异常，重试" % (image_count, image_url))
                                     continue
                                 else:
