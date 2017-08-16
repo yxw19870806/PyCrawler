@@ -177,7 +177,7 @@ def twitter():
     from twitter import twitter
     twitter_path = os.path.join(ROOT_PATH, "twitter")
     os.chdir(twitter_path)
-    for i in range(1, 5):
+    for i in range(1, 6):
         save_data_path = os.path.join(twitter_path, "info\\save_%s.data" % i)
         image_download_path = os.path.join(twitter_path, "photo\\twitter%s" % i)
         image_temp_path = os.path.join(image_download_path, "tempImage")
