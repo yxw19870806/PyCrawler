@@ -17,6 +17,12 @@ SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", 
                        "PRIOR", "DELETE", "END", "NEXT", "OEM_1", "OEM_2", "OEM_3", "OEM_4", "OEM_5", "OEM_6", "OEM_7",
                        "OEM_COMMA", "OEM_PERIOD", "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "DECIMAL"]
 
+SUPPORT_SUB_KEYBOARD_LIST = {
+    "CTRL": "CONTROL",
+    "SHIFT": "SHIFT",
+    "ALT": "MENU",
+}
+
 class KeyboardEvent(threading.Thread):
     key_down_list ={
         "LSHIFT": False,
@@ -26,11 +32,11 @@ class KeyboardEvent(threading.Thread):
         "LMENU": False,
         "RMENU": False,
     }
+    # 按键名 => 回调方法名
+    event_key_list = {}
 
     def __init__(self, event_list):
         threading.Thread.__init__(self)
-        # 按键 => 回调方法名
-        filter_event_list = {}
         for key, function in event_list.iteritems():
             event_function = event_list[key]
             key = str(key).upper()
@@ -38,13 +44,16 @@ class KeyboardEvent(threading.Thread):
             if key.find("+") >= 0:
                 sub_key, key = key.split("+", 1)
                 sub_key = sub_key.strip()
+                # 不在支持的组合键控制按键中
+                if sub_key not in SUPPORT_SUB_KEYBOARD_LIST:
+                    continue
+                sub_key = SUPPORT_SUB_KEYBOARD_LIST[sub_key] + " "
                 key = key.strip()
             else:
                 sub_key = ""
             # 判断是否在支持的按键里
             if key in SUPPORT_KEYBOARD_LIST:
-                filter_event_list[sub_key + " " + key] = event_function
-        self.event_key_list = filter_event_list
+                self.event_key_list[sub_key + key] = event_function
 
     # 按键判断并执行方法
     def on_keyboard_down(self, event):
