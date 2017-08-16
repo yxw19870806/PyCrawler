@@ -35,10 +35,15 @@ def get_one_page_album(album_id):
             # 获取图集标题
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
         # 获取图集图片地址
-        image_url_list = re.findall('<img src="([^"]*)"', tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>"))
+        image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>")
+        if not image_list_html:
+            raise robot.RobotException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response.data))
+        image_url_list = re.findall('<img src="([^"]*)"', image_list_html)
         if len(image_url_list) == 0:
-            raise robot.RobotException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
-        result["image_url_list"] += map(str, image_url_list)
+            if image_list_html.strip() != "<center></center>":
+                raise robot.RobotException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+        else:
+            result["image_url_list"] += map(str, image_url_list)
         # 判断是不是最后一页
         page_count_find = re.findall('">(\d*)</a>', tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>"))
         if len(page_count_find) > 0:
