@@ -214,13 +214,11 @@ def _random_user_agent():
     os_type = random.choice(windows_version_list)
     if browser_type == "firefox":
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
-        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" \
-               % (os_type, firefox_version, firefox_version)
+        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
     elif browser_type == "chrome":
         sub_version = random.randint(1, 100)
         chrome_version = random.choice(chrome_version_list)
-        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" \
-               % (os_type, chrome_version, sub_version)
+        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
     return ""
 
 

@@ -336,25 +336,26 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 # default_value_list 每一位的默认值
 def read_save_data(save_data_path, key_index, default_value_list):
     result_list = {}
-    if os.path.exists(save_data_path):
-        for single_save_data in tool.read_file(save_data_path, 2):
-            single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
-            if len(single_save_data) == 0:
-                continue
-            single_save_list = single_save_data.split("\t")
+    if not os.path.exists(save_data_path):
+        return result_list
+    for single_save_data in tool.read_file(save_data_path, 2):
+        single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
+        if len(single_save_data) == 0:
+            continue
+        single_save_list = single_save_data.split("\t")
 
-            # 根据default_value_list给没给字段默认值
-            index = 0
-            for default_value in default_value_list:
-                # _开头表示和该数组下标的值一直，如["", "_0"] 表示第1位为空时数值和第0位一致
-                if default_value != "" and default_value[0] == "_":
-                    default_value = single_save_list[int(default_value.replace("_", ""))]
-                if len(single_save_list) <= index:
-                    single_save_list.append(default_value)
-                if single_save_list[index] == "":
-                    single_save_list[index] = default_value
-                index += 1
-            result_list[single_save_list[key_index]] = single_save_list
+        # 根据default_value_list给没给字段默认值
+        index = 0
+        for default_value in default_value_list:
+            # _开头表示和该数组下标的值一直，如["", "_0"] 表示第1位为空时数值和第0位一致
+            if default_value != "" and default_value[0] == "_":
+                default_value = single_save_list[int(default_value.replace("_", ""))]
+            if len(single_save_list) <= index:
+                single_save_list.append(default_value)
+            if single_save_list[index] == "":
+                single_save_list[index] = default_value
+            index += 1
+        result_list[single_save_list[key_index]] = single_save_list
     return result_list
 
 
