@@ -212,8 +212,6 @@ class Download(threading.Thread):
                     if first_page_id is None:
                         first_page_id = album_info["page_id"]
 
-                    image_count = 1
-                    album_path = os.path.join(IMAGE_DOWNLOAD_PATH, sub_path, album_info["album_title"])
                     # 获取图集所有图片
                     try:
                         photo_pagination_response = get_album_photo(sub_path, album_info["page_id"])
@@ -221,19 +219,25 @@ class Download(threading.Thread):
                         log.error(sub_path + " %s号图集解析失败，原因：%s" % (album_info["page_id"], e.message))
                         raise
 
-                    log.trace(sub_path + " %s号图集解析的所有图集：%s" % (album_info["page_id"], album_pagination_response["album_info_list"]))
+                    log.trace(sub_path + " %s号图集《%s》解析的所有图集：%s" % (album_info["page_id"], album_info["album_title"], album_pagination_response["album_info_list"]))
 
+                    image_count = 1
+                    album_title = robot.filter_text(album_info["album_title"])
+                    if album_title:
+                        album_path = os.path.join(IMAGE_DOWNLOAD_PATH, "%04d %s" % (int(album_info["page_id"]), album_title))
+                    else:
+                        album_path = os.path.join(IMAGE_DOWNLOAD_PATH, "%04d" % int(album_info["page_id"]))
                     for image_url in photo_pagination_response["image_url_list"]:
-                        log.step(sub_path + " %s号图集 开始下载第%s张图片 %s" % (album_info["page_id"], image_count, image_url))
+                        log.step(sub_path + " %s号图集《%s》 开始下载第%s张图片 %s" % (album_info["page_id"], album_info["album_title"], image_count, image_url))
 
                         file_type = image_url.split(".")[-1]
                         file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                         save_file_return = net.save_net_file(image_url, file_path)
                         if save_file_return["status"] == 1:
-                            log.step(sub_path + " %s号图集 第%s张图片下载成功" % (album_info["page_id"], image_count))
+                            log.step(sub_path + " %s号图集《%s》 第%s张图片下载成功" % (album_info["page_id"], album_info["album_title"], image_count))
                             image_count += 1
                         else:
-                            log.error(sub_path + " %s号图集 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                     total_image_count += image_count
 
