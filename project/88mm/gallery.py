@@ -63,7 +63,7 @@ def get_one_page_album(sub_path, page_count):
             extra_album_info["album_title"] = album_title
         result["album_info_list"].append(extra_album_info)
     # 判断是不是最后一页
-    max_page_find = re.findall("<a href='list_1_(\d*).html'>末页</a>", album_pagination_html)
+    max_page_find = re.findall("<a href='list_" + SUB_PATH_LIST[sub_path] + "_(\d*).html'>末页</a>", album_pagination_html)
     if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and robot.is_integer(max_page_find[0]):
         result['is_over'] = page_count >= int(max_page_find[0])
     else:
