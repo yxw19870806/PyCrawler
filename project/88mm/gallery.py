@@ -9,9 +9,11 @@ email: hikaru870806@hotmail.com
 from common import log, net, robot, tool
 import os
 import re
+import string
 import threading
 import time
 import traceback
+import urllib
 
 SUB_PATH_LIST = {
     "Rosi": "1",
@@ -244,9 +246,9 @@ class Download(threading.Thread):
                 # 正在下载的目录
                 self.temp_path = album_path
                 for image_url in photo_pagination_response["image_url_list"]:
+                    image_url = urllib.quote(image_url, safe=string.printable.replace(" ", ""))
                     log.step(sub_path + " %s号图集《%s》 开始下载第%s张图片 %s" % (album_info["page_id"], album_info["album_title"], image_count, image_url))
 
-                    image_url = image_url.replace(" ", "%20")
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
