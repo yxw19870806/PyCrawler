@@ -392,8 +392,8 @@ class Download(threading.Thread):
                 self.account_info[4] = first_tweet_id
 
             # 保存最后的信息
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             self.thread_lock.acquire()
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += image_count - 1
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_name)

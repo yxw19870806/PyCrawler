@@ -232,8 +232,8 @@ class Download(threading.Thread):
             log.step(account_name + " 下载完毕，总共获得%s首歌曲" % (video_count - 1))
 
             # 保存最后的信息
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             self.thread_lock.acquire()
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_VIDEO_COUNT += video_count - 1
             ACCOUNTS.remove(account_id)
             self.thread_lock.release()

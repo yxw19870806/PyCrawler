@@ -246,8 +246,8 @@ class Download(threading.Thread):
                 self.account_info[1] = first_post_id
 
             # 保存最后的信息
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             self.thread_lock.acquire()
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += this_account_total_image_count
             ACCOUNTS.remove(account_name)
             self.thread_lock.release()

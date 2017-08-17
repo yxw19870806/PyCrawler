@@ -272,8 +272,8 @@ class Download(threading.Thread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
         self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
         TOTAL_IMAGE_COUNT += total_image_count
         ACCOUNTS.remove(sub_path)
         self.thread_lock.release()
