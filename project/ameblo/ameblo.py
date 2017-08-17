@@ -202,14 +202,10 @@ class Ameblo(robot.Robot):
 
         # 未完成的数据保存
         if len(ACCOUNTS) > 0:
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for account_name in ACCOUNTS:
-                # account_name  image_count  last_blog_time
-                new_save_data_file.write("\t".join(account_list[account_name]) + "\n")
-            new_save_data_file.close()
-
-        # 删除临时文件夹
-        self.finish_task()
+            with open(NEW_SAVE_DATA_PATH, "a") as new_save_data_file:
+                for account_name in ACCOUNTS:
+                    # account_name  image_count  last_blog_time
+                    new_save_data_file.write("\t".join(account_list[account_name]) + "\n")
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
@@ -272,6 +268,7 @@ class Download(threading.Thread):
 
             log.step(account_name + " 需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
 
+            # 从最早的日志开始下载
             while len(blog_id_list) > 0:
                 blog_id = blog_id_list.pop()
                 log.step(account_name + " 开始解析日志%s" % blog_id)
