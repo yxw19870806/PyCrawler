@@ -228,6 +228,9 @@ class Download(threading.Thread):
             # 从最早的图集开始下载
             while len(album_info_list) > 0:
                 album_info = album_info_list.pop()
+
+                log.step(sub_path + " 开始解析%s号图集" % album_info["page_id"])
+
                 # 获取图集所有图片
                 try:
                     photo_pagination_response = get_album_photo(sub_path, album_info["page_id"])
