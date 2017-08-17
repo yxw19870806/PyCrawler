@@ -6,6 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import tool
+import threading
 
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False
@@ -13,6 +14,7 @@ IS_SHOW_TRACE = False
 ERROR_LOG_PATH = ""
 STEP_LOG_PATH = ""
 TRACE_LOG_PATH = ""
+thread_lock = threading.Lock()
 
 
 def error(msg):
@@ -20,7 +22,9 @@ def error(msg):
     if IS_SHOW_ERROR:
         tool.print_msg(msg, False)
     if ERROR_LOG_PATH != "":
+        thread_lock.acquire()
         tool.write_file(msg, ERROR_LOG_PATH)
+        thread_lock.release()
 
 
 def step(msg):
@@ -28,7 +32,9 @@ def step(msg):
     if IS_SHOW_STEP:
         tool.print_msg(msg, False)
     if STEP_LOG_PATH != "":
+        thread_lock.acquire()
         tool.write_file(msg, STEP_LOG_PATH)
+        thread_lock.release()
 
 
 def trace(msg):
@@ -36,4 +42,6 @@ def trace(msg):
     if IS_SHOW_TRACE:
         tool.print_msg(msg, False)
     if TRACE_LOG_PATH != "":
+        thread_lock.acquire()
         tool.write_file(msg, TRACE_LOG_PATH)
+        thread_lock.release()
