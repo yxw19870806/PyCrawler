@@ -223,6 +223,7 @@ class Download(threading.Thread):
             unique_list = []
             audio_info_list = []
             is_over = False
+            # 获取全部还未下载过需要解析的歌曲
             while not is_over:
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
 
@@ -263,6 +264,7 @@ class Download(threading.Thread):
 
             log.step(account_name + " 需要下载的全部歌曲解析完毕，共%s个" % len(audio_info_list))
 
+            # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:
                 audio_info = audio_info_list.pop()
                 log.step(account_name + " 开始解析歌曲%s《%s》" % (audio_info["audio_key"], audio_info["audio_title"]))
@@ -279,7 +281,7 @@ class Download(threading.Thread):
 
                 log.step(account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], audio_info["audio_title"]))
+                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], robot.filter_text(audio_info["audio_title"])))
                 save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step(account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
