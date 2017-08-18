@@ -19,8 +19,6 @@ TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
-NOT_LOGIN_CAN_RUN = False
-SAVE_ACCOUNT_INFO = True
 COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
 
 
@@ -279,6 +277,7 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
+        self.temp_path = ""
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -288,16 +287,17 @@ class Download(threading.Thread):
             account_name = self.account_info[2]
         else:
             account_name = self.account_info[0]
+        total_image_count = 0
 
         try:
             log.step(account_name + " 开始")
 
-            this_account_total_image_count = 0
             page_count = 1
             unique_list = []
+            album_info_list = []
             is_over = False
-            first_album_id = None
-            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
+            coser_id = None
+            # 获取全部还未下载过需要解析的作品
             while not is_over:
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 
@@ -308,81 +308,23 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页作品解析失败，原因：%s" % (page_count, e.message))
                     raise
 
+                coser_id = album_pagination_response["coser_id"]
+
                 log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response["album_info_list"]))
 
                 for album_info in album_pagination_response["album_info_list"]:
-                    # 检查是否达到存档记录
-                    if int(album_info["album_id"]) <= int(self.account_info[1]):
-                        is_over = True
-                        break
-
-                    # 新的存档记录
-                    if first_album_id is None:
-                        first_album_id = album_info["album_id"]
-
                     # 新增作品导致的重复判断
                     if album_info["album_id"] in unique_list:
                         continue
                     else:
                         unique_list.append(album_info["album_id"])
 
-                    log.step(account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
-
-                    # 获取作品
-                    try:
-                        album_response = get_album_page(album_pagination_response["coser_id"], album_info["album_id"])
-                    except robot.RobotException, e:
-                        log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
-                        raise
-
-                    # 是不是已被管理员锁定
-                    if album_response["is_admin_locked"]:
-                        log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_info["album_id"], album_info["album_title"]))
-                        continue
-
-                    # 是不是只对粉丝可见，并判断是否需要自动关注
-                    if album_response["is_only_follower"]:
-                        if not IS_AUTO_FOLLOW:
-                            continue
-                        log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
-                        if follow(account_id):
-                            # 重新获取作品页面
-                            try:
-                                album_response = get_album_page(album_pagination_response["coser_id"], album_info["album_id"])
-                            except robot.RobotException, e:
-                                log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
-                                raise
-                        else:
-                            # 关注失败
-                            log.error(account_name + " 关注失败，跳过作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
-                            continue
-
-                    # 过滤标题中不支持的字符
-                    filtered_title = robot.filter_text(album_info["album_title"])
-                    if filtered_title:
-                        album_path = os.path.join(image_path, "%s %s" % (album_info["album_id"], filtered_title))
+                    # 检查是否达到存档记录
+                    if int(album_info["album_id"]) > int(self.account_info[1]):
+                        album_info_list.append(album_info)
                     else:
-                        album_path = os.path.join(image_path, str(album_info["album_id"]))
-
-                    image_count = 1
-                    for image_url in album_response["image_url_list"]:
-                        # 禁用指定分辨率
-                        image_url = "/".join(image_url.split("/")[0:-1])
-                        log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
-
-                        if image_url.rfind("/") < image_url.rfind("."):
-                            file_type = image_url.split(".")[-1]
-                        else:
-                            file_type = "jpg"
-                        file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, file_path)
-                        if save_file_return["status"] == 1:
-                            log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_count))
-                            image_count += 1
-                        else:
-                            log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                    this_account_total_image_count += image_count - 1
+                        is_over = True
+                        break
 
                 if not is_over:
                     if album_pagination_response["is_over"]:
@@ -390,29 +332,90 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            log.step(account_name + " 下载完毕，总共获得%s张图片" % this_account_total_image_count)
+            log.step(account_name + " 需要下载的全部作品解析完毕，共%s个" % len(album_info_list))
 
-            # 新的存档记录
-            if first_album_id is not None:
-                self.account_info[1] = first_album_id
+            # 从最早的作品开始下载
+            while len(album_info_list) > 0:
+                album_info = album_info_list.pop()
+                log.step(account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
 
-            # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += this_account_total_image_count
-            ACCOUNTS.remove(account_id)
-            self.thread_lock.release()
+                # 获取作品
+                try:
+                    album_response = get_album_page(coser_id, album_info["album_id"])
+                except robot.RobotException, e:
+                    log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+                    raise
 
-            log.step(account_name + " 完成")
+                # 是不是已被管理员锁定
+                if album_response["is_admin_locked"]:
+                    log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_info["album_id"], album_info["album_title"]))
+                    continue
+
+                # 是不是只对粉丝可见，并判断是否需要自动关注
+                if album_response["is_only_follower"]:
+                    if not IS_AUTO_FOLLOW:
+                        continue
+                    log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
+                    if follow(account_id):
+                        # 重新获取作品页面
+                        try:
+                            album_response = get_album_page(coser_id, album_info["album_id"])
+                        except robot.RobotException, e:
+                            log.error(account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+                            raise
+                    else:
+                        # 关注失败
+                        log.error(account_name + " 关注失败，跳过作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
+                        continue
+
+                image_count = 1
+                # 过滤标题中不支持的字符
+                album_title = robot.filter_text(album_info["album_title"])
+                if album_title:
+                    album_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (album_info["album_id"], album_title))
+                else:
+                    album_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, str(album_info["album_id"]))
+                # 正在下载的目录
+                self.temp_path = album_path
+                for image_url in album_response["image_url_list"]:
+                    # 禁用指定分辨率
+                    image_url = "/".join(image_url.split("/")[0:-1])
+                    log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
+
+                    if image_url.rfind("/") < image_url.rfind("."):
+                        file_type = image_url.split(".")[-1]
+                    else:
+                        file_type = "jpg"
+                    file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_count))
+                        image_count += 1
+                    else:
+                        log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                # 作品全部图片下载完毕
+                self.temp_path = ""  # 临时目录设置清除
+                self.account_info[1] = album_info["album_id"]  # 设置存档记录
+                total_image_count += image_count - 1  # 计数累加
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
             else:
                 log.error(account_name + " 异常退出")
+            # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
+            if self.temp_path:
+                tool.remove_dir_or_file(self.temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
+        # 保存最后的信息
+        self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+        TOTAL_IMAGE_COUNT += total_image_count
+        ACCOUNTS.remove(account_id)
+        self.thread_lock.release()
+        log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 if __name__ == "__main__":
     Bcy().main()
