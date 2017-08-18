@@ -19,7 +19,8 @@ ACCOUNTS = []
 TOTAL_VIDEO_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-
+AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
+AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
 
 # 获取指定页数的所有歌曲
 # page_type 页面类型：yc - 原唱、fc - 翻唱
@@ -152,8 +153,8 @@ class Download(threading.Thread):
         total_video_count = 0
 
         # 原创、翻唱
-        audio_type_to_index_dict = {"yc": 1, "fc": 2}  # 存档文件里的下标
-        audio_type_name_dict = {"yc": "原唱", "fc": "翻唱"}  # 显示名字
+        audio_type_to_index_dict = {AUDIO_TYPE_YC: 1, AUDIO_TYPE_FC: 2}  # 存档文件里的下标
+        audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
         try:
             log.step(account_name + " 开始")
 
