@@ -15,6 +15,10 @@ import time
 import traceback
 import urllib
 
+ACCOUNTS = []
+TOTAL_IMAGE_COUNT = 0
+IMAGE_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
 SUB_PATH_LIST = {
     "Rosi": "1",
     "Sibao": "2",
@@ -26,10 +30,6 @@ SUB_PATH_LIST = {
     "JiePai": '8',
     "GaoQing": "9",
 }
-ACCOUNTS = []
-TOTAL_IMAGE_COUNT = 0
-IMAGE_DOWNLOAD_PATH = ""
-NEW_SAVE_DATA_PATH = ""
 
 
 # 获取指定一页的图集
@@ -228,7 +228,6 @@ class Download(threading.Thread):
             # 从最早的图集开始下载
             while len(album_info_list) > 0:
                 album_info = album_info_list.pop()
-
                 log.step(sub_path + " 开始解析%s号图集" % album_info["page_id"])
 
                 # 获取图集所有图片
@@ -241,6 +240,7 @@ class Download(threading.Thread):
                 log.trace(sub_path + " %s号图集《%s》解析的所有图片：%s" % (album_info["page_id"], album_info["album_title"], photo_pagination_response["image_url_list"]))
 
                 image_count = 1
+                # 过滤标题中不支持的字符
                 album_title = robot.filter_text(album_info["album_title"])
                 if album_title:
                     album_path = os.path.join(IMAGE_DOWNLOAD_PATH, "%04d %s" % (int(album_info["page_id"]), album_title))
@@ -283,6 +283,7 @@ class Download(threading.Thread):
         ACCOUNTS.remove(sub_path)
         self.thread_lock.release()
         log.step(sub_path + " 下载完毕，总共获得%s张图片" % total_image_count)
+
 
 if __name__ == "__main__":
     Gallery().main()

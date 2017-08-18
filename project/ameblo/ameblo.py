@@ -330,5 +330,6 @@ class Download(threading.Thread):
         self.thread_lock.release()
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
+
 if __name__ == "__main__":
     Ameblo().main()
