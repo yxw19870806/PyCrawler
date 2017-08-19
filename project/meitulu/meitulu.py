@@ -14,7 +14,6 @@ import re
 # 获取指定一页的图集
 def get_one_page_album(album_id):
     page_count = max_page_count = 1
-    image_count = 0
     result = {
         "is_delete": False,  # 是不是已经被删除
         "album_title": "",  # 图集标题
