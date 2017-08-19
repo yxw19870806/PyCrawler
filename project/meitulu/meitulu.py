@@ -100,6 +100,7 @@ class MeiTuLu(robot.Robot):
                 album_path = os.path.join(self.image_download_path, "%04d" % album_id)
 
             for image_url in album_pagination_response["image_url_list"]:
+                image_url = image_url.replace("/[page]", "/")
                 log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
