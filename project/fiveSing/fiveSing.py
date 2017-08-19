@@ -211,7 +211,7 @@ class Download(threading.Thread):
                 # 从最早的歌曲开始下载
                 while len(audio_info_list) > 0:
                     audio_info = audio_info_list.pop()
-                    log.step(account_name + " 开始解析%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_key"], audio_info["audio_title"]))
+                    log.step(account_name + " 开始解析%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
 
                     # 获取歌曲的详情页
                     try:
@@ -222,7 +222,7 @@ class Download(threading.Thread):
 
                     log.step(account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-                    file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], robot.filter_text(audio_info["audio_title"])))
+                    file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type_name, "%s - %s.mp3" % (audio_info["audio_id"], robot.filter_text(audio_info["audio_title"])))
                     save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
                     if save_file_return["status"] == 1:
                         log.step(account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
