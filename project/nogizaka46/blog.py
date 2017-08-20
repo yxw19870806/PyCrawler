@@ -241,7 +241,7 @@ class Download(threading.Thread):
                             big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
                             if big_image_response["image_url"] is not None:
                                 image_url = big_image_response["image_url"]
-                                big_image_response = big_image_response["cookies"]
+                                cookies_list = big_image_response["cookies"]
                             is_big_image_over = big_image_response["is_over"]
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
 
