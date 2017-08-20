@@ -26,7 +26,6 @@ NEW_SAVE_DATA_PATH = ""
 def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
     blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
-    print blog_pagination_url
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
         "blog_info_list": [],  # 所有图片信息
@@ -219,7 +218,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.step(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+                log.trace(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
                 for blog_info in blog_pagination_response["blog_info_list"]:
                     # 检查是否达到存档记录
