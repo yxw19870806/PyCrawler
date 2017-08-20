@@ -31,7 +31,10 @@ def get_account_from_index():
     page_count = 1
     account_list = {}
     while True:
-        pagination_account_list = get_one_page_account(page_count)
+        try:
+            pagination_account_list = get_one_page_account(page_count)
+        except robot.RobotException, e:
+            tool.print_msg("第%s页账号解析失败，原因：%s" % (page_count, e.message))
         if len(pagination_account_list) > 0:
             account_list.update(pagination_account_list)
             page_count += 1
@@ -53,12 +56,14 @@ def get_one_page_account(page_count):
         # 获取成员名字
         account_name = account_selector.find(".profile-name").eq(0).text()
         if not account_name:
-            raise robot.RobotException("成员信息截取成员名字失败\n\%s" % account_selector.html())
-        account_name = account_name.strip().encode("UTF-8")
+            account_name = ""
+            # raise robot.RobotException("成员信息截取成员名字失败\n\%s" % account_selector.html().encode("UTF-8"))
+        else:
+            account_name = account_name.strip().encode("UTF-8")
         # 获取twitter账号
         account_id = account_selector.find(".screen-name a").text()
-        if not account_name:
-            raise robot.RobotException("成员信息截取twitter账号失败\n\%s" % account_selector.html())
+        if not account_id:
+            raise robot.RobotException("成员信息截取twitter账号失败\n\%s" % account_selector.html().encode("UTF-8"))
         account_id = account_id.strip().replace("@", "")
         pagination_account_list[account_id] = account_name
     return pagination_account_list
