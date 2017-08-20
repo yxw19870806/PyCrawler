@@ -13,7 +13,7 @@ import time
 import traceback
 
 ACCOUNTS = []
-IMAGE_COUNT_PER_PAGE = 2
+IMAGE_COUNT_PER_PAGE = 50
 TOTAL_IMAGE_COUNT = 0
 IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
@@ -35,7 +35,7 @@ def get_account_index_page(account_name):
             raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
         result["user_id"] = user_id
         # 获取site key
-        site_key = tool.find_sub_string(account_index_response.data, '"site_key":"', '"')
+        site_key = tool.find_sub_string(account_index_response.data, 'root.YUI_config.flickr.api.site_key = "', '"')
         if not site_key:
             raise robot.RobotException("页面截取site key失败\n%s" % account_index_response.data)
         result["site_key"] = site_key
