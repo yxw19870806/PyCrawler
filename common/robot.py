@@ -25,6 +25,11 @@ SYS_SET_PROXY = "set_proxy"
 SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
 # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
 SYS_GET_COOKIE = "get_cookie"
+# 程序是否需要额外读取配置（应用级别）
+# 传入参数类型为tuple，且长度至少为二
+# 第一位是配置文件所在路径
+# 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同get_config方法后三个参数
+SYS_APP_CONFIG = "app_config"
 
 
 class Robot(object):
@@ -61,10 +66,18 @@ class Robot(object):
         else:
             config_path = tool.PROJECT_CONFIG_PATH
 
+        # 程序配置
         config = read_config(config_path)
-
         if not isinstance(extra_config, dict):
             extra_config = {}
+
+        # 应用配置
+        self.app_config = {}
+        if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) >= 2:
+            app_config = read_config(sys_config[SYS_APP_CONFIG][0])
+            for app_config_template in  sys_config[SYS_APP_CONFIG][1:]:
+                if len(app_config_template) == 3:
+                    self.app_config[app_config_template[0]] = get_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
 
         # 日志
         self.is_show_error = get_config(config, "IS_SHOW_ERROR", True, 2)
