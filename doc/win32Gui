@@ -1,0 +1,89 @@
+http://www.programcreek.com/python/index/322/win32gui
+
+1.根据标题或者类名查找窗口
+win32gui.FindWindow(WINDOW_CLASS_NAME, WINDOW_TITLE_NAME)
+	param	WINDOW_CLASS_NAME（窗口类名，不要则为Null或0）
+			WINDOW_TITLE_NAME（窗口标题）
+	return	WINDOW_HANDLE（窗口句柄）
+
+2.根据窗口句柄获取窗口位置
+win32gui.GetWindowRect(WINDOW_HANDLE)
+	param	WINDOW_HANDLE（窗口句柄）
+	return	WINDOW_LEFT_POSITION（窗口的左边界坐标）, WINDOW_TOP_POSITION（窗口顶边界坐标）, WINDOW_RIGHT_POSITION（窗口右边界坐标）, WINDOW_BOTTOM_POSITION（窗口底边界坐标）
+		窗口宽 = WINDOW_RIGHT_POSITION - WINDOW_LEFT_POSITION
+		窗口高 = WINDOW_TOP_POSITION - WINDOW_BOTTOM_POSITION
+
+3.根据窗口句柄设置窗口位置、大小
+win32gui.SetWindowPos(WINDOW_HANDLE, WINDOW_Z_INDEX, WINDOW_POSITION_X, WINDOW_POSITION_Y, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_FLAG)
+	param	WINDOW_HANDLE（窗口句柄）
+			WINDOW_Z_INDEX（新窗口层级），取值：
+				win32con.HWND_TOP：将窗口置于Z序的顶部。
+    			win32con.HWND_BOTTOM：将窗口置于Z序的底部。如果参数hWnd标识了一个顶层窗口，则窗口失去顶级位置，并且被置在其他窗口的底部。
+    			win32con.HWND_NOTOPMOST：将窗口置于所有非顶层窗口之上（即在所有顶层窗口之后）。如果窗口已经是非顶层窗口则该标志不起作用。
+    			win32con.HWND_TOPMOST：将窗口置于所有非顶层窗口之上。即使窗口未被激活窗口也将保持顶级位置。
+    		WINDOW_POSITION_X（新窗口的左边界，单位：像素）
+    		WINDOW_POSITION_Y（新窗口的顶边界，单位：像素）
+			WINDOW_WIDTH（新窗口的长，单位：像素）
+			WINDOW_HEIGHT（新窗口的宽，单位：像素）
+			WINDOW_FLAG（窗口尺寸和定位的标志），取值（多个标志用或运算符号|连接）：
+				win32con.SWP_ASNCWINDOWPOS：如果调用进程不拥有窗口，系统会向拥有窗口的线程发出需求。这就防止调用线程在其他线程处理需求的时候发生死锁。
+				win32con.SWP_DEFERERASE：防止产生WM_SYNCPAINT消息。
+				win32con.SWP_DRAWFRAME：在窗口周围画一个边框（定义在窗口类描述中）。
+				win32con.SWP_FRAMECHANGED：给窗口发送WM_NCCALCSIZE消息，即使窗口尺寸没有改变也会发送该消息。如果未指定这个标志，只有在改变了窗口尺寸时才发送WM_NCCALCSIZE。
+				win32con.SWP_HIDEWINDOW：隐藏窗口。
+				win32con.SWP_NOACTIVATE：不激活窗口。如果未设置标志，则窗口被激活，并被设置到其他最高级窗口或非最高级组的顶部（根据参数hWndlnsertAfter设置）。
+				win32con.SWP_NOCOPYBITS：清除客户区的所有内容。如果未设置该标志，客户区的有效内容被保存并且在窗口尺寸更新和重定位后拷贝回客户区。
+				win32con.SWP_NOMOVE：维持当前位置（忽略第3个和第4个参数）。
+				win32con.SWP_NOOWNERZORDER：不改变z序中的所有者窗口的位置。
+				win32con.SWP_NOREDRAW：不重画改变的内容。如果设置了这个标志，则不发生任何重画动作。适用于客户区和非客户区（包括标题栏和滚动条）和任何由于窗回移动而露出的父窗口的所有部分。如果设置了这个标志，应用程序必须明确地使窗口无效并区重画窗口的任何部分和父窗口需要重画的部分。
+				win32con.SWP_NOREPOSITION：与SWP_NOOWNERZORDER标志相同。
+				win32con.SWP_NOSENDCHANGING：防止窗口接收WM_WINDOWPOSCHANGING消息。
+				win32con.SWP_NOSIZE：维持当前尺寸（忽略第5个和第6个参数）。
+				win32con.SWP_NOZORDER：维持当前Z序（忽略第2个参数）。
+				win32con.SWP_SHOWWINDOW：显示窗口。
+win32gui.MoveWindow(WINDOW_HANDLE, WINDOW_POSITION_X, WINDOW_POSITION_Y, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_REPAINT)
+	param	WINDOW_HANDLE（窗口句柄）
+			WINDOW_POSITION_X（新窗口的左边界，单位：像素）
+    		WINDOW_POSITION_Y（新窗口的顶边界，单位：像素）
+			WINDOW_WIDTH（新窗口的长，单位：像素）
+			WINDOW_HEIGHT（新窗口的宽，单位：像素）
+
+4.根据窗口句柄，遍历获取所有子窗口
+window = win32gui.GetWindow(WINDOW_HANDLE, win32con.GW_CHILD)
+while window:
+    window = win32gui.GetWindow(window, win32con.GW_HWNDNEXT)
+
+5.根据窗口句柄，获取某个屏幕坐标对应的窗口相对坐标
+win32gui.ScreenToClient(WINDOW_HANDLE, (SCREEN_POSITION_X, SCREEN_POSITION_Y))
+	param	WINDOW_HANDLE（窗口句柄）
+			SCREEN_POSITION_X（屏幕X坐标）
+			SCREEN_POSITION_Y（屏幕Y坐标）
+	return	WINDOW_POSITION_X（窗口X坐标）
+			WINDOW_POSITION_Y（窗口X坐标）
+
+6.根据窗口句柄，获取窗口相对坐标对应的屏幕坐标
+win32gui.ClientToScreen(WINDOW_HANDLE, (WINDOW_POSITION_X, WINDOW_POSITION_Y))
+	param	WINDOW_HANDLE（窗口句柄）
+			WINDOW_POSITION_X（窗口X坐标）
+			WINDOW_POSITION_Y（窗口X坐标）
+	return	SCREEN_POSITION_X（屏幕X坐标）
+			SCREEN_POSITION_Y（屏幕Y坐标）
+
+7.获取当前最顶端窗口的窗口句柄
+win32gui.GetForegroundWindow()
+
+8.获取桌面窗口的窗口句柄
+win32gui.GetDesktopWindow()
+所有程序窗口都是桌面窗口的子窗口
+
+9.根据窗口句柄，获取设备上下文
+win32gui.GetDC(WINDOW_HANDLE)
+	param	WINDOW_HANDLE（窗口句柄）
+	return	DEVICE_CONTEXT
+
+10.根据设备上下文获取对应窗口坐标的颜色RGB值
+win32gui.GetPixel(DEVICE_CONTEXT, POSITION_X, POSITION_Y)
+	param	DEVICE_CONTEXT（设备上下文）
+			POSITION_X（窗口的相对X坐标）
+			POSITION_Y（窗口的相对Y坐标）
+	return	RGB_VALUE（颜色RGB值对应的整数）范围：0 ~ 16777215，转化为16进制后，从右往左每2位分别代表RGB的值
