@@ -158,6 +158,56 @@ filename = "c:\\aa.bb\\cc.dd"
 获取路径名: os.path.dirname(filename) -> c:\aa.bb
 获取文件扩展名: os.path.splitext(filename)[1] -> dd
 
+23.常用时间方法
+时间元祖
+	长度为9，分别是：
+	tm_year		年
+	tm_mon		月，range(1, 12)
+	tm_mday		日，range(1, 31)
+	tm_hour		小时，range(0, 23)
+	tm_min		分钟，range(0, 59)
+	tm_sec		秒，range(0, 61)
+	tm_wday		周几，range(0, 6)，周一是0
+	tm_yday		一年的第几天（1-366）
+	tm_isdst	是不是夏令时，1 当前是夏令时, 0 当前不是夏令时，-1 未知
+strftime(TIME_FORMAT)
+	%y	年份（后2位）				range(00-99)
+	%Y	年份（长度为4）				range(1970-2999)
+	%m	月份（长度为2）				range(01-12)
+	%b	月份（英文缩写）			Jan，Feb，Mar，Apr，May，Jun，Jul，Aug，Sep，Oct，Nov，Dec
+	%B	月份（英文）				January，February，March，April，May，June，July，August，September，October，November，December
+	%d	每月第几天（长度为2）		range(01-31)
+	%H	小时（24小时制，长度为2）	range(00-23)
+	%I	小时（12小时制，长度为2）	range(01-12)
+	%p	上午/下午					AM，PM
+	%M	分钟（长度为2）				range(00-59)
+	%s	秒（长度为2）				range(01-61)
+	%w	周几（长度为2，周日为0）	range(0-6)
+	%a	周几（英文缩写）			Mon，Tue，Wed，Thu，Fri，Sat，Sun
+	%A	周几（英文)					Monday，Tuesday，Wednesday，Thursday，Friday，Saturday，Sunday
+	%j	一年第几天（长度为3）						range(001-366)
+	%U	一年第几周（周日为每星期第一天，长度为2）	range(00-53)
+	%W	一年第几周（周一为每星期第一天，长度为2）	range(00-53)
+	%Z	时区（可能需要编码encode()）
+	%c	本地化时间日期格式							%m/%d/%y %H:%M:%S
+	%x	本地化时间格式								%H:%M:%S
+	%X	本地化日期格式								m/%d/%y
+获取当前时间戳		time.time()，精确到0.01秒
+获取当前时间元祖	time.localtime() 系统时间，time.gmtime() UTC时间
+获取当前格式化时间	time.strftime(TIME_FORMAT)
+
+时间戳->时间元祖		time.gmtime(TIME_STAMP)
+时间戳->格式化时间		time.strftime(FORMAT, time.gmtime(TIME_STAMP))
+时间元祖->时间戳		time.mktime(TIME_TUPLE)
+时间元祖->格式化时间	time.strftime(FORMAT, TIME_TUPLE)
+格式化时间->时间戳		time.mktime(time.strptime(TIME_FORMAT_STRING, FORMAT))
+格式化时间->时间元祖	time.strptime(TIME_FORMAT_STRING, FORMAT)
+
+获取当天0点时间戳		time.mktime(time.strptime(time.strftime('%Y-%m-%d 00:00:00'), "%Y-%m-%d %H:%M:%S"))
+获取该月1日0点时间戳	time.mktime(time.strptime(time.strftime('%Y-01-01 00:00:00'), "%Y-%m-%d %H:%M:%S"))
+获取今年1月1日0点时间戳	time.mktime(time.strptime(time.strftime('%Y-%m-01 00:00:00'), "%Y-%m-%d %H:%M:%S"))
+获取一天后的时间戳		time.mktime((datetime.datetime.today() + datetime.timedelta(days=1)).timetuple())
+获取一天前的时间戳		time.mktime((datetime.datetime.today() - datetime.timedelta(days=1)).timetuple())
 
 
 99.web
