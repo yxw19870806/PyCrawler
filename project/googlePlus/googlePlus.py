@@ -294,7 +294,7 @@ class Download(threading.Thread):
                     while True:
                         save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
                         if save_file_return["status"] == 1:
-                            self.temp_path_list.append(file_path)
+                            self.temp_path_list.append(save_file_return["file_path"])
                             log.step(account_name + " 第%s张图片下载成功" % image_index)
                             image_index += 1
                         elif save_file_return["status"] == 0 and save_file_return["code"] == 500 and retry_count <= 5:
