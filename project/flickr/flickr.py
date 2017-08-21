@@ -209,7 +209,7 @@ class Download(threading.Thread):
 
                 for image_info in photo_pagination_response["image_info_list"]:
                     # 检查是否达到存档记录
-                    if int(self.account_info[2]) < image_info["image_time"]:
+                    if image_info["image_time"] > int(self.account_info[2]):
                         image_info_list.append(image_info)
                     else:
                         is_over = True
