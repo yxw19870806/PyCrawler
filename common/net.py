@@ -257,10 +257,10 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 判断文件下载后的大小和response中的Content-Length是否一致
             content_length = response.getheader("Content-Length")
             if content_length is None:
-                return {"status": 1, "code": 0}
+                return {"status": 1, "code": 0, "file_path": file_path}
             file_size = os.path.getsize(file_path)
             if int(content_length) == file_size:
-                return {"status": 1, "code": 0}
+                return {"status": 1, "code": 0, "file_path": file_path}
             else:
                 tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         # 超过重试次数，直接退出
