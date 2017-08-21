@@ -22,6 +22,7 @@ NEW_SAVE_DATA_PATH = ""
 AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
 AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
 
+
 # 获取指定页数的所有歌曲
 # page_type 页面类型：yc - 原唱、fc - 翻唱
 def get_one_page_audio(account_id, page_type, page_count):
