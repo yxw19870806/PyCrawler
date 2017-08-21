@@ -280,6 +280,8 @@ class Download(threading.Thread):
                     log.error(account_name + " 日志%s解析失败，原因：%s" % (blog_id, e.message))
                     raise
 
+                log.trace(account_name + " 日志%s解析的所有图片：%s" % (blog_id, blog_response["blog_id_list"]))
+
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_response["image_url_list"]:
                     if filter_image_url(image_url):
