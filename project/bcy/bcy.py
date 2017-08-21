@@ -199,10 +199,12 @@ class Bcy(robot.Robot):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global COOKIE_INFO
+        global IS_AUTO_FOLLOW
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
+            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("IS_AUTO_FOLLOW", True, 2)),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -210,6 +212,7 @@ class Bcy(robot.Robot):
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         COOKIE_INFO["LOGGED_USER"] = self.cookie_value["LOGGED_USER"]
+        IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
 
     def main(self):
         global ACCOUNTS
