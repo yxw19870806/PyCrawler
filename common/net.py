@@ -36,7 +36,6 @@ class ErrorResponse(object):
         self.data = None
         self.headers = {}
         self.json_data = []
-        self.extra_info = {}
 
 
 # 初始化urllib3的连接池
