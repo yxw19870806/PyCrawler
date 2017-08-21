@@ -19,6 +19,7 @@ TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
+IS_LOGIN = True
 COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
 
 
@@ -171,6 +172,7 @@ def get_album_page(coser_id, album_id):
     result = {
         "is_admin_locked": False,  # 是否被管理员锁定
         "is_only_follower": False,  # 是否只显示给粉丝
+        "is_only_login": False,  # 是否只显示给登录用户
         "image_url_list": [],  # 页面解析出的所有图片地址列表
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -181,6 +183,9 @@ def get_album_page(coser_id, album_id):
     # 检测作品是否只对粉丝可见
     if album_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
         result["is_only_follower"] = True
+    # 检测作品是否只对登录可见
+    if album_response.data.find("该作品已被作者设置为登录后可见") >= 0:
+        result["is_only_login"] = True
     # 获取作品页面内的所有图片地址列表
     image_url_list = re.findall("src='([^']*)'", album_response.data)
     if not result["is_admin_locked"] and not result["is_only_follower"] and len(image_url_list) == 0:
@@ -223,8 +228,8 @@ class Bcy(robot.Robot):
                 elif input_str in ["e", "exit"]:
                     tool.process_exit()
                 elif input_str in ["c", "continue"]:
-                    global IS_AUTO_FOLLOW
-                    IS_AUTO_FOLLOW = False
+                    global IS_LOGIN
+                    IS_LOGIN = False
                     break
 
         # 解析存档文件
@@ -351,9 +356,17 @@ class Download(threading.Thread):
                     log.error(account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_info["album_id"], album_info["album_title"]))
                     continue
 
+                # 是不是只对登录账号可见
+                if album_response["is_only_login"]:
+                    log.error(account_name + " 作品%s 《%s》只对登录账号显示，跳过" % (album_info["album_id"], album_info["album_title"]))
+                    if not IS_LOGIN:
+                        continue
+                    else:
+                        tool.process_exit()
+
                 # 是不是只对粉丝可见，并判断是否需要自动关注
                 if album_response["is_only_follower"]:
-                    if not IS_AUTO_FOLLOW:
+                    if not IS_LOGIN or not IS_AUTO_FOLLOW:
                         continue
                     log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
                     if follow(account_id):
