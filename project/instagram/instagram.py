@@ -19,9 +19,7 @@ IMAGE_COUNT_PER_PAGE = 12
 QUERY_ID = "17859156310193001"
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
-VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = True
@@ -101,7 +99,7 @@ def get_one_page_media(account_id, cursor):
             # 判断是否有视频
             media_result["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
             # 获取图片上传时间
-            media_result["time"] = str(int(media_info["node"]["taken_at_timestamp"]))
+            media_result["media_time"] = int(media_info["node"]["taken_at_timestamp"])
             # 获取媒体详情界面id
             media_result["page_id"] = str(media_info["node"]["shortcode"])
             result["media_info_list"].append(media_result)
@@ -179,9 +177,7 @@ def get_media_page(page_id):
 
 class Instagram(robot.Robot):
     def __init__(self, extra_config=None):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_DOWNLOAD_IMAGE
@@ -195,9 +191,7 @@ class Instagram(robot.Robot):
         robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
-        VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
@@ -256,12 +250,15 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
+        self.temp_path_list = []
 
     def run(self):
         global TOTAL_IMAGE_COUNT
         global TOTAL_VIDEO_COUNT
 
         account_name = self.account_info[0]
+        total_image_count = 0
+        total_video_count = 0
 
         try:
             log.step(account_name + " 开始")
@@ -280,13 +277,10 @@ class Download(threading.Thread):
                     log.error(account_name + " account id 不符合，原账号已改名")
                     tool.process_exit()
 
-            image_count = 1
-            video_count = 1
+            media_info_list = []
             cursor = ""
             is_over = False
-            first_created_time = None
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
+            # 获取全部还未下载过需要解析的媒体
             while not is_over:
                 log.step(account_name + " 开始解析cursor '%s'的媒体信息" % cursor)
 
@@ -301,71 +295,11 @@ class Download(threading.Thread):
 
                 for media_info in media_pagination_response["media_info_list"]:
                     # 检查是否达到存档记录
-                    if int(media_info["time"]) <= int(self.account_info[4]):
+                    if media_info["media_time"] > int(self.account_info[4]):
+                        media_info_list.append(media_info)
+                    else:
                         is_over = True
                         break
-
-                    # 新的存档记录
-                    if first_created_time is None:
-                        first_created_time = media_info["time"]
-
-                    log.step(account_name + " 开始解析媒体%s" % media_info["page_id"])
-
-                    media_response = None
-                    # 图片
-                    if IS_DOWNLOAD_IMAGE:
-                        # 多张图片
-                        if media_info["is_group"]:
-                            # 获取媒体详细页
-                            try:
-                                media_response = get_media_page(media_info["page_id"])
-                            except robot.RobotException, e:
-                                log.error(account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
-                                raise
-
-                            image_url_list = media_response["image_url_list"]
-                        # 单张图片 或者 视频的预览图片
-                        else:
-                            image_url_list = [media_info["image_url"]]
-
-                        for image_url in image_url_list:
-                            # 去除特效，获取原始路径
-                            image_url_protocol, image_url_path = urllib.splittype(image_url)
-                            image_url_host = urllib.splithost(image_url_path)[0]
-                            image_url_name = image_url.split("/")[-1]
-                            image_url = "%s://%s//%s" % (image_url_protocol, image_url_host, image_url_name)
-                            log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-
-                            file_type = image_url.split(".")[-1]
-                            image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                            save_file_return = net.save_net_file(image_url, image_file_path)
-                            if save_file_return["status"] == 1:
-                                log.step(account_name + " 第%s张图片下载成功" % image_count)
-                                image_count += 1
-                            else:
-                                log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                    # 视频
-                    if IS_DOWNLOAD_VIDEO and (media_info["is_group"] or media_info["is_video"]):
-                        if media_response is None:
-                            # 获取媒体详细页
-                            try:
-                                media_response = get_media_page(media_info["page_id"])
-                            except robot.RobotException, e:
-                                log.error(account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
-                                raise
-
-                        for video_url in media_response["video_url_list"]:
-                            log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                            file_type = video_url.split(".")[-1]
-                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                            save_file_return = net.save_net_file(video_url, video_file_path)
-                            if save_file_return["status"] == 1:
-                                log.step(account_name + " 第%s个视频下载成功" % video_count)
-                                video_count += 1
-                            else:
-                                log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
                     if media_pagination_response["next_page_cursor"] is None:
@@ -373,49 +307,101 @@ class Download(threading.Thread):
                     else:
                         cursor = media_pagination_response["next_page_cursor"]
 
-            log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
+            log.step(account_name + " 需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
 
-            # 排序
-            if image_count > 1:
-                log.step(account_name + " 图片开始从下载目录移动到保存目录")
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                if robot.sort_file(image_path, destination_path, int(self.account_info[2]), 4):
-                    log.step(account_name + " 图片从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
-            if video_count > 1:
-                log.step(account_name + " 视频开始从下载目录移动到保存目录")
-                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
-                    log.step(account_name + " 视频从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
+            # 从最早的媒体开始下载
+            while len(media_info_list) > 0:
+                media_info = media_info_list.pop()
+                log.step(account_name + " 开始解析媒体 %s" % media_info["page_id"])
 
-            # 新的存档记录
-            if first_created_time is not None:
-                self.account_info[2] = str(int(self.account_info[2]) + image_count - 1)
-                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
-                self.account_info[4] = first_created_time
+                media_response = None
+                # 图片下载
+                image_index = int(self.account_info[2]) + 1
+                if IS_DOWNLOAD_IMAGE:
+                    # 多张图片
+                    if media_info["is_group"]:
+                        # 获取媒体详细页
+                        try:
+                            media_response = get_media_page(media_info["page_id"])
+                        except robot.RobotException, e:
+                            log.error(account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
+                            raise
+                        image_url_list = media_response["image_url_list"]
+                    # 单张图片 或者 视频的预览图片
+                    else:
+                        image_url_list = [media_info["image_url"]]
 
-            # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += image_count - 1
-            TOTAL_VIDEO_COUNT += video_count - 1
-            ACCOUNTS.remove(account_name)
-            self.thread_lock.release()
+                    for image_url in image_url_list:
+                        # 去除特效，获取原始路径
+                        image_url_protocol, image_url_path = urllib.splittype(image_url)
+                        image_url_host = urllib.splithost(image_url_path)[0]
+                        image_url_name = image_url.split("/")[-1]
+                        image_url = "%s://%s//%s" % (image_url_protocol, image_url_host, image_url_name)
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
-            log.step(account_name + " 完成")
+                        file_type = image_url.split(".")[-1]
+                        image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
+                        save_file_return = net.save_net_file(image_url, image_file_path)
+                        if save_file_return["status"] == 1:
+                            self.temp_path_list.append(image_file_path)
+                            log.step(account_name + " 第%s张图片下载成功" % image_index)
+                            image_index += 1
+                        else:
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+                # 视频下载
+                video_index = int(self.account_info[3]) + 1
+                if IS_DOWNLOAD_VIDEO and (media_info["is_group"] or media_info["is_video"]):
+                    # 如果图片那里没有获取过媒体页面，需要重新获取一下
+                    if media_response is None:
+                        # 获取媒体详细页
+                        try:
+                            media_response = get_media_page(media_info["page_id"])
+                        except robot.RobotException, e:
+                            log.error(account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
+                            raise
+
+                    for video_url in media_response["video_url_list"]:
+                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
+
+                        file_type = video_url.split(".")[-1]
+                        video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.%s" % (video_index, file_type))
+                        save_file_return = net.save_net_file(video_url, video_file_path)
+                        if save_file_return["status"] == 1:
+                            self.temp_path_list.append(video_file_path)
+                            log.step(account_name + " 第%s个视频下载成功" % video_index)
+                            video_index += 1
+                        else:
+                            log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+                # 媒体内图片和视频全部下载完毕
+                self.temp_path_list = []  # 临时目录设置清除
+                total_image_count += (image_index - 1) - int(self.account_info[2])  # 计数累加
+                total_video_count += (video_index - 1) - int(self.account_info[3])  # 计数累加
+                self.account_info[2] = str(image_index - 1)  # 设置存档记录
+                self.account_info[3] = str(video_index - 1)  # 设置存档记录
+                self.account_info[4] = str(media_info["media_time"])
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
             else:
                 log.error(account_name + " 异常退出")
+            # 如果临时目录变量不为空，表示某个媒体正在下载中，需要把下载了部分的内容给清理掉
+            if len(self.temp_path_list) > 0:
+                for temp_path in self.temp_path_list:
+                    tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+        TOTAL_IMAGE_COUNT += total_image_count
+        TOTAL_VIDEO_COUNT += total_video_count
+        ACCOUNTS.remove(account_name)
+        self.thread_lock.release()
+        log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
 
 
 if __name__ == "__main__":
