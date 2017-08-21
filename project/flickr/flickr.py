@@ -15,7 +15,6 @@ import traceback
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 50
 TOTAL_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
@@ -107,7 +106,6 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
 
 class Flickr(robot.Robot):
     def __init__(self):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -118,7 +116,6 @@ class Flickr(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
