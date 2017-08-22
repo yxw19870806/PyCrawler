@@ -289,12 +289,12 @@ def read_file(file_path, read_type=1):
 # type=1: 追加
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
+    file_path = change_path_encoding(file_path)
     if make_dir(os.path.dirname(file_path), 0):
         if append_type == 1:
             open_type = "a"
         else:
             open_type = "w"
-        file_path = change_path_encoding(file_path)
         with open(file_path, open_type) as file_handle:
             if isinstance(msg, unicode):
                 msg = msg.encode("UTF-8")
