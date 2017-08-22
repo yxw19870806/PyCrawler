@@ -27,9 +27,9 @@ def get_one_page_photo(page_count):
         photo_selector_html = photo_selector.html().encode("UTF-8")
         extra_photo_info = {
             "account_name": "",  # twitter账号
-            "tweet_id": 0,  # tweet id
+            "tweet_id": None,  # tweet id
             "image_url_list": [],  # 图片地址
-            "time": None,  # tweet发布时间
+            "tweet_time": None,  # tweet发布时间
         }
         # 获取tweet id
         tweet_url = photo_selector.find(".photo-link-outer a").eq(0).attr("href")
@@ -49,7 +49,7 @@ def get_one_page_photo(page_count):
         if not tweet_time:
             raise robot.RobotException("图片信息截取tweet发布时间失败\n%s" % photo_selector_html)
         try:
-            extra_photo_info["time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
+            extra_photo_info["tweet_time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
         except ValueError:
             raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % tweet_time)
         # 获取图片地址
@@ -74,19 +74,19 @@ class Jigadori(robot.Robot):
 
     def main(self):
         # 解析存档文件
-        last_blog_time = 0
-        image_start_index = 0
+        # image_count last_blog_time
+        save_info = [0, 0]
         if os.path.exists(self.save_data_path):
-            save_info = tool.read_file(self.save_data_path).split("\t")
-            if len(save_info) >= 2:
-                image_start_index = int(save_info[0])
-                last_blog_time = int(save_info[1])
+            file_save_info = tool.read_file(self.save_data_path).split("\t")
+            if len(file_save_info) >= 2 and robot.is_integer(file_save_info[0]) and robot.is_integer(file_save_info[1]):
+                save_info = file_save_info
 
         page_count = 1
-        image_count = 1
+        total_image_count = 0
         unique_list = []
+        image_info_list = []
         is_over = False
-        first_blog_time = None
+        # 获取全部还未下载过需要解析的图片
         while not is_over:
             log.step("开始解析第%s页图片" % page_count)
 
@@ -95,73 +95,72 @@ class Jigadori(robot.Robot):
                 photo_pagination_response = get_one_page_photo(page_count)
             except robot.RobotException, e:
                 log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
-                raise 
+                raise
+            except SystemExit:
+                log.step("提前退出")
+                tool.process_exit()
 
             # 没有图片了
             if len(photo_pagination_response["image_info_list"]) == 0:
                 break
 
             for image_info in photo_pagination_response["image_info_list"]:
-                # 检查是否达到存档记录
-                if image_info["time"] <= last_blog_time:
-                    is_over = True
-                    break
-
-                # 新的存档记录
-                if first_blog_time is None:
-                    first_blog_time = str(image_info["time"])
-
                 # 新增图片导致的重复判断
                 if image_info["tweet_id"] in unique_list:
                     continue
                 else:
                     unique_list.append(image_info["tweet_id"])
 
-                for image_url in image_info["image_url_list"]:
-                    log.step("开始下载第%s张图片 %s" % (image_count, image_url))
-
-                    file_type = image_url.split(".")[-1]
-                    if file_type.find("/") != -1:
-                        file_type = "jpg"
-                    file_path = os.path.join(self.image_temp_path, "%05d_%s.%s" % (image_count, image_info["account_name"], file_type))
-                    save_file_return = net.save_net_file(image_url, file_path)
-                    if save_file_return["status"] == 1:
-                        log.step("第%s张图片下载成功" % image_count)
-                        image_count += 1
-                    else:
-                        log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_count, image_info["account_name"], image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                # 检查是否达到存档记录
+                if image_info["tweet_time"] > int(save_info[1]):
+                    image_info_list.append(image_info)
+                else:
+                    is_over = True
+                    break
 
             if not is_over:
                 page_count += 1
 
-        log.step("下载完毕")
+        log.step("需要下载的全部图片解析完毕，共%s个" % len(image_info_list))
 
-        # 排序复制到保存目录
-        if image_count > 1:
-            log.step("图片开始从下载目录移动到保存目录")
+        # 从最早的图片开始下载
+        while len(image_info_list) > 0:
+            image_info = image_info_list.pop()
 
-            file_list = tool.get_dir_files_name(self.image_temp_path, "desc")
-            for file_name in file_list:
-                image_path = os.path.join(self.image_temp_path, file_name)
-                file_name_list = file_name.split(".")
-                file_type = file_name_list[-1]
-                account_id = "_".join(".".join(file_name_list[:-1]).split("_")[1:])
+            log.step("开始解析tweet%s的图片" % image_info["tweet_id"])
 
-                image_start_index += 1
-                destination_file_name = "%05d_%s.%s" % (image_start_index, account_id, file_type)
-                destination_path = os.path.join(self.image_download_path, destination_file_name)
-                tool.copy_files(image_path, destination_path)
-
-            log.step("图片从下载目录移动到保存目录成功")
-
-            # 删除临时文件夹
-            tool.remove_dir_or_file(self.image_temp_path)
+            image_index = int(save_info[0]) + 1
+            temp_path_list = []
+            try:
+                for image_url in image_info["image_url_list"]:
+                    log.step("开始下载第%s张图片 %s" % (image_index, image_url))
+                    file_type = image_url.split(".")[-1]
+                    if file_type.find("/") != -1:
+                        file_type = "jpg"
+                    file_path = os.path.join(self.image_download_path, "%05d_%s.%s" % (image_index, image_info["account_name"], file_type))
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        temp_path_list.append(file_path)
+                        log.step("第%s张图片下载成功" % image_index)
+                        image_index += 1
+                    else:
+                        log.error("第%s张图片（account_id：%s) %s，下载失败，原因：%s" % (image_index, image_info["account_name"], image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            except SystemExit:
+                # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+                if len(temp_path_list) > 0:
+                    for temp_path in temp_path_list:
+                        tool.remove_dir_or_file(temp_path)
+                log.step("提前退出")
+                break
+            # tweet图片全部下载完毕
+            total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
+            save_info[0] = str(image_index - 1)  # 设置存档记录
+            save_info[1] = str(image_info["tweet_time"])  # 设置存档记录
 
         # 保存新的存档文件
-        if first_blog_time is not None:
-            tool.write_file(str(image_start_index) + "\t" + first_blog_time, self.save_data_path, 2)
+        tool.write_file("\t".join(save_info), self.save_data_path, 2)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
 
 if __name__ == "__main__":
