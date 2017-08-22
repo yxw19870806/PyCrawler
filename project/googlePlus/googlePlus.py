@@ -303,8 +303,8 @@ class Download(threading.Thread):
                 # 相册图片全部下载完毕
                 self.temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-                self.account_info[1] = str(image_index - 1) # 设置存档记录
-                self.account_info[2] = str(blog_info["blog_time"])
+                self.account_info[1] = str(image_index - 1)  # 设置存档记录
+                self.account_info[2] = str(blog_info["blog_time"])  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
