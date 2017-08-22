@@ -261,9 +261,8 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
 # 文件路径编码转换
 def change_path_encoding(path):
     if isinstance(path, str):
-        return unicode(path, "UTF-8")
-    else:
-        return path
+        path = unicode(path, "UTF-8")
+    return os.path.realpath(path)
 
 
 # 读取文件
