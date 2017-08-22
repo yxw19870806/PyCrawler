@@ -279,6 +279,8 @@ def read_file(file_path, read_type=1):
     with open(file_path, "r") as file_handle:
         if read_type == 1:
             result = file_handle.read()
+            if result[-1] == "\n":
+                result = result[:-1]
         else:
             result = file_handle.readlines()
     return result
