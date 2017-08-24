@@ -112,6 +112,11 @@ def get_album_photo(sub_path, page_id):
     return result
 
 
+# 对图片地址中的特殊字符（如，中文）进行转义
+def get_image_url(image_url):
+    return urllib.quote(image_url, safe=string.printable.replace(" ", ""))
+
+
 class Gallery(robot.Robot):
     def __init__(self):
         global IMAGE_DOWNLOAD_PATH
@@ -249,7 +254,8 @@ class Download(threading.Thread):
                 # 正在下载的目录
                 self.temp_path = album_path
                 for image_url in photo_pagination_response["image_url_list"]:
-                    image_url = urllib.quote(image_url, safe=string.printable.replace(" ", ""))
+                    # 图片地址转义
+                    image_url = get_image_url(image_url)
                     log.step(sub_path + " %s号图集《%s》 开始下载第%s张图片 %s" % (album_info["page_id"], album_info["album_title"], image_count, image_url))
 
                     file_type = image_url.split(".")[-1]
