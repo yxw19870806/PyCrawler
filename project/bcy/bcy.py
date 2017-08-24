@@ -194,6 +194,11 @@ def get_album_page(coser_id, album_id):
     return result
 
 
+# 禁用指定分辨率
+def get_image_url(image_url):
+    return "/".join(image_url.split("/")[0:-1])
+
+
 class Bcy(robot.Robot):
     def __init__(self):
         global IMAGE_DOWNLOAD_PATH
@@ -395,7 +400,7 @@ class Download(threading.Thread):
                 self.temp_path = album_path
                 for image_url in album_response["image_url_list"]:
                     # 禁用指定分辨率
-                    image_url = "/".join(image_url.split("/")[0:-1])
+                    image_url = get_image_url(image_url)
                     log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
 
                     if image_url.rfind("/") < image_url.rfind("."):
