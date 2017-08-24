@@ -281,7 +281,11 @@ def read_file(file_path, read_type=1):
             if result[-1] == "\n":
                 result = result[:-1]
         else:
-            result = file_handle.readlines()
+            result = []
+            for line in file_handle.readlines():
+                if line[-1] == "\n":
+                    line = line[:-1]
+                result.append(line)
     return result
 
 
