@@ -137,6 +137,11 @@ def get_album_page(account_id, album_id):
     return result
 
 
+# 过滤图片地址（跳过视频）
+def filter_image_url(image_url):
+    return image_url.find("/video.googleusercontent.com/") != -1 or image_url.find("/video-downloads.googleusercontent.com/") != -1
+
+
 class GooglePlus(robot.Robot):
     def __init__(self):
         global IMAGE_DOWNLOAD_PATH
@@ -262,7 +267,6 @@ class Download(threading.Thread):
             # 从最早的相册开始下载
             while len(blog_info_list) > 0:
                 blog_info = blog_info_list.pop()
-
                 log.step(account_name + " 开始解析日志 %s" % blog_info["blog_id"])
                     
                 # 获取相册页
@@ -280,10 +284,9 @@ class Download(threading.Thread):
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in album_response["image_url_list"]:
-                    # 视频跳过
-                    if image_url.find("video.googleusercontent.com") != -1 or image_url.find("video-downloads.googleusercontent.com") != -1:
+                    # 过滤图片地址
+                    if filter_image_url(image_url):
                         continue
-
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_team, account_name, "%04d.jpg" % image_index)
