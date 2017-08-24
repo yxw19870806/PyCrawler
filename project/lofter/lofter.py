@@ -15,7 +15,6 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
@@ -54,9 +53,20 @@ def get_blog_page(blog_url):
     return result
 
 
+# 从日志地址中解析出日志id
+def get_blog_id(blog_url):
+    return blog_url.split("/")[-1].split("_")[-1]
+
+
+# 去除图片的参数
+def get_image_url(image_url):
+     if image_url.rfind("?") > image_url.rfind("."):
+        return image_url.split("?")[0]
+     return image_url
+
+
 class Lofter(robot.Robot):
     def __init__(self):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -66,7 +76,6 @@ class Lofter(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -123,21 +132,22 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
+        self.temp_path_list = []
 
     def run(self):
         global TOTAL_IMAGE_COUNT
 
         account_name = self.account_info[0]
+        total_image_count = 0
 
         try:
             log.step(account_name + " 开始")
 
             page_count = 1
-            image_count = 1
             unique_list = []
+            blog_url_list = []
             is_over = False
-            first_blog_id = None
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            # 获取全部还未下载过需要解析的日志
             while not is_over:
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
@@ -151,19 +161,10 @@ class Download(threading.Thread):
                 if len(blog_pagination_response["blog_url_list"]) == 0:
                     break
 
-                log.trace(account_name + " 第%s页去重排序后的日志：%s" % (page_count, blog_pagination_response["blog_url_list"]))
+                log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, blog_pagination_response["blog_url_list"]))
 
                 for blog_url in blog_pagination_response["blog_url_list"]:
-                    blog_id = blog_url.split("/")[-1].split("_")[-1]
-
-                    # 检查是否达到存档记录
-                    if blog_id <= self.account_info[2]:
-                        is_over = True
-                        break
-
-                    # 新的存档记录
-                    if first_blog_id is None:
-                        first_blog_id = blog_id
+                    blog_id = get_blog_id(blog_url)
 
                     # 新增日志导致的重复判断
                     if blog_id in unique_list:
@@ -171,75 +172,77 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(blog_id)
 
-                    log.step(account_name + " 开始解析日志 %s" % blog_url)
-
-                    # 获取日志
-                    try:
-                        blog_response = get_blog_page(blog_url)
-                    except robot.RobotException, e:
-                        log.error(account_name + " 日志 %s 解析失败，原因：%s" % (blog_url, e.message))
-                        raise
-
-                    # 获取图片下载地址列表
-                    if len(blog_response["image_url_list"]) == 0:
-                        log.error(account_name + " 日志 %s 中没有找到图片" % blog_url)
-                        continue
-
-                    log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_response["image_url_list"]))
-
-                    for image_url in blog_response["image_url_list"]:
-                        if image_url.rfind("?") > image_url.rfind("."):
-                            image_url = image_url.split("?")[0]
-                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-
-                        file_type = image_url.split(".")[-1]
-                        file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                        save_file_return = net.save_net_file(image_url, file_path)
-                        if save_file_return["status"] == 1:
-                            log.step(account_name + " 第%s张图片下载成功" % image_count)
-                            image_count += 1
-                        else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                    if is_over:
+                    # 检查是否达到存档记录
+                    if blog_id > self.account_info[2]:
+                        blog_url_list.append(blog_url)
+                    else:
+                        is_over = True
                         break
 
                 if not is_over:
                     page_count += 1
 
-            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
+            log.step("需要下载的全部日志解析完毕，共%s个" % len(blog_url_list))
 
-            # 排序
-            if image_count > 1:
-                log.step(account_name + " 图片开始从下载目录移动到保存目录")
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    log.step(account_name + " 图片从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_name + " 创建图片子目录 %s 失败" % destination_path)
-                    tool.process_exit()
+            # 从最早的日志开始下载
+            while len(blog_url_list) > 0:
+                blog_url = blog_url_list.pop()
+                log.step(account_name + " 开始解析日志 %s" % blog_url)
 
-            # 新的存档记录
-            if first_blog_id is not None:
-                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = first_blog_id
+                # 获取日志
+                try:
+                    blog_response = get_blog_page(blog_url)
+                except robot.RobotException, e:
+                    log.error(account_name + " 日志 %s 解析失败，原因：%s" % (blog_url, e.message))
+                    raise
 
-            # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += image_count - 1
-            ACCOUNTS.remove(account_name)
-            self.thread_lock.release()
+                # 获取图片下载地址列表
+                if len(blog_response["image_url_list"]) == 0:
+                    log.error(account_name + " 日志 %s 中没有找到图片" % blog_url)
+                    continue
 
-            log.step(account_name + " 完成")
+                log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_response["image_url_list"]))
+
+                image_index = int(self.account_info[1]) + 1
+                for image_url in blog_response["image_url_list"]:
+                    # 去除图片地址的参数
+                    image_url = get_image_url(image_url)
+                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+
+                    file_type = image_url.split(".")[-1]
+                    file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        self.temp_path_list.append(file_path)
+                        log.step(account_name + " 第%s张图片下载成功" % image_index)
+                        image_index += 1
+                    else:
+                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                # 日志内图片全部下载完毕
+                self.temp_path_list = []  # 临时目录设置清除
+                total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+                self.account_info[1] = str(image_index - 1)  # 设置存档记录
+                self.account_info[2] = get_blog_id(blog_url)  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
             else:
                 log.error(account_name + " 异常退出")
+            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            if len(self.temp_path_list) > 0:
+                for temp_path in self.temp_path_list:
+                    tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+        TOTAL_IMAGE_COUNT += total_image_count
+        ACCOUNTS.remove(account_name)
+        self.thread_lock.release()
+        log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 
 if __name__ == "__main__":
