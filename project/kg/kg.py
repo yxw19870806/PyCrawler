@@ -221,7 +221,7 @@ class Download(threading.Thread):
                 log.step(account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
                 file_type = audio_play_response["audio_url"].split(".")[-1].split("?")[0]
-                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.%s" % (audio_info["audio_id"], audio_info["audio_title"], file_type))
+                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.%s" % (audio_info["audio_id"], robot.filter_text(audio_info["audio_title"]), file_type))
                 save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step(account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
