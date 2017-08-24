@@ -177,7 +177,7 @@ class Download(threading.Thread):
                 if not is_over:
                     page_count += 1
 
-            log.step("需要下载的全部图片解析完毕，共%s个" % len(blog_info_list))
+            log.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
 
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
@@ -203,7 +203,7 @@ class Download(threading.Thread):
                 # 日志内图片全部下载完毕
                 self.temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-                self.account_info[1] = str(image_index)  # 设置存档记录
+                self.account_info[1] = str(image_index - 1)  # 设置存档记录
                 self.account_info[2] = blog_info["blog_id"]  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
