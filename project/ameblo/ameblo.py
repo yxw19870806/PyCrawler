@@ -284,6 +284,7 @@ class Download(threading.Thread):
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_response["image_url_list"]:
+                    # 过滤一些无效的地址
                     if filter_image_url(image_url):
                         continue
                     # 获取原始图片下载地址

@@ -126,7 +126,6 @@ class Jigadori(robot.Robot):
         # 从最早的图片开始下载
         while len(image_info_list) > 0:
             image_info = image_info_list.pop()
-
             log.step("开始解析tweet%s的图片" % image_info["tweet_id"])
 
             image_index = int(save_info[0]) + 1
@@ -134,9 +133,11 @@ class Jigadori(robot.Robot):
             try:
                 for image_url in image_info["image_url_list"]:
                     log.step("开始下载第%s张图片 %s" % (image_index, image_url))
-                    file_type = image_url.split(".")[-1]
-                    if file_type.find("/") != -1:
+
+                    if image_url.rfind("/") > image_url.rfind("."):
                         file_type = "jpg"
+                    else:
+                        file_type = image_url.split(".")[-1]
                     file_path = os.path.join(self.image_download_path, "%05d_%s.%s" % (image_index, image_info["account_name"], file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
