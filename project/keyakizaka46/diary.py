@@ -55,6 +55,17 @@ def get_one_page_blog(account_id, page_count):
     return result
 
 
+# 检测地址是否包含域名
+def get_image_url(image_url):
+    # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
+    if image_url[:7] != "http://" and image_url[:8] != "https://":
+        if image_url[0] == "/":
+            image_url = "http://www.keyakizaka46.com%s" % image_url
+        else:
+            image_url = "http://www.keyakizaka46.com/%s" % image_url
+    return image_url
+
+
 class Diary(robot.Robot):
     def __init__(self):
         global IMAGE_TEMP_PATH
@@ -179,12 +190,7 @@ class Download(threading.Thread):
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_info["image_url_list"]:
-                    # 如果图片地址没有域名，表示直接使用当前域名下的资源，需要拼接成完整的地址
-                    if image_url[:7] != "http://" and image_url[:8] != "https://":
-                        if image_url[0] == "/":
-                            image_url = "http://www.keyakizaka46.com%s" % image_url
-                        else:
-                            image_url = "http://www.keyakizaka46.com/%s" % image_url
+                    image_url = get_image_url(image_url)
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
