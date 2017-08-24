@@ -16,7 +16,6 @@ import traceback
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 20
 TOTAL_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
@@ -68,7 +67,6 @@ def get_image_url(image_url):
 
 class Diary(robot.Robot):
     def __init__(self):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -78,7 +76,6 @@ class Diary(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -194,7 +191,7 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(IMAGE_TEMP_PATH, account_name, "%04d.%s" % (image_index, file_type))
+                    file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         self.temp_path_list.append(file_path)
