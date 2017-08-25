@@ -53,6 +53,11 @@ def get_one_page_album(album_id):
     return result
 
 
+# 对一些异常的图片地址做过滤
+def get_image_url(image_url):
+    return image_url.replace("/[page]", "/")
+
+
 class MeiTuLu(robot.Robot):
     def __init__(self):
         sys_config = {
@@ -100,7 +105,7 @@ class MeiTuLu(robot.Robot):
                 album_path = os.path.join(self.image_download_path, "%04d" % album_id)
 
             for image_url in album_pagination_response["image_url_list"]:
-                image_url = image_url.replace("/[page]", "/")
+                image_url = get_image_url(image_url)
                 log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]
