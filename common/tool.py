@@ -92,6 +92,9 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
             if cookie_info[4] == cookie_key:
                 return cookie_info[5]
     elif browser_type == 3:
+        # chrome仅支持windows系统的解密
+        if platform.system() != "Windows":
+            return None
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
@@ -167,6 +170,9 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
     elif browser_type == 3:
+        # chrome仅支持windows系统的解密
+        if platform.system() != "Windows":
+            return None
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
         cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
