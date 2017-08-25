@@ -16,8 +16,8 @@ import time
 import threading
 if platform.system() == "Windows":
     import win32crypt
-
-# 初始化操作
+# if sys.stdout.encoding != "UTF-8":
+#     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
 if sys.version_info < (2, 7, 12):
     raise Exception("python版本过低，请访问官网 https://www.python.org/downloads/ 更新")
 elif sys.version_info >= (3,):
