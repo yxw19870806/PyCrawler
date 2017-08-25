@@ -106,7 +106,6 @@ class MeiTuLu(robot.Robot):
         while not is_over and album_id <= index_response["max_album_id"]:
             log.step("开始解析图集%s" % album_id)
 
-            image_count = 1
             # 获取相册
             try:
                 album_pagination_response = get_one_page_album(album_id)
@@ -131,19 +130,20 @@ class MeiTuLu(robot.Robot):
             else:
                 album_path = os.path.join(self.image_download_path, "%04d" % album_id)
 
+            image_index = 1
             for image_url in album_pagination_response["image_url_list"]:
                 image_url = get_image_url(image_url)
-                log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+                log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                 file_type = image_url.split(".")[-1]
-                file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
+                file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                 try:
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
-                        image_count += 1
+                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        image_index += 1
                     else:
-                         log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                         log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
                     tool.remove_dir_or_file(album_path)
@@ -151,7 +151,7 @@ class MeiTuLu(robot.Robot):
                     break
 
             if not is_over:
-                total_image_count += image_count - 1
+                total_image_count += image_index - 1
                 album_id += 1
 
         # 重新保存存档文件
