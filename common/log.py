@@ -23,8 +23,12 @@ def error(msg):
         tool.print_msg(msg, False)
     if ERROR_LOG_PATH != "":
         thread_lock.acquire()
-        tool.write_file(msg, ERROR_LOG_PATH)
-        thread_lock.release()
+        try:
+            tool.write_file(msg, ERROR_LOG_PATH)
+        except:
+            raise
+        finally:
+            thread_lock.release()
 
 
 def step(msg):
@@ -33,8 +37,12 @@ def step(msg):
         tool.print_msg(msg, False)
     if STEP_LOG_PATH != "":
         thread_lock.acquire()
-        tool.write_file(msg, STEP_LOG_PATH)
-        thread_lock.release()
+        try:
+            tool.write_file(msg, STEP_LOG_PATH)
+        except:
+            raise
+        finally:
+            thread_lock.release()
 
 
 def trace(msg):
@@ -43,5 +51,9 @@ def trace(msg):
         tool.print_msg(msg, False)
     if TRACE_LOG_PATH != "":
         thread_lock.acquire()
-        tool.write_file(msg, TRACE_LOG_PATH)
-        thread_lock.release()
+        try:
+            tool.write_file(msg, TRACE_LOG_PATH)
+        except:
+            raise
+        finally:
+            thread_lock.release()
