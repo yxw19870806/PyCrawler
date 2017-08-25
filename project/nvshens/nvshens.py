@@ -11,6 +11,22 @@ import os
 import re
 
 
+# 获取图集首页
+def get_index_page():
+    index_url = "https://www.nvshens.com/gallery/"
+    index_response = net.http_request(index_url)
+    result = {
+        "max_album_id": None,  # 最新图集id
+    }
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+    album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
+    if len(album_id_find) == 0:
+        raise robot.RobotException("页面匹配图集id失败\n%s" % index_response.data)
+    result["max_album_id"] = max(map(int, album_id_find))
+    return result
+
+
 # 获取图集所有图片
 def get_album_photo(album_id):
     page_count = max_page_count = 1
@@ -70,22 +86,6 @@ def get_album_photo(album_id):
     # 判断页面上的总数和实际地址数量是否一致
     if image_count != len(result["image_url_list"]):
         raise robot.RobotException("页面截取的图片数量 %s 和显示的总数 %s 不一致" % (image_count, len(result["image_url_list"])))
-    return result
-
-
-# 获取图集首页
-def get_index_page():
-    index_url = "https://www.nvshens.com/gallery/"
-    index_response = net.http_request(index_url)
-    result = {
-        "max_album_id": None,  # 最新图集id
-    }
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
-    album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
-    if len(album_id_find) == 0:
-        raise robot.RobotException("页面匹配图集id失败\n%s" % index_response.data)
-    result["max_album_id"] = max(map(int, album_id_find))
     return result
 
 
