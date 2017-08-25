@@ -11,6 +11,25 @@ import os
 import re
 
 
+# 获取图集首页
+def get_index_page():
+    index_url = "https://www.meitulu.com/"
+    index_response = net.http_request(index_url)
+    result = {
+        "max_album_id": None,  # 最新图集id
+    }
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+    new_album_html = tool.find_sub_string(index_response.data, '<div class="zuixin">最新发布</div>', '<div class="zuixin">名站写真</div>')
+    if not new_album_html:
+        raise robot.RobotException("页面截取最新发布失败\n%s" % index_response.data)
+    album_id_find = re.findall('<a href="https://www.meitulu.com/item/(\d*).html"', new_album_html)
+    if len(album_id_find) == 0:
+        raise robot.RobotException("最新发布匹配图集id失败\n%s" % new_album_html)
+    result["max_album_id"] = max(map(int, album_id_find))
+    return result
+
+
 # 获取指定一页的图集
 def get_one_page_album(album_id):
     page_count = max_page_count = 1
@@ -68,15 +87,23 @@ class MeiTuLu(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
-
         if os.path.exists(self.save_data_path):
             album_id = int(tool.read_file(self.save_data_path))
         else:
             album_id = 1
 
+        # 获取图集首页
+        try:
+            index_response = get_index_page()
+        except robot.RobotException, e:
+            log.error("图集首页解析失败，原因：%s" % e.message)
+            raise
+
+        log.step("最新图集id：%s" % index_response["max_album_id"])
+
         total_image_count = 0
         is_over = False
-        while not is_over:
+        while not is_over and album_id <= index_response["max_album_id"]:
             log.step("开始解析图集%s" % album_id)
 
             image_count = 1
