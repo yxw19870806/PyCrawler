@@ -44,6 +44,8 @@ def get_album_photo(album_id):
         # 判断图集是否已经被删除
         if page_count == 1:
             result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
+            if result["is_delete"]:
+                return result
             # 获取图集图片总数
             image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
             if not robot.is_integer(image_count):
@@ -51,7 +53,6 @@ def get_album_photo(album_id):
             image_count = int(image_count)
             if image_count == 0:
                 result["is_delete"] = True
-            if result["is_delete"]:
                 return result
             # 获取图集标题
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
