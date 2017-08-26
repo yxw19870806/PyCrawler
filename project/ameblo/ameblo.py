@@ -22,7 +22,7 @@ NEW_SAVE_DATA_PATH = ""
 
 # 获取指定页数的所有日志
 def get_one_page_blog(account_name, page_count):
-    blog_pagination_url = "http://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
+    blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
         "blog_id_list": [],  # 所有日志id
@@ -36,7 +36,7 @@ def get_one_page_blog(account_name, page_count):
             page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
             if not page_data:
                 raise robot.RobotException("页面截取正文失败\n%s" % blog_pagination_response.data)
-            blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="http://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
+            blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="https://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
         if len(blog_id_list) == 0:
             raise robot.RobotException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
         result["blog_id_list"] = map(str, blog_id_list)
@@ -67,7 +67,7 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
-    blog_url = "http://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
+    blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
     blog_response = net.http_request(blog_url)
     result = {
         "image_url_list": [],  # 所有图片地址
