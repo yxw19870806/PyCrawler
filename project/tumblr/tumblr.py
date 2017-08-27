@@ -307,7 +307,7 @@ class Download(threading.Thread):
 
                         # 第三方视频，跳过
                         if video_play_response["is_skip"]:
-                            log.error(account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
+                            log.error(account_id + " 日志 %s 存在第三方视频（第%s个视频），跳过" % (post_url, video_count))
                             break
 
                         video_url = video_play_response["video_url"]
