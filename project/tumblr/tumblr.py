@@ -26,13 +26,18 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
+COOKIE_INFO = {}
+USER_AGENT = None
 
 
 # 获取一页的日志地址列表
 def get_one_page_post(account_id, page_count):
-    host = "http://%s.tumblr.com" % account_id
-    post_pagination_url = "%s/page/%s" % (host, page_count)
-    post_pagination_response = net.http_request(post_pagination_url)
+    if page_count == 1:
+        post_pagination_url = "http://%s.tumblr.com/" % account_id
+    else:
+        post_pagination_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
+    header_list = {"User-Agent": USER_AGENT}
+    post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=COOKIE_INFO)
     result = {
         "post_url_list": [],  # 所有日志地址
         "is_over": [],  # 是不是最后一页日志
@@ -67,7 +72,8 @@ def get_one_page_post(account_id, page_count):
 
 # 获取日志页面
 def get_post_page(post_url):
-    post_response = net.http_request(post_url)
+    header_list = {"User-Agent": USER_AGENT}
+    post_response = net.http_request(post_url, header_list=header_list, cookies_list=COOKIE_INFO)
     result = {
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 所有图片地址
@@ -167,11 +173,15 @@ class Tumblr(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
+        global COOKIE_INFO
+        global USER_AGENT
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_GET_COOKIE: {".tumblr.com": ()},
             robot.SYS_SET_PROXY: True,
+            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0)),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -183,6 +193,8 @@ class Tumblr(robot.Robot):
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        COOKIE_INFO = self.cookie_value
+        USER_AGENT = self.app_config["USER_AGENT"]
 
     def main(self):
         global ACCOUNTS
