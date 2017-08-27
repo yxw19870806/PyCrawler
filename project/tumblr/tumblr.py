@@ -320,6 +320,13 @@ class Download(threading.Thread):
                             log.step(account_id + " 第%s个视频下载成功" % video_count)
                             video_count += 1
                         else:
+                            if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
+                                video_url = video_url.replace("_r1_720", "_r1")
+                                save_file_return = net.save_net_file(video_url, video_file_path)
+                                if save_file_return["status"] == 1:
+                                    log.step(account_id + " 第%s个视频下载成功" % video_count)
+                                    video_count += 1
+                                    break
                             log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                         break
 
