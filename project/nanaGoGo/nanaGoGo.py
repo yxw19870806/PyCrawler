@@ -188,6 +188,8 @@ class Download(threading.Thread):
                 if len(media_pagination_response["media_info_list"]) == 0:
                     break
 
+                log.trace(account_name + " target id %s解析的所有媒体信息：%s" % (target_id, media_pagination_response["media_info_list"]))
+
                 for media_info in media_pagination_response["media_info_list"]:
                     # 检查是否达到存档记录
                     if int(media_info["blog_id"]) > int(self.account_info[3]):
