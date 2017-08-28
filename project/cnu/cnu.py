@@ -92,19 +92,19 @@ class CNU(robot.Robot):
             else:
                 album_path = os.path.join(self.image_download_path, str(album_id))
 
-            image_count = 1
+            image_index = 1
             for image_url in album_response["image_url_list"]:
-                log.step("作品%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+                log.step("作品%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                 file_type = image_url.split(".")[-1]
-                file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
+                file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                 try:
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
-                        image_count += 1
+                        log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        image_index += 1
                     else:
-                         log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                         log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
                     tool.remove_dir_or_file(album_path)
@@ -112,7 +112,7 @@ class CNU(robot.Robot):
                     break
 
             if not is_over:
-                total_image_count += image_count - 1
+                total_image_count += image_index - 1
                 album_id += 1
 
         # 重新保存存档文件

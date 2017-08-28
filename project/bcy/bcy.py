@@ -389,7 +389,7 @@ class Download(threading.Thread):
                         log.error(account_name + " 关注失败，跳过作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
                         continue
 
-                image_count = 1
+                image_index = 1
                 # 过滤标题中不支持的字符
                 album_title = robot.filter_text(album_info["album_title"])
                 if album_title:
@@ -401,23 +401,23 @@ class Download(threading.Thread):
                 for image_url in album_response["image_url_list"]:
                     # 禁用指定分辨率
                     image_url = get_image_url(image_url)
-                    log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_count, image_url))
+                    log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
                     if image_url.rfind("/") < image_url.rfind("."):
                         file_type = image_url.split(".")[-1]
                     else:
                         file_type = "jpg"
-                    file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
+                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_count))
-                        image_count += 1
+                        log.step(account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
+                        image_index += 1
                     else:
-                        log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 作品全部图片下载完毕
                 self.temp_path = ""  # 临时目录设置清除
                 self.account_info[1] = album_info["album_id"]  # 设置存档记录
-                total_image_count += image_count - 1  # 计数累加
+                total_image_count += image_index - 1  # 计数累加
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")

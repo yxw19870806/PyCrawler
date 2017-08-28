@@ -131,28 +131,26 @@ class MeiTuZZ(robot.Robot):
 
             # 图片下载
             if self.is_download_image and album_response["image_url_list"] is not None:
-                log.trace("第%s页解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
-
-                image_count = 1
+                image_index = 1
                 image_path = os.path.join(self.image_download_path, "%04d" % album_id)
                 for image_url in album_response["image_url_list"]:
-                    log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_count, image_url))
+                    log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_index, image_url))
 
-                    image_file_path = os.path.join(image_path, "%04d.jpg" % image_count)
+                    image_file_path = os.path.join(image_path, "%04d.jpg" % image_index)
                     try:
                         save_file_return = net.save_net_file(image_url, image_file_path, True)
                         if save_file_return["status"] == 1:
-                            log.step("第%s页第%s张图片下载成功" % (album_id, image_count))
-                            image_count += 1
+                            log.step("第%s页第%s张图片下载成功" % (album_id, image_index))
+                            image_index += 1
                         else:
-                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                     except SystemExit:
                         log.step("提前退出")
                         tool.remove_dir_or_file(image_path)
                         is_over = True
                         break
 
-                total_image_count += image_count - 1
+                total_image_count += image_index - 1
 
             # 视频下载
             if self.is_download_image and album_response["video_url"] is not None:
