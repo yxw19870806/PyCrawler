@@ -213,7 +213,7 @@ class Download(threading.Thread):
                     raise
 
                 log.trace(sub_path + " 第%s页解析的所有图集：%s" % (page_count, album_pagination_response["album_info_list"]))
-                # 提取所有
+
                 for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
                     if int(album_info["page_id"]) > int(self.account_info[1]):
