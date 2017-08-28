@@ -41,7 +41,8 @@ def get_one_page_media(account_name, target_id):
         for media_info in media_pagination_response.json_data["data"]:
             extra_media_info = {
                 "blog_id": None,  # 日志id
-                "blog_body": None,  # 日志内容
+                "image_url_list": [],  # 所有图片地址
+                "video_url_list": [],  # 所有图片地址
             }
             if not robot.check_sub_key(("post",), media_info):
                 raise robot.RobotException("媒体信息'post'字段不存在\n%s" % media_info)
@@ -54,7 +55,30 @@ def get_one_page_media(account_name, target_id):
             # 获取日志内容
             if not robot.check_sub_key(("body",), media_info["post"]):
                 raise robot.RobotException("媒体信息'body'字段不存在\n%s" % media_info)
-            extra_media_info["blog_body"] = media_info["post"]["body"]
+            for blog_body in media_info["post"]["body"]:
+                print blog_body
+                if not robot.check_sub_key(("bodyType",), blog_body):
+                    raise robot.RobotException("媒体信息'bodyType'字段不存在\n%s" % blog_body)
+                if not robot.is_integer(blog_body["bodyType"]):
+                    raise robot.RobotException("媒体信息'bodyType'字段类型不正确\n%s" % blog_body)
+                # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
+                body_type = int(blog_body["bodyType"])
+                if body_type == 1:  # 文本
+                    continue
+                elif body_type == 2:  # 表情
+                    continue
+                elif body_type == 3:  # 图片
+                    if not robot.check_sub_key(("image",), blog_body):
+                        raise robot.RobotException("媒体信息'image'字段不存在\n%s" % blog_body)
+                    extra_media_info["image_url_list"].append(str(blog_body["image"]))
+                elif body_type == 7:  # 转发
+                    continue
+                elif body_type == 8:  # video
+                    if not robot.check_sub_key(("movieUrlHq",), blog_body):
+                        raise robot.RobotException("媒体信息'movieUrlHq'字段不存在\n%s" % blog_body)
+                    extra_media_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
+                else:
+                    raise robot.RobotException("媒体信息'bodyType'字段取值不正确\n%s" % blog_body)
             result["media_info_list"].append(extra_media_info)
     elif target_id == INIT_TARGET_ID and media_pagination_response.status == 400:
         raise robot.RobotException("talk不存在")
@@ -159,7 +183,7 @@ class Download(threading.Thread):
             image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
             video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
             while not is_over:
-                log.step(account_name + " 开始解析target id %s后的一页视频" % target_id)
+                log.step(account_name + " 开始解析target id %s后的一页媒体" % target_id)
 
                 # 获取一页媒体信息
                 try:
@@ -186,57 +210,30 @@ class Download(threading.Thread):
                     target_id = media_info["blog_id"]
 
                     log.step(account_name + " 开始解析日志%s" % media_info["blog_id"])
-                    # todo 放到解析方法get_one_page_media()中去
-                    for blog_body in media_info["blog_body"]:
-                        if not robot.check_sub_key(("bodyType",), blog_body):
-                            log.error(account_name + " 媒体信息%s的bodyType解析失败" % media_info["json_data"])
-                            tool.process_exit()
 
-                        # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
-                        body_type = int(blog_body["bodyType"])
-                        if body_type == 1:  # 文本
-                            pass
-                        elif body_type == 2:  # 表情
-                            pass
-                        elif body_type == 3:  # 图片
-                            if IS_DOWNLOAD_IMAGE:
-                                if not robot.check_sub_key(("image",), blog_body):
-                                    log.error(account_name + " 第%s张图片解析失败%s" % (image_count, blog_body))
-                                    continue
+                    if IS_DOWNLOAD_IMAGE:
+                        for image_url in media_info["image_url_list"]:
+                            log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
+                            file_type = image_url.split(".")[-1]
+                            image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
+                            save_file_return = net.save_net_file(image_url, image_file_path)
+                            if save_file_return["status"] == 1:
+                                log.step(account_name + " 第%s张图片下载成功" % image_count)
+                                image_count += 1
+                            else:
+                                log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-                                image_url = str(blog_body["image"])
-                                log.step(account_name + " 开始下载第%s张图片 %s" % (image_count, image_url))
-
-                                file_type = image_url.split(".")[-1]
-                                image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                                save_file_return = net.save_net_file(image_url, image_file_path)
-                                if save_file_return["status"] == 1:
-                                    log.step(account_name + " 第%s张图片下载成功" % image_count)
-                                    image_count += 1
-                                else:
-                                    log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                        elif body_type == 7:  # 转发
-                            pass
-                        elif body_type == 8:  # video
-                            if IS_DOWNLOAD_VIDEO:
-                                if not robot.check_sub_key(("movieUrlHq",), blog_body):
-                                    log.error(account_name + " 第%s个视频解析失败%s" % (video_count, blog_body))
-                                    continue
-
-                                video_url = str(blog_body["movieUrlHq"])
-                                log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                                file_type = video_url.split(".")[-1]
-                                video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                                save_file_return = net.save_net_file(video_url, video_file_path)
-                                if save_file_return["status"] == 1:
-                                    log.step(account_name + " 第%s个视频下载成功" % video_count)
-                                    video_count += 1
-                                else:
-                                    log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                        else:
-                            log.error(account_name + " 第%s张图片、第%s个视频，未知bodytype %s, %s" % (image_count, video_count, body_type, blog_body))
-                            tool.process_exit()
+                    if IS_DOWNLOAD_VIDEO:
+                        for video_url in media_info["video_url_list"]:
+                            log.step(account_name + " 开始下载第%s个视频 %s" % (video_count, video_url))
+                            file_type = video_url.split(".")[-1]
+                            video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
+                            save_file_return = net.save_net_file(video_url, video_file_path)
+                            if save_file_return["status"] == 1:
+                                log.step(account_name + " 第%s个视频下载成功" % video_count)
+                                video_count += 1
+                            else:
+                                log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
             # 排序
             if image_count > 1:
