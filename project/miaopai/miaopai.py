@@ -214,7 +214,7 @@ class Download(threading.Thread):
                 else:
                     page_count += 1
 
-            log.step("需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+            log.step(account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
 
             while len(video_id_list) > 0:
                 video_id = video_id_list.pop()
