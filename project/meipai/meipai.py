@@ -209,7 +209,7 @@ class Download(threading.Thread):
 
             log.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
-            # 从最早的日志开始下载
+            # 从最早的视频开始下载
             while len(video_info_list) > 0:
                 video_info = video_info_list.pop()
                 video_index = int(self.account_info[1]) + 1

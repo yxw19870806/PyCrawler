@@ -180,6 +180,7 @@ class Download(threading.Thread):
             unique_list = []
             video_id_list = []
             is_over = False
+            # 获取全部还未下载过需要解析的视频
             while not is_over:
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
@@ -216,6 +217,7 @@ class Download(threading.Thread):
 
             log.step(account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
 
+            # 从最早的视频开始下载
             while len(video_id_list) > 0:
                 video_id = video_id_list.pop()
                 video_index = int(self.account_info[1]) + 1
