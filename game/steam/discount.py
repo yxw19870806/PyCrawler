@@ -5,13 +5,15 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import robot
+from common import robot, tool
+import steamCommon
 import json
 import os
+import time
+import datetime
 
-from common import tool
-import steamCommon
-
+API_UPDATE_TIME_WEEKDAY = 2  # 每周优惠更新时间（周几）
+API_UPDATE_TIME_HOUR = 1  # 每周优惠更新时间（几点）
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
@@ -25,9 +27,21 @@ def save_discount_list(discount_game_list):
 
 # 获取文件中的打折列表
 def load_discount_list():
-    if not os.path.exists(DISCOUNT_DATA_PATH):
-        return []
     discount_game_list = []
+    if not os.path.exists(DISCOUNT_DATA_PATH):
+        return discount_game_list
+    week_day = int(time.strftime("%w"))
+    # 已超过本周API更新时间
+    if (week_day > API_UPDATE_TIME_WEEKDAY) or (week_day == API_UPDATE_TIME_WEEKDAY and int(time.strftime("%H")) >= API_UPDATE_TIME_WEEKDAY):
+        last_api_update_day = (datetime.datetime.today() + datetime.timedelta(days=API_UPDATE_TIME_WEEKDAY - week_day)).timetuple()
+    #  获取上周API更新时间
+    else:
+        last_api_update_day = (datetime.datetime.today() + datetime.timedelta(days=API_UPDATE_TIME_WEEKDAY - week_day - 7)).timetuple()
+    last_api_update_day = time.strptime(time.strftime("%Y-%m-%d " + "%02d" % API_UPDATE_TIME_HOUR + ":00:00", last_api_update_day), "%Y-%m-%d %H:%M:%S")
+    last_api_update_time = time.mktime(last_api_update_day)
+    if os.path.getmtime(DISCOUNT_DATA_PATH) < last_api_update_time < time.time():
+        tool.print_msg("discount game list expired")
+        return discount_game_list
     try:
         discount_game_list = json.loads(tool.read_file(DISCOUNT_DATA_PATH))
     except ValueError:
