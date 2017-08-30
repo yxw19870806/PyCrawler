@@ -161,6 +161,7 @@ class Download(threading.Thread):
             album_url_list = []
             # 获取全部还未下载过需要解析的相册
             for album_url in account_index_response["album_url_list"]:
+                # 获取相册id
                 album_id = get_album_id(album_url)
                 if album_id is None:
                     log.error(account_name + " 相册地址%s解析相册id失败" % album_url)
