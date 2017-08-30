@@ -164,6 +164,14 @@ def get_video_play_page(account_id, post_id):
     return result
 
 
+# 日志地址解析日志id
+def get_post_id(post_url):
+    post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
+    if robot.is_integer(post_id):
+        return post_id
+    return None
+
+
 class Tumblr(robot.Robot):
     def __init__(self):
         global IMAGE_TEMP_PATH
@@ -255,44 +263,39 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
+        total_image_count = 0
+        total_video_count = 0
+        temp_path_list = []
 
         try:
             log.step(account_id + " 开始")
 
             page_count = 1
-            image_count = 1
-            video_count = 1
             unique_list = []
+            post_url_list = []
             is_over = False
-            first_post_id = None
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_id)
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_id)
+            # 获取全部还未下载过需要解析的日志
             while not is_over:
-                log.step(account_id + " 开始解析第%s页相册" % page_count)
+                log.step(account_id + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页的日志地址
                 try:
                     post_pagination_response = get_one_page_post(account_id, page_count)
                 except robot.RobotException, e:
-                    log.error(account_id + " 第%s页相册解析失败，原因：%s" % (page_count, e.message))
+                    log.error(account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
                 if post_pagination_response["is_over"]:
                     break
 
-                log.trace(account_id + " 第%s页相册解析的所有日志：%s" % (page_count, post_pagination_response["post_url_list"]))
+                log.trace(account_id + " 第%s页解析的所有日志：%s" % (page_count, post_pagination_response["post_url_list"]))
 
                 for post_url in post_pagination_response["post_url_list"]:
-                    post_id = tool.find_sub_string(post_url, "/post/").split("/")[0]
-
-                    # 检查是否达到存档记录
-                    if int(post_id) <= int(self.account_info[3]):
-                        is_over = True
-                        break
-
-                    # 新的存档记录
-                    if first_post_id is None:
-                        first_post_id = post_id
+                    # 获取日志id
+                    post_id = get_post_id(post_url)
+                    if post_id is None:
+                        log.error(account_id + " 日志地址%s解析日志id失败" % post_url)
+                        tool.process_exit()
 
                     # 新增信息页导致的重复判断
                     if post_id in unique_list:
@@ -300,116 +303,122 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(post_id)
 
-                    log.step(account_id + " 开始解析日志 %s" % post_url)
-
-                    # 获取日志
-                    try:
-                        post_response = get_post_page(post_url)
-                    except robot.RobotException, e:
-                        log.error(account_id + " 日志 %s 解析失败，原因：%s" % (post_url, e.message))
-                        raise
-
-                    # 视频下载
-                    while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
-                        try:
-                            video_play_response = get_video_play_page(account_id, post_id)
-                        except robot.RobotException, e:
-                            log.error(account_id + " 日志 %s 的视频解析失败，原因：%s" % (post_url, e.message))
-                            raise
-
-                        # 第三方视频，跳过
-                        if video_play_response["is_skip"]:
-                            log.error(account_id + " 日志 %s 存在第三方视频（第%s个视频），跳过" % (post_url, video_count))
-                            break
-
-                        video_url = video_play_response["video_url"]
-                        log.step(account_id + " 开始下载第%s个视频 %s" % (video_count, video_url))
-
-                        file_type = video_url.split(".")[-1]
-                        video_file_path = os.path.join(video_path, "%04d.%s" % (video_count, file_type))
-                        save_file_return = net.save_net_file(video_url, video_file_path)
-                        if save_file_return["status"] == 1:
-                            log.step(account_id + " 第%s个视频下载成功" % video_count)
-                            video_count += 1
-                        else:
-                            if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
-                                video_url = video_url.replace("_r1_720", "_r1")
-                                save_file_return = net.save_net_file(video_url, video_file_path)
-                                if save_file_return["status"] == 1:
-                                    log.step(account_id + " 第%s个视频下载成功" % video_count)
-                                    video_count += 1
-                                    break
-                            log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_count, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    # 检查是否达到存档记录
+                    if int(post_id) > int(self.account_info[3]):
+                        post_url_list.append(post_url)
+                    else:
+                        is_over = True
                         break
-
-                    # 图片下载
-                    if IS_DOWNLOAD_IMAGE and len(post_response["image_url_list"]) > 0:
-                        log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_response["image_url_list"]))
-                        for image_url in post_response["image_url_list"]:
-                            log.step(account_id + " 开始下载第%s张图片 %s" % (image_count, image_url))
-
-                            file_type = image_url.split(".")[-1]
-                            image_file_path = os.path.join(image_path, "%04d.%s" % (image_count, file_type))
-                            retry_count = 0
-                            while True:
-                                save_file_return = net.save_net_file(image_url, image_file_path)
-                                if save_file_return["status"] == 1:
-                                    log.step(account_id + " 第%s张图片下载成功" % image_count)
-                                    image_count += 1
-                                # 下载失败，并且http_code不是403和404，重试
-                                elif save_file_return["status"] == 0 and save_file_return["code"] not in [403, 404] and retry_count <= 5:
-                                    retry_count += 1
-                                    continue
-                                else:
-                                    log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                                break
 
                 if not is_over:
                     page_count += 1
 
-            log.step(account_id + " 下载完毕，总共获得%s张图片和%s个视频" % (image_count - 1, video_count - 1))
+            log.step(account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_url_list))
 
-            # 排序
-            if image_count > 1:
-                log.step(account_id + " 图片开始从下载目录移动到保存目录")
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id)
-                if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    log.step(account_id + " 图片从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_id + " 创建图片保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
-            if video_count > 1:
-                log.step(account_id + " 视频开始从下载目录移动到保存目录")
-                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id)
-                if robot.sort_file(video_path, destination_path, int(self.account_info[2]), 4):
-                    log.step(account_id + " 视频从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_id + " 创建视频保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
+            # 从最早的日志开始下载
+            while len(post_url_list) > 0:
+                post_url = post_url_list.pop()
+                post_id = get_post_id(post_url)
+                log.step(account_id + " 开始解析日志 %s" % post_url)
 
-            # 新的存档记录
-            if first_post_id is not None:
-                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = str(int(self.account_info[2]) + video_count - 1)
-                self.account_info[3] = first_post_id
+                # 获取日志
+                try:
+                    post_response = get_post_page(post_url)
+                except robot.RobotException, e:
+                    log.error(account_id + " 日志 %s 解析失败，原因：%s" % (post_url, e.message))
+                    raise
 
-            # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += image_count - 1
-            TOTAL_VIDEO_COUNT += video_count - 1
-            ACCOUNTS.remove(account_id)
-            self.thread_lock.release()
+                # 视频下载
+                video_index = int(self.account_info[2]) + 1
+                while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
+                    try:
+                        video_play_response = get_video_play_page(account_id, post_id)
+                    except robot.RobotException, e:
+                        log.error(account_id + " 日志 %s 的视频解析失败，原因：%s" % (post_url, e.message))
+                        raise
 
-            log.step(account_id + " 完成")
+                    # 第三方视频，跳过
+                    if video_play_response["is_skip"]:
+                        log.error(account_id + " 日志 %s 存在第三方视频（第%s个视频），跳过" % (post_url, video_index))
+                        break
+
+                    video_url = video_play_response["video_url"]
+                    log.step(account_id + " 开始下载第%s个视频 %s" % (video_index, video_url))
+
+                    file_type = video_url.split(".")[-1]
+                    video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_id, "%04d.%s" % (video_index, file_type))
+                    save_file_return = net.save_net_file(video_url, video_file_path)
+                    if save_file_return["status"] == 1:
+                        # 设置临时目录
+                        temp_path_list.append(video_file_path)
+                        log.step(account_id + " 第%s个视频下载成功" % video_index)
+                        video_index += 1
+                    else:
+                        if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
+                            video_url = video_url.replace("_r1_720", "_r1")
+                            save_file_return = net.save_net_file(video_url, video_file_path)
+                            if save_file_return["status"] == 1:
+                                # 设置临时目录
+                                temp_path_list.append(video_file_path)
+                                log.step(account_id + " 第%s个视频下载成功" % video_index)
+                                break
+                        log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    break
+
+                # 图片下载
+                image_index = int(self.account_info[1]) + 1
+                if IS_DOWNLOAD_IMAGE and len(post_response["image_url_list"]) > 0:
+                    log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_response["image_url_list"]))
+
+                    for image_url in post_response["image_url_list"]:
+                        log.step(account_id + " 开始下载第%s张图片 %s" % (image_index, image_url))
+
+                        file_type = image_url.split(".")[-1]
+                        image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id, "%04d.%s" % (image_index, file_type))
+                        retry_count = 0
+                        while True:
+                            save_file_return = net.save_net_file(image_url, image_file_path)
+                            if save_file_return["status"] == 1:
+                                # 设置临时目录
+                                temp_path_list.append(image_file_path)
+                                log.step(account_id + " 第%s张图片下载成功" % image_index)
+                                image_index += 1
+                            # 下载失败，并且http_code不是403和404，重试
+                            elif save_file_return["status"] == 0 and save_file_return["code"] not in [403, 404] and retry_count <= 5:
+                                retry_count += 1
+                                continue
+                            else:
+                                log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            break
+
+                # 日志内图片和视频全部下载完毕
+                temp_path_list = []  # 临时目录设置清除
+                total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+                total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
+                self.account_info[1] = str(image_index - 1)  # 设置存档记录
+                self.account_info[2] = str(video_index - 1)  # 设置存档记录
+                self.account_info[3] = post_id
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_id + " 提前退出")
             else:
                 log.error(account_id + " 异常退出")
+            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            if len(temp_path_list) > 0:
+                for temp_path in temp_path_list:
+                    tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_id + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+        TOTAL_IMAGE_COUNT += total_image_count
+        TOTAL_VIDEO_COUNT += total_video_count
+        ACCOUNTS.remove(account_id)
+        self.thread_lock.release()
+        log.step(account_id + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
 
 
 if __name__ == "__main__":
