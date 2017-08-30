@@ -16,16 +16,34 @@ def get_one_page_blog(page_count):
     blog_pagination_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
     result = {
         "is_over": False,  # 是不是最后一页日志
-        "image_name_list": [],  # 所有图片名字
+        "blog_info_list": [],  # 所有日志信息
     }
     blog_pagination_response = net.http_request(blog_pagination_url)
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     # 检测是否是最后一页
     result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
+    if result["is_over"]:
+        return result
     # 获取图片名字
-    image_name_list = re.findall('data-original="./([^"]*)"', blog_pagination_response.data)
-    result["image_name_list"] = map(str, image_name_list)
+    blog_html_find = re.findall("<section>([\s|\S]*?)</section>", blog_pagination_response.data)
+    if len(blog_html_find) == 0:
+        raise robot.RobotException("页面匹配日志信息失败\n%s" % blog_pagination_response.data)
+    for blog_html in blog_html_find:
+        extra_blog_info = {
+            "blog_id": None,  # 日志id
+            "image_url_list": [],  # 图片地址列表
+        }
+        image_name_list = re.findall('data-original="./([^"]*)"', blog_html)
+        if len(image_name_list) == 0:
+            continue
+        blog_id = str(image_name_list[0]).split("-")[0]
+        if not robot.is_integer(blog_id):
+            raise robot.RobotException("图片名字截取日志id失败\n%s" % blog_html)
+        extra_blog_info["blog_id"] = blog_id
+        for image_name in image_name_list:
+            extra_blog_info["image_url_list"].append("http://blog.mariko-shinoda.net/%s" % image_name)
+        result["blog_info_list"].append(extra_blog_info)
     return result
 
 
@@ -39,19 +57,18 @@ class Blog(robot.Robot):
 
     def main(self):
         # 解析存档文件
-        last_blog_time = 0
-        image_start_index = 0
+        save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
-            save_info = tool.read_file(self.save_data_path).split("\t")
-            if len(save_info) >= 2:
-                image_start_index = int(save_info[0])
-                last_blog_time = int(save_info[1])
+            file_save_info = tool.read_file(self.save_data_path).split("\t")
+            if len(file_save_info) >= 2 and robot.is_integer(file_save_info[0]) and robot.is_integer(file_save_info[1]):
+                save_info = file_save_info
 
         # 下载
         page_count = 1
-        image_count = 1
+        total_image_count = 0
+        blog_info_list = []
         is_over = False
-        first_blog_time = None
+        # 获取全部还未下载过需要解析的日志
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
@@ -67,50 +84,57 @@ class Blog(robot.Robot):
                 break
 
             # 获取页面内的所有图片
-            log.trace("第%s页解析的全部图片：%s" % (page_count, blog_pagination_response["image_name_list"]))
+            log.trace("第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
-            if len(blog_pagination_response["image_name_list"]) > 0:
-                # 获取日志时间
-                blog_time = int(blog_pagination_response["image_name_list"][0].split("-")[0])
-
+            for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
-                if blog_time <= last_blog_time:
+                if int(blog_info["blog_id"]) > int(save_info[1]):
+                    blog_info_list.append(blog_info)
+                else:
+                    is_over = True
                     break
 
-                # 新的存档记录
-                if first_blog_time is None:
-                    first_blog_time = str(blog_time)
+            if not is_over:
+                page_count += 1
 
-            for image_name in blog_pagination_response["image_name_list"]:
-                image_url = "http://blog.mariko-shinoda.net/%s" % image_name
-                log.step("开始下载第%s张图片 %s" % (image_count, image_url))
+        log.step("需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
 
-                file_type = image_url.split(".")[-1].split(":")[0]
-                file_path = os.path.join(self.image_temp_path, "%05d.%s" % (image_count, file_type))
-                save_file_return = net.save_net_file(image_url, file_path)
-                if save_file_return["status"] == 1:
-                    log.step("第%s张图片下载成功" % image_count)
-                    image_count += 1
-                else:
-                    log.step("第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-            page_count += 1
+        # 从最早的日志开始下载
+        while len(blog_info_list) > 0:
+            blog_info = blog_info_list.pop()
+            log.step("开始解析日志 %s" % blog_info["blog_id"])
 
-        log.step("下载完毕，总共获得%s张图片" % (image_count - 1))
+            image_index = int(save_info[0]) + 1
+            temp_path_list = []
+            try:
+                for image_url in blog_info["image_url_list"]:
+                    log.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
-        # 排序复制到保存目录
-        if image_count > 1:
-            log.step("图片开始从下载目录移动到保存目录")
-            if robot.sort_file(self.image_temp_path, self.image_download_path, image_start_index, 5):
-                log.step("图片从下载目录移动到保存目录成功")
-            else:
-                log.error("创建图片保存目录 %s 失败" % self.image_download_path)
-                tool.process_exit()
+                    file_type = image_url.split(".")[-1].split(":")[0]
+                    file_path = os.path.join(self.image_download_path, "%05d.%s" % (image_index, file_type))
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        temp_path_list.append(file_path)
+                        log.step("第%s张图片下载成功" % image_index)
+                        image_index += 1
+                    else:
+                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            except SystemExit:
+                # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+                if len(temp_path_list) > 0:
+                    for temp_path in temp_path_list:
+                        tool.remove_dir_or_file(temp_path)
+                log.step("提前退出")
+                break
+            # 日志内图片全部下载完毕
+            total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
+            save_info[0] = str(image_index - 1)  # 设置存档记录
+            save_info[1] = blog_info["blog_id"]  # 设置存档记录
 
         # 保存新的存档文件
-        if first_blog_time is not None:
-            tool.write_file(str(image_start_index) + "\t" + first_blog_time, self.save_data_path, 2)
+        tool.write_file("\t".join(save_info), self.save_data_path, 2)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
 
 if __name__ == "__main__":
