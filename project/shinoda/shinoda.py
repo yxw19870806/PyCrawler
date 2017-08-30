@@ -67,6 +67,7 @@ class Blog(robot.Robot):
         page_count = 1
         total_image_count = 0
         blog_info_list = []
+        temp_path_list = []
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
@@ -86,6 +87,7 @@ class Blog(robot.Robot):
             # 获取页面内的所有图片
             log.trace("第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
+            # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
                 # 检查是否达到存档记录
                 if int(blog_info["blog_id"]) > int(save_info[1]):
@@ -105,7 +107,6 @@ class Blog(robot.Robot):
             log.step("开始解析日志 %s" % blog_info["blog_id"])
 
             image_index = int(save_info[0]) + 1
-            temp_path_list = []
             try:
                 for image_url in blog_info["image_url_list"]:
                     log.step("开始下载第%s张图片 %s" % (image_index, image_url))
@@ -127,6 +128,7 @@ class Blog(robot.Robot):
                 log.step("提前退出")
                 break
             # 日志内图片全部下载完毕
+            temp_path_list = []  # 临时目录设置清除
             total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
             save_info[0] = str(image_index - 1)  # 设置存档记录
             save_info[1] = blog_info["blog_id"]  # 设置存档记录

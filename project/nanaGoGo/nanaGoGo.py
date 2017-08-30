@@ -158,7 +158,6 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
-        self.temp_path_list = []
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -167,6 +166,7 @@ class Download(threading.Thread):
         account_name = self.account_info[0]
         total_image_count = 0
         total_video_count = 0
+        temp_path_list = []
 
         try:
             log.step(account_name + " 开始")
@@ -191,11 +191,12 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " target id %s解析的所有媒体信息：%s" % (target_id, media_pagination_response["media_info_list"]))
 
+                # 寻找这一页符合条件的日志
                 for media_info in media_pagination_response["media_info_list"]:
                     # 检查是否达到存档记录
                     if int(media_info["blog_id"]) > int(self.account_info[3]):
                         media_info_list.append(media_info)
-                        # 设置target id，取下一页图片
+                        # 设置下一页指针
                         target_id = media_info["blog_id"]
                     else:
                         is_over = True
@@ -218,7 +219,7 @@ class Download(threading.Thread):
                         image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
                         save_file_return = net.save_net_file(image_url, image_file_path)
                         if save_file_return["status"] == 1:
-                            self.temp_path_list.append(image_file_path)
+                            temp_path_list.append(image_file_path)
                             log.step(account_name + " 第%s张图片下载成功" % image_index)
                             image_index += 1
                         else:
@@ -234,14 +235,14 @@ class Download(threading.Thread):
                         video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.%s" % (video_index, file_type))
                         save_file_return = net.save_net_file(video_url, video_file_path)
                         if save_file_return["status"] == 1:
-                            self.temp_path_list.append(video_file_path)
+                            temp_path_list.append(video_file_path)
                             log.step(account_name + " 第%s个视频下载成功" % video_index)
                             video_index += 1
                         else:
                             log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 # 日志内图片和视频全部下载完毕
-                self.temp_path_list = []  # 临时目录设置清除
+                temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
                 total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
                 self.account_info[1] = str(image_index - 1)  # 设置存档记录
@@ -253,8 +254,8 @@ class Download(threading.Thread):
             else:
                 log.error(account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个媒体正在下载中，需要把下载了部分的内容给清理掉
-            if len(self.temp_path_list) > 0:
-                for temp_path in self.temp_path_list:
+            if len(temp_path_list) > 0:
+                for temp_path in temp_path_list:
                     tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")

@@ -187,13 +187,13 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
-        self.temp_path = ""
 
     def run(self):
         global TOTAL_IMAGE_COUNT
 
         sub_path = self.account_info[0]
         total_image_count = 0
+        temp_path = ""
 
         try:
             log.step(sub_path + " 开始")
@@ -214,6 +214,7 @@ class Download(threading.Thread):
 
                 log.trace(sub_path + " 第%s页解析的所有图集：%s" % (page_count, album_pagination_response["album_info_list"]))
 
+                # 寻找这一页符合条件的图集
                 for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
                     if int(album_info["page_id"]) > int(self.account_info[1]):
@@ -251,8 +252,8 @@ class Download(threading.Thread):
                     album_path = os.path.join(IMAGE_DOWNLOAD_PATH, "%04d %s" % (int(album_info["page_id"]), album_title))
                 else:
                     album_path = os.path.join(IMAGE_DOWNLOAD_PATH, "%04d" % int(album_info["page_id"]))
-                # 正在下载的目录
-                self.temp_path = album_path
+                # 设置临时目录
+                temp_path = album_path
                 for image_url in photo_pagination_response["image_url_list"]:
                     # 图片地址转义
                     image_url = get_image_url(image_url)
@@ -266,18 +267,18 @@ class Download(threading.Thread):
                         image_index += 1
                     else:
                         log.error(sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                # 图集全部图片下载完毕
-                self.temp_path = ""  # 临时目录设置清除
-                self.account_info[1] = album_info["page_id"]  # 设置存档记录
+                # 图集内图片全部下载完毕
+                temp_path = ""  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
+                self.account_info[1] = album_info["page_id"]  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step(sub_path + " 提前退出")
             else:
                 log.error(sub_path + " 异常退出")
             # 如果临时目录变量不为空，表示某个图集正在下载中，需要把下载了部分的内容给清理掉
-            if self.temp_path:
-                tool.remove_dir_or_file(self.temp_path)
+            if temp_path:
+                tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(sub_path + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

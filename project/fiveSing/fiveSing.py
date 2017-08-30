@@ -185,6 +185,7 @@ class Download(threading.Thread):
 
                     log.trace(account_name + " 第%s页%s解析的所有歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
 
+                    # 寻找这一页符合条件的歌曲
                     for audio_info in audio_pagination_response["audio_info_list"]:
                         # 新增歌曲导致的重复判断
                         if audio_info["audio_id"] in unique_list:

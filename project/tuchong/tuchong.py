@@ -164,13 +164,13 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
-        self.temp_path = ""
 
     def run(self):
         global TOTAL_IMAGE_COUNT
 
         account_name = self.account_info[0]
         total_image_count = 0
+        temp_path = ""
 
         try:
             log.step(account_name + " 开始")
@@ -225,7 +225,7 @@ class Download(threading.Thread):
                     post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (album_info["album_id"], title))
                 else:
                     post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, album_info["album_id"])
-                self.temp_path = post_path
+                temp_path = post_path
                 for image_url in album_info["image_url_list"]:
                     log.step(account_name + " 相册%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
@@ -237,7 +237,7 @@ class Download(threading.Thread):
                     else:
                         log.error(account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 相册内图片全部下载完毕
-                self.temp_path = ""  # 临时目录设置清除
+                temp_path = ""  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
                 self.account_info[1] = album_info["album_id"]  # 设置存档记录
         except SystemExit, se:
@@ -246,8 +246,8 @@ class Download(threading.Thread):
             else:
                 log.error(account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
-            if self.temp_path:
-                tool.remove_dir_or_file(self.temp_path)
+            if temp_path:
+                tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
@@ -259,6 +259,7 @@ class Download(threading.Thread):
         ACCOUNTS.remove(account_name)
         self.thread_lock.release()
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
+
 
 if __name__ == "__main__":
     TuChong().main()

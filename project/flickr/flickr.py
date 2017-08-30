@@ -207,7 +207,9 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
+                # 寻找这一页符合条件的图片
                 for image_info in photo_pagination_response["image_info_list"]:
+                    # todo 如果存在上传时间一致的图片
                     # 检查是否达到存档记录
                     if image_info["image_time"] > int(self.account_info[2]):
                         image_info_list.append(image_info)
@@ -237,9 +239,9 @@ class Download(threading.Thread):
                 else:
                     log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 图片下载完毕
+                total_image_count += 1  # 计数累加
                 self.account_info[1] = str(image_index)  # 设置存档记录
                 self.account_info[2] = str(image_info["image_time"])  # 设置存档记录
-                total_image_count += 1  # 计数累加
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")

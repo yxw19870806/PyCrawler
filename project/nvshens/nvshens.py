@@ -119,7 +119,6 @@ class Nvshens(robot.Robot):
         while not is_over and album_id <= index_response["max_album_id"]:
             log.step("开始解析图集%s" % album_id)
 
-            image_count = 1
             # 获取图集
             try:
                 album_pagination_response = get_album_photo(album_id)
@@ -137,26 +136,26 @@ class Nvshens(robot.Robot):
 
             log.trace("图集%s解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
 
+            image_index = 1
             # 过滤标题中不支持的字符
             album_title = robot.filter_text(album_pagination_response["album_title"])
             if album_title:
                 album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
             else:
                 album_path = os.path.join(self.image_download_path, str(album_id))
-
             for image_url in album_pagination_response["image_url_list"]:
-                log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_count, image_url))
+                log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                 file_type = image_url.split(".")[-1]
-                file_path = os.path.join(album_path, "%03d.%s" % (image_count, file_type))
+                file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                 try:
                     header_list = {"Referer": "https://www.nvshens.com/g/%s/" % album_id}
                     save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
                     if save_file_return["status"] == 1:
-                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_count))
-                        image_count += 1
+                        log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
+                        image_index += 1
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
                     tool.remove_dir_or_file(album_path)
@@ -164,7 +163,7 @@ class Nvshens(robot.Robot):
                     break
 
             if not is_over:
-                total_image_count += image_count - 1
+                total_image_count += image_index - 1  # 计数累加
                 album_id += 1
 
         # 重新保存存档文件

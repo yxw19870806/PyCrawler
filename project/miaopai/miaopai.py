@@ -193,6 +193,7 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response["video_id_list"]))
 
+                # 寻找这一页符合条件的视频
                 for video_id in video_pagination_response["video_id_list"]:
                     # 新增视频导致的重复判断
                     if video_id in unique_list:

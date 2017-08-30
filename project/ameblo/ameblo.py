@@ -218,13 +218,13 @@ class Download(threading.Thread):
         threading.Thread.__init__(self)
         self.account_info = account_info
         self.thread_lock = thread_lock
-        self.temp_path_list = []
 
     def run(self):
         global TOTAL_IMAGE_COUNT
 
         account_name = self.account_info[0]
         total_image_count = 0
+        temp_path_list = []
 
         try:
             log.step(account_name + " 开始")
@@ -302,13 +302,14 @@ class Download(threading.Thread):
                             os.remove(file_path)
                             log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_index, image_url))
                         else:
-                            self.temp_path_list.append(file_path)
+                            # 设置临时目录
+                            temp_path_list.append(file_path)
                             log.step(account_name + " 第%s张图片下载成功" % image_index)
                             image_index += 1
                     else:
                         log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                # 图集全部图片下载完毕
-                self.temp_path_list = []  # 临时目录设置清除
+                # 图集内图片全部下载完毕
+                temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
                 self.account_info[1] = str(image_index - 1)  # 设置存档记录
                 self.account_info[2] = blog_id  # 设置存档记录
@@ -318,8 +319,8 @@ class Download(threading.Thread):
             else:
                 log.error(account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            if len(self.temp_path_list) > 0:
-                for temp_path in self.temp_path_list:
+            if len(temp_path_list) > 0:
+                for temp_path in temp_path_list:
                     tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")

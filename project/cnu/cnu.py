@@ -85,14 +85,13 @@ class CNU(robot.Robot):
 
             log.trace("第%s页作品解析的所有图片：%s" % (album_id, album_response["image_url_list"]))
 
+            image_index = 1
             # 过滤标题中不支持的字符
             album_title = robot.filter_text(album_response["album_title"])
             if album_title:
                 album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
             else:
                 album_path = os.path.join(self.image_download_path, str(album_id))
-
-            image_index = 1
             for image_url in album_response["image_url_list"]:
                 log.step("作品%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
@@ -112,7 +111,7 @@ class CNU(robot.Robot):
                     break
 
             if not is_over:
-                total_image_count += image_index - 1
+                total_image_count += image_index - 1  # 计数累加
                 album_id += 1
 
         # 重新保存存档文件

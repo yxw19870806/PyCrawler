@@ -219,7 +219,6 @@ class Download(threading.Thread):
                 raise
 
             page_count = 1
-            video_count = 1
             unique_list = []
             audio_info_list = []
             is_over = False
@@ -240,6 +239,7 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " 第%s页解析的所有歌曲：%s" % (page_count, audit_pagination_response["audio_info_list"]))
 
+                # 寻找这一页符合条件的歌曲
                 for audio_info in audit_pagination_response["audio_info_list"]:
                     # 新增歌曲导致的重复判断
                     if audio_info["audio_id"] in unique_list:
@@ -277,6 +277,7 @@ class Download(threading.Thread):
                     raise
 
                 if audio_play_response["is_delete"]:
+                    log.error(account_name + " 歌曲%s《%s》异常，跳过" % (audio_info["audio_key"], audio_info["audio_title"]))
                     continue
 
                 log.step(account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
@@ -285,7 +286,6 @@ class Download(threading.Thread):
                 save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step(account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
-                    video_count += 1
                 else:
                     log.error(account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 歌曲下载完毕
