@@ -75,7 +75,7 @@ class Jigadori(robot.Robot):
     def main(self):
         # 解析存档文件
         # image_count last_blog_time
-        save_info = [0, 0]
+        save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
             if len(file_save_info) >= 2 and robot.is_integer(file_save_info[0]) and robot.is_integer(file_save_info[1]):
@@ -155,7 +155,7 @@ class Jigadori(robot.Robot):
                         tool.remove_dir_or_file(temp_path)
                 log.step("提前退出")
                 break
-            # tweet图片全部下载完毕
+            # tweet内图片全部下载完毕
             total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
             save_info[0] = str(image_index - 1)  # 设置存档记录
             save_info[1] = str(image_info["tweet_time"])  # 设置存档记录
