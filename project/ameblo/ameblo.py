@@ -230,7 +230,6 @@ class Download(threading.Thread):
             log.step(account_name + " 开始")
 
             page_count = 1
-            unique_list = []
             blog_id_list = []
             is_over = False
             # 获取全部还未下载过需要解析的日志
@@ -247,15 +246,13 @@ class Download(threading.Thread):
                 log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
 
                 for blog_id in blog_pagination_response["blog_id_list"]:
-                    # 新增日志导致的重复判断
-                    if blog_id in unique_list:
-                        continue
-                    else:
-                        unique_list.append(blog_id)
-
                     # 检查是否达到存档记录
                     if int(blog_id) > int(self.account_info[2]):
-                        blog_id_list.append(blog_id)
+                        # 新增日志导致的重复判断
+                        if blog_id in blog_id_list:
+                            continue
+                        else:
+                            blog_id_list.append(blog_id)
                     else:
                         is_over = True
                         break

@@ -177,7 +177,6 @@ class Download(threading.Thread):
                 raise
 
             page_count = 1
-            unique_list = []
             video_id_list = []
             is_over = False
             # 获取全部还未下载过需要解析的视频
@@ -195,15 +194,13 @@ class Download(threading.Thread):
 
                 # 寻找这一页符合条件的视频
                 for video_id in video_pagination_response["video_id_list"]:
-                    # 新增视频导致的重复判断
-                    if video_id in unique_list:
-                        continue
-                    else:
-                        unique_list.append(video_id)
-
                     # 检查是否达到存档记录
                     if video_id != self.account_info[2]:
-                        video_id_list.append(video_id)
+                        # 新增视频导致的重复判断
+                        if video_id in video_id_list:
+                            continue
+                        else:
+                            video_id_list.append(video_id)
                     else:
                         is_over = True
                         break
