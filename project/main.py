@@ -1,6 +1,5 @@
 # -*- coding:UTF-8  -*-
 
-from common import tool
 import os
 import sys
 
@@ -225,14 +224,6 @@ def weibo_article():
         "image_temp_path": os.path.join(weibo_article_path, "article\\tempImage"),
     }
     article.Article(extra_config).main()
-
-
-# 微视
-def weishi():
-    from weishi import weishi
-    weishi_path = os.path.join(ROOT_PATH, "weishi")
-    os.chdir(weishi_path)
-    weishi.WeiShi().main()
 
 
 # 看了又看
