@@ -98,6 +98,8 @@ def get_video_url(video_play_url):
             if not video_url:
                 raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
             video_url = str(urllib2.unquote(video_url))
+            if video_url.find("//") == 0:
+                video_url = "http:" + video_url
         elif video_play_response.status == 404:
             video_url = ""
         else:
