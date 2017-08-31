@@ -262,11 +262,15 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 return {"status": 1, "code": 0, "file_path": file_path}
             else:
                 tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+        elif response.status == HTTP_RETURN_CODE_URL_INVALID:
+            if create_file:
+                os.remove(file_path)
+            return {"status": 0, "code": -1}
         # 超过重试次数，直接退出
         elif response.status == HTTP_RETURN_CODE_RETRY:
             if create_file:
                 os.remove(file_path)
-            return {"status": 0, "code": -1}
+            return {"status": 0, "code": -2}
         # 其他http code，退出
         elif response.status == 500 or response.status == 502:
             pass
@@ -277,7 +281,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             return {"status": 0, "code": response.status}
     if create_file:
         os.remove(file_path)
-    return {"status": 0, "code": -2}
+    return {"status": 0, "code": -3}
 
 
 # 保存网络文件列表（多个URL的内容按顺序写入一个文件）
