@@ -19,9 +19,7 @@ import urlparse
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
-VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = True
@@ -174,9 +172,7 @@ def get_post_id(post_url):
 
 class Tumblr(robot.Robot):
     def __init__(self):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
-        global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global IS_DOWNLOAD_IMAGE
@@ -194,9 +190,7 @@ class Tumblr(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
-        VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
