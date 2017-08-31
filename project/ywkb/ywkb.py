@@ -38,7 +38,7 @@ def get_one_page_photo(page_count):
         result["is_over"] = True
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    return photo_pagination_response
+    return result
 
 
 class YWKB(robot.Robot):
@@ -54,12 +54,13 @@ class YWKB(robot.Robot):
         if os.path.exists(self.save_data_path):
             last_image_id = int(tool.read_file(self.save_data_path))
         else:
-            last_image_id = 1
+            last_image_id = 0
 
         page_count = 1
-        image_count = 1
+        total_image_count = 0
+        image_info_list = []
         is_over = False
-        first_image_id = None
+        # 获取全部还未下载过需要解析的图片
         while not is_over:
             log.step("开始解析第%s页日志" % page_count)
 
@@ -72,34 +73,44 @@ class YWKB(robot.Robot):
             if photo_pagination_response["is_over"]:
                 break
 
+            # 寻找这一页符合条件的图片
             for image_info in photo_pagination_response["image_info_list"]:
                 # 检查是否达到存档记录
-                if image_info["image_id"] <= last_image_id:
+                if image_info["image_id"] > last_image_id:
+                    image_info_list.append(image_info)
+                else:
                     is_over = True
                     break
 
-                # 新的存档记录
-                if first_image_id is None:
-                    first_image_id = image_info["image_id"]
+            page_count += 1
 
-                log.step("开始下载%s的图片 %s" % (image_info["image_id"], image_info["image_url"]))
+        log.step("需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
 
-                file_type = image_info["image_url"].split(".")[-1]
-                file_path = os.path.join(self.image_download_path, "%04d.%s" % (image_info["image_id"], file_type))
+        # 从最早的图片开始下载
+        while len(image_info_list) > 0:
+            image_info = image_info_list.pop()
+            log.step("开始下载%s的图片 %s" % (image_info["image_id"], image_info["image_url"]))
+
+            file_type = image_info["image_url"].split(".")[-1]
+            file_path = os.path.join(self.image_download_path, "%04d.%s" % (image_info["image_id"], file_type))
+            try:
                 save_file_return = net.save_net_file(image_info["image_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step("%s的图片下载成功" % image_info["image_id"])
-                    image_count += 1
                 else:
                     log.error("%s的图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    continue
+            except SystemExit:
+                log.step("提前退出")
+                break
+            # 图片下载完毕
+            total_image_count += 1  # 计数累加
+            last_image_id = str(image_info["image_id"])  # 设置存档记录
 
-            page_count += 1
+        # 保存新的存档文件
+        tool.write_file(str(last_image_id), self.save_data_path, 2)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), image_count - 1))
-
-        # 重新保存存档文件
-        if first_image_id is not None:
-            tool.write_file(str(first_image_id), self.save_data_path, 2)
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
 
 if __name__ == "__main__":
