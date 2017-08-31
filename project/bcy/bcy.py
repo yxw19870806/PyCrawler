@@ -111,14 +111,14 @@ def unfollow(account_id):
     return False
 
 
-# 获取指定页数的所有作品
+# 获取指定页数的全部作品
 def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     album_pagination_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
     album_pagination_response = net.http_request(album_pagination_url)
     result = {
         "coser_id": None,  # coser id
-        "album_info_list": [],  # 所有作品信息
+        "album_info_list": [],  # 全部作品信息
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -173,7 +173,7 @@ def get_album_page(coser_id, album_id):
         "is_admin_locked": False,  # 是否被管理员锁定
         "is_only_follower": False,  # 是否只显示给粉丝
         "is_only_login": False,  # 是否只显示给登录用户
-        "image_url_list": [],  # 页面解析出的所有图片地址列表
+        "image_url_list": [],  # 页面解析出的全部图片地址列表
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
@@ -186,7 +186,7 @@ def get_album_page(coser_id, album_id):
     # 检测作品是否只对登录可见
     if album_response.data.find("该作品已被作者设置为登录后可见") >= 0:
         result["is_only_login"] = True
-    # 获取作品页面内的所有图片地址列表
+    # 获取作品页面内的全部图片地址列表
     image_url_list = re.findall("src='([^']*)'", album_response.data)
     if not result["is_admin_locked"] and not result["is_only_follower"] and len(image_url_list) == 0:
         raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
@@ -324,7 +324,7 @@ class Download(threading.Thread):
                 if coser_id is None:
                     coser_id = album_pagination_response["coser_id"]
 
-                log.trace(account_name + " 第%s页解析的所有作品：%s" % (page_count, album_pagination_response["album_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_info_list"]))
 
                 # 寻找这一页符合条件的作品
                 for album_info in album_pagination_response["album_info_list"]:

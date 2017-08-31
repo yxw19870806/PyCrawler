@@ -23,14 +23,14 @@ AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
 AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
 
 
-# 获取指定页数的所有歌曲
+# 获取指定页数的全部歌曲
 # page_type 页面类型：yc - 原唱、fc - 翻唱
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
     audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
     audio_pagination_response = net.http_request(audio_pagination_url)
     result = {
-        "audio_info_list": [],  # 所有歌曲信息
+        "audio_info_list": [],  # 全部歌曲信息
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_pagination_response.status))
@@ -183,7 +183,7 @@ class Download(threading.Thread):
                     if len(audio_pagination_response["audio_info_list"]) == 0:
                         break
 
-                    log.trace(account_name + " 第%s页%s解析的所有歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
+                    log.trace(account_name + " 第%s页%s解析的全部歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
 
                     # 寻找这一页符合条件的歌曲
                     for audio_info in audio_pagination_response["audio_info_list"]:

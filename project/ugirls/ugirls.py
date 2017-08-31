@@ -18,7 +18,7 @@ def get_album_page(album_id):
     result = {
         "is_delete": False,  # 是不是已经被删除
         "model_name": "",  # 模特名字
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
@@ -108,7 +108,7 @@ class UGirls(robot.Robot):
                 album_id += 1
                 continue
 
-            log.trace("第%s页图集解析的所有图片：%s" % (album_id, album_response["image_url_list"]))
+            log.trace("第%s页图集解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
 
             image_count = 1
             album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response["model_name"]))

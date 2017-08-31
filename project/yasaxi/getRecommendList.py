@@ -19,7 +19,7 @@ def get_account_from_save_data(file_path):
     return account_list
 
 
-# 调用推荐API获取所有推荐账号
+# 调用推荐API获取全部推荐账号
 def get_account_from_api():
     api_url = "https://api.yasaxi.com/users/recommend?tag="
     header_list = {"x-auth-token": yasaxiCommon.AUTH_TOKEN, "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO}

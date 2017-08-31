@@ -15,7 +15,7 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取指定账号的所有关注列表
+# 获取指定账号的全部关注列表
 # suid -> 0r9ewgQ0v7UoDptu
 def get_follow_list(suid):
     page_count = 1

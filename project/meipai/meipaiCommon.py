@@ -9,7 +9,7 @@ from common import *
 import re
 
 
-# 获取指定账号的所有关注列表
+# 获取指定账号的全部关注列表
 def get_follow_list(account_id):
     max_page_count = 1
     page_count = 1

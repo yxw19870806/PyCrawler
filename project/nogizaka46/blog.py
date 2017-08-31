@@ -27,7 +27,7 @@ def get_one_page_blog(account_id, page_count):
     blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
-        "blog_info_list": [],  # 所有图片信息
+        "blog_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页日志
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -43,8 +43,8 @@ def get_one_page_blog(account_id, page_count):
         for blog_data in blog_data_list:
             extra_image_info = {
                 "blog_id": None,  # 日志id
-                "image_url_list": [],  # 所有图片地址
-                "big_2_small_image_lust": {},  # 所有含有大图的图片
+                "image_url_list": [],  # 全部图片地址
+                "big_2_small_image_lust": {},  # 全部含有大图的图片
             }
             # 获取日志id
             blog_id_html = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
@@ -57,7 +57,7 @@ def get_one_page_blog(account_id, page_count):
             # 获取图片地址列表
             image_url_list = re.findall('src="([^"]*)"', blog_data)
             extra_image_info["image_url_list"] = map(str, image_url_list)
-            # 获取所有的大图对应的小图
+            # 获取全部大图对应的小图
             big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
             big_2_small_image_lust = {}
             for big_image_url, small_image_url in big_image_list_find:
@@ -215,7 +215,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
                 # 寻找这一页符合条件的日志
                 for blog_info in blog_pagination_response["blog_info_list"]:

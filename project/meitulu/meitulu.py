@@ -36,7 +36,7 @@ def get_one_page_album(album_id):
     result = {
         "is_delete": False,  # 是不是已经被删除
         "album_title": "",  # 图集标题
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     while page_count <= max_page_count:
         if page_count == 1:
@@ -121,7 +121,7 @@ class MeiTuLu(robot.Robot):
                 album_id += 1
                 continue
 
-            log.trace("图集%s解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
+            log.trace("图集%s解析的全部图片：%s" % (album_id, album_pagination_response["image_url_list"]))
 
             # 过滤标题中不支持的字符
             album_title = robot.filter_text(album_pagination_response["album_title"])

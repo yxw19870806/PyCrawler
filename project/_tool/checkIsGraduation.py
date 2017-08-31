@@ -1,5 +1,5 @@
 # -*- coding:UTF-8  -*-
-# 获取指定存档文件中所有毕业成员的名字
+# 获取指定存档文件中全部毕业成员的名字
 from common import tool
 import os
 import sys
@@ -10,7 +10,7 @@ SAVE_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename
 NAME_COLUMN = 4
 
 
-# 从现役成员名单中获取所有成员名字（由get48GroupMember.py生成）
+# 从现役成员名单中获取全部成员名字（由get48GroupMember.py生成）
 def get_member_list():
     member = []
     for line in tool.read_file("member.txt", 2):
@@ -19,7 +19,7 @@ def get_member_list():
     return member
 
 
-# 从存档文件中获取所有名字（NAME_COLUMN对应的名字必须和从官网获取的成员本名一致）
+# 从存档文件中获取全部名字（NAME_COLUMN对应的名字必须和从官网获取的成员本名一致）
 def get_save_file_name_list():
     member = []
     for line in tool.read_file(SAVE_FILE_PATH, 2):

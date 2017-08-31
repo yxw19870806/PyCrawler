@@ -12,7 +12,7 @@ USER_COUNT_PER_PAGE = 50
 COOKIE_INFO = {}
 
 
-# 获取指定账号的所有粉丝列表（需要cookies）
+# 获取指定账号的全部粉丝列表（需要cookies）
 # account_id -> 490060609
 def get_follow_by_list(account_id):
     cursor = None
@@ -39,7 +39,7 @@ def get_follow_by_list(account_id):
     return follow_by_list
 
 
-# 获取指定账号的所有关注列表（需要cookies）
+# 获取指定账号的全部关注列表（需要cookies）
 # account_id -> 490060609
 def get_follow_list(account_id):
     cursor = None

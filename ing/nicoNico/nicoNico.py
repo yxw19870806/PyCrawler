@@ -19,7 +19,7 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取所有的视频信息列表
+# 获取账号全部视频信息
 # account_id => 15614906
 def get_account_index_page(account_id):
     # http://www.nicovideo.jp/mylist/15614906#+page=1

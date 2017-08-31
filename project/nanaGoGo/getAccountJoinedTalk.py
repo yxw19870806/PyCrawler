@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-7gogo批量获取账号所参与的所有talk id
+7gogo批量获取账号所参与的全部talk id
 https://7gogo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com

@@ -19,7 +19,7 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取指定页数的所有音频信息
+# 获取指定页数的全部音频信息
 def get_one_page_audio(account_id, page_count):
     # http://www.ximalaya.com/1014267/index_tracks?page=2
     audit_pagination_url = "http://www.ximalaya.com/%s/index_tracks?page=%s" % (account_id, page_count)
@@ -161,7 +161,7 @@ class Download(threading.Thread):
                 if audit_pagination_response.extra_info["audio_info_list"] is []:
                     break
 
-                log.trace(account_name + " 第%s页解析的所有音频：%s" % (page_count, audit_pagination_response.extra_info["audio_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部音频：%s" % (page_count, audit_pagination_response.extra_info["audio_info_list"]))
 
                 for audio_info in audit_pagination_response.extra_info["audio_info_list"]:
                     if audio_info["audio_id"] is None:

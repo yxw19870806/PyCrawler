@@ -30,13 +30,13 @@ def get_image_index_page(account_id):
     image_index_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
     image_index_response = net.http_request(image_index_url)
     result = {
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(image_index_response.status))
     if image_index_response.data == '<script>window.location.href="/404.html";</script>':
         raise robot.RobotException("账号不存在")
-    # 获取所有图片地址
+    # 获取全部图片地址
     if image_index_response.data.find("还没有照片哦") == -1:
         image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response.data)
         if len(result["image_url_list"]) == 0:
@@ -70,7 +70,7 @@ def get_video_index_page(account_id):
     video_pagination_response = net.http_request(video_pagination_url)
     result = {
         "is_exist": True,  # 是不是存在视频
-        "video_id_list": [],  # 所有视频id
+        "video_id_list": [],  # 全部视频id
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
@@ -92,7 +92,7 @@ def get_video_info_page(video_id):
     video_info_response = net.http_request(video_info_url, json_decode=True)
     result = {
         "video_time": False,  # 视频上传时间
-        "video_url_list": [],  # 所有视频分集地址
+        "video_url_list": [],  # 全部视频分集地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))

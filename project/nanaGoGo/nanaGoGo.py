@@ -24,12 +24,12 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取指定页数的所有媒体信息
+# 获取指定页数的全部媒体信息
 def get_one_page_media(account_name, target_id):
     media_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
     media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
     result = {
-        "media_info_list": [],  # 页面解析出的所有媒体信息列表
+        "media_info_list": [],  # 全部媒体信息
     }
     if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("data",), media_pagination_response.json_data):
@@ -39,8 +39,8 @@ def get_one_page_media(account_name, target_id):
         for media_info in media_pagination_response.json_data["data"]:
             extra_media_info = {
                 "blog_id": None,  # 日志id
-                "image_url_list": [],  # 所有图片地址
-                "video_url_list": [],  # 所有图片地址
+                "image_url_list": [],  # 全部图片地址
+                "video_url_list": [],  # 全部视频地址
             }
             if not robot.check_sub_key(("post",), media_info):
                 raise robot.RobotException("媒体信息'post'字段不存在\n%s" % media_info)
@@ -189,7 +189,7 @@ class Download(threading.Thread):
                 if len(media_pagination_response["media_info_list"]) == 0:
                     break
 
-                log.trace(account_name + " target id %s解析的所有媒体信息：%s" % (target_id, media_pagination_response["media_info_list"]))
+                log.trace(account_name + " target id %s解析的全部媒体：%s" % (target_id, media_pagination_response["media_info_list"]))
 
                 # 寻找这一页符合条件的日志
                 for media_info in media_pagination_response["media_info_list"]:

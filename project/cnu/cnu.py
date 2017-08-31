@@ -18,7 +18,7 @@ def get_album_page(album_id):
     result = {
         "is_delete": False,  # 是不是作品已被删除
         "album_title": "",  # 作品标题
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取作品标题
@@ -62,7 +62,7 @@ class CNU(robot.Robot):
         else:
             album_id = 1
 
-        # http://www.cnu.cc/about/ 所有作品
+        # http://www.cnu.cc/about/ 全部作品
         total_image_count = 0
         is_over = False
         while not is_over:
@@ -83,7 +83,7 @@ class CNU(robot.Robot):
                 album_id += 1
                 continue
 
-            log.trace("第%s页作品解析的所有图片：%s" % (album_id, album_response["image_url_list"]))
+            log.trace("第%s页作品解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
 
             image_index = 1
             # 过滤标题中不支持的字符

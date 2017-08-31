@@ -55,7 +55,7 @@ def get_one_page_album(account_id, post_time):
     album_pagination_response = net.http_request(album_pagination_url, json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
-        "album_info_list": [],  # 所有图片信息
+        "album_info_list": [],  # 全部图片信息
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
@@ -68,7 +68,7 @@ def get_one_page_album(account_id, post_time):
             "album_id": None,  # 相册id
             "album_time": None,  # 相册创建时间
             "album_title": "",  # 相册标题
-            "image_url_list": [],  # 所有图片地址
+            "image_url_list": [],  # 全部图片地址
         }
         # 获取相册id
         if not robot.check_sub_key(("post_id",), album_info):

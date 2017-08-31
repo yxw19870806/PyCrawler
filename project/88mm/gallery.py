@@ -38,7 +38,7 @@ def get_one_page_album(sub_path, page_count):
     album_pagination_response = net.http_request(album_pagination_url)
     result = {
         "is_over": False,  # 是不是最后一页图集
-        "album_info_list": [],  # 所有图集信息
+        "album_info_list": [],  # 全部图集信息
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
@@ -73,11 +73,11 @@ def get_one_page_album(sub_path, page_count):
     return result
 
 
-# 获取图集所有图片
+# 获取图集全部图片
 def get_album_photo(sub_path, page_id):
     page_count = 1
     result = {
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     while True:
         if page_count == 1:
@@ -212,7 +212,7 @@ class Download(threading.Thread):
                     log.error(sub_path + " 第%s页图集解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(sub_path + " 第%s页解析的所有图集：%s" % (page_count, album_pagination_response["album_info_list"]))
+                log.trace(sub_path + " 第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_info_list"]))
 
                 # 寻找这一页符合条件的图集
                 for album_info in album_pagination_response["album_info_list"]:
@@ -236,14 +236,14 @@ class Download(threading.Thread):
                 album_info = album_info_list.pop()
                 log.step(sub_path + " 开始解析%s号图集" % album_info["page_id"])
 
-                # 获取图集所有图片
+                # 获取图集全部图片
                 try:
                     photo_pagination_response = get_album_photo(sub_path, album_info["page_id"])
                 except robot.RobotException, e:
                     log.error(sub_path + " %s号图集解析失败，原因：%s" % (album_info["page_id"], e.message))
                     raise
 
-                log.trace(sub_path + " %s号图集《%s》解析的所有图片：%s" % (album_info["page_id"], album_info["album_title"], photo_pagination_response["image_url_list"]))
+                log.trace(sub_path + " %s号图集《%s》解析的全部图片：%s" % (album_info["page_id"], album_info["album_title"], photo_pagination_response["image_url_list"]))
 
                 image_index = 1
                 # 过滤标题中不支持的字符

@@ -45,7 +45,7 @@ def get_account_index_page(account_name):
     return result
 
 
-# 获取指定页数的所有媒体
+# 获取指定页数的全部媒体
 # account_id -> 490060609
 def get_one_page_media(account_id, cursor):
     if cursor:
@@ -54,7 +54,7 @@ def get_one_page_media(account_id, cursor):
         media_pagination_url = "https://www.instagram.com/graphql/query/?query_id=%s&id=%s&first=%s" % (QUERY_ID, account_id, IMAGE_COUNT_PER_PAGE)
     media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
     result = {
-        "media_info_list": [],  # 所有媒体信息
+        "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": None,  # 下一页媒体信息的指针
     }
     # Too Many Requests
@@ -116,8 +116,8 @@ def get_media_page(page_id):
     media_url = "https://www.instagram.com/p/%s/" % page_id
     media_response = net.http_request(media_url)
     result = {
-        "image_url_list": [],  # 所有图片地址
-        "video_url_list": [],  # 所有视频地址
+        "image_url_list": [],  # 全部图片地址
+        "video_url_list": [],  # 全部视频地址
     }
     if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         media_info_html = tool.find_sub_string(media_response.data, "window._sharedData = ", ";</script>")
@@ -299,7 +299,7 @@ class Download(threading.Thread):
                     log.error(account_name + " cursor '%s'的一页媒体信息解析失败，原因：%s" % (cursor, e.message))
                     raise 
 
-                log.trace(account_name + " cursor '%s'解析的所有媒体信息：%s" % (cursor, media_pagination_response["media_info_list"]))
+                log.trace(account_name + " cursor '%s'解析的全部媒体：%s" % (cursor, media_pagination_response["media_info_list"]))
 
                 # 寻找这一页符合条件的媒体
                 for media_info in media_pagination_response["media_info_list"]:

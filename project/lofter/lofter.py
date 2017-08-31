@@ -19,16 +19,16 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取指定页数的所有日志
+# 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     # http://moexia.lofter.com/?page=1
     blog_pagination_url = "http://%s.lofter.com/?page=%s" % (account_name, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
-        "blog_url_list": [],  # 所有日志地址
+        "blog_url_list": [],  # 全部日志地址
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取所有日志地址
+        # 获取全部日志地址
         blog_url_list = re.findall('"(http://' + account_name + '.lofter.com/post/[^"]*)"', blog_pagination_response.data)
         # 去重排序
         result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
@@ -43,11 +43,11 @@ def get_one_page_blog(account_name, page_count):
 def get_blog_page(blog_url):
     blog_response = net.http_request(blog_url)
     result = {
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
-    # 获取所有图片地址
+    # 获取全部图片地址
     image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
     result["image_url_list"] = map(str, image_url_list)
     return result
@@ -161,7 +161,7 @@ class Download(threading.Thread):
                 if len(blog_pagination_response["blog_url_list"]) == 0:
                     break
 
-                log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, blog_pagination_response["blog_url_list"]))
+                log.trace(account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_url_list"]))
 
                 # 寻找这一页符合条件的日志
                 for blog_url in blog_pagination_response["blog_url_list"]:
@@ -202,7 +202,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 日志 %s 中没有找到图片" % blog_url)
                     continue
 
-                log.trace(account_name + " 日志 %s 解析的所有图片：%s" % (blog_url, blog_response["image_url_list"]))
+                log.trace(account_name + " 日志 %s 解析的全部图片：%s" % (blog_url, blog_response["image_url_list"]))
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_response["image_url_list"]:

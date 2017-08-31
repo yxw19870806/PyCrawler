@@ -37,7 +37,7 @@ def get_one_page_post(account_id, page_count):
     header_list = {"User-Agent": USER_AGENT}
     post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=COOKIE_INFO)
     result = {
-        "post_url_list": [],  # 所有日志地址
+        "post_url_list": [],  # 全部日志地址
         "is_over": [],  # 是不是最后一页日志
     }
     if post_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -52,7 +52,7 @@ def get_one_page_post(account_id, page_count):
             if len(page_data["itemListElement"]) == 0:
                 raise robot.RobotException("日志信息'itemListElement'字段长度不正确\n%s" % page_data)
 
-            # 获取所有日志地址
+            # 获取全部日志地址
             for post_info in page_data["itemListElement"]:
                 if not robot.check_sub_key(("url",), post_info):
                     raise robot.RobotException("日志信息'url'字段不存在\n%s" % page_data)
@@ -74,7 +74,7 @@ def get_post_page(post_url):
     post_response = net.http_request(post_url, header_list=header_list, cookies_list=COOKIE_INFO)
     result = {
         "has_video": False,  # 是不是包含视频
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_response.status))
@@ -97,7 +97,7 @@ def get_post_page(post_url):
             if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
                 result["image_url_list"].append(image_url)
         else:
-            # 获取所有图片地址
+            # 获取全部图片地址
             image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
             new_image_url_list = {}
             for image_url in image_url_list:
@@ -282,7 +282,7 @@ class Download(threading.Thread):
                 if post_pagination_response["is_over"]:
                     break
 
-                log.trace(account_id + " 第%s页解析的所有日志：%s" % (page_count, post_pagination_response["post_url_list"]))
+                log.trace(account_id + " 第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_url_list"]))
 
                 # 寻找这一页符合条件的日志
                 for post_url in post_pagination_response["post_url_list"]:
@@ -363,7 +363,7 @@ class Download(threading.Thread):
                 # 图片下载
                 image_index = int(self.account_info[1]) + 1
                 if IS_DOWNLOAD_IMAGE and len(post_response["image_url_list"]) > 0:
-                    log.trace(account_id + " 日志 %s 解析的的所有图片：%s" % (post_url, post_response["image_url_list"]))
+                    log.trace(account_id + " 日志 %s 解析的的全部图片：%s" % (post_url, post_response["image_url_list"]))
 
                     for image_url in post_response["image_url_list"]:
                         log.step(account_id + " 开始下载第%s张图片 %s" % (image_index, image_url))

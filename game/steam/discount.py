@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-获取所有的steam打折游戏信息
+获取steam全部打折游戏信息
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -51,7 +51,7 @@ def load_discount_list():
     return discount_game_list
 
 
-# 给出给定大等于最低折扣或者小等于最低价格的所有还没有的打折游戏
+# 给出给定大等于最低折扣或者小等于最低价格的还没有的打折游戏
 # min_discount_percent  最低折扣
 # min_discount_price    最低价格
 def main(account_id, include_type, min_discount_percent, min_discount_price):
@@ -68,14 +68,14 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
         try:
             discount_game_list = steamCommon.get_discount_game_list(login_cookie)
         except robot.RobotException, e:
-            tool.print_msg("所有打折游戏解析失败，原因：%s" % e.message)
+            tool.print_msg("打折游戏解析失败，原因：%s" % e.message)
             raise
         # 将打折列表写入文件
         save_discount_list(discount_game_list)
         tool.print_msg("get discount game list from website")
     else:
         tool.print_msg("get discount game list from cache file")
-    # 获取自己的所有游戏列表
+    # 获取自己的全部游戏列表
     try:
         owned_game_list = steamCommon.get_account_owned_app_list(account_id)
     except robot.RobotException, e:

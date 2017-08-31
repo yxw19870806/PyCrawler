@@ -25,7 +25,7 @@ def get_account_index_page(account_name):
     account_index_url = "http://%s.pp.163.com/" % account_name
     account_index_response = net.http_request(account_index_url)
     result = {
-        "album_url_list": [],  # 所有相册地址
+        "album_url_list": [],  # 全部相册地址
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
@@ -33,7 +33,7 @@ def get_account_index_page(account_name):
     account_index_html = account_index_response.data.decode("GBK").encode("UTF-8")
     if account_index_html.find("<title>该页面不存在</title>") >= 0:
         raise robot.RobotException("账号不存在")
-    # 获取所有相册地址
+    # 获取全部相册地址
     album_result_selector = pq(account_index_html).find("#p_contents li")
     if album_result_selector.size() == 0:
         raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_html)
@@ -55,7 +55,7 @@ def get_album_page(album_url):
     album_response = net.http_request(album_url)
     result = {
         "album_title": "",  # 相册标题
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
@@ -156,7 +156,7 @@ class Download(threading.Thread):
                 log.error(account_name + " 主页解析失败，原因：%s" % e.message)
                 raise
 
-            log.trace(account_name + " 解析的所有相册地址：%s" % account_index_response["album_url_list"])
+            log.trace(account_name + " 解析的全部相册：%s" % account_index_response["album_url_list"])
 
             album_url_list = []
             # 获取全部还未下载过需要解析的相册
@@ -187,7 +187,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册%s解析失败，原因：%s" % (album_url, e.message))
                     raise
 
-                log.trace(account_name + " 相册%s解析的所有图片地址：%s" % (album_url, album_response["image_url_list"]))
+                log.trace(account_name + " 相册%s解析的全部图片：%s" % (album_url, album_response["image_url_list"]))
 
                 image_index = 1
                 # 过滤标题中不支持的字符

@@ -24,7 +24,7 @@ def get_one_page_audio(account_id, page_count):
     audio_pagination_url = "http://kg.qq.com/cgi/kg_ugc_get_homepage?type=get_ugc&format=json&share_uid=%s&start=%s&num=%s" % (account_id, page_count, AUDIO_COUNT_PER_PAGE)
     audio_pagination_response = net.http_request(audio_pagination_url, json_decode=True)
     result = {
-        "audio_info_list": [],  # 所有歌曲信息
+        "audio_info_list": [],  # 全部歌曲信息
         "is_over": False,  # 是不是最后一页歌曲
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -183,7 +183,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有歌曲信息：%s" % (page_count, audio_pagination_response["audio_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部歌曲：%s" % (page_count, audio_pagination_response["audio_info_list"]))
 
                 # 寻找这一页符合条件的歌曲
                 for audio_info in audio_pagination_response["audio_info_list"]:

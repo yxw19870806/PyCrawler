@@ -27,7 +27,7 @@ def get_one_page_photo(account_id, page_count):
     photo_pagination_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
-        "image_info_list": [],  # 所有图片信息
+        "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, cookies_list=cookies_list, json_decode=True)

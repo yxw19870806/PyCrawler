@@ -11,12 +11,12 @@ import os
 import re
 
 
-# 获取指定页数的所有日志
+# 获取指定页数的全部日志
 def get_one_page_blog(page_count):
     blog_pagination_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
     result = {
         "is_over": False,  # 是不是最后一页日志
-        "blog_info_list": [],  # 所有日志信息
+        "blog_info_list": [],  # 全部日志信息
     }
     blog_pagination_response = net.http_request(blog_pagination_url)
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -84,8 +84,8 @@ class Blog(robot.Robot):
             if blog_pagination_response["is_over"]:
                 break
 
-            # 获取页面内的所有图片
-            log.trace("第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+            # 获取页面内的全部图片
+            log.trace("第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:

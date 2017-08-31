@@ -37,14 +37,14 @@ def get_account_index_page(account_id):
     return result
 
 
-# 获取指定页数的所有视频
+# 获取指定页数的全部视频
 # suid -> 0r9ewgQ0v7UoDptu
 def get_one_page_video(suid, page_count):
     # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
     video_pagination_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
     result = {
-        "video_id_list": [],  # 所有视频id
+        "video_id_list": [],  # 全部视频id
         "is_over": False  # 是不是最后一页视频
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -52,7 +52,7 @@ def get_one_page_video(suid, page_count):
         if not robot.check_sub_key(("isall",), video_pagination_response.json_data):
             raise robot.RobotException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
         result["is_over"] = bool(video_pagination_response.json_data["isall"])
-        # 获取所有视频id
+        # 获取全部视频id
         if not robot.check_sub_key(("msg",), video_pagination_response.json_data):
             raise robot.RobotException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
         video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
@@ -190,7 +190,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有视频：%s" % (page_count, video_pagination_response["video_id_list"]))
+                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_id_list"]))
 
                 # 寻找这一页符合条件的视频
                 for video_id in video_pagination_response["video_id_list"]:

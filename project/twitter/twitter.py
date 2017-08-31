@@ -52,7 +52,7 @@ def get_one_page_media(account_name, position_blog_id):
     result = {
         "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
-        "media_info_list": [],  # 所有媒体信息
+        "media_info_list": [],  # 全部媒体信息
         "next_page_position": None  # 下一页指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -93,7 +93,7 @@ def get_one_page_media(account_name, position_blog_id):
             extra_media_info = {
                 "blog_id": None,  # 日志id
                 "has_video": False,  # 是不是包含视频
-                "image_url_list": [],  # 所有图片地址
+                "image_url_list": [],  # 全部图片地址
             }
             # 获取日志id
             blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
@@ -288,7 +288,7 @@ class Download(threading.Thread):
                 if media_pagination_response["is_over"]:
                     break
 
-                log.trace(account_name + " position %s解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
+                log.trace(account_name + " position %s解析的全部媒体：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
 
                 # 寻找这一页符合条件的媒体
                 for media_info in media_pagination_response["media_info_list"]:

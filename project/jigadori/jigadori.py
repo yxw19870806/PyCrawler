@@ -12,12 +12,12 @@ import os
 import time
 
 
-# 获取指定页数的所有图片
+# 获取指定页数的全部图片
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
     result = {
-        "image_info_list": [],  # 所有图片信息
+        "image_info_list": [],  # 全部图片信息
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
@@ -104,7 +104,7 @@ class Jigadori(robot.Robot):
             if len(photo_pagination_response["image_info_list"]) == 0:
                 break
 
-            log.trace("第%s页解析的所有图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
+            log.trace("第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
             # 寻找这一页符合条件的图片
             for image_info in photo_pagination_response["image_info_list"]:

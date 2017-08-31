@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-グラドル自画撮り部 已下载文件中提取所有成员账号
+グラドル自画撮り部 已下载文件中提取全部成员账号
 http://jigadori.fkoji.com/users
 @author: hikaru
 email: hikaru870806@hotmail.com

@@ -16,14 +16,14 @@ COUNT_INDEX = 1
 IS_INTEGER = True
 
 
-# 获取指定目录下所有子目录内的文件数量
+# 获取指定目录下全部子目录内的文件数量
 # is_integer    文件名是否是整数，如果为True，另外判断最大的那个序号是否和总文件数一致
 def get_storage_file_count():
     if not os.path.exists(FILE_STORAGE_PATH):
         print "file root path %s not exist" % FILE_STORAGE_PATH
         return {}
     account_list = {}
-    # 根目录下的所有子目录
+    # 根目录下的全部子目录
     for dir_name in os.listdir(FILE_STORAGE_PATH):
         sub_path = os.path.join(FILE_STORAGE_PATH, dir_name)
         file_list = os.listdir(sub_path)
@@ -39,7 +39,7 @@ def get_storage_file_count():
     return account_list
 
 
-# 获取存档文件内的所有存档的下载数量
+# 获取存档文件内的全部存档的下载数量
 def get_save_data_file_count():
     if not os.path.exists(SAVE_DATA_FILE_PATH):
         print "save data %s not exist" % SAVE_DATA_FILE_PATH

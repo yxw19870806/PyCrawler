@@ -27,14 +27,14 @@ def get_index_page():
     return result
 
 
-# 获取图集所有图片
+# 获取图集全部图片
 def get_album_photo(album_id):
     page_count = max_page_count = 1
     image_count = 0
     result = {
         "is_delete": False,  # 是不是已经被删除
         "album_title": "",  # 图集标题
-        "image_url_list": [],  # 页所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     while page_count <= max_page_count:
         album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)
@@ -134,7 +134,7 @@ class Nvshens(robot.Robot):
                 album_id += 1
                 continue
 
-            log.trace("图集%s解析的所有图片：%s" % (album_id, album_pagination_response["image_url_list"]))
+            log.trace("图集%s解析的全部图片：%s" % (album_id, album_pagination_response["image_url_list"]))
 
             image_index = 1
             # 过滤标题中不支持的字符

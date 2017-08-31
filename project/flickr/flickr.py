@@ -45,12 +45,12 @@ def get_account_index_page(account_name):
     return result
 
 
-# 获取指定页数的所有图片
+# 获取指定页数的全部图片
 # user_id -> 36587311@N08
 def get_one_page_photo(user_id, page_count, api_key, request_id):
     api_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
-    # 所有可支持的参数
+    # 全部可支持的参数
     # extras = [
     #     "can_addmeta", "can_comment", "can_download", "can_share", "contact", "count_comments", "count_faves",
     #     "count_views", "date_taken", "date_upload", "description", "icon_urls_deep", "isfavorite", "ispro", "license",
@@ -65,7 +65,7 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
     }
     photo_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, json_decode=True)
     result = {
-        "image_info_list": [],  # 所有图片信息
+        "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -147,7 +147,7 @@ class Flickr(robot.Robot):
 
             time.sleep(1)
 
-        # 检查除主线程外的其他所有线程是不是全部结束了
+        # 检查除主线程外的其他全部线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
             time.sleep(10)
 
@@ -205,7 +205,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
                 # 寻找这一页符合条件的图片
                 for image_info in photo_pagination_response["image_info_list"]:
@@ -235,12 +235,13 @@ class Download(threading.Thread):
                 file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
                 save_file_return = net.save_net_file(image_info["image_url"], file_path)
                 if save_file_return["status"] == 1:
+                    image_index += 1
                     log.step(account_name + " 第%s张图片下载成功" % image_index)
                 else:
                     log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 图片下载完毕
-                total_image_count += 1  # 计数累加
-                self.account_info[1] = str(image_index)  # 设置存档记录
+                total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+                self.account_info[1] = str(image_index - 1)  # 设置存档记录
                 self.account_info[2] = str(image_info["image_time"])  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:

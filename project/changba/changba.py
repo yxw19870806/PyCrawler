@@ -40,14 +40,14 @@ def get_account_index_page(account_id):
     return result
 
 
-# 获取指定页数的所有歌曲信息
+# 获取指定页数的全部歌曲信息
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
     audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count - 1)
     audit_pagination_response = net.http_request(audit_pagination_url, json_decode=True)
     result = {
-        "audio_info_list": [],  # 所有歌曲信息
+        "audio_info_list": [],  # 全部歌曲信息
     }
     if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audit_pagination_response.status))
@@ -237,7 +237,7 @@ class Download(threading.Thread):
                 if len(audit_pagination_response["audio_info_list"]) == 0:
                     break
 
-                log.trace(account_name + " 第%s页解析的所有歌曲：%s" % (page_count, audit_pagination_response["audio_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部歌曲：%s" % (page_count, audit_pagination_response["audio_info_list"]))
 
                 # 寻找这一页符合条件的歌曲
                 for audio_info in audit_pagination_response["audio_info_list"]:

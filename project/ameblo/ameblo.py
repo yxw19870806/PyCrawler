@@ -20,12 +20,12 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取指定页数的所有日志
+# 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
-        "blog_id_list": [],  # 所有日志id
+        "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是不是最后一页日志
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -70,7 +70,7 @@ def get_blog_page(account_name, blog_id):
     blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
     blog_response = net.http_request(blog_url)
     result = {
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
@@ -243,7 +243,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                log.trace(account_name + " 第%s页解析的所有日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
+                log.trace(account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
 
                 for blog_id in blog_pagination_response["blog_id_list"]:
                     # 检查是否达到存档记录
@@ -277,7 +277,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 日志%s解析失败，原因：%s" % (blog_id, e.message))
                     raise
 
-                log.trace(account_name + " 日志%s解析的所有图片：%s" % (blog_id, blog_response["image_url_list"]))
+                log.trace(account_name + " 日志%s解析的全部图片：%s" % (blog_id, blog_response["image_url_list"]))
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_response["image_url_list"]:

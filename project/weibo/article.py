@@ -29,7 +29,7 @@ def get_one_page_article(page_id, page_count):
     preview_article_pagination_url = "http://weibo.com/p/%s/wenzhang?pids=Pl_Core_ArticleList__62&Pl_Core_ArticleList__62_page=%s&ajaxpagelet=1" % (page_id, page_count)
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
-        "article_info_list": [],  # 所有文章信息
+        "article_info_list": [],  # 全部章信息
         "is_over": False,  # 是不是最后一页文章
     }
     article_pagination_response = net.http_request(preview_article_pagination_url, cookies_list=cookies_list)
@@ -78,7 +78,7 @@ def get_article_page(article_url):
         "article_id": "",  # 文章id
         "article_title": "",  # 文章标题
         "top_image_url": None,  # 文章顶部图片
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(article_response.status))

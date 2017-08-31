@@ -13,7 +13,7 @@ import threading
 TOTAL_IMAGE_COUNT = 0
 
 
-# 获取指定页数的所有图片
+# 获取指定页数的全部图片
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://www.abase.me/movies.php?page=%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
@@ -25,7 +25,7 @@ def get_one_page_photo(page_count):
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     # 获取页面中的影片数量
     result["page_video_count"] = photo_pagination_response.data.count('<div class="item pull-left">')
-    # 获取页面中的所有图片信息列表
+    # 获取页面中的全部图片信息列表
     # 单张图片信息的格式：[image_url, title]
     image_info_list = re.findall('<img src="" data-original="([^"]*)" class="lazy [^"]*" title="([^"]*)">', photo_pagination_response.data)
     result["image_info_list"] = [map(str, key) for key in image_info_list]
@@ -72,7 +72,7 @@ class ABase(robot.Robot):
         main_thread_count = threading.activeCount()
         # 多线程下载类型
         # 1 同时开始N个下载线程
-        # 2 对一页中的所有图片开启多线程下载，下完一页中的所有图片后开始下一页
+        # 2 对一页中的全部图片开启多线程下载，下完一页中的所有图片后开始下一页
         thread_type = 2
         while True:
             log.step("开始解析第%s页图片" % page_count)

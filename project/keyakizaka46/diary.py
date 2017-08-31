@@ -20,13 +20,13 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取指定页数的所有日志
+# 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
     # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
     blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
     blog_pagination_response = net.http_request(blog_pagination_url)
     result = {
-        "blog_info_list": [],  # 所有日志信息
+        "blog_info_list": [],  # 全部日志信息
     }
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
@@ -40,14 +40,14 @@ def get_one_page_blog(account_id, page_count):
     for blog_info in blog_list:
         extra_blog_info = {
             "blog_id" : None,  # 日志id
-            "image_url_list": [],  # 所有图片地址
+            "image_url_list": [],  # 全部图片地址
         }
         # 获取日志id
         blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
         if not robot.is_integer(blog_id):
             raise robot.RobotException("日志页面截取日志id失败\n%s" % blog_info)
         extra_blog_info["blog_id"] = str(blog_id)
-        # 获取所有图片地址
+        # 获取全部图片地址
         image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
         extra_blog_info["image_url_list"] = map(str, image_url_list)
         result["blog_info_list"].append(extra_blog_info)
@@ -162,11 +162,11 @@ class Download(threading.Thread):
                     log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
-                # 没有获取到任何日志，所有日志已经全部获取完毕了
+                # 没有获取到任何日志，全部日志已经全部获取完毕了
                 if len(blog_pagination_response["blog_info_list"]) == 0:
                     break
 
-                log.trace(account_name + " 第%s页解析的所有日志信息：%s" % (page_count, blog_pagination_response["blog_info_list"]))
+                log.trace(account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_info_list"]))
 
                 # 寻找这一页符合条件的日志
                 for blog_info in blog_pagination_response["blog_info_list"]:
@@ -186,7 +186,7 @@ class Download(threading.Thread):
             while len(blog_info_list) > 0:
                 blog_info =  blog_info_list.pop()
                 log.step(account_name + " 开始解析日志%s" % blog_info["blog_id"])
-                log.trace(account_name + " 日志%s解析的所有图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
+                log.trace(account_name + " 日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_info["image_url_list"]:

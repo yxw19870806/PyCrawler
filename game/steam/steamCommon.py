@@ -39,7 +39,7 @@ def get_account_owned_app_list(user_id):
     return app_id_list
 
 
-# 获取所有正在打折的游戏列表
+# 获取全部正在打折的游戏列表
 def get_discount_game_list(login_cookie):
     page_count = 1
     discount_game_list = []
@@ -66,7 +66,7 @@ def get_discount_game_list(login_cookie):
                 bundle_info = game_selector.attr("data-ds-bundle-data")
                 app_id = []
                 if bundle_info:
-                    # 包含的所有app_id
+                    # 包含的全部app_id
                     app_id_find = re.findall('"m_rgIncludedAppIDs":\[([^\]]*)\]', bundle_info)
                     for temp_id_list in app_id_find:
                         temp_id_list = temp_id_list.split(",")
@@ -125,7 +125,7 @@ def get_discount_game_list(login_cookie):
     return discount_game_list
 
 
-# 获取所有已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
+# 获取全部已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
 def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
     badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
@@ -134,7 +134,7 @@ def get_self_account_badges(account_id, login_cookie):
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(badges_index_response.status))
     badges_detail_url_list = []
-    # 所有徽章div
+    # 徽章div
     badges_selector = pq(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
     for index in range(0, badges_selector.size()):
         badge_html = badges_selector.eq(index).html().encode("UTF-8")
@@ -177,7 +177,7 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     else:
         badge_level = 0
     wanted_count = 5 - badge_level
-    # 所有集换式卡牌div
+    # 集换式卡牌div
     cards_selector = page_selector.find(".maincontent .badge_detail_tasks .badge_card_set_card")
     for card_index in range(0, cards_selector.size()):
         card_selector = cards_selector.eq(card_index)

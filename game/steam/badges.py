@@ -34,7 +34,7 @@ def main(account_id):
         if len(wanted_card_list) > 0:
             game_id = badges_detail_url.split("/")[-2]
             tool.print_msg("game id: %s" % game_id, False)
-            # 获取所有卡牌的市场售价
+            # 获取全部卡牌的市场售价
             try:
                 market_card_list = steamCommon.get_market_game_trade_card_price(game_id, login_cookie)
             except robot.RobotException, e:

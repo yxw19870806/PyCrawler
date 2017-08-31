@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定token后的一页相册
 def get_one_page_blog(account_id, token):
     result = {
-        "blog_info_list": [],  # 所有日志信息
+        "blog_info_list": [],  # 全部日志信息
         "next_page_key": None,  # 下一页token
     }
     # 截取页面中的JS数据
@@ -96,7 +96,7 @@ def get_album_page(account_id, album_id):
     # 图片不止一页：https://get.google.com/albumarchive/109057690948151627836/album/AF1QipMg1hsC4teQFP5xaBioWo-1SCr4Hphh4mfc0ZZX?source=pwa
     album_url = "https://get.google.com/albumarchive/%s/album/%s" % (account_id, album_id)
     result = {
-        "image_url_list": [],  # 所有图片地址
+        "image_url_list": [],  # 全部图片地址
     }
     album_response = net.http_request(album_url)
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -243,7 +243,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册页（token：%s）解析失败，原因：%s" % (key, e.message))
                     raise
 
-                log.trace(account_name + " 相册页（token：%s）解析的所有日志信息：%s" % (key, blog_pagination_response["blog_info_list"]))
+                log.trace(account_name + " 相册页（token：%s）解析的全部日志：%s" % (key, blog_pagination_response["blog_info_list"]))
 
                 # 寻找这一页符合条件的日志
                 for blog_info in blog_pagination_response["blog_info_list"]:
@@ -279,7 +279,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 相册%s没有解析到图片" % blog_info["blog_id"])
                     continue
 
-                log.trace(account_name + " 相册存档页%s解析的所有图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
+                log.trace(account_name + " 相册存档页%s解析的全部图片：%s" % (blog_info["blog_id"], album_response["image_url_list"]))
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in album_response["image_url_list"]:

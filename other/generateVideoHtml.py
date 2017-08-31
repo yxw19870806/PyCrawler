@@ -16,7 +16,7 @@ def get_file_url_from_log(log_path):
     return re.findall("(http://[\S]*)", str)
 
 
-# 根据url列表，生成包含所有下载地址的页面
+# 根据url列表，生成包含全部下载地址的页面
 def generate_html_page(video_url_list):
     html = "<!DOCTYPE html>\n<html>\n<body>\n"
     index = 1

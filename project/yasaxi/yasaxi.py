@@ -20,7 +20,7 @@ IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
-# 获取指定页数的所有日志
+# 获取指定页数的全部日志
 def get_one_page_photo(account_id, cursor):
     photo_pagination_url = "https://api.yasaxi.com/statuses/user?userId=%s&cursor=%s&count=20" % (account_id, cursor)
     header_list = {
@@ -33,7 +33,7 @@ def get_one_page_photo(account_id, cursor):
         "is_over": False,  # 是不是已经没有新的图片
         "is_error": False,  # 是不是格式不符合
         "next_page_cursor": None,  # 下一页图片的指针
-        "status_list": [],  # 所有状态信息
+        "status_list": [],  # 全部状态信息
     }
     photo_pagination_response = net.http_request(photo_pagination_url, header_list=header_list, is_random_ip=False, json_decode=True)
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -56,7 +56,7 @@ def get_one_page_photo(account_id, cursor):
         for status_info in photo_pagination_response.json_data["data"]:
             status_result = {
                 "id": None,  # 状态id
-                "image_url_list": [],  # 所有图片地址
+                "image_url_list": [],  # 全部图片地址
             }
             # 获取状态id
             if not robot.check_sub_key(("statusId",), status_info):

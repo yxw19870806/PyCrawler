@@ -30,7 +30,7 @@ def get_one_page_video(account_id, page_time):
         video_pagination_url += "&pageflag=0"
     result = {
         "is_error": False,  # 是不是格式不符合
-        "video_info_list": [],  # 所有视频信息
+        "video_info_list": [],  # 全部视频信息
         "is_over": False,  # 是不是最后一页视频
     }
     header_list = {"Referer": "http://weishi.qq.com/"}
@@ -196,7 +196,7 @@ class Download(threading.Thread):
                     log.error(account_name + " %s后的一页视频解析失败，原因：%s" % (page_time, e.message))
                     raise
 
-                log.step(account_name + " 第%s页解析的所有视频信息：%s" % (video_count, video_pagination_response["video_info_list"]))
+                log.step(account_name + " 第%s页解析的全部视频：%s" % (video_count, video_pagination_response["video_info_list"]))
 
                 for video_info in video_pagination_response["video_info_list"]:
                     # 检查是否达到存档记录

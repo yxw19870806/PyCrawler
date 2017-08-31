@@ -22,8 +22,8 @@ def get_album_page(page_count):
     result = {
         "is_over": False,  # 是不是已经结束
         "is_delete": False,  # 是不是相册已被删除（或还没有内容）
-        "image_url_list": None,  # 所有图片地址
-        "video_url": None,  # 所有视频地址
+        "image_url_list": None,  # 全部图片地址
+        "video_url": None,  # 视频地址
         "title": "",  # 相册标题
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -125,7 +125,7 @@ class MeiTuZZ(robot.Robot):
             error_count = 0
 
             if album_response["image_url_list"] is not None:
-                log.trace("第%s页相册解析的所有图片：%s" % (album_id, album_response["image_url_list"]))
+                log.trace("第%s页相册解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
             else:
                 log.trace("第%s页相册解析的视频：%s" % (album_id, album_response["video_url"]))
 

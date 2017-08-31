@@ -9,7 +9,7 @@ from common import net, tool
 import re
 
 
-# 获取论坛所有版块的地址列表
+# 获取论坛全部版块的地址列表
 def get_bbs_forum_url_list(index_url):
     index_response = net.http_request(index_url)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
