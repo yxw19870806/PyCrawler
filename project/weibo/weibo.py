@@ -191,6 +191,7 @@ class Download(threading.Thread):
                     else:
                         unique_list.append(image_info["image_url"])
 
+                    # todo 如果存在上传时间一致的图片
                     # 检查是否达到存档记录
                     if image_info["image_time"] > int(self.account_info[2]):
                         image_info_list.append(image_info)
