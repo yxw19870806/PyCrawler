@@ -54,15 +54,11 @@ def instagram():
     for i in range(1, 4):
         save_data_path = os.path.join(instagram_path, "info\\save_%s.data" % i)
         image_download_path = os.path.join(instagram_path, "photo\\instagram%s" % i)
-        image_temp_path = os.path.join(image_download_path, "tempImage")
         video_download_path = os.path.join(instagram_path, "video\\instagram%s" % i)
-        video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
             "image_download_path": image_download_path,
-            "image_temp_path": image_temp_path,
             "video_download_path": video_download_path,
-            "video_temp_path": video_temp_path,
         }
         instagram.Instagram(extra_config).main()
 
@@ -179,15 +175,11 @@ def twitter():
     for i in range(1, 6):
         save_data_path = os.path.join(twitter_path, "info\\save_%s.data" % i)
         image_download_path = os.path.join(twitter_path, "photo\\twitter%s" % i)
-        image_temp_path = os.path.join(image_download_path, "tempImage")
         video_download_path = os.path.join(twitter_path, "video\\twitter%s" % i)
-        video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
             "image_download_path": image_download_path,
-            "image_temp_path": image_temp_path,
             "video_download_path": video_download_path,
-            "video_temp_path": video_temp_path,
         }
         twitter.Twitter(extra_config).main()
 
@@ -200,15 +192,11 @@ def weibo():
     for save_file in ["ATF", "lunar", "save_1", "save_2", "snh48"]:
         save_data_path = os.path.join(weibo_path, "info\\%s.data" % save_file)
         image_download_path = os.path.join(weibo_path, "photo\\%s" % save_file)
-        image_temp_path = os.path.join(image_download_path, "tempImage")
         # video_download_path = os.path.join(weibo_path, "video\\%s" % save_file)
-        # video_temp_path = os.path.join(video_download_path, "tempVideo")
         extra_config = {
             "save_data_path": save_data_path,
             "image_download_path": image_download_path,
-            "image_temp_path": image_temp_path,
             # "video_download_path": video_download_path,
-            # "video_temp_path": video_temp_path,
         }
         weibo.Weibo(extra_config).main()
 
@@ -221,7 +209,6 @@ def weibo_article():
     extra_config = {
         "save_data_path": os.path.join(weibo_article_path, "info\\article.data"),
         "image_download_path": os.path.join(weibo_article_path, "article"),
-        "image_temp_path": os.path.join(weibo_article_path, "article\\tempImage"),
     }
     article.Article(extra_config).main()
 

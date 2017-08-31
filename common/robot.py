@@ -163,15 +163,8 @@ class Robot(object):
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
                 tool.process_exit()
                 return
-            # 图片临时下载目录
-            if "image_temp_path" in extra_config:
-                self.image_temp_path = extra_config["image_temp_path"]
-            else:
-                self.image_temp_path = get_config(config, "IMAGE_TEMP_PATH", "\\\\tempImage", 3)
-            # 图片下载数量，0为下载全部可用资源
         else:
             self.image_download_path = ""
-            self.image_temp_path = ""
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
@@ -184,14 +177,8 @@ class Robot(object):
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
                 tool.process_exit()
                 return
-            # 视频下载临时目录
-            if "video_temp_path" in extra_config:
-                self.video_temp_path = extra_config["video_temp_path"]
-            else:
-                self.video_temp_path = get_config(config, "VIDEO_TEMP_PATH", "\\\\tempVideo", 3)
         else:
             self.video_download_path = ""
-            self.video_temp_path = ""
 
         # 代理
         is_proxy = get_config(config, "IS_PROXY", 2, 1)

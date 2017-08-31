@@ -14,7 +14,6 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_VIDEO_COUNT = 0
-VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
@@ -114,7 +113,6 @@ def get_video_url(video_id):
 
 class NicoNico(robot.Robot):
     def __init__(self):
-        global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -125,7 +123,6 @@ class NicoNico(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -203,7 +200,7 @@ class Download(threading.Thread):
 
             video_count = 1
             first_video_id = None
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
+            video_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
             for video_info in account_index_response.extra_info["video_info_list"]:
                 if not robot.check_sub_key(("item_data",), video_info) or \
                         not robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):

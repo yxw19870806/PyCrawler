@@ -16,7 +16,6 @@ import traceback
 ACCOUNTS = []
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 TOTAL_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 COOKIE_INFO = {"SUB": ""}
@@ -67,7 +66,6 @@ def get_one_page_photo(account_id, page_count):
 
 class Weibo(robot.Robot):
     def __init__(self, extra_config=None):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
         global COOKIE_INFO
@@ -82,7 +80,6 @@ class Weibo(robot.Robot):
         robot.Robot.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         COOKIE_INFO.update(self.cookie_value)
