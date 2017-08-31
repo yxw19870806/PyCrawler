@@ -15,14 +15,12 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_VIDEO_COUNT = 0
-VIDEO_TEMP_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
 class Template(robot.Robot):
     def __init__(self):
-        global VIDEO_TEMP_PATH
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -35,7 +33,6 @@ class Template(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        VIDEO_TEMP_PATH = self.video_temp_path
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -79,9 +76,6 @@ class Template(robot.Robot):
                 new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
-        # 删除临时文件夹
-        self.finish_task()
-
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
@@ -100,40 +94,14 @@ class Download(threading.Thread):
         account_id = self.account_info[0]
         # todo 是否有需要显示不同名字
         account_name = account_id
+        total_video_count = 0
 
         try:
             log.step(account_name + " 开始")
 
-            video_path = os.path.join(VIDEO_TEMP_PATH, account_name)
-
             # todo 视频下载逻辑
-            video_count = 1
-            first_video_time = None
+            video_index = 1
 
-            log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
-
-            # 排序
-            if video_count > 1:
-                destination_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name)
-                if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
-                    log.step(account_name + " 视频从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
-
-            # 新的存档记录
-            if first_video_time is not None:
-                self.account_info[3] = str(int(self.account_info[3]) + video_count - 1)
-                self.account_info[4] = first_video_time
-
-            # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_VIDEO_COUNT += video_count - 1
-            ACCOUNTS.remove(account_id)
-            self.thread_lock.release()
-
-            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
@@ -142,6 +110,14 @@ class Download(threading.Thread):
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+        TOTAL_VIDEO_COUNT += total_video_count
+        ACCOUNTS.remove(account_id)
+        self.thread_lock.release()
+        log.step(account_name + " 下载完毕，总共获得%s个视频" % total_video_count)
 
 
 if __name__ == "__main__":

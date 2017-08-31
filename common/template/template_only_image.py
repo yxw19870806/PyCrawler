@@ -15,14 +15,12 @@ import traceback
 
 ACCOUNTS = []
 TOTAL_IMAGE_COUNT = 0
-IMAGE_TEMP_PATH = ""
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 
 
 class Template(robot.Robot):
     def __init__(self):
-        global IMAGE_TEMP_PATH
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
 
@@ -35,7 +33,6 @@ class Template(robot.Robot):
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_TEMP_PATH = self.image_temp_path
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
@@ -79,9 +76,6 @@ class Template(robot.Robot):
                 new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
             new_save_data_file.close()
 
-        # 删除临时文件夹
-        self.finish_task()
-
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 
@@ -100,39 +94,14 @@ class Download(threading.Thread):
         account_id = self.account_info[0]
         # todo 是否有需要显示不同名字
         account_name = account_id
+        total_image_count = 0
 
         try:
             log.step(account_name + " 开始")
 
             # todo 图片下载逻辑
-            image_count = 1
-            first_image_time = None
-            image_path = os.path.join(IMAGE_TEMP_PATH, account_name)
+            image_index = 1
 
-            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
-
-            # 排序
-            if image_count > 0:
-                destination_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
-                if robot.sort_file(image_path, destination_path, int(self.account_info[1]), 4):
-                    log.step(account_name + " 图片从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_name + " 创建图片保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
-
-            # 新的存档记录
-            if first_image_time is not None:
-                self.account_info[1] = str(int(self.account_info[1]) + image_count - 1)
-                self.account_info[2] = first_image_time
-
-            # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += image_count - 1
-            ACCOUNTS.remove(account_id)
-            self.thread_lock.release()
-
-            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
@@ -141,6 +110,14 @@ class Download(threading.Thread):
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        self.thread_lock.acquire()
+        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+        TOTAL_IMAGE_COUNT += total_image_count
+        ACCOUNTS.remove(account_id)
+        self.thread_lock.release()
+        log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 
 if __name__ == "__main__":
