@@ -86,6 +86,8 @@ class UGirls(robot.Robot):
             log.error("图集首页解析失败，原因：%s" % e.message)
             raise
 
+        log.step("最新图集id：%s" % index_response["max_album_id"])
+
         total_image_count = 0
         is_over = False
         while not is_over and album_id <= index_response["max_album_id"]:
