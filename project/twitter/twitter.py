@@ -308,7 +308,7 @@ class Download(threading.Thread):
 
             log.step(account_name + " 需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
 
-            # 从最早的日志开始下载
+            # 从最早的媒体开始下载
             while len(media_info_list) > 0:
                 media_info = media_info_list.pop()
                 log.step(account_name + " 开始解析媒体志 %s" % media_info["blog_id"])

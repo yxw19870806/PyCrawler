@@ -213,7 +213,7 @@ class Download(threading.Thread):
 
             log.step(account_name + " 需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
 
-            # 从最早的图片开始下载
+            # 从最早的相册开始下载
             while len(album_info_list) > 0:
                 album_info = album_info_list.pop()
                 log.step(account_name + " 开始解析相册%s" % album_info["album_id"])

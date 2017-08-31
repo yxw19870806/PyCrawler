@@ -262,7 +262,7 @@ class Download(threading.Thread):
                     else:
                         page_count += 1
 
-            log.step(account_name + " 需要下载的全部歌曲解析完毕，共%s个" % len(audio_info_list))
+            log.step(account_name + " 需要下载的全部歌曲解析完毕，共%s首" % len(audio_info_list))
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:
