@@ -244,9 +244,6 @@ class Instagram(robot.Robot):
                 new_save_data_file.write("\t".join(account_list[account_name]) + "\n")
             new_save_data_file.close()
 
-        # 删除临时文件夹
-        self.finish_task()
-
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
 

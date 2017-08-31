@@ -258,17 +258,6 @@ class Robot(object):
     def get_run_time(self):
         return int(time.time() - self.start_time)
 
-    # 下载逻辑完成后手动调用，进行一些收尾工作
-    def finish_task(self):
-        if self.image_temp_path:
-            tool.delete_null_dir(self.image_temp_path)
-            if os.path.exists(self.image_temp_path):
-                self.print_msg("图片临时下载目录%s中存在文件" % self.image_temp_path)
-        if self.video_temp_path:
-            tool.delete_null_dir(self.video_temp_path)
-            if os.path.exists(self.video_temp_path):
-                self.print_msg("视频临时下载目录%s中存在文件" % self.video_temp_path)
-
 
 # 读取配置文件
 def read_config(config_path):
