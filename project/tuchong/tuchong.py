@@ -202,6 +202,7 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " %s后的一页相册：%s" % (post_time, album_pagination_response["album_info_list"]))
 
+                # 寻找这一页符合条件的相册
                 for album_info in album_pagination_response["album_info_list"]:
                     # 检查是否达到存档记录
                     if int(album_info["album_id"]) > int(self.account_info[1]):

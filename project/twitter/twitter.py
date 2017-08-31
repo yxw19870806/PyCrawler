@@ -290,6 +290,7 @@ class Download(threading.Thread):
 
                 log.trace(account_name + " position %s解析的所有媒体信息：%s" % (position_blog_id, media_pagination_response["media_info_list"]))
 
+                # 寻找这一页符合条件的媒体
                 for media_info in media_pagination_response["media_info_list"]:
                     # 检查是否达到存档记录
                     if int(media_info["blog_id"]) > int(self.account_info[4]):

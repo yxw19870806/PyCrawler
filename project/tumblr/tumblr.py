@@ -284,6 +284,7 @@ class Download(threading.Thread):
 
                 log.trace(account_id + " 第%s页解析的所有日志：%s" % (page_count, post_pagination_response["post_url_list"]))
 
+                # 寻找这一页符合条件的日志
                 for post_url in post_pagination_response["post_url_list"]:
                     # 获取日志id
                     post_id = get_post_id(post_url)
