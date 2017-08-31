@@ -8,12 +8,6 @@ email: hikaru870806@hotmail.com
 from common import *
 import re
 
-ACCOUNTS = []
-TOTAL_VIDEO_COUNT = 0
-VIDEO_TEMP_PATH = ""
-VIDEO_DOWNLOAD_PATH = ""
-NEW_SAVE_DATA_PATH = ""
-
 
 # 获取指定账号的全部关注列表
 # suid -> 0r9ewgQ0v7UoDptu
