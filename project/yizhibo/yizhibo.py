@@ -299,7 +299,7 @@ class Download(threading.Thread):
                 if is_error:
                     break
 
-                log.step("需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+                log.step(account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
                 # 从最早的视频开始下载
                 video_index = int(self.account_info[1]) + 1
