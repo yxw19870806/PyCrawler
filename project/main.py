@@ -111,6 +111,14 @@ def meipai():
     meipai.MeiPai().main()
 
 
+# 美图录
+def meitulu():
+    from meitulu import meitulu
+    meitulu_path = os.path.join(ROOT_PATH, "meitulu")
+    os.chdir(meitulu_path)
+    meitulu.MeiTuLu().main()
+
+
 # 美图赚赚
 def meituzz():
     from meituzz import meituzz
@@ -149,6 +157,14 @@ def nogizaka46_blog():
     nogizaka46_log_path = os.path.join(ROOT_PATH, "nogizaka46")
     os.chdir(nogizaka46_log_path)
     blog.Blog().main()
+
+
+# nvshens
+def nvshens():
+    from nvshens import nvshens
+    nvshens_log_path = os.path.join(ROOT_PATH, "nvshens")
+    os.chdir(nvshens_log_path)
+    nvshens.Nvshens().main()
 
 
 # 篠田麻里子blog
@@ -257,11 +273,13 @@ def zunguang():
 # kg()
 # lofter()
 # meipai()
+# meitulu()
 # meituzz()
 # miaopai()
 # nana_go_go()
 # netease_photographer()
 # nogizaka46_blog()
+# nvshens()
 # shinoda_blog()
 # tuchong()
 # tumblr()
