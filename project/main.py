@@ -33,9 +33,17 @@ def chang_ba():
 # 5sing
 def five_sing():
     from fiveSing import fiveSing
-    five_sing_path = os.path.join(os.path.abspath(".."), "fiveSing")
+    five_sing_path = os.path.join(ROOT_PATH, "fiveSing")
     os.chdir(five_sing_path)
     fiveSing.FiveSing().main()
+
+
+# flickr
+def flickr():
+    from flickr import flickr
+    flickr_path = os.path.join(ROOT_PATH, "flickr")
+    os.chdir(flickr_path)
+    flickr.Flickr().main()
 
 
 # GooglePlus
@@ -250,6 +258,7 @@ def zunguang():
 # bcy()
 # chang_ba()
 # five_sing()
+# flickr()
 # google_plus()
 # instagram()
 # jigadori()
