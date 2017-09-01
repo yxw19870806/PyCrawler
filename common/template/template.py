@@ -23,6 +23,23 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
+# 获取一页日志
+def get_one_page_blog(account_id, page_count):
+    result = {
+        "blog_id_list": [],  # 日志id
+    }
+    return result
+
+
+# 获取指定日志
+def get_blog_page(account_id, blog_id):
+    result = {
+        "image_url_list": [],  # 全部图片地址
+        "video_url_list": [],  # 全部视频地址
+    }
+    return result
+
+
 class Template(robot.Robot):
     def __init__(self):
         global IMAGE_DOWNLOAD_PATH
@@ -110,27 +127,103 @@ class Download(threading.Thread):
         account_name = account_id
         total_image_count = 0
         total_video_count = 0
+        temp_path_list = []
 
         try:
             log.step(account_name + " 开始")
 
-            # todo 图片下载逻辑
-            # 图片下载
-            image_index = 1
-            if IS_DOWNLOAD_IMAGE:
-                pass
+            page_count = 1
+            blog_id_list = []
+            is_over = False
+            # 获取全部还未下载过需要解析的日志
+            while not is_over:
+                log.step(account_name + " 开始解析第%s页日志" % page_count)
 
-            # todo 视频下载逻辑
-            # 视频下载
-            video_index = 1
-            if IS_DOWNLOAD_VIDEO:
-                pass
+                # todo 一页日志解析规则
+                # 获取指定时间后的一页日志
+                try:
+                    blog_pagination_response = get_one_page_blog(account_id, page_count)
+                except robot.RobotException, e:
+                    log.error(account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
+                    raise
 
+                log.trace(account_name + " 第%s页解析的全部日志：%s" % (page_count, blog_pagination_response["blog_id_list"]))
+
+                # 寻找这一页符合条件的媒体
+                for blog_id in blog_pagination_response["blog_id_list"]:
+                    # 检查是否达到存档记录
+                    if int(blog_id) > int(self.account_info[3]):
+                        blog_id_list.append(blog_id)
+                    else:
+                        is_over = True
+                        break
+
+            log.step(account_name + " 需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
+
+            while len(blog_id_list) > 0:
+                blog_id = blog_id_list.pop()
+                log.step(account_name + " 开始解析日志%s" % blog_id)
+
+                # todo 日志解析规则
+                # 获取指定日志
+                try:
+                    blog_response = get_blog_page(account_id, blog_id)
+                except robot.RobotException, e:
+                    log.error(account_name + " 日志%s解析失败，原因：%s" % (blog_id, e.message))
+                    raise
+
+                # todo 图片下载逻辑
+                # 图片下载
+                image_index = self.account_info[1] + 1
+                if IS_DOWNLOAD_IMAGE:
+                    for image_url in blog_response["image_url_list"]:
+                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+
+                        file_type = image_url.split(".")[-1]
+                        image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
+                        save_file_return = net.save_net_file(image_url, image_file_path)
+                        if save_file_return["status"] == 1:
+                            # 设置临时目录
+                            temp_path_list.append(image_file_path)
+                            log.step(account_name + " 第%s张图片下载成功" % image_index)
+                            image_index += 1
+                        else:
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+                # todo 视频下载逻辑
+                # 视频下载
+                video_index = self.account_info[2] + 1
+                if IS_DOWNLOAD_VIDEO:
+                    for video_url in blog_response["video_url_list"]:
+                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
+
+                        file_type = video_url.split(".")[-1]
+                        video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.%s" % (video_index, file_type))
+                        save_file_return = net.save_net_file(video_url, video_file_path)
+                        if save_file_return["status"] == 1:
+                            # 设置临时目录
+                            temp_path_list.append(video_file_path)
+                            log.step(account_name + " 第%s个视频下载成功" % video_index)
+                            video_index += 1
+                        else:
+                            log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+                # 媒体内图片和视频全部下载完毕
+                temp_path_list = []  # 临时目录设置清除
+                total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+                total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
+                self.account_info[1] = str(image_index - 1)  # 设置存档记录
+                self.account_info[2] = str(video_index - 1)  # 设置存档记录
+                self.account_info[3] = ""  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
             else:
                 log.error(account_name + " 异常退出")
+            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            if len(temp_path_list) > 0:
+                for temp_path in temp_path_list:
+                    tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
