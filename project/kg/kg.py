@@ -226,7 +226,7 @@ class Download(threading.Thread):
                     log.error(account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 歌曲下载完毕
                 total_video_count += 1  # 计数累加
-                self.account_info[1] = audio_info["audio_id"]  # 设置存档记录
+                self.account_info[1] = str(audio_info["audio_time"])  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
