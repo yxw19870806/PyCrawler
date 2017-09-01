@@ -221,15 +221,6 @@ def weibo_article():
     article.Article(extra_config).main()
 
 
-# 看了又看
-def yasaxi():
-    from yasaxi import getRecommendList, yasaxi
-    yasaxi_path = os.path.join(ROOT_PATH, "yasaxi")
-    os.chdir(yasaxi_path)
-    getRecommendList.main()
-    yasaxi.Yasaxi().main()
-
-
 # 一直播
 def yizhibo():
     from yizhibo import yizhibo
@@ -277,7 +268,6 @@ def zunguang():
 # twitter()
 # weibo()
 # weibo_article()
-# yasaxi()
 # yizhibo()
 # ywkb()
 # zunguang()
