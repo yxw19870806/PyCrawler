@@ -221,6 +221,7 @@ class Download(threading.Thread):
                         log.step(account_name + " 第%s张图片下载成功" % image_index)
                 else:
                     log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    continue
                 # 图片下载完毕
                 total_image_count += 1  # 计数累加
                 self.account_info[1] = str(image_index)  # 设置存档记录
