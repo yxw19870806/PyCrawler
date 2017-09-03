@@ -126,9 +126,9 @@ class MeiTuLu(robot.Robot):
             # 过滤标题中不支持的字符
             album_title = robot.filter_text(album_pagination_response["album_title"])
             if album_title:
-                album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_title))
+                album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
             else:
-                album_path = os.path.join(self.image_download_path, "%04d" % album_id)
+                album_path = os.path.join(self.image_download_path, "%05d" % album_id)
 
             image_index = 1
             for image_url in album_pagination_response["image_url_list"]:
