@@ -124,7 +124,7 @@ class PrPr(robot.Robot):
 
         # 解析存档文件
         # account_id last_post_time
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", ""])
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
         ACCOUNTS = account_list.keys()
 
         # 循环下载每个id
@@ -175,8 +175,10 @@ class Download(threading.Thread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
-        # todo 是否有需要显示不同名字
-        account_name = account_id
+        if len(self.account_info) > 2 and self.account_info[2]:
+            account_name = self.account_info[2]
+        else:
+            account_name = account_id
         total_image_count = 0
         total_video_count = 0
         temp_path_list = []
