@@ -77,7 +77,6 @@ def get_post_page(post_id):
     if not robot.check_sub_key(("pictures", "imageCount", "videoCount"), index_response.json_data["result"]):
         raise robot.RobotException("返回信息'pictures'、'imageCount'或'videoCount'字段不存在\n%s" % index_response.json_data)
     for media_info in index_response.json_data["result"]["pictures"]:
-        print media_info
         if not robot.check_sub_key(("url",), media_info):
             raise robot.RobotException("返回信息'url'字段不存在\n%s" % media_info)
         if not robot.check_sub_key(("type",), media_info):
@@ -96,7 +95,6 @@ def get_post_page(post_id):
                 result["image_url_list"].append(str(media_info["thum"]))
         else:
             raise robot.RobotException("返回信息'type'字段取值不正确\n%s" % media_info)
-        print result
     return result
 
 
