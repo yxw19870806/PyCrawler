@@ -29,8 +29,8 @@ def get_one_page_video(account_id, page_time):
         video_pagination_url += "&pageflag=0"
     result = {
         "is_error": False,  # 是不是格式不符合
-        "video_info_list": [],  # 全部视频信息
         "is_over": False,  # 是不是最后一页视频
+        "video_info_list": [],  # 全部视频信息
     }
     header_list = {"Referer": "http://weishi.qq.com/"}
     video_pagination_response = net.http_request(video_pagination_url, header_list=header_list, json_decode=True)
@@ -48,7 +48,7 @@ def get_one_page_video(account_id, page_time):
     if not robot.check_sub_key(("info", "hasNext"), video_pagination_response.json_data["data"]):
         raise robot.RobotException("返回信息'info'或'hasNext'字段不存在\n%s" % video_pagination_response.json_data)
     for video_info in video_pagination_response.json_data["data"]["info"]:
-        extra_video_info = {
+        result_video_info = {
             "video_id": None,  # 视频id
             "video_part_id_list": [],  # 视频分集id
             "video_time": None,  # 视频上传时间
@@ -56,7 +56,7 @@ def get_one_page_video(account_id, page_time):
         # 获取视频id
         if not robot.check_sub_key(("id",), video_info):
             raise robot.RobotException("视频信息'id'字段不存在\n%s" % video_info)
-        extra_video_info["video_id"] = str(video_info["id"])
+        result_video_info["video_id"] = str(video_info["id"])
         # 获取分集id
         if not robot.check_sub_key(("newvideos",), video_info):
             raise robot.RobotException("视频信息'newvideos'字段不存在\n%s" % video_info)
@@ -67,14 +67,14 @@ def get_one_page_video(account_id, page_time):
         for video_part_info in video_info["newvideos"]:
             if not robot.check_sub_key(("vid",), video_part_info):
                 raise robot.RobotException("视频分集信息'vid'字段不存在\n%s" % video_info)
-            extra_video_info["video_part_id_list"].append(str(video_part_info["vid"]))
+            result_video_info["video_part_id_list"].append(str(video_part_info["vid"]))
         # 获取视频id
         if not robot.check_sub_key(("timestamp",), video_info):
             raise robot.RobotException("视频信息'timestamp'字段不存在\n%s" % video_info)
         if not robot.is_integer(video_info["timestamp"]):
             raise robot.RobotException("视频信息'timestamp'字段类型不正确\n%s" % video_info)
-        extra_video_info["video_time"] = int(video_info["timestamp"])
-        result["video_info_list"].append(extra_video_info)
+        result_video_info["video_time"] = int(video_info["timestamp"])
+        result["video_info_list"].append(result_video_info)
     # 检测是否还有下一页
     result["is_over"] = bool(video_pagination_response.json_data["data"]["hasNext"])
     return result

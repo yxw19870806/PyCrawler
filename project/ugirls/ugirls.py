@@ -16,9 +16,9 @@ def get_album_page(album_id):
     album_url = "http://www.ugirls.com/Content/List/Magazine-%s.html" % album_id
     album_response = net.http_request(album_url)
     result = {
+        "image_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是不是已经被删除
         "model_name": "",  # 模特名字
-        "image_url_list": [],  # 全部图片地址
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))

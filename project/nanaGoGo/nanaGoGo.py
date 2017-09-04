@@ -37,7 +37,7 @@ def get_one_page_media(account_name, target_id):
         if not isinstance(media_pagination_response.json_data["data"], list):
             raise robot.RobotException("返回信息'data'字段类型不正确\n%s" % media_pagination_response.json_data)
         for media_info in media_pagination_response.json_data["data"]:
-            extra_media_info = {
+            result_media_info = {
                 "blog_id": None,  # 日志id
                 "image_url_list": [],  # 全部图片地址
                 "video_url_list": [],  # 全部视频地址
@@ -49,7 +49,7 @@ def get_one_page_media(account_name, target_id):
                 raise robot.RobotException("媒体信息'postId'字段不存在\n%s" % media_info)
             if not robot.is_integer(media_info["post"]["postId"]):
                 raise robot.RobotException("媒体信息'postId'类型不正确n%s" % media_info)
-            extra_media_info["blog_id"] = str(media_info["post"]["postId"])
+            result_media_info["blog_id"] = str(media_info["post"]["postId"])
             # 获取日志内容
             if not robot.check_sub_key(("body",), media_info["post"]):
                 raise robot.RobotException("媒体信息'body'字段不存在\n%s" % media_info)
@@ -67,16 +67,16 @@ def get_one_page_media(account_name, target_id):
                 elif body_type == 3:  # 图片
                     if not robot.check_sub_key(("image",), blog_body):
                         raise robot.RobotException("媒体信息'image'字段不存在\n%s" % blog_body)
-                    extra_media_info["image_url_list"].append(str(blog_body["image"]))
+                    result_media_info["image_url_list"].append(str(blog_body["image"]))
                 elif body_type == 7:  # 转发
                     continue
                 elif body_type == 8:  # video
                     if not robot.check_sub_key(("movieUrlHq",), blog_body):
                         raise robot.RobotException("媒体信息'movieUrlHq'字段不存在\n%s" % blog_body)
-                    extra_media_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
+                    result_media_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
                 else:
                     raise robot.RobotException("媒体信息'bodyType'字段取值不正确\n%s" % blog_body)
-            result["media_info_list"].append(extra_media_info)
+            result["media_info_list"].append(result_media_info)
     elif target_id == INIT_TARGET_ID and media_pagination_response.status == 400:
         raise robot.RobotException("talk不存在")
     else:

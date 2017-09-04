@@ -41,10 +41,10 @@ def get_one_page_blog(account_id, page_count):
         # 第一位不是日志内容，没有用
         blog_data_list.pop(0)
         for blog_data in blog_data_list:
-            extra_image_info = {
+            result_image_info = {
+                "big_2_small_image_lust": {},  # 全部含有大图的图片
                 "blog_id": None,  # 日志id
                 "image_url_list": [],  # 全部图片地址
-                "big_2_small_image_lust": {},  # 全部含有大图的图片
             }
             # 获取日志id
             blog_id_html = tool.find_sub_string(blog_data, '<a href="http://blog.nogizaka46.com/%s/' % account_id, '.php"')
@@ -53,17 +53,17 @@ def get_one_page_blog(account_id, page_count):
             blog_id = blog_id_html.split("/")[-1]
             if not robot.is_integer(blog_id):
                 raise robot.RobotException("日志内容截取日志id失败\n%s" % blog_data)
-            extra_image_info["blog_id"] = str(int(blog_id))
+            result_image_info["blog_id"] = str(int(blog_id))
             # 获取图片地址列表
             image_url_list = re.findall('src="([^"]*)"', blog_data)
-            extra_image_info["image_url_list"] = map(str, image_url_list)
+            result_image_info["image_url_list"] = map(str, image_url_list)
             # 获取全部大图对应的小图
             big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
             big_2_small_image_lust = {}
             for big_image_url, small_image_url in big_image_list_find:
                 big_2_small_image_lust[str(small_image_url)] = str(big_image_url)
-            extra_image_info["big_2_small_image_lust"] = big_2_small_image_lust
-            result["blog_info_list"].append(extra_image_info)
+            result_image_info["big_2_small_image_lust"] = big_2_small_image_lust
+            result["blog_info_list"].append(result_image_info)
         # 判断是不是最后一页
         paginate_data = tool.find_sub_string(blog_pagination_response.data, '<div class="paginate">', "</div>")
         if not paginate_data:
@@ -82,9 +82,9 @@ def get_one_page_blog(account_id, page_count):
 # 检查图片是否存在对应的大图，以及判断大图是否仍然有效，如果存在可下载的大图则返回大图地址，否则返回原图片地址
 def check_big_image(image_url, big_2_small_list):
     result = {
+        "cookies": None,  # 页面返回的cookies
         "image_url": None,  # 大图地址
         "is_over": False,  # 是不是已经没有还生效的大图了
-        "cookies": None,  # 页面返回的cookies
     }
     if image_url in big_2_small_list:
         if big_2_small_list[image_url].find("http://dcimg.awalker.jp") == 0:

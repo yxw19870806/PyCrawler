@@ -90,7 +90,7 @@ def get_one_page_media(account_name, position_blog_id):
         if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
             raise robot.RobotException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
         for tweet_data in tweet_data_list:
-            extra_media_info = {
+            result_media_info = {
                 "blog_id": None,  # 日志id
                 "has_video": False,  # 是不是包含视频
                 "image_url_list": [],  # 全部图片地址
@@ -99,13 +99,13 @@ def get_one_page_media(account_name, position_blog_id):
             blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
             if not robot.is_integer(blog_id):
                 raise robot.RobotException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-            extra_media_info["blog_id"] = str(blog_id)
+            result_media_info["blog_id"] = str(blog_id)
             # 获取图片地址
             image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
-            extra_media_info["image_url_list"] = map(str, image_url_list)
+            result_media_info["image_url_list"] = map(str, image_url_list)
             # 判断是不是有视频
-            extra_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
-            result["media_info_list"].append(extra_media_info)
+            result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
+            result["media_info_list"].append(result_media_info)
         # 判断是不是还有下一页
         if media_pagination_response.json_data["has_more_items"]:
             result["next_page_position"] = str(media_pagination_response.json_data["min_position"])

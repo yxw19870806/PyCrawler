@@ -25,10 +25,10 @@ def get_one_page_photo(page_count):
     for photo_index in range(0, photo_list_selector.size()):
         photo_selector = photo_list_selector.eq(photo_index)
         photo_selector_html = photo_selector.html().encode("UTF-8")
-        extra_photo_info = {
+        result_photo_info = {
             "account_name": "",  # twitter账号
-            "tweet_id": None,  # tweet id
             "image_url_list": [],  # 图片地址
+            "tweet_id": None,  # tweet id
             "tweet_time": None,  # tweet发布时间
         }
         # 获取tweet id
@@ -38,18 +38,18 @@ def get_one_page_photo(page_count):
         tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
         if not robot.is_integer(tweet_id):
             raise robot.RobotException("tweet地址截取tweet id失败\n%s" % tweet_url)
-        extra_photo_info["tweet_id"] = int(tweet_id)
+        result_photo_info["tweet_id"] = int(tweet_id)
         # 获取twitter账号
         account_name = photo_selector.find(".user-info .user-name .screen-name").text()
         if not account_name:
             raise robot.RobotException("图片信息截取twitter账号失败\n%s" % photo_selector_html)
-        extra_photo_info["account_name"] = str(account_name).strip().replace("@", "")
+        result_photo_info["account_name"] = str(account_name).strip().replace("@", "")
         # 获取tweet发布时间
         tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text().strip()
         if not tweet_time:
             raise robot.RobotException("图片信息截取tweet发布时间失败\n%s" % photo_selector_html)
         try:
-            extra_photo_info["tweet_time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
+            result_photo_info["tweet_time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
         except ValueError:
             raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % tweet_time)
         # 获取图片地址
@@ -58,8 +58,8 @@ def get_one_page_photo(page_count):
             image_url = image_list_selector.eq(image_index).attr("src")
             if not image_url:
                 raise robot.RobotException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
-            extra_photo_info["image_url_list"].append(str(image_url).strip())
-        result["image_info_list"].append(extra_photo_info)
+            result_photo_info["image_url_list"].append(str(image_url).strip())
+        result["image_info_list"].append(result_photo_info)
     return result
 
 

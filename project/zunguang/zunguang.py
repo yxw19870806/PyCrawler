@@ -18,9 +18,9 @@ def get_album_page(page_count):
     post_data = {"bid": page_count}
     album_response = net.http_request(album_url, method="POST", post_data=post_data, json_decode=True, is_random_ip=False)
     result = {
-        "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
-        "title": "",  # 相册标题
+        "album_title": "",  # 相册标题
         "image_url_list": [],  # 全部图片地址
+        "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
@@ -49,7 +49,7 @@ def get_album_page(page_count):
             # 获取相册标题
             if not robot.check_sub_key(("title",), album_body):
                 raise robot.RobotException("返回数据'title'字段不存在\n%s" % album_response.json_data)
-            result["title"] = str(album_body["title"].encode("UTF-8"))
+            result["album_title"] = str(album_body["title"].encode("UTF-8"))
             # 获取图片地址
             if not robot.check_sub_key(("attr",), album_body):
                 raise robot.RobotException("返回数据'attr'字段不存在\n%s" % album_response.json_data)
@@ -114,12 +114,10 @@ class ZunGuang(robot.Robot):
             error_count = 0
 
             # 下载目录标题
-            title = ""
-            if album_response["title"]:
-                # 过滤标题中不支持的字符
-                title = robot.filter_text(album_response["title"])
-            if title:
-                image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, title))
+            # 过滤标题中不支持的字符
+            album_title = robot.filter_text(album_response["album_title"])
+            if album_title:
+                image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, album_title))
             else:
                 image_path = os.path.join(self.image_download_path, "%04d" % page_count)
 

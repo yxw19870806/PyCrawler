@@ -44,7 +44,7 @@ def get_one_page_article(page_id, page_count):
     if len(preview_article_data_list) == 0:
         raise robot.RobotException("文章分组失败\n%s" % article_data)
     for preview_article_data in preview_article_data_list:
-        extra_article_info = {
+        result_article_info = {
             "article_time": None,  # 文章发布时间
             "article_url": None,  # 文章地址
         }
@@ -53,15 +53,15 @@ def get_one_page_article(page_id, page_count):
         if not article_time:
             raise robot.RobotException("文章预览截取文章时间失败\n%s" % preview_article_data)
         try:
-            extra_article_info["article_time"] = int(time.mktime(time.strptime(article_time, "%Y 年 %m 月 %d 日 %H:%M")))
+            result_article_info["article_time"] = int(time.mktime(time.strptime(article_time, "%Y 年 %m 月 %d 日 %H:%M")))
         except ValueError:
             raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % article_time)
         # 获取文章地址
         article_path = tool.find_sub_string(preview_article_data, '<a target=\\"_blank\\" href=\\"', '\\">')
         if not article_time:
             raise robot.RobotException("文章预览截取文章地址失败\n%s" % preview_article_data)
-        extra_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
-        result["article_info_list"].append(extra_article_info)
+        result_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
+        result["article_info_list"].append(result_article_info)
     # 检测是否还有下一页
     page_count_find = re.findall('<a[\s|\S]*?>([\d]+)<\\\\/a>', article_pagination_response.data)
     result["is_over"] = page_count >= max(map(int, page_count_find))
@@ -73,11 +73,11 @@ def get_article_page(article_url):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     article_response = net.http_request(article_url, cookies_list=cookies_list)
     result = {
-        "is_pay": False,  # 是否需要购买
         "article_id": "",  # 文章id
         "article_title": "",  # 文章标题
-        "top_image_url": None,  # 文章顶部图片
         "image_url_list": [],  # 全部图片地址
+        "is_pay": False,  # 是否需要购买
+        "top_image_url": None,  # 文章顶部图片
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(article_response.status))

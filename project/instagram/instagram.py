@@ -78,7 +78,7 @@ def get_one_page_media(account_id, cursor):
             raise robot.RobotException("返回数据'edges'字段长度不正确\n%s" % media_pagination_response.json_data)
         media_node = media_pagination_response.json_data["data"]["user"]["edge_owner_to_timeline_media"]
         for media_info in media_node["edges"]:
-            media_result = {
+            result_media_info = {
                 "image_url": None,  # 图片地址
                 "is_group": False,  # 是不是图片/视频组
                 "is_video": False,  # 是不是视频
@@ -93,16 +93,16 @@ def get_one_page_media(account_id, cursor):
             if media_info["node"]["__typename"] not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
                 raise robot.RobotException("媒体信息'__typename'取值范围不正确\n%s" % media_info)
             # 获取图片地址
-            media_result["image_url"] = str(media_info["node"]["display_url"])
+            result_media_info["image_url"] = str(media_info["node"]["display_url"])
             # 判断是不是图片/视频组
-            media_result["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
+            result_media_info["is_group"] = media_info["node"]["__typename"] == "GraphSidecar"
             # 判断是否有视频
-            media_result["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
+            result_media_info["is_video"] = media_info["node"]["__typename"] == "GraphVideo"
             # 获取图片上传时间
-            media_result["media_time"] = int(media_info["node"]["taken_at_timestamp"])
+            result_media_info["media_time"] = int(media_info["node"]["taken_at_timestamp"])
             # 获取媒体详情界面id
-            media_result["page_id"] = str(media_info["node"]["shortcode"])
-            result["media_info_list"].append(media_result)
+            result_media_info["page_id"] = str(media_info["node"]["shortcode"])
+            result["media_info_list"].append(result_media_info)
         # 获取下一页的指针
         if media_node["page_info"]["has_next_page"]:
             result["next_page_cursor"] = str(media_node["page_info"]["end_cursor"])
@@ -155,10 +155,8 @@ def get_media_page(page_id):
                     raise robot.RobotException("媒体节点'node'字段不存在\n%s" % edge)
                 if not robot.check_sub_key(("__typename", "display_url"), edge["node"]):
                     raise robot.RobotException("媒体节点'__typename'或'display_url'字段不存在\n%s" % edge)
-
                 # 获取图片地址
                 result["image_url_list"].append(str(edge["node"]["display_url"]))
-
                 # 获取视频地址
                 if edge["node"]["__typename"] == "GraphVideo":
                     if not robot.check_sub_key(("video_url",), edge["node"]):

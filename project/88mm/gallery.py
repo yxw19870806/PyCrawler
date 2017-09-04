@@ -37,8 +37,8 @@ def get_one_page_album(sub_path, page_count):
     album_pagination_url = "http://www.88mmw.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
     album_pagination_response = net.http_request(album_pagination_url)
     result = {
-        "is_over": False,  # 是不是最后一页图集
         "album_info_list": [],  # 全部图集信息
+        "is_over": False,  # 是不是最后一页图集
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
@@ -54,16 +54,16 @@ def get_one_page_album(sub_path, page_count):
     if len(album_info_list) == 0:
         raise robot.RobotException("页面匹配图集信息失败\n%s" % album_info_html)
     for page_id, album_title in album_info_list:
-        extra_album_info = {
-            "page_id": str(page_id),  # 图集页面id
+        result_album_info = {
             "album_title": "",  # 图集id
+            "page_id": str(page_id),  # 图集页面id
         }
         # 获取图集标题
         if len(re.findall("_共\d*张", album_title)) == 1:
-            extra_album_info["album_title"] = album_title[:album_title.rfind("_共")]
+            result_album_info["album_title"] = album_title[:album_title.rfind("_共")]
         else:
-            extra_album_info["album_title"] = album_title
-        result["album_info_list"].append(extra_album_info)
+            result_album_info["album_title"] = album_title
+        result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
     max_page_find = re.findall("<a href='list_" + SUB_PATH_LIST[sub_path] + "_(\d*).html'>末页</a>", album_pagination_html)
     if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and robot.is_integer(max_page_find[0]):

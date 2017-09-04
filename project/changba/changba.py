@@ -52,26 +52,26 @@ def get_one_page_audio(user_id, page_count):
     if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audit_pagination_response.status))
     for audio_info in audit_pagination_response.json_data:
-        extra_audio_info = {
+        result_audio_info = {
             "audio_id": None,  # 歌曲id
-            "audio_title": "",  # 歌曲标题
             "audio_key": None,  # 歌曲唯一key
-            "type": None,  # 歌曲类型，0 MV，1/3 歌曲
+            "audio_title": "",  # 歌曲标题
+            "audio_type": None,  # 歌曲类型，0 MV，1/3 歌曲
         }
         # 获取歌曲id
         if not robot.check_sub_key(("workid",), audio_info):
             raise robot.RobotException("歌曲信息'workid'字段不存在\n%s" % audio_info)
         if not robot.is_integer(audio_info["workid"]):
             raise robot.RobotException("歌曲信息'workid'字段类型不正确\n%s" % audio_info)
-        extra_audio_info["audio_id"] = str(audio_info["workid"])
+        result_audio_info["audio_id"] = str(audio_info["workid"])
         # 获取歌曲标题
         if not robot.check_sub_key(("songname",), audio_info):
             raise robot.RobotException("歌曲信息'songname'字段不存在\n%s" % audio_info)
-        extra_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
+        result_audio_info["audio_title"] = str(audio_info["songname"].encode("UTF-8"))
         # 获取歌曲key
         if not robot.check_sub_key(("enworkid",), audio_info):
             raise robot.RobotException("歌曲信息'enworkid'字段不存在\n%s" % audio_info)
-        extra_audio_info["audio_key"] = str(audio_info["enworkid"])
+        result_audio_info["audio_key"] = str(audio_info["enworkid"])
         # 获取歌曲类型
         if not robot.check_sub_key(("type",), audio_info):
             raise robot.RobotException("歌曲信息'type'字段不存在\n%s" % audio_info)
@@ -79,8 +79,8 @@ def get_one_page_audio(user_id, page_count):
             raise robot.RobotException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
         if int(audio_info["type"]) not in (0, 1, 3):
             raise robot.RobotException("歌曲信息'type'字段范围不正确\n%s" % audio_info)
-        extra_audio_info["type"] = int(audio_info["type"])
-        result["audio_info_list"].append(extra_audio_info)
+        result_audio_info["audio_type"] = int(audio_info["type"])
+        result["audio_info_list"].append(result_audio_info)
     return result
 
 
@@ -268,7 +268,7 @@ class Download(threading.Thread):
 
                 # 获取歌曲播放页
                 try:
-                    audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["type"])
+                    audio_play_response = get_audio_play_page(audio_info["audio_key"], audio_info["audio_type"])
                 except robot.RobotException, e:
                     log.error(account_name + " 歌曲%s《%s》解析失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], e.message))
                     raise

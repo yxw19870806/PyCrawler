@@ -22,9 +22,9 @@ def get_one_page_favorite(page_count):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     favorite_pagination_response = net.http_request(favorite_pagination_url, cookies_list=cookies_list)
     result = {
+        "blog_info_list": [],  # 所有微博信息
         "is_error": False,  # 是不是不符合格式
         "is_over": False,  # 是不是最后一页收藏
-        "blog_info_list": [],  # 所有微博信息
     }
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(favorite_pagination_response.status))
@@ -49,15 +49,15 @@ def get_one_page_favorite(page_count):
         # 已被删除的微博
         if not feed_selector.has_class("WB_feed_type"):
             continue
-        extra_blog_info = {
-            "blog_id": None,  # 页面解析出的日志id（mid）
-            "image_url_list": [],  # 页面解析出的微博图片地址列表
+        result_blog_info = {
+            "blog_id": None,  # 日志id（mid）
+            "image_url_list": [],  # 所有图片地址
         }
         # 解析日志id
         blog_id = feed_selector.attr("mid")
         if not robot.is_integer(blog_id):
             raise robot.RobotException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
-        extra_blog_info["blog_id"] = str(blog_id)
+        result_blog_info["blog_id"] = str(blog_id)
         # WB_text       微博文本
         # WB_media_wrap 微博媒体（图片）
         # .WB_feed_expand .WB_expand     转发的微博，下面同样包含WB_text、WB_media_wrap这些结构
@@ -75,9 +75,9 @@ def get_one_page_favorite(page_count):
                     temp_list = image_url.split("/")
                     temp_list[3] = "large"
                     image_url_list.append("http:" + str("/".join(temp_list)))
-                extra_blog_info["image_url_list"] = image_url_list
-        if len(extra_blog_info["image_url_list"]) > 0:
-            result["blog_info_list"].append(extra_blog_info)
+                result_blog_info["image_url_list"] = image_url_list
+        if len(result_blog_info["image_url_list"]) > 0:
+            result["blog_info_list"].append(result_blog_info)
     # 最后一条feed是分页信息
     page_selector = children_selector.eq(children_selector.size() - 1)
     # 判断是不是最后一页

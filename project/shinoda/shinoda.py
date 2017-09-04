@@ -15,8 +15,8 @@ import re
 def get_one_page_blog(page_count):
     blog_pagination_url = "http://blog.mariko-shinoda.net/page%s.html" % (page_count - 1)
     result = {
-        "is_over": False,  # 是不是最后一页日志
         "blog_info_list": [],  # 全部日志信息
+        "is_over": False,  # 是不是最后一页日志
     }
     blog_pagination_response = net.http_request(blog_pagination_url)
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -30,7 +30,7 @@ def get_one_page_blog(page_count):
     if len(blog_html_find) == 0:
         raise robot.RobotException("页面匹配日志信息失败\n%s" % blog_pagination_response.data)
     for blog_html in blog_html_find:
-        extra_blog_info = {
+        result_blog_info = {
             "blog_id": None,  # 日志id
             "image_url_list": [],  # 图片地址列表
         }
@@ -40,10 +40,10 @@ def get_one_page_blog(page_count):
         blog_id = str(image_name_list[0]).split("-")[0]
         if not robot.is_integer(blog_id):
             raise robot.RobotException("图片名字截取日志id失败\n%s" % blog_html)
-        extra_blog_info["blog_id"] = blog_id
+        result_blog_info["blog_id"] = blog_id
         for image_name in image_name_list:
-            extra_blog_info["image_url_list"].append("http://blog.mariko-shinoda.net/%s" % image_name)
-        result["blog_info_list"].append(extra_blog_info)
+            result_blog_info["image_url_list"].append("http://blog.mariko-shinoda.net/%s" % image_name)
+        result["blog_info_list"].append(result_blog_info)
     return result
 
 

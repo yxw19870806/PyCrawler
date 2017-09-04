@@ -15,8 +15,8 @@ def get_one_page_photo(page_count):
     photo_pagination_url = "http://www.dahuadan.com/category/ywkb/page/%s" % page_count
     photo_pagination_response = net.http_request(photo_pagination_url)
     result = {
-        "is_over": False,  # 是不是已经没有新的相册
         "image_info_list": [],  # 是不是已经没有新的相册
+        "is_over": False,  # 是不是已经没有新的相册
     }
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         article_data = tool.find_sub_string(photo_pagination_response.data, '<section id="primary"', "</section>")
@@ -29,11 +29,11 @@ def get_one_page_photo(page_count):
         for image_id, image_url in image_info_list:
             image_id_2_url_list[int(image_id)] = str(image_url)
         for image_id in sorted(image_id_2_url_list.keys(), reverse=True):
-            extra_image_info = {
+            result_image_info = {
                 "image_id": image_id,  # 图片id
                 "image_url": image_id_2_url_list[image_id],  # 图片地址
             }
-            result["image_info_list"].append(extra_image_info)
+            result["image_info_list"].append(result_image_info)
     elif photo_pagination_response.status == 404:
         result["is_over"] = True
     else:

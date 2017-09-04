@@ -65,7 +65,7 @@ def get_one_page_blog(account_id, token):
     # 获取日志信息
     if script_data[1] is not None:
         for data in script_data[1]:
-            extra_blog_info = {
+            result_blog_info = {
                 "blog_id": None,  # 日志id
                 "blog_time": None,  # 日志发布时间
             }
@@ -76,14 +76,14 @@ def get_one_page_blog(account_id, token):
                     break
             if len(blog_data) >= 5:
                 # 获取日志id
-                extra_blog_info["blog_id"] = str(blog_data[0])
+                result_blog_info["blog_id"] = str(blog_data[0])
                 # 获取日志发布时间
                 if not robot.is_integer(blog_data[4]):
                     raise robot.RobotException("日志时间类型不正确\n%s" % blog_data)
-                extra_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
+                result_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
             else:
                 raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
-            result["blog_info_list"].append(extra_blog_info)
+            result["blog_info_list"].append(result_blog_info)
     else:
         result["is_error"] = False
     return result

@@ -40,11 +40,11 @@ def get_one_page_audio(account_id, page_type, page_count):
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
     audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
     for audio_info in audio_info_list:
-        extra_audio_info = {
+        result_audio_info = {
             "audio_id": str(audio_info[0]),
             "audio_title": str(audio_info[1]),
         }
-        result["audio_info_list"].append(extra_audio_info)
+        result["audio_info_list"].append(result_audio_info)
     return result
 
 

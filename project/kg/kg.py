@@ -37,31 +37,31 @@ def get_one_page_audio(account_id, page_count):
     if not robot.check_sub_key(("has_more", "ugclist"), audio_pagination_response.json_data["data"]):
         raise robot.RobotException("返回数据'has_more'或者'ugclist'字段不存在\n%s" % audio_pagination_response.json_data)
     for audio_info in audio_pagination_response.json_data["data"]["ugclist"]:
-        audio_result = {
+        result_audio_info = {
             "audio_id": None,  # 歌曲id
             "audio_key": None,  # 歌曲访问token
-            "audio_title": "",  # 歌曲标题
             "audio_time": None,  # 歌曲上传时间
+            "audio_title": "",  # 歌曲标题
         }
         # 获取歌曲id
         if not robot.check_sub_key(("ksong_mid",), audio_info):
             raise robot.RobotException("返回数据'ksong_mid'字段不存在\n%s" % audio_info)
-        audio_result["audio_id"] = str(audio_info["ksong_mid"])
+        result_audio_info["audio_id"] = str(audio_info["ksong_mid"])
         # 获取歌曲访问token
         if not robot.check_sub_key(("shareid",), audio_info):
             raise robot.RobotException("返回数据'shareid'字段不存在\n%s" % audio_info)
-        audio_result["audio_key"] = str(audio_info["shareid"])
+        result_audio_info["audio_key"] = str(audio_info["shareid"])
         # 获取歌曲标题
         if not robot.check_sub_key(("title",), audio_info):
             raise robot.RobotException("返回数据'title'字段不存在\n%s" % audio_info)
-        audio_result["audio_title"] = str(audio_info["title"].encode("UTF-8"))
+        result_audio_info["audio_title"] = str(audio_info["title"].encode("UTF-8"))
         # 获取歌曲上传时间
         if not robot.check_sub_key(("time",), audio_info):
             raise robot.RobotException("返回数据'time'字段不存在\n%s" % audio_info)
         if not robot.is_integer(audio_info["time"]):
             raise robot.RobotException("返回数据'time'字段类型不正确\n%s" % audio_info)
-        audio_result["audio_time"] = str(audio_info["time"])
-        result["audio_info_list"].append(audio_result)
+        result_audio_info["audio_time"] = str(audio_info["time"])
+        result["audio_info_list"].append(result_audio_info)
     # 判断是不是最后一页
     result["is_over"] = not bool(int(audio_pagination_response.json_data["data"]["has_more"]))
     return result

@@ -37,14 +37,14 @@ def get_one_page_video(account_id, page_count):
         # 历史直播，跳过
         if robot.check_sub_key(("lives",), media_data):
             continue
-        extra_video_info = {
+        result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频下载地址
         }
         # 获取视频id
         if not robot.check_sub_key(("id",), media_data):
             raise robot.RobotException("视频信息'id'字段不存在\n%s" % media_data)
-        extra_video_info["video_id"] = str(media_data["id"])
+        result_video_info["video_id"] = str(media_data["id"])
         # 获取视频下载地址
         if not robot.check_sub_key(("video",), media_data):
             raise robot.RobotException("视频信息'video'字段不存在\n%s" % media_data)
@@ -59,8 +59,8 @@ def get_one_page_video(account_id, page_count):
             raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
         if video_url.find("http") != 0:
             raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
-        extra_video_info["video_url"] = video_url
-        result["video_info_list"].append(extra_video_info)
+        result_video_info["video_url"] = video_url
+        result["video_info_list"].append(result_video_info)
     return result
 
 

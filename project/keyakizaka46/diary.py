@@ -38,7 +38,7 @@ def get_one_page_blog(account_id, page_count):
         raise robot.RobotException("页面正文截取失败\n%s" % blog_pagination_response.data)
     blog_list = re.findall("<article>([\s|\S]*?)</article>", blog_article_html)
     for blog_info in blog_list:
-        extra_blog_info = {
+        result_blog_info = {
             "blog_id" : None,  # 日志id
             "image_url_list": [],  # 全部图片地址
         }
@@ -46,11 +46,11 @@ def get_one_page_blog(account_id, page_count):
         blog_id = tool.find_sub_string(blog_info, "/diary/detail/", "?")
         if not robot.is_integer(blog_id):
             raise robot.RobotException("日志页面截取日志id失败\n%s" % blog_info)
-        extra_blog_info["blog_id"] = str(blog_id)
+        result_blog_info["blog_id"] = str(blog_id)
         # 获取全部图片地址
         image_url_list = re.findall('<img[\S|\s]*?src="([^"]+)"', blog_info)
-        extra_blog_info["image_url_list"] = map(str, image_url_list)
-        result["blog_info_list"].append(extra_blog_info)
+        result_blog_info["image_url_list"] = map(str, image_url_list)
+        result["blog_info_list"].append(result_blog_info)
     return result
 
 

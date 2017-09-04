@@ -16,9 +16,9 @@ def get_album_page(album_id):
     album_url = "http://www.cnu.cc/works/%s" % album_id
     album_response = net.http_request(album_url)
     result = {
-        "is_delete": False,  # 是不是作品已被删除
         "album_title": "",  # 作品标题
         "image_url_list": [],  # 全部图片地址
+        "is_delete": False,  # 是不是作品已被删除
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取作品标题

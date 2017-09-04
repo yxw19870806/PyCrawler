@@ -32,9 +32,9 @@ def get_album_photo(album_id):
     page_count = max_page_count = 1
     image_count = 0
     result = {
-        "is_delete": False,  # 是不是已经被删除
         "album_title": "",  # 图集标题
         "image_url_list": [],  # 全部图片地址
+        "is_delete": False,  # 是不是已经被删除
     }
     while page_count <= max_page_count:
         album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)

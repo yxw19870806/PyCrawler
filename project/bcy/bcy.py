@@ -117,8 +117,8 @@ def get_one_page_album(account_id, page_count):
     album_pagination_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
     album_pagination_response = net.http_request(album_pagination_url)
     result = {
-        "coser_id": None,  # coser id
         "album_info_list": [],  # 全部作品信息
+        "coser_id": None,  # coser id
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -136,7 +136,7 @@ def get_one_page_album(account_id, page_count):
     album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
     for album_index in range(0, album_list_selector.size()):
         album_selector = album_list_selector.eq(album_index)
-        extra_album_info = {
+        result_album_info = {
             "album_id": None,  # 作品id
             "album_title": None,  # 作品标题
         }
@@ -147,11 +147,11 @@ def get_one_page_album(account_id, page_count):
         album_id = str(album_url).split("/")[-1]
         if not robot.is_integer(album_id):
             raise robot.RobotException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
-        extra_album_info['album_id'] = album_id
+        result_album_info['album_id'] = album_id
         # 获取作品标题
         album_title = album_selector.find(".postWorkCard__img footer").text()
-        extra_album_info["album_title"] = str(album_title.encode("UTF-8"))
-        result["album_info_list"].append(extra_album_info)
+        result_album_info["album_title"] = str(album_title.encode("UTF-8"))
+        result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
     last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
     if last_pagination_selector.size() == 1:
@@ -170,10 +170,10 @@ def get_album_page(coser_id, album_id):
     album_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
     album_response = net.http_request(album_url, cookies_list=COOKIE_INFO)
     result = {
+        "image_url_list": [],  # 全部图片地址
         "is_admin_locked": False,  # 是否被管理员锁定
         "is_only_follower": False,  # 是否只显示给粉丝
         "is_only_login": False,  # 是否只显示给登录用户
-        "image_url_list": [],  # 页面解析出的全部图片地址列表
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))

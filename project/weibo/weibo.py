@@ -40,7 +40,7 @@ def get_one_page_photo(account_id, page_count):
         if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
             raise robot.RobotException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
         for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
-            extra_image_info = {
+            result_image_info = {
                 "image_time": None,  # 图片上传时间
                 "image_url": None,  # 图片地址
             }
@@ -49,12 +49,12 @@ def get_one_page_photo(account_id, page_count):
                 raise robot.RobotException("图片信息'timestamp'字段不存在\n%s" % image_info)
             if not robot.check_sub_key(("timestamp",), image_info):
                 raise robot.RobotException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
-            extra_image_info["image_time"] = int(image_info["timestamp"])
+            result_image_info["image_time"] = int(image_info["timestamp"])
             # 获取图片地址
             if not robot.check_sub_key(("pic_host", "pic_name"), image_info):
                 raise robot.RobotException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
-            extra_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
-            result["image_info_list"].append(extra_image_info)
+            result_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
+            result["image_info_list"].append(result_image_info)
         # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
         result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
     elif photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:

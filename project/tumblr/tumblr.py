@@ -129,8 +129,8 @@ def get_video_play_page(account_id, post_id):
     video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_play_response = net.http_request(video_play_url)
     result = {
-        "video_url": None,  # 视频地址
         "is_skip": False,  # 是不是第三方视频
+        "video_url": None,  # 视频地址
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))

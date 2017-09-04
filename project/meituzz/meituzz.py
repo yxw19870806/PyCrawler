@@ -20,11 +20,11 @@ def get_album_page(page_count):
         album_url = "http://zz.mt27z.cn/ab/brVv22?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
     album_response = net.http_request(album_url)
     result = {
-        "is_over": False,  # 是不是已经结束
-        "is_delete": False,  # 是不是相册已被删除（或还没有内容）
         "image_url_list": None,  # 全部图片地址
+        "is_delete": False,  # 是不是相册已被删除（或还没有内容）
+        "is_over": False,  # 是不是已经结束
+        "album_title": "",  # 相册标题
         "video_url": None,  # 视频地址
-        "title": "",  # 相册标题
     }
     if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取相册标题
@@ -32,9 +32,9 @@ def get_album_page(page_count):
         if result["is_over"]:
             return result
         # 获取相册标题
-        result["title"] = tool.find_sub_string(album_response.data, "<title>", "</title>").replace("\n", "")
+        result["album_title"] = tool.find_sub_string(album_response.data, "<title>", "</title>").replace("\n", "")
         # 检测相册是否已被删除
-        result["is_delete"] = result["title"] == "作品已被删除"
+        result["is_delete"] = result["album_title"] == "作品已被删除"
         if result["is_delete"]:
             return result
         # 截取key
@@ -157,8 +157,7 @@ class MeiTuZZ(robot.Robot):
                 video_url = album_response["video_url"]
                 log.step("开始下载第%s页视频 %s" % (album_id, video_url))
 
-                title = robot.filter_text(album_response["title"])
-                video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, title))
+                video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, robot.filter_text(album_response["album_title"])))
                 try:
                     save_file_return = net.save_net_file(video_url, video_file_path)
                     if save_file_return["status"] == 1:

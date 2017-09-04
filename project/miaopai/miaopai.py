@@ -43,8 +43,8 @@ def get_one_page_video(suid, page_count):
     video_pagination_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
     video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
     result = {
+        "is_over": False,  # 是不是最后一页视频
         "video_id_list": [],  # 全部视频id
-        "is_over": False  # 是不是最后一页视频
     }
     if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 判断是不是最后一页
