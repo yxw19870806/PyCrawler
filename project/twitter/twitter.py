@@ -23,16 +23,19 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
+COOKIE_INFO = {}
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, cookies_list=COOKIE_INFO)
     result = {
         "account_id": None,  # account id
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
+            raise robot.RobotException("私密账号，需要关注才能访问")
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
         if not robot.is_integer(account_id):
             raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
@@ -48,7 +51,7 @@ def get_account_index_page(account_name):
 def get_one_page_media(account_name, position_blog_id):
     media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
     media_pagination_url += "?include_available_features=1&include_entities=1&max_position=%s" % position_blog_id
-    media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
+    media_pagination_response = net.http_request(media_pagination_url, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
@@ -176,11 +179,13 @@ class Twitter(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
+        global COOKIE_INFO
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
+            robot.SYS_GET_COOKIE: {".twitter.com": ()}
         }
         robot.Robot.__init__(self, sys_config, extra_config)
 
@@ -190,6 +195,7 @@ class Twitter(robot.Robot):
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        COOKIE_INFO = self.cookie_value
 
     def main(self):
         global ACCOUNTS
