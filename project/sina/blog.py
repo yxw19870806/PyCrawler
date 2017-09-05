@@ -30,6 +30,8 @@ def get_one_page_blog(account_id, page_count):
         "is_over": False,  # 是不是最后一页
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
+            raise robot.RobotException("账号不存在")
         article_list_selector = pq(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
         if article_list_selector.size() == 0:
             raise robot.RobotException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
