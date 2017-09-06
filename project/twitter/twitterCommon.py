@@ -29,34 +29,6 @@ def get_auth_token():
     return None
 
 
-# 关注指定账号（需要cookies）
-# account_id -> 103436496
-def follow_account(auth_token, account_id):
-    follow_url = "https://twitter.com/i/user/follow"
-    follow_data = {"user_id": account_id}
-    header_list = {"Referer": "https://twitter.com/"}
-    cookies_list = {"auth_token": auth_token}
-    follow_response = net.http_request(follow_url, method="POST", post_data=follow_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
-    if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("new_state",), follow_response.json_data) and follow_response.json_data["new_state"] == "following":
-            return True
-    return False
-
-
-# 取消关注指定账号（需要cookies）
-# account_id -> 103436496
-def unfollow_account(auth_token, account_id):
-    unfollow_url = "https://twitter.com/i/user/unfollow"
-    unfollow_data = {"user_id": account_id}
-    header_list = {"Referer": "https://twitter.com/"}
-    cookies_list = {"auth_token": auth_token}
-    unfollow_response = net.http_request(unfollow_url, method="POST", post_data=unfollow_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
-    if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("new_state",), unfollow_response.json_data) and unfollow_response.json_data["new_state"] == "not-following":
-            return True
-    return False
-
-
 # 获取指定账号的全部关注列表（需要cookies）
 def get_follow_list(account_name):
     position_id = "2000000000000000000"
