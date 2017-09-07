@@ -73,6 +73,9 @@ def main():
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         account_list_from_save_data = get_account_from_save_data()
+        for account_id in account_list_from_save_data:
+            if account_id not in account_list_from_api:
+                tool.print_msg("%s (%s) not found from API result" % (account_id, account_list_from_save_data[account_id]))
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = "%s\t\t\t\t\t%s" % (account_id, account_list_from_api[account_id])
