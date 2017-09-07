@@ -100,4 +100,18 @@ def get_user_info_by_user_id(user_id):
     return {}
 
 
+# 关注指定用户
+def follow_account(user_id):
+    api_url = _get_api_url("friendships/create.json")
+    api_url += "?user_id=%s" % user_id
+    header_list = {
+        "Authorization": "Bearer %s" % ACCESS_TOKEN,
+    }
+    response = net.http_request(api_url, method="POST", header_list=header_list, json_decode=True)
+    print response.status
+    if response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        pass
+    return False
+
+
 init()
