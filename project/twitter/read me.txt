@@ -11,3 +11,5 @@ save.data格式（每一行代表一条记录，每条记录包含以下内容�
 配置参数（config.ini）：
 	1.可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO
 	2.默认使用代理访问（参数IS_PROXY=2时也有效果）
+	3.为访问已被保护的推文，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
+	并在浏览器中手动关注该账号（通过对方的审核）
