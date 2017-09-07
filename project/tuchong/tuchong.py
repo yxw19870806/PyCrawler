@@ -87,7 +87,7 @@ def get_one_page_album(account_id, post_time):
         # 获取相册创建时间
         if not robot.check_sub_key(("published_at",), album_info):
             raise robot.RobotException("相册信息'published_at'字段不存在\n%s" % album_info)
-        result["album_time"] = str(album_info["published_at"])
+        result_image_info["album_time"] = str(album_info["published_at"])
         result["album_info_list"].append(result_image_info)
     return result
 
