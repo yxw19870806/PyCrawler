@@ -8,12 +8,53 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 import base64
+import json
 import os
 import sys
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
 ACCESS_TOKEN = None
+
+
+def init():
+    api_key = None
+    api_secret = None
+    if ACCESS_TOKEN is not None:
+        return True
+    token_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token.data")
+    # 文件不存在，console输入
+    if not os.path.exists(token_file_path):
+        while True:
+            input_str = tool.console_input("未检测到api key和api secret，是否手动输入(y)es / (N)o：").lower()
+            if input_str in ["y", "yes"]:
+                api_key = tool.console_input("API KEY：")
+                api_secret = tool.console_input("API SECRET：")
+                break
+            elif input_str in ["n", "no"]:
+                return False
+    else: # 文件存在，读取文件内容
+        api_info = tool.read_file(token_file_path)
+        try:
+            api_info = json.loads(base64.b64decode(api_info))
+        except ValueError:
+            tool.print_msg("incorrect api info")
+            return False
+        except TypeError:
+            tool.print_msg("incorrect api info")
+            return False
+        else:
+            api_key = api_info["api_key"]
+            api_secret = api_info["api_secret"]
+    if get_access_token(api_key, api_secret):
+        # 保存到文件中
+        api_info = base64.b64encode(json.dumps({"api_key": api_key, "api_secret": api_secret}))
+        tool.write_file(api_info, token_file_path, 2)
+        tool.print_msg("access token get succeed!")
+        return True
+    else:
+        tool.remove_dir_or_file(token_file_path)
+    return False
 
 
 def get_access_token(api_key, api_secret):
@@ -50,12 +91,4 @@ def get_user_info_by_user_id(user_id):
     return {}
 
 
-if ACCESS_TOKEN is None:
-    while True:
-        api_info = tool.read_file(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token.data"))
-        if api_info:
-            api_info = base64.b64decode(api_info)
-            if robot.check_sub_key(("api_key", "api_secret"), api_info):
-                if get_access_token(api_info["api_key"], api_info["api_secret"]):
-                    break
-        print "access token获取失败"
+init()
