@@ -121,11 +121,26 @@ def get_audio_play_page(audio_en_word_id, audio_type):
         else:
             video_source_string = tool.find_sub_string(audio_play_response.data, "<script>jwplayer.utils.qn = '", "';</script>")
             if not video_source_string:
-                raise robot.RobotException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
-            try:
-                video_url = base64.b64decode(video_source_string)
-            except TypeError:
-                raise robot.RobotException("歌曲加密地址解密失败\n%s" % video_source_string)
+                # 是不是使用bokecc cdn的视频
+                bokecc_param = tool.find_sub_string(audio_play_response.data, '<script src="//p.bokecc.com/player?', '"')
+                if not bokecc_param:
+                    raise robot.RobotException("页面截取歌曲加密地址失败\n%s" % audio_play_response.data)
+                vid = tool.find_sub_string(bokecc_param, "vid=", "&")
+                if not vid:
+                    raise robot.RobotException("bokecc参数截取vid失败\n%s" % bokecc_param)
+                bokecc_xml_url = "https://p.bokecc.com/servlet/playinfo?vid=%s&m=1&fv=WIN&rnd=%s" % (vid, str(int(time.time()))[-4:])
+                bokecc_xml_response = net.http_request(bokecc_xml_url)
+                if bokecc_xml_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                    raise robot.RobotException("bokecc xml文件 %s 访问失败" % bokecc_xml_url)
+                audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response.data)
+                if len(audio_url_find) == 0:
+                    raise robot.RobotException("bokecc xml文件 %s 截取歌曲地址失败\n%s" % (bokecc_xml_url, bokecc_xml_response.data))
+                video_url = audio_url_find[-1].replace("&amp;", "&")
+            else:
+                try:
+                    video_url = base64.b64decode(video_source_string)
+                except TypeError:
+                    raise robot.RobotException("歌曲加密地址解密失败\n%s" % video_source_string)
             result["audio_url"] = video_url
     return result
 
