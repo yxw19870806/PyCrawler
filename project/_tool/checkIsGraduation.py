@@ -33,7 +33,7 @@ def check_is_graduation():
     save_file_account_name_list = get_save_file_name_list()
     for account_name in save_file_account_name_list:
         if account_name not in member_list:
-            print account_name
+            tool.print_msg(account_name)
 
 
 if __name__ == "__main__":

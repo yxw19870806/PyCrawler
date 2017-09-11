@@ -82,12 +82,12 @@ for item_path, item_position in item_list.items():
                         special_attribute = special_attribute.replace("'", "’")
                     item_introduction = tool.find_sub_string(item_detail, '<div class="item-flavor d3-color-orange serif">', "</div>").strip()
                     item_introduction = item_introduction.replace("'", "’")
-                    print item_position, item_name, special_attribute, item_introduction
+                    tool.print_msg("%s %s %s %s" % (item_position, item_name, special_attribute, item_introduction))
                     item_attribute_list[item_path].append([item_name, special_attribute, item_introduction])
                 else:
-                    print "error get" + item_url
+                    tool.print_msg("error get" + item_url)
         else:
-            print "error get" + item_index_url
+            tool.print_msg("error get" + item_index_url)
         pagination = tool.find_sub_string(item_index_response.data, '<ul class="ui-pagination">', "</ul>")
         if pagination:
             pagination = re.findall('<a href="#page=([\d]*)">', pagination)
