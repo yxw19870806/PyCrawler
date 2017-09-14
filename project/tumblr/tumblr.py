@@ -354,7 +354,7 @@ class Download(threading.Thread):
                                 temp_path_list.append(video_file_path)
                                 log.step(account_id + " 第%s个视频下载成功" % video_index)
                                 break
-                        log.error(account_id + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_id + " 第%s个视频 %s 下载失败（%s），原因：%s" % (video_index, video_url, post_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                     break
 
                 # 图片下载
@@ -380,7 +380,7 @@ class Download(threading.Thread):
                                 retry_count += 1
                                 continue
                             else:
-                                log.error(account_id + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                                log.error(account_id + " 第%s张图片 %s 下载失败（%s），原因：%s" % (image_index, image_url, post_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                             break
 
                 # 日志内图片和视频全部下载完毕
