@@ -71,9 +71,19 @@ class Wallpaper(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        extra_config = {
+            "save_data_path": os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/wallpaper.data")
+        }
+        robot.Robot.__init__(self, sys_config, extra_config=extra_config)
 
     def main(self):
+        last_image_id = 0
+        if os.path.exists(self.save_data_path):
+            file_save_info = tool.read_file(self.save_data_path)
+            if not robot.is_integer(file_save_info):
+                log.error("存档内数据格式不正确")
+                tool.process_exit()
+            last_image_id = int(file_save_info)
         total_image_count = 0
 
         try:
@@ -120,7 +130,11 @@ class Wallpaper(robot.Robot):
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_info["image_id"])
                 else:
-                     log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    continue
+                # 图片下载完毕
+                total_image_count += 1  # 计数累加
+                last_image_id = image_info["image_id"]  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step("提前退出")
@@ -130,6 +144,8 @@ class Wallpaper(robot.Robot):
             log.error("未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
+        # 重新保存存档文件
+        tool.write_file(str(last_image_id), self.save_data_path, 2)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
 
