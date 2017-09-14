@@ -16,7 +16,7 @@ def check_is_repeat():
     for line in tool.read_file(SAVE_FILE_PATH, 2):
         temp_list = line.replace("\n", "").split("\t")
         if temp_list[NAME_COLUMN] in history:
-            print temp_list[NAME_COLUMN]
+            tool.print_msg(temp_list[NAME_COLUMN])
         else:
             history.append(temp_list[NAME_COLUMN])
     return history

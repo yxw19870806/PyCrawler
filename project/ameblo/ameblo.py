@@ -305,7 +305,7 @@ class Download(threading.Thread):
                             image_index += 1
                     else:
                         log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                # 图集内图片全部下载完毕
+                # 日志内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
                 self.account_info[1] = str(image_index - 1)  # 设置存档记录

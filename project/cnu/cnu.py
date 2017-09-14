@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 from common import log, net, robot, tool
 import json
 import os
+import traceback
 
 
 # 获取作品页面
@@ -57,66 +58,73 @@ class CNU(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
+        album_id = 1
         if os.path.exists(self.save_data_path):
-            album_id = int(tool.read_file(self.save_data_path))
-        else:
-            album_id = 1
-
-        # http://www.cnu.cc/about/ 全部作品
+            file_save_info = tool.read_file(self.save_data_path)
+            if not robot.is_integer(file_save_info):
+                log.error("存档内数据格式不正确")
+                tool.process_exit()
+            album_id = int(file_save_info)
         total_image_count = 0
-        is_over = False
-        while not is_over:
-            log.step("开始解析第%s页作品" % album_id)
+        temp_path = ""
 
-            # 获取相册
-            try:
-                album_response = get_album_page(album_id)
-            except robot.RobotException, e:
-                log.error("第%s页作品解析失败，原因：%s" % (album_id, e.message))
-                break
-            except SystemExit:
-                log.step("提前退出")
-                break
+        try:
+            # http://www.cnu.cc/about/ 全部作品
+            # todo 获取最新的作品id
+            while True:
+                log.step("开始解析第%s页作品" % album_id)
 
-            if album_response["is_delete"]:
-                log.step("第%s页作品已被删除，跳过" % album_id)
-                album_id += 1
-                continue
-
-            log.trace("第%s页作品解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
-
-            image_index = 1
-            # 过滤标题中不支持的字符
-            album_title = robot.filter_text(album_response["album_title"])
-            if album_title:
-                album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
-            else:
-                album_path = os.path.join(self.image_download_path, str(album_id))
-            for image_url in album_response["image_url_list"]:
-                log.step("作品%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
-
-                file_type = image_url.split(".")[-1]
-                file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
+                # 获取相册
                 try:
+                    album_response = get_album_page(album_id)
+                except robot.RobotException, e:
+                    log.error("第%s页作品解析失败，原因：%s" % (album_id, e.message))
+                    raise
+
+                if album_response["is_delete"]:
+                    log.step("第%s页作品已被删除，跳过" % album_id)
+                    album_id += 1
+                    continue
+
+                log.trace("第%s页作品解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
+
+                image_index = 1
+                # 过滤标题中不支持的字符
+                album_title = robot.filter_text(album_response["album_title"])
+                if album_title:
+                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
+                else:
+                    album_path = os.path.join(self.image_download_path, str(album_id))
+                temp_path = album_path
+                for image_url in album_response["image_url_list"]:
+                    log.step("作品%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
+
+                    file_type = image_url.split(".")[-1]
+                    file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                         image_index += 1
                     else:
-                         log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                except SystemExit:
-                    log.step("提前退出")
-                    tool.remove_dir_or_file(album_path)
-                    is_over = True
-                    break
-
-            if not is_over:
+                        log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                # 作品内图片全部下载完毕
+                temp_path = ""  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
-                album_id += 1
+                album_id += 1  # 设置存档记录
+        except SystemExit, se:
+            if se.code == 0:
+                log.step("提前退出")
+            else:
+                log.error("异常退出")
+            # 如果临时目录变量不为空，表示某个作品正在下载中，需要把下载了部分的内容给清理掉
+            if temp_path:
+                tool.remove_dir_or_file(temp_path)
+        except Exception, e:
+            log.error("未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, 2)
-
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
 

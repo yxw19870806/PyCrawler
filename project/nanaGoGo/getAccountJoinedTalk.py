@@ -61,7 +61,7 @@ def get_account_talks(account_id, account_name, talk_list):
                 "talk_name": talk_name,
                 "talk_description": talk_description,
             }
-        print account_id + ": " + talk_name + ", " + talk_description
+        tool.print_msg(account_id + ": " + talk_name + ", " + talk_description)
 
 
 def main():

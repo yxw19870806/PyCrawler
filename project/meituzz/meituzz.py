@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 import os
+import traceback
 
 ERROR_PAGE_COUNT_CHECK = 50
 
@@ -82,99 +83,102 @@ class MeiTuZZ(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
+        save_album_id = album_id = 1
         if os.path.exists(self.save_data_path):
-            album_id = int(tool.read_file(self.save_data_path))
-        else:
-            album_id = 1
-
+            file_save_info = tool.read_file(self.save_data_path)
+            if not robot.is_integer(file_save_info):
+                log.error("存档内数据格式不正确")
+                tool.process_exit()
+            save_album_id = album_id = int(file_save_info)
         total_image_count = 0
         total_video_count = 0
-        error_count = 0
-        is_over = False
-        while not is_over:
-            log.step("开始解析第%s页相册" % album_id)
+        temp_path_list = []
 
-            # 获取相册
-            try:
-                album_response = get_album_page(album_id)
-            except robot.RobotException, e:
-                log.error("第%s页相册解析失败，原因：%s" % (album_id, e.message))
-                album_id -= error_count
-                break
-            except SystemExit:
-                log.step("提前退出")
-                album_id -= error_count
-                break
+        try:
+            error_album_count = 0
+            while True:
+                log.step("开始解析第%s页相册" % album_id)
 
-            if album_response["is_over"]:
-                album_id -= error_count
-                break
+                # 获取相册
+                try:
+                    album_response = get_album_page(album_id)
+                except robot.RobotException, e:
+                    log.error("第%s页相册解析失败，原因：%s" % (album_id, e.message))
+                    raise
 
-            if album_response["is_delete"]:
-                error_count += 1
-                if error_count >= ERROR_PAGE_COUNT_CHECK:
-                    log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
-                    album_id -= error_count - 1
+                if album_response["is_over"]:
                     break
+
+                if album_response["is_delete"]:
+                    error_album_count += 1
+                    if error_album_count >= ERROR_PAGE_COUNT_CHECK:
+                        log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
+                        break
+                    else:
+                        log.step("第%s页相册已被删除" % album_id)
+                        album_id += 1
+                        continue
+
+                # 成功获取到相册，错误数重置
+                error_album_count = 0
+
+                if album_response["image_url_list"] is not None:
+                    log.trace("第%s页相册解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
                 else:
-                    log.step("第%s页相册已被删除" % album_id)
-                    album_id += 1
-                    continue
+                    log.trace("第%s页相册解析的视频：%s" % (album_id, album_response["video_url"]))
 
-            # 错误数量重置
-            error_count = 0
-
-            if album_response["image_url_list"] is not None:
-                log.trace("第%s页相册解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
-            else:
-                log.trace("第%s页相册解析的视频：%s" % (album_id, album_response["video_url"]))
-
-            # 图片下载
-            if self.is_download_image and album_response["image_url_list"] is not None:
+                # 图片下载
                 image_index = 1
-                image_path = os.path.join(self.image_download_path, "%04d" % album_id)
-                for image_url in album_response["image_url_list"]:
-                    log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_index, image_url))
+                if self.is_download_image and album_response["image_url_list"] is not None:
+                    image_path = os.path.join(self.image_download_path, "%04d" % album_id)
+                    for image_url in album_response["image_url_list"]:
+                        log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_index, image_url))
 
-                    image_file_path = os.path.join(image_path, "%04d.jpg" % image_index)
-                    try:
+                        image_file_path = os.path.join(image_path, "%04d.jpg" % image_index)
                         save_file_return = net.save_net_file(image_url, image_file_path, True)
                         if save_file_return["status"] == 1:
+                            # 设置临时目录
+                            temp_path_list.append(image_file_path)
                             log.step("第%s页第%s张图片下载成功" % (album_id, image_index))
                             image_index += 1
                         else:
                             log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                    except SystemExit:
-                        log.step("提前退出")
-                        tool.remove_dir_or_file(image_path)
-                        is_over = True
-                        break
 
-                total_image_count += image_index - 1
+                # 视频下载
+                video_index = 1
+                if self.is_download_image and album_response["video_url"] is not None:
+                    log.step("开始下载第%s页视频 %s" % (album_id, album_response["video_url"]))
 
-            # 视频下载
-            if self.is_download_image and album_response["video_url"] is not None:
-                video_url = album_response["video_url"]
-                log.step("开始下载第%s页视频 %s" % (album_id, video_url))
-
-                video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, robot.filter_text(album_response["album_title"])))
-                try:
-                    save_file_return = net.save_net_file(video_url, video_file_path)
+                    video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, robot.filter_text(album_response["album_title"])))
+                    save_file_return = net.save_net_file(album_response["video_url"], video_file_path)
                     if save_file_return["status"] == 1:
+                        # 设置临时目录
+                        temp_path_list.append(video_file_path)
                         log.step("第%s页视频下载成功" % album_id)
-                        total_video_count += 1
+                        video_index += 1
                     else:
-                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                except SystemExit:
-                    log.step("提前退出")
-                    is_over = True
+                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-            if not is_over:
-                album_id += 1
+                # tweet内图片和视频全部下载完毕
+                temp_path_list = []  # 临时目录设置清除
+                total_image_count += image_index - 1  # 计数累加
+                total_video_count += video_index - 1  # 计数累加
+                save_album_id = album_id = album_id + 1  # 设置存档记录
+        except SystemExit, se:
+            if se.code == 0:
+                log.step("提前退出")
+            else:
+                log.error("异常退出")
+            # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
+            if len(temp_path_list) > 0:
+                for temp_path in temp_path_list:
+                    tool.remove_dir_or_file(temp_path)
+        except Exception, e:
+            log.error("未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 重新保存存档文件
-        tool.write_file(str(album_id), self.save_data_path, 2)
-
+        tool.write_file(str(save_album_id), self.save_data_path, 2)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), total_image_count, total_video_count))
 
 
