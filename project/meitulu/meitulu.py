@@ -54,6 +54,7 @@ def get_one_page_album(album_id):
         if page_count == 1:
             # 获取图集标题
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
+        result["album_title"] = result["album_title"].replace("・", "")  # \u30fb
         # 获取图集图片地址
         image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>")
         if not image_list_html:
