@@ -81,6 +81,9 @@ class Jigadori(robot.Robot):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
             if len(file_save_info) >= 2 and robot.is_integer(file_save_info[0]) and robot.is_integer(file_save_info[1]):
                 save_info = file_save_info
+            else:
+                log.error("存档内数据格式不正确")
+                tool.process_exit()
         total_image_count = 0
         temp_path_list = []
 
