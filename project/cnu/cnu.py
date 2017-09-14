@@ -58,14 +58,13 @@ class CNU(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
+        album_id = 1
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
             if not robot.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             album_id = int(file_save_info)
-        else:
-            album_id = 1
         total_image_count = 0
         temp_path = ""
 
@@ -111,7 +110,7 @@ class CNU(robot.Robot):
                 # 作品内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
-                album_id += 1
+                album_id += 1  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step("提前退出")

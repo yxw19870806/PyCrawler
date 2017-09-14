@@ -75,7 +75,7 @@ class Jigadori(robot.Robot):
 
     def main(self):
         # 解析存档文件
-        # image_count last_blog_time
+        # image_count  last_blog_time
         save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
