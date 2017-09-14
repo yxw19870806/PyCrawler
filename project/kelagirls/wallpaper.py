@@ -9,6 +9,8 @@ email: hikaru870806@hotmail.com
 from common import *
 from pyquery import PyQuery as pq
 import os
+import sys
+import traceback
 
 
 # 获取指定一页的壁纸
@@ -73,54 +75,60 @@ class Wallpaper(robot.Robot):
 
     def main(self):
         total_image_count = 0
-        page_count = 1
-        image_info_list = []
-        is_over = False
-        # 获取全部还未下载过需要解析的壁纸
-        while not is_over:
-            log.step("开始解析第%s页壁纸" % page_count)
 
-            # 获取一页壁纸
-            try:
-                photo_pagination_response = get_one_page_photo(page_count)
-            except robot.RobotException, e:
-                log.error("第%s页壁纸解析失败，原因：%s" % (page_count, e.message))
-                break
-            except SystemExit:
-                log.step("提前退出")
-                image_info_list = []
-                break
+        try:
+            page_count = 1
+            image_info_list = []
+            is_over = False
+            # 获取全部还未下载过需要解析的壁纸
+            while not is_over:
+                log.step("开始解析第%s页壁纸" % page_count)
 
-            log.trace("第%s页壁纸解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
+                # 获取一页壁纸
+                try:
+                    photo_pagination_response = get_one_page_photo(page_count)
+                except robot.RobotException, e:
+                    log.error("第%s页壁纸解析失败，原因：%s" % (page_count, e.message))
+                    break
+                except SystemExit:
+                    log.step("提前退出")
+                    image_info_list = []
+                    break
 
-            for image_info in photo_pagination_response["image_info_list"]:
-                image_info_list.append(image_info)
+                log.trace("第%s页壁纸解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
-            if not is_over:
-                if photo_pagination_response["is_over"]:
-                    is_over = True
-                else:
-                    page_count += 1
+                for image_info in photo_pagination_response["image_info_list"]:
+                    image_info_list.append(image_info)
 
-        log.step("需要下载的全部图片解析完毕，共%s个" % len(image_info_list))
+                if not is_over:
+                    if photo_pagination_response["is_over"]:
+                        is_over = True
+                    else:
+                        page_count += 1
 
-        # 从最早的图片开始下载
-        while len(image_info_list) > 0:
-            image_info = image_info_list.pop()
+            log.step("需要下载的全部图片解析完毕，共%s个" % len(image_info_list))
 
-            log.step("开始下载第%s张图片 %s" % (image_info["image_id"], image_info["image_url"]))
+            # 从最早的图片开始下载
+            while len(image_info_list) > 0:
+                image_info = image_info_list.pop()
 
-            file_type = image_info["image_url"].split(".")[-1]
-            file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), robot.filter_text(image_info["model_name"]), file_type))
-            try:
+                log.step("开始下载第%s张图片 %s" % (image_info["image_id"], image_info["image_url"]))
+
+                file_type = image_info["image_url"].split(".")[-1]
+                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), robot.filter_text(image_info["model_name"]), file_type))
                 save_file_return = net.save_net_file(image_info["image_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_info["image_id"])
                 else:
                      log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
-            except SystemExit:
+        except SystemExit, se:
+            if se.code == 0:
                 log.step("提前退出")
-                break
+            else:
+                log.error("异常退出")
+        except Exception, e:
+            log.error("未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
