@@ -253,14 +253,6 @@ def ywkb():
     ywkb.YWKB().main()
 
 
-# 尊光
-def zunguang():
-    from zunguang import zunguang
-    zunguang_path = os.path.join(ROOT_PATH, "zunguang")
-    os.chdir(zunguang_path)
-    zunguang.ZunGuang().main()
-
-
 # ameblo()
 # bcy()
 # chang_ba()
@@ -288,5 +280,4 @@ def zunguang():
 # weibo_article()
 # yizhibo()
 # ywkb()
-# zunguang()
 # tool.shutdown()
