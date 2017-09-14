@@ -83,20 +83,19 @@ class MeiTuZZ(robot.Robot):
 
     def main(self):
         # 解析存档文件，获取上一次的album id
+        save_album_id = album_id = 1
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
             if not robot.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
-            album_id = int(file_save_info)
-        else:
-            album_id = 1
+            save_album_id = album_id = int(file_save_info)
         total_image_count = 0
         total_video_count = 0
-        error_album_count = 0
         temp_path_list = []
 
         try:
+            error_album_count = 0
             while True:
                 log.step("开始解析第%s页相册" % album_id)
 
@@ -105,17 +104,15 @@ class MeiTuZZ(robot.Robot):
                     album_response = get_album_page(album_id)
                 except robot.RobotException, e:
                     log.error("第%s页相册解析失败，原因：%s" % (album_id, e.message))
-                    break
+                    raise
 
                 if album_response["is_over"]:
-                    album_id -= error_album_count
                     break
 
                 if album_response["is_delete"]:
                     error_album_count += 1
                     if error_album_count >= ERROR_PAGE_COUNT_CHECK:
                         log.step("连续%s页相册没有图片，退出程序" % ERROR_PAGE_COUNT_CHECK)
-                        album_id -= error_album_count - 1
                         break
                     else:
                         log.step("第%s页相册已被删除" % album_id)
@@ -161,18 +158,17 @@ class MeiTuZZ(robot.Robot):
                         video_index += 1
                     else:
                         log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
                 # tweet内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
                 total_video_count += video_index - 1  # 计数累加
-                album_id += 1
+                save_album_id = album_id = album_id + 1  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step("提前退出")
             else:
                 log.error("异常退出")
-            # 中途退出减去跳过的相册数量
-            album_id -= error_album_count
             # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
             if len(temp_path_list) > 0:
                 for temp_path in temp_path_list:
@@ -180,11 +176,9 @@ class MeiTuZZ(robot.Robot):
         except Exception, e:
             log.error("未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
-            # 中途退出减去跳过的相册数量
-            album_id -= error_album_count
 
         # 重新保存存档文件
-        tool.write_file(str(album_id), self.save_data_path, 2)
+        tool.write_file(str(save_album_id), self.save_data_path, 2)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), total_image_count, total_video_count))
 
 
