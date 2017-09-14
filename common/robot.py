@@ -142,7 +142,7 @@ class Robot(object):
 
         # 存档
         if "save_data_path" in extra_config:
-            self.save_data_path = extra_config["save_data_path"]
+            self.save_data_path = os.path.realpath(extra_config["save_data_path"])
         else:
             self.save_data_path = get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
@@ -155,7 +155,7 @@ class Robot(object):
         if self.is_download_image:
             # 图片保存目录
             if "image_download_path" in extra_config:
-                self.image_download_path = extra_config["image_download_path"]
+                self.image_download_path = os.path.realpath(extra_config["image_download_path"])
             else:
                 self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", 3)
             if not tool.make_dir(self.image_download_path, 0):
@@ -169,7 +169,7 @@ class Robot(object):
         if self.is_download_video:
             # 视频保存目录
             if "video_download_path" in extra_config:
-                self.video_download_path = extra_config["video_download_path"]
+                self.video_download_path = os.path.realpath(extra_config["video_download_path"])
             else:
                 self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", 3)
             if not tool.make_dir(self.video_download_path, 0):
