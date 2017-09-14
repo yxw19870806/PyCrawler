@@ -262,7 +262,7 @@ class Robot(object):
 # 读取配置文件
 def read_config(config_path):
     config = ConfigParser.SafeConfigParser()
-    with codecs.open(config_path, encoding="UTF-8-SIG") as file_handle:
+    with codecs.open(tool.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
         config.readfp(file_handle)
     return config
 
@@ -325,7 +325,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 # default_value_list 每一位的默认值
 def read_save_data(save_data_path, key_index, default_value_list):
     result_list = {}
-    if not os.path.exists(save_data_path):
+    if not os.path.exists(tool.change_path_encoding(save_data_path)):
         return result_list
     for single_save_data in tool.read_file(save_data_path, 2):
         single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
@@ -354,7 +354,7 @@ def rewrite_save_file(temp_save_data_path, save_data_path):
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     tool.write_file(tool.list_to_string(temp_list), save_data_path, 2)
-    os.remove(temp_save_data_path)
+    tool.remove_dir_or_file(temp_save_data_path)
 
 
 # 生成新存档的文件路径
