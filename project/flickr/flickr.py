@@ -175,6 +175,7 @@ class Download(threading.Thread):
 
         account_name = self.account_info[0]
         total_image_count = 0
+        temp_path_list = []
 
         try:
             log.step(account_name + " 开始")
@@ -206,7 +207,6 @@ class Download(threading.Thread):
 
                 # 寻找这一页符合条件的图片
                 for image_info in photo_pagination_response["image_info_list"]:
-                    # todo 如果存在上传时间一致的图片
                     # 检查是否达到存档记录
                     if image_info["image_time"] > int(self.account_info[2]):
                         image_info_list.append(image_info)
@@ -223,20 +223,32 @@ class Download(threading.Thread):
             log.step(account_name + " 需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
 
             # 从最早的图片开始下载
+            image_url_list = []
             while len(image_info_list) > 0:
                 image_info = image_info_list.pop()
-                image_index = int(self.account_info[1]) + 1
-                log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
+                # 下一张图片的上传时间一致，合并下载
+                image_url_list.append(image_info["image_url"])
+                if len(image_info_list) > 0 and image_info_list[-1]["image_time"] == image_info["image_time"]:
+                    continue
 
-                file_type = image_info["image_url"].split(".")[-1]
-                file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
-                save_file_return = net.save_net_file(image_info["image_url"], file_path)
-                if save_file_return["status"] == 1:
-                    image_index += 1
-                    log.step(account_name + " 第%s张图片下载成功" % image_index)
-                else:
-                    log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                # 同一上传时间的所有图片
+                image_index = int(self.account_info[1]) + 1
+                for image_url in image_url_list:
+                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+
+                    file_type = image_url.split(".")[-1]
+                    file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
+                    save_file_return = net.save_net_file(image_url, file_path)
+                    if save_file_return["status"] == 1:
+                        # 设置临时目录
+                        temp_path_list.append(file_path)
+                        log.step(account_name + " 第%s张图片下载成功" % image_index)
+                        image_index += 1
+                    else:
+                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 图片下载完毕
+                image_url_list = []  # 累加图片地址清除
+                temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
                 self.account_info[1] = str(image_index - 1)  # 设置存档记录
                 self.account_info[2] = str(image_info["image_time"])  # 设置存档记录
@@ -245,6 +257,10 @@ class Download(threading.Thread):
                 log.step(account_name + " 提前退出")
             else:
                 log.error(account_name + " 异常退出")
+            # 如果临时目录变量不为空，表示同一时间的图片正在下载中，需要把下载了部分的内容给清理掉
+            if len(temp_path_list) > 0:
+                for temp_path in temp_path_list:
+                    tool.remove_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
