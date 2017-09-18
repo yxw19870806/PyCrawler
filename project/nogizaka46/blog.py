@@ -55,7 +55,7 @@ def get_one_page_blog(account_id, page_count):
                 raise robot.RobotException("日志内容截取日志id失败\n%s" % blog_data)
             result_image_info["blog_id"] = str(int(blog_id))
             # 获取图片地址列表
-            image_url_list = re.findall('src="([^"]*)"', blog_data)
+            image_url_list = re.findall('src="(http[^"]*)"', blog_data)
             result_image_info["image_url_list"] = map(str, image_url_list)
             # 获取全部大图对应的小图
             big_image_list_find = re.findall('<a href="([^"]*)"><img[\S|\s]*? src="([^"]*)"', blog_data)
