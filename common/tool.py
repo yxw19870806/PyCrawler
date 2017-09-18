@@ -204,6 +204,8 @@ def print_msg(msg, is_time=True):
             print msg
         else:
             print msg.decode("UTF-8").encode(output_encoding)
+    except UnicodeEncodeError:
+        print msg
     except:
         raise
     finally:
