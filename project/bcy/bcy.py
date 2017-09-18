@@ -149,7 +149,7 @@ def get_one_page_album(account_id, page_count):
             raise robot.RobotException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
         result_album_info['album_id'] = album_id
         # 获取作品标题
-        album_title = album_selector.find(".postWorkCard__img footer").text()
+        album_title = album_selector.find(".postWorkCard__img img").attr("alt")
         result_album_info["album_title"] = str(album_title.encode("UTF-8"))
         result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
