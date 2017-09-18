@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 新浪博客图片爬虫
-http://http://blog.sina.com.cn/
+http://blog.sina.com.cn/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -227,16 +227,16 @@ class Download(threading.Thread):
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
                 blog_info = blog_info_list.pop()
-                log.step(account_name + " 开始解析日志 %s" % blog_info["blog_url"])
+                log.step(account_name + " 开始解析日志《%s》 %s" % (blog_info["blog_title"], blog_info["blog_url"]))
 
                 # 获取日志
                 try:
                     blog_response = get_blog_page(blog_info["blog_url"])
                 except robot.RobotException, e:
-                    log.error(account_name + " 日志 %s 解析失败，原因：%s" % (blog_info["blog_url"], e.message))
+                    log.error(account_name + " 日志《%s》 %s 解析失败，原因：%s" % (blog_info["blog_title"], blog_info["blog_url"], e.message))
                     raise
 
-                log.trace(account_name + " 日志 %s 解析的全部图片：%s" % (blog_info["blog_url"], blog_response["image_url_list"]))
+                log.trace(account_name + " 日志《%s》 %s 解析的全部图片：%s" % (blog_info["blog_title"], blog_info["blog_url"], blog_response["image_url_list"]))
 
                 image_index = 1
                 # 过滤标题中不支持的字符
@@ -251,7 +251,7 @@ class Download(threading.Thread):
                 for image_url in blog_response["image_url_list"]:
                     # 获取图片原始地址
                     image_url = get_image_url(image_url)
-                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+                    log.step(account_name + " 日志《%s》 开始下载第%s张图片 %s" % (blog_info["blog_title"], image_index, image_url))
 
                     if image_url.rfind(".") > image_url.rfind("/"):
                         file_type = image_url.split(".")[-1]
@@ -260,10 +260,10 @@ class Download(threading.Thread):
                     file_path = os.path.join(image_path, "%04d.%s" % (image_index, file_type))
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
-                        log.step(account_name + " 第%s张图片下载成功" % image_index)
+                        log.step(account_name + " 日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], image_index))
                         image_index += 1
                     else:
-                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error(account_name + " 日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 日志内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
