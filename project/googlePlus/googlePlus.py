@@ -285,20 +285,14 @@ class Download(threading.Thread):
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_team, account_name, "%04d.jpg" % image_index)
-                    retry_count = 0
-                    while True:
-                        save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
-                        if save_file_return["status"] == 1:
-                            # 设置临时目录
-                            temp_path_list.append(save_file_return["file_path"])
-                            log.step(account_name + " 第%s张图片下载成功" % image_index)
-                            image_index += 1
-                        elif save_file_return["status"] == 0 and save_file_return["code"] == 500 and retry_count <= 5:
-                            retry_count += 1
-                            continue
-                        else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                        break
+                    save_file_return = net.save_net_file(image_url, file_path, need_content_type=True)
+                    if save_file_return["status"] == 1:
+                        # 设置临时目录
+                        temp_path_list.append(save_file_return["file_path"])
+                        log.step(account_name + " 第%s张图片下载成功" % image_index)
+                        image_index += 1
+                    else:
+                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 相册内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
