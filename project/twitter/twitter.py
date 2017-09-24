@@ -325,20 +325,15 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1].split(":")[0]
                         image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
-                        for retry_count in range(0, 5):
-                            save_file_return = net.save_net_file(image_url, image_file_path)
-                            if save_file_return["status"] == 1:
-                                temp_path_list.append(image_file_path)
-                                log.step(account_name + " 第%s张图片下载成功" % image_index)
-                                image_index += 1
-                            elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
-                                log.error(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_index, image_url))
-                            elif save_file_return["status"] == 0 and save_file_return["code"] in [500, 503, 504]:
-                                log.step(account_name + " 第%s张图片 %s 下载异常，重试" % (image_index, image_url))
-                                continue
-                            else:
-                                log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                            break
+                        save_file_return = net.save_net_file(image_url, image_file_path)
+                        if save_file_return["status"] == 1:
+                            temp_path_list.append(image_file_path)
+                            log.step(account_name + " 第%s张图片下载成功" % image_index)
+                            image_index += 1
+                        elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
+                            log.error(account_name + " 第%s张图片 %s 已被删除，跳过" % (image_index, image_url))
+                        else:
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 # 视频下载
                 video_index = int(self.account_info[3]) + 1
