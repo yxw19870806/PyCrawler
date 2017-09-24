@@ -271,8 +271,8 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if create_file:
                 os.remove(file_path)
             return {"status": 0, "code": -2}
-        # 其他http code，退出
-        elif response.status == 500 or response.status == 502:
+        # 500锡类错误，重试
+        elif response.status in [500, 502, 503, 504]:
             pass
         # 其他http code，退出
         else:
