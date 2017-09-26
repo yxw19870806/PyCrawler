@@ -122,8 +122,22 @@ os.getcwd()								获取运行目录
 binascii.b2a_hex(str) 字符串转为16进制
 binascii.b2a_hex(str) 16进制转为字符串
 
-17.字典按照value排序生成列表
-[a[key] for key in sorted(a.keys(), reverse=False)]
+17.字典排序
+{"a": 1, "d": 2, "c": 3}
+字典按照key排序（结果只要key）
+sorted(a.keys(), reverse=False) -> ["a", "c", "d"]
+字典按照value排序（结果只要value）
+sorted(a.values(), reverse=False) -> [1, 2, 3]
+
+字典按照key排序（结果只要value）
+[a[key] for key in sorted(a.keys(), reverse=False)] -> [1, 3, 2]
+字典按照value排序（结果只要key）
+[key[0] for key in sorted(a.items(), key=lambda item: item[1], reverse=False)] -> ["a", "d", "c"]
+
+字典按照key排序（结果为(key, value)）
+sorted(dic.items(), key=lambda item: item[0], reverse = False) -> [("a", 1), ("c", 3), ("d", 2)]
+字典按照value排序（结果为(key, value)）
+sorted(dic.items(), key=lambda item: item[1], reverse = False) -> [("a", 1), ("d", 2), ("c", 3)]
 
 18.http://www.lfd.uci.edu/~gohlke/pythonlibs/
 windows下常用二进制python extension package文件
