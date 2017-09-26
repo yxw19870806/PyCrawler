@@ -23,6 +23,7 @@ SUPPORT_SUB_KEYBOARD_LIST = {
     "ALT": "MENU",
 }
 
+
 class KeyboardEvent(threading.Thread):
     key_down_list ={
         "LSHIFT": False,
