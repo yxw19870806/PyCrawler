@@ -60,7 +60,7 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
     #     "is_marketplace_printable", "is_marketplace_licensable", "publiceditability"
     # ]
     post_data = {
-        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "extras": "date_upload,url_o", "get_user_info": 0, "user_id": user_id, "view_as": "use_pref",
+        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "extras": "date_upload,url_o,url_k", "get_user_info": 0, "user_id": user_id, "view_as": "use_pref",
         "sort": "use_pref", "method": "flickr.people.getPhotos", "api_key": api_key, "format": "json", "hermes": 1, "reqId": request_id, "nojsoncallback": 1,
     }
     photo_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, json_decode=True)
@@ -95,8 +95,12 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
             result_image_info["image_url"] = str(photo_info["url_o_cdn"])
         elif robot.check_sub_key(("url_o",), photo_info):
             result_image_info["image_url"] = str(photo_info["url_o"])
+        elif robot.check_sub_key(("url_k_cdn",), photo_info):
+            result_image_info["image_url"] = str(photo_info["url_k_cdn"])
+        elif robot.check_sub_key(("url_k",), photo_info):
+            result_image_info["image_url"] = str(photo_info["url_k"])
         else:
-            raise robot.RobotException("图片信息'url_o_cdn'或者'url_o'字段不存在\n%s" % photo_info)
+            raise robot.RobotException("图片信息'url_o'或者'url_k'字段不存在\n%s" % photo_info)
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
     if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
