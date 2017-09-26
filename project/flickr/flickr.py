@@ -60,8 +60,9 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
     #     "is_marketplace_printable", "is_marketplace_licensable", "publiceditability"
     # ]
     post_data = {
-        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "extras": "date_upload,url_o,url_k", "get_user_info": 0, "user_id": user_id, "view_as": "use_pref",
-        "sort": "use_pref", "method": "flickr.people.getPhotos", "api_key": api_key, "format": "json", "hermes": 1, "reqId": request_id, "nojsoncallback": 1,
+        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1,
+        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "get_user_info": 0, "user_id": user_id, "api_key": api_key, "hermes": 1, "reqId": request_id,
+        "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
     photo_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, json_decode=True)
     result = {
@@ -91,16 +92,23 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
             raise robot.RobotException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
         result_image_info["image_time"] = int(photo_info["dateupload"])
         # 获取图片地址
-        if robot.check_sub_key(("url_o_cdn",), photo_info):
-            result_image_info["image_url"] = str(photo_info["url_o_cdn"])
-        elif robot.check_sub_key(("url_o",), photo_info):
-            result_image_info["image_url"] = str(photo_info["url_o"])
-        elif robot.check_sub_key(("url_k_cdn",), photo_info):
-            result_image_info["image_url"] = str(photo_info["url_k_cdn"])
-        elif robot.check_sub_key(("url_k",), photo_info):
-            result_image_info["image_url"] = str(photo_info["url_k"])
+        max_resolution = 0
+        max_resolution_photo_type = ""
+        # 可获取图片尺寸中最大的那张
+        for photo_type in ["c","f","h","k","l","m","n","o","q","s","sq","t","z"]:
+            if robot.check_sub_key(("width_" + photo_type, "height_" + photo_type), photo_info):
+                resolution = int(photo_info["width_" + photo_type]) * int(photo_info["height_" + photo_type])
+                if resolution > max_resolution:
+                    max_resolution = resolution
+                    max_resolution_photo_type = photo_type
+        if not max_resolution_photo_type:
+            raise robot.RobotException("图片信息匹配最高分辨率的图片尺寸失败\n%s" % photo_info)
+        if robot.check_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
+            result_image_info["image_url"] = str(photo_info["url_" + max_resolution_photo_type + "_cdn"])
+        elif robot.check_sub_key(("url_" + max_resolution_photo_type,), photo_info):
+            result_image_info["image_url"] = str(photo_info["url_" + max_resolution_photo_type])
         else:
-            raise robot.RobotException("图片信息'url_o'或者'url_k'字段不存在\n%s" % photo_info)
+            raise robot.RobotException("图片信息'url_%s_cdn'或者'url_%s_cdn'字段不存在\n%s" % (max_resolution_photo_type, max_resolution_photo_type, photo_info))
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
     if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
