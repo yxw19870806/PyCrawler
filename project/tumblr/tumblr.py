@@ -369,21 +369,14 @@ class Download(threading.Thread):
 
                         file_type = image_url.split(".")[-1]
                         image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id, "%04d.%s" % (image_index, file_type))
-                        retry_count = 0
-                        while True:
-                            save_file_return = net.save_net_file(image_url, image_file_path)
-                            if save_file_return["status"] == 1:
-                                # 设置临时目录
-                                temp_path_list.append(image_file_path)
-                                log.step(account_id + " 第%s张图片下载成功" % image_index)
-                                image_index += 1
-                            # 下载失败，并且http_code不是403和404，重试
-                            elif save_file_return["status"] == 0 and save_file_return["code"] not in [403, 404] and retry_count <= 5:
-                                retry_count += 1
-                                continue
-                            else:
-                                log.error(account_id + " 第%s张图片 %s 下载失败（%s），原因：%s" % (image_index, image_url, post_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                            break
+                        save_file_return = net.save_net_file(image_url, image_file_path)
+                        if save_file_return["status"] == 1:
+                            # 设置临时目录
+                            temp_path_list.append(image_file_path)
+                            log.step(account_id + " 第%s张图片下载成功" % image_index)
+                            image_index += 1
+                        else:
+                            log.error(account_id + " 第%s张图片 %s 下载失败（%s），原因：%s" % (image_index, image_url, post_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 # 日志内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
