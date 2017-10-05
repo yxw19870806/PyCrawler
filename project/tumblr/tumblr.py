@@ -85,42 +85,44 @@ def get_post_page(post_url):
     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
     if not og_type:
         raise robot.RobotException("正文截取og_type失败\n%s" % post_page_head)
-    # 空、音频、引用，跳过
-    if og_type in ["tumblr-feed:entry", "tumblr-feed:audio", "tumblr-feed:quote", "tumblr-feed:link"]:
-        pass
+    # 视频
+    if og_type == "tumblr-feed:video":
+        result["has_video"] = True
+        # 获取图片地址
+        image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
+        if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
+            result["image_url_list"].append(image_url)
     else:
-        # 视频
-        if og_type == "tumblr-feed:video":
-            result["has_video"] = True
-            # 获取图片地址
-            image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
-            if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
-                result["image_url_list"].append(image_url)
-        else:
-            # 获取全部图片地址
-            image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
-            new_image_url_list = {}
-            for image_url in image_url_list:
-                # 头像，跳过
-                if image_url.find("/avatar_") != -1:
+        # 获取全部图片地址
+        image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+        new_image_url_list = {}
+        for image_url in image_url_list:
+            # 头像，跳过
+            if image_url.find("/avatar_") != -1:
+                continue
+            image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
+            # 判断是否有分辨率更小的相同图片
+            if image_id in new_image_url_list:
+                resolution = image_url.split("_")[-1].split(".")[0]
+                if resolution == "cover":
+                    log.error("image_url: " + image_url + ", old_image_url: " + new_image_url_list[image_id])
                     continue
-                image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
-                # 判断是否有分辨率更小的相同图片
-                if image_id in new_image_url_list:
-                    resolution = image_url.split("_")[-1].split(".")[0]
-                    if resolution[-1] == "h":
-                        resolution = int(resolution[:-1])
-                    else:
-                        resolution = int(resolution)
-                    old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
-                    if old_resolution[-1] == "h":
-                        old_resolution = int(old_resolution[:-1])
-                    else:
-                        old_resolution = int(old_resolution)
-                    if resolution < old_resolution:
-                        continue
-                new_image_url_list[image_id] = image_url
-            result["image_url_list"] = new_image_url_list.values()
+                elif resolution[-1] == "h":
+                    resolution = int(resolution[:-1])
+                else:
+                    resolution = int(resolution)
+                old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
+                if old_resolution == "cover":
+                    log.error("image_url: " + image_url + ", old_image_url: " + new_image_url_list[image_id])
+                    old_resolution = 0
+                elif old_resolution[-1] == "h":
+                    old_resolution = int(old_resolution[:-1])
+                else:
+                    old_resolution = int(old_resolution)
+                if resolution < old_resolution:
+                    continue
+            new_image_url_list[image_id] = image_url
+        result["image_url_list"] = new_image_url_list.values()
     return result
 
 
