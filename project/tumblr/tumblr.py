@@ -26,7 +26,7 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 COOKIE_INFO = {}
 USER_AGENT = None
-IS_SHOW_ERROR_403_AND_404 = True
+IS_STEP_ERROR_403_AND_404 = True
 
 
 # 获取一页的日志地址列表
@@ -182,14 +182,14 @@ class Tumblr(robot.Robot):
         global IS_DOWNLOAD_VIDEO
         global COOKIE_INFO
         global USER_AGENT
-        global IS_SHOW_ERROR_403_AND_404
+        global IS_STEP_ERROR_403_AND_404
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_GET_COOKIE: {".tumblr.com": ()},
             robot.SYS_SET_PROXY: True,
-            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0), ("IS_SHOW_ERROR_403_AND_404", True, 2)),
+            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0), ("IS_STEP_ERROR_403_AND_404", True, 2)),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -201,7 +201,7 @@ class Tumblr(robot.Robot):
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         COOKIE_INFO = self.cookie_value
         USER_AGENT = self.app_config["USER_AGENT"]
-        IS_SHOW_ERROR_403_AND_404 = self.app_config["IS_SHOW_ERROR_403_AND_404"]
+        IS_STEP_ERROR_403_AND_404 = self.app_config["IS_STEP_ERROR_403_AND_404"]
 
     def main(self):
         global ACCOUNTS
@@ -361,7 +361,7 @@ class Download(threading.Thread):
                                 break
                         error_message = account_id + " 第%s个视频 %s 下载失败（%s），原因：%s" % (video_index, video_url, post_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
                         # 403、404错误作为step log输出
-                        if IS_SHOW_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
+                        if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                             log.step(error_message)
                         else:
                             log.error(error_message)
@@ -386,7 +386,7 @@ class Download(threading.Thread):
                         else:
                             error_message = account_id + " 第%s张图片 %s 下载失败（%s），原因：%s" % (image_index, image_url, post_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
                             # 403、404错误作为step log输出
-                            if IS_SHOW_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
+                            if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                                 log.step(error_message)
                             else:
                                 log.error(error_message)
