@@ -106,7 +106,6 @@ def get_post_page(post_url):
             if image_id in new_image_url_list:
                 resolution = image_url.split("_")[-1].split(".")[0]
                 if resolution == "cover":
-                    log.error("image_url: " + image_url + ", old_image_url: " + new_image_url_list[image_id])
                     continue
                 elif resolution[-1] == "h":
                     resolution = int(resolution[:-1])
@@ -114,7 +113,6 @@ def get_post_page(post_url):
                     resolution = int(resolution)
                 old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
                 if old_resolution == "cover":
-                    log.error("image_url: " + image_url + ", old_image_url: " + new_image_url_list[image_id])
                     old_resolution = 0
                 elif old_resolution[-1] == "h":
                     old_resolution = int(old_resolution[:-1])
