@@ -91,7 +91,7 @@ def get_post_page(post_url):
         result["has_video"] = True
         # 获取图片地址
         image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
-        if image_url and image_url != "http://assets.tumblr.com/images/og/fb_landscape_share.png":
+        if image_url and image_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
             result["image_url_list"].append(image_url)
     else:
         # 获取全部图片地址
