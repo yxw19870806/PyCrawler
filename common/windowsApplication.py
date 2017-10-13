@@ -81,6 +81,13 @@ class WindowsApplication:
         win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, tmp)
         win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
 
+    # 自动向窗口发送按键指令（必须在前台激活窗口）
+    def send_key(self, keyboard):
+        # key down
+        win32api.PostMessage(self.window_handle, win32con.WM_KEYDOWN, keyboard, 0)
+        # key up
+        win32api.PostMessage(self.window_handle, win32con.WM_KEYUP, keyboard, 0)
+
     # 获取窗口某个坐标的颜色（窗口必须在最顶端）
     def get_color(self, pos_x, pos_y):
         try:
