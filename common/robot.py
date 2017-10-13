@@ -130,15 +130,10 @@ class Robot(object):
         self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 2) and sys_download_video
 
         if not self.is_download_image and not self.is_download_video:
-            # 下载图片和视频都没有开启，请检查配置
-            if not self.is_download_image and sys_download_image and not self.is_download_video and sys_download_video:
-                self.print_msg("下载图片和视频都没有开启，请检查配置！")
-            elif not self.is_download_image and sys_download_image:
-                self.print_msg("下载图片没有开启，请检查配置！")
-            elif not self.is_download_video and sys_download_video:
-                self.print_msg("下载视频没有开启，请检查配置！")
-            tool.process_exit()
-            return
+            if sys_download_image or sys_download_video:
+                self.print_msg("所有支持的下载都没有开启，请检查配置！")
+                tool.process_exit()
+                return
 
         # 存档
         if "save_data_path" in extra_config:
