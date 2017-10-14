@@ -32,9 +32,9 @@ IS_STEP_ERROR_403_AND_404 = True
 # 获取一页的日志地址列表
 def get_one_page_post(account_id, page_count):
     if page_count == 1:
-        post_pagination_url = "http://%s.tumblr.com/" % account_id
+        post_pagination_url = "https://%s.tumblr.com/" % account_id
     else:
-        post_pagination_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
+        post_pagination_url = "https://%s.tumblr.com/page/%s" % (account_id, page_count)
     header_list = {"User-Agent": USER_AGENT}
     post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=COOKIE_INFO)
     result = {
@@ -127,7 +127,7 @@ def get_post_page(post_url):
 
 # 获取视频播放页面
 def get_video_play_page(account_id, post_id):
-    video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+    video_play_url = "https://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_play_response = net.http_request(video_play_url)
     result = {
         "is_skip": False,  # 是不是第三方视频
