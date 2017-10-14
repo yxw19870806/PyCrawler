@@ -190,6 +190,8 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
         except Exception, e:
             if exception_return and str(e).find(exception_return) >= 0:
                 return ErrorResponse(HTTP_RETURN_CODE_EXCEPTION_CATCH)
+            elif str(e).find("EOF occurred in violation of protocol") >=0:
+                time.sleep(30)
             tool.print_msg(str(e))
             tool.print_msg(url + " 访问超时，稍后重试")
             traceback.print_exc()
