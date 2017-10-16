@@ -90,7 +90,7 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     method = method.upper()
-    if method not in ["GET", "POST", "HEAD"]:
+    if method not in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]:
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
