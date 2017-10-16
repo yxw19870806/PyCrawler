@@ -97,6 +97,7 @@ def filter_image_url(image_url):
             or image_url.find("//b.st-hatena.com/images/entry-button/") >= 0 or image_url.find("//vc.ameba.jp/view?") >= 0 \
             or image_url.find("//mail.google.com/mail/") >= 0 or image_url.find("//www.youtube.com/") >= 0 \
             or image_url.find("//jp.mg2.mail.yahoo.co.jp/ya/download/") >= 0 or image_url.find("//blog.watanabepro.co.jp/") >= 0 \
+            or image_url.find("//iine.blog.ameba.jp/web/display_iine.html") >= 0 \
             or image_url[-9:] == "clear.gif":
         return True
     return False

@@ -118,7 +118,7 @@ def get_one_page_media(account_name, position_blog_id):
 # 根据视频所在推特的ID，获取视频的下载地址
 def get_video_play_page(tweet_id):
     video_play_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
-    video_play_response = net.http_request(video_play_url)
+    video_play_response = net.http_request(video_play_url, cookies_list=COOKIE_INFO)
     result = {
         "video_url": None,  # 视频地址
     }

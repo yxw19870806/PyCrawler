@@ -32,9 +32,9 @@ IS_STEP_ERROR_403_AND_404 = True
 # 获取一页的日志地址列表
 def get_one_page_post(account_id, page_count):
     if page_count == 1:
-        post_pagination_url = "http://%s.tumblr.com/" % account_id
+        post_pagination_url = "https://%s.tumblr.com/" % account_id
     else:
-        post_pagination_url = "http://%s.tumblr.com/page/%s" % (account_id, page_count)
+        post_pagination_url = "https://%s.tumblr.com/page/%s" % (account_id, page_count)
     header_list = {"User-Agent": USER_AGENT}
     post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=COOKIE_INFO)
     result = {
@@ -71,8 +71,7 @@ def get_one_page_post(account_id, page_count):
 
 # 获取日志页面
 def get_post_page(post_url):
-    header_list = {"User-Agent": USER_AGENT}
-    post_response = net.http_request(post_url, header_list=header_list, cookies_list=COOKIE_INFO)
+    post_response = net.http_request(post_url, header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO)
     result = {
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 全部图片地址
@@ -127,7 +126,7 @@ def get_post_page(post_url):
 
 # 获取视频播放页面
 def get_video_play_page(account_id, post_id):
-    video_play_url = "http://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+    video_play_url = "https://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
     video_play_response = net.http_request(video_play_url)
     result = {
         "is_skip": False,  # 是不是第三方视频
@@ -137,7 +136,7 @@ def get_video_play_page(account_id, post_id):
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
     if len(video_url_find) == 1:
-        video_response = net.http_request(video_url_find[0], redirect=False)
+        video_response = net.http_request(video_url_find[0], method="HEAD", redirect=False)
         # 获取视频重定向页面
         if video_response.status == 302 and video_response.getheader("Location") is not None:
             # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
