@@ -84,6 +84,13 @@ class WindowsApplication:
             time.sleep(click_time)
         win32gui.SendMessage(self.window_handle, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, tmp)
 
+    def move_click(self, pos_x, pos_y, click_time=0):
+        win32api.SetCursorPos((pos_x, pos_y))
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+        if click_time > 0:
+            time.sleep(click_time)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+
     # 自动向窗口发送按键指令（必须在前台激活窗口）
     def send_key(self, keyboard):
         # key down
