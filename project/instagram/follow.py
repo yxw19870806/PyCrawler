@@ -71,7 +71,7 @@ def main():
     # cookie
     is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
     if is_auto_get_cookie:
-        cookie_path = tool.get_default_browser_cookie_path(browser_type)
+        cookie_path = browser.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
     all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
