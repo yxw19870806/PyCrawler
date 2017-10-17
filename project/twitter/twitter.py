@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 """
-Twitter图片爬虫
+Twitter图片&视频爬虫
 https://twitter.com/
 @author: hikaru
 email: hikaru870806@hotmail.com
