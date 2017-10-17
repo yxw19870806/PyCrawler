@@ -21,7 +21,7 @@ def get_auth_token():
         cookie_path = browser.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-    all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+    all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
     if ".twitter.com" in all_cookie_from_browser and "auth_token" in all_cookie_from_browser[".twitter.com"]:
         return all_cookie_from_browser["www.instagram.com"]["sessionid"]
     return None

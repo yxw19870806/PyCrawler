@@ -226,7 +226,7 @@ def get_login_cookie_from_browser():
         cookie_path = browser.get_default_browser_cookie_path(browser_type)
     else:
         cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
-    all_cookie_from_browser = tool.get_all_cookie_from_browser(browser_type, cookie_path)
+    all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
     if "store.steampowered.com" not in all_cookie_from_browser:
         raise robot.RobotException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
     if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:

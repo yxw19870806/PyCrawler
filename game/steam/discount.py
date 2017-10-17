@@ -122,4 +122,4 @@ if __name__ == "__main__":
     if INCLUDE_BUNDLE:
         include_type_id += 4
 
-    main(steamCommon.get_account_id_from_file(), include_type_id, 90, 1)
+    main(steamCommon.get_account_id_from_file(), include_type_id, 85, 1)
