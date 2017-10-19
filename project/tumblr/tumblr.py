@@ -141,11 +141,13 @@ def get_video_play_page(account_id, post_id):
     if len(video_url_find) == 1:
         video_response = net.http_request(video_url_find[0], method="HEAD", redirect=False)
         # 获取视频重定向页面
-        if video_response.status == 302 and video_response.getheader("Location") is not None:
-            # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
-            # ->
-            # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
-            result["video_url"] = video_response.getheader("Location").replace("#_=_", "").replace("_r1_480", "_r1_720")
+        if video_response.status == 302:
+            redirect_url = video_response.getheader("Location")
+            if redirect_url is not None:
+                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
+                # ->
+                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
+                result["video_url"] = redirect_url.replace("#_=_", "").replace("_r1_480", "_r1_720")
         else:
             # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
             # ->
