@@ -62,7 +62,7 @@ def init():
         tool.print_msg("access token get succeed!")
         return True
     else:
-        tool.remove_dir_or_file(token_file_path)
+        tool.delete_dir_or_file(token_file_path)
     return False
 
 

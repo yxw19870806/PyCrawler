@@ -87,7 +87,7 @@ class Robot(object):
         self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
-        if not tool.make_dir(error_log_dir, 0):
+        if not tool.create_dir(error_log_dir, 0):
             self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
             tool.process_exit()
             return
@@ -99,7 +99,7 @@ class Robot(object):
             self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
-            if not tool.make_dir(step_log_dir, 0):
+            if not tool.create_dir(step_log_dir, 0):
                 self.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
                 tool.process_exit()
                 return
@@ -111,7 +111,7 @@ class Robot(object):
             self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
-            if not tool.make_dir(trace_log_dir, 0):
+            if not tool.create_dir(trace_log_dir, 0):
                 self.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
                 tool.process_exit()
                 return
@@ -153,7 +153,7 @@ class Robot(object):
                 self.image_download_path = os.path.realpath(extra_config["image_download_path"])
             else:
                 self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", 3)
-            if not tool.make_dir(self.image_download_path, 0):
+            if not tool.create_dir(self.image_download_path, 0):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
                 tool.process_exit()
@@ -167,7 +167,7 @@ class Robot(object):
                 self.video_download_path = os.path.realpath(extra_config["video_download_path"])
             else:
                 self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", 3)
-            if not tool.make_dir(self.video_download_path, 0):
+            if not tool.create_dir(self.video_download_path, 0):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
                 tool.process_exit()
@@ -303,7 +303,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
     file_list = tool.get_dir_files_name(source_path, "desc")
     # 判断排序目标文件夹是否存在
     if len(file_list) >= 1:
-        if not tool.make_dir(destination_path, 0):
+        if not tool.create_dir(destination_path, 0):
             return False
         # 倒叙排列
         for file_name in file_list:
@@ -312,7 +312,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
             new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
             tool.copy_files(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
         # 删除临时文件夹
-        tool.remove_dir_or_file(source_path)
+        tool.delete_dir_or_file(source_path)
     return True
 
 
@@ -349,7 +349,7 @@ def rewrite_save_file(temp_save_data_path, save_data_path):
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     tool.write_file(tool.list_to_string(temp_list), save_data_path, 2)
-    tool.remove_dir_or_file(temp_save_data_path)
+    tool.delete_dir_or_file(temp_save_data_path)
 
 
 # 生成新存档的文件路径

@@ -251,7 +251,7 @@ class Download(threading.Thread):
                     save_file_return = net.save_net_file(image_url, file_path, cookies_list=big_image_response["cookies"])
                     if save_file_return["status"] == 1:
                         if check_image_invalid(file_path):
-                            tool.remove_dir_or_file(file_path)
+                            tool.delete_dir_or_file(file_path)
                             log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_index, image_url))
                         else:
                             temp_path_list.append(file_path)
@@ -272,7 +272,7 @@ class Download(threading.Thread):
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
             if len(temp_path_list) > 0:
                 for temp_path in temp_path_list:
-                    tool.remove_dir_or_file(temp_path)
+                    tool.delete_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

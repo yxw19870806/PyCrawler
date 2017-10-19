@@ -298,7 +298,7 @@ class Download(threading.Thread):
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         if weiboCommon.check_image_invalid(file_path):
-                            tool.remove_dir_or_file(file_path)
+                            tool.delete_dir_or_file(file_path)
                             log.error(account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_title, image_index, image_url))
                         else:
                             log.step(account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_index))
@@ -315,7 +315,7 @@ class Download(threading.Thread):
                     save_file_return = net.save_net_file(article_response["top_image_url"], file_path)
                     if save_file_return["status"] == 1:
                         if weiboCommon.check_image_invalid(file_path):
-                            tool.remove_dir_or_file(file_path)
+                            tool.delete_dir_or_file(file_path)
                             log.error(account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_image_url"]))
                         else:
                             log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
@@ -334,7 +334,7 @@ class Download(threading.Thread):
                 log.error(account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个文章正在下载中，需要把下载了部分的内容给清理掉
             if temp_path:
-                tool.remove_dir_or_file(temp_path)
+                tool.delete_dir_or_file(temp_path)
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
