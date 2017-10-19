@@ -240,7 +240,7 @@ def _random_ip_address():
 def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None):
     file_path = tool.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not tool.make_dir(os.path.dirname(file_path), 0):
+    if not tool.create_dir(os.path.dirname(file_path), 0):
         return False
     create_file = False
     for retry_count in range(0, 5):
@@ -297,7 +297,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
 def save_net_file_list(file_url_list, file_path, header_list=None):
     file_path = tool.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not tool.make_dir(os.path.dirname(file_path), 0):
+    if not tool.create_dir(os.path.dirname(file_path), 0):
         return False
     for retry_count in range(0, 5):
         # 下载

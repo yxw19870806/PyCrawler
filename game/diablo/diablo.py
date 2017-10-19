@@ -100,7 +100,7 @@ for item_path, item_position in item_list.items():
         break
 
 
-tool.make_dir("data", 0)
+tool.create_dir("data", 0)
 for item_path in item_attribute_list:
     with open(tool.change_path_encoding("data\%s.txt" % item_list[item_path]), "w") as file_handle:
         for item in item_attribute_list[item_path]:

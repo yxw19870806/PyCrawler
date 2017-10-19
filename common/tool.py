@@ -114,6 +114,94 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
     return find_string
 
 
+# 按照指定连接符合并二维数组生成字符串
+def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
+    temp_list = []
+    for value in source_lists:
+        if second_sign != "":
+            temp_list.append(second_sign.join(map(str, value)))
+        else:
+            temp_list.append(str(value))
+    return first_sign.join(temp_list)
+
+
+# 获取指定目录的文件列表
+# order desc 降序
+# order asc  升序
+# order 其他 不需要排序
+def get_dir_files_name(path, order=None):
+    path = change_path_encoding(path)
+    if not os.path.exists(path):
+        return []
+    files_list = map(lambda file_name: file_name.encode("UTF-8"), os.listdir(path))
+    # 升序
+    if order == "asc":
+        return sorted(files_list, reverse=False)
+    # 降序
+    elif order == "desc":
+        return sorted(files_list, reverse=True)
+    else:
+        return files_list
+
+
+# 复制文件
+# source_file_path      源文件路径
+# destination_file_path 目标文件路径
+def copy_files(source_file_path, destination_file_path):
+    source_file_path = change_path_encoding(source_file_path)
+    if not create_dir(os.path.dirname(destination_file_path), 0):
+        return
+    destination_file_path = change_path_encoding(destination_file_path)
+    shutil.copyfile(source_file_path, destination_file_path)
+
+
+# 生成指定长度的随机字符串
+# char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
+def generate_random_string(string_length, char_lib_type=7):
+    result = ""
+    char_lib = {
+        1: "abcdefghijklmnopqrstuvwxyz",  # 小写字母
+        2: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",  # 大写字母
+        4: "0123456789",  # 数字
+    }
+    random_string = ""
+    for i in char_lib:
+        if char_lib_type & i == i:
+            for char in char_lib[i]:
+                random_string += char
+    if not random_string:
+        return result
+    length = len(random_string) - 1
+    for i in range(0, string_length):
+        result += random_string[random.randint(0, length)]
+    return result
+
+
+# 获取指定文件的MD5值
+def get_file_md5(file_path):
+    file_path = change_path_encoding(file_path)
+    if not os.path.exists(file_path):
+        return None
+    md5_obj = hashlib.md5()
+    with open(file_path, "rb") as file_handle:
+        md5_obj.update(file_handle.read())
+    return md5_obj.hexdigest()
+
+
+# 结束进程
+# exit_code 0: 正常结束, 1: 异常退出
+def process_exit(exit_code=1):
+    sys.exit(exit_code)
+
+
+# 定时关机
+def shutdown(delay_time=30):
+    if platform.system() == "Windows":
+        os.system("shutdown -s -f -t " + str(delay_time))
+    else:
+        os.system("halt")
+
+
 # 文件路径编码转换
 def change_path_encoding(path):
     if isinstance(path, str):
@@ -150,7 +238,7 @@ def read_file(file_path, read_type=1):
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
     file_path = change_path_encoding(file_path)
-    if make_dir(os.path.dirname(file_path), 0):
+    if create_dir(os.path.dirname(file_path), 0):
         if append_type == 1:
             open_type = "a"
         else:
@@ -161,64 +249,11 @@ def write_file(msg, file_path, append_type=1):
             file_handle.write(msg + "\n")
 
 
-# 按照指定连接符合并二维数组生成字符串
-def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
-    temp_list = []
-    for value in source_lists:
-        if second_sign != "":
-            temp_list.append(second_sign.join(map(str, value)))
-        else:
-            temp_list.append(str(value))
-    return first_sign.join(temp_list)
-
-
-# 获取指定目录的文件列表
-# order desc 降序
-# order asc  升序
-# order 其他 不需要排序
-def get_dir_files_name(path, order=None):
-    path = change_path_encoding(path)
-    if not os.path.exists(path):
-        return []
-    files_list = map(lambda file_name: file_name.encode("UTF-8"), os.listdir(path))
-    # 升序
-    if order == "asc":
-        return sorted(files_list, reverse=False)
-    # 降序
-    elif order == "desc":
-        return sorted(files_list, reverse=True)
-    else:
-        return files_list
-
-
-# 删除整个目录以及目录下所有文件
-def remove_dir_or_file(dir_path):
-    dir_path = change_path_encoding(dir_path)
-    if not os.path.exists(dir_path):
-        return True
-    if os.path.isdir(dir_path):
-        shutil.rmtree(dir_path, True)
-    else:
-        os.remove(dir_path)
-
-
-# 删除指定目录下的全部空文件夹
-def delete_null_dir(dir_path):
-    dir_path = change_path_encoding(dir_path)
-    if os.path.isdir(dir_path):
-        for file_name in os.listdir(dir_path):
-            sub_path = os.path.join(dir_path, file_name)
-            if os.path.isdir(sub_path):
-                delete_null_dir(sub_path)
-        if len(os.listdir(dir_path)) == 0:
-            os.rmdir(dir_path)
-
-
 # 创建目录
 # create_mode 0 : 不存在则创建
 # create_mode 1 : 存在则删除并创建
 # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
-def make_dir(dir_path, create_mode):
+def create_dir(dir_path, create_mode):
     dir_path = change_path_encoding(dir_path)
     if create_mode != 0 and create_mode != 1 and create_mode != 2:
         create_mode = 0
@@ -271,59 +306,24 @@ def make_dir(dir_path, create_mode):
     return False
 
 
-# 复制文件
-# source_file_path      源文件路径
-# destination_file_path 目标文件路径
-def copy_files(source_file_path, destination_file_path):
-    source_file_path = change_path_encoding(source_file_path)
-    if not make_dir(os.path.dirname(destination_file_path), 0):
-        return
-    destination_file_path = change_path_encoding(destination_file_path)
-    shutil.copyfile(source_file_path, destination_file_path)
-
-
-# 生成指定长度的随机字符串
-# char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
-def generate_random_string(string_length, char_lib_type=7):
-    result = ""
-    char_lib = {
-        1: "abcdefghijklmnopqrstuvwxyz",  # 小写字母
-        2: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",  # 大写字母
-        4: "0123456789",  # 数字
-    }
-    random_string = ""
-    for i in char_lib:
-        if char_lib_type & i == i:
-            for char in char_lib[i]:
-                random_string += char
-    if not random_string:
-        return result
-    length = len(random_string) - 1
-    for i in range(0, string_length):
-        result += random_string[random.randint(0, length)]
-    return result
-
-
-# 获取指定文件的MD5值
-def get_file_md5(file_path):
-    file_path = change_path_encoding(file_path)
-    if not os.path.exists(file_path):
-        return None
-    md5_obj = hashlib.md5()
-    with open(file_path, "rb") as file_handle:
-        md5_obj.update(file_handle.read())
-    return md5_obj.hexdigest()
-
-
-# 结束进程
-# exit_code 0: 正常结束, 1: 异常退出
-def process_exit(exit_code=1):
-    sys.exit(exit_code)
-
-
-# 定时关机
-def shutdown(delay_time=30):
-    if platform.system() == "Windows":
-        os.system("shutdown -s -f -t " + str(delay_time))
+# 删除整个目录以及目录下所有文件
+def delete_dir_or_file(dir_path):
+    dir_path = change_path_encoding(dir_path)
+    if not os.path.exists(dir_path):
+        return True
+    if os.path.isdir(dir_path):
+        shutil.rmtree(dir_path, True)
     else:
-        os.system("halt")
+        os.remove(dir_path)
+
+
+# 删除指定目录下的全部空文件夹
+def delete_null_dir(dir_path):
+    dir_path = change_path_encoding(dir_path)
+    if os.path.isdir(dir_path):
+        for file_name in os.listdir(dir_path):
+            sub_path = os.path.join(dir_path, file_name)
+            if os.path.isdir(sub_path):
+                delete_null_dir(sub_path)
+        if len(os.listdir(dir_path)) == 0:
+            os.rmdir(dir_path)
