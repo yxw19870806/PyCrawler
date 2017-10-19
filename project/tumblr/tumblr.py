@@ -35,8 +35,11 @@ def get_one_page_post(account_id, page_count):
         post_pagination_url = "https://%s.tumblr.com/" % account_id
     else:
         post_pagination_url = "https://%s.tumblr.com/page/%s" % (account_id, page_count)
-    header_list = {"User-Agent": USER_AGENT}
-    post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=COOKIE_INFO)
+    post_pagination_response = net.http_request(post_pagination_url, header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO, redirect=False)
+    if post_pagination_response.status == 302:
+        redirect_url = post_pagination_response.getheader("Location")
+        if redirect_url is not None:
+            post_pagination_response = net.http_request(redirect_url.replace("#_=_", ""), header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO)
     result = {
         "post_url_list": [],  # 全部日志地址
         "is_over": [],  # 是不是最后一页日志
