@@ -104,7 +104,6 @@ def get_post_page(post_url):
             if image_url.find("/avatar_") != -1:
                 continue
             image_id, resolution = analysis_image(image_url)
-            print image_id, resolution
             # 判断是否有分辨率更小的相同图片
             if image_id in new_image_url_list:
                 image_id, old_resolution = analysis_image(new_image_url_list[image_id])
