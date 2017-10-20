@@ -1,5 +1,5 @@
 # -*- coding:UTF-8  -*-
-from common import net, tool
+from common import net, output, path, tool
 import re
 
 item_list = {
@@ -82,12 +82,12 @@ for item_path, item_position in item_list.items():
                         special_attribute = special_attribute.replace("'", "’")
                     item_introduction = tool.find_sub_string(item_detail, '<div class="item-flavor d3-color-orange serif">', "</div>").strip()
                     item_introduction = item_introduction.replace("'", "’")
-                    tool.print_msg("%s %s %s %s" % (item_position, item_name, special_attribute, item_introduction))
+                    output.print_msg("%s %s %s %s" % (item_position, item_name, special_attribute, item_introduction))
                     item_attribute_list[item_path].append([item_name, special_attribute, item_introduction])
                 else:
-                    tool.print_msg("error get" + item_url)
+                    output.print_msg("error get" + item_url)
         else:
-            tool.print_msg("error get" + item_index_url)
+            output.print_msg("error get" + item_index_url)
         pagination = tool.find_sub_string(item_index_response.data, '<ul class="ui-pagination">', "</ul>")
         if pagination:
             pagination = re.findall('<a href="#page=([\d]*)">', pagination)
@@ -100,8 +100,8 @@ for item_path, item_position in item_list.items():
         break
 
 
-tool.create_dir("data", 0)
+path.create_dir("data", 0)
 for item_path in item_attribute_list:
-    with open(tool.change_path_encoding("data\%s.txt" % item_list[item_path]), "w") as file_handle:
+    with open(path.change_path_encoding("data\%s.txt" % item_list[item_path]), "w") as file_handle:
         for item in item_attribute_list[item_path]:
             file_handle.write("\t".join(item) + "\n")

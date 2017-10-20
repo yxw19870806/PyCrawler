@@ -60,10 +60,10 @@ def main():
         try:
             member_list = get_member_from_talk(talk_id)
         except robot.RobotException, e:
-            tool.print_msg(talk_id + " 获取成员失败，原因：%s" % e.message)
+            output.print_msg(talk_id + " 获取成员失败，原因：%s" % e.message)
         for account_id in member_list:
             if account_id not in account_list:
-                tool.print_msg("%s %s" % (account_id, member_list[account_id]))
+                output.print_msg("%s %s" % (account_id, member_list[account_id]))
                 tool.write_file("%s\t%s" % (account_id, member_list[account_id]), ACCOUNT_ID_FILE_PATH, 1)
                 account_list.append(account_id)
 

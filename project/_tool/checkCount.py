@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 # 判断存档文件中的数量和保存目录中的数量是否一致
-from common import tool
+from common import output, tool
 import os
 import sys
 
@@ -20,7 +20,7 @@ IS_INTEGER = True
 # is_integer    文件名是否是整数，如果为True，另外判断最大的那个序号是否和总文件数一致
 def get_storage_file_count():
     if not os.path.exists(FILE_STORAGE_PATH):
-        tool.print_msg("file root path %s not exist" % FILE_STORAGE_PATH)
+        output.print_msg("file root path %s not exist" % FILE_STORAGE_PATH)
         return {}
     account_list = {}
     # 根目录下的全部子目录
@@ -34,7 +34,7 @@ def get_storage_file_count():
             for file_name in file_list:
                 file_max_index = max(int(file_name.split(".")[0]), file_max_index)
             if file_max_index != total_file_count:
-                tool.print_msg("%s total count %s not equal to max count %s" % (dir_name, total_file_count, file_max_index))
+                output.print_msg("%s total count %s not equal to max count %s" % (dir_name, total_file_count, file_max_index))
         account_list[dir_name] = total_file_count
     return account_list
 
@@ -42,7 +42,7 @@ def get_storage_file_count():
 # 获取存档文件内的全部存档的下载数量
 def get_save_data_file_count():
     if not os.path.exists(SAVE_DATA_FILE_PATH):
-        tool.print_msg("save data %s not exist" % SAVE_DATA_FILE_PATH)
+        output.print_msg("save data %s not exist" % SAVE_DATA_FILE_PATH)
         return {}
     account_list = {}
     for line in tool.read_file(SAVE_DATA_FILE_PATH, 2):
@@ -60,10 +60,10 @@ def check_count():
         if account_id not in account_list_from_save_data:
             account_list_from_save_data[account_id] = 0
         if account_list_from_save_data[account_id] != account_list_from_storage[account_id]:
-            tool.print_msg("%s count in save data: %s, in root path: %s" % (account_id, account_list_from_save_data[account_id], account_list_from_storage[account_id]))
+            output.print_msg("%s count in save data: %s, in root path: %s" % (account_id, account_list_from_save_data[account_id], account_list_from_storage[account_id]))
     for account_id in dict(account_list_from_storage):
         if account_id not in account_list_from_save_data:
-            tool.print_msg("%s not found in save data" % account_id)
+            output.print_msg("%s not found in save data" % account_id)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import robot, tool
+from common import output, robot, tool
 import steamCommon
 import json
 import os
@@ -40,7 +40,7 @@ def load_discount_list():
     last_api_update_day = time.strptime(time.strftime("%Y-%m-%d " + "%02d" % API_UPDATE_TIME_HOUR + ":00:00", last_api_update_day), "%Y-%m-%d %H:%M:%S")
     last_api_update_time = time.mktime(last_api_update_day)
     if os.path.getmtime(DISCOUNT_DATA_PATH) < last_api_update_time < time.time():
-        tool.print_msg("discount game list expired")
+        output.print_msg("discount game list expired")
         return discount_game_list
     try:
         discount_game_list = json.loads(tool.read_file(DISCOUNT_DATA_PATH))
@@ -59,7 +59,7 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
     try:
         login_cookie = steamCommon.get_login_cookie_from_browser()
     except robot.RobotException, e:
-        tool.print_msg("登录状态检测失败，原因：%s" % e.message)
+        output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
     # 从文件里获取打折列表
     discount_game_list = load_discount_list()
@@ -68,18 +68,18 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
         try:
             discount_game_list = steamCommon.get_discount_game_list(login_cookie)
         except robot.RobotException, e:
-            tool.print_msg("打折游戏解析失败，原因：%s" % e.message)
+            output.print_msg("打折游戏解析失败，原因：%s" % e.message)
             raise
         # 将打折列表写入文件
         save_discount_list(discount_game_list)
-        tool.print_msg("get discount game list from website")
+        output.print_msg("get discount game list from website")
     else:
-        tool.print_msg("get discount game list from cache file")
+        output.print_msg("get discount game list from cache file")
     # 获取自己的全部游戏列表
     try:
         owned_game_list = steamCommon.get_account_owned_app_list(account_id)
     except robot.RobotException, e:
-        tool.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
+        output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
     for discount_info in discount_game_list:
         # 获取到的价格不大于0的跳过
@@ -103,14 +103,14 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
                         break
                 if not is_all:
                     if discount_info["type"] == "bundle":
-                        tool.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                        output.print_msg("http://store.steampowered.com/bundle/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
                     else:
-                        tool.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                        output.print_msg("http://store.steampowered.com/sub/%s ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
             else:
                 if include_type & 1 == 0:
                     continue
                 if discount_info["app_id"] not in owned_game_list:
-                    tool.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
+                    output.print_msg("http://store.steampowered.com/app/%s/ ,discount %s%%, old price: %s, discount price: %s" % (discount_info["id"], discount_info["discount"], discount_info["old_price"], discount_info["now_price"]), False)
 
 
 if __name__ == "__main__":

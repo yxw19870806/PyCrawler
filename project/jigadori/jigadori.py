@@ -164,7 +164,7 @@ class Jigadori(robot.Robot):
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
             if len(temp_path_list) > 0:
                 for temp_path in temp_path_list:
-                    tool.delete_dir_or_file(temp_path)
+                    path.delete_dir_or_file(temp_path)
         except Exception, e:
             log.error("未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

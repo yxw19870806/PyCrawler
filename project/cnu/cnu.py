@@ -6,7 +6,7 @@ http://www.cnu.cc/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import *
 import json
 import os
 import traceback
@@ -118,7 +118,7 @@ class CNU(robot.Robot):
                 log.error("异常退出")
             # 如果临时目录变量不为空，表示某个作品正在下载中，需要把下载了部分的内容给清理掉
             if temp_path:
-                tool.delete_dir_or_file(temp_path)
+                path.delete_dir_or_file(temp_path)
         except Exception, e:
             log.error("未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

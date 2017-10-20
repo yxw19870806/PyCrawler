@@ -1,5 +1,5 @@
 # -*- coding:UTF-8  -*-
-from common import net, tool
+from common import net, output, tool
 import re
 
 
@@ -17,13 +17,13 @@ def akb(file_handle):
                     english_name = tool.find_sub_string(member, '<p class="memberListNamee">', "</p>")
                     team_find = re.findall('<h5 class="memberListTeam">([^<]*)</h5>', member)
                     if not japanese_name:
-                        tool.print_msg("error japanese_name")
+                        output.print_msg("error japanese_name")
                         continue
                     if not english_name:
-                        tool.print_msg("error english_name")
+                        output.print_msg("error english_name")
                         continue
                     if (team_id != 12 and len(team_find) != 1) or (team_id == 12 and len(team_find) != 2):
-                        tool.print_msg("error team_find")
+                        output.print_msg("error team_find")
                         continue
 
                     japanese_name = japanese_name.replace(" ", "")
@@ -32,7 +32,7 @@ def akb(file_handle):
 
                     file_handle.write(japanese_name + "\t" + last_name + " " + first_name + "\t" + team + "\n")
             else:
-                tool.print_msg("error member_list_page")
+                output.print_msg("error member_list_page")
 
 
 def ske(file_handle):
@@ -54,10 +54,10 @@ def ske(file_handle):
                 english_name = tool.find_sub_string(member, '<h3 class="en">', "</h3>")
                 plus_text = tool.find_sub_string(member, '<li class="textPlus">', "</li>")
                 if len(japanese_name_find) != 1:
-                    tool.print_msg("error japanese_name_find")
+                    output.print_msg("error japanese_name_find")
                     continue
                 if not english_name:
-                    tool.print_msg("error english_name")
+                    output.print_msg("error english_name")
                     continue
 
                 japanese_name = japanese_name_find[0].replace(" ", "")
@@ -86,7 +86,7 @@ def nmb(file_handle):
             team_find = tool.find_sub_string(team_page, '<a name="', '"></a>')
             if team_find:
                 if team_find not in team_list:
-                    tool.print_msg("not found %s in team_list" % team_find)
+                    output.print_msg("not found %s in team_list" % team_find)
                     continue
                 member_list = re.findall('<li class="member-box[^"]*">([\s|\S]*?)</li>', team_page)
                 for member in member_list:
@@ -94,10 +94,10 @@ def nmb(file_handle):
                     japanese_name_find = re.findall('<h4><a href="[^"]*">([^<]*)</a></h4>', member)
                     english_name_find = re.findall("<p[\s|\S]*?>([\s|\S]*?)</[p|a]>", member)
                     if len(japanese_name_find) != 1:
-                        tool.print_msg("error japanese_name_find")
+                        output.print_msg("error japanese_name_find")
                         continue
                     if len(english_name_find) != 1:
-                        tool.print_msg("error english_name_find")
+                        output.print_msg("error english_name_find")
                         continue
 
                     team = team_list[team_find]
@@ -112,7 +112,7 @@ def nmb(file_handle):
 
                     file_handle.write(japanese_name + "\t" + last_name + " " + first_name + "\t" + team + "\n")
             else:
-                tool.print_msg("error team_find")
+                output.print_msg("error team_find")
 
 
 def hkt(file_handle):
@@ -123,7 +123,7 @@ def hkt(file_handle):
         for team_page in team_find:
             team = tool.find_sub_string(team_page, "<h3>", "</h3>")
             if not team:
-                tool.print_msg("error team")
+                output.print_msg("error team")
                 continue
             team = team.strip()
             member_list = re.findall("<li>([\s|\S]*?)</li>", team_page)
@@ -131,7 +131,7 @@ def hkt(file_handle):
                 member = member.replace("<br />", "").replace("\n", "").replace("\r", "").replace("\t", "")
                 name_find = re.findall("""<a href="/profile/[\d]*"><img src="[^"]*" alt="[^"]*" width="120" height="150" /><span class='name_j'>([^"]*)</span><span class='name_e'>([^<]*)</span></a> """, member)
                 if len(name_find) != 1:
-                    tool.print_msg("error name_find")
+                    output.print_msg("error name_find")
                     continue
                 japanese_name, english_name = name_find[0]
                 team_plus_find = re.findall('<div class="team_j">([^<]*)</div>', member)

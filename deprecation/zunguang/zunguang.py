@@ -72,7 +72,7 @@ class ZunGuang(robot.Robot):
         }
         robot.Robot.__init__(self, sys_config)
 
-        tool.print_msg("配置文件读取完成")
+        output.print_msg("配置文件读取完成")
 
     def main(self):
         # 解析存档文件，获取上一次的page count
@@ -137,7 +137,7 @@ class ZunGuang(robot.Robot):
                         log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (page_count, image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
-                    tool.delete_dir_or_file(image_path)
+                    path.delete_dir_or_file(image_path)
                     is_over = True
                     break
 

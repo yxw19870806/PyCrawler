@@ -5,7 +5,7 @@ clicker heroes自动升级树精
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import process, tool
+from common import output, process, tool
 from game.clickHero import clickerHeroes
 import time
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     click_button_index = 0
     # (点击升级的按钮位置，1 ~ 4），保证升级窗口中第一个按钮完整显示）
     while not 1 <= int(click_button_index) <= 4:
-        input_str = tool.console_input("请输入点击的按钮位置（1-4）: ")
+        input_str = output.console_input("请输入点击的按钮位置（1-4）: ")
         if str(input_str).isdigit():
             click_button_index = int(input_str)
 
@@ -60,10 +60,10 @@ if __name__ == "__main__":
                 # 检测宝箱，并且只要开启过一次后就不再检测
                 if not is_open_equip_box and check_relic_box():
                     is_open_equip_box = True
-                    tool.print_msg("open relic box")
+                    output.print_msg("open relic box")
 
                 if check_progression_mode():
-                    tool.print_msg("enable progression mode")
+                    output.print_msg("enable progression mode")
             # 重置计数
             count = 0
 

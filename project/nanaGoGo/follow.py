@@ -36,13 +36,13 @@ def follow_account(account_id):
     follow_response = net.http_request(follow_api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data", "error"), follow_response.json_data) and follow_response.json_data["data"] is None:
-            tool.print_msg("关注%s成功" % account_id)
+            output.print_msg("关注%s成功" % account_id)
             return True
         else:
-            tool.print_msg("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
+            output.print_msg("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
             tool.process_exit()
     else:
-        tool.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()
     return False
 
@@ -64,7 +64,7 @@ def main():
         for cookie_key in all_cookie_from_browser[".7gogo.jp"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".7gogo.jp"][cookie_key]
     else:
-        tool.print_msg("没有检测到登录信息")
+        output.print_msg("没有检测到登录信息")
         tool.process_exit()
 
     # 读取存档文件
@@ -76,7 +76,7 @@ def main():
             count += 1
         time.sleep(0.1)
 
-    tool.print_msg("关注完成，成功关注了%s个账号" % count)
+    output.print_msg("关注完成，成功关注了%s个账号" % count)
 
 if __name__ == "__main__":
     main()

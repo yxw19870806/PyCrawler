@@ -5,7 +5,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import extraTool, tool
+from common import extraTool, path, tool
 from distutils.core import setup
 import os
 import py2exe
@@ -18,24 +18,24 @@ def create_exe(py_file_path, need_config=False, need_zip=False):
     py_file_name = ".".join(os.path.basename(py_file_path).split(".")[:-1])
 
     # 旧目录删除
-    tool.delete_dir_or_file(build_path)
-    tool.delete_dir_or_file(build_dist_path)
+    path.delete_dir_or_file(build_path)
+    path.delete_dir_or_file(build_dist_path)
 
     # 打包
     setup(console=[py_file_path])
 
     # 复制其他必要文件
     if need_config:
-        tool.create_dir(os.path.join(build_dist_path, "data\\"), 0)
-        tool.copy_files(os.path.join(tool.PROJECT_COMMON_PATH, "config_exe.ini"), os.path.join(build_dist_path, "data\\config.ini"))
+        path.create_dir(os.path.join(build_dist_path, "data\\"), 0)
+        path.copy_files(os.path.join(tool.PROJECT_COMMON_PATH, "config_exe.ini"), os.path.join(build_dist_path, "data\\config.ini"))
 
     # 删除临时目录
-    tool.delete_dir_or_file(build_path)
+    path.delete_dir_or_file(build_path)
 
     # 是否需要压缩
     if need_zip:
         extraTool.zip_dir(build_dist_path, os.path.realpath("%s.zip" % py_file_name))
-        tool.delete_dir_or_file(build_dist_path)
+        path.delete_dir_or_file(build_dist_path)
     else:
         shutil.move(build_dist_path, os.path.realpath(".\\%s" % py_file_name))
 

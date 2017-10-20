@@ -76,7 +76,7 @@ def main():
     try:
         channel_list = get_channel_from_api()
     except robot.RobotException, e:
-        tool.print_msg("频道列表解析失败，原因：%s" % e.message)
+        output.print_msg("频道列表解析失败，原因：%s" % e.message)
         raise
 
     account_list_from_api = {}
@@ -84,9 +84,9 @@ def main():
         try:
             channel_account_list = get_channel_account_from_api(channel_id)
         except robot.RobotException, e:
-            tool.print_msg("频道%s推荐账号解析失败，原因：%s" % (channel_id, e.message))
+            output.print_msg("频道%s推荐账号解析失败，原因：%s" % (channel_id, e.message))
             raise
-        tool.print_msg("频道%s获取推荐账号%s个" % (channel_id, len(channel_account_list)))
+        output.print_msg("频道%s获取推荐账号%s个" % (channel_id, len(channel_account_list)))
         # 累加账号
         account_list_from_api.update(channel_account_list)
 

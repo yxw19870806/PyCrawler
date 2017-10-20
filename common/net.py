@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import process, tool
+from common import output, path, process, tool
 import json
 import os
 import random
@@ -48,7 +48,7 @@ def init_http_connection_pool():
 def set_proxy(ip, port):
     global HTTP_CONNECTION_POOL
     HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
-    tool.print_msg("设置代理成功")
+    output.print_msg("设置代理成功")
 
 
 # 根据传入cookie key和value，生成一个放入header中的cookie字符串
@@ -79,7 +79,6 @@ def get_cookies_from_response_header(response_headers):
 # header_list       http header信息，e.g. {"Host":“www.example.com"}
 # cookies_list      cookie信息，e.g. {"cookie1":“value1", "cookie2":“value2"}
 # is_random_ip      是否使用伪造IP
-# exception_return  如果异常信息中包含以下字符串，直接返回-1
 # return            0：无法访问
 #                   -1：URL格式不正确
 #                   -2：json decode error
@@ -157,7 +156,7 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
             return response
         except urllib3.exceptions.ProxyError:
             notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
-            input_str = tool.console_input(notice).lower()
+            input_str = output.console_input(notice).lower()
             if input_str in ["c", "continue"]:
                 pass
             elif input_str in ["s", "stop"]:
@@ -188,17 +187,15 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
         #     # if str(e).find("'Connection aborted.', error(10054,") >= 0:
         #     #     return ErrorResponse(-3)
         except Exception, e:
-            if exception_return and str(e).find(exception_return) >= 0:
-                return ErrorResponse(HTTP_RETURN_CODE_EXCEPTION_CATCH)
-            elif str(e).find("EOF occurred in violation of protocol") >=0:
+            if str(e).find("EOF occurred in violation of protocol") >=0:
                 time.sleep(30)
-            tool.print_msg(str(e))
-            tool.print_msg(url + " 访问超时，稍后重试")
+            output.print_msg(str(e))
+            output.print_msg(url + " 访问超时，稍后重试")
             traceback.print_exc()
 
         retry_count += 1
         if retry_count >= HTTP_REQUEST_RETRY_COUNT:
-            tool.print_msg("无法访问页面：" + url)
+            output.print_msg("无法访问页面：" + url)
             return ErrorResponse(HTTP_RETURN_CODE_RETRY)
 
 
@@ -238,9 +235,9 @@ def _random_ip_address():
 #               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
 #               > 0：访问出错，对应url的http code
 def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None):
-    file_path = tool.change_path_encoding(file_path)
+    file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not tool.create_dir(os.path.dirname(file_path), 0):
+    if not path.create_dir(os.path.dirname(file_path), 0):
         return False
     create_file = False
     for retry_count in range(0, 5):
@@ -263,7 +260,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if int(content_length) == file_size:
                 return {"status": 1, "code": 0, "file_path": file_path}
             else:
-                tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+                output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         elif response.status == HTTP_RETURN_CODE_URL_INVALID:
             if create_file:
                 os.remove(file_path)
@@ -295,9 +292,9 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
 #               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
 #               > 0：访问出错，对应url的http code
 def save_net_file_list(file_url_list, file_path, header_list=None):
-    file_path = tool.change_path_encoding(file_path)
+    file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not tool.create_dir(os.path.dirname(file_path), 0):
+    if not path.create_dir(os.path.dirname(file_path), 0):
         return False
     for retry_count in range(0, 5):
         # 下载

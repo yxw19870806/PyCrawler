@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 # 获取指定存档文件中是否存在重复的主键
-from common import tool
+from common import output, tool
 import os
 import sys
 
@@ -16,7 +16,7 @@ def check_is_repeat():
     for line in tool.read_file(SAVE_FILE_PATH, 2):
         temp_list = line.replace("\n", "").split("\t")
         if temp_list[NAME_COLUMN] in history:
-            tool.print_msg(temp_list[NAME_COLUMN])
+            output.print_msg(temp_list[NAME_COLUMN])
         else:
             history.append(temp_list[NAME_COLUMN])
     return history

@@ -38,7 +38,7 @@ class Robot(object):
     # 输出错误日志
     def print_msg(self, msg):
         if self.print_function is None:
-            tool.print_msg(msg, True)
+            output.print_msg(msg, True)
         else:
             self.print_function(msg)
 
@@ -87,7 +87,7 @@ class Robot(object):
         self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
-        if not tool.create_dir(error_log_dir, 0):
+        if not path.create_dir(error_log_dir, 0):
             self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
             tool.process_exit()
             return
@@ -99,7 +99,7 @@ class Robot(object):
             self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
-            if not tool.create_dir(step_log_dir, 0):
+            if not path.create_dir(step_log_dir, 0):
                 self.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
                 tool.process_exit()
                 return
@@ -111,7 +111,7 @@ class Robot(object):
             self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
-            if not tool.create_dir(trace_log_dir, 0):
+            if not path.create_dir(trace_log_dir, 0):
                 self.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
                 tool.process_exit()
                 return
@@ -153,7 +153,7 @@ class Robot(object):
                 self.image_download_path = os.path.realpath(extra_config["image_download_path"])
             else:
                 self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", 3)
-            if not tool.create_dir(self.image_download_path, 0):
+            if not path.create_dir(self.image_download_path, 0):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
                 tool.process_exit()
@@ -167,7 +167,7 @@ class Robot(object):
                 self.video_download_path = os.path.realpath(extra_config["video_download_path"])
             else:
                 self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", 3)
-            if not tool.create_dir(self.video_download_path, 0):
+            if not path.create_dir(self.video_download_path, 0):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
                 tool.process_exit()
@@ -257,7 +257,7 @@ class Robot(object):
 # 读取配置文件
 def read_config(config_path):
     config = ConfigParser.SafeConfigParser()
-    with codecs.open(tool.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
+    with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
         config.readfp(file_handle)
     return config
 
@@ -272,7 +272,7 @@ def get_config(config, key, default_value, mode):
     if config.has_option("setting", key):
         value = config.get("setting", key).encode("UTF-8")
     else:
-        tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+        output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
     if mode == 0:
         pass
@@ -282,7 +282,7 @@ def get_config(config, key, default_value, mode):
         elif isinstance(value, str) and value.isdigit():
             value = int(value)
         else:
-            tool.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+            output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
             value = default_value
     elif mode == 2:
         if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
@@ -300,19 +300,19 @@ def get_config(config, key, default_value, mode):
 
 # 将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
 def sort_file(source_path, destination_path, start_count, file_name_length):
-    file_list = tool.get_dir_files_name(source_path, "desc")
+    file_list = path.get_dir_files_name(source_path, "desc")
     # 判断排序目标文件夹是否存在
     if len(file_list) >= 1:
-        if not tool.create_dir(destination_path, 0):
+        if not path.create_dir(destination_path, 0):
             return False
         # 倒叙排列
         for file_name in file_list:
             start_count += 1
             file_type = os.path.splitext(file_name)[1]  # 包括 .扩展名
             new_file_name = str(("%0" + str(file_name_length) + "d") % start_count) + file_type
-            tool.copy_files(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
+            path.copy_files(os.path.join(source_path, file_name), os.path.join(destination_path, new_file_name))
         # 删除临时文件夹
-        tool.delete_dir_or_file(source_path)
+        path.delete_dir_or_file(source_path)
     return True
 
 
@@ -320,7 +320,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 # default_value_list 每一位的默认值
 def read_save_data(save_data_path, key_index, default_value_list):
     result_list = {}
-    if not os.path.exists(tool.change_path_encoding(save_data_path)):
+    if not os.path.exists(path.change_path_encoding(save_data_path)):
         return result_list
     for single_save_data in tool.read_file(save_data_path, 2):
         single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
@@ -349,7 +349,7 @@ def rewrite_save_file(temp_save_data_path, save_data_path):
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     tool.write_file(tool.list_to_string(temp_list), save_data_path, 2)
-    tool.delete_dir_or_file(temp_save_data_path)
+    path.delete_dir_or_file(temp_save_data_path)
 
 
 # 生成新存档的文件路径
@@ -361,6 +361,11 @@ def get_new_save_file_path(old_save_file_path):
 # 替换目录中的指定字符串
 def replace_path(path):
     return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
+
+
+# 获取当前时间
+def get_time():
+    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
 # 判断类型是否为字典，并且检测是否存在指定的key

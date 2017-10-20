@@ -79,8 +79,6 @@ class MeiTuZZ(robot.Robot):
         }
         robot.Robot.__init__(self, sys_config)
 
-        tool.print_msg("配置文件读取完成")
-
     def main(self):
         # 解析存档文件，获取上一次的album id
         save_album_id = album_id = 1
@@ -172,7 +170,7 @@ class MeiTuZZ(robot.Robot):
             # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
             if len(temp_path_list) > 0:
                 for temp_path in temp_path_list:
-                    tool.delete_dir_or_file(temp_path)
+                    path.delete_dir_or_file(temp_path)
         except Exception, e:
             log.error("未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

@@ -23,24 +23,24 @@ def follow_account(account_id):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     follow_response = net.http_request(api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        tool.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()
     if not (robot.check_sub_key(("code",), follow_response.json_data) and robot.is_integer(follow_response.json_data["code"])):
-        tool.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()
     if int(follow_response.json_data["code"]) == 100000:
-        tool.print_msg("关注%s成功" % account_id)
+        output.print_msg("关注%s成功" % account_id)
         time.sleep(5)
         return True
     elif int(follow_response.json_data["code"]) == 100027:
-        tool.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
+        output.print_msg("关注%s失败，连续关注太多用户需要输入验证码，等待一会儿继续尝试" % account_id)
         # sleep 一段时间后再试
         time.sleep(60)
     elif int(follow_response.json_data["code"]) == 100001:
-        tool.print_msg("达到今日关注上限，退出程序" % account_id)
+        output.print_msg("达到今日关注上限，退出程序" % account_id)
         tool.process_exit()
     else:
-        tool.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
+        output.print_msg("关注%s失败，返回内容：%s，退出程序！" % (account_id, follow_response.json_data))
         tool.process_exit()
     return False
 
@@ -60,13 +60,13 @@ def main():
         for cookie_key in all_cookie_from_browser[".sina.com.cn"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
     else:
-        tool.print_msg("没有检测到登录信息")
+        output.print_msg("没有检测到登录信息")
         tool.process_exit()
     if ".login.sina.com.cn" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser[".login.sina.com.cn"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".login.sina.com.cn"][cookie_key]
     else:
-        tool.print_msg("没有检测到登录信息")
+        output.print_msg("没有检测到登录信息")
         tool.process_exit()
 
     # 检测登录状态
@@ -77,7 +77,7 @@ def main():
             COOKIE_INFO.update(new_cookies_list)
         # 再次检测登录状态
         if not weiboCommon.check_login(COOKIE_INFO):
-            tool.print_msg("没有检测到您的登录信息，无法关注账号，退出！")
+            output.print_msg("没有检测到您的登录信息，无法关注账号，退出！")
             tool.process_exit()
 
     # 存档位置
@@ -88,7 +88,7 @@ def main():
         while not follow_account(account_id):
             pass
 
-    tool.print_msg("关注完成")
+    output.print_msg("关注完成")
 
 if __name__ == "__main__":
     main()
