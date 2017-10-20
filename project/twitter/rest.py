@@ -47,10 +47,10 @@ def init():
         try:
             api_info = json.loads(base64.b64decode(api_info))
         except ValueError:
-            tool.print_msg("incorrect api info")
+            output.print_msg("incorrect api info")
             return False
         except TypeError:
-            tool.print_msg("incorrect api info")
+            output.print_msg("incorrect api info")
             return False
         else:
             api_key = api_info["api_key"]
@@ -59,7 +59,7 @@ def init():
         # 保存到文件中
         api_info = base64.b64encode(json.dumps({"api_key": api_key, "api_secret": api_secret}))
         tool.write_file(api_info, token_file_path, 2)
-        tool.print_msg("access token get succeed!")
+        output.print_msg("access token get succeed!")
         return True
     else:
         tool.delete_dir_or_file(token_file_path)

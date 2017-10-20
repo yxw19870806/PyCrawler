@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
 # 获取指定存档文件中全部毕业成员的名字
-from common import tool
+from common import output, tool
 import os
 import sys
 
@@ -33,7 +33,7 @@ def check_is_graduation():
     save_file_account_name_list = get_save_file_name_list()
     for account_name in save_file_account_name_list:
         if account_name not in member_list:
-            tool.print_msg(account_name)
+            output.print_msg(account_name)
 
 
 if __name__ == "__main__":

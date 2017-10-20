@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import process, tool
+from common import output, process, tool
 import json
 import os
 import random
@@ -48,7 +48,7 @@ def init_http_connection_pool():
 def set_proxy(ip, port):
     global HTTP_CONNECTION_POOL
     HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
-    tool.print_msg("设置代理成功")
+    output.print_msg("设置代理成功")
 
 
 # 根据传入cookie key和value，生成一个放入header中的cookie字符串
@@ -192,13 +192,13 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                 return ErrorResponse(HTTP_RETURN_CODE_EXCEPTION_CATCH)
             elif str(e).find("EOF occurred in violation of protocol") >=0:
                 time.sleep(30)
-            tool.print_msg(str(e))
-            tool.print_msg(url + " 访问超时，稍后重试")
+            output.print_msg(str(e))
+            output.print_msg(url + " 访问超时，稍后重试")
             traceback.print_exc()
 
         retry_count += 1
         if retry_count >= HTTP_REQUEST_RETRY_COUNT:
-            tool.print_msg("无法访问页面：" + url)
+            output.print_msg("无法访问页面：" + url)
             return ErrorResponse(HTTP_RETURN_CODE_RETRY)
 
 
@@ -263,7 +263,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if int(content_length) == file_size:
                 return {"status": 1, "code": 0, "file_path": file_path}
             else:
-                tool.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
+                output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         elif response.status == HTTP_RETURN_CODE_URL_INVALID:
             if create_file:
                 os.remove(file_path)

@@ -45,7 +45,7 @@ def get_discount_game_list(login_cookie):
     discount_game_list = []
     app_id_list = []
     while True:
-        tool.print_msg("开始解析第%s页打折游戏" % page_count)
+        output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         cookies_list = {"steamLogin": login_cookie}
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, cookies_list=cookies_list)
@@ -72,7 +72,7 @@ def get_discount_game_list(login_cookie):
                         temp_id_list = temp_id_list.split(",")
                         app_id += temp_id_list
                 else:
-                    tool.print_msg("bundle_info not found\n%s" % game_selector.html().encode("UTF-8"))
+                    output.print_msg("bundle_info not found\n%s" % game_selector.html().encode("UTF-8"))
             elif package_id is not None:
                 prime_id = package_id
                 game_type = "package"

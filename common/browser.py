@@ -5,6 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+from common import output
 import os
 import platform
 import sqlite3
@@ -34,14 +35,14 @@ def get_default_browser_cookie_path(browser_type):
     elif browser_type == BROWSER_TYPE_CHROME:
         return os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default")
     else:
-        _print_msg("不支持的浏览器类型：" + browser_type)
+        output.print_msg("不支持的浏览器类型：" + browser_type)
     return None
 
 
 # 从浏览器保存的cookies中获取指定key的cookie value
 def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_domains=""):
     if not os.path.exists(file_path):
-        _print_msg("cookie目录：" + file_path + " 不存在")
+        output.print_msg("cookie目录：" + file_path + " 不存在")
         return None
     if browser_type == BROWSER_TYPE_IE:
         for cookie_name in os.listdir(file_path):
@@ -87,7 +88,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
                     return None
                 return value
     else:
-        _print_msg("不支持的浏览器类型：" + browser_type)
+        output.print_msg("不支持的浏览器类型：" + browser_type)
         return None
     return None
 
@@ -116,7 +117,7 @@ def _filter_domain(domain, target_domains):
 #           }
 def get_all_cookie_from_browser(browser_type, file_path):
     if not os.path.exists(file_path):
-        _print_msg("cookie目录：" + file_path + " 不存在")
+        output.print_msg("cookie目录：" + file_path + " 不存在")
         return None
     all_cookies = {}
     if browser_type == 1:
@@ -165,19 +166,6 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
     else:
-        _print_msg("不支持的浏览器类型：" + browser_type)
+        output.print_msg("不支持的浏览器类型：" + browser_type)
         return None
     return all_cookies
-
-
-# 控制台输出（线程安全）
-def _print_msg(msg,):
-    try:
-        # 终端输出编码
-        output_encoding = sys.stdout.encoding
-        if output_encoding == "UTF-8":
-            print msg
-        else:
-            print msg.decode("UTF-8").encode(output_encoding)
-    except UnicodeEncodeError:
-        print msg

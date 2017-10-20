@@ -4,6 +4,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+from common import output
 import hashlib
 import os
 import platform
@@ -34,26 +35,6 @@ PROJECT_APP_PATH = os.path.join(PROJECT_ROOT_PATH, "project")
 PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
 # config.ini路径
 PROJECT_CONFIG_PATH = os.path.join(PROJECT_ROOT_PATH, "common/config.ini")
-
-
-# 控制台输出（线程安全）
-def print_msg(msg, is_time=True):
-    if is_time:
-        msg = get_time() + " " + msg
-    thread_lock.acquire()
-    try:
-        # 终端输出编码
-        output_encoding = sys.stdout.encoding
-        if output_encoding == "UTF-8":
-            print msg
-        else:
-            print msg.decode("UTF-8").encode(output_encoding)
-    except UnicodeEncodeError:
-        print msg
-    except:
-        raise
-    finally:
-        thread_lock.release()
 
 
 # 控制台输入
@@ -301,7 +282,7 @@ def create_dir(dir_path, create_mode):
             if os.path.isdir(dir_path):
                 return True
         except Exception, e:
-            print_msg(str(e))
+            output.print_msg(str(e))
             time.sleep(5)
     return False
 

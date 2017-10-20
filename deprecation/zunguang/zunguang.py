@@ -72,7 +72,7 @@ class ZunGuang(robot.Robot):
         }
         robot.Robot.__init__(self, sys_config)
 
-        tool.print_msg("配置文件读取完成")
+        output.print_msg("配置文件读取完成")
 
     def main(self):
         # 解析存档文件，获取上一次的page count

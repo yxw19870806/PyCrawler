@@ -46,7 +46,7 @@ def main():
         try:
             account_list_from_api = get_account_from_api()
         except robot.RobotException, e:
-            tool.print_msg("推荐账号解析失败，原因：%s" % e.message)
+            output.print_msg("推荐账号解析失败，原因：%s" % e.message)
             raise
         if len(account_list_from_api) > 0:
             account_list_from_save_data = get_account_from_save_data(save_data_path)

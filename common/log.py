@@ -5,8 +5,9 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import tool
+from common import output, tool
 import threading
+import time
 
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False
@@ -18,9 +19,9 @@ thread_lock = threading.Lock()
 
 
 def error(msg):
-    msg = tool.get_time() + " [Error] " + str(msg)
+    msg = _get_time() + " [Error] " + str(msg)
     if IS_SHOW_ERROR:
-        tool.print_msg(msg, False)
+        output.print_msg(msg, False)
     if ERROR_LOG_PATH != "":
         thread_lock.acquire()
         try:
@@ -32,9 +33,9 @@ def error(msg):
 
 
 def step(msg):
-    msg = tool.get_time() + " " + str(msg)
+    msg = _get_time() + " " + str(msg)
     if IS_SHOW_STEP:
-        tool.print_msg(msg, False)
+        output.print_msg(msg, False)
     if STEP_LOG_PATH != "":
         thread_lock.acquire()
         try:
@@ -46,9 +47,9 @@ def step(msg):
 
 
 def trace(msg):
-    msg = tool.get_time() + " " + str(msg)
+    msg = _get_time() + " " + str(msg)
     if IS_SHOW_TRACE:
-        tool.print_msg(msg, False)
+        output.print_msg(msg, False)
     if TRACE_LOG_PATH != "":
         thread_lock.acquire()
         try:
@@ -57,3 +58,8 @@ def trace(msg):
             raise
         finally:
             thread_lock.release()
+
+
+# 获取时间
+def _get_time():
+    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))

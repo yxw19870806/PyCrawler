@@ -61,7 +61,7 @@ def get_account_talks(account_id, account_name, talk_list):
                 "talk_name": talk_name,
                 "talk_description": talk_description,
             }
-        tool.print_msg(account_id + ": " + talk_name + ", " + talk_description)
+        output.print_msg(account_id + ": " + talk_name + ", " + talk_description)
 
 
 def main():
@@ -71,7 +71,7 @@ def main():
         try:
             get_account_talks(account_id, account_list[account_id], talk_list)
         except robot.RobotException, e:
-            tool.print_msg(account_id + " 获取talk列表失败，原因：%s" % e.message)
+            output.print_msg(account_id + " 获取talk列表失败，原因：%s" % e.message)
     if len(talk_list) > 0:
         with open(TALK_ID_FILE_PATH, "w") as file_handle:
             for talk_id in talk_list:
