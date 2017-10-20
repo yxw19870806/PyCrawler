@@ -97,7 +97,7 @@ def get_post_page(post_url):
             result["image_url_list"].append(image_url)
     else:
         # 获取全部图片地址
-        image_url_list = re.findall('"(http[s]?://\w*[.]?media.tumblr.com/[^"]*)"', post_page_head)
+        image_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
         new_image_url_list = {}
         for image_url in image_url_list:
             # 头像，跳过
@@ -118,25 +118,32 @@ def get_post_page(post_url):
 
 def analysis_image(image_url):
     temp_list = image_url.split("/")[-1].split(".")[0].split("_")
-    image_id = temp_list[1]
-    if len(image_id) != 17 and len(image_id) != 19:
-        log.error("unknown 1 image url: %s" % image_url)
     resolution = 0
     if temp_list[0] == "tumblr":
-        if len(temp_list) == 3:
-            if temp_list[2] == "cover":
-                pass
-            elif robot.is_integer(temp_list[2]):
-                resolution = int(temp_list[2])
-            elif temp_list[2][0] == "h" and robot.is_integer(temp_list[2][1:]):
-                resolution = int(temp_list[2][1:])
-            else:
-                log.error("unknown 3 image url: %s" % image_url)
+        image_id = temp_list[1]
+        # http://78.media.tumblr.com/tumblr_livevtbzL31qzk5tao1_cover.jpg
+        # http://78.media.tumblr.com/tumblr_ljkiptVlj61qg3k48o1_1302659992_cover.jpg
+        if temp_list[-1] == "cover":
+            pass
+        # https://78.media.tumblr.com/tumblr_lixa2piSdw1qc4p5zo1_500.jpg
+        # https://78.media.tumblr.com/tumblr_lhrk7kBVz31qbijcho1_r1_500.gif
+        # https://78.media.tumblr.com/4612757fb6b608d2d14939833ed2e244/tumblr_ouao969iP51rqmr8lo1_540.jpg
+        elif robot.is_integer(temp_list[-1]):
+            resolution = int(temp_list[-1])
+        elif temp_list[-1][0] == "h" and robot.is_integer(temp_list[-1][1:]):
+            resolution = int(temp_list[-1][1:])
+        # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
         elif len(temp_list) == 2:
             pass
         else:
-            log.error("unknown 2 image url: %s" % image_url)
+            log.error("unknown 1 image url: %s" % image_url)
+    # http://78.media.tumblr.com/TVeEqrZktkygbzi2tUbbKMGXo1_1280.jpg
+    elif not robot.is_integer(temp_list[0]):
+        image_id = temp_list[0]
     else:
+        image_id = image_url.split("/")[-1].split(".")[0]
+        log.error("unknown 2 image url: %s" % image_url)
+    if len(image_id) < 15:
         log.error("unknown 3 image url: %s" % image_url)
     return image_id, resolution
 
