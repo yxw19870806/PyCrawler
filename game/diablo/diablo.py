@@ -1,5 +1,5 @@
 # -*- coding:UTF-8  -*-
-from common import net, tool
+from common import net, output, path, tool
 import re
 
 item_list = {
@@ -100,8 +100,8 @@ for item_path, item_position in item_list.items():
         break
 
 
-tool.create_dir("data", 0)
+path.create_dir("data", 0)
 for item_path in item_attribute_list:
-    with open(tool.change_path_encoding("data\%s.txt" % item_list[item_path]), "w") as file_handle:
+    with open(path.change_path_encoding("data\%s.txt" % item_list[item_path]), "w") as file_handle:
         for item in item_attribute_list[item_path]:
             file_handle.write("\t".join(item) + "\n")

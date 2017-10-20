@@ -144,7 +144,7 @@ class Favorite(robot.Robot):
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         if weiboCommon.check_image_invalid(file_path):
-                            tool.delete_dir_or_file(file_path)
+                            path.delete_dir_or_file(file_path)
                             log.error("微博%s的第%s张图片 %s 资源已被删除，跳过" % (blog_info["blog_id"], image_count, image_url))
                         else:
                             log.step("微博%s的第%s张图片下载成功" % (blog_info["blog_id"], image_count))

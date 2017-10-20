@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import output, process, tool
+from common import output, path, process, tool
 import json
 import os
 import random
@@ -235,9 +235,9 @@ def _random_ip_address():
 #               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
 #               > 0：访问出错，对应url的http code
 def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None):
-    file_path = tool.change_path_encoding(file_path)
+    file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not tool.create_dir(os.path.dirname(file_path), 0):
+    if not path.create_dir(os.path.dirname(file_path), 0):
         return False
     create_file = False
     for retry_count in range(0, 5):
@@ -292,9 +292,9 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
 #               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
 #               > 0：访问出错，对应url的http code
 def save_net_file_list(file_url_list, file_path, header_list=None):
-    file_path = tool.change_path_encoding(file_path)
+    file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not tool.create_dir(os.path.dirname(file_path), 0):
+    if not path.create_dir(os.path.dirname(file_path), 0):
         return False
     for retry_count in range(0, 5):
         # 下载
