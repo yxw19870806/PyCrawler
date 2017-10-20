@@ -38,7 +38,7 @@ class Robot(object):
     # 输出错误日志
     def print_msg(self, msg):
         if self.print_function is None:
-            tool.print_msg(msg, True)
+            output.print_msg(msg, True)
         else:
             self.print_function(msg)
 
@@ -272,7 +272,7 @@ def get_config(config, key, default_value, mode):
     if config.has_option("setting", key):
         value = config.get("setting", key).encode("UTF-8")
     else:
-        tool.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
+        output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
     if mode == 0:
         pass
@@ -282,7 +282,7 @@ def get_config(config, key, default_value, mode):
         elif isinstance(value, str) and value.isdigit():
             value = int(value)
         else:
-            tool.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
+            output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
             value = default_value
     elif mode == 2:
         if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
