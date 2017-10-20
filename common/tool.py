@@ -37,14 +37,6 @@ PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
 PROJECT_CONFIG_PATH = os.path.join(PROJECT_ROOT_PATH, "common/config.ini")
 
 
-# 控制台输入
-def console_input(msg):
-    output_encoding = sys.stdout.encoding
-    if output_encoding != "UTF-8":
-        msg = msg.decode("UTF-8").encode(output_encoding)
-    return raw_input(msg)
-
-
 # 获取时间
 def get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
@@ -254,7 +246,7 @@ def create_dir(dir_path, create_mode):
             else:
                 is_delete = False
                 while not is_delete:
-                    input_str = console_input(get_time() + " 目录：" + str(dir_path) + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
+                    input_str = output.console_input(get_time() + " 目录：" + str(dir_path) + " 已存在，是否需要删除该文件夹并继续程序? (Y)es or (N)o: ")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
                         is_delete = True

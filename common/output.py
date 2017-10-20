@@ -33,6 +33,14 @@ def print_msg(msg, is_time=True):
         thread_lock.release()
 
 
+# 控制台输入
+def console_input(msg):
+    output_encoding = sys.stdout.encoding
+    if output_encoding != "UTF-8":
+        msg = msg.decode("UTF-8").encode(output_encoding)
+    return raw_input(msg)
+
+
 # 获取时间
 def _get_time():
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))

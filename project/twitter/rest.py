@@ -35,10 +35,10 @@ def init():
     # 文件不存在，console输入
     if not os.path.exists(token_file_path):
         while True:
-            input_str = tool.console_input("未检测到api key和api secret，是否手动输入(y)es / (N)o：").lower()
+            input_str = output.console_input("未检测到api key和api secret，是否手动输入(y)es / (N)o：").lower()
             if input_str in ["y", "yes"]:
-                api_key = tool.console_input("API KEY：")
-                api_secret = tool.console_input("API SECRET：")
+                api_key = output.console_input("API KEY：")
+                api_secret = output.console_input("API SECRET：")
                 break
             elif input_str in ["n", "no"]:
                 return False

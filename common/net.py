@@ -156,7 +156,7 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
             return response
         except urllib3.exceptions.ProxyError:
             notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
-            input_str = tool.console_input(notice).lower()
+            input_str = output.console_input(notice).lower()
             if input_str in ["c", "continue"]:
                 pass
             elif input_str in ["s", "stop"]:
