@@ -35,8 +35,11 @@ def get_one_page_post(account_id, page_count):
         post_pagination_url = "https://%s.tumblr.com/" % account_id
     else:
         post_pagination_url = "https://%s.tumblr.com/page/%s" % (account_id, page_count)
-    header_list = {"User-Agent": USER_AGENT}
-    post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=COOKIE_INFO)
+    post_pagination_response = net.http_request(post_pagination_url, header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO, redirect=False)
+    if post_pagination_response.status == 302:
+        redirect_url = post_pagination_response.getheader("Location")
+        if redirect_url is not None:
+            post_pagination_response = net.http_request(redirect_url.replace("#_=_", ""), header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO)
     result = {
         "post_url_list": [],  # 全部日志地址
         "is_over": [],  # 是不是最后一页日志
@@ -100,28 +103,43 @@ def get_post_page(post_url):
             # 头像，跳过
             if image_url.find("/avatar_") != -1:
                 continue
-            image_id = image_url[image_url.find("media.tumblr.com/") + len("media.tumblr.com/"):].split("_")[0]
+            image_id, resolution = analysis_image(image_url)
+            print image_id, resolution
             # 判断是否有分辨率更小的相同图片
             if image_id in new_image_url_list:
-                resolution = image_url.split("_")[-1].split(".")[0]
-                if resolution == "cover":
-                    continue
-                elif resolution[-1] == "h":
-                    resolution = int(resolution[:-1])
-                else:
-                    resolution = int(resolution)
-                old_resolution = new_image_url_list[image_id].split("_")[-1].split(".")[0]
-                if old_resolution == "cover":
-                    old_resolution = 0
-                elif old_resolution[-1] == "h":
-                    old_resolution = int(old_resolution[:-1])
-                else:
-                    old_resolution = int(old_resolution)
+                image_id, old_resolution = analysis_image(new_image_url_list[image_id])
+                if old_resolution == -1:
+                    log.error("unknown image url 1: %s, image url 2: %s" % (image_url, new_image_url_list[image_id]))
                 if resolution < old_resolution:
                     continue
             new_image_url_list[image_id] = image_url
         result["image_url_list"] = new_image_url_list.values()
     return result
+
+
+def analysis_image(image_url):
+    temp_list = image_url.split("/")[-1].split(".")[0].split("_")
+    image_id = temp_list[1]
+    if len(image_id) != 17 and len(image_id) != 19:
+        log.error("unknown 1 image url: %s" % image_url)
+    resolution = 0
+    if temp_list[0] == "tumblr":
+        if len(temp_list) == 3:
+            if temp_list[2] == "cover":
+                pass
+            elif robot.is_integer(temp_list[2]):
+                resolution = int(temp_list[2])
+            elif temp_list[2][0] == "h" and robot.is_integer(temp_list[2][1:]):
+                resolution = int(temp_list[2][1:])
+            else:
+                log.error("unknown 3 image url: %s" % image_url)
+        elif len(temp_list) == 2:
+            pass
+        else:
+            log.error("unknown 2 image url: %s" % image_url)
+    else:
+        log.error("unknown 3 image url: %s" % image_url)
+    return image_id, resolution
 
 
 # 获取视频播放页面
@@ -138,11 +156,13 @@ def get_video_play_page(account_id, post_id):
     if len(video_url_find) == 1:
         video_response = net.http_request(video_url_find[0], method="HEAD", redirect=False)
         # 获取视频重定向页面
-        if video_response.status == 302 and video_response.getheader("Location") is not None:
-            # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
-            # ->
-            # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
-            result["video_url"] = video_response.getheader("Location").replace("#_=_", "").replace("_r1_480", "_r1_720")
+        if video_response.status == 302:
+            redirect_url = video_response.getheader("Location")
+            if redirect_url is not None:
+                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
+                # ->
+                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
+                result["video_url"] = redirect_url.replace("#_=_", "").replace("_r1_480", "_r1_720")
         else:
             # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
             # ->
