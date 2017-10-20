@@ -4,16 +4,14 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, path
+from common import path
 import hashlib
 import os
 import platform
 import random
-import shutil
 import ssl
 import sys
 import time
-import threading
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
 if sys.version_info < (2, 7, 12):
@@ -22,7 +20,6 @@ elif sys.version_info >= (3,):
     raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
 # disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
 ssl._create_default_https_context = ssl._create_unverified_context
-thread_lock = threading.Lock()
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
@@ -35,11 +32,6 @@ PROJECT_APP_PATH = os.path.join(PROJECT_ROOT_PATH, "project")
 PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
 # config.ini路径
 PROJECT_CONFIG_PATH = os.path.join(PROJECT_ROOT_PATH, "common/config.ini")
-
-
-# 获取时间
-def get_time():
-    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
 
 
 # 根据开始与结束的字符串，截取字符串

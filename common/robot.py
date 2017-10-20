@@ -363,6 +363,11 @@ def replace_path(path):
     return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
 
 
+# 获取当前时间
+def get_time():
+    return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
+
+
 # 判断类型是否为字典，并且检测是否存在指定的key
 def check_sub_key(needles, haystack):
     if not isinstance(needles, tuple):

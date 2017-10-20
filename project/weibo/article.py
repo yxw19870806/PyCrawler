@@ -157,7 +157,7 @@ class Article(robot.Robot):
             # 再次检测登录状态
             if not weiboCommon.check_login(COOKIE_INFO):
                 while True:
-                    input_str = output.console_input(tool.get_time() + " 没有检测到登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
+                    input_str = output.console_input(robot.get_time() + " 没有检测到登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
                         COOKIE_INFO["SUB"] = tool.generate_random_string(50)
