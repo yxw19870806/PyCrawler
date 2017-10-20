@@ -79,7 +79,6 @@ def get_cookies_from_response_header(response_headers):
 # header_list       http header信息，e.g. {"Host":“www.example.com"}
 # cookies_list      cookie信息，e.g. {"cookie1":“value1", "cookie2":“value2"}
 # is_random_ip      是否使用伪造IP
-# exception_return  如果异常信息中包含以下字符串，直接返回-1
 # return            0：无法访问
 #                   -1：URL格式不正确
 #                   -2：json decode error
@@ -188,9 +187,7 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
         #     # if str(e).find("'Connection aborted.', error(10054,") >= 0:
         #     #     return ErrorResponse(-3)
         except Exception, e:
-            if exception_return and str(e).find(exception_return) >= 0:
-                return ErrorResponse(HTTP_RETURN_CODE_EXCEPTION_CATCH)
-            elif str(e).find("EOF occurred in violation of protocol") >=0:
+            if str(e).find("EOF occurred in violation of protocol") >=0:
                 time.sleep(30)
             output.print_msg(str(e))
             output.print_msg(url + " 访问超时，稍后重试")
