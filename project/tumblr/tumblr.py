@@ -101,8 +101,14 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
 
 
 # 获取日志页面
-def get_post_page(post_url):
-    post_response = net.http_request(post_url, header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO)
+def get_post_page(post_url, is_safe_mode):
+    if is_safe_mode:
+        header_list = {"User-Agent": USER_AGENT}
+        cookies_list = COOKIE_INFO
+    else:
+        header_list = None
+        cookies_list = None
+    post_response = net.http_request(post_url, header_list=header_list, cookies_list=cookies_list)
     result = {
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 全部图片地址
@@ -386,7 +392,7 @@ class Download(threading.Thread):
 
                 # 获取日志
                 try:
-                    post_response = get_post_page(post_url)
+                    post_response = get_post_page(post_url, is_safe_mode)
                 except robot.RobotException, e:
                     log.error(account_id + " 日志 %s 解析失败，原因：%s" % (post_url, e.message))
                     raise
