@@ -29,17 +29,45 @@ USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = True
 
 
+# 获取首页，判断是否支持https以及是否启用safe-mode
+def get_index_setting(account_id):
+    index_url = "https://%s.tumblr.com/" % account_id
+    index_response = net.http_request(index_url, redirect=False)
+    is_https = True
+    is_safe_mode = False
+    print index_response.status
+    print index_response.headers
+    if index_response.status == 302:
+        redirect_url = index_response.getheader("Location")
+        if index_response is None:
+            raise robot.RobotException("")
+        if redirect_url.find("https://www.tumblr.com/safe-mode?url=") == 0:
+            is_safe_mode = True
+            if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
+                is_https = False
+        else:
+            if redirect_url.find("http://") == 0:
+                is_https = False
+    return is_https, is_safe_mode
+
+
 # 获取一页的日志地址列表
-def get_one_page_post(account_id, page_count):
-    if page_count == 1:
-        post_pagination_url = "https://%s.tumblr.com/" % account_id
+def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
+    if is_https:
+        protocol_type = "https"
     else:
-        post_pagination_url = "https://%s.tumblr.com/page/%s" % (account_id, page_count)
-    post_pagination_response = net.http_request(post_pagination_url, header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO, redirect=False)
-    if post_pagination_response.status == 302:
-        redirect_url = post_pagination_response.getheader("Location")
-        if redirect_url is not None:
-            post_pagination_response = net.http_request(redirect_url.replace("#_=_", ""), header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO)
+        protocol_type = "http"
+    if page_count == 1:
+        post_pagination_url = "%s://%s.tumblr.com/" % (protocol_type, account_id)
+    else:
+        post_pagination_url = "%s://%s.tumblr.com/page/%s" % (protocol_type, account_id, page_count)
+    if is_safe_mode:
+        header_list = {"User-Agent": USER_AGENT}
+        cookies_list = COOKIE_INFO
+    else:
+        header_list = None
+        cookies_list = None
+    post_pagination_response = net.http_request(post_pagination_url, header_list=header_list, cookies_list=cookies_list)
     result = {
         "post_url_list": [],  # 全部日志地址
         "is_over": [],  # 是不是最后一页日志
@@ -155,8 +183,12 @@ def analysis_image(image_url):
 
 
 # 获取视频播放页面
-def get_video_play_page(account_id, post_id):
-    video_play_url = "https://www.tumblr.com/video/%s/%s/0" % (account_id, post_id)
+def get_video_play_page(account_id, post_id, is_https):
+    if is_https:
+        protocol_type = "https"
+    else:
+        protocol_type = "http"
+    video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
     video_play_response = net.http_request(video_play_url)
     result = {
         "is_skip": False,  # 是不是第三方视频
@@ -294,6 +326,11 @@ class Download(threading.Thread):
 
         try:
             log.step(account_id + " 开始")
+            try:
+                is_https, is_safe_mode = get_index_setting(account_id)
+            except robot.RobotException, e:
+                log.error(account_id + " 账号设置解析失败，原因：%s" % e.message)
+                raise
 
             page_count = 1
             unique_list = []
@@ -305,7 +342,7 @@ class Download(threading.Thread):
 
                 # 获取一页的日志地址
                 try:
-                    post_pagination_response = get_one_page_post(account_id, page_count)
+                    post_pagination_response = get_one_page_post(account_id, page_count, is_https, is_safe_mode)
                 except robot.RobotException, e:
                     log.error(account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
@@ -358,7 +395,7 @@ class Download(threading.Thread):
                 video_index = int(self.account_info[2]) + 1
                 while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
                     try:
-                        video_play_response = get_video_play_page(account_id, post_id)
+                        video_play_response = get_video_play_page(account_id, post_id, is_https)
                     except robot.RobotException, e:
                         log.error(account_id + " 日志 %s 的视频解析失败，原因：%s" % (post_url, e.message))
                         raise
