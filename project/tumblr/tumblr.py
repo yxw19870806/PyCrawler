@@ -120,10 +120,13 @@ def analysis_image(image_url):
     temp_list = image_url.split("/")[-1].split(".")[0].split("_")
     resolution = 0
     if temp_list[0] == "tumblr":
-        image_id = temp_list[1]
+        if temp_list[1] == "inline" and not robot.is_integer(temp_list[2]):
+            image_id = temp_list[2]
+        else:
+            image_id = temp_list[1]
         # http://78.media.tumblr.com/tumblr_livevtbzL31qzk5tao1_cover.jpg
         # http://78.media.tumblr.com/tumblr_ljkiptVlj61qg3k48o1_1302659992_cover.jpg
-        if temp_list[-1] == "cover":
+        if temp_list[-1] in ["cover", "og"]:
             pass
         # https://78.media.tumblr.com/tumblr_lixa2piSdw1qc4p5zo1_500.jpg
         # https://78.media.tumblr.com/tumblr_lhrk7kBVz31qbijcho1_r1_500.gif
@@ -132,6 +135,9 @@ def analysis_image(image_url):
             resolution = int(temp_list[-1])
         elif temp_list[-1][0] == "h" and robot.is_integer(temp_list[-1][1:]):
             resolution = int(temp_list[-1][1:])
+        # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
+        elif temp_list[-1][-1] == "h" and robot.is_integer(temp_list[-1][:-1]):
+            resolution = int(temp_list[-1][:-1])
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
         elif len(temp_list) == 2:
             pass
