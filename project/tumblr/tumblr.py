@@ -35,19 +35,23 @@ def get_index_setting(account_id):
     index_response = net.http_request(index_url, redirect=False)
     is_https = True
     is_safe_mode = False
-    print index_response.status
-    print index_response.headers
     if index_response.status == 302:
         redirect_url = index_response.getheader("Location")
-        if index_response is None:
-            raise robot.RobotException("")
-        if redirect_url.find("https://www.tumblr.com/safe-mode?url=") == 0:
+        if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
+            is_https = False
+            index_url = "http://%s.tumblr.com/" % account_id
+            index_response = net.http_request(index_url, redirect=False)
+            if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+                return is_https, is_safe_mode
+            elif index_response.status != 302:
+                raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+            redirect_url = index_response.getheader("Location")
+        if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
             is_safe_mode = True
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
                 is_https = False
-        else:
-            if redirect_url.find("http://") == 0:
-                is_https = False
+    elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
     return is_https, is_safe_mode
 
 
