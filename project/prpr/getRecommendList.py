@@ -64,7 +64,7 @@ def get_channel_account_from_api(channel_id):
                 raise robot.RobotException("返回信息'_id'字段不存在\n%s" % account_info)
             if not robot.check_sub_key(("nickname",), account_info):
                 raise robot.RobotException("返回信息'result'字段不存在\n%s" % account_info)
-            account_list[str(account_info["_id"])] = str(account_info["nickname"].encode("UTF-8"))
+            account_list[str(account_info["_id"])] = robot.filter_text(str(account_info["nickname"].encode("UTF-8")))
         page_count += 1
     return account_list
 
