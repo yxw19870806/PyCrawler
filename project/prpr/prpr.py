@@ -238,9 +238,7 @@ class Download(threading.Thread):
 
                         origin_image_url, file_param = image_url.split("?", 1)
                         file_name_and_type = origin_image_url.split("/")[-1]
-                        if file_param.find("/interlace/") >= 0:
-                            image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "interlace", file_name_and_type)
-                        elif file_param.find("/blur/") >= 0:
+                        if file_param.find("/blur/") >= 0:
                             image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "blur", file_name_and_type)
                         else:
                             image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "other", file_name_and_type)
