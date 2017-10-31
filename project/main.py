@@ -167,6 +167,14 @@ def nvshens():
     nvshens.Nvshens().main()
 
 
+# PR社
+def prpr():
+    from prpr import prpr
+    prpr_log_path = os.path.join(ROOT_PATH, "prpr")
+    os.chdir(prpr_log_path)
+    prpr.PrPr().main()
+
+
 # 篠田麻里子blog
 def shinoda_blog():
     from shinoda import shinoda
@@ -272,6 +280,7 @@ def ywkb():
 # netease_photographer()
 # nogizaka46_blog()
 # nvshens()
+# prpr()
 # shinoda_blog()
 # tuchong()
 # tumblr()
