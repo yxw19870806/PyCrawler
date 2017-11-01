@@ -15,18 +15,25 @@ RETURN_FILE_LIST_ASC = 1
 RETURN_FILE_LIST_DESC = 2
 
 
-# 文件路径编码转换
-def change_path_encoding(path):
-    if isinstance(path, str):
-        path = unicode(path, "UTF-8")
-    return os.path.realpath(path)
+def change_path_encoding(file_path):
+    """Decode file path to unicode, and return the real path"""
+    if not isinstance(file_path, unicode):
+        file_path = str(file_path)
+        file_path = unicode(file_path, "UTF-8")
+    return os.path.realpath(file_path)
 
 
-# 创建目录
-# create_mode 0 : 不存在则创建
-# create_mode 1 : 存在则删除并创建
-# create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
 def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
+    """Create directory
+
+    :param create_mode:
+        CREATE_DIR_MODE_IGNORE_IF_EXIST   create if not exist; do nothing if exist
+        CREATE_DIR_MODE_DELETE_IF_EXIST   delete first if exist and not empty
+
+    :return:
+        True    create succeed
+        False   create failed（include file_path is a file, not a directory）
+    """
     dir_path = change_path_encoding(dir_path)
     if create_mode not in [CREATE_DIR_MODE_IGNORE_IF_EXIST, CREATE_DIR_MODE_DELETE_IF_EXIST]:
         create_mode = CREATE_DIR_MODE_IGNORE_IF_EXIST
@@ -49,8 +56,8 @@ def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):
     return False
 
 
-# 删除整个目录以及目录下所有文件
 def delete_dir_or_file(dir_path):
+    """Delete file or directory（include subdirectory or files）"""
     dir_path = change_path_encoding(dir_path)
     if not os.path.exists(dir_path):
         return True
@@ -60,8 +67,8 @@ def delete_dir_or_file(dir_path):
         os.remove(dir_path)
 
 
-# 删除指定目录下的全部空文件夹
 def delete_null_dir(dir_path):
+    """Delete all empty subdirectory"""
     dir_path = change_path_encoding(dir_path)
     if os.path.isdir(dir_path):
         for file_name in os.listdir(dir_path):
@@ -76,11 +83,23 @@ def delete_null_dir(dir_path):
 # order desc 降序
 # order asc  升序
 # order 其他 不需要排序
-def get_dir_files_name(path, order=None):
-    path = change_path_encoding(path)
-    if not os.path.exists(path):
+def get_dir_files_name(dir_path, order=None):
+    """Get list of filename from specified directory
+
+    :param order:
+        RETURN_FILE_LIST_ASC    ascending order of files list
+        RETURN_FILE_LIST_DESC   descending order of files list
+        Other                   default files list
+
+    :return:
+        list of files list(unicode)
+    """
+    dir_path = change_path_encoding(dir_path)
+    if not os.path.exists(dir_path):
         return []
-    files_list = map(lambda file_name: file_name.encode("UTF-8"), os.listdir(path))
+    if not os.path.isdir(dir_path):
+        return []
+    files_list = map(lambda file_name: unicode(file_name, "UTF-8"), os.listdir(dir_path))
     # 升序
     if order == RETURN_FILE_LIST_ASC:
         return sorted(files_list, reverse=False)
@@ -91,13 +110,11 @@ def get_dir_files_name(path, order=None):
         return files_list
 
 
-# 复制文件
-# source_file_path      源文件路径
-# destination_file_path 目标文件路径
-def copy_files(source_file_path, destination_file_path):
-    source_file_path = change_path_encoding(source_file_path)
-    if not create_dir(os.path.dirname(destination_file_path)):
+def copy_files(source_dir_path, destination_dir_path):
+    """Copy Files from source directory to destination directory"""
+    source_dir_path = change_path_encoding(source_dir_path)
+    if not create_dir(os.path.dirname(destination_dir_path)):
         return False
-    destination_file_path = change_path_encoding(destination_file_path)
-    shutil.copyfile(source_file_path, destination_file_path)
+    destination_dir_path = change_path_encoding(destination_dir_path)
+    shutil.copyfile(source_dir_path, destination_dir_path)
     return True
