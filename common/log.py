@@ -60,6 +60,6 @@ def trace(msg):
             thread_lock.release()
 
 
-# 获取时间
 def _get_time():
+    """Get formatted time string(%m-%d %H:%M:%S)"""
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))
