@@ -20,6 +20,7 @@ VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
 IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
+IS_STEP_INVALID_RESOURCE = False
 
 
 # 获取指定时间后的一页作品
@@ -115,10 +116,12 @@ class PrPr(robot.Robot):
         global NEW_SAVE_DATA_PATH
         global IS_DOWNLOAD_IMAGE
         global IS_DOWNLOAD_VIDEO
+        global IS_STEP_INVALID_RESOURCE
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("IS_STEP_INVALID_RESOURCE", False, 2)),
         }
         robot.Robot.__init__(self, sys_config)
 
@@ -128,6 +131,7 @@ class PrPr(robot.Robot):
         IS_DOWNLOAD_IMAGE = self.is_download_image
         IS_DOWNLOAD_VIDEO = self.is_download_video
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        IS_STEP_INVALID_RESOURCE = self.app_config["IS_STEP_INVALID_RESOURCE"]
 
     def main(self):
         global ACCOUNTS
@@ -256,7 +260,11 @@ class Download(threading.Thread):
                         if save_file_return["status"] == 1:
                             if check_invalid(save_file_return["file_path"]):
                                 path.delete_dir_or_file(save_file_return["file_path"])
-                                log.error(account_name + " 作品%s 第%s张图 %s 无效，已删除" % (post_info["post_id"], image_index, image_url))
+                                error_message = account_name + " 作品%s 第%s张图 %s 无效，已删除" % (post_info["post_id"], image_index, image_url)
+                                if IS_STEP_INVALID_RESOURCE:
+                                    log.step(error_message)
+                                else:
+                                    log.error(error_message)
                             else:
                                 # 设置临时目录
                                 temp_path_list.append(image_file_path)
@@ -276,7 +284,11 @@ class Download(threading.Thread):
                         if save_file_return["status"] == 1:
                             if check_invalid(save_file_return["file_path"]):
                                 path.delete_dir_or_file(save_file_return["file_path"])
-                                log.error(account_name + " 作品%s 第%s个视频 %s 无效，已删除" % (post_info["post_id"], video_index, video_url))
+                                error_message = account_name + " 作品%s 第%s个视频 %s 无效，已删除" % (post_info["post_id"], video_index, video_url)
+                                if IS_STEP_INVALID_RESOURCE:
+                                    log.step(error_message)
+                                else:
+                                    log.error(error_message)
                             else:
                                 # 设置临时目录
                                 temp_path_list.append(video_file_path)
