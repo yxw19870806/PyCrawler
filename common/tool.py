@@ -166,7 +166,7 @@ def read_file(file_path, read_type=1):
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
     file_path = path.change_path_encoding(file_path)
-    if path.create_dir(os.path.dirname(file_path), 0):
+    if path.create_dir(os.path.dirname(file_path)):
         if append_type == 1:
             open_type = "a"
         else:

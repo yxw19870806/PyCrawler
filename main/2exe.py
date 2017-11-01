@@ -26,7 +26,7 @@ def create_exe(py_file_path, need_config=False, need_zip=False):
 
     # 复制其他必要文件
     if need_config:
-        path.create_dir(os.path.join(build_dist_path, "data\\"), 0)
+        path.create_dir(os.path.join(build_dist_path, "data\\"))
         path.copy_files(os.path.join(tool.PROJECT_COMMON_PATH, "config_exe.ini"), os.path.join(build_dist_path, "data\\config.ini"))
 
     # 删除临时目录
