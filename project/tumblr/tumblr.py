@@ -26,7 +26,7 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 COOKIE_INFO = {}
 USER_AGENT = None
-IS_STEP_ERROR_403_AND_404 = True
+IS_STEP_ERROR_403_AND_404 = False
 
 
 # 获取首页，判断是否支持https以及是否启用safe-mode
@@ -266,7 +266,7 @@ class Tumblr(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_GET_COOKIE: {".tumblr.com": ()},
             robot.SYS_SET_PROXY: True,
-            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0), ("IS_STEP_ERROR_403_AND_404", True, 2)),
+            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0), ("IS_STEP_ERROR_403_AND_404", False, 2)),
         }
         robot.Robot.__init__(self, sys_config)
 
