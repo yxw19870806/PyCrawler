@@ -300,7 +300,7 @@ def get_config(config, key, default_value, mode):
 
 # 将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
 def sort_file(source_path, destination_path, start_count, file_name_length):
-    file_list = path.get_dir_files_name(source_path, "desc")
+    file_list = path.get_dir_files_name(source_path, path.RETURN_FILE_LIST_DESC)
     # 判断排序目标文件夹是否存在
     if len(file_list) >= 1:
         if not path.create_dir(destination_path, 0):

@@ -10,6 +10,9 @@ import os
 import shutil
 import time
 
+RETURN_FILE_LIST_ASC = 1
+RETURN_FILE_LIST_DESC = 2
+
 
 # 文件路径编码转换
 def change_path_encoding(path):
@@ -24,7 +27,7 @@ def change_path_encoding(path):
 # create_mode 2 : 存在提示删除，确定后删除创建，取消后退出程序
 def create_dir(dir_path, create_mode):
     dir_path = change_path_encoding(dir_path)
-    if create_mode != 0 and create_mode != 1 and create_mode != 2:
+    if create_mode not in [0, 1, 2]:
         create_mode = 0
     # 目录存在
     if os.path.exists(dir_path):
@@ -107,10 +110,10 @@ def get_dir_files_name(path, order=None):
         return []
     files_list = map(lambda file_name: file_name.encode("UTF-8"), os.listdir(path))
     # 升序
-    if order == "asc":
+    if order == RETURN_FILE_LIST_ASC:
         return sorted(files_list, reverse=False)
     # 降序
-    elif order == "desc":
+    elif order == RETURN_FILE_LIST_DESC:
         return sorted(files_list, reverse=True)
     else:
         return files_list
