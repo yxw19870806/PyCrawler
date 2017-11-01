@@ -85,7 +85,7 @@ def get_cookies_from_response_header(response_headers):
 #                   -10：特殊异常捕获后的返回
 #                   其他>0：网页返回码（正常返回码为200）
 def http_request(url, method="GET", post_data=None, binary_data=None, header_list=None, cookies_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT,
-                 read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
+                 read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True):
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     method = method.upper()
