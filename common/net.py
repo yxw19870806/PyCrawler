@@ -263,12 +263,12 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         elif response.status == HTTP_RETURN_CODE_URL_INVALID:
             if create_file:
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
             return {"status": 0, "code": -1}
         # 超过重试次数，直接退出
         elif response.status == HTTP_RETURN_CODE_RETRY:
             if create_file:
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
             return {"status": 0, "code": -2}
         # 500锡类错误，重试
         elif response.status in [500, 502, 503, 504]:
@@ -276,10 +276,10 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         # 其他http code，退出
         else:
             if create_file:
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
             return {"status": 0, "code": response.status}
     if create_file:
-        os.remove(file_path)
+        path.delete_dir_or_file(file_path)
     return {"status": 0, "code": -3}
 
 
@@ -305,12 +305,12 @@ def save_net_file_list(file_url_list, file_path, header_list=None):
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
                 elif response.status == HTTP_RETURN_CODE_RETRY:
-                    os.remove(file_path)
+                    path.delete_dir_or_file(file_path)
                     return {"status": 0, "code": -1}
                 # 其他http code，退出
                 else:
-                    os.remove(file_path)
+                    path.delete_dir_or_file(file_path)
                     return {"status": 0, "code": response.status}
         return {"status": 1, "code": 0}
-    # os.remove(file_path)
+    # path.delete_dir_or_file(file_path)
     return {"status": 0, "code": -2}

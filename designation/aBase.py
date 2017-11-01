@@ -144,17 +144,17 @@ class Download(threading.Thread):
         save_file_return = net.save_net_file(self.file_url, file_path)
         if save_file_return["status"] == 1:
             if check_invalid_image(file_path):
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
                 log.step("%s的封面图片无效，自动删除" % self.title)
             else:
                 log.step("%s的封面图片下载成功" % self.title)
                 if is_exist:
                     # 如果新下载图片比原来大，则替换原本的；否则删除新下载的图片
                     if os.path.getsize(self.file_temp_path) > os.path.getsize(self.file_path):
-                        os.remove(self.file_path)
+                        path.delete_dir_or_file(self.file_path)
                         os.rename(self.file_temp_path, self.file_path)
                     else:
-                        os.remove(self.file_temp_path)
+                        path.delete_dir_or_file(self.file_temp_path)
 
                 self.thread_lock.acquire()
                 TOTAL_IMAGE_COUNT += 1

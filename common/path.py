@@ -51,7 +51,7 @@ def create_dir(dir_path, create_mode):
         # 删除原本路劲
         # 文件
         if os.path.isfile(dir_path):
-            os.remove(dir_path)
+            delete_dir_or_file(dir_path)
         # 目录
         elif os.path.isdir(dir_path):
             # 非空目录

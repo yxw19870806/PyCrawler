@@ -297,7 +297,7 @@ class Download(threading.Thread):
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         if check_image_invalid(file_path):
-                            os.remove(file_path)
+                            path.delete_dir_or_file(file_path)
                             log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_index, image_url))
                         else:
                             # 设置临时目录
