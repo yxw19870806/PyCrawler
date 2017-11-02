@@ -10,6 +10,7 @@ from common import output, path, process, tool
 import json
 import os
 import random
+import ssl
 import time
 import traceback
 import urllib3
@@ -20,6 +21,8 @@ HTTP_REQUEST_RETRY_COUNT = 10
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
+# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
+ssl._create_default_https_context = ssl._create_unverified_context
 
 HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）

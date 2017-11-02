@@ -10,20 +10,19 @@ import os
 import platform
 import random
 import string
-import ssl
 import sys
+
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
 if sys.version_info < (2, 7, 12):
     raise Exception("python版本过低，请访问官网 https://www.python.org/downloads/ 更新")
 elif sys.version_info >= (3,):
     raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
-# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
-ssl._create_default_https_context = ssl._create_unverified_context
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
     IS_EXECUTABLE = False
+
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), ".."))
 # 项目程序目录
