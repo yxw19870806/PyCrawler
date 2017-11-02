@@ -170,10 +170,13 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 timeout = urllib3.Timeout(connect=connection_timeout)
             else:
                 timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
-            if binary_data is None:
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
+            if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields)
             else:
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
+                if binary_data is None:
+                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
+                else:
+                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)
