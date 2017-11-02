@@ -29,7 +29,7 @@ def get_one_page_blog(account_id, token):
     if token:
         api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
-        blog_pagination_response = net.http_request(api_url, method="POST", post_data=post_data)
+        blog_pagination_response = net.http_request(api_url, method="POST", fields=post_data)
         if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
         script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
@@ -119,7 +119,7 @@ def get_album_page(account_id, album_id):
     while continue_token:
         api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
-        image_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, encode_multipart=False)
+        image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
         if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
         continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()

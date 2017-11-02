@@ -81,7 +81,7 @@ def login():
     login_url = "http://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
     cookies_list = {"acw_tc": COOKIE_INFO["acw_tc"], "PHPSESSID": COOKIE_INFO["PHPSESSID"]}
-    login_response = net.http_request(login_url, method="POST", post_data=login_post, cookies_list=cookies_list)
+    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=cookies_list)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if login_response.data.find('<a href="/login">登录</a>') == -1:
             return True
@@ -92,7 +92,7 @@ def login():
 def follow(account_id):
     follow_api_url = "http://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_response = net.http_request(follow_api_url, method="POST", post_data=follow_post_data)
+    follow_response = net.http_request(follow_api_url, method="POST", fields=follow_post_data)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 0 未登录，11 关注成功，12 已关注
         if int(follow_response.data) == 12:
@@ -104,7 +104,7 @@ def follow(account_id):
 def unfollow(account_id):
     unfollow_api_url = "http://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_response = net.http_request(unfollow_api_url, method="POST", post_data=unfollow_post_data)
+    unfollow_response = net.http_request(unfollow_api_url, method="POST", fields=unfollow_post_data)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if int(unfollow_response.data) == 1:
             return True

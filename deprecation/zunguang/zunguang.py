@@ -16,7 +16,7 @@ ERROR_PAGE_COUNT_CHECK = 10
 def get_album_page(page_count):
     album_url = "http://www.zunguang.com/index.php?c=api&yc=blog&ym=getOneBlog"
     post_data = {"bid": page_count}
-    album_response = net.http_request(album_url, method="POST", post_data=post_data, json_decode=True, is_random_ip=False)
+    album_response = net.http_request(album_url, method="POST", fields=post_data, json_decode=True, is_random_ip=False)
     result = {
         "album_title": "",  # 相册标题
         "image_url_list": [],  # 全部图片地址

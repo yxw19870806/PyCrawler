@@ -75,7 +75,7 @@ def get_access_token(api_key, api_secret):
     post_data = {
         "grant_type": "client_credentials"
     }
-    response = net.http_request(auth_url, method="POST", header_list=header_list, post_data=post_data, json_decode=True)
+    response = net.http_request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
     if response.status == net.HTTP_RETURN_CODE_SUCCEED and robot.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]

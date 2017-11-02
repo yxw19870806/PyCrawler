@@ -75,7 +75,7 @@ def build_header_cookie_string(cookies_list):
 
 
 def get_cookies_from_response_header(response_headers):
-    """Get cookies dictionary from http response header list"""
+    """Get dictionary of cookies values from http response header list"""
     if not isinstance(response_headers, urllib3._collections.HTTPHeaderDict):
         return {}
     if "Set-Cookie" not in response_headers:
@@ -87,7 +87,7 @@ def get_cookies_from_response_header(response_headers):
     return cookies_list
 
 
-def http_request(url, method="GET", post_data=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, redirect=True,
+def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, redirect=True,
                  connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
@@ -97,11 +97,12 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
     :param method:
         request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
 
-    :param post_data:
-        request data when method = "POST", not work with binary_data
+    :param fields:
+        dictionary type of request data, will urlencode() them to string. like post data, query string, etc
+        not work with binary_data
 
     :param binary_data:
-        request data when method = "POST", not work with post_data
+        binary type of request data, not work with post_data
 
     :param header_list:
         customize header dictionary
@@ -169,13 +170,10 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                 timeout = urllib3.Timeout(connect=connection_timeout)
             else:
                 timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
-            if method == "POST":
-                if binary_data is None:
-                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, encode_multipart=encode_multipart)
-                else:
-                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
+            if binary_data is None:
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
             else:
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout)
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)

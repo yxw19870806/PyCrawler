@@ -45,7 +45,7 @@ def get_album_page(page_count):
         # 调用API，获取相册资源
         media_url = "http://zz.mt27z.cn/ab/bd"
         post_data = {"y": page_count, "s": key}
-        media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
+        media_response = net.http_request(media_url, method="POST", fields=post_data, json_decode=True)
         if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if not robot.check_sub_key(("i",), media_response.json_data) and not robot.check_sub_key(("v",), media_response.json_data):
                 raise robot.RobotException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
