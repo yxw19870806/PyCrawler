@@ -50,11 +50,14 @@ def get_account_index_page(account_name):
 # account_id -> 490060609
 def get_one_page_media(account_id, cursor):
     api_url = "https://www.instagram.com/graphql/query/"
+    query_data = {
+        "query_id": QUERY_ID,
+        "id": account_id,
+        "first": IMAGE_COUNT_PER_PAGE,
+    }
     if cursor:
-        media_pagination_url = api_url + "?query_id=%s&id=%s&first=%s&after=%s" % (QUERY_ID, account_id, IMAGE_COUNT_PER_PAGE, cursor)
-    else:
-        media_pagination_url = api_url + "?query_id=%s&id=%s&first=%s" % (QUERY_ID, account_id, IMAGE_COUNT_PER_PAGE)
-    media_pagination_response = net.http_request(media_pagination_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+        query_data["after"] = cursor
+    media_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": None,  # 下一页媒体信息的指针
