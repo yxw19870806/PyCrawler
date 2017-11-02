@@ -5,8 +5,9 @@ import re
 
 def akb(file_handle):
     for team_id in [1, 2, 3, 4, 12]:
-        member_index_url = "http://www.akb48.co.jp/about/members/?team_id=" + str(team_id)
-        member_index_response = net.http_request(member_index_url, method="GET")
+        member_index_url = "http://www.akb48.co.jp/about/members/"
+        query_data = {"team_id": team_id}
+        member_index_response = net.http_request(member_index_url, method="GET", fields=query_data)
         if member_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             member_list_page = tool.find_sub_string(member_index_response.data, '<ul class="memberListUl">', "</ul>")
             if member_list_page:
