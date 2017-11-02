@@ -29,7 +29,7 @@ COOKIE_INFO = {}
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, cookies_list=COOKIE_INFO)
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "account_id": None,  # account id
     }
@@ -50,8 +50,12 @@ def get_account_index_page(account_name):
 # 获取一页的媒体信息
 def get_one_page_media(account_name, position_blog_id):
     media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
-    media_pagination_url += "?include_available_features=1&include_entities=1&max_position=%s" % position_blog_id
-    media_pagination_response = net.http_request(media_pagination_url, cookies_list=COOKIE_INFO, json_decode=True)
+    query_data = {
+        "include_available_features": "1",
+        "include_entities": "1",
+        "max_position": position_blog_id,
+    }
+    media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
@@ -118,7 +122,7 @@ def get_one_page_media(account_name, position_blog_id):
 # 根据视频所在推特的ID，获取视频的下载地址
 def get_video_play_page(tweet_id):
     video_play_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
-    video_play_response = net.http_request(video_play_url, cookies_list=COOKIE_INFO)
+    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "video_url": None,  # 视频地址
     }
@@ -130,7 +134,7 @@ def get_video_play_page(tweet_id):
             m3u8_file_url = m3u8_file_url.replace("\\/", "/") + ".m3u8"
             file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
             file_url_host = urllib.splithost(file_url_path)[0]
-            m3u8_file_response = net.http_request(m3u8_file_url)
+            m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                 raise robot.RobotException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
             # 是否包含的是m3u8文件（不同分辨率）
@@ -138,7 +142,7 @@ def get_video_play_page(tweet_id):
             if len(include_m3u8_file_list) > 0:
                 # 生成最高分辨率视频所在的m3u8文件地址
                 m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
-                m3u8_file_response = net.http_request(m3u8_file_url)
+                m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
                 if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     raise robot.RobotException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
 
@@ -160,7 +164,7 @@ def get_video_play_page(tweet_id):
                 if not vmap_file_url:
                     raise robot.RobotException("页面截取视频播放地址失败\n%s" % video_play_response.data)
                 vmap_file_url = vmap_file_url.replace("\\/", "/")
-                vmap_file_response = net.http_request(vmap_file_url)
+                vmap_file_response = net.http_request(vmap_file_url, method="GET")
                 if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     raise robot.RobotException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, robot.get_http_request_failed_reason(vmap_file_response.status)))
                 video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")

@@ -21,10 +21,14 @@ def get_account_from_save_data(file_path):
 
 # 调用推荐API获取全部推荐账号
 def get_account_from_api():
-    api_url = "https://api.yasaxi.com/users/recommend?tag="
-    header_list = {"x-auth-token": yasaxiCommon.AUTH_TOKEN, "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO}
+    api_url = "https://api.yasaxi.com/users/recommend"
+    query_data = {"tag": ""}
+    header_list = {
+        "x-auth-token": yasaxiCommon.AUTH_TOKEN,
+        "x-zhezhe-info": yasaxiCommon.ZHEZHE_INFO
+    }
     account_list = {}
-    api_response = net.http_request(api_url, header_list=header_list, json_decode=True)
+    api_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
     if not robot.check_sub_key(("data",), api_response.json_data):

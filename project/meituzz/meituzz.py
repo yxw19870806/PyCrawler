@@ -16,10 +16,12 @@ ERROR_PAGE_COUNT_CHECK = 50
 # 获取指定页数的相册
 def get_album_page(page_count):
     if page_count <= 25000:
-        album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
+        album_url = "http://meituzz.com/album/browse"
+        query_data = {"albumID": page_count}
     else:
-        album_url = "http://zz.mt27z.cn/ab/brVv22?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
-    album_response = net.http_request(album_url)
+        album_url = "http://zz.mt27z.cn/ab/brVv22"
+        query_data = {"y": "%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])}
+    album_response = net.http_request(album_url, method="GET", fields=query_data)
     result = {
         "image_url_list": None,  # 全部图片地址
         "is_delete": False,  # 是不是相册已被删除（或还没有内容）
@@ -45,7 +47,7 @@ def get_album_page(page_count):
         # 调用API，获取相册资源
         media_url = "http://zz.mt27z.cn/ab/bd"
         post_data = {"y": page_count, "s": key}
-        media_response = net.http_request(media_url, method="POST", post_data=post_data, json_decode=True)
+        media_response = net.http_request(media_url, method="POST", fields=post_data, json_decode=True)
         if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if not robot.check_sub_key(("i",), media_response.json_data) and not robot.check_sub_key(("v",), media_response.json_data):
                 raise robot.RobotException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)

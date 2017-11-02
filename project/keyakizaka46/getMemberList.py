@@ -22,8 +22,9 @@ def get_account_from_save_data(file_path):
 
 # 从页面获取全部成员账号
 def get_account_from_index():
-    index_url = "http://www.keyakizaka46.com/mob/news/diarShw.php?cd=member"
-    index_response = net.http_request(index_url)
+    index_url = "http://www.keyakizaka46.com/mob/news/diarShw.php"
+    query_data = {"cd": "member"}
+    index_response = net.http_request(index_url, method="GET", fields=query_data)
     account_list = {}
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))

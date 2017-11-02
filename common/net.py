@@ -10,6 +10,7 @@ from common import output, path, process, tool
 import json
 import os
 import random
+import ssl
 import time
 import traceback
 import urllib3
@@ -20,6 +21,8 @@ HTTP_REQUEST_RETRY_COUNT = 10
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
+# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
+ssl._create_default_https_context = ssl._create_unverified_context
 
 HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
@@ -29,8 +32,8 @@ HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
 
 
-# 错误response的对象
 class ErrorResponse(object):
+    """Default http_request() response object(exception return)"""
     def __init__(self, status=-1):
         self.status = status
         self.data = None
@@ -38,22 +41,31 @@ class ErrorResponse(object):
         self.json_data = []
 
 
-# 初始化urllib3的连接池
 def init_http_connection_pool():
+    """init urllib3 connection pool"""
     global HTTP_CONNECTION_POOL
     HTTP_CONNECTION_POOL = urllib3.PoolManager(retries=False)
 
 
-# 设置代理，初始化带有代理的urllib3的连接池
 def set_proxy(ip, port):
+    """init urllib3 proxy connection pool"""
     global HTTP_CONNECTION_POOL
     HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
     output.print_msg("设置代理成功")
 
 
-# 根据传入cookie key和value，生成一个放入header中的cookie字符串
-# {"cookie1":“value1", "cookie2":“value2"} -> cookie1=value1; cookie2=value2
 def build_header_cookie_string(cookies_list):
+    """generate cookies string for http request header
+
+    :param cookies_list:
+        {
+            "cookie1":“value1",
+            "cookie2":“value2"
+        }
+
+    :return:
+        cookie1=value1; cookie2=value2
+    """
     if not cookies_list:
         return ""
     temp_string = []
@@ -62,8 +74,8 @@ def build_header_cookie_string(cookies_list):
     return "; ".join(temp_string)
 
 
-# 从请求返回的set-cookie字段解析出全部的cookies内容字典
 def get_cookies_from_response_header(response_headers):
+    """Get dictionary of cookies values from http response header list"""
     if not isinstance(response_headers, urllib3._collections.HTTPHeaderDict):
         return {}
     if "Set-Cookie" not in response_headers:
@@ -75,17 +87,48 @@ def get_cookies_from_response_header(response_headers):
     return cookies_list
 
 
-# http请求(urlib3)
-# header_list       http header信息，e.g. {"Host":“www.example.com"}
-# cookies_list      cookie信息，e.g. {"cookie1":“value1", "cookie2":“value2"}
-# is_random_ip      是否使用伪造IP
-# return            0：无法访问
-#                   -1：URL格式不正确
-#                   -2：json decode error
-#                   -10：特殊异常捕获后的返回
-#                   其他>0：网页返回码（正常返回码为200）
-def http_request(url, method="GET", post_data=None, binary_data=None, header_list=None, cookies_list=None, connection_timeout=HTTP_CONNECTION_TIMEOUT,
-                 read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False, encode_multipart=False, redirect=True, exception_return=""):
+def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, redirect=True,
+                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False):
+    """Http request via urllib3
+
+    :param url:
+        the url which you want visit, start with "http://" or "https://"
+
+    :param method:
+        request method, value in ["GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]
+
+    :param fields:
+        dictionary type of request data, will urlencode() them to string. like post data, query string, etc
+        not work with binary_data
+
+    :param binary_data:
+        binary type of request data, not work with post_data
+
+    :param header_list:
+        customize header dictionary
+
+    :param cookies_list:
+        customize cookies dictionary, will replaced header_list["Cookie"]
+
+    :param encode_multipart:
+        see "encode_multipart" in urllib3.request_encode_body
+
+    :param redirect:
+        is auto redirect, when response.status in [301, 302, 303, 307, 308]
+
+    :param connection_timeout:
+        customize connection timeout seconds
+
+    :param read_timeout:
+        customize read timeout seconds
+
+    :param is_random_ip:
+        is counterfeit a request header with random ip, will replaced header_list["X-Forwarded-For"] and header_list["X-Real-Ip"]
+
+    :param json_decode:
+        is return a decoded json data when response status = 200
+        if decode failure will replace response status with HTTP_RETURN_CODE_JSON_DECODE_ERROR
+    """
     if not (url.find("http://") == 0 or url.find("https://") == 0):
         return ErrorResponse(HTTP_RETURN_CODE_URL_INVALID)
     method = method.upper()
@@ -127,13 +170,13 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
                 timeout = urllib3.Timeout(connect=connection_timeout)
             else:
                 timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
-            if method == "POST":
+            if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
+                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields)
+            else:
                 if binary_data is None:
-                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=post_data, encode_multipart=encode_multipart)
+                    response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields, encode_multipart=encode_multipart)
                 else:
                     response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, body=binary_data, encode_multipart=encode_multipart)
-            else:
-                response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout)
             if response.status == HTTP_RETURN_CODE_SUCCEED and json_decode:
                 try:
                     response.json_data = json.loads(response.data)
@@ -199,10 +242,12 @@ def http_request(url, method="GET", post_data=None, binary_data=None, header_lis
             return ErrorResponse(HTTP_RETURN_CODE_RETRY)
 
 
-# 随机生成一个合法的user agent
 def _random_user_agent():
-    # "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
-    # "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+    """Get a random valid Firefox or Chrome user agent
+
+        Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
+        Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+    """
     firefox_version_max = 55
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
     chrome_version_list = ["51.0.2704", "52.0.2743", "53.0.2785", "54.0.2840", "55.0.2883",
@@ -220,24 +265,37 @@ def _random_user_agent():
     return ""
 
 
-# 生成一个随机的IP地址
 def _random_ip_address():
+    """Get a random IP address(not necessarily correct)"""
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-# 保存网络文件
-# file_url 文件所在网址
-# file_path 文件所在本地路径，包括路径和文件名
-# need_content_type 是否需要读取response中的Content-Type作为后缀名，会自动替换file_path中的后缀名
-# return
-#       status: 0：失败，1：成功,
-#       code:   -1：无法访问（没有获得返回，可能是域名无法解析，请求被直接丢弃，地址被墙等）
-#               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
-#               > 0：访问出错，对应url的http code
 def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None):
+    """Visit web and save to local
+
+    :param file_url:
+        the remote resource URL which you want to save
+
+    :param file_path:
+        the local file path which you want to save remote resource
+
+    :param need_content_type:
+        is auto rename file according to "Content-Type" in response headers
+
+    :param header_list:
+        customize header dictionary
+
+    :param cookies_list:
+        customize cookies dictionary, will replaced header_list["Cookie"]
+
+    :return:
+        status      0 download failure, 1 download successful
+        code        failure reason
+        file_path   finally local file path(when need_content_type is True, will rename it)
+    """
     file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not path.create_dir(os.path.dirname(file_path), 0):
+    if not path.create_dir(os.path.dirname(file_path)):
         return False
     create_file = False
     for retry_count in range(0, 5):
@@ -263,12 +321,12 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path, content_length, file_url, file_size))
         elif response.status == HTTP_RETURN_CODE_URL_INVALID:
             if create_file:
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
             return {"status": 0, "code": -1}
         # 超过重试次数，直接退出
         elif response.status == HTTP_RETURN_CODE_RETRY:
             if create_file:
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
             return {"status": 0, "code": -2}
         # 500锡类错误，重试
         elif response.status in [500, 502, 503, 504]:
@@ -276,25 +334,35 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         # 其他http code，退出
         else:
             if create_file:
-                os.remove(file_path)
+                path.delete_dir_or_file(file_path)
             return {"status": 0, "code": response.status}
     if create_file:
-        os.remove(file_path)
+        path.delete_dir_or_file(file_path)
     return {"status": 0, "code": -3}
 
 
-# 保存网络文件列表（多个URL的内容按顺序写入一个文件）
-# file_url 文件所在网址
-# file_path 文件所在本地路径，包括路径和文件名
-# return
-#       status: 0：失败，1：成功,
-#       code:   -1：无法访问（没有获得返回，可能是域名无法解析，请求被直接丢弃，地址被墙等）
-#               -2：下载失败（访问没有问题，但下载后与源文件大小不一致，网络问题）
-#               > 0：访问出错，对应url的http code
-def save_net_file_list(file_url_list, file_path, header_list=None):
+def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=None):
+    """Visit web and save to local(multiple remote resource, single local file)
+
+    :param file_url_list:
+        the list of remote resource URL which you want to save
+
+    :param file_path:
+        the local file path which you want to save remote resource
+
+    :param header_list:
+        customize header dictionary
+
+    :param cookies_list:
+        customize cookies dictionary, will replaced header_list["Cookie"]
+
+    :return:
+        status      0 download failure, 1 download successful
+        code        failure reason
+    """
     file_path = path.change_path_encoding(file_path)
     # 判断保存目录是否存在
-    if not path.create_dir(os.path.dirname(file_path), 0):
+    if not path.create_dir(os.path.dirname(file_path)):
         return False
     for retry_count in range(0, 5):
         # 下载
@@ -305,12 +373,12 @@ def save_net_file_list(file_url_list, file_path, header_list=None):
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
                 elif response.status == HTTP_RETURN_CODE_RETRY:
-                    os.remove(file_path)
+                    path.delete_dir_or_file(file_path)
                     return {"status": 0, "code": -1}
                 # 其他http code，退出
                 else:
-                    os.remove(file_path)
+                    path.delete_dir_or_file(file_path)
                     return {"status": 0, "code": response.status}
         return {"status": 1, "code": 0}
-    # os.remove(file_path)
+    # path.delete_dir_or_file(file_path)
     return {"status": 0, "code": -2}

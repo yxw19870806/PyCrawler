@@ -23,8 +23,14 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
     # http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=01&page=0&rw=20
-    blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php?cd=member&ct=%02d&page=%s&rw=%s" % (int(account_id), page_count - 1, IMAGE_COUNT_PER_PAGE)
-    blog_pagination_response = net.http_request(blog_pagination_url)
+    blog_pagination_url = "http://www.keyakizaka46.com/mob/news/diarKiji.php"
+    query_data = {
+        "cd": "member",
+        "ct": "%02d" % int(account_id),
+        "page": page_count - 1,
+        "rw": IMAGE_COUNT_PER_PAGE,
+    }
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_info_list": [],  # 全部日志信息
     }

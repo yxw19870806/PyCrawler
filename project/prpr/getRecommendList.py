@@ -20,7 +20,7 @@ def get_account_from_save_data(file_path):
 
 def get_channel_from_api():
     api_url = "https://api.prpr.tinydust.cn/v3/channels/user/channels"
-    api_response = net.http_request(api_url, json_decode=True)
+    api_response = net.http_request(api_url, method="GET", json_decode=True)
     channel_list = []
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
@@ -45,8 +45,12 @@ def get_channel_account_from_api(channel_id):
     account_per_page = 50
     account_list = {}
     while True:
-        api_url = "https://api.prpr.tinydust.cn/v3/channels/%s/girls?page=%s&limit=%s" % (channel_id, page_count, account_per_page)
-        api_response = net.http_request(api_url, json_decode=True)
+        api_url = "https://api.prpr.tinydust.cn/v3/channels/%s/girls" % channel_id
+        query_data = {
+            "page": page_count,
+            "limit": account_per_page,
+        }
+        api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
         if not robot.check_sub_key(("code",), api_response.json_data):

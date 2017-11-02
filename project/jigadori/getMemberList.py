@@ -45,8 +45,9 @@ def get_account_from_index():
 
 # 获取一页账号
 def get_one_page_account(page_count):
-    account_pagination_url = "http://jigadori.fkoji.com/users?p=%s" % page_count
-    account_pagination_response = net.http_request(account_pagination_url)
+    account_pagination_url = "http://jigadori.fkoji.com/users"
+    query_data = {"p": page_count}
+    account_pagination_response = net.http_request(account_pagination_url, method="GET", fields=query_data)
     pagination_account_list = {}
     if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         robot.RobotException(robot.get_http_request_failed_reason(account_pagination_response.status))

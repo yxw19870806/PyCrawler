@@ -26,8 +26,13 @@ IS_DOWNLOAD_VIDEO = True
 
 # 获取指定页数的全部媒体信息
 def get_one_page_media(account_name, target_id):
-    media_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images?targetId=%s&limit=%s&direction=PREV" % (account_name, target_id, MESSAGE_COUNT_PER_PAGE)
-    media_pagination_response = net.http_request(media_pagination_url, json_decode=True)
+    media_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
+    query_data = {
+        "targetId": target_id,
+        "limit": MESSAGE_COUNT_PER_PAGE,
+        "direction": "PREV",
+    }
+    media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "media_info_list": [],  # 全部媒体信息
     }

@@ -5,8 +5,9 @@ import re
 
 def akb(file_handle):
     for team_id in [1, 2, 3, 4, 12]:
-        member_index_url = "http://www.akb48.co.jp/about/members/?team_id=" + str(team_id)
-        member_index_response = net.http_request(member_index_url)
+        member_index_url = "http://www.akb48.co.jp/about/members/"
+        query_data = {"team_id": team_id}
+        member_index_response = net.http_request(member_index_url, method="GET", fields=query_data)
         if member_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             member_list_page = tool.find_sub_string(member_index_response.data, '<ul class="memberListUl">', "</ul>")
             if member_list_page:
@@ -43,7 +44,7 @@ def ske(file_handle):
         "SKE48 Team Kenkyusei": ("<!-- LIST - KENKYUSEI -->", "<!-- //LIST - KENKYUSEI -->")
     }
     index_url = "http://www.ske48.co.jp/profile/list.php"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         for team_name in split_list:
             team_page = tool.find_sub_string(index_response.data, split_list[team_name][0], split_list[team_name][1])
@@ -79,7 +80,7 @@ def nmb(file_handle):
         "kenkyusei": "NMB48 Team Kenkyusei",
     }
     index_url = "http://www.nmb48.com/member/"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         team_page_list = re.findall("<!--▼チーム別領域ボックス▼-->([\s|\S]*?)<!--▲チーム別領域ボックス▲--> ", index_response.data)
         for team_page in team_page_list:
@@ -117,7 +118,7 @@ def nmb(file_handle):
 
 def hkt(file_handle):
     index_url = "http://www.hkt48.jp/profile/"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         team_find = re.findall("(<h3>[\s|\S]*?)<!-- / .contsbox --></div>", index_response.data)
         for team_page in team_find:
@@ -147,7 +148,7 @@ def hkt(file_handle):
 
 def jkt(file_handle):
     index_url = "http://www.jkt48.com/member/list"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         page = tool.find_sub_string(index_response.data, '<div id="mainCol">', "<!--end #mainCol-->", 1)
         start_index = 0

@@ -35,7 +35,7 @@ SUB_PATH_LIST = {
 # 获取指定一页的图集
 def get_one_page_album(sub_path, page_count):
     album_pagination_url = "http://www.88mmw.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
-    album_pagination_response = net.http_request(album_pagination_url)
+    album_pagination_response = net.http_request(album_pagination_url, method="GET")
     result = {
         "album_info_list": [],  # 全部图集信息
         "is_over": False,  # 是不是最后一页图集
@@ -84,7 +84,7 @@ def get_album_photo(sub_path, page_id):
             photo_pagination_url = "http://www.88mmw.com/%s/%s" % (sub_path, page_id)
         else:
             photo_pagination_url = "http://www.88mmw.com/%s/%s/index_%s.html" % (sub_path, page_id, page_count)
-        photo_pagination_response = net.http_request(photo_pagination_url)
+        photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
         if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(photo_pagination_response.status))
         # 页面编码

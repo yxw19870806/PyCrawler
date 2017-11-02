@@ -28,7 +28,7 @@ def get_account_from_save_data(file_path):
 # 根据talk id获取全部参与者
 def get_member_from_talk(talk_id):
     talk_index_url = "https://7gogo.jp/%s" % talk_id
-    talk_index_response = net.http_request(talk_index_url)
+    talk_index_response = net.http_request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(talk_index_response.status))

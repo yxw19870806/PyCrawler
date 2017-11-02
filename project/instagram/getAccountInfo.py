@@ -14,7 +14,7 @@ import sys
 # 获取账号首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s/" % account_name
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "account_info": "",  # 自我介绍
         "external_url": "",  # 外部链接地址

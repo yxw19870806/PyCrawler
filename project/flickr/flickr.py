@@ -22,7 +22,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号相册首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "site_key": None,  # site key
         "user_id": None,  # user id
@@ -64,7 +64,7 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
         "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "get_user_info": 0, "user_id": user_id, "api_key": api_key, "hermes": 1, "reqId": request_id,
         "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
-    photo_pagination_response = net.http_request(api_url, method="POST", post_data=post_data, json_decode=True)
+    photo_pagination_response = net.http_request(api_url, method="POST", fields=post_data, json_decode=True)
     result = {
         "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片

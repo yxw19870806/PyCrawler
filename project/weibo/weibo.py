@@ -23,13 +23,19 @@ COOKIE_INFO = {"SUB": ""}
 
 # 获取一页的图片信息
 def get_one_page_photo(account_id, page_count):
-    photo_pagination_url = "http://photo.weibo.com/photos/get_all?uid=%s&count=%s&page=%s&type=3" % (account_id, IMAGE_COUNT_PER_PAGE, page_count)
+    photo_pagination_url = "http://photo.weibo.com/photos/get_all"
+    query_data = {
+        "uid": account_id,
+        "count": IMAGE_COUNT_PER_PAGE,
+        "page": page_count,
+        "type": "3",
+    }
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
         "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片
     }
-    photo_pagination_response = net.http_request(photo_pagination_url, cookies_list=cookies_list, json_decode=True)
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("data",), photo_pagination_response.json_data):
             raise robot.RobotException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)

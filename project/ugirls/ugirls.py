@@ -15,7 +15,7 @@ import traceback
 # 获取指定页数的图集
 def get_album_page(album_id):
     album_url = "http://www.ugirls.com/Content/List/Magazine-%s.html" % album_id
-    album_response = net.http_request(album_url)
+    album_response = net.http_request(album_url, method="GET")
     result = {
         "image_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是不是已经被删除
@@ -49,7 +49,7 @@ def get_album_page(album_id):
 # 从图集首页获取最新的图集id
 def get_index_page():
     index_url = "http://www.ugirls.com/Content/"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": None,  # 最新图集id
     }

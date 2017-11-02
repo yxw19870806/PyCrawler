@@ -25,8 +25,10 @@ IS_DOWNLOAD_VIDEO = True
 
 # 获取全部图片地址列表
 def get_image_index_page(account_id):
-    image_index_url = "http://www.yizhibo.com/member/personel/user_photos?memberid=%s" % account_id
-    image_index_response = net.http_request(image_index_url)
+    # http://www.yizhibo.com/member/personel/user_photos?memberid=6066534
+    image_index_url = "http://www.yizhibo.com/member/personel/user_photos"
+    query_data = {"memberid": account_id}
+    image_index_response = net.http_request(image_index_url, method="GET", fields=query_data)
     result = {
         "image_url_list": [],  # 全部图片地址
     }
@@ -66,8 +68,10 @@ def get_image_header(image_url):
 
 # 获取全部视频ID列表
 def get_video_index_page(account_id):
-    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos?memberid=%s" % account_id
-    video_pagination_response = net.http_request(video_pagination_url)
+    # http://www.yizhibo.com/member/personel/user_videos?memberid=6066534
+    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos" % account_id
+    query_data = {"memberid": account_id}
+    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
     result = {
         "is_exist": True,  # 是不是存在视频
         "video_id_list": [],  # 全部视频id
@@ -88,8 +92,9 @@ def get_video_index_page(account_id):
 # video_id -> qxonW5XeZru03nUB
 def get_video_info_page(video_id):
     # http://api.xiaoka.tv/live/web/get_play_live?scid=xX9-TLVx0xTiSZ69
-    video_info_url = "http://api.xiaoka.tv/live/web/get_play_live?scid=%s" % video_id
-    video_info_response = net.http_request(video_info_url, json_decode=True)
+    video_info_url = "http://api.xiaoka.tv/live/web/get_play_live"
+    query_data = {"scid": video_id}
+    video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_time": False,  # 视频上传时间
         "video_url_list": [],  # 全部视频分集地址
@@ -112,7 +117,7 @@ def get_video_info_page(video_id):
     if not robot.check_sub_key(("linkurl",), video_info_response.json_data["data"]):
         raise robot.RobotException("返回信息'linkurl'字段不存在\n%s" % video_info_response.json_data)
     video_file_url = str(video_info_response.json_data["data"]["linkurl"])
-    video_file_response = net.http_request(video_file_url)
+    video_file_response = net.http_request(video_file_url, method="GET")
     if video_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         ts_id_list = re.findall("([\S]*.ts)", video_file_response.data)
         if len(ts_id_list) == 0:

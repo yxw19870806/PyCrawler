@@ -23,8 +23,14 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定页数的全部视频
 def get_one_page_video(account_id, page_count):
     # http://www.meipai.com/users/user_timeline?uid=22744352&page=1&count=20&single_column=1
-    video_pagination_url = "http://www.meipai.com/users/user_timeline?uid=%s&page=%s&count=%s&single_column=1" % (account_id, page_count, VIDEO_COUNT_PER_PAGE)
-    video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
+    video_pagination_url = "http://www.meipai.com/users/user_timeline"
+    query_data = {
+        "uid": account_id,
+        "page": page_count,
+        "count": VIDEO_COUNT_PER_PAGE,
+        "single_column": 1,
+    }
+    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
         "video_info_list": [],  # 全部视频信息

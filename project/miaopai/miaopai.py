@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # account_id -> mi9wmdhhof
 def get_account_index_page(account_id):
     account_index_url = "http://www.miaopai.com/u/paike_%s/relation/follow.htm" % account_id
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "user_id": None,  # 账号user id
     }
@@ -40,8 +40,13 @@ def get_account_index_page(account_id):
 # suid -> 0r9ewgQ0v7UoDptu
 def get_one_page_video(suid, page_count):
     # http://www.miaopai.com/gu/u?page=1&suid=0r9ewgQ0v7UoDptu&fen_type=channel
-    video_pagination_url = "http://www.miaopai.com/gu/u?page=%s&suid=%s&fen_type=channel" % (page_count, suid)
-    video_pagination_response = net.http_request(video_pagination_url, json_decode=True)
+    video_pagination_url = "http://www.miaopai.com/gu/u"
+    query_data = {
+        "page": page_count,
+        "suid": suid,
+        "fen_type": "channel",
+    }
+    video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "is_over": False,  # 是不是最后一页视频
         "video_id_list": [],  # 全部视频id
@@ -65,8 +70,9 @@ def get_one_page_video(suid, page_count):
 
 # 获取指定id视频的详情页
 def get_video_info_page(video_id):
-    video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
-    video_info_response = net.http_request(video_info_url, json_decode=True)
+    video_info_url = "http://gslb.miaopai.com/stream/%s.json" % video_id
+    query_data = {"token": ""}
+    video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "video_url": None,  # 视频地址
     }

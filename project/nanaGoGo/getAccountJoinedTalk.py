@@ -29,7 +29,7 @@ def get_account_from_file():
 # 根据talk id获取全部参与者
 def get_account_talks(account_id, account_name, talk_list):
     account_index = "https://7gogo.jp/users/%s" % account_id
-    account_index_response = net.http_request(account_index)
+    account_index_response = net.http_request(account_index, method="GET")
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
     talk_list_selector = PQ(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")

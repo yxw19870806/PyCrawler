@@ -26,7 +26,7 @@ def get_account_index_page(account_name):
         account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
-    account_index_response = net.http_request(account_index_url, redirect=False)
+    account_index_response = net.http_request(account_index_url, method="GET", redirect=False)
     result = {
         "account_id": None,  # account id（字母账号->数字账号)
     }
@@ -50,8 +50,9 @@ def get_account_index_page(account_name):
 # post_time -> 2016-11-11 11:11:11
 def get_one_page_album(account_id, post_time):
     # https://deer-vision.tuchong.com/rest/sites/1186455/posts/2016-11-11%2011:11:11?limit=20
-    album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s?limit=%s" % (account_id, post_time, IMAGE_COUNT_PER_PAGE)
-    album_pagination_response = net.http_request(album_pagination_url, json_decode=True)
+    album_pagination_url = "https://www.tuchong.com/rest/sites/%s/posts/%s" % (account_id, post_time)
+    query_data = {"limit": IMAGE_COUNT_PER_PAGE}
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_info_list": [],  # 全部图片信息
         "is_error": False,  # 是不是格式不符合

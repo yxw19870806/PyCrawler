@@ -15,6 +15,7 @@ from common import *
 import yasaxiCommon
 
 ACCOUNTS = []
+IMAGE_COUNT_PER_PAGE = 20
 TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -22,7 +23,12 @@ NEW_SAVE_DATA_PATH = ""
 
 # 获取指定页数的全部日志
 def get_one_page_photo(account_id, cursor):
-    photo_pagination_url = "https://api.yasaxi.com/statuses/user?userId=%s&cursor=%s&count=20" % (account_id, cursor)
+    photo_pagination_url = "https://api.yasaxi.com/statuses/user"
+    query_data = {
+        "userId": account_id,
+        "cursor": cursor,
+        "count": IMAGE_COUNT_PER_PAGE,
+    }
     header_list = {
         "x-access-token": yasaxiCommon.ACCESS_TOKEN,
         "x-auth-token": yasaxiCommon.AUTH_TOKEN,
@@ -35,7 +41,7 @@ def get_one_page_photo(account_id, cursor):
         "next_page_cursor": None,  # 下一页图片的指针
         "status_info_list": [],  # 全部状态信息
     }
-    photo_pagination_response = net.http_request(photo_pagination_url, header_list=header_list, is_random_ip=False, json_decode=True)
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, header_list=header_list, is_random_ip=False, json_decode=True)
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
     # 异常返回

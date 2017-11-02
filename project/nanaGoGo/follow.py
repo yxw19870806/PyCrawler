@@ -33,7 +33,7 @@ def follow_account(account_id):
     header_list = {
         "X-7gogo-WebAuth": "yTRBxlzKsGnYfln9VQCx9ZQTZFERgoELVRh82k_lwDy=",
     }
-    follow_response = net.http_request(follow_api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+    follow_response = net.http_request(follow_api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("data", "error"), follow_response.json_data) and follow_response.json_data["data"] is None:
             output.print_msg("关注%s成功" % account_id)

@@ -12,9 +12,8 @@ import time
 thread_lock = threading.Lock()
 
 
-# 控制台输出
-# thread_lock   threading.Lock()，传入锁保证线程安全
 def print_msg(msg, is_time=True):
+    """Console print decoded message(according to coding of sys.stdout.encoding), thread safe"""
     if is_time:
         msg = _get_time() + " " + msg
     thread_lock.acquire()
@@ -33,14 +32,14 @@ def print_msg(msg, is_time=True):
         thread_lock.release()
 
 
-# 控制台输入
 def console_input(msg):
+    """Console input"""
     output_encoding = sys.stdout.encoding
     if output_encoding != "UTF-8":
         msg = msg.decode("UTF-8").encode(output_encoding)
     return raw_input(msg)
 
 
-# 获取时间
 def _get_time():
+    """Get formatted time string(%m-%d %H:%M:%S)"""
     return time.strftime("%m-%d %H:%M:%S", time.localtime(time.time()))

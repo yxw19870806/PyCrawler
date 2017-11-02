@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
-    blog_pagination_response = net.http_request(blog_pagination_url)
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     result = {
         "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是不是最后一页日志
@@ -68,7 +68,7 @@ def get_one_page_blog(account_name, page_count):
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
     blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    blog_response = net.http_request(blog_url)
+    blog_response = net.http_request(blog_url, method="GET")
     result = {
         "image_url_list": [],  # 全部图片地址
     }
@@ -297,7 +297,7 @@ class Download(threading.Thread):
                     save_file_return = net.save_net_file(image_url, file_path)
                     if save_file_return["status"] == 1:
                         if check_image_invalid(file_path):
-                            os.remove(file_path)
+                            path.delete_dir_or_file(file_path)
                             log.step(account_name + " 第%s张图片 %s 不符合规则，删除" % (image_index, image_url))
                         else:
                             # 设置临时目录

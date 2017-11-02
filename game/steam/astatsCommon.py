@@ -11,8 +11,9 @@ from common import output, net, robot, tool
 
 # 获取指定游戏是否存在无效成就
 def get_game_invalid_achievements(game_id):
-    game_index_url = "http://astats.astats.nl/astats/Steam_Game_Info.php?AppID=%s" % game_id
-    game_index_response = net.http_request(game_index_url)
+    game_index_url = "http://astats.astats.nl/astats/Steam_Game_Info.php"
+    query_data = {"AppID": game_id}
+    game_index_response = net.http_request(game_index_url, method="GET", fields=query_data)
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("游戏 %s 访问失败" % game_id)
         tool.process_exit()

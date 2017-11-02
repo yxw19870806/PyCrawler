@@ -15,7 +15,7 @@ import traceback
 # 获取作品页面
 def get_album_page(album_id):
     album_url = "http://www.cnu.cc/works/%s" % album_id
-    album_response = net.http_request(album_url)
+    album_response = net.http_request(album_url, method="GET")
     result = {
         "album_title": "",  # 作品标题
         "image_url_list": [],  # 全部图片地址

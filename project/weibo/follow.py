@@ -21,7 +21,7 @@ def follow_account(account_id):
     }
     header_list = {"Referer": "http://weibo.com/%s/follow" % account_id}
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    follow_response = net.http_request(api_url, method="POST", post_data=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
+    follow_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()

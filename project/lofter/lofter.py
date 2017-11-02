@@ -22,8 +22,9 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     # http://moexia.lofter.com/?page=1
-    blog_pagination_url = "http://%s.lofter.com/?page=%s" % (account_name, page_count)
-    blog_pagination_response = net.http_request(blog_pagination_url)
+    blog_pagination_url = "http://%s.lofter.com" % account_name
+    query_data = {"page": page_count}
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_url_list": [],  # 全部日志地址
     }
@@ -41,7 +42,7 @@ def get_one_page_blog(account_name, page_count):
 
 # 获取日志
 def get_blog_page(blog_url):
-    blog_response = net.http_request(blog_url)
+    blog_response = net.http_request(blog_url, method="GET")
     result = {
         "image_url_list": [],  # 全部图片地址
     }

@@ -50,9 +50,10 @@ def get_follow_list(account_name):
 
 # 获取一页的关注列表
 def get_one_page_follow(account_name, auth_token, position_id):
-    follow_pagination_url = "https://twitter.com/%s/following/users?max_position=%s" % (account_name, position_id)
+    follow_pagination_url = "https://twitter.com/%s/following/users" % account_name
+    query_data = {"max_position": position_id}
     cookies_list = {"auth_token": auth_token}
-    follow_pagination_response = net.http_request(follow_pagination_url, cookies_list=cookies_list, json_decode=True)
+    follow_pagination_response = net.http_request(follow_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_pagination_response.json_data):
             return follow_pagination_response.json_data

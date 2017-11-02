@@ -6,7 +6,7 @@ https://www.nvshens.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import log, net, robot, tool
+from common import *
 import os
 import re
 import traceback
@@ -15,7 +15,7 @@ import traceback
 # 获取图集首页
 def get_index_page():
     index_url = "https://www.nvshens.com/gallery/"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": None,  # 最新图集id
     }
@@ -39,7 +39,7 @@ def get_album_photo(album_id):
     }
     while page_count <= max_page_count:
         album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)
-        album_pagination_response = net.http_request(album_pagination_url)
+        album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(album_pagination_response.status))
         # 判断图集是否已经被删除

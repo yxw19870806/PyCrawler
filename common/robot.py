@@ -87,7 +87,7 @@ class Robot(object):
         self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
-        if not path.create_dir(error_log_dir, 0):
+        if not path.create_dir(error_log_dir):
             self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
             tool.process_exit()
             return
@@ -99,7 +99,7 @@ class Robot(object):
             self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
-            if not path.create_dir(step_log_dir, 0):
+            if not path.create_dir(step_log_dir):
                 self.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
                 tool.process_exit()
                 return
@@ -111,7 +111,7 @@ class Robot(object):
             self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
-            if not path.create_dir(trace_log_dir, 0):
+            if not path.create_dir(trace_log_dir):
                 self.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
                 tool.process_exit()
                 return
@@ -153,7 +153,7 @@ class Robot(object):
                 self.image_download_path = os.path.realpath(extra_config["image_download_path"])
             else:
                 self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", 3)
-            if not path.create_dir(self.image_download_path, 0):
+            if not path.create_dir(self.image_download_path):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
                 tool.process_exit()
@@ -167,7 +167,7 @@ class Robot(object):
                 self.video_download_path = os.path.realpath(extra_config["video_download_path"])
             else:
                 self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", 3)
-            if not path.create_dir(self.video_download_path, 0):
+            if not path.create_dir(self.video_download_path):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
                 tool.process_exit()
@@ -300,10 +300,10 @@ def get_config(config, key, default_value, mode):
 
 # 将指定文件夹内的所有文件排序重命名并复制到其他文件夹中
 def sort_file(source_path, destination_path, start_count, file_name_length):
-    file_list = path.get_dir_files_name(source_path, "desc")
+    file_list = path.get_dir_files_name(source_path, path.RETURN_FILE_LIST_DESC)
     # 判断排序目标文件夹是否存在
     if len(file_list) >= 1:
-        if not path.create_dir(destination_path, 0):
+        if not path.create_dir(destination_path):
             return False
         # 倒叙排列
         for file_name in file_list:

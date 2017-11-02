@@ -15,8 +15,9 @@ import traceback
 
 # 获取指定一页的壁纸
 def get_one_page_photo(page_count):
-    photo_pagination_url = "http://kelagirls.com/bizhi!findForIndexMore.action?page=%s" % page_count
-    photo_pagination_response = net.http_request(photo_pagination_url)
+    photo_pagination_url = "http://kelagirls.com/bizhi!findForIndexMore.action"
+    query_data = {"page": page_count}
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
     result = {
         "image_info_list": [],  # 全部图片地址
         "is_over": [],  # 是不是最后一页壁纸

@@ -18,9 +18,10 @@ COOKIE_INFO = {"SUB": ""}
 # 获取一页的收藏微博ge
 def get_one_page_favorite(page_count):
     # http://www.weibo.com/fav?page=1
-    favorite_pagination_url = "http://www.weibo.com/fav?page=%s" % page_count
+    favorite_pagination_url = "http://www.weibo.com/fav"
+    query_data = {"page": page_count}
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    favorite_pagination_response = net.http_request(favorite_pagination_url, cookies_list=cookies_list)
+    favorite_pagination_response = net.http_request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
     result = {
         "blog_info_list": [],  # 所有微博信息
         "is_error": False,  # 是不是不符合格式

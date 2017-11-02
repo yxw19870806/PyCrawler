@@ -19,7 +19,7 @@ def get_one_page_blog(page_count):
         "blog_info_list": [],  # 全部日志信息
         "is_over": False,  # 是不是最后一页日志
     }
-    blog_pagination_response = net.http_request(blog_pagination_url)
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     # 检测是否是最后一页

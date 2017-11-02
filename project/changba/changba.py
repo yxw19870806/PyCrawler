@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号首页页面
 def get_account_index_page(account_id):
     account_index_url = "http://changba.com/u/%s" % account_id
-    account_index_response = net.http_request(account_index_url, redirect=False)
+    account_index_response = net.http_request(account_index_url, method="GET", redirect=False)
     result = {
         "user_id": None,  # user id
     }
@@ -44,8 +44,12 @@ def get_account_index_page(account_id):
 # user_id -> 4306405
 def get_one_page_audio(user_id, page_count):
     # http://changba.com/member/personcenter/loadmore.php?userid=4306405&pageNum=1
-    audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php?userid=%s&pageNum=%s" % (user_id, page_count - 1)
-    audit_pagination_response = net.http_request(audit_pagination_url, json_decode=True)
+    audit_pagination_url = "http://changba.com/member/personcenter/loadmore.php"
+    query_data = {
+        "userid": user_id,
+        "pageNum": page_count - 1,
+    }
+    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
@@ -92,7 +96,7 @@ def get_audio_play_page(audio_en_word_id, audio_type):
         "audio_url": None,  # 歌曲地址
         "is_delete": False,  # 是不是已经被删除
     }
-    audio_play_response = net.http_request(audio_play_url)
+    audio_play_response = net.http_request(audio_play_url, method="GET")
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
     if audio_play_response.data.find("该作品可能含有不恰当内容将不能显示。") > -1:
@@ -128,8 +132,14 @@ def get_audio_play_page(audio_en_word_id, audio_type):
                 vid = tool.find_sub_string(bokecc_param, "vid=", "&")
                 if not vid:
                     raise robot.RobotException("bokecc参数截取vid失败\n%s" % bokecc_param)
-                bokecc_xml_url = "https://p.bokecc.com/servlet/playinfo?vid=%s&m=1&fv=WIN&rnd=%s" % (vid, str(int(time.time()))[-4:])
-                bokecc_xml_response = net.http_request(bokecc_xml_url)
+                bokecc_xml_url = "https://p.bokecc.com/servlet/playinfo"
+                query_data = {
+                    "vid": vid,
+                    "m": 1,
+                    "fv": "WIN",
+                    "rnd": str(int(time.time()))[-4:],
+                }
+                bokecc_xml_response = net.http_request(bokecc_xml_url, method="GET", fields=query_data)
                 if bokecc_xml_response.status != net.HTTP_RETURN_CODE_SUCCEED:
                     raise robot.RobotException("bokecc xml文件 %s 访问失败" % bokecc_xml_url)
                 audio_url_find = re.findall('playurl="([^"]*)"', bokecc_xml_response.data)

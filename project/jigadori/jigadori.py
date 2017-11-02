@@ -15,8 +15,9 @@ import traceback
 
 # 获取指定页数的全部图片
 def get_one_page_photo(page_count):
-    photo_pagination_url = "http://jigadori.fkoji.com/?p=%s" % page_count
-    photo_pagination_response = net.http_request(photo_pagination_url)
+    photo_pagination_url = "http://jigadori.fkoji.com/"
+    query_data = {"p": page_count}
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
     result = {
         "image_info_list": [],  # 全部图片信息
     }

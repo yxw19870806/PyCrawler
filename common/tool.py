@@ -9,21 +9,20 @@ import hashlib
 import os
 import platform
 import random
-import ssl
+import string
 import sys
-import time
+
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
 if sys.version_info < (2, 7, 12):
     raise Exception("python版本过低，请访问官网 https://www.python.org/downloads/ 更新")
 elif sys.version_info >= (3,):
     raise Exception("仅支持python2.X，请访问官网 https://www.python.org/downloads/ 安装最新的python2")
-# disable URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:590)>
-ssl._create_default_https_context = ssl._create_unverified_context
 if getattr(sys, "frozen", False):
     IS_EXECUTABLE = True
 else:
     IS_EXECUTABLE = False
+
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), ".."))
 # 项目程序目录
@@ -93,23 +92,22 @@ def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
 # 生成指定长度的随机字符串
 # char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
 def generate_random_string(string_length, char_lib_type=7):
-    result = ""
     char_lib = {
-        1: "abcdefghijklmnopqrstuvwxyz",  # 小写字母
-        2: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",  # 大写字母
+        1: string.lowercase,  # 小写字母
+        2: string.uppercase,  # 大写字母
         4: "0123456789",  # 数字
     }
-    random_string = ""
-    for i in char_lib:
+    char_pool = []
+    for i, random_string in char_lib.iteritems():
         if char_lib_type & i == i:
-            for char in char_lib[i]:
-                random_string += char
-    if not random_string:
-        return result
-    length = len(random_string) - 1
-    for i in range(0, string_length):
-        result += random_string[random.randint(0, length)]
-    return result
+            char_pool.append(random_string)
+    char_pool = "".join(char_pool)
+    if not char_pool:
+        return ""
+    result = []
+    for random_count in range(0, string_length):
+        result.append(random.choice(char_pool))
+    return "".join(result)
 
 
 # 获取指定文件的MD5值
@@ -166,7 +164,7 @@ def read_file(file_path, read_type=1):
 # type=2: 覆盖
 def write_file(msg, file_path, append_type=1):
     file_path = path.change_path_encoding(file_path)
-    if path.create_dir(os.path.dirname(file_path), 0):
+    if path.create_dir(os.path.dirname(file_path)):
         if append_type == 1:
             open_type = "a"
         else:
