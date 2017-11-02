@@ -90,11 +90,9 @@ def _get_api_url(end_point):
 # 根据user_id获取用户信息
 def get_user_info_by_user_id(user_id):
     api_url = _get_api_url("users/show.json")
-    api_url += "?user_id=%s" % user_id
-    header_list = {
-        "Authorization": "Bearer %s" % ACCESS_TOKEN,
-    }
-    response = net.http_request(api_url, method="GET", header_list=header_list, json_decode=True)
+    query_data = {"user_id": user_id}
+    header_list = {"Authorization": "Bearer %s" % ACCESS_TOKEN}
+    response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return response.json_data
     return {}

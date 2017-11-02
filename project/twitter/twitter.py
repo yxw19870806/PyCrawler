@@ -50,8 +50,12 @@ def get_account_index_page(account_name):
 # 获取一页的媒体信息
 def get_one_page_media(account_name, position_blog_id):
     media_pagination_url = "https://twitter.com/i/profiles/show/%s/media_timeline" % account_name
-    media_pagination_url += "?include_available_features=1&include_entities=1&max_position=%s" % position_blog_id
-    media_pagination_response = net.http_request(media_pagination_url, method="GET", cookies_list=COOKIE_INFO, json_decode=True)
+    query_data = {
+        "include_available_features": "1",
+        "include_entities": "1",
+        "max_position": position_blog_id,
+    }
+    media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
