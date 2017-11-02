@@ -9,9 +9,9 @@ import hashlib
 import os
 import platform
 import random
+import string
 import ssl
 import sys
-import time
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")
 if sys.version_info < (2, 7, 12):
@@ -93,23 +93,22 @@ def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
 # 生成指定长度的随机字符串
 # char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
 def generate_random_string(string_length, char_lib_type=7):
-    result = ""
     char_lib = {
-        1: "abcdefghijklmnopqrstuvwxyz",  # 小写字母
-        2: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",  # 大写字母
+        1: string.lowercase,  # 小写字母
+        2: string.uppercase,  # 大写字母
         4: "0123456789",  # 数字
     }
-    random_string = ""
-    for i in char_lib:
+    char_pool = []
+    for i, random_string in char_lib.iteritems():
         if char_lib_type & i == i:
-            for char in char_lib[i]:
-                random_string += char
-    if not random_string:
-        return result
-    length = len(random_string) - 1
-    for i in range(0, string_length):
-        result += random_string[random.randint(0, length)]
-    return result
+            char_pool.append(random_string)
+    char_pool = "".join(char_pool)
+    if not char_pool:
+        return ""
+    result = []
+    for random_count in range(0, string_length):
+        result.append(random.choice(char_pool))
+    return "".join(result)
 
 
 # 获取指定文件的MD5值
