@@ -22,8 +22,9 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定页数的全部音频信息
 def get_one_page_audio(account_id, page_count):
     # http://www.ximalaya.com/1014267/index_tracks?page=2
-    audit_pagination_url = "http://www.ximalaya.com/%s/index_tracks?page=%s" % (account_id, page_count)
-    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", json_decode=True)
+    audit_pagination_url = "http://www.ximalaya.com/%s/index_tracks" % account_id
+    query_data = {"page": page_count}
+    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 页面解析出的音频信息列表
     }
