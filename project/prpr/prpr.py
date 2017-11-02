@@ -25,8 +25,13 @@ IS_STEP_INVALID_RESOURCE = False
 
 # 获取指定时间后的一页作品
 def get_one_page_post(account_id, timestamp):
-    post_pagination_url = "https://api.prpr.tinydust.cn/v3/posts/old?timestamp=%s&userId=%s&limit=%s" % (timestamp, account_id, POST_COUNT_PER_PAGE)
-    index_response = net.http_request(post_pagination_url, method="GET", json_decode=True)
+    post_pagination_url = "https://api.prpr.tinydust.cn/v3/posts/old"
+    query_data = {
+        "timestamp": timestamp,
+        "userId": account_id,
+        "limit": POST_COUNT_PER_PAGE,
+    }
+    index_response = net.http_request(post_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "post_info_list": [],  # 全部作品信息
     }
