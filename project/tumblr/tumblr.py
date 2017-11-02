@@ -457,7 +457,7 @@ class Download(threading.Thread):
                     for image_url in post_response["image_url_list"]:
                         log.step(account_id + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
-                        file_type = image_url.split(".")[-1]
+                        file_type = image_url.split("?")[0].split(".")[-1]
                         image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_id, "%04d.%s" % (image_index, file_type))
                         save_file_return = net.save_net_file(image_url, image_file_path)
                         if save_file_return["status"] == 1:
