@@ -114,8 +114,9 @@ def unfollow(account_id):
 # 获取指定页数的全部作品
 def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
-    album_pagination_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
-    album_pagination_response = net.http_request(album_pagination_url, method="GET")
+    album_pagination_url = "http://bcy.net/u/%s/post/cos" % account_id
+    query_data = {"p": page_count}
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data)
     result = {
         "album_info_list": [],  # 全部作品信息
         "coser_id": None,  # coser id
