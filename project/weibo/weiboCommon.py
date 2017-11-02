@@ -27,8 +27,9 @@ def check_login(cookie_info):
 # param     cookie_info 相关域名保存的cookie字典
 # return    response中返回的cookie字典
 def generate_login_cookie(cookie_info):
-    login_url = "https://login.sina.com.cn/sso/login.php?url=http%3A%2F%2Fweibo.com"
-    login_response = net.http_request(login_url, method="GET", cookies_list=cookie_info)
+    login_url = "https://login.sina.com.cn/sso/login.php"
+    query_data = {"url": "https://weibo.com"}
+    login_response = net.http_request(login_url, method="GET", fields=query_data, cookies_list=cookie_info)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return net.get_cookies_from_response_header(login_response.headers)
     return {}
