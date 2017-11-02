@@ -29,7 +29,7 @@ def check_login():
         return False
     cookies_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
     index_url = "http://bcy.net/"
-    index_response = net.http_request(index_url, cookies_list=cookies_list)
+    index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         set_cookie = net.get_cookies_from_response_header(index_response.headers)
         if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
@@ -38,7 +38,7 @@ def check_login():
     if not COOKIE_INFO["acw_tc"] or not COOKIE_INFO["PHPSESSID"]:
         return False
     home_url = "http://bcy.net/home/user/index"
-    home_response = net.http_request(home_url, cookies_list=COOKIE_INFO)
+    home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO)
     if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if home_response.data.find('<a href="/login">登录</a>') == -1:
             return True
@@ -66,7 +66,7 @@ def login():
     global COOKIE_INFO
     # 访问首页，获取一个随机session id
     home_url = "http://bcy.net/home/user/index"
-    home_response = net.http_request(home_url)
+    home_response = net.http_request(home_url, method="GET")
     if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
         if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
@@ -115,7 +115,7 @@ def unfollow(account_id):
 def get_one_page_album(account_id, page_count):
     # http://bcy.net/u/50220/post/cos?&p=1
     album_pagination_url = "http://bcy.net/u/%s/post/cos?&p=%s" % (account_id, page_count)
-    album_pagination_response = net.http_request(album_pagination_url)
+    album_pagination_response = net.http_request(album_pagination_url, method="GET")
     result = {
         "album_info_list": [],  # 全部作品信息
         "coser_id": None,  # coser id
@@ -168,7 +168,7 @@ def get_one_page_album(account_id, page_count):
 def get_album_page(coser_id, album_id):
     # http://bcy.net/coser/detail/9299/36484
     album_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
-    album_response = net.http_request(album_url, cookies_list=COOKIE_INFO)
+    album_response = net.http_request(album_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
         "is_admin_locked": False,  # 是否被管理员锁定

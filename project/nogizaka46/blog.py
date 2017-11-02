@@ -25,7 +25,7 @@ NEW_SAVE_DATA_PATH = ""
 def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
     blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
-    blog_pagination_response = net.http_request(blog_pagination_url)
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     result = {
         "blog_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页日志
@@ -88,7 +88,7 @@ def check_big_image(image_url, big_2_small_list):
     }
     if image_url in big_2_small_list:
         if big_2_small_list[image_url].find("http://dcimg.awalker.jp") == 0:
-            big_image_response = net.http_request(big_2_small_list[image_url])
+            big_image_response = net.http_request(big_2_small_list[image_url], method="GET")
             if big_image_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 # 检测是不是已经过期删除
                 temp_image_url = tool.find_sub_string(big_image_response.data, '<img src="', '"')

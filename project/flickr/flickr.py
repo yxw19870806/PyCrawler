@@ -22,7 +22,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号相册首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "site_key": None,  # site key
         "user_id": None,  # user id

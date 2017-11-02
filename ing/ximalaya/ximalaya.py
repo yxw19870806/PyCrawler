@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 def get_one_page_audio(account_id, page_count):
     # http://www.ximalaya.com/1014267/index_tracks?page=2
     audit_pagination_url = "http://www.ximalaya.com/%s/index_tracks?page=%s" % (account_id, page_count)
-    audit_pagination_response = net.http_request(audit_pagination_url, json_decode=True)
+    audit_pagination_response = net.http_request(audit_pagination_url, method="GET", json_decode=True)
     result = {
         "audio_info_list": [],  # 页面解析出的音频信息列表
     }
@@ -61,7 +61,7 @@ def get_audio_info_page(audio_id):
     result = {
         "audio_url": None,  # 页面解析出的音频地址
     }
-    audio_play_response = net.http_request(audio_info_url, json_decode=True)
+    audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
     if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         print audio_play_response.json_data
     return result

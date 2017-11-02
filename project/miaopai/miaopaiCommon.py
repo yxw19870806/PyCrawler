@@ -16,7 +16,7 @@ def get_follow_list(suid):
     follow_list = {}
     while True:
         follow_pagination_url = "http://www.miaopai.com/gu/follow?page=%s&suid=%s" % (page_count, suid)
-        follow_pagination_response = net.http_request(follow_pagination_url, json_decode=True)
+        follow_pagination_response = net.http_request(follow_pagination_url, method="GET", json_decode=True)
         if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if robot.check_sub_key(("msg", "stat"), follow_pagination_response.json_data) and follow_pagination_response.json_data["stat"].isdigit():
                 stat = int(follow_pagination_response.json_data["stat"]["stat"])

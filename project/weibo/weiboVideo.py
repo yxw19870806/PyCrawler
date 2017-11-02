@@ -37,7 +37,7 @@ def get_one_page_video(account_page_id, since_id):
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
     }
-    video_pagination_response = net.http_request(video_pagination_url, cookies_list=cookies_list, json_decode=True)
+    video_pagination_response = net.http_request(video_pagination_url, method="GET", cookies_list=cookies_list, json_decode=True)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
     if not robot.check_sub_key(("code", "data"), video_pagination_response.json_data):
@@ -70,7 +70,7 @@ def get_video_url(video_play_url):
     if video_play_url.find("miaopai.com/show/") >= 0:  # 秒拍
         video_id = tool.find_sub_string(video_play_url, "miaopai.com/show/", ".")
         video_info_url = "http://gslb.miaopai.com/stream/%s.json?token=" % video_id
-        video_info_response = net.http_request(video_info_url, json_decode=True)
+        video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
         if not robot.check_sub_key(("status", "result"), video_info_response.json_data):
@@ -90,7 +90,7 @@ def get_video_url(video_play_url):
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-        video_play_response = net.http_request(video_play_url, cookies_list=cookies_list)
+        video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url = tool.find_sub_string(video_play_response.data, "video_src=", "&")
             if not video_url:
@@ -106,7 +106,7 @@ def get_video_url(video_play_url):
             raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
-        video_play_response = net.http_request(video_play_url)
+        video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
         video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
@@ -128,7 +128,7 @@ def get_video_url(video_play_url):
         video_url = "http://gslb.miaopai.com/stream/%s.mp4" % video_id
     # http://www.weishi.com/t/2000546051794045
     elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
-        video_play_response = net.http_request(video_play_url)
+        video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
         video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_response.data)
@@ -136,7 +136,7 @@ def get_video_url(video_play_url):
             raise robot.RobotException("页面匹配视频id失败\n%s" % video_play_response.data)
         video_id = video_play_url.split("/")[-1]
         video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&device=1&id=%s" % (video_id_find[0], video_id)
-        video_info_response = net.http_request(video_info_url, json_decode=True)
+        video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException("API " + robot.get_http_request_failed_reason(video_info_response.status))
         if not robot.check_sub_key(("data",), video_info_response.json_data):

@@ -16,7 +16,7 @@ IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求
 # 获取账号首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, cookies_list=COOKIE_INFO)
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "is_follow": False,  # 是否已经关注
         "is_private": False,  # 是否是私密账号

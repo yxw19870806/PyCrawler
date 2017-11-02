@@ -21,7 +21,7 @@ def get_account_id_from_file():
 # 获取指定账号的全部游戏ud列表
 def get_account_owned_app_list(user_id):
     game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_response = net.http_request(game_index_url)
+    game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(game_index_response.status))
     owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", ";")
@@ -48,7 +48,7 @@ def get_discount_game_list(login_cookie):
         output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
         cookies_list = {"steamLogin": login_cookie}
-        discount_game_pagination_response = net.http_request(discount_game_pagination_url, cookies_list=cookies_list)
+        discount_game_pagination_response = net.http_request(discount_game_pagination_url, method="GET", cookies_list=cookies_list)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException("第%s页打折游戏解析失败" % page_count)
         search_result_selector = pq(discount_game_pagination_response.data).find("#search_result_container")
@@ -130,7 +130,7 @@ def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
     badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
     cookies_list = {"steamLogin": login_cookie}
-    badges_index_response = net.http_request(badges_index_url, cookies_list=cookies_list)
+    badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list=cookies_list)
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(badges_index_response.status))
     badges_detail_url_list = []
@@ -155,7 +155,7 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     cookies_list = {
         "steamLogin": login_cookie,
     }
-    badge_detail_response = net.http_request(badge_detail_url, cookies_list=cookies_list)
+    badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=cookies_list)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(badge_detail_response.status))
     wanted_card_list = {}
@@ -198,7 +198,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
     cookies_list = {"steamLogin": login_cookie}
     market_search_url = "http://steamcommunity.com/market/search/render/"
     market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
-    market_search_response = net.http_request(market_search_url, cookies_list=cookies_list, json_decode=True)
+    market_search_response = net.http_request(market_search_url, method="GET", cookies_list=cookies_list, json_decode=True)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(market_search_response.status))
     market_item_list = {}
@@ -232,7 +232,7 @@ def get_login_cookie_from_browser():
     if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
         return all_cookie_from_browser["store.steampowered.com"]["steamLogin"]
     login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-    login_response = net.http_request(login_url, cookies_list=all_cookie_from_browser["store.steampowered.com"], redirect=False)
+    login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], redirect=False)
     if login_response.status == 302:
         set_cookies = net.get_cookies_from_response_header(login_response.headers)
         if "steamLogin" not in set_cookies:

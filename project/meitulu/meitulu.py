@@ -15,7 +15,7 @@ import traceback
 # 获取图集首页
 def get_index_page():
     index_url = "https://www.meitulu.com/"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     result = {
         "max_album_id": None,  # 最新图集id
     }
@@ -44,7 +44,7 @@ def get_one_page_album(album_id):
             album_pagination_url = "https://www.meitulu.com/item/%s.html" % album_id
         else:
             album_pagination_url = "https://www.meitulu.com/item/%s_%s.html" % (album_id, page_count)
-        album_pagination_response = net.http_request(album_pagination_url)
+        album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True
             return result

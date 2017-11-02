@@ -25,7 +25,7 @@ def get_account_from_save_data(file_path):
 # 从页面获取全部成员账号
 def get_account_from_index():
     index_url = "http://blog.nogizaka46.com/"
-    index_response = net.http_request(index_url)
+    index_response = net.http_request(index_url, method="GET")
     account_list = {}
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_response.data)

@@ -44,7 +44,7 @@ def get_one_page_blog(account_id, token):
         script_data = script_data[0][2]["113305009"]
     else:
         blog_pagination_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
-        blog_pagination_response = net.http_request(blog_pagination_url)
+        blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
         if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             script_data_html = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
             script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
@@ -97,7 +97,7 @@ def get_album_page(account_id, album_id):
     result = {
         "image_url_list": [],  # 全部图片地址
     }
-    album_response = net.http_request(album_url)
+    album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
     script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")

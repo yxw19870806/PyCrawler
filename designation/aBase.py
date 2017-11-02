@@ -16,7 +16,7 @@ TOTAL_IMAGE_COUNT = 0
 # 获取指定页数的全部图片
 def get_one_page_photo(page_count):
     photo_pagination_url = "http://abase.me/movies.php?page=%s" % page_count
-    photo_pagination_response = net.http_request(photo_pagination_url)
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
     result = {
         "page_video_count": 0,  # 页面解析出的影片数量
         "image_info_list": [],  # 页面解析出的图片信息列表

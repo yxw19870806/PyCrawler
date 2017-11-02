@@ -17,7 +17,7 @@ def check_login(cookie_info):
         return False
     cookies_list = {"SUB": cookie_info["SUB"]}
     index_url = "https://weibo.com/"
-    index_response = net.http_request(index_url, cookies_list=cookies_list)
+    index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return index_response.data.find("$CONFIG['islogin']='1';") >= 0
     return False
@@ -28,7 +28,7 @@ def check_login(cookie_info):
 # return    response中返回的cookie字典
 def generate_login_cookie(cookie_info):
     login_url = "https://login.sina.com.cn/sso/login.php?url=http%3A%2F%2Fweibo.com"
-    login_response = net.http_request(login_url, cookies_list=cookie_info)
+    login_response = net.http_request(login_url, method="GET", cookies_list=cookie_info)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return net.get_cookies_from_response_header(login_response.headers)
     return {}
@@ -41,7 +41,7 @@ def get_account_index_page(account_id):
     result = {
         "account_page_id": None,  # 页面解析出的账号page id
     }
-    account_index_response = net.http_request(account_index_url, cookies_list=cookies_list)
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=cookies_list)
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data, "$CONFIG['page_id']='", "'")

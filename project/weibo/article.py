@@ -31,7 +31,7 @@ def get_one_page_article(page_id, page_count):
         "article_info_list": [],  # 全部章信息
         "is_over": False,  # 是不是最后一页文章
     }
-    article_pagination_response = net.http_request(preview_article_pagination_url, cookies_list=cookies_list, redirect=False)
+    article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", cookies_list=cookies_list, redirect=False)
     if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(article_pagination_response.status))
     # 截取文章数据
@@ -71,7 +71,7 @@ def get_one_page_article(page_id, page_count):
 # 获取文章页面
 def get_article_page(article_url):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
-    article_response = net.http_request(article_url, cookies_list=cookies_list)
+    article_response = net.http_request(article_url, method="GET", cookies_list=cookies_list)
     result = {
         "article_id": "",  # 文章id
         "article_title": "",  # 文章标题

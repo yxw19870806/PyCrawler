@@ -33,7 +33,7 @@ def get_one_page_video(account_id, page_time):
         "video_info_list": [],  # 全部视频信息
     }
     header_list = {"Referer": "http://weishi.qq.com/"}
-    video_pagination_response = net.http_request(video_pagination_url, header_list=header_list, json_decode=True)
+    video_pagination_response = net.http_request(video_pagination_url, method="GET", header_list=header_list, json_decode=True)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
     if not robot.check_sub_key(("ret",), video_pagination_response.json_data):
@@ -83,7 +83,7 @@ def get_one_page_video(account_id, page_time):
 # 根据视频id和vid获取视频下载地址
 def get_video_info_page(video_vid, video_id):
     video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&id=%s" % (video_vid, video_id)
-    video_info_response = net.http_request(video_info_url, json_decode=True)
+    video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
         "video_url": "",  # 视频地址

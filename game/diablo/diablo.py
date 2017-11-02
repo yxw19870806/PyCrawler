@@ -55,7 +55,7 @@ for item_path, item_position in item_list.items():
             item_index_url = base_host + "/tw/base/legendarygem/"
         else:
             item_index_url = base_host + "/tw/item/%s/legendary.html#page=%s" % (item_path, page_count)
-        item_index_response = net.http_request(item_index_url)
+        item_index_response = net.http_request(item_index_url, method="GET")
         if item_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             # item_index = item_index.decode("UTF-8")
             item_index_page = tool.find_sub_string(item_index_response.data, '<div class="cizhui-c-m', '<div class="data-options', 1)
@@ -70,7 +70,7 @@ for item_path, item_position in item_list.items():
                 item_name = tool.find_sub_string(item_info, 'class="diablo3tip">', "</a>")
                 item_name = item_name.replace("'", "’")
                 item_url = base_host + item_url
-                item_response = net.http_request(item_url)
+                item_response = net.http_request(item_url, method="GET")
                 if item_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                     item_detail = tool.find_sub_string(item_response.data, '<div class="content-right-bdl clearfix">', '<dl class="content-right-bdr">')
                     item_detail = item_detail.decode("GBK").encode("UTF-8")

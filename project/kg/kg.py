@@ -22,7 +22,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取指定页数的一页歌曲信息
 def get_one_page_audio(account_id, page_count):
     audio_pagination_url = "http://kg.qq.com/cgi/kg_ugc_get_homepage?type=get_ugc&format=json&share_uid=%s&start=%s&num=%s" % (account_id, page_count, AUDIO_COUNT_PER_PAGE)
-    audio_pagination_response = net.http_request(audio_pagination_url, json_decode=True)
+    audio_pagination_response = net.http_request(audio_pagination_url, method="GET", json_decode=True)
     result = {
         "audio_info_list": [],  # 全部歌曲信息
         "is_over": False,  # 是不是最后一页歌曲
@@ -70,7 +70,7 @@ def get_one_page_audio(account_id, page_count):
 # 获取歌曲播放地址
 def get_audio_play_page(audio_key):
     audio_play_url = "http://kg.qq.com/node/play?s=%s" % audio_key
-    audio_play_response = net.http_request(audio_play_url)
+    audio_play_response = net.http_request(audio_play_url, method="GET")
     result = {
         "audio_url": None,  # 歌曲地址
     }

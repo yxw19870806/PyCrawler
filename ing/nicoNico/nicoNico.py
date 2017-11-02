@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 def get_account_index_page(account_id):
     # http://www.nicovideo.jp/mylist/15614906#+page=1
     account_index_url = "http://www.nicovideo.jp/mylist/%s" % account_id
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, method="GET")
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
         try:

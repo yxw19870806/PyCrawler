@@ -28,7 +28,7 @@ AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
 def get_one_page_audio(account_id, page_type, page_count):
     # http://5sing.kugou.com/inory/yc/1.html
     audio_pagination_url = "http://5sing.kugou.com/%s/%s/%s.html" % (account_id, page_type, page_count)
-    audio_pagination_response = net.http_request(audio_pagination_url)
+    audio_pagination_response = net.http_request(audio_pagination_url, method="GET")
     result = {
         "audio_info_list": [],  # 全部歌曲信息
     }
@@ -51,7 +51,7 @@ def get_one_page_audio(account_id, page_type, page_count):
 # 获取指定id的歌曲播放页
 def get_audio_play_page(audio_id, song_type):
     audio_play_url = "http://5sing.kugou.com/%s/%s.html" % (song_type, audio_id)
-    audio_play_response = net.http_request(audio_play_url)
+    audio_play_response = net.http_request(audio_play_url, method="GET")
     result = {
         "audio_url": None,  # 歌曲地址
     }

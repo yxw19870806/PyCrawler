@@ -29,7 +29,7 @@ def get_one_page_photo(account_id, page_count):
         "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片
     }
-    photo_pagination_response = net.http_request(photo_pagination_url, cookies_list=cookies_list, json_decode=True)
+    photo_pagination_response = net.http_request(photo_pagination_url, method="GET", cookies_list=cookies_list, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if not robot.check_sub_key(("data",), photo_pagination_response.json_data):
             raise robot.RobotException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)

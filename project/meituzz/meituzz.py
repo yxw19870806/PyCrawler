@@ -19,7 +19,7 @@ def get_album_page(page_count):
         album_url = "http://meituzz.com/album/browse?albumID=%s" % page_count
     else:
         album_url = "http://zz.mt27z.cn/ab/brVv22?y=%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])
-    album_response = net.http_request(album_url)
+    album_response = net.http_request(album_url, method="GET")
     result = {
         "image_url_list": None,  # 全部图片地址
         "is_delete": False,  # 是不是相册已被删除（或还没有内容）

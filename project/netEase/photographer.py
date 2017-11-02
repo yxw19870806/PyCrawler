@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号主页
 def get_account_index_page(account_name):
     account_index_url = "http://%s.pp.163.com/" % account_name
-    account_index_response = net.http_request(account_index_url)
+    account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "album_url_list": [],  # 全部相册地址
     }
@@ -52,7 +52,7 @@ def get_album_id(album_url):
 
 # 获取相册页
 def get_album_page(album_url):
-    album_response = net.http_request(album_url)
+    album_response = net.http_request(album_url, method="GET")
     result = {
         "album_title": "",  # 相册标题
         "image_url_list": [],  # 全部图片地址
