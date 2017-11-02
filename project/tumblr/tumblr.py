@@ -205,11 +205,15 @@ def get_video_play_page(account_id, post_id, is_https):
     else:
         protocol_type = "http"
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
-    video_play_response = net.http_request(video_play_url, method="GET")
+    video_play_response = net.http_request(video_play_url, method="GET", redirect=False)
     result = {
         "is_skip": False,  # 是不是第三方视频
         "video_url": None,  # 视频地址
     }
+    if video_play_response.status == 301:
+        video_play_url = video_play_response.getheader("Location")
+        if video_play_url is not None:
+            video_play_response = net.http_request(video_play_url, method="GET")
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
