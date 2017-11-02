@@ -24,8 +24,9 @@ NEW_SAVE_DATA_PATH = ""
 # account_id -> asuka.saito
 def get_one_page_blog(account_id, page_count):
     # http://blog.nogizaka46.com/asuka.saito
-    blog_pagination_url = "http://blog.nogizaka46.com/%s/?p=%s" % (account_id, page_count)
-    blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
+    blog_pagination_url = "http://blog.nogizaka46.com/%s/" % account_id
+    query_data = {"p": page_count}
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data)
     result = {
         "blog_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页日志
