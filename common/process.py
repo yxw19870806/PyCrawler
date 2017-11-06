@@ -6,7 +6,6 @@ email: hikaru870806@hotmail.com
 """
 from common import output
 from multiprocessing.connection import Client, Listener
-import sys
 import threading
 
 
@@ -20,8 +19,8 @@ PROCESS_STATUS_FINISH = 3  # 进程等待现有任务完成后停止
 PROCESS_PID_LIST = []  # 存放所有需要操作的进程PID
 
 
-# 进程监控
 class ProcessControl(threading.Thread):
+    """program status controller Class"""
     def __init__(self, ip=PROCESS_SERVER_IP, port=PROCESS_SERVER_PORT):
         threading.Thread.__init__(self)
         self.ip = str(ip)
@@ -43,8 +42,8 @@ class ProcessControl(threading.Thread):
         listener.close()
 
 
-# 设置进程状态
 def set_process_status(process_status):
+    """Set program status"""
     try:
         process_status = int(process_status)
     except ValueError:
@@ -56,15 +55,18 @@ def set_process_status(process_status):
 
 
 def pause_process():
+    """Pause program"""
     output.print_msg("pause process")
     set_process_status(PROCESS_STATUS_PAUSE)
 
 
 def continue_process():
+    """restart program"""
     output.print_msg("continue process")
     set_process_status(PROCESS_STATUS_RUN)
 
 
 def stop_process():
+    """Stop program"""
     output.print_msg("stop process")
     set_process_status(PROCESS_STATUS_STOP)
