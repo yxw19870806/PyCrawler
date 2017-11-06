@@ -79,10 +79,6 @@ def delete_null_dir(dir_path):
             os.rmdir(dir_path)
 
 
-# 获取指定目录的文件列表
-# order desc 降序
-# order asc  升序
-# order 其他 不需要排序
 def get_dir_files_name(dir_path, order=None):
     """Get list of filename from specified directory
 
