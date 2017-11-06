@@ -25,6 +25,7 @@ SUPPORT_SUB_KEYBOARD_LIST = {
 
 
 class KeyboardEvent(threading.Thread):
+    """Keyboard Event Listener Class"""
     key_down_list ={
         "LSHIFT": False,
         "RSHIFT": False,
@@ -37,6 +38,12 @@ class KeyboardEvent(threading.Thread):
     event_key_list = {}
 
     def __init__(self, event_list):
+        """Init keyboard Event Listener
+
+        :param event_list:
+            dictionary of key and trigger function
+            key name => event function object
+        """
         threading.Thread.__init__(self)
         for key, function in event_list.iteritems():
             event_function = event_list[key]
@@ -58,7 +65,9 @@ class KeyboardEvent(threading.Thread):
 
     # 按键判断并执行方法
     def on_keyboard_down(self, event):
+        """Function of key down event listener"""
         key = str(event.Key).upper()
+        # 组合键按下，本身没有单独的事件
         if key in self.key_down_list:
             self.key_down_list[key] = True
         else:
@@ -74,12 +83,14 @@ class KeyboardEvent(threading.Thread):
                     self.event_key_list[key]()
 
     def on_keyboard_up(self, event):
+        """Function of key up event listener"""
         key = str(event.Key).upper()
+        # 组合键归位
         if key in self.key_down_list:
             self.key_down_list[key] = False
 
-    # 监听所有键盘事件
     def run(self):
+        """Start listener"""
         hook_manager = pyHook.HookManager()
         hook_manager.KeyDown = self.on_keyboard_down
         hook_manager.KeyUp = self.on_keyboard_up
