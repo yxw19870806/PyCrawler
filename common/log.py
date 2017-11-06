@@ -19,6 +19,7 @@ thread_lock = threading.Lock()
 
 
 def error(msg):
+    """Error message logger"""
     msg = _get_time() + " [Error] " + str(msg)
     if IS_SHOW_ERROR:
         output.print_msg(msg, False)
@@ -33,6 +34,7 @@ def error(msg):
 
 
 def step(msg):
+    """Step message logger"""
     msg = _get_time() + " " + str(msg)
     if IS_SHOW_STEP:
         output.print_msg(msg, False)
@@ -47,6 +49,7 @@ def step(msg):
 
 
 def trace(msg):
+    """Trace(Debugger) message logger"""
     msg = _get_time() + " " + str(msg)
     if IS_SHOW_TRACE:
         output.print_msg(msg, False)
