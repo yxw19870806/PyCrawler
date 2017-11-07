@@ -34,6 +34,7 @@ SYS_APP_CONFIG = "app_config"
 
 class Robot(object):
     print_function = None
+    process_flag = None
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -228,19 +229,26 @@ class Robot(object):
 
         # 键盘监控线程
         if get_config(config, "IS_KEYBOARD_EVENT", True, 2):
+            # 进程阻塞标志
+            self.process_flag = threading.Event()
+            self.process_flag.set()
+
             keyboard_event_bind = {}
             pause_process_key = get_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9", 0)
             # 暂停进程
             if pause_process_key:
                 keyboard_event_bind[pause_process_key] = process.pause_process
+                keyboard_event_bind[pause_process_key] = self.pause_process
             # 继续进程
             continue_process_key = get_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10", 0)
             if continue_process_key:
                 keyboard_event_bind[continue_process_key] = process.continue_process
+                keyboard_event_bind[continue_process_key] = self.resume_process
             # 结束进程（取消当前的线程，完成任务）
             stop_process_key = get_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12", 0)
             if stop_process_key:
                 keyboard_event_bind[stop_process_key] = process.stop_process
+                keyboard_event_bind[stop_process_key] = self.stop_process
 
             if keyboard_event_bind:
                 keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
@@ -249,8 +257,20 @@ class Robot(object):
 
         self.print_msg("初始化完成")
 
+    def pause_process(self):
+        """Set process_flag to False"""
+        self.process_flag.clear()
+
+    def resume_process(self):
+        """Set process_flag to True"""
+        self.process_flag.set()
+
+    def stop_process(self):
+        tool.process_exit(0)
+
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
+        """Get process runned time(seconds)"""
         return int(time.time() - self.start_time)
 
 
