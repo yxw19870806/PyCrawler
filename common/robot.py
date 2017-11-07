@@ -254,6 +254,14 @@ class Robot(object):
         return int(time.time() - self.start_time)
 
 
+class DownloadThread(threading.Thread):
+    """Download sub-thread"""
+    def __init__(self, account_info, thread_lock):
+        threading.Thread.__init__(self)
+        self.account_info = account_info
+        self.thread_lock = thread_lock
+
+
 # 读取配置文件
 def read_config(config_path):
     config = ConfigParser.SafeConfigParser()

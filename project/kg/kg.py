@@ -154,11 +154,9 @@ class KG(robot.Robot):
         log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
 
 
-class Download(threading.Thread):
+class Download(robot.DownloadThread):
     def __init__(self, account_info, thread_lock):
-        threading.Thread.__init__(self)
-        self.account_info = account_info
-        self.thread_lock = thread_lock
+        robot.DownloadThread.__init__(self, account_info, thread_lock)
 
     def run(self):
         global TOTAL_VIDEO_COUNT
