@@ -213,24 +213,6 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
                 return ErrorResponse(HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
             pass
-        # except urllib3.exceptions.MaxRetryError, e:
-        #     print_msg(url)
-        #     print_msg(str(e))
-        #     # 无限重定向
-        #     # if str(e).find("Caused by ResponseError('too many redirects',)") >= 0:
-        #     #     return ErrorResponse(-1)
-        # except urllib3.exceptions.ConnectTimeoutError, e:
-        #     print_msg(str(e))
-        #     print_msg(url + " 访问超时，稍后重试")
-        #     # 域名无法解析
-        #     # if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
-        #     #     return ErrorResponse(-2)
-        # except urllib3.exceptions.ProtocolError, e:
-        #     print_msg(str(e))
-        #     print_msg(url + " 访问超时，稍后重试")
-        #     # 链接被终止
-        #     # if str(e).find("'Connection aborted.', error(10054,") >= 0:
-        #     #     return ErrorResponse(-3)
         except Exception, e:
             if str(e).find("EOF occurred in violation of protocol") >=0:
                 time.sleep(30)
