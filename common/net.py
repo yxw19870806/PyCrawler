@@ -137,6 +137,33 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     if HTTP_CONNECTION_POOL is None:
         init_http_connection_pool()
 
+    if header_list is None:
+        header_list = {}
+
+    # 设置User-Agent
+    if "User-Agent" not in header_list:
+        header_list["User-Agent"] = _random_user_agent()
+
+    # 设置一个随机IP
+    if is_random_ip:
+        random_ip = _random_ip_address()
+        header_list["X-Forwarded-For"] = random_ip
+        header_list["X-Real-Ip"] = random_ip
+
+    # 设置cookie
+    if cookies_list:
+        header_list["Cookie"] = build_header_cookie_string(cookies_list)
+
+    # 超时设置
+    if connection_timeout == 0 and read_timeout == 0:
+        timeout = None
+    elif connection_timeout == 0:
+        timeout = urllib3.Timeout(read=read_timeout)
+    elif read_timeout == 0:
+        timeout = urllib3.Timeout(connect=connection_timeout)
+    else:
+        timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
+
     retry_count = 0
     while True:
         while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
@@ -144,32 +171,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
             tool.process_exit(0)
 
-        if header_list is None:
-            header_list = {}
-
-        # 设置User-Agent
-        if "User-Agent" not in header_list:
-            header_list["User-Agent"] = _random_user_agent()
-
-        # 设置一个随机IP
-        if is_random_ip:
-            random_ip = _random_ip_address()
-            header_list["X-Forwarded-For"] = random_ip
-            header_list["X-Real-Ip"] = random_ip
-
-        # 设置cookie
-        if cookies_list:
-            header_list["Cookie"] = build_header_cookie_string(cookies_list)
-
         try:
-            if connection_timeout == 0 and read_timeout == 0:
-                timeout = None
-            elif connection_timeout == 0:
-                timeout = urllib3.Timeout(read=read_timeout)
-            elif read_timeout == 0:
-                timeout = urllib3.Timeout(connect=connection_timeout)
-            else:
-                timeout = urllib3.Timeout(connect=connection_timeout, read=read_timeout)
             if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
                 response = HTTP_CONNECTION_POOL.request(method, url, headers=header_list, redirect=redirect, timeout=timeout, fields=fields)
             else:
