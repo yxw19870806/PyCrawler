@@ -76,14 +76,14 @@ def get_album_photo(album_id):
             raise robot.RobotException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         result["image_url_list"] += map(str, image_url_list)
         # 获取总页数
+        max_page_count = 1
         pagination_html = tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>")
         if pagination_html:
             page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', pagination_html)
-            if len(page_count_find) == 0:
-                raise robot.RobotException("第%s页 分页信息截取最大页数失败\n%s" % pagination_html)
-            max_page_count = max(map(int, page_count_find))
-        else:
-            max_page_count == 1
+            if len(page_count_find) != 0:
+                max_page_count = max(map(int, page_count_find))
+            else:
+                log.error("图集%s 第%s页分页异常" % (album_id, page_count))
         page_count += 1
     # 判断页面上的总数和实际地址数量是否一致
     if image_count != len(result["image_url_list"]):
