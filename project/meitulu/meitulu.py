@@ -48,8 +48,6 @@ def get_one_page_album(album_id):
         if page_count == 1 and album_pagination_response.status == 404:
             result["is_delete"] = True
             return result
-        elif album_pagination_response.status in [503, 504]:
-            continue
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(album_pagination_response.status))
         if page_count == 1:
