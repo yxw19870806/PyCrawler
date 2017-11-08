@@ -198,6 +198,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                                 is_error = False
                     if is_error:
                         response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
+            elif response.status in [500, 502, 503, 504]:  # 服务器临时性错误，重试
+                retry_count += 1
+                continue
             return response
         except urllib3.exceptions.ProxyError:
             notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
@@ -312,9 +315,6 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if create_file:
                 path.delete_dir_or_file(file_path)
             return {"status": 0, "code": -2}
-        # 500锡类错误，重试
-        elif response.status in [500, 502, 503, 504]:
-            pass
         # 其他http code，退出
         else:
             if create_file:
