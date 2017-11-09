@@ -6,6 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from common import process
 import codecs
 import ConfigParser
 import os
@@ -307,19 +308,36 @@ class DownloadThread(threading.Thread):
 
 # 读取配置文件
 def read_config(config_path):
+    """Read config file"""
     config = ConfigParser.SafeConfigParser()
     with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
         config.readfp(file_handle)
     return config
 
 
-# 获取配置文件
-# config : 字典格式，如：{key1:value1, key2:value2}
-# mode=0 : 直接赋值
-# mode=1 : 取整
-# mode=2 : 布尔值，非True的传值或者字符串"0"和"false"为False，其他值为True
-# mode=3 : 文件路径，以"\"开头的为当前目录下创建
 def get_config(config, key, default_value, mode):
+    """Analysis config
+
+    :param config:
+        Dictionary of config
+
+    :param key:
+        key of config
+
+    :param default_value:
+        default value
+
+    :param mode:
+        type of analysis mode
+        0   direct assignment
+        1   conversion to integer
+        2   conversion to boolean
+            the value Equivalent to False, or string of "0" and "false" will conversion to False
+            other string will conversion to True
+        3   conversion to file path
+            startup with '\', project root path
+            startup with '\\', application root path
+    """
     if config.has_option("setting", key):
         value = config.get("setting", key).encode("UTF-8")
     else:
@@ -328,9 +346,7 @@ def get_config(config, key, default_value, mode):
     if mode == 0:
         pass
     elif mode == 1:
-        if isinstance(value, int):
-            pass
-        elif isinstance(value, str) and value.isdigit():
+        if isinstance(value, int) or isinstance(value, long) or (isinstance(value, str) and value.isdigit()):
             value = int(value)
         else:
             output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
