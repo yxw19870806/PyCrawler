@@ -16,20 +16,16 @@ def print_msg(msg, is_time=True):
     """Console print decoded message(according to coding of sys.stdout.encoding), thread safe"""
     if is_time:
         msg = _get_time() + " " + msg
-    thread_lock.acquire()
-    try:
-        # 终端输出编码
-        output_encoding = sys.stdout.encoding
-        if output_encoding == "UTF-8":
+    with thread_lock:
+        try:
+            # 终端输出编码
+            output_encoding = sys.stdout.encoding
+            if output_encoding == "UTF-8":
+                print msg
+            else:
+                print msg.decode("UTF-8").encode(output_encoding)
+        except UnicodeEncodeError:
             print msg
-        else:
-            print msg.decode("UTF-8").encode(output_encoding)
-    except UnicodeEncodeError:
-        print msg
-    except:
-        raise
-    finally:
-        thread_lock.release()
 
 
 def console_input(msg):

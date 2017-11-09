@@ -157,9 +157,8 @@ class Download(threading.Thread):
                     else:
                         path.delete_dir_or_file(self.file_temp_path)
 
-                self.thread_lock.acquire()
-                TOTAL_IMAGE_COUNT += 1
-                self.thread_lock.release()
+                with self.thread_lock:
+                    TOTAL_IMAGE_COUNT += 1
         else:
             log.error("%s的封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
