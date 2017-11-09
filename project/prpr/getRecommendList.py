@@ -76,7 +76,7 @@ def get_channel_account_from_api(channel_id):
 def main():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
-    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
+    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
     try:
         channel_list = get_channel_from_api()
     except robot.RobotException, e:
