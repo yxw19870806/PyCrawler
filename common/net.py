@@ -88,7 +88,7 @@ def get_cookies_from_response_header(response_headers):
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_redirect=True,
-                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False):
+                 is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
     :param url:
@@ -113,8 +113,11 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
     :param encode_multipart:
         see "encode_multipart" in urllib3.request_encode_body
 
-    :param redirect:
+    :param is_auto_redirect:
         is auto redirect, when response.status in [301, 302, 303, 307, 308]
+
+    :param is_auto_retry:
+        is auto retry, when response.status in [500, 502, 503, 504]
 
     :param connection_timeout:
         customize connection timeout seconds
@@ -198,7 +201,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                                 is_error = False
                     if is_error:
                         response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
-            elif response.status in [500, 502, 503, 504]:  # 服务器临时性错误，重试
+            elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
                 retry_count += 1
                 continue
             return response
