@@ -11,6 +11,7 @@ import ConfigParser
 import os
 import re
 import sys
+import thread
 import threading
 import time
 
@@ -34,7 +35,7 @@ SYS_APP_CONFIG = "app_config"
 
 class Robot(object):
     print_function = None
-    process_flag = None
+    thread_event = None
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -230,8 +231,8 @@ class Robot(object):
         # 键盘监控线程
         if get_config(config, "IS_KEYBOARD_EVENT", True, 2):
             # 进程阻塞标志
-            self.process_flag = threading.Event()
-            self.process_flag.set()
+            self.thread_event = threading.Event()
+            self.thread_event.set()
 
             keyboard_event_bind = {}
             pause_process_key = get_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9", 0)
@@ -258,12 +259,14 @@ class Robot(object):
         self.print_msg("初始化完成")
 
     def pause_process(self):
-        """Set process_flag to False"""
-        self.process_flag.clear()
+        """Set thread_event to False"""
+        output.print_msg("pause process")
+        self.thread_event.clear()
 
     def resume_process(self):
-        """Set process_flag to True"""
-        self.process_flag.set()
+        """Set thread_event to True"""
+        output.print_msg("resume process")
+        self.thread_event.set()
 
     def stop_process(self):
         tool.process_exit(0)
@@ -276,10 +279,30 @@ class Robot(object):
 
 class DownloadThread(threading.Thread):
     """Download sub-thread"""
-    def __init__(self, account_info, thread_lock):
+    thread_lock = None
+    thread_event = None
+
+    def __init__(self, account_info, thread_lock=None, thread_event=None):
+        """
+        :param account_info:
+
+        :param thread_lock:
+            threading.Lock() object in main thread
+
+        :param thread_event:
+            threading.Event() object in main thread, flag of process is running
+        """
         threading.Thread.__init__(self)
         self.account_info = account_info
-        self.thread_lock = thread_lock
+        if isinstance(thread_lock, thread.LockType):
+            self.thread_lock = thread_lock
+        if isinstance(thread_lock, threading._Event):
+            self.thread_event = thread_event
+
+    def wait(self):
+        """Block process unitl self.thread_event.clear()"""
+        if self.thread_event is not None:
+            self.thread_event.wait()
 
 
 # 读取配置文件
