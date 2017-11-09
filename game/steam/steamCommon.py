@@ -232,7 +232,7 @@ def get_login_cookie_from_browser():
     if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
         return all_cookie_from_browser["store.steampowered.com"]["steamLogin"]
     login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-    login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], redirect=False)
+    login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], is_auto_redirect=False)
     if login_response.status == 302:
         set_cookies = net.get_cookies_from_response_header(login_response.headers)
         if "steamLogin" not in set_cookies:

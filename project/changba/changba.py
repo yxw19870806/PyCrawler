@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号首页页面
 def get_account_index_page(account_id):
     account_index_url = "http://changba.com/u/%s" % account_id
-    account_index_response = net.http_request(account_index_url, method="GET", redirect=False)
+    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
     }

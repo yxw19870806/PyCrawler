@@ -26,7 +26,7 @@ def get_account_index_page(account_name):
         account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", redirect=False)
+    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "account_id": None,  # account id（字母账号->数字账号)
     }
