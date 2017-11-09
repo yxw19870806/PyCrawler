@@ -206,7 +206,7 @@ class Download(robot.DownloadThread):
                 video_id = str(video_info["item_data"]["watch_id"])
 
                 # 过滤标题中不支持的字符
-                video_title = robot.filter_text(video_info["item_data"]["title"])
+                video_title = path.filter_text(video_info["item_data"]["title"])
 
                 # 获取视频下载地址
                 video_url = get_video_url(video_id)

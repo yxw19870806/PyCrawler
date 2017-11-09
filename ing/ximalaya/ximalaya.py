@@ -203,7 +203,7 @@ class Download(robot.DownloadThread):
                     break
 
                 audio_url = audio_play_response["audio_url"]
-                audio_title = robot.filter_text(audio_info["audio_title"])
+                audio_title = path.filter_text(audio_info["audio_title"])
                 log.step(account_name + " 开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_title, audio_url))
 
                 file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], audio_title))

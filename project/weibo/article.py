@@ -283,7 +283,7 @@ class Download(robot.DownloadThread):
                 article_id = article_response["article_id"]
                 article_title = article_response["article_title"]
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(article_title)
+                title = path.filter_text(article_title)
                 if title:
                     article_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (article_id, title))
                 else:

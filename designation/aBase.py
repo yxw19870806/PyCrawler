@@ -96,7 +96,7 @@ class ABase(robot.Robot):
                 while thread_type == 1 and threading.activeCount() >= self.thread_count + main_thread_count:
                     time.sleep(5)
 
-                title = robot.filter_text(title).upper()
+                title = path.filter_text(title).upper()
                 image_url = get_large_image_url(small_image_url)
                 if image_url is None:
                     log.error("%s的封面图片 %s 大图地址解析失败" % (small_image_url, title))

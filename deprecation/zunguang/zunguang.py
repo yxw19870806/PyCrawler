@@ -115,7 +115,7 @@ class ZunGuang(robot.Robot):
 
             # 下载目录标题
             # 过滤标题中不支持的字符
-            album_title = robot.filter_text(album_response["album_title"])
+            album_title = path.filter_text(album_response["album_title"])
             if album_title:
                 image_path = os.path.join(self.image_download_path, "%04d %s" % (page_count, album_title))
             else:

@@ -238,7 +238,7 @@ class Download(robot.DownloadThread):
 
                 image_index = 1
                 # 过滤标题中不支持的字符
-                blog_title = robot.filter_text(blog_info["blog_title"])
+                blog_title = path.filter_text(blog_info["blog_title"])
                 blog_id = get_blog_id(blog_info["blog_url"])
                 # 过滤标题中不支持的字符
                 if blog_title:

@@ -126,7 +126,7 @@ class Wallpaper(robot.Robot):
                 log.step("开始下载第%s张图片 %s" % (image_info["image_id"], image_info["image_url"]))
 
                 file_type = image_info["image_url"].split(".")[-1]
-                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), robot.filter_text(image_info["model_name"]), file_type))
+                file_path = os.path.join(self.image_download_path, "%03d %s.%s" % (int(image_info["image_id"]), path.filter_text(image_info["model_name"]), file_type))
                 save_file_return = net.save_net_file(image_info["image_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_info["image_id"])

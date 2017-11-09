@@ -214,7 +214,7 @@ class Download(robot.DownloadThread):
 
                 image_index = 1
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(album_info["album_title"])
+                title = path.filter_text(album_info["album_title"])
                 if title:
                     post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (album_info["album_id"], title))
                 else:
