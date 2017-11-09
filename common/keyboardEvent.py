@@ -9,13 +9,13 @@ import pythoncom
 import pyHook
 import threading
 
-
-SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S",
-                       "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "F1", "F2",
-                       "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "NUMPAD0", "NUMPAD1", "NUMPAD2",
-                       "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9", "INSERT", "HOME",
-                       "PRIOR", "DELETE", "END", "NEXT", "OEM_1", "OEM_2", "OEM_3", "OEM_4", "OEM_5", "OEM_6", "OEM_7",
-                       "OEM_COMMA", "OEM_PERIOD", "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "DECIMAL"]
+SUPPORT_KEYBOARD_LIST = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+                         "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                         "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+                         "NUMPAD0", "NUMPAD1", "NUMPAD2", "NUMPAD3", "NUMPAD4", "NUMPAD5", "NUMPAD6", "NUMPAD7", "NUMPAD8", "NUMPAD9",
+                         "INSERT", "HOME", "PRIOR", "DELETE", "END", "NEXT",
+                         "OEM_1", "OEM_2", "OEM_3", "OEM_4", "OEM_5", "OEM_6", "OEM_7",
+                         "OEM_COMMA", "OEM_PERIOD", "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "DECIMAL"]
 
 SUPPORT_SUB_KEYBOARD_LIST = {
     "CTRL": "CONTROL",
