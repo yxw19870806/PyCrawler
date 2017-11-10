@@ -23,7 +23,7 @@ NEW_SAVE_DATA_PATH = ""
 # 获取账号首页页面
 def get_account_index_page(account_id):
     account_index_url = "http://changba.com/u/%s" % account_id
-    account_index_response = net.http_request(account_index_url, method="GET", redirect=False)
+    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "user_id": None,  # user id
     }
@@ -302,7 +302,7 @@ class Download(robot.DownloadThread):
 
                 log.step(account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], robot.filter_text(audio_info["audio_title"])))
+                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))
                 save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
                 if save_file_return["status"] == 1:
                     log.step(account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
@@ -321,11 +321,10 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_VIDEO_COUNT += total_video_count
-        ACCOUNTS.remove(account_id)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_VIDEO_COUNT += total_video_count
+            ACCOUNTS.remove(account_id)
         log.step(account_name + " 下载完毕，总共获得%s首歌曲" % total_video_count)
 
 

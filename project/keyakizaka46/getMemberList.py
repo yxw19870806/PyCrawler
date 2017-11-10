@@ -48,7 +48,7 @@ def get_account_from_index():
 def main():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
-    save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
+    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         account_list_from_save_data = get_account_from_save_data(save_data_path)

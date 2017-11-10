@@ -238,7 +238,7 @@ class Download(robot.DownloadThread):
 
                 image_index = 1
                 # 过滤标题中不支持的字符
-                blog_title = robot.filter_text(blog_info["blog_title"])
+                blog_title = path.filter_text(blog_info["blog_title"])
                 blog_id = get_blog_id(blog_info["blog_url"])
                 # 过滤标题中不支持的字符
                 if blog_title:
@@ -279,11 +279,10 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_IMAGE_COUNT += total_image_count
-        ACCOUNTS.remove(account_id)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += total_image_count
+            ACCOUNTS.remove(account_id)
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 

@@ -20,10 +20,10 @@ ACCESS_TOKEN = None
 def init():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 设置代理
-    is_proxy = robot.get_config(config, "IS_PROXY", 2, 1)
+    is_proxy = robot.analysis_config(config, "IS_PROXY", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
     if is_proxy == 1 or is_proxy == 2:
-        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        proxy_ip = robot.analysis_config(config, "PROXY_IP", "127.0.0.1")
+        proxy_port = robot.analysis_config(config, "PROXY_PORT", "8087")
         # 使用代理的线程池
         net.set_proxy(proxy_ip, proxy_port)
 

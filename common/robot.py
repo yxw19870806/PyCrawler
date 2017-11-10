@@ -6,11 +6,13 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from common import process
 import codecs
 import ConfigParser
 import os
 import re
 import sys
+import thread
 import threading
 import time
 
@@ -28,13 +30,13 @@ SYS_GET_COOKIE = "get_cookie"
 # 程序是否需要额外读取配置（应用级别）
 # 传入参数类型为tuple，且长度至少为二
 # 第一位是配置文件所在路径
-# 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同get_config方法后三个参数
+# 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
 
 
 class Robot(object):
     print_function = None
-    process_flag = None
+    thread_event = None
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -78,13 +80,13 @@ class Robot(object):
             app_config = read_config(sys_config[SYS_APP_CONFIG][0])
             for app_config_template in  sys_config[SYS_APP_CONFIG][1:]:
                 if len(app_config_template) == 3:
-                    self.app_config[app_config_template[0]] = get_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
+                    self.app_config[app_config_template[0]] = analysis_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
 
         # 日志
-        self.is_show_error = get_config(config, "IS_SHOW_ERROR", True, 2)
-        self.is_show_step = get_config(config, "IS_SHOW_STEP", True, 2)
-        self.is_show_trace = get_config(config, "IS_SHOW_TRACE", False, 2)
-        error_log_path = get_config(config, "ERROR_LOG_PATH", "\\log/errorLog.txt", 3)
+        self.is_show_error = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.is_show_step = analysis_config(config, "IS_SHOW_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        self.is_show_trace = analysis_config(config, "IS_SHOW_TRACE", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        error_log_path = analysis_config(config, "ERROR_LOG_PATH", "\\log/errorLog.txt", CONFIG_ANALYSIS_MODE_PATH)
         self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
 
@@ -92,11 +94,11 @@ class Robot(object):
             self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
             tool.process_exit()
             return
-        is_log_step = get_config(config, "IS_LOG_STEP", True, 2)
+        is_log_step = analysis_config(config, "IS_LOG_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
         if not is_log_step:
             self.step_log_path = ""
         else:
-            step_log_path = get_config(config, "STEP_LOG_PATH", "\\log/stepLog.txt", 3)
+            step_log_path = analysis_config(config, "STEP_LOG_PATH", "\\log/stepLog.txt", CONFIG_ANALYSIS_MODE_PATH)
             self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
@@ -104,11 +106,11 @@ class Robot(object):
                 self.print_msg("创建步骤日志目录 %s 失败" % step_log_dir)
                 tool.process_exit()
                 return
-        is_log_trace = get_config(config, "IS_LOG_TRACE", True, 2)
+        is_log_trace = analysis_config(config, "IS_LOG_TRACE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
         if not is_log_trace:
             self.trace_log_path = ""
         else:
-            trace_log_path = get_config(config, "TRACE_LOG_PATH", "\\log/traceLog.txt", 3)
+            trace_log_path = analysis_config(config, "TRACE_LOG_PATH", "\\log/traceLog.txt", CONFIG_ANALYSIS_MODE_PATH)
             self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
@@ -127,8 +129,8 @@ class Robot(object):
             IS_INIT = True
 
         # 是否下载
-        self.is_download_image = get_config(config, "IS_DOWNLOAD_IMAGE", True, 2) and sys_download_image
-        self.is_download_video = get_config(config, "IS_DOWNLOAD_VIDEO", True, 2) and sys_download_video
+        self.is_download_image = analysis_config(config, "IS_DOWNLOAD_IMAGE", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_image
+        self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
 
         if not self.is_download_image and not self.is_download_video:
             if sys_download_image or sys_download_video:
@@ -140,7 +142,7 @@ class Robot(object):
         if "save_data_path" in extra_config:
             self.save_data_path = os.path.realpath(extra_config["save_data_path"])
         else:
-            self.save_data_path = get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
+            self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
             # 存档文件不存在
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
@@ -153,7 +155,7 @@ class Robot(object):
             if "image_download_path" in extra_config:
                 self.image_download_path = os.path.realpath(extra_config["image_download_path"])
             else:
-                self.image_download_path = get_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", 3)
+                self.image_download_path = analysis_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.image_download_path):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
@@ -167,7 +169,7 @@ class Robot(object):
             if "video_download_path" in extra_config:
                 self.video_download_path = os.path.realpath(extra_config["video_download_path"])
             else:
-                self.video_download_path = get_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", 3)
+                self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.video_download_path):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
@@ -177,10 +179,10 @@ class Robot(object):
             self.video_download_path = ""
 
         # 代理
-        is_proxy = get_config(config, "IS_PROXY", 2, 1)
+        is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
         if is_proxy == 1 or (is_proxy == 2 and sys_set_proxy):
-            proxy_ip = get_config(config, "PROXY_IP", "127.0.0.1", 0)
-            proxy_port = get_config(config, "PROXY_PORT", "8087", 0)
+            proxy_ip = analysis_config(config, "PROXY_IP", "127.0.0.1")
+            proxy_port = analysis_config(config, "PROXY_PORT", "8087")
             # 使用代理的线程池
             net.set_proxy(proxy_ip, proxy_port)
         else:
@@ -191,13 +193,13 @@ class Robot(object):
         self.cookie_value = {}
         if sys_get_cookie:
             # 操作系统&浏览器
-            browser_type = get_config(config, "BROWSER_TYPE", 2, 1)
+            browser_type = analysis_config(config, "BROWSER_TYPE", 2, CONFIG_ANALYSIS_MODE_INTEGER)
             # cookie
-            is_auto_get_cookie = get_config(config, "IS_AUTO_GET_COOKIE", True, 2)
+            is_auto_get_cookie = analysis_config(config, "IS_AUTO_GET_COOKIE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
             if is_auto_get_cookie:
                 cookie_path = browser.get_default_browser_cookie_path(browser_type)
             else:
-                cookie_path = get_config(config, "COOKIE_PATH", "", 0)
+                cookie_path = analysis_config(config, "COOKIE_PATH", "")
             all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
             for cookie_domain in sys_config[SYS_GET_COOKIE]:
                 # 如果指定了cookie key
@@ -215,11 +217,11 @@ class Robot(object):
                             self.cookie_value[cookie_name] = all_cookie_from_browser[cookie_domain][cookie_name]
 
         # Http Setting
-        net.HTTP_CONNECTION_TIMEOUT = get_config(config, "HTTP_CONNECTION_TIMEOUT", 10, 1)
-        net.HTTP_REQUEST_RETRY_COUNT = get_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, 1)
+        net.HTTP_CONNECTION_TIMEOUT = analysis_config(config, "HTTP_CONNECTION_TIMEOUT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
+        net.HTTP_REQUEST_RETRY_COUNT = analysis_config(config, "HTTP_REQUEST_RETRY_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
 
         # 线程数
-        self.thread_count = get_config(config, "THREAD_COUNT", 10, 1)
+        self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
         self.thread_lock = threading.Lock()
 
         # 启用线程监控是否需要暂停其他下载线程
@@ -228,24 +230,24 @@ class Robot(object):
         process_control_thread.start()
 
         # 键盘监控线程
-        if get_config(config, "IS_KEYBOARD_EVENT", True, 2):
+        if analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
             # 进程阻塞标志
-            self.process_flag = threading.Event()
-            self.process_flag.set()
+            self.thread_event = threading.Event()
+            self.thread_event.set()
 
             keyboard_event_bind = {}
-            pause_process_key = get_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9", 0)
+            pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
             if pause_process_key:
                 keyboard_event_bind[pause_process_key] = process.pause_process
                 keyboard_event_bind[pause_process_key] = self.pause_process
             # 继续进程
-            continue_process_key = get_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10", 0)
+            continue_process_key = analysis_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10")
             if continue_process_key:
                 keyboard_event_bind[continue_process_key] = process.continue_process
                 keyboard_event_bind[continue_process_key] = self.resume_process
             # 结束进程（取消当前的线程，完成任务）
-            stop_process_key = get_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12", 0)
+            stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
             if stop_process_key:
                 keyboard_event_bind[stop_process_key] = process.stop_process
                 keyboard_event_bind[stop_process_key] = self.stop_process
@@ -258,12 +260,14 @@ class Robot(object):
         self.print_msg("初始化完成")
 
     def pause_process(self):
-        """Set process_flag to False"""
-        self.process_flag.clear()
+        """Set thread_event to False"""
+        output.print_msg("pause process")
+        self.thread_event.clear()
 
     def resume_process(self):
-        """Set process_flag to True"""
-        self.process_flag.set()
+        """Set thread_event to True"""
+        output.print_msg("resume process")
+        self.thread_event.set()
 
     def stop_process(self):
         tool.process_exit(0)
@@ -276,48 +280,85 @@ class Robot(object):
 
 class DownloadThread(threading.Thread):
     """Download sub-thread"""
-    def __init__(self, account_info, thread_lock):
+    thread_lock = None
+    thread_event = None
+
+    def __init__(self, account_info, thread_lock=None, thread_event=None):
+        """
+        :param account_info:
+
+        :param thread_lock:
+            threading.Lock() object in main thread
+
+        :param thread_event:
+            threading.Event() object in main thread, flag of process is running
+        """
         threading.Thread.__init__(self)
         self.account_info = account_info
-        self.thread_lock = thread_lock
+        if isinstance(thread_lock, thread.LockType):
+            self.thread_lock = thread_lock
+        if isinstance(thread_lock, threading._Event):
+            self.thread_event = thread_event
+
+    def wait(self):
+        """Block process unitl self.thread_event.clear()"""
+        if self.thread_event is not None:
+            self.thread_event.wait()
 
 
-# 读取配置文件
 def read_config(config_path):
+    """Read config file"""
     config = ConfigParser.SafeConfigParser()
     with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
         config.readfp(file_handle)
     return config
 
 
-# 获取配置文件
-# config : 字典格式，如：{key1:value1, key2:value2}
-# mode=0 : 直接赋值
-# mode=1 : 取整
-# mode=2 : 布尔值，非True的传值或者字符串"0"和"false"为False，其他值为True
-# mode=3 : 文件路径，以"\"开头的为当前目录下创建
-def get_config(config, key, default_value, mode):
+CONFIG_ANALYSIS_MODE_INTEGER = 1
+CONFIG_ANALYSIS_MODE_BOOLEAN = 2
+CONFIG_ANALYSIS_MODE_PATH = 3
+
+
+def analysis_config(config, key, default_value, mode=None):
+    """Analysis config
+
+    :param config:
+        Dictionary of config
+
+    :param key:
+        key of config
+
+    :param default_value:
+        default value
+
+    :param mode:
+        type of analysis mode
+        None    direct assignment
+        1       conversion to integer
+        2       conversion to boolean
+                    the value Equivalent to False, or string of "0" and "false" will conversion to False
+                    other string will conversion to True
+        3       conversion to file path
+                    startup with '\', project root path
+                    startup with '\\', application root path
+    """
     if config.has_option("setting", key):
         value = config.get("setting", key).encode("UTF-8")
     else:
         output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
-    if mode == 0:
-        pass
-    elif mode == 1:
-        if isinstance(value, int):
-            pass
-        elif isinstance(value, str) and value.isdigit():
+    if mode == CONFIG_ANALYSIS_MODE_INTEGER:
+        if isinstance(value, int) or isinstance(value, long) or (isinstance(value, str) and value.isdigit()):
             value = int(value)
         else:
             output.print_msg("配置文件config.ini中key为'" + key + "'的值必须是一个整数，使用程序默认设置")
             value = default_value
-    elif mode == 2:
+    elif mode == CONFIG_ANALYSIS_MODE_BOOLEAN:
         if not value or value == "0" or (isinstance(value, str) and value.lower() == "false"):
             value = False
         else:
             value = True
-    elif mode == 3:
+    elif mode == CONFIG_ANALYSIS_MODE_PATH:
         if value[:2] == "\\\\":  # \\ 开头，程序所在目录
             value = os.path.join(os.path.abspath(""), value[2:])  # \\ 仅做标记使用，实际需要去除
         elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
@@ -417,19 +458,6 @@ def is_integer(number):
     elif str(number).isdigit():
         return True
     return False
-
-
-# 过滤文本中的字符，以符合windows支持的路径字符集
-def filter_text(text):
-    for filter_char in ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]:
-        text = text.replace(filter_char, " ")  # 过滤一些windows文件名屏蔽的字符
-    while True:
-        new_text = text.strip().rstrip(".")  # 去除前后空格以及后缀的点
-        # 如果前后没有区别则直接返回
-        if text == new_text:
-            return text
-        else:
-            text = new_text
 
 
 # 替换文本中的表情符号

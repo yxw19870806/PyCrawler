@@ -203,7 +203,7 @@ class Download(robot.DownloadThread):
                     break
 
                 audio_url = audio_play_response["audio_url"]
-                audio_title = robot.filter_text(audio_info["audio_title"])
+                audio_title = path.filter_text(audio_info["audio_title"])
                 log.step(account_name + " 开始下载音频%s《%s》 %s" % (audio_info["audio_id"], audio_title, audio_url))
 
                 file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], audio_title))
@@ -226,11 +226,10 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_VIDEO_COUNT += total_video_count
-        ACCOUNTS.remove(account_id)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_VIDEO_COUNT += total_video_count
+            ACCOUNTS.remove(account_id)
         log.step(account_name + " 下载完毕，总共获得%s首音频" % total_video_count)
 
 

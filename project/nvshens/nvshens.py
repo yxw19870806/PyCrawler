@@ -140,7 +140,7 @@ class Nvshens(robot.Robot):
 
                 image_index = 1
                 # 过滤标题中不支持的字符
-                album_title = robot.filter_text(album_pagination_response["album_title"])
+                album_title = path.filter_text(album_pagination_response["album_title"])
                 if album_title:
                     album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
                 else:

@@ -36,7 +36,7 @@ def get_one_page_article(page_id, page_count):
         "article_info_list": [],  # 全部章信息
         "is_over": False,  # 是不是最后一页文章
     }
-    article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, redirect=False)
+    article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, is_auto_redirect=False)
     if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(article_pagination_response.status))
     # 截取文章数据
@@ -283,7 +283,7 @@ class Download(robot.DownloadThread):
                 article_id = article_response["article_id"]
                 article_title = article_response["article_title"]
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(article_title)
+                title = path.filter_text(article_title)
                 if title:
                     article_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (article_id, title))
                 else:
@@ -343,11 +343,10 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_IMAGE_COUNT += total_image_count
-        ACCOUNTS.remove(account_id)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += total_image_count
+            ACCOUNTS.remove(account_id)
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 

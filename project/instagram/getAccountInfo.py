@@ -44,14 +44,14 @@ def get_account_index_page(account_name):
 def main():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
-    save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
+    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
     # 设置代理
-    is_proxy = robot.get_config(config, "IS_PROXY", 2, 1)
+    is_proxy = robot.analysis_config(config, "IS_PROXY", 2, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
     if is_proxy == 1 or is_proxy == 2:
-        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        proxy_ip = robot.analysis_config(config, "PROXY_IP", "127.0.0.1")
+        proxy_port = robot.analysis_config(config, "PROXY_PORT", "8087")
         # 使用代理的线程池
         net.set_proxy(proxy_ip, proxy_port)
 

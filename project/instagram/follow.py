@@ -67,13 +67,13 @@ def follow_account(account_name, account_id):
 def main():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
     # 操作系统&浏览器
-    browser_type = robot.get_config(config, "BROWSER_TYPE", 2, 1)
+    browser_type = robot.analysis_config(config, "BROWSER_TYPE", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
     # cookie
-    is_auto_get_cookie = robot.get_config(config, "IS_AUTO_GET_COOKIE", True, 4)
+    is_auto_get_cookie = robot.analysis_config(config, "IS_AUTO_GET_COOKIE", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
     if is_auto_get_cookie:
         cookie_path = browser.get_default_browser_cookie_path(browser_type)
     else:
-        cookie_path = robot.get_config(config, "COOKIE_PATH", "", 0)
+        cookie_path = robot.analysis_config(config, "COOKIE_PATH", "")
     all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
     if "www.instagram.com" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser["www.instagram.com"]:
@@ -82,15 +82,15 @@ def main():
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
     # 设置代理
-    is_proxy = robot.get_config(config, "IS_PROXY", 2, 1)
+    is_proxy = robot.analysis_config(config, "IS_PROXY", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
     if is_proxy == 1 or is_proxy == 2:
-        proxy_ip = robot.get_config(config, "PROXY_IP", "127.0.0.1", 0)
-        proxy_port = robot.get_config(config, "PROXY_PORT", "8087", 0)
+        proxy_ip = robot.analysis_config(config, "PROXY_IP", "127.0.0.1")
+        proxy_port = robot.analysis_config(config, "PROXY_PORT", "8087")
         # 使用代理的线程池
         net.set_proxy(proxy_ip, proxy_port)
 
     # 存档位置
-    save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
+    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
 

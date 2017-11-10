@@ -96,7 +96,7 @@ class ABase(robot.Robot):
                 while thread_type == 1 and threading.activeCount() >= self.thread_count + main_thread_count:
                     time.sleep(5)
 
-                title = robot.filter_text(title).upper()
+                title = path.filter_text(title).upper()
                 image_url = get_large_image_url(small_image_url)
                 if image_url is None:
                     log.error("%s的封面图片 %s 大图地址解析失败" % (small_image_url, title))
@@ -157,9 +157,8 @@ class Download(threading.Thread):
                     else:
                         path.delete_dir_or_file(self.file_temp_path)
 
-                self.thread_lock.acquire()
-                TOTAL_IMAGE_COUNT += 1
-                self.thread_lock.release()
+                with self.thread_lock:
+                    TOTAL_IMAGE_COUNT += 1
         else:
             log.error("%s的封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 

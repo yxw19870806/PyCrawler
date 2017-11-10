@@ -32,7 +32,7 @@ IS_STEP_ERROR_403_AND_404 = False
 # 获取首页，判断是否支持https以及是否启用safe-mode
 def get_index_setting(account_id):
     index_url = "https://%s.tumblr.com/" % account_id
-    index_response = net.http_request(index_url, method="GET", redirect=False)
+    index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
     is_https = True
     is_safe_mode = False
     if index_response.status == 302:
@@ -40,7 +40,7 @@ def get_index_setting(account_id):
         if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
             is_https = False
             index_url = "http://%s.tumblr.com/" % account_id
-            index_response = net.http_request(index_url, method="GET", redirect=False)
+            index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
             if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 return is_https, is_safe_mode
             elif index_response.status != 302:
@@ -205,7 +205,7 @@ def get_video_play_page(account_id, post_id, is_https):
     else:
         protocol_type = "http"
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
-    video_play_response = net.http_request(video_play_url, method="GET", redirect=False)
+    video_play_response = net.http_request(video_play_url, method="GET", is_auto_redirect=False)
     result = {
         "is_skip": False,  # 是不是第三方视频
         "video_url": None,  # 视频地址
@@ -218,7 +218,7 @@ def get_video_play_page(account_id, post_id, is_https):
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
     video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
     if len(video_url_find) == 1:
-        video_response = net.http_request(video_url_find[0], method="HEAD", redirect=False)
+        video_response = net.http_request(video_url_find[0], method="HEAD", is_auto_redirect=False)
         # 获取视频重定向页面
         if video_response.status == 302:
             redirect_url = video_response.getheader("Location")
@@ -496,12 +496,11 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_IMAGE_COUNT += total_image_count
-        TOTAL_VIDEO_COUNT += total_video_count
-        ACCOUNTS.remove(account_id)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += total_image_count
+            TOTAL_VIDEO_COUNT += total_video_count
+            ACCOUNTS.remove(account_id)
         log.step(account_id + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
 
 

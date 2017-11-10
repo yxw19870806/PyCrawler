@@ -26,7 +26,7 @@ def get_account_index_page(account_name):
         account_index_url = "https://tuchong.com/%s" % account_name
     else:
         account_index_url = "https://%s.tuchong.com" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", redirect=False)
+    account_index_response = net.http_request(account_index_url, method="GET", is_auto_redirect=False)
     result = {
         "account_id": None,  # account id（字母账号->数字账号)
     }
@@ -214,7 +214,7 @@ class Download(robot.DownloadThread):
 
                 image_index = 1
                 # 过滤标题中不支持的字符
-                title = robot.filter_text(album_info["album_title"])
+                title = path.filter_text(album_info["album_title"])
                 if title:
                     post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (album_info["album_id"], title))
                 else:
@@ -247,11 +247,10 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_IMAGE_COUNT += total_image_count
-        ACCOUNTS.remove(account_name)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += total_image_count
+            ACCOUNTS.remove(account_name)
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 

@@ -149,7 +149,7 @@ class MeiTuZZ(robot.Robot):
                 if self.is_download_image and album_response["video_url"] is not None:
                     log.step("开始下载第%s页视频 %s" % (album_id, album_response["video_url"]))
 
-                    video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, robot.filter_text(album_response["album_title"])))
+                    video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, path.filter_text(album_response["album_title"])))
                     save_file_return = net.save_net_file(album_response["video_url"], video_file_path)
                     if save_file_return["status"] == 1:
                         # 设置临时目录

@@ -206,7 +206,7 @@ class Download(robot.DownloadThread):
                 video_id = str(video_info["item_data"]["watch_id"])
 
                 # 过滤标题中不支持的字符
-                video_title = robot.filter_text(video_info["item_data"]["title"])
+                video_title = path.filter_text(video_info["item_data"]["title"])
 
                 # 获取视频下载地址
                 video_url = get_video_url(video_id)
@@ -237,12 +237,10 @@ class Download(robot.DownloadThread):
                 self.account_info[1] = first_video_id
 
             # 保存最后的信息
-            self.thread_lock.acquire()
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_VIDEO_COUNT += video_count - 1
-            ACCOUNTS.remove(account_id)
-            self.thread_lock.release()
-
+            with self.thread_lock:
+                tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+                TOTAL_VIDEO_COUNT += video_count - 1
+                ACCOUNTS.remove(account_id)
             log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:

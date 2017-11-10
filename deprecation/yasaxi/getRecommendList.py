@@ -46,7 +46,7 @@ def main():
     if yasaxiCommon.get_token_from_file():
         config = robot.read_config(tool.PROJECT_CONFIG_PATH)
         # 存档位置
-        save_data_path = robot.get_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", 3)
+        save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
         try:
             account_list_from_api = get_account_from_api()
         except robot.RobotException, e:

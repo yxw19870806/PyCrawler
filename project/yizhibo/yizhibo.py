@@ -69,7 +69,7 @@ def get_image_header(image_url):
 # 获取全部视频ID列表
 def get_video_index_page(account_id):
     # http://www.yizhibo.com/member/personel/user_videos?memberid=6066534
-    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos" % account_id
+    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
     result = {
@@ -332,12 +332,11 @@ class Download(robot.DownloadThread):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
-        self.thread_lock.acquire()
-        tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-        TOTAL_IMAGE_COUNT += total_image_count
-        TOTAL_VIDEO_COUNT += total_video_count
-        ACCOUNTS.remove(account_id)
-        self.thread_lock.release()
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += total_image_count
+            TOTAL_VIDEO_COUNT += total_video_count
+            ACCOUNTS.remove(account_id)
         log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
 
 
