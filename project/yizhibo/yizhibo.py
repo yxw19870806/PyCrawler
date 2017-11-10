@@ -69,7 +69,7 @@ def get_image_header(image_url):
 # 获取全部视频ID列表
 def get_video_index_page(account_id):
     # http://www.yizhibo.com/member/personel/user_videos?memberid=6066534
-    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos" % account_id
+    video_pagination_url = "http://www.yizhibo.com/member/personel/user_videos"
     query_data = {"memberid": account_id}
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data)
     result = {
