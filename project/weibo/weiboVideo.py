@@ -217,8 +217,8 @@ class Weibo(robot.Robot):
                 tool.process_exit()
 
         # 解析存档文件
-        # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
+        # account_id  video_count  last_video_url  (account_name)
+        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
         ACCOUNTS = account_list.keys()
 
         # 循环下载每个id
@@ -266,8 +266,8 @@ class Download(robot.DownloadThread):
         global TOTAL_VIDEO_COUNT
 
         account_id = self.account_info[0]
-        if len(self.account_info) >= 6 and self.account_info[5]:
-            account_name = self.account_info[5]
+        if len(self.account_info) >= 4 and self.account_info[3]:
+            account_name = self.account_info[3]
         else:
             account_name = self.account_info[0]
         total_video_count = 0
@@ -301,7 +301,7 @@ class Download(robot.DownloadThread):
                 # 寻找这一页符合条件的视频
                 for video_play_url in video_pagination_response["video_play_url_list"]:
                     # 检查是否达到存档记录
-                    if self.account_info[4] != video_play_url:
+                    if self.account_info[2] != video_play_url:
                         video_play_url_list.append(video_play_url)
                     else:
                         is_over = True
@@ -312,7 +312,7 @@ class Download(robot.DownloadThread):
                         is_over = True
                         # todo 没有找到历史记录如何处理
                         # 有历史记录，但此次直接获取了全部视频
-                        if self.account_info[4] != "":
+                        if self.account_info[2] != "":
                             log.error(account_name + " 没有找到上次下载的最后一个视频地址")
                     else:
                         # 设置下一页指针
@@ -323,7 +323,7 @@ class Download(robot.DownloadThread):
             # 从最早的图片开始下载
             while len(video_play_url_list) > 0:
                 video_play_url = video_play_url_list.pop()
-                video_index = int(self.account_info[3]) + 1
+                video_index = int(self.account_info[1]) + 1
                 log.step(account_name + " 开始解析第%s个视频 %s" % (video_index, video_play_url))
 
                 # 获取这个视频的下载地址
@@ -347,8 +347,8 @@ class Download(robot.DownloadThread):
                     continue
                 # 视频下载完毕
                 total_video_count += 1  # 计数累加
-                self.account_info[3] = str(video_index)  # 设置存档记录
-                self.account_info[4] = video_play_url  # 设置存档记录
+                self.account_info[1] = str(video_index)  # 设置存档记录
+                self.account_info[2] = video_play_url  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
