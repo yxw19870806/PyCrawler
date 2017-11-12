@@ -305,9 +305,9 @@ class Download(robot.DownloadThread):
                 log.step(account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
 
                 # 从最早的视频开始下载
-                video_index = int(self.account_info[1]) + 1
                 while len(video_info_list) > 0:
                     video_info = video_info_list.pop()
+                    video_index = int(self.account_info[1]) + 1
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))
 
                     video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.ts" % video_index)
