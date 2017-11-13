@@ -9,9 +9,9 @@ from common import output
 import os
 import platform
 import sqlite3
-import sys
 if platform.system() == "Windows":
     import win32crypt
+
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2
 BROWSER_TYPE_CHROME = 3
