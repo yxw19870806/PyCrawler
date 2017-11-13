@@ -390,7 +390,7 @@ def read_save_data(save_data_path, key_index, default_value_list):
     result_list = {}
     if not os.path.exists(path.change_path_encoding(save_data_path)):
         return result_list
-    for single_save_data in tool.read_file(save_data_path, 2):
+    for single_save_data in tool.read_file(save_data_path, tool.READ_FILE_TYPE_LINE):
         single_save_data = single_save_data.replace("\xef\xbb\xbf", "").replace("\n", "").replace("\r", "")
         if len(single_save_data) == 0:
             continue

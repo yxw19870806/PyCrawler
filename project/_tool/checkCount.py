@@ -45,7 +45,7 @@ def get_save_data_file_count():
         output.print_msg("save data %s not exist" % SAVE_DATA_FILE_PATH)
         return {}
     account_list = {}
-    for line in tool.read_file(SAVE_DATA_FILE_PATH, 2):
+    for line in tool.read_file(SAVE_DATA_FILE_PATH, tool.READ_FILE_TYPE_LINE):
         temp_list = line.replace("\n", "").split("\t")
         account_list[temp_list[PRIME_KEY_INDEX]] = int(temp_list[COUNT_INDEX])
     return account_list

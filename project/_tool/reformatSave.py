@@ -13,7 +13,7 @@ NEW_SAVE_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_file
 # 修改存档文件列的顺序并保存
 def reformat_save():
     new_lines = []
-    for line in tool.read_file(OLD_SAVE_FILE_PATH, 2):
+    for line in tool.read_file(OLD_SAVE_FILE_PATH, tool.READ_FILE_TYPE_LINE):
         temp_list = line.replace("\n", "").split("\t")
         new_list = list([])
         # 新旧字段逻辑

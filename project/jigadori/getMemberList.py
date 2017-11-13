@@ -19,7 +19,7 @@ def get_account_from_save_data():
     account_list = {}
     if not os.path.exists(SAVE_DATA_PATH):
         return account_list
-    for line in tool.read_file(SAVE_DATA_PATH, 2):
+    for line in tool.read_file(SAVE_DATA_PATH, tool.READ_FILE_TYPE_LINE):
         line = line.replace("\n", "")
         account_info_temp = line.split("\t")
         account_list[account_info_temp[0]] = line

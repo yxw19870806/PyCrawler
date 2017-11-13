@@ -23,6 +23,9 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 
+READ_FILE_TYPE_FULL = 1 # 读取整个文件 ，返回字符串
+READ_FILE_TYPE_LINE = 2 # 按行读取，返回list
+
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), ".."))
 # 项目程序目录
@@ -135,10 +138,20 @@ def shutdown(delay_time=30):
         os.system("halt")
 
 
-# 读取文件
-# type=1: 读取整个文件，同 .read()，返回string
-# type=2: 按行读取整个文件，同 .readlines()，返回list
-def read_file(file_path, read_type=1):
+def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
+    """Read local file
+
+    :param file_path:
+        the path of file
+
+    :param read_type:
+        READ_FILE_TYPE_FULL     read full file
+        READ_FILE_TYPE_LINE     read each line of file
+
+    :return:
+        READ_FILE_TYPE_FULL     type of string
+        READ_FILE_TYPE_LINE     type of list
+    """
     file_path = path.change_path_encoding(file_path)
     if not os.path.exists(file_path):
         if read_type == 1:

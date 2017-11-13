@@ -18,7 +18,7 @@ ACCOUNT_ID_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_fi
 # 获取存档文件
 def get_account_from_save_data(file_path):
     account_list = {}
-    for line in tool.read_file(file_path, 2):
+    for line in tool.read_file(file_path, tool.READ_FILE_TYPE_LINE):
         line = line.replace("\n", "")
         account_info_temp = line.split("\t")
         account_list[account_info_temp[0]] = line

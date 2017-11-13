@@ -20,7 +20,7 @@ TALK_ID_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filen
 # 获取account id文件
 def get_account_from_file():
     account_list = {}
-    for line in tool.read_file(ACCOUNT_ID_FILE_PATH, 2):
+    for line in tool.read_file(ACCOUNT_ID_FILE_PATH, tool.READ_FILE_TYPE_LINE):
         split_temp = line.replace("\n", "").split("\t")
         account_list[split_temp[0]] = split_temp[1]
     return account_list

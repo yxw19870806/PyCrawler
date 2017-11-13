@@ -13,7 +13,7 @@ NAME_COLUMN = 4
 # 从现役成员名单中获取全部成员名字（由get48GroupMember.py生成）
 def get_member_list():
     member = []
-    for line in tool.read_file("member.txt", 2):
+    for line in tool.read_file("member.txt", tool.READ_FILE_TYPE_LINE):
         temp_list = line.replace("\n", "").split("\t")
         member.append(temp_list[0])
     return member
@@ -22,7 +22,7 @@ def get_member_list():
 # 从存档文件中获取全部名字（NAME_COLUMN对应的名字必须和从官网获取的成员本名一致）
 def get_save_file_name_list():
     member = []
-    for line in tool.read_file(SAVE_FILE_PATH, 2):
+    for line in tool.read_file(SAVE_FILE_PATH, tool.READ_FILE_TYPE_LINE):
         temp_list = line.replace("\n", "").split("\t")
         member.append(temp_list[NAME_COLUMN])
     return member
