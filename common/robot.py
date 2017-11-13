@@ -33,6 +33,10 @@ SYS_GET_COOKIE = "get_cookie"
 # 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
 
+CONFIG_ANALYSIS_MODE_INTEGER = 1
+CONFIG_ANALYSIS_MODE_BOOLEAN = 2
+CONFIG_ANALYSIS_MODE_PATH = 3
+
 
 class Robot(object):
     print_function = None
@@ -312,11 +316,6 @@ def read_config(config_path):
     with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
         config.readfp(file_handle)
     return config
-
-
-CONFIG_ANALYSIS_MODE_INTEGER = 1
-CONFIG_ANALYSIS_MODE_BOOLEAN = 2
-CONFIG_ANALYSIS_MODE_PATH = 3
 
 
 def analysis_config(config, key, default_value, mode=None):
