@@ -238,10 +238,9 @@ def _random_user_agent():
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
     """
-    firefox_version_max = 55
+    firefox_version_max = 56
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["51.0.2704", "52.0.2743", "53.0.2785", "54.0.2840", "55.0.2883",
-                           "56.0.2924", "57.0.2987", "58.0.3029", "59.0.3071", "60.0.3080"]
+    chrome_version_list = ["53.0.2785", "54.0.2840", "55.0.2883", "56.0.2924", "57.0.2987", "58.0.3029", "59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202"]
     windows_version_list = ["6.1", "6.3", "10.0"]
     browser_type = random.choice(["firefox", "chrome"])
     os_type = random.choice(windows_version_list)
