@@ -164,7 +164,7 @@ def analysis_image(image_url):
             image_id = temp_list[1]
         # http://78.media.tumblr.com/tumblr_livevtbzL31qzk5tao1_cover.jpg
         # http://78.media.tumblr.com/tumblr_ljkiptVlj61qg3k48o1_1302659992_cover.jpg
-        if temp_list[-1] in ["cover", "og"]:
+        if temp_list[-1] in ["cover", "og", "frame1"]:
             pass
         # https://78.media.tumblr.com/tumblr_lixa2piSdw1qc4p5zo1_500.jpg
         # https://78.media.tumblr.com/tumblr_lhrk7kBVz31qbijcho1_r1_500.gif
@@ -178,7 +178,14 @@ def analysis_image(image_url):
             resolution = int(temp_list[-1][:-1])
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
         # http://78.media.tumblr.com/afd60c3d469055cea4544fe848eeb266/tumblr_inline_n9gff0sXMl1rzbdqg.gif
-        elif len(temp_list) == 2 or (len(temp_list) == 3 and temp_list[1] == "inline"):
+        # https://78.media.tumblr.com/tumblr_o7ec46zp5M1vpohsl_frame1.jpg
+        # https://78.media.tumblr.com/tumblr_odtdlgTAbg1sg1lga_r1_frame1.jpg
+        elif (
+            len(temp_list) == 2 or
+            (len(temp_list) == 3 and temp_list[1] == "inline") or
+            (len(temp_list) == 3 and temp_list[2] == "frame1") or
+            (len(temp_list) == 4 and temp_list[2] == "r1" and temp_list[3] == "frame1")
+        ):
             pass
         else:
             log.error("unknown 1 image url: %s" % image_url)
@@ -193,7 +200,7 @@ def analysis_image(image_url):
     else:
         image_id = image_url.split("/")[-1].split(".")[0]
         log.error("unknown 2 image url: %s" % image_url)
-    if len(image_id) < 15:
+    if len(image_id) < 15 and not (robot.is_integer(image_id) and int(image_id) < 10000):
         log.error("unknown 3 image url: %s" % image_url)
     return image_id, resolution
 
