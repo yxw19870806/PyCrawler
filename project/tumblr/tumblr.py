@@ -200,7 +200,7 @@ def analysis_image(image_url):
     else:
         image_id = image_url.split("/")[-1].split(".")[0]
         log.error("unknown 2 image url: %s" % image_url)
-    if len(image_id) < 15 and not (robot.is_integer(image_id) and int(image_id) < 10000):
+    if len(image_id) < 15 and not (robot.is_integer(image_id) and int(image_id) < 100000000):
         log.error("unknown 3 image url: %s" % image_url)
     return image_id, resolution
 
