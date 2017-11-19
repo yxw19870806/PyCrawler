@@ -50,6 +50,8 @@ def get_index_setting(account_id):
             is_safe_mode = True
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
                 is_https = False
+    elif index_response.status == 404:
+        raise robot.RobotException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
     return is_https, is_safe_mode
@@ -97,8 +99,6 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
                 result["post_url_list"].append(str(post_url))
         else:
             result["is_over"] = True
-    elif page_count == 1 and post_pagination_response.status == 404:
-        raise robot.RobotException("账号不存在")
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_pagination_response.status))
     return result
