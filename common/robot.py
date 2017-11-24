@@ -223,26 +223,19 @@ class Robot(object):
 
         # 键盘监控线程
         if analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
-            # 进程阻塞标志
-            self.thread_event = threading.Event()
-            self.thread_event.set()
-
             keyboard_event_bind = {}
             pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
             if pause_process_key:
-                keyboard_event_bind[pause_process_key] = process.pause_process
-                keyboard_event_bind[pause_process_key] = self.pause_process
+                keyboard_event_bind[pause_process_key] = net.pause_request
             # 继续进程
             continue_process_key = analysis_config(config, "CONTINUE_PROCESS_KEYBOARD_KEY", "F10")
             if continue_process_key:
-                keyboard_event_bind[continue_process_key] = process.continue_process
-                keyboard_event_bind[continue_process_key] = self.resume_process
+                keyboard_event_bind[continue_process_key] = net.resume_request
             # 结束进程（取消当前的线程，完成任务）
             stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
             if stop_process_key:
                 keyboard_event_bind[stop_process_key] = process.stop_process
-                keyboard_event_bind[stop_process_key] = self.stop_process
 
             if keyboard_event_bind:
                 keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
@@ -250,16 +243,6 @@ class Robot(object):
                 keyboard_control_thread.start()
 
         self.print_msg("初始化完成")
-
-    def pause_process(self):
-        """Set thread_event to False"""
-        output.print_msg("pause process")
-        self.thread_event.clear()
-
-    def resume_process(self):
-        """Set thread_event to True"""
-        output.print_msg("resume process")
-        self.thread_event.set()
 
     def stop_process(self):
         tool.process_exit(0)

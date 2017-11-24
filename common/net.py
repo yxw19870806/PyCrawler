@@ -12,6 +12,7 @@ import os
 import random
 import ssl
 import time
+import threading
 import traceback
 import urllib3
 
@@ -30,6 +31,9 @@ HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返
 HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
+
+thread_event = threading.Event()
+thread_event.set()
 
 
 class ErrorResponse(object):
@@ -169,10 +173,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
 
     retry_count = 0
     while True:
-        while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
-            time.sleep(10)
         if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
             tool.process_exit(0)
+        thread_event.wait()
 
         try:
             if method in ['DELETE', 'GET', 'HEAD', 'OPTIONS']:
@@ -368,3 +371,15 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
         return {"status": 1, "code": 0}
     # path.delete_dir_or_file(file_path)
     return {"status": 0, "code": -2}
+
+
+def pause_request():
+    """Block thread when use http_request()"""
+    output.print_msg("pause process")
+    thread_event.clear()
+
+
+def resume_request():
+    """Resume thread"""
+    output.print_msg("resume process")
+    thread_event.set()
