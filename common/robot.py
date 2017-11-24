@@ -16,7 +16,6 @@ import thread
 import threading
 import time
 
-IS_INIT = False
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_IMAGE = "download_image"
 # 程序是否支持下载视频功能（会判断配置中是否需要下载视频，如全部是则创建视频下载目录）
@@ -51,7 +50,6 @@ class Robot(object):
 
     # 程序全局变量的设置
     def __init__(self, sys_config, extra_config=None):
-        global IS_INIT
         self.start_time = time.time()
 
         # 程序启动配置
@@ -87,23 +85,22 @@ class Robot(object):
                     self.app_config[app_config_template[0]] = analysis_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
 
         # 日志
-        self.is_show_error = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        self.is_show_step = analysis_config(config, "IS_SHOW_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-        self.is_show_trace = analysis_config(config, "IS_SHOW_TRACE", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        log.IS_SHOW_ERROR = self.is_show_error = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        log.IS_SHOW_STEP = self.is_show_step = analysis_config(config, "IS_SHOW_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
+        log.IS_SHOW_TRACE = self.is_show_trace = analysis_config(config, "IS_SHOW_TRACE", False, CONFIG_ANALYSIS_MODE_BOOLEAN)
         error_log_path = analysis_config(config, "ERROR_LOG_PATH", "\\log/errorLog.txt", CONFIG_ANALYSIS_MODE_PATH)
-        self.error_log_path = replace_path(error_log_path)
+        log.ERROR_LOG_PATH = self.error_log_path = replace_path(error_log_path)
         error_log_dir = os.path.dirname(self.error_log_path)
-
         if not path.create_dir(error_log_dir):
             self.print_msg("创建错误日志目录 %s 失败" % error_log_dir)
             tool.process_exit()
             return
         is_log_step = analysis_config(config, "IS_LOG_STEP", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
         if not is_log_step:
-            self.step_log_path = ""
+            log.STEP_LOG_PATH = self.step_log_path = ""
         else:
             step_log_path = analysis_config(config, "STEP_LOG_PATH", "\\log/stepLog.txt", CONFIG_ANALYSIS_MODE_PATH)
-            self.step_log_path = replace_path(step_log_path)
+            log.STEP_LOG_PATH = self.step_log_path = replace_path(step_log_path)
             # 日志文件保存目录
             step_log_dir = os.path.dirname(self.step_log_path)
             if not path.create_dir(step_log_dir):
@@ -112,25 +109,16 @@ class Robot(object):
                 return
         is_log_trace = analysis_config(config, "IS_LOG_TRACE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
         if not is_log_trace:
-            self.trace_log_path = ""
+            log.TRACE_LOG_PATH = self.trace_log_path = ""
         else:
             trace_log_path = analysis_config(config, "TRACE_LOG_PATH", "\\log/traceLog.txt", CONFIG_ANALYSIS_MODE_PATH)
-            self.trace_log_path = replace_path(trace_log_path)
+            log.TRACE_LOG_PATH = self.trace_log_path = replace_path(trace_log_path)
             # 日志文件保存目录
             trace_log_dir = os.path.dirname(self.trace_log_path)
             if not path.create_dir(trace_log_dir):
                 self.print_msg("创建调试日志目录 %s 失败" % trace_log_dir)
                 tool.process_exit()
                 return
-
-        if not IS_INIT:
-            log.IS_SHOW_ERROR = self.is_show_error
-            log.IS_SHOW_STEP = self.is_show_step
-            log.IS_SHOW_TRACE = self.is_show_trace
-            log.ERROR_LOG_PATH = self.error_log_path
-            log.STEP_LOG_PATH = self.step_log_path
-            log.TRACE_LOG_PATH = self.trace_log_path
-            IS_INIT = True
 
         # 是否下载
         self.is_download_image = analysis_config(config, "IS_DOWNLOAD_IMAGE", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_image
