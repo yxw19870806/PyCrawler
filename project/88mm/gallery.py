@@ -15,7 +15,7 @@ import time
 import traceback
 import urllib
 
-ACCOUNTS = []
+ACCOUNT_LIST = {}
 TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -133,18 +133,17 @@ class Gallery(robot.Robot):
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
-        global ACCOUNTS
+        global ACCOUNT_LIST
 
         # sub_path  last_page_id
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0"])
         for sub_path in SUB_PATH_LIST:
-            if sub_path not in account_list:
-                account_list[sub_path] = [sub_path, "0"]
-        ACCOUNTS = account_list.keys()
+            if sub_path not in ACCOUNT_LIST:
+                ACCOUNT_LIST[sub_path] = [sub_path, "0"]
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for sub_path in account_list:
+        for sub_path in ACCOUNT_LIST:
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
                 if robot.is_process_end() == 0:
@@ -157,7 +156,7 @@ class Gallery(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[sub_path], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[sub_path], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -167,11 +166,8 @@ class Gallery(robot.Robot):
             time.sleep(10)
 
         # 未完成的数据保存
-        if len(ACCOUNTS) > 0:
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for account_id in ACCOUNTS:
-                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
-            new_save_data_file.close()
+        if len(ACCOUNT_LIST) > 0:
+            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values(), "\n", "\t"), NEW_SAVE_DATA_PATH, 1)
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
@@ -282,7 +278,7 @@ class Download(robot.DownloadThread):
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += total_image_count
-            ACCOUNTS.remove(sub_path)
+            ACCOUNT_LIST.pop(sub_path)
         log.step(sub_path + " 下载完毕，总共获得%s张图片" % total_image_count)
 
 
