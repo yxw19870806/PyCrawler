@@ -124,8 +124,6 @@ def get_post_page(post_url, is_safe_mode):
         raise robot.RobotException("页面截取正文失败\n%s" % post_response.data)
     # 获取og_type（页面类型的是视频还是图片或其他）
     og_type = tool.find_sub_string(post_page_head, '<meta property="og:type" content="', '" />')
-    if not og_type:
-        raise robot.RobotException("正文截取og_type失败\n%s" % post_page_head)
     # 视频
     if og_type == "tumblr-feed:video":
         result["has_video"] = True
@@ -133,6 +131,25 @@ def get_post_page(post_url, is_safe_mode):
         image_url = tool.find_sub_string(post_page_head, '<meta property="og:image" content="', '" />')
         if image_url and image_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
             result["image_url_list"].append(image_url)
+    elif not og_type:
+        script_data = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
+        if not script_data:
+            raise robot.RobotException("正文截取og_type失败\n%s" % post_page_head)
+        try:
+            script_data = json.loads(script_data)
+        except ValueError:
+            raise robot.RobotException("页面脚本数据解析失败\n%s" % script_data)
+        if robot.check_sub_key(("image",), script_data):
+            if isinstance(script_data["image"], dict):
+                if not robot.check_sub_key(("@list",), script_data["image"]):
+                    raise robot.RobotException("页面脚本数据'@list'字段不存在\n%s" % script_data)
+                for image_url in script_data["image"]["@list"]:
+                    result["image_url_list"].append(str(image_url))
+            elif isinstance(script_data["image"], str) or isinstance(script_data["image"], unicode):
+                result["image_url_list"].append(str(script_data["image"]))
+            else:
+                raise robot.RobotException("页面脚本数据'image'字段类型错误\n%s" % script_data)
+        log.error("post url: %s, image count: %s, application/ld+json\n%s" % (post_url, len(result["image_url_list"]), script_data))
     else:
         # 获取全部图片地址
         image_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
