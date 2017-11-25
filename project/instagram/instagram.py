@@ -122,8 +122,8 @@ def get_one_page_media(account_id, cursor):
 
 # 获取媒体详细页
 def get_media_page(page_id):
-    media_url = "https://www.instagram.com/p/%s/" % page_id
-    media_response = net.http_request(media_url, method="GET")
+    media_url = "https://www.instagram.com/p/%s" % page_id
+    media_response = net.http_request(media_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
         "video_url_list": [],  # 全部视频地址
