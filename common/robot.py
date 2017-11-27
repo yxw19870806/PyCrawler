@@ -281,6 +281,16 @@ class DownloadThread(threading.Thread):
             self.thread_event.wait()
 
 
+class RobotException(SystemExit):
+    def __init__(self, msg=""):
+        SystemExit.__init__(self, 1)
+        self.exception_message = msg
+
+    @property
+    def message(self):
+        return  self.exception_message
+
+
 def read_config(config_path):
     """Read config file"""
     config = ConfigParser.SafeConfigParser()
@@ -486,13 +496,3 @@ def get_http_request_failed_reason(return_code):
         return "未知错误，http code %s" % return_code
     else:
         return "未知错误，return code %s" % return_code
-
-
-class RobotException(SystemExit):
-    def __init__(self, msg=""):
-        SystemExit.__init__(self, 1)
-        self.exception_message = msg
-
-    @property
-    def message(self):
-        return  self.exception_message
