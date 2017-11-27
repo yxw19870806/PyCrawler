@@ -13,7 +13,7 @@ import threading
 import time
 import traceback
 
-ACCOUNTS = []
+ACCOUNT_LIST = {}
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
@@ -153,16 +153,15 @@ class YiZhiBo(robot.Robot):
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
-        global ACCOUNTS
+        global ACCOUNT_LIST
 
         # 解析存档文件
         # account_id  video_count  last_video_time  image_count  last_image_time(account_name)
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
-        ACCOUNTS = account_list.keys()
+        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_id in sorted(account_list.keys()):
+        for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
                 if robot.is_process_end() == 0:
@@ -175,7 +174,7 @@ class YiZhiBo(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -185,11 +184,8 @@ class YiZhiBo(robot.Robot):
             time.sleep(10)
 
         # 未完成的数据保存
-        if len(ACCOUNTS) > 0:
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for account_id in ACCOUNTS:
-                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
-            new_save_data_file.close()
+        if len(ACCOUNT_LIST) > 0:
+            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values(), "\n", "\t"), NEW_SAVE_DATA_PATH, 1)
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
@@ -336,7 +332,7 @@ class Download(robot.DownloadThread):
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_IMAGE_COUNT += total_image_count
             TOTAL_VIDEO_COUNT += total_video_count
-            ACCOUNTS.remove(account_id)
+            ACCOUNT_LIST.pop(account_id)
         log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
 
 

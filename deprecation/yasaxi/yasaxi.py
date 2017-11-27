@@ -14,7 +14,7 @@ import traceback
 from common import *
 import yasaxiCommon
 
-ACCOUNTS = []
+ACCOUNT_LIST = {}
 IMAGE_COUNT_PER_PAGE = 20
 TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
@@ -133,7 +133,7 @@ class Yasaxi(robot.Robot):
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
-        global ACCOUNTS
+        global ACCOUNT_LIST
 
         # 从文件中宏读取账号信息（访问token）
         if not yasaxiCommon.get_token_from_file():
@@ -142,12 +142,11 @@ class Yasaxi(robot.Robot):
 
         # 解析存档文件
         # account_id  status_id
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", ""])
-        ACCOUNTS = account_list.keys()
+        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", ""])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_id in sorted(account_list.keys()):
+        for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
                 if robot.is_process_end() == 0:
@@ -160,7 +159,7 @@ class Yasaxi(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_id], self.thread_lock)
             thread.start()
 
             time.sleep(1)
@@ -170,11 +169,8 @@ class Yasaxi(robot.Robot):
             time.sleep(10)
 
         # 未完成的数据保存
-        if len(ACCOUNTS) > 0:
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for account_id in ACCOUNTS:
-                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
-            new_save_data_file.close()
+        if len(ACCOUNT_LIST) > 0:
+            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values(), "\n", "\t"), NEW_SAVE_DATA_PATH, 1)
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
@@ -248,8 +244,6 @@ class Download(robot.DownloadThread):
                     else:
                         is_over = True
 
-            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
-
             # 新的存档记录
             if first_status_id is not None:
                 self.account_info[1] = first_status_id
@@ -258,9 +252,9 @@ class Download(robot.DownloadThread):
             with self.thread_lock:
                 tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
                 TOTAL_IMAGE_COUNT += image_count - 1
-                ACCOUNTS.remove(account_id)
+                ACCOUNT_LIST.pop(account_id)
 
-            log.step(account_name + " 完成")
+            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
