@@ -22,7 +22,7 @@ def reformat_save():
         new_list.append(temp_list[2])
         new_lines.append("\t".join(new_list))
 
-    tool.write_file("\n".join(new_lines), NEW_SAVE_FILE_PATH, 2)
+    tool.write_file("\n".join(new_lines), NEW_SAVE_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":

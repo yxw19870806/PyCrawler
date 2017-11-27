@@ -22,7 +22,7 @@ DISCOUNT_DATA_PATH = os.path.realpath(os.path.join("discount.txt"))
 
 # 打折游戏列表保存到文件
 def save_discount_list(discount_game_list):
-    tool.write_file(json.dumps(discount_game_list), DISCOUNT_DATA_PATH, 2)
+    tool.write_file(json.dumps(discount_game_list), DISCOUNT_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 # 获取文件中的打折列表

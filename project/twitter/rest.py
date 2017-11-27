@@ -58,7 +58,7 @@ def init():
     if get_access_token(api_key, api_secret):
         # 保存到文件中
         api_info = base64.b64encode(json.dumps({"api_key": api_key, "api_secret": api_secret}))
-        tool.write_file(api_info, token_file_path, 2)
+        tool.write_file(api_info, token_file_path, tool.WRITE_FILE_TYPE_APPEND)
         output.print_msg("access token get succeed!")
         return True
     else:

@@ -26,6 +26,9 @@ else:
 READ_FILE_TYPE_FULL = 1 # 读取整个文件 ，返回字符串
 READ_FILE_TYPE_LINE = 2 # 按行读取，返回list
 
+WRITE_FILE_TYPE_APPEND = 1  # 追加写入文件
+WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
+
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), ".."))
 # 项目程序目录
@@ -175,14 +178,17 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
 # 写文件
 # type=1: 追加
 # type=2: 覆盖
-def write_file(msg, file_path, append_type=1):
+def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
     file_path = path.change_path_encoding(file_path)
-    if path.create_dir(os.path.dirname(file_path)):
-        if append_type == 1:
-            open_type = "a"
-        else:
-            open_type = "w"
-        with open(file_path, open_type) as file_handle:
-            if isinstance(msg, unicode):
-                msg = msg.encode("UTF-8")
-            file_handle.write(msg + "\n")
+    if not path.create_dir(os.path.dirname(file_path)):
+        return False
+    if append_type == WRITE_FILE_TYPE_APPEND:
+        open_type = "a"
+    elif append_type == WRITE_FILE_TYPE_REPLACE:
+        open_type = "w"
+    else:
+        return False
+    with open(file_path, open_type) as file_handle:
+        if isinstance(msg, unicode):
+            msg = msg.encode("UTF-8")
+        file_handle.write(msg + "\n")

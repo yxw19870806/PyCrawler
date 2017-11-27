@@ -387,7 +387,7 @@ def read_save_data(save_data_path, key_index, default_value_list):
 def rewrite_save_file(temp_save_data_path, save_data_path):
     account_list = read_save_data(temp_save_data_path, 0, [])
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
-    tool.write_file(tool.list_to_string(temp_list), save_data_path, 2)
+    tool.write_file(tool.list_to_string(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
 
 

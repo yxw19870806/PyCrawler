@@ -135,7 +135,7 @@ class Weibo(robot.Robot):
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
-            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values(), "\n", "\t"), NEW_SAVE_DATA_PATH, 1)
+            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values(), "\n", "\t"), NEW_SAVE_DATA_PATH)
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)

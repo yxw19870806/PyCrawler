@@ -171,7 +171,7 @@ class Jigadori(robot.Robot):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存新的存档文件
-        tool.write_file("\t".join(save_info), self.save_data_path, 2)
+        tool.write_file("\t".join(save_info), self.save_data_path, tool.WRITE_FILE_TYPE_APPEND)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
 
 

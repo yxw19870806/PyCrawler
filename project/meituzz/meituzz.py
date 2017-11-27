@@ -178,7 +178,7 @@ class MeiTuZZ(robot.Robot):
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 重新保存存档文件
-        tool.write_file(str(save_album_id), self.save_data_path, 2)
+        tool.write_file(str(save_album_id), self.save_data_path, tool.WRITE_FILE_TYPE_APPEND)
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), total_image_count, total_video_count))
 
 
