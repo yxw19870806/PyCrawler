@@ -76,6 +76,8 @@ class Blog(robot.Robot):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页日志" % page_count)
 
                 # 获取一页日志
@@ -113,6 +115,8 @@ class Blog(robot.Robot):
 
                 image_index = int(save_info[0]) + 1
                 for image_url in blog_info["image_url_list"]:
+                    if not self.is_running():
+                        tool.process_exit(0)
                     log.step("开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_type = image_url.split(".")[-1].split(":")[0]

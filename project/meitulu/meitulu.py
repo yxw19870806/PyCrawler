@@ -110,6 +110,8 @@ class MeiTuLu(robot.Robot):
             log.step("最新图集id：%s" % index_response["max_album_id"])
 
             while album_id <= index_response["max_album_id"]:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析图集%s" % album_id)
 
                 # 获取相册
@@ -135,6 +137,8 @@ class MeiTuLu(robot.Robot):
                     album_path = os.path.join(self.image_download_path, "%05d" % album_id)
                 temp_path = album_path
                 for image_url in album_pagination_response["image_url_list"]:
+                    if not self.is_running():
+                        tool.process_exit(0)
                     image_url = get_image_url(image_url)
                     log.step("图集%s 《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
