@@ -253,7 +253,7 @@ class Bcy(robot.Robot):
                 self.wait_sub_thread()
 
             # 提前结束
-            if self.is_running():
+            if not self.is_running():
                 break
 
             # 开始下载
