@@ -273,6 +273,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的媒体
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析position %s后的一页媒体列表" % position_blog_id)
 
                 # 获取指定时间点后的一页图片信息
@@ -308,6 +309,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的媒体开始下载
             while len(media_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 media_info = media_info_list.pop()
                 log.step(account_name + " 开始解析媒体志 %s" % media_info["blog_id"])
 
@@ -315,6 +317,7 @@ class Download(robot.DownloadThread):
                 image_index = int(self.account_info[2]) + 1
                 if IS_DOWNLOAD_IMAGE:
                     for image_url in media_info["image_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                         file_type = image_url.split(".")[-1].split(":")[0]
@@ -332,6 +335,7 @@ class Download(robot.DownloadThread):
                 # 视频下载
                 video_index = int(self.account_info[3]) + 1
                 if IS_DOWNLOAD_VIDEO and media_info["has_video"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 获取视频播放地址
                     try:
                         video_play_response = get_video_play_page(media_info["blog_id"])
@@ -339,6 +343,7 @@ class Download(robot.DownloadThread):
                         log.error(account_name + " 日志%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
                         raise
 
+                    self.main_thread_check()  # 检测主线程运行状态
                     video_url = video_play_response["video_url"]
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 

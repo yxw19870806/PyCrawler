@@ -165,6 +165,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的相册开始下载
             while len(album_url_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 album_url = album_url_list.pop()
                 album_id = get_album_id(album_url)
                 log.step(account_name + " 开始解析第相册%s" % album_url)
@@ -186,6 +187,7 @@ class Download(robot.DownloadThread):
                     album_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, str(album_id))
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 相册%s《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]

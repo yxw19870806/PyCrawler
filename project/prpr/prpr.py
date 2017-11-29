@@ -202,7 +202,9 @@ class Download(robot.DownloadThread):
             timestamp = int(time.time() * 1000)
             # 获取全部还未下载过需要解析的作品
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析%s后一页的作品" % timestamp)
+
                 # 获取一页作品
                 try:
                     post_pagination_response = get_one_page_post(account_id, timestamp)
@@ -230,6 +232,7 @@ class Download(robot.DownloadThread):
             log.step(account_name + " 需要下载的全部作品解析完毕，共%s个" % len(post_id_list))
 
             while len(post_id_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 post_info = post_id_list.pop()
                 log.step(account_name + " 开始解析作品%s" % post_info["post_id"])
 
@@ -244,6 +247,7 @@ class Download(robot.DownloadThread):
                 image_index = 1
                 if IS_DOWNLOAD_IMAGE:
                     for image_url in blog_response["image_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_name + " 作品%s 开始下载第%s张图片 %s" % (post_info["post_id"], image_index, image_url))
 
                         origin_image_url, file_param = image_url.split("?", 1)
@@ -273,6 +277,7 @@ class Download(robot.DownloadThread):
                 video_index = 1
                 if IS_DOWNLOAD_VIDEO:
                     for video_url in blog_response["video_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_name + " 作品%s 开始下载第%s个视频 %s" % (post_info["post_id"], video_index, video_url))
 
                         video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s_%02d.mp4" % (post_info["post_id"], video_index))

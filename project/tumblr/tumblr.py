@@ -373,6 +373,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_id + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页的日志地址
@@ -415,6 +416,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的日志开始下载
             while len(post_url_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 post_url = post_url_list.pop()
                 post_id = get_post_id(post_url)
                 log.step(account_id + " 开始解析日志 %s" % post_url)
@@ -429,6 +431,7 @@ class Download(robot.DownloadThread):
                 # 视频下载
                 video_index = int(self.account_info[2]) + 1
                 while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     try:
                         video_play_response = get_video_play_page(account_id, post_id, is_https)
                     except robot.RobotException, e:
@@ -440,6 +443,7 @@ class Download(robot.DownloadThread):
                         log.error(account_id + " 日志 %s 存在第三方视频（第%s个视频），跳过" % (post_url, video_index))
                         break
 
+                    self.main_thread_check()  # 检测主线程运行状态
                     video_url = video_play_response["video_url"]
                     log.step(account_id + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
@@ -474,6 +478,7 @@ class Download(robot.DownloadThread):
                     log.trace(account_id + " 日志 %s 解析的的全部图片：%s" % (post_url, post_response["image_url_list"]))
 
                     for image_url in post_response["image_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_id + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                         file_type = image_url.split("?")[0].split(".")[-1]

@@ -164,6 +164,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的图片
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取指定一页图片的信息
@@ -210,6 +211,7 @@ class Download(robot.DownloadThread):
                 # 同一上传时间的所有图片
                 image_index = int(self.account_info[1]) + 1
                 for image_url in image_url_list:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_type = image_url.split(".")[-1]

@@ -146,6 +146,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页博客信息
@@ -177,12 +178,14 @@ class Download(robot.DownloadThread):
 
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 blog_info =  blog_info_list.pop()
                 log.step(account_name + " 开始解析日志%s" % blog_info["blog_id"])
                 log.trace(account_name + " 日志%s解析的全部图片：%s" % (blog_info["blog_id"], blog_info["image_url_list"]))
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_info["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 检测图片地址是否包含域名
                     image_url = get_image_url(image_url)
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))

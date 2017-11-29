@@ -158,6 +158,7 @@ class Download(robot.DownloadThread):
                 is_over = False
                 # 获取全部还未下载过需要解析的歌曲
                 while not is_over:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
 
                     # 获取一页歌曲
@@ -200,6 +201,7 @@ class Download(robot.DownloadThread):
 
                 # 从最早的歌曲开始下载
                 while len(audio_info_list) > 0:
+                    self.main_thread_check()  # 检测主线程运行状态
                     audio_info = audio_info_list.pop()
                     log.step(account_name + " 开始解析%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
 
@@ -210,6 +212,7 @@ class Download(robot.DownloadThread):
                         log.error(account_name + " %s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
                         break
 
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
                     file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type_name, "%s - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))

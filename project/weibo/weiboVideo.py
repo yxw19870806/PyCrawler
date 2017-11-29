@@ -280,6 +280,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的视频
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析%s后一页视频" % since_id)
 
                 # 获取指定时间点后的一页视频信息
@@ -315,6 +316,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的图片开始下载
             while len(video_play_url_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 video_play_url = video_play_url_list.pop()
                 video_index = int(self.account_info[1]) + 1
                 log.step(account_name + " 开始解析第%s个视频 %s" % (video_index, video_play_url))
@@ -329,6 +331,7 @@ class Download(robot.DownloadThread):
                 if video_url is "":
                     continue
 
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
                 video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.mp4" % video_index)

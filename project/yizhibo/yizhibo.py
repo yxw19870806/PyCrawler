@@ -222,6 +222,7 @@ class Download(robot.DownloadThread):
 
                 # 寻找这一页符合条件的图片
                 for image_url in image_index_response["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始解析图片%s" % image_url)
                     try:
                         image_head_response = get_image_header(image_url)
@@ -246,6 +247,7 @@ class Download(robot.DownloadThread):
 
                 # 从最早的图片开始下载
                 while len(image_info_list) > 0:
+                    self.main_thread_check()  # 检测主线程运行状态
                     image_info = image_info_list.pop()
                     image_index = int(self.account_info[3]) + 1
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
@@ -277,6 +279,7 @@ class Download(robot.DownloadThread):
 
                 # 寻找这一页符合条件的视频
                 for video_id in video_pagination_response["video_id_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始解析视频%s" % video_id)
                     # 获取视频的时间和下载地址
                     try:
@@ -299,6 +302,7 @@ class Download(robot.DownloadThread):
 
                 # 从最早的视频开始下载
                 while len(video_info_list) > 0:
+                    self.main_thread_check()  # 检测主线程运行状态
                     video_info = video_info_list.pop()
                     video_index = int(self.account_info[1]) + 1
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_info["video_url_list"]))

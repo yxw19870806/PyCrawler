@@ -195,6 +195,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # 获取一页图片
@@ -225,11 +226,13 @@ class Download(robot.DownloadThread):
 
             # 从最早的日志开始下载
             while len(blog_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 blog_info = blog_info_list.pop()
                 log.step(account_name + " 开始解析日志%s" % blog_info["blog_id"])
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_info["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 检查是否存在大图可以下载
                     big_image_response = check_big_image(image_url, blog_info["big_2_small_image_lust"])
                     if big_image_response["image_url"] is not None:

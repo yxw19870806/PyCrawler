@@ -235,6 +235,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的文章
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 # 获取一页文章预览页面
                 try:
                     article_pagination_response = get_one_page_article(account_index_response["account_page_id"], page_count)
@@ -260,6 +261,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的文章开始下载
             while len(article_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 article_info = article_info_list.pop()
                 log.step(account_name + " 开始解析文章 %s" % article_info["article_url"])
 
@@ -286,6 +288,7 @@ class Download(robot.DownloadThread):
                 # 文章正文图片
                 image_index = 1
                 for image_url in article_response["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
                         continue
                     log.step(account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_index, image_url))
@@ -304,6 +307,7 @@ class Download(robot.DownloadThread):
 
                 # 文章顶部图片
                 if article_response["top_image_url"] is not None:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
 
                     file_type = article_response["top_image_url"].split(".")[-1]

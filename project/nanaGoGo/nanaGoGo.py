@@ -169,6 +169,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析target id %s后的一页媒体" % target_id)
 
                 # 获取一页媒体信息
@@ -206,6 +207,7 @@ class Download(robot.DownloadThread):
                 image_index = int(self.account_info[1]) + 1
                 if IS_DOWNLOAD_IMAGE:
                     for image_url in media_info["image_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                         file_type = image_url.split(".")[-1]
@@ -222,6 +224,7 @@ class Download(robot.DownloadThread):
                 video_index = int(self.account_info[2]) + 1
                 if IS_DOWNLOAD_VIDEO:
                     for video_url in media_info["video_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
                         file_type = video_url.split(".")[-1]

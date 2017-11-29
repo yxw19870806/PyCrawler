@@ -301,6 +301,7 @@ class Download(robot.DownloadThread):
             coser_id = None
             # 获取全部还未下载过需要解析的作品
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页作品" % page_count)
 
                 # 获取一页作品
@@ -340,6 +341,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的作品开始下载
             while len(album_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 album_info = album_info_list.pop()
                 log.step(account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
 
@@ -369,6 +371,7 @@ class Download(robot.DownloadThread):
                         continue
                     log.step(account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
                     if follow(account_id):
+                        self.main_thread_check()  # 检测主线程运行状态
                         # 重新获取作品页面
                         try:
                             album_response = get_album_page(coser_id, album_info["album_id"])
@@ -390,6 +393,7 @@ class Download(robot.DownloadThread):
                 # 设置临时目录
                 temp_path = album_path
                 for image_url in album_response["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 禁用指定分辨率
                     image_url = get_image_url(image_url)
                     log.step(account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))

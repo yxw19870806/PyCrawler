@@ -173,6 +173,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的相册
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析%s后的一页相册" % post_time)
 
                 # 获取一页相册
@@ -202,6 +203,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的相册开始下载
             while len(album_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 album_info = album_info_list.pop()
                 log.step(account_name + " 开始解析相册%s" % album_info["album_id"])
 
@@ -214,6 +216,7 @@ class Download(robot.DownloadThread):
                     post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, album_info["album_id"])
                 temp_path = post_path
                 for image_url in album_info["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 相册%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
                     file_path = os.path.join(post_path, "%s.jpg" % image_index)

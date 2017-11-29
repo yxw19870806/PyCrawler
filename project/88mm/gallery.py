@@ -191,6 +191,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的图集
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(sub_path + " 开始解析第%s页图集" % page_count)
 
                 # 获取一页图集
@@ -221,6 +222,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的图集开始下载
             while len(album_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 album_info = album_info_list.pop()
                 log.step(sub_path + " 开始解析%s号图集" % album_info["page_id"])
 
@@ -243,6 +245,7 @@ class Download(robot.DownloadThread):
                 # 设置临时目录
                 temp_path = album_path
                 for image_url in photo_pagination_response["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 图片地址转义
                     image_url = get_image_url(image_url)
                     log.step(sub_path + " %s号图集《%s》 开始下载第%s张图片 %s" % (album_info["page_id"], album_info["album_title"], image_index, image_url))
