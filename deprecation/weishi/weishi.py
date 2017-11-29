@@ -128,11 +128,8 @@ class WeiShi(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if self.is_running():
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
             if self.is_running():
@@ -146,7 +143,7 @@ class WeiShi(robot.Robot):
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -255,6 +252,7 @@ class Download(robot.DownloadThread):
             TOTAL_VIDEO_COUNT += total_video_count
             ACCOUNT_LIST.pop(account_id)
         log.step(account_name + " 下载完毕，总共获得%s个视频" % total_video_count)
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

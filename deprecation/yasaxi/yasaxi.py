@@ -148,11 +148,8 @@ class Yasaxi(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if self.is_running():
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
             if not self.is_running():
@@ -166,7 +163,7 @@ class Yasaxi(robot.Robot):
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -187,11 +184,11 @@ class Download(robot.DownloadThread):
 
         account_id = self.account_info[0]
         account_name = self.account_info[2]
+        image_count = 1
 
         try:
             log.step(account_name + " 开始")
 
-            image_count = 1
             cursor = 0
             is_over = False
             first_status_id = None
@@ -243,18 +240,9 @@ class Download(robot.DownloadThread):
                         cursor = photo_pagination_response["next_page_cursor"]
                     else:
                         is_over = True
-
             # 新的存档记录
             if first_status_id is not None:
                 self.account_info[1] = first_status_id
-
-            # 保存最后的信息
-            with self.thread_lock:
-                tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-                TOTAL_IMAGE_COUNT += image_count - 1
-                ACCOUNT_LIST.pop(account_id)
-
-            log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
@@ -264,6 +252,13 @@ class Download(robot.DownloadThread):
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
+        # 保存最后的信息
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_IMAGE_COUNT += image_count - 1
+            ACCOUNT_LIST.pop(account_id)
+        log.step(account_name + " 下载完毕，总共获得%s张图片" % (image_count - 1))
+        self.notify_main_thread()
 
 if __name__ == "__main__":
     Yasaxi().main()
