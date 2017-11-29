@@ -457,16 +457,6 @@ def filter_emoji(text):
     return emoji.sub('', text)
 
 
-# 进程是否需要结束
-# 返回码 0: 正常运行; 1 立刻结束; 2 等待现有任务完成后结束
-def is_process_end():
-    if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
-        return 1
-    elif process.PROCESS_STATUS == process.PROCESS_STATUS_FINISH:
-        return 2
-    return 0
-
-
 # 获取网络文件下载失败的原因
 def get_save_net_file_failed_reason(return_code):
     if return_code == 404:

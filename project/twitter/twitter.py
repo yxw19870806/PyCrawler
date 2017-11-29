@@ -213,17 +213,17 @@ class Twitter(robot.Robot):
         for account_name in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
+                if self.is_running():
                     time.sleep(10)
                 else:
                     break
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_name], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_name], self)
             thread.start()
 
             time.sleep(1)
@@ -243,8 +243,8 @@ class Twitter(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_IMAGE_COUNT

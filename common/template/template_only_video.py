@@ -65,13 +65,13 @@ class Template(robot.Robot):
         for account_id in sorted(account_list.keys()):
             # 检查正在运行的线程数
             while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
+                if self.is_running():
                     time.sleep(10)
                 else:
                     break
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
@@ -98,8 +98,8 @@ class Template(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_VIDEO_COUNT
