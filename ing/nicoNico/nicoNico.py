@@ -138,25 +138,22 @@ class NicoNico(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(account_list.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id], self.thread_lock)
+            thread = Download(account_list[account_id], self)
             thread.start()
 
             time.sleep(1)
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNTS) > 0:
@@ -172,8 +169,8 @@ class NicoNico(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_VIDEO_COUNT
@@ -235,13 +232,6 @@ class Download(robot.DownloadThread):
             # 新的存档记录
             if first_video_id is not None:
                 self.account_info[1] = first_video_id
-
-            # 保存最后的信息
-            with self.thread_lock:
-                tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-                TOTAL_VIDEO_COUNT += video_count - 1
-                ACCOUNTS.remove(account_id)
-            log.step(account_name + " 完成")
         except SystemExit, se:
             if se.code == 0:
                 log.step(account_name + " 提前退出")
@@ -250,6 +240,14 @@ class Download(robot.DownloadThread):
         except Exception, e:
             log.error(account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        with self.thread_lock:
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_VIDEO_COUNT += video_count - 1
+            ACCOUNTS.remove(account_id)
+        log.step(account_name + " 完成")
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

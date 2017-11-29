@@ -78,14 +78,11 @@ class Template(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(account_list.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
@@ -96,7 +93,7 @@ class Template(robot.Robot):
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNTS) > 0:
@@ -113,8 +110,8 @@ class Template(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -233,6 +230,7 @@ class Download(robot.DownloadThread):
             TOTAL_VIDEO_COUNT += total_video_count
             ACCOUNTS.remove(account_id)
         log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

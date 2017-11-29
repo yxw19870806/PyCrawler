@@ -226,25 +226,22 @@ class Instagram(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_name in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_name], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_name], self)
             thread.start()
 
             time.sleep(1)
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -257,8 +254,8 @@ class Instagram(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -291,6 +288,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的媒体
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析cursor '%s'的媒体信息" % cursor)
 
                 # 获取指定时间后的一页媒体信息
@@ -322,6 +320,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的媒体开始下载
             while len(media_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 media_info = media_info_list.pop()
                 log.step(account_name + " 开始解析媒体 %s" % media_info["page_id"])
 
@@ -343,6 +342,7 @@ class Download(robot.DownloadThread):
                         image_url_list = [media_info["image_url"]]
 
                     for image_url in image_url_list:
+                        self.main_thread_check()  # 检测主线程运行状态
                         # 去除特效，获取原始路径
                         image_url = get_image_url(image_url)
                         log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
@@ -361,6 +361,7 @@ class Download(robot.DownloadThread):
                 # 视频下载
                 video_index = int(self.account_info[3]) + 1
                 if IS_DOWNLOAD_VIDEO and (media_info["is_group"] or media_info["is_video"]):
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 如果图片那里没有获取过媒体页面，需要重新获取一下
                     if media_response is None:
                         # 获取媒体详细页
@@ -371,6 +372,7 @@ class Download(robot.DownloadThread):
                             raise
 
                     for video_url in media_response["video_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
                         file_type = video_url.split(".")[-1]
@@ -411,6 +413,7 @@ class Download(robot.DownloadThread):
             TOTAL_VIDEO_COUNT += total_video_count
             ACCOUNT_LIST.pop(account_name)
         log.step(account_name + " 下载完毕，总共获得%s张图片和%s个视频" % (total_image_count, total_video_count))
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

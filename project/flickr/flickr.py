@@ -142,25 +142,22 @@ class Flickr(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_id], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_id], self)
             thread.start()
 
             time.sleep(1)
 
         # 检查除主线程外的其他全部线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -173,8 +170,8 @@ class Flickr(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -200,6 +197,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的图片
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页图片" % page_count)
 
                 # 获取一页图片
@@ -231,6 +229,7 @@ class Download(robot.DownloadThread):
             # 从最早的图片开始下载
             image_url_list = []
             while len(image_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 image_info = image_info_list.pop()
                 # 下一张图片的上传时间一致，合并下载
                 image_url_list.append(image_info["image_url"])
@@ -240,6 +239,7 @@ class Download(robot.DownloadThread):
                 # 同一上传时间的所有图片
                 image_index = int(self.account_info[1]) + 1
                 for image_url in image_url_list:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                     file_type = image_url.split(".")[-1]
@@ -277,6 +277,7 @@ class Download(robot.DownloadThread):
             TOTAL_IMAGE_COUNT += total_image_count
             ACCOUNT_LIST.pop(account_name)
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

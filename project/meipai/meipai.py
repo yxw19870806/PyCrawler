@@ -115,25 +115,22 @@ class MeiPai(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_id], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_id], self)
             thread.start()
 
             time.sleep(1)
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -146,8 +143,8 @@ class MeiPai(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_VIDEO_COUNT
@@ -168,6 +165,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的视频
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页视频" % page_count)
 
                 # 获取一页视频
@@ -209,6 +207,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的视频开始下载
             while len(video_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 video_info = video_info_list.pop()
                 video_index = int(self.account_info[1]) + 1
                 log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_info["video_url"]))
@@ -238,6 +237,7 @@ class Download(robot.DownloadThread):
             TOTAL_VIDEO_COUNT += total_video_count
             ACCOUNT_LIST.pop(account_id)
         log.step(account_name + " 下载完毕，总共获得%s个视频" % total_video_count)
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

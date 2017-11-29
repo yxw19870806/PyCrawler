@@ -96,6 +96,8 @@ class UGirls(robot.Robot):
             log.step("最新图集id：%s" % index_response["max_album_id"])
 
             while album_id <= index_response["max_album_id"]:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页图集" % album_id)
 
                 # 获取相册
@@ -115,6 +117,8 @@ class UGirls(robot.Robot):
                 image_index = 1
                 temp_path = album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response["model_name"]))
                 for image_url in album_response["image_url_list"]:
+                    if not self.is_running():
+                        tool.process_exit(0)
                     log.step("开始下载第%s页图集的第%s张图片 %s" % (album_id, image_index, image_url))
 
                     file_type = image_url.split(".")[-1]

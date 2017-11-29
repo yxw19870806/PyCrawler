@@ -97,6 +97,8 @@ class MeiTuZZ(robot.Robot):
         try:
             error_album_count = 0
             while True:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页相册" % album_id)
 
                 # 获取相册
@@ -132,6 +134,8 @@ class MeiTuZZ(robot.Robot):
                 if self.is_download_image and album_response["image_url_list"] is not None:
                     image_path = os.path.join(self.image_download_path, "%04d" % album_id)
                     for image_url in album_response["image_url_list"]:
+                        if not self.is_running():
+                            tool.process_exit(0)
                         log.step("开始下载第%s页第%s张图片 %s" % (album_id, image_index, image_url))
 
                         image_file_path = os.path.join(image_path, "%04d.jpg" % image_index)
@@ -147,6 +151,8 @@ class MeiTuZZ(robot.Robot):
                 # 视频下载
                 video_index = 1
                 if self.is_download_image and album_response["video_url"] is not None:
+                    if not self.is_running():
+                        tool.process_exit(0)
                     log.step("开始下载第%s页视频 %s" % (album_id, album_response["video_url"]))
 
                     video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, path.filter_text(album_response["album_title"])))

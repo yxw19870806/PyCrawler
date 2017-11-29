@@ -91,25 +91,22 @@ class Lofter(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_name in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_name], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_name], self)
             thread.start()
 
             time.sleep(1)
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -122,8 +119,8 @@ class Lofter(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_IMAGE_COUNT
@@ -141,6 +138,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 try:
@@ -179,6 +177,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的日志开始下载
             while len(blog_url_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 blog_url = blog_url_list.pop()
                 log.step(account_name + " 开始解析日志 %s" % blog_url)
 
@@ -198,6 +197,7 @@ class Download(robot.DownloadThread):
 
                 image_index = int(self.account_info[1]) + 1
                 for image_url in blog_response["image_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     # 去除图片地址的参数
                     image_url = get_image_url(image_url)
                     log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
@@ -235,6 +235,7 @@ class Download(robot.DownloadThread):
             TOTAL_IMAGE_COUNT += total_image_count
             ACCOUNT_LIST.pop(account_name)
         log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

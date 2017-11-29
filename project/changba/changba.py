@@ -180,25 +180,22 @@ class ChangBa(robot.Robot):
         main_thread_count = threading.activeCount()
         for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
-            while threading.activeCount() >= self.thread_count + main_thread_count:
-                if robot.is_process_end() == 0:
-                    time.sleep(10)
-                else:
-                    break
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
 
             # 提前结束
-            if robot.is_process_end() > 0:
+            if not self.is_running():
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_id], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_id], self)
             thread.start()
 
             time.sleep(1)
 
         # 检查除主线程外的其他所有线程是不是全部结束了
         while threading.activeCount() > main_thread_count:
-            time.sleep(10)
+            self.wait_sub_thread()
 
         # 未完成的数据保存
         if len(ACCOUNT_LIST) > 0:
@@ -211,8 +208,8 @@ class ChangBa(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    def __init__(self, account_info, thread_lock):
-        robot.DownloadThread.__init__(self, account_info, thread_lock)
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         global TOTAL_VIDEO_COUNT
@@ -240,6 +237,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的歌曲
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页歌曲" % page_count)
 
                 # 获取一页歌曲
@@ -282,6 +280,7 @@ class Download(robot.DownloadThread):
 
             # 从最早的歌曲开始下载
             while len(audio_info_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 audio_info = audio_info_list.pop()
                 log.step(account_name + " 开始解析歌曲%s《%s》" % (audio_info["audio_key"], audio_info["audio_title"]))
 
@@ -296,6 +295,7 @@ class Download(robot.DownloadThread):
                     log.error(account_name + " 歌曲%s《%s》异常，跳过" % (audio_info["audio_key"], audio_info["audio_title"]))
                     continue
 
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
                 file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%s - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))
@@ -322,6 +322,7 @@ class Download(robot.DownloadThread):
             TOTAL_VIDEO_COUNT += total_video_count
             ACCOUNT_LIST.pop(account_id)
         log.step(account_name + " 下载完毕，总共获得%s首歌曲" % total_video_count)
+        self.notify_main_thread()
 
 
 if __name__ == "__main__":

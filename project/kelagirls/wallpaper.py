@@ -93,6 +93,8 @@ class Wallpaper(robot.Robot):
             is_over = False
             # 获取全部还未下载过需要解析的壁纸
             while not is_over:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s页壁纸" % page_count)
 
                 # 获取一页壁纸
@@ -121,6 +123,8 @@ class Wallpaper(robot.Robot):
 
             # 从最早的图片开始下载
             while len(image_info_list) > 0:
+                if not self.is_running():
+                    tool.process_exit(0)
                 image_info = image_info_list.pop()
 
                 log.step("开始下载第%s张图片 %s" % (image_info["image_id"], image_info["image_url"]))

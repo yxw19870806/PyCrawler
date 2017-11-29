@@ -40,6 +40,7 @@ CONFIG_ANALYSIS_MODE_PATH = 3
 class Robot(object):
     print_function = None
     thread_event = None
+    prcess_status = True  # 主进程是否在运行
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -214,12 +215,13 @@ class Robot(object):
 
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        self.thread_lock = threading.Lock()
+        self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
+        self.thread_condition = threading.Condition()  # 线程数达到上限时等待wait()，直到任意线程唤醒notify()
 
         # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = process.ProcessControl()
-        process_control_thread.setDaemon(True)
-        process_control_thread.start()
+        # process_control_thread = process.ProcessControl()
+        # process_control_thread.setDaemon(True)
+        # process_control_thread.start()
 
         # 键盘监控线程
         if analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
@@ -235,7 +237,7 @@ class Robot(object):
             # 结束进程（取消当前的线程，完成任务）
             stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
             if stop_process_key:
-                keyboard_event_bind[stop_process_key] = process.stop_process
+                keyboard_event_bind[stop_process_key] = self.stop_process
 
             if keyboard_event_bind:
                 keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
@@ -245,20 +247,29 @@ class Robot(object):
         self.print_msg("初始化完成")
 
     def stop_process(self):
-        tool.process_exit(0)
+        output.print_msg("stop process")
+        self.prcess_status = False
 
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
         """Get process runned time(seconds)"""
         return int(time.time() - self.start_time)
 
+    def is_running(self):
+        return self.prcess_status
+
+    def wait_sub_thread(self):
+        self.thread_condition.acquire()
+        self.thread_condition.wait()
+        self.thread_condition.release()
+
 
 class DownloadThread(threading.Thread):
     """Download sub-thread"""
+    main_thread = None
     thread_lock = None
-    thread_event = None
 
-    def __init__(self, account_info, thread_lock=None, thread_event=None):
+    def __init__(self, account_info, main_thread):
         """
         :param account_info:
 
@@ -270,15 +281,24 @@ class DownloadThread(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.account_info = account_info
-        if isinstance(thread_lock, thread.LockType):
-            self.thread_lock = thread_lock
-        if isinstance(thread_lock, threading._Event):
-            self.thread_event = thread_event
+        if isinstance(main_thread, Robot):
+            self.main_thread = main_thread
+            self.thread_lock = main_thread.thread_lock
+        else:
+            output.print_msg("下载线程参数异常")
+            tool.process_exit()
 
-    def wait(self):
-        """Block process unitl self.thread_event.clear()"""
-        if self.thread_event is not None:
-            self.thread_event.wait()
+    # 检测主线程是否已经结束（外部中断）
+    def main_thread_check(self):
+        if not self.main_thread.is_running():
+            self.notify_main_thread()
+            tool.process_exit(0)
+
+    # 线程下完完成后唤醒主线程，开启新的线程
+    def notify_main_thread(self):
+        self.main_thread.thread_condition.acquire()
+        self.main_thread.thread_condition.notify()
+        self.main_thread.thread_condition.release()
 
 
 class RobotException(SystemExit):
@@ -447,16 +467,6 @@ def filter_emoji(text):
     except re.error:
         emoji = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
     return emoji.sub('', text)
-
-
-# 进程是否需要结束
-# 返回码 0: 正常运行; 1 立刻结束; 2 等待现有任务完成后结束
-def is_process_end():
-    if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
-        return 1
-    elif process.PROCESS_STATUS == process.PROCESS_STATUS_FINISH:
-        return 2
-    return 0
 
 
 # 获取网络文件下载失败的原因
