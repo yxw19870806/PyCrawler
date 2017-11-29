@@ -215,7 +215,8 @@ class Robot(object):
 
         # 线程数
         self.thread_count = analysis_config(config, "THREAD_COUNT", 10, CONFIG_ANALYSIS_MODE_INTEGER)
-        self.thread_lock = threading.Lock()
+        self.thread_lock = threading.Lock()  # 线程锁，避免操作一些全局参数
+        self.thread_condition = threading.Condition()  # 线程数达到上限时等待wait()，直到任意线程唤醒notify()
 
         # 启用线程监控是否需要暂停其他下载线程
         # process_control_thread = process.ProcessControl()
@@ -257,6 +258,11 @@ class Robot(object):
     def is_running(self):
         return self.prcess_status
 
+    def wait_sub_thread(self):
+        self.thread_condition.acquire()
+        self.thread_condition.wait()
+        self.thread_condition.release()
+
 
 class DownloadThread(threading.Thread):
     """Download sub-thread"""
@@ -285,8 +291,14 @@ class DownloadThread(threading.Thread):
     # 检测主线程是否已经结束（外部中断）
     def main_thread_check(self):
         if not self.main_thread.is_running():
+            self.notify_main_thread()
             tool.process_exit(0)
 
+    # 线程下完完成后唤醒主线程，开启新的线程
+    def notify_main_thread(self):
+        self.main_thread.thread_condition.acquire()
+        self.main_thread.thread_condition.notify()
+        self.main_thread.thread_condition.release()
 
 
 class RobotException(SystemExit):
