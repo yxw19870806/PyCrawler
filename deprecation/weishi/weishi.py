@@ -178,6 +178,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的视频
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析%s后的一页视频" % page_time)
 
                 # 获取一页视频信息
@@ -210,6 +211,7 @@ class Download(robot.DownloadThread):
                 video_index = int(self.account_info[1]) + 1
                 # 单个视频存在多个分集
                 for video_part_id in video_info["video_part_id_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始解析视频%s" % video_part_id)
                     # 获取视频下载地址
                     try:

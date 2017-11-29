@@ -85,6 +85,8 @@ class ZunGuang(robot.Robot):
         error_count = 0
         is_over = False
         while not is_over:
+            if not self.is_running():
+                tool.process_exit(0)
             log.step("开始解析第%s页图片" % page_count)
 
             # 获取相册
@@ -124,6 +126,8 @@ class ZunGuang(robot.Robot):
             log.trace("第%s页相册解析的全部图片：%s" % (page_count, album_response["image_url_list"]))
             image_count = 1
             for image_url in album_response["image_url_list"]:
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始下载第%s页第%s张图片 %s" % (page_count, image_count, image_url))
 
                 file_type = image_url.split(".")[-1]

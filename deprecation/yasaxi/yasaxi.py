@@ -194,6 +194,7 @@ class Download(robot.DownloadThread):
             first_status_id = None
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name)
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析cursor '%s'的图片" % cursor)
 
                 # 获取一页图片
@@ -219,6 +220,7 @@ class Download(robot.DownloadThread):
                     log.step(account_name + " 开始解析状态%s的图片" % status_info["id"])
 
                     for image_url in status_info["image_url_list"]:
+                        self.main_thread_check()  # 检测主线程运行状态
                         file_name_and_type = image_url.split("?")[0].split("/")[-1]
                         resolution = image_url.split("?")[0].split("/")[-2]
                         file_name = file_name_and_type.split(".")[0]
