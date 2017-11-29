@@ -40,6 +40,7 @@ CONFIG_ANALYSIS_MODE_PATH = 3
 class Robot(object):
     print_function = None
     thread_event = None
+    prcess_status = True  # 主进程是否在运行
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -217,9 +218,9 @@ class Robot(object):
         self.thread_lock = threading.Lock()
 
         # 启用线程监控是否需要暂停其他下载线程
-        process_control_thread = process.ProcessControl()
-        process_control_thread.setDaemon(True)
-        process_control_thread.start()
+        # process_control_thread = process.ProcessControl()
+        # process_control_thread.setDaemon(True)
+        # process_control_thread.start()
 
         # 键盘监控线程
         if analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
@@ -235,7 +236,7 @@ class Robot(object):
             # 结束进程（取消当前的线程，完成任务）
             stop_process_key = analysis_config(config, "STOP_PROCESS_KEYBOARD_KEY", "CTRL + F12")
             if stop_process_key:
-                keyboard_event_bind[stop_process_key] = process.stop_process
+                keyboard_event_bind[stop_process_key] = self.stop_process
 
             if keyboard_event_bind:
                 keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
@@ -245,20 +246,24 @@ class Robot(object):
         self.print_msg("初始化完成")
 
     def stop_process(self):
-        tool.process_exit(0)
+        output.print_msg("stop process")
+        self.prcess_status = False
 
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
         """Get process runned time(seconds)"""
         return int(time.time() - self.start_time)
 
+    def is_running(self):
+        return self.prcess_status
+
 
 class DownloadThread(threading.Thread):
     """Download sub-thread"""
+    main_thread = None
     thread_lock = None
-    thread_event = None
 
-    def __init__(self, account_info, thread_lock=None, thread_event=None):
+    def __init__(self, account_info, main_thread):
         """
         :param account_info:
 
@@ -270,15 +275,18 @@ class DownloadThread(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.account_info = account_info
-        if isinstance(thread_lock, thread.LockType):
-            self.thread_lock = thread_lock
-        if isinstance(thread_lock, threading._Event):
-            self.thread_event = thread_event
+        if isinstance(main_thread, Robot):
+            self.main_thread = main_thread
+            self.thread_lock = main_thread.thread_lock
+        else:
+            output.print_msg("下载线程参数异常")
+            tool.process_exit()
 
-    def wait(self):
-        """Block process unitl self.thread_event.clear()"""
-        if self.thread_event is not None:
-            self.thread_event.wait()
+    # 检测主线程是否已经结束（外部中断）
+    def main_thread_check(self):
+        if not self.main_thread.is_running():
+            tool.process_exit(0)
+
 
 
 class RobotException(SystemExit):
