@@ -13,10 +13,11 @@ import threading
 import time
 import traceback
 
-ACCOUNTS = []
+ACCOUNT_LIST = {}
 TOTAL_VIDEO_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
+
 
 # 获取一页日志
 def get_one_page_blog(account_id, page_count):
@@ -52,17 +53,16 @@ class Template(robot.Robot):
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
 
     def main(self):
-        global ACCOUNTS
+        global ACCOUNT_LIST
 
         # todo 存档文件格式
         # 解析存档文件
         # account_id
-        account_list = robot.read_save_data(self.save_data_path, 0, ["", ])
-        ACCOUNTS = account_list.keys()
+        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", ])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_id in sorted(account_list.keys()):
+        for account_id in sorted(ACCOUNT_LIST.keys()):
             # 检查正在运行的线程数
             if threading.activeCount() >= self.thread_count + main_thread_count:
                 self.wait_sub_thread()
@@ -72,7 +72,7 @@ class Template(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(account_list[account_id], self.thread_lock)
+            thread = Download(ACCOUNT_LIST[account_id], self)
             thread.start()
 
             time.sleep(1)
@@ -82,11 +82,8 @@ class Template(robot.Robot):
             self.wait_sub_thread()
 
         # 未完成的数据保存
-        if len(ACCOUNTS) > 0:
-            new_save_data_file = open(NEW_SAVE_DATA_PATH, "a")
-            for account_id in ACCOUNTS:
-                new_save_data_file.write("\t".join(account_list[account_id]) + "\n")
-            new_save_data_file.close()
+        if len(ACCOUNT_LIST) > 0:
+            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values()), NEW_SAVE_DATA_PATH)
 
         # 重新排序保存存档文件
         robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
@@ -115,6 +112,7 @@ class Download(robot.DownloadThread):
             is_over = False
             # 获取全部还未下载过需要解析的日志
             while not is_over:
+                self.main_thread_check()  # 检测主线程运行状态
                 log.step(account_name + " 开始解析第%s页日志" % page_count)
 
                 # todo 一页日志解析规则
@@ -139,6 +137,7 @@ class Download(robot.DownloadThread):
             log.step(account_name + " 需要下载的全部日志解析完毕，共%s个" % len(blog_id_list))
 
             while len(blog_id_list) > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 blog_id = blog_id_list.pop()
                 log.step(account_name + " 开始解析日志%s" % blog_id)
 
@@ -154,6 +153,7 @@ class Download(robot.DownloadThread):
                 # 视频下载
                 video_index = self.account_info[1] + 1
                 for video_url in blog_response["video_url_list"]:
+                    self.main_thread_check()  # 检测主线程运行状态
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
                     file_type = video_url.split(".")[-1]
@@ -189,7 +189,7 @@ class Download(robot.DownloadThread):
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
             TOTAL_VIDEO_COUNT += total_video_count
-            ACCOUNTS.remove(account_id)
+            ACCOUNT_LIST.pop(account_id)
         log.step(account_name + " 下载完毕，总共获得%s个视频" % total_video_count)
         self.notify_main_thread()
 
