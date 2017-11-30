@@ -45,7 +45,7 @@ def main():
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = "%s\t\t\t\t\t" % account_id
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file("\n".join(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_APPEND)
+        tool.write_file("\n".join(temp_list), SAVE_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
