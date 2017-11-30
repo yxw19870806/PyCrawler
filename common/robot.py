@@ -397,6 +397,10 @@ def read_save_data(save_data_path, key_index, default_value_list):
             continue
         single_save_list = single_save_data.split("\t")
 
+        if single_save_list[key_index] in result_list:
+            output.print_msg("存档中存在重复行")
+            tool.process_exit()
+
         # 根据default_value_list给没给字段默认值
         index = 0
         for default_value in default_value_list:
