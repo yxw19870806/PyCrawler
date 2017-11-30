@@ -48,9 +48,8 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
                 continue
-            cookie_file = open(os.path.join(file_path, cookie_name), "r")
-            cookie_info = cookie_file.read()
-            cookie_file.close()
+            with open(os.path.join(file_path, cookie_name), "r") as cookie_file:
+                cookie_info = cookie_file.read()
             for cookies in cookie_info.split("*"):
                 cookie_list = cookies.strip("\n").split("\n")
                 if len(cookie_list) < 8:
@@ -124,9 +123,8 @@ def get_all_cookie_from_browser(browser_type, file_path):
         for cookie_name in os.listdir(file_path):
             if cookie_name.find(".txt") == -1:
                 continue
-            cookie_file = open(os.path.join(file_path, cookie_name), "r")
-            cookie_info = cookie_file.read()
-            cookie_file.close()
+            with open(os.path.join(file_path, cookie_name), "r") as cookie_file:
+                cookie_info = cookie_file.read()
             for cookies in cookie_info.split("*"):
                 cookie_list = cookies.strip("\n").split("\n")
                 if len(cookie_list) < 8:
