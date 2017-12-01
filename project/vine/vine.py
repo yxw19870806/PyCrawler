@@ -20,19 +20,21 @@ NEW_SAVE_DATA_PATH = ""
 
 # 获取用户首页
 def get_account_index_page(account_id):
-    # 获取账号id
-    account_vanity_url = "https://vine.co/api/users/profiles/vanity/%s" % account_id
-    account_vanity_response = net.http_request(account_vanity_url, method="GET", json_decode=True)
-    if account_vanity_response.status == 404:
-        raise robot.RobotException("账号不存在")
-    elif account_vanity_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException("账号ID页，%s" % robot.get_http_request_failed_reason(account_vanity_response.status))
-    if not robot.check_sub_key(("data",), account_vanity_response.json_data):
-        raise robot.RobotException("账号ID页返回信息'data'字段不存在\n%s" % account_vanity_response.json_data)
-    if not robot.check_sub_key(("userIdStr",), account_vanity_response.json_data["data"]):
-        raise robot.RobotException("账号ID页返回信息'userIdStr'字段不存在\n%s" % account_vanity_response.json_data)
+    if not robot.is_integer(account_id):
+        # 获取账号id
+        account_vanity_url = "https://vine.co/api/users/profiles/vanity/%s" % account_id
+        account_vanity_response = net.http_request(account_vanity_url, method="GET", json_decode=True)
+        if account_vanity_response.status == 404:
+            raise robot.RobotException("账号不存在")
+        elif account_vanity_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise robot.RobotException("账号ID页，%s" % robot.get_http_request_failed_reason(account_vanity_response.status))
+        if not robot.check_sub_key(("data",), account_vanity_response.json_data):
+            raise robot.RobotException("账号ID页返回信息'data'字段不存在\n%s" % account_vanity_response.json_data)
+        if not robot.check_sub_key(("userIdStr",), account_vanity_response.json_data["data"]):
+            raise robot.RobotException("账号ID页返回信息'userIdStr'字段不存在\n%s" % account_vanity_response.json_data)
+        account_id = account_vanity_response.json_data["data"]["userIdStr"]
     # 获取账号详情
-    account_profile_url = "https://archive.vine.co/profiles/%s.json" % account_vanity_response.json_data["data"]["userIdStr"]
+    account_profile_url = "https://archive.vine.co/profiles/%s.json" % account_id
     result = {
         "video_id_list": [],  # 日志id
     }
