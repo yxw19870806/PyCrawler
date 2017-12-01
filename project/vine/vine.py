@@ -61,19 +61,23 @@ def get_video_page(video_id):
     video_page_url = "https://archive.vine.co/posts/%s.json" % video_id
     video_page_response = net.http_request(video_page_url, method="GET", json_decode=True)
     result = {
+        "is_skip": False,  # 是否跳过
         "video_url": None,  # 视频地址
         "video_id": 0,  # 视频id（数字）
     }
-    if video_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_page_response.status == 403:
+        result["is_skip"] = True
+    elif video_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_page_response.status))
-    if not robot.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_page_response.json_data):
-        raise robot.RobotException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_page_response.json_data)
-    if not robot.is_integer(video_page_response.json_data["postId"]):
-        raise robot.RobotException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
-    # 获取视频地址
-    result["video_url"] = str(video_page_response.json_data["videoUrl"])
-    # 获取视频id（数字）
-    result["video_id"] = video_page_response.json_data["postId"]
+    else:
+        if not robot.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_page_response.json_data):
+            raise robot.RobotException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_page_response.json_data)
+        if not robot.is_integer(video_page_response.json_data["postId"]):
+            raise robot.RobotException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
+        # 获取视频地址
+        result["video_url"] = str(video_page_response.json_data["videoUrl"])
+        # 获取视频id（数字）
+        result["video_id"] = video_page_response.json_data["postId"]
     return result
 
 
@@ -184,6 +188,11 @@ class Download(robot.DownloadThread):
                 except robot.RobotException, e:
                     log.error(account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
                     raise
+
+                # 是否需要跳过，比如没有权限访问
+                if video_response["is_skip"]:
+                    log.step(account_name + " 视频 %s 跳过" % video_response["video_id"])
+                    continue
 
                 # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
                 if not is_find:
