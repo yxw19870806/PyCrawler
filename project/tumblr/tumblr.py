@@ -149,7 +149,6 @@ def get_post_page(post_url, is_safe_mode):
                 result["image_url_list"].append(str(script_data["image"]))
             else:
                 raise robot.RobotException("页面脚本数据'image'字段类型错误\n%s" % script_data)
-        log.error("post url: %s, image count: %s, application/ld+json\n%s" % (post_url, len(result["image_url_list"]), script_data))
     else:
         # 获取全部图片地址
         image_url_list = re.findall('"(http[s]?://\d*[.]?media.tumblr.com/[^"]*)"', post_page_head)
