@@ -401,6 +401,9 @@ def read_save_data(save_data_path, key_index, default_value_list):
             output.print_msg("存档中存在重复行")
             tool.process_exit()
 
+        # 去除前后空格
+        single_save_list = map(lambda value: value.strip(), single_save_list)
+
         # 根据default_value_list给没给字段默认值
         index = 0
         for default_value in default_value_list:
