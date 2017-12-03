@@ -74,19 +74,20 @@ def get_video_info_page(video_id):
     query_data = {"token": ""}
     video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "video_url": None,  # 视频地址
+        "video_url_list": [],  # 视频地址
     }
     if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取视频地址
         if not robot.check_sub_key(("result",), video_info_response.json_data):
             raise robot.RobotException("返回信息'result'字段不存在\n%s" % video_info_response.json_data)
-        # 存在多个CDN地址，任意一个匹配即可
+        # 存在多个CDN地址
+        video_url_list = []
         for result in video_info_response.json_data["result"]:
             if robot.check_sub_key(("path", "host", "scheme"), result):
-                result["video_url"] = str(result["scheme"]) + str(result["host"]) + str(result["path"])
-                break
-        if result["video_url"] is None:
+                video_url_list.append(str(result["scheme"]) + str(result["host"]) + str(result["path"]))
+        if len(video_url_list) == 0:
             raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
+        result["video_url_list"] = video_url_list
     else:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
     return result
@@ -221,15 +222,22 @@ class Download(robot.DownloadThread):
                     log.error(account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
                     raise
 
-                self.main_thread_check()  # 检测主线程运行状态
-                log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_info_response["video_url"]))
-
                 file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.mp4" % video_index)
-                save_file_return = net.save_net_file(video_info_response["video_url"], file_path)
-                if save_file_return["status"] == 1:
-                    log.step(account_name + " 第%s个视频下载成功" % video_index)
-                else:
-                    log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                while len(video_info_response["video_url_list"]) > 0:
+                    self.main_thread_check()  # 检测主线程运行状态
+                    video_url = video_info_response["video_url_list"].pop(0)
+                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
+
+                    save_file_return = net.save_net_file(video_url, file_path)
+                    if save_file_return["status"] == 1:
+                        log.step(account_name + " 第%s个视频下载成功" % video_index)
+                        break
+                    else:
+                        error_message = account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
+                        if len(video_url) == 0:
+                            log.error(error_message)
+                        else:
+                            log.step(error_message)
                 # 视频下载完毕
                 self.account_info[1] = str(video_index)  # 设置存档记录
                 self.account_info[2] = video_id  # 设置存档记录
