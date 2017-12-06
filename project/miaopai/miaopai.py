@@ -148,115 +148,120 @@ class MiaoPai(robot.Robot):
 class Download(robot.DownloadThread):
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
-
-    def run(self):
-        global TOTAL_VIDEO_COUNT
-
-        account_id = self.account_info[0]
+        self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
-            account_name = self.account_info[3]
+            self.account_name = self.account_info[3]
         else:
-            account_name = self.account_info[0]
-        total_video_count = 0
+            self.account_name = self.account_info[0]
+        self.total_video_count = 0
+        log.step(self.account_name + " 开始")
 
-        try:
-            log.step(account_name + " 开始")
+    # 获取所有可下载视频
+    def get_crawl_list(self, user_id):
+        page_count = 1
+        video_id_list = []
+        is_over = False
+        # 获取全部还未下载过需要解析的视频
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始解析第%s页视频" % page_count)
 
+            # 获取指定一页的视频信息
             try:
-                account_index_response = get_account_index_page(account_id)
+                video_pagination_response = get_one_page_video(user_id, page_count)
             except robot.RobotException, e:
-                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
+                log.error(self.account_name + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            page_count = 1
-            video_id_list = []
-            is_over = False
-            # 获取全部还未下载过需要解析的视频
-            while not is_over:
-                self.main_thread_check()  # 检测主线程运行状态
-                log.step(account_name + " 开始解析第%s页视频" % page_count)
+            log.trace(self.account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_id_list"]))
 
-                # 获取指定一页的视频信息
-                try:
-                    video_pagination_response = get_one_page_video(account_index_response["user_id"], page_count)
-                except robot.RobotException, e:
-                    log.error(account_name + " 第%s页视频解析失败，原因：%s" % (page_count, e.message))
-                    raise
-
-                log.trace(account_name + " 第%s页解析的全部视频：%s" % (page_count, video_pagination_response["video_id_list"]))
-
-                # 寻找这一页符合条件的视频
-                for video_id in video_pagination_response["video_id_list"]:
-                    # 检查是否达到存档记录
-                    if video_id != self.account_info[2]:
-                        # 新增视频导致的重复判断
-                        if video_id in video_id_list:
-                            continue
-                        else:
-                            video_id_list.append(video_id)
+            # 寻找这一页符合条件的视频
+            for video_id in video_pagination_response["video_id_list"]:
+                # 检查是否达到存档记录
+                if video_id != self.account_info[2]:
+                    # 新增视频导致的重复判断
+                    if video_id in video_id_list:
+                        continue
                     else:
-                        is_over = True
-                        break
-
-                # 没有视频了
-                if video_pagination_response["is_over"]:
-                    if self.account_info[2] != "":
-                        log.error(account_name + " 没有找到上次下载的最后一个视频地址")
-                    is_over = True
+                        video_id_list.append(video_id)
                 else:
-                    page_count += 1
+                    is_over = True
+                    break
 
-            log.step(account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+            # 没有视频了
+            if video_pagination_response["is_over"]:
+                if self.account_info[2] != "":
+                    log.error(self.account_name + " 没有找到上次下载的最后一个视频地址")
+                is_over = True
+            else:
+                page_count += 1
+
+    # 解析单个视频
+    def crawl_video(self, video_id):
+        # 获取视频下载地址
+        try:
+            video_info_response = get_video_info_page(video_id)
+        except robot.RobotException, e:
+            log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
+            raise
+
+        video_index = int(self.account_info[1]) + 1
+        file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_name, "%04d.mp4" % video_index)
+        while len(video_info_response["video_url_list"]) > 0:
+            self.main_thread_check()  # 检测主线程运行状态
+            video_url = video_info_response["video_url_list"].pop(0)
+            log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
+
+            save_file_return = net.save_net_file(video_url, file_path)
+            if save_file_return["status"] == 1:
+                log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+                break
+            else:
+                error_message = self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
+                if len(video_url) == 0:
+                    log.error(error_message)
+                else:
+                    log.step(error_message)
+
+        # 视频下载完毕
+        self.account_info[1] = str(video_index)  # 设置存档记录
+        self.account_info[2] = video_id  # 设置存档记录
+        self.total_video_count += 1  # 计数累加
+
+    def run(self):
+        try:
+            try:
+                account_index_response = get_account_index_page(self.account_id)
+            except robot.RobotException, e:
+                log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
+                raise
+
+            # 获取所有可下载视频
+            video_id_list = self.get_crawl_list(account_index_response["user_id"])
+            log.step(self.account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
 
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
-                self.main_thread_check()  # 检测主线程运行状态
                 video_id = video_id_list.pop()
-                video_index = int(self.account_info[1]) + 1
-                log.step(account_name + " 开始解析第%s个视频 %s" % (video_index, video_id))
-
-                # 获取视频下载地址
-                try:
-                    video_info_response = get_video_info_page(video_id)
-                except robot.RobotException, e:
-                    log.error(account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
-                    raise
-
-                file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.mp4" % video_index)
-                while len(video_info_response["video_url_list"]) > 0:
-                    self.main_thread_check()  # 检测主线程运行状态
-                    video_url = video_info_response["video_url_list"].pop(0)
-                    log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
-
-                    save_file_return = net.save_net_file(video_url, file_path)
-                    if save_file_return["status"] == 1:
-                        log.step(account_name + " 第%s个视频下载成功" % video_index)
-                        break
-                    else:
-                        error_message = account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
-                        if len(video_url) == 0:
-                            log.error(error_message)
-                        else:
-                            log.step(error_message)
-                # 视频下载完毕
-                self.account_info[1] = str(video_index)  # 设置存档记录
-                self.account_info[2] = video_id  # 设置存档记录
-                total_video_count += 1  # 计数累加
+                log.step(self.account_name + " 开始解析第%s个视频 %s" % (int(self.account_info[1]) + 1, video_id))
+                self.crawl_video(video_id)
+                self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
+                log.error(self.account_name + " 异常退出")
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
+            global TOTAL_VIDEO_COUNT
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_VIDEO_COUNT += total_video_count
-            ACCOUNT_LIST.pop(account_id)
-        log.step(account_name + " 下载完毕，总共获得%s个视频" % total_video_count)
+            TOTAL_VIDEO_COUNT += self.total_video_count
+            ACCOUNT_LIST.pop(self.account_id)
+        log.step(self.account_name + " 下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 
 
