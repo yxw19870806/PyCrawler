@@ -170,113 +170,120 @@ class Flickr(robot.Robot):
 
 
 class Download(robot.DownloadThread):
+    request_id = tool.generate_random_string(8)  # 生成一个随机的request id用作访问（模拟页面传入）
+
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
+        self.account_name = self.account_info[0]
+        self.total_image_count = 0
+        self.temp_path_list = []
+        log.step(self.account_name + " 开始")
 
-    def run(self):
-        global TOTAL_IMAGE_COUNT
+    # 获取所有可下载图片
+    def get_crawl_list(self, user_id, site_key):
+        page_count = 1
+        image_info_list = []
+        is_over = False
+        # 获取全部还未下载过需要解析的图片
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始解析第%s页图片" % page_count)
 
-        account_name = self.account_info[0]
-        total_image_count = 0
-        temp_path_list = []
-
-        try:
-            log.step(account_name + " 开始")
-
-            # 获取相册首页页面
+            # 获取一页图片
             try:
-                account_index_response = get_account_index_page(account_name)
+                photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, self.request_id)
             except robot.RobotException, e:
-                log.error(account_name + " 相册首页解析失败，原因：%s" % e.message)
+                log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            # 生成一个随机的request id用作访问（模拟页面传入）
-            request_id = tool.generate_random_string(8)
-            page_count = 1
-            image_info_list = []
-            is_over = False
-            # 获取全部还未下载过需要解析的图片
-            while not is_over:
-                self.main_thread_check()  # 检测主线程运行状态
-                log.step(account_name + " 开始解析第%s页图片" % page_count)
+            log.trace(self.account_name + " 第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
 
-                # 获取一页图片
-                try:
-                    photo_pagination_response = get_one_page_photo(account_index_response["user_id"], page_count, account_index_response["site_key"], request_id)
-                except robot.RobotException, e:
-                    log.error(account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
-                    raise
+            # 寻找这一页符合条件的图片
+            for image_info in photo_pagination_response["image_info_list"]:
+                # 检查是否达到存档记录
+                if image_info["image_time"] > int(self.account_info[2]):
+                    image_info_list.append(image_info)
+                else:
+                    is_over = True
+                    break
 
-                log.trace(account_name + " 第%s页解析的全部图片：%s" % (page_count, photo_pagination_response["image_info_list"]))
+            if not is_over:
+                if photo_pagination_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
 
-                # 寻找这一页符合条件的图片
-                for image_info in photo_pagination_response["image_info_list"]:
-                    # 检查是否达到存档记录
-                    if image_info["image_time"] > int(self.account_info[2]):
-                        image_info_list.append(image_info)
-                    else:
-                        is_over = True
-                        break
+        return image_info_list
 
-                if not is_over:
-                    if photo_pagination_response["is_over"]:
-                        is_over = True
-                    else:
-                        page_count += 1
+    # 下载同一上传时间的所有图片
+    def crawl_image(self, image_info_list):
+        image_index = int(self.account_info[1]) + 1
+        for image_info in image_info_list:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
+            file_type = image_info["image_url"].split(".")[-1]
+            file_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%04d.%s" % (image_index, file_type))
+            save_file_return = net.save_net_file(image_info["image_url"], file_path)
+            if save_file_return["status"] == 1:
+                # 设置临时目录
+                self.temp_path_list.append(file_path)
+                log.step(self.account_name + " 第%s张图片下载成功" % image_index)
+                image_index += 1
+            else:
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
-            log.step(account_name + " 需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
+        # 图片下载完毕
+        self.temp_path_list = []  # 临时目录设置清除
+        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.account_info[2] = str(image_info_list[0]["image_time"])  # 设置存档记
+
+    def run(self):
+        try:
+            # 获取相册首页页面
+            try:
+                account_index_response = get_account_index_page(self.account_name)
+            except robot.RobotException, e:
+                log.error(self.account_name + " 相册首页解析失败，原因：%s" % e.message)
+                raise
+
+            # 获取所有可下载图片
+            image_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"])
+            log.step(self.account_name + " 需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
 
             # 从最早的图片开始下载
-            image_url_list = []
+            deal_image_info_list = []
             while len(image_info_list) > 0:
-                self.main_thread_check()  # 检测主线程运行状态
                 image_info = image_info_list.pop()
                 # 下一张图片的上传时间一致，合并下载
-                image_url_list.append(image_info["image_url"])
+                deal_image_info_list.append(image_info["image_url"])
                 if len(image_info_list) > 0 and image_info_list[-1]["image_time"] == image_info["image_time"]:
                     continue
 
-                # 同一上传时间的所有图片
-                image_index = int(self.account_info[1]) + 1
-                for image_url in image_url_list:
-                    self.main_thread_check()  # 检测主线程运行状态
-                    log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
-
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
-                    save_file_return = net.save_net_file(image_url, file_path)
-                    if save_file_return["status"] == 1:
-                        # 设置临时目录
-                        temp_path_list.append(file_path)
-                        log.step(account_name + " 第%s张图片下载成功" % image_index)
-                        image_index += 1
-                    else:
-                        log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                # 图片下载完毕
-                image_url_list = []  # 累加图片地址清除
-                temp_path_list = []  # 临时目录设置清除
-                total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-                self.account_info[1] = str(image_index - 1)  # 设置存档记录
-                self.account_info[2] = str(image_info["image_time"])  # 设置存档记录
+                # 下载同一上传时间的所有图片
+                self.crawl_image(deal_image_info_list)
+                deal_image_info_list = []  # 累加图片地址清除
+                self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
+                log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示同一时间的图片正在下载中，需要把下载了部分的内容给清理掉
-            if len(temp_path_list) > 0:
-                for temp_path in temp_path_list:
+            if len(self.temp_path_list) > 0:
+                for temp_path in self.temp_path_list:
                     path.delete_dir_or_file(temp_path)
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
+            global TOTAL_IMAGE_COUNT
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += total_image_count
-            ACCOUNT_LIST.pop(account_name)
-        log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
+            TOTAL_IMAGE_COUNT += self.total_image_count
+            ACCOUNT_LIST.pop(self.account_name)
+        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 
