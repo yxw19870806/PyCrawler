@@ -19,8 +19,6 @@ ACCOUNT_LIST = {}
 TOTAL_VIDEO_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
-AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
-AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
 
 
 # 获取指定页数的全部歌曲
@@ -128,118 +126,132 @@ class FiveSing(robot.Robot):
 
 
 class Download(robot.DownloadThread):
+    AUDIO_COUNT_PER_PAGE = 20  # 每页歌曲数量上限
+    AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
+    AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
+    # 原创、翻唱
+    audio_type_to_index_dict = {AUDIO_TYPE_YC: 1, AUDIO_TYPE_FC: 2}  # 存档文件里的下标
+    audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
+
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
+        self.account_id = self.account_info[0]
+        if len(self.account_info) >= 4 and self.account_info[3]:
+            self.account_name = self.account_info[3]
+        else:
+            self.account_name = self.account_info[0]
+        self.total_video_count = 0
+        log.step(self.account_name + " 开始")
+
+    # 获取所有可下载歌曲
+    def get_crawl_list(self, audio_type):
+        audio_type_index = self.audio_type_to_index_dict[audio_type]
+        audio_type_name = self.audio_type_name_dict[audio_type]
+
+        page_count = 1
+        unique_list = []
+        audio_info_list = []
+        is_over = False
+        # 获取全部还未下载过需要解析的歌曲
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
+
+            # 获取一页歌曲
+            try:
+                audio_pagination_response = get_one_page_audio(self.account_id, audio_type, page_count)
+            except robot.RobotException, e:
+                log.error(self.account_name + " 第%s页%s歌曲解析失败，原因：%s" % (page_count, audio_type_name, e.message))
+                break
+
+            # 如果为空，表示已经取完了
+            if len(audio_pagination_response["audio_info_list"]) == 0:
+                break
+
+            log.trace(self.account_name + " 第%s页%s解析的全部歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
+
+            # 寻找这一页符合条件的歌曲
+            for audio_info in audio_pagination_response["audio_info_list"]:
+                # 新增歌曲导致的重复判断
+                if audio_info["audio_id"] in unique_list:
+                    continue
+                else:
+                    unique_list.append(audio_info["audio_id"])
+
+                # 检查是否达到存档记录
+                if int(audio_info["audio_id"]) > int(self.account_info[audio_type_index]):
+                    audio_info_list.append(audio_info)
+                else:
+                    is_over = True
+                    break
+
+            if not is_over:
+                # 获取的歌曲数量少于1页的上限，表示已经到结束了
+                # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
+                if len(audio_pagination_response["audio_info_list"]) < self.AUDIO_COUNT_PER_PAGE:
+                    is_over = True
+                else:
+                    page_count += 1
+
+        return audio_info_list
+
+    # 解析单首歌曲
+    def crawl_audio(self, audio_type, audio_info):
+        audio_type_name = self.audio_type_name_dict[audio_type]
+
+        # 获取歌曲的详情页
+        try:
+            audio_play_response = get_audio_play_page(audio_info["audio_id"], audio_type)
+        except robot.RobotException, e:
+            log.error(self.account_name + " %s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
+            return
+
+        self.main_thread_check()  # 检测主线程运行状态
+        log.step(self.account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"]))
+
+        file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_name, audio_type_name, "%s - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))
+        save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
+        if save_file_return["status"] == 1:
+            log.step(self.account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
+        else:
+            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            return
+
+        # 歌曲下载完毕
+        self.total_video_count += 1  # 计数累加
+        self.account_info[1] = audio_info["audio_id"]  # 设置存档记录
 
     def run(self):
-        global TOTAL_VIDEO_COUNT
-
-        account_id = self.account_info[0]
-        if len(self.account_info) >= 4 and self.account_info[3]:
-            account_name = self.account_info[3]
-        else:
-            account_name = self.account_info[0]
-        total_video_count = 0
-
-        # 原创、翻唱
-        audio_type_to_index_dict = {AUDIO_TYPE_YC: 1, AUDIO_TYPE_FC: 2}  # 存档文件里的下标
-        audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
         try:
-            log.step(account_name + " 开始")
+            for audio_type in self.audio_type_to_index_dict.keys():
+                audio_type_name = self.audio_type_name_dict[audio_type]
 
-            video_count = 1
-            for audio_type in audio_type_to_index_dict.keys():
-                audio_type_index = audio_type_to_index_dict[audio_type]
-                audio_type_name = audio_type_name_dict[audio_type]
-
-                page_count = 1
-                unique_list = []
-                audio_info_list = []
-                is_over = False
-                # 获取全部还未下载过需要解析的歌曲
-                while not is_over:
-                    self.main_thread_check()  # 检测主线程运行状态
-                    log.step(account_name + " 开始解析第%s页%s歌曲" % (page_count, audio_type_name))
-
-                    # 获取一页歌曲
-                    try:
-                        audio_pagination_response = get_one_page_audio(account_id, audio_type, page_count)
-                    except robot.RobotException, e:
-                        log.error(account_name + " 第%s页%s歌曲解析失败，原因：%s" % (page_count, audio_type_name, e.message))
-                        break
-
-                    # 如果为空，表示已经取完了
-                    if len(audio_pagination_response["audio_info_list"]) == 0:
-                        break
-
-                    log.trace(account_name + " 第%s页%s解析的全部歌曲：%s" % (page_count, audio_type_name, audio_pagination_response["audio_info_list"]))
-
-                    # 寻找这一页符合条件的歌曲
-                    for audio_info in audio_pagination_response["audio_info_list"]:
-                        # 新增歌曲导致的重复判断
-                        if audio_info["audio_id"] in unique_list:
-                            continue
-                        else:
-                            unique_list.append(audio_info["audio_id"])
-
-                        # 检查是否达到存档记录
-                        if int(audio_info["audio_id"]) > int(self.account_info[audio_type_index]):
-                            audio_info_list.append(audio_info)
-                        else:
-                            is_over = True
-                            break
-
-                    if not is_over:
-                        # 获取的歌曲数量少于1页的上限，表示已经到结束了
-                        # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                        if len(audio_pagination_response["audio_info_list"]) < 20:
-                            is_over = True
-                        else:
-                            page_count += 1
-
-                log.step(account_name + " 需要下载的全部%s歌曲解析完毕，共%s首" % (audio_type_name, len(audio_info_list)))
+                # 获取所有可下载歌曲
+                audio_info_list = self.get_crawl_list(audio_type)
+                log.step(self.account_name + " 需要下载的全部%s歌曲解析完毕，共%s首" % (audio_type_name, len(audio_info_list)))
 
                 # 从最早的歌曲开始下载
                 while len(audio_info_list) > 0:
-                    self.main_thread_check()  # 检测主线程运行状态
                     audio_info = audio_info_list.pop()
-                    log.step(account_name + " 开始解析%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
-
-                    # 获取歌曲的详情页
-                    try:
-                        audio_play_response = get_audio_play_page(audio_info["audio_id"], audio_type)
-                    except robot.RobotException, e:
-                        log.error(account_name + " %s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
-                        break
-
-                    self.main_thread_check()  # 检测主线程运行状态
-                    log.step(account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"]))
-
-                    file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, audio_type_name, "%s - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))
-                    save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
-                    if save_file_return["status"] == 1:
-                        log.step(account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
-                        video_count += 1
-                    else:
-                        log.error(account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                    # 歌曲下载完毕
-                    total_video_count += 1  # 计数累加
-                    self.account_info[1] = audio_info["audio_id"]  # 设置存档记录
+                    log.step(self.account_name + " 开始解析%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
+                    self.crawl_audio(audio_type, audio_info)
+                self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
+                log.error(self.account_name + " 异常退出")
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
+            global TOTAL_VIDEO_COUNT
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_VIDEO_COUNT += total_video_count
-            ACCOUNT_LIST.pop(account_id)
-        log.step(account_name + " 下载完毕，总共获得%s首歌曲" % total_video_count)
+            TOTAL_VIDEO_COUNT += self.total_video_count
+            ACCOUNT_LIST.pop(self.account_id)
+        log.step(self.account_name + " 下载完毕，总共获得%s首歌曲" % self.total_video_count)
         self.notify_main_thread()
 
 
