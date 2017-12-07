@@ -150,104 +150,110 @@ class TuChong(robot.Robot):
 class Download(robot.DownloadThread):
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
+        self.account_name = self.account_info[0]
+        self.total_image_count = 0
+        self.temp_path = ""
+        log.step(self.account_name + " 开始")
 
-    def run(self):
-        global TOTAL_IMAGE_COUNT
+    # 获取所有可下载相册
+    def get_crawl_list(self, account_id):
+        post_time = time.strftime('%Y-%m-%d %H:%M:%S')
+        album_info_list = []
+        is_over = False
+        # 获取全部还未下载过需要解析的相册
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始解析%s后的一页相册" % post_time)
 
-        account_name = self.account_info[0]
-        total_image_count = 0
-        temp_path = ""
-
-        try:
-            log.step(account_name + " 开始")
-
+            # 获取一页相册
             try:
-                account_index_response = get_account_index_page(account_name)
+                album_pagination_response = get_one_page_album(account_id, post_time)
             except robot.RobotException, e:
-                log.error(account_name + " 主页解析失败，原因：%s" % e.message)
+                log.error(self.account_name + " %s后的一页相册解析失败，原因：%s" % (post_time, e.message))
                 raise
-            account_id = account_index_response["account_id"]
 
-            post_time = time.strftime('%Y-%m-%d %H:%M:%S')
-            album_info_list = []
-            is_over = False
-            # 获取全部还未下载过需要解析的相册
-            while not is_over:
-                self.main_thread_check()  # 检测主线程运行状态
-                log.step(account_name + " 开始解析%s后的一页相册" % post_time)
+            # 如果为空，表示已经取完了
+            if len(album_pagination_response["album_info_list"]) == 0:
+                break
 
-                # 获取一页相册
-                try:
-                    album_pagination_response = get_one_page_album(account_id, post_time)
-                except robot.RobotException, e:
-                    log.error(account_name + " %s后的一页相册解析失败，原因：%s" % (post_time, e.message))
-                    raise
+            log.trace(self.account_name + " %s后的一页相册：%s" % (post_time, album_pagination_response["album_info_list"]))
 
-                # 如果为空，表示已经取完了
-                if len(album_pagination_response["album_info_list"]) == 0:
+            # 寻找这一页符合条件的相册
+            for album_info in album_pagination_response["album_info_list"]:
+                # 检查是否达到存档记录
+                if int(album_info["album_id"]) > int(self.account_info[1]):
+                    album_info_list.append(album_info)
+                    post_time = album_info["album_time"]
+                else:
+                    is_over = True
                     break
 
-                log.trace(account_name + " %s后的一页相册：%s" % (post_time, album_pagination_response["album_info_list"]))
+        return album_info_list
 
-                # 寻找这一页符合条件的相册
-                for album_info in album_pagination_response["album_info_list"]:
-                    # 检查是否达到存档记录
-                    if int(album_info["album_id"]) > int(self.account_info[1]):
-                        album_info_list.append(album_info)
-                        post_time = album_info["album_time"]
-                    else:
-                        is_over = True
-                        break
+    # 解析单个相册
+    def crawl_album(self, album_info):
+        image_index = 1
+        # 过滤标题中不支持的字符
+        title = path.filter_text(album_info["album_title"])
+        if title:
+            post_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (album_info["album_id"], title))
+        else:
+            post_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, album_info["album_id"])
+        self.temp_path = post_path
+        for image_url in album_info["image_url_list"]:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 相册%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
 
-            log.step(account_name + " 需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
+            file_path = os.path.join(post_path, "%s.jpg" % image_index)
+            save_file_return = net.save_net_file(image_url, file_path)
+            if save_file_return["status"] == 1:
+                log.step(self.account_name + " 相册%s《%s》 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
+                image_index += 1
+            else:
+                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+        # 相册内图片全部下载完毕
+        self.temp_path = ""  # 临时目录设置清除
+        self.total_image_count += image_index - 1  # 计数累加
+        self.account_info[1] = album_info["album_id"]  # 设置存档记录
+
+    def run(self):
+        try:
+            try:
+                account_index_response = get_account_index_page(self.account_name)
+            except robot.RobotException, e:
+                log.error(self.account_name + " 主页解析失败，原因：%s" % e.message)
+                raise
+
+            album_info_list = self.get_crawl_list(account_index_response["account_id"])
+            log.step(self.account_name + " 需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
 
             # 从最早的相册开始下载
             while len(album_info_list) > 0:
                 self.main_thread_check()  # 检测主线程运行状态
                 album_info = album_info_list.pop()
-                log.step(account_name + " 开始解析相册%s" % album_info["album_id"])
-
-                image_index = 1
-                # 过滤标题中不支持的字符
-                title = path.filter_text(album_info["album_title"])
-                if title:
-                    post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (album_info["album_id"], title))
-                else:
-                    post_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, album_info["album_id"])
-                temp_path = post_path
-                for image_url in album_info["image_url_list"]:
-                    self.main_thread_check()  # 检测主线程运行状态
-                    log.step(account_name + " 相册%s《%s》 开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
-
-                    file_path = os.path.join(post_path, "%s.jpg" % image_index)
-                    save_file_return = net.save_net_file(image_url, file_path)
-                    if save_file_return["status"] == 1:
-                        log.step(account_name + " 相册%s《%s》 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
-                        image_index += 1
-                    else:
-                        log.error(account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-                # 相册内图片全部下载完毕
-                temp_path = ""  # 临时目录设置清除
-                total_image_count += image_index - 1  # 计数累加
-                self.account_info[1] = album_info["album_id"]  # 设置存档记录
+                log.step(self.account_name + " 开始解析相册%s" % album_info["album_id"])
+                self.crawl_album(album_info)
+                self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
+                log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
-            if temp_path:
-                path.delete_dir_or_file(temp_path)
+            if self.temp_path:
+                path.delete_dir_or_file(self.temp_path)
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
+            global TOTAL_IMAGE_COUNT
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += total_image_count
-            ACCOUNT_LIST.pop(account_name)
-        log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
+            TOTAL_IMAGE_COUNT += self.total_image_count
+            ACCOUNT_LIST.pop(self.account_name)
+        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 
