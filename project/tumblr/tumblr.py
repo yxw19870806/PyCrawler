@@ -359,8 +359,7 @@ class Download(robot.DownloadThread):
         log.step(self.account_id + " 开始")
 
     # 获取所有可下载日志
-    def get_crawl_list(self, page_count):
-        unique_list = []
+    def get_crawl_list(self, page_count, unique_list):
         post_url_list = []
         is_over = False
         # 获取全部还未下载过需要解析的日志
@@ -403,6 +402,8 @@ class Download(robot.DownloadThread):
 
             if not is_over:
                 page_count += 1
+
+        return post_url_list
 
     # 解析单个日志
     def crawl_post(self, post_url):
@@ -499,37 +500,44 @@ class Download(robot.DownloadThread):
                 log.error(self.account_id + " 账号设置解析失败，原因：%s" % e.message)
                 raise
 
-            page_count = 1
-            while True:
-                page_count += EACH_LOOP_MAX_PAGE_COUNT
+            start_page_count = 1
+            while EACH_LOOP_MAX_PAGE_COUNT > 0:
+                start_page_count += EACH_LOOP_MAX_PAGE_COUNT
                 try:
-                    post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https, self.is_safe_mode)
+                    post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https, self.is_safe_mode)
                 except robot.RobotException, e:
-                    log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
+                    log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
                     raise
 
                 # 这页没有任何内容，返回上一个检查节点
                 if post_pagination_response["is_over"]:
-                    page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                     break
 
                 post_id = get_post_id(post_pagination_response["post_url_list"][-1])
                 # 这页已经匹配到存档点，返回上一个节点
                 if int(post_id) < int(self.account_info[3]):
-                    page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                log.step(self.account_id + " 前%s页没有符合条件的日志，跳过%s页后继续查询" % (page_count, EACH_LOOP_MAX_PAGE_COUNT))
+                log.step(self.account_id + " 前%s页没有符合条件的日志，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
 
-            post_url_list = self.get_crawl_list(page_count)
-            log.step(self.account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_url_list))
+            unique_list = []
+            while True:
+                post_url_list = self.get_crawl_list(start_page_count, unique_list)
+                log.step(self.account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_url_list))
 
-            # 从最早的日志开始下载
-            while len(post_url_list) > 0:
-                post_url = post_url_list.pop()
-                log.step(self.account_id + " 开始解析日志 %s" % post_url)
-                self.crawl_post(post_url)
-                self.main_thread_check()  # 检测主线程运行状态
+                # 从最早的日志开始下载
+                while len(post_url_list) > 0:
+                    post_url = post_url_list.pop()
+                    log.step(self.account_id + " 开始解析日志 %s" % post_url)
+                    self.crawl_post(post_url)
+                    self.main_thread_check()  # 检测主线程运行状态
+
+                if start_page_count == 1:
+                    break
+                else:
+                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
         except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_id + " 提前退出")
