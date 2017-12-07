@@ -208,143 +208,150 @@ class Article(robot.Robot):
 class Download(robot.DownloadThread):
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
-
-    def run(self):
-        global TOTAL_IMAGE_COUNT
-
-        account_id = self.account_info[0]
+        self.account_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
-            account_name = self.account_info[2]
+            self.account_name = self.account_info[2]
         else:
-            account_name = self.account_info[0]
-        total_image_count = 0
-        temp_path = ""
+            self.account_name = self.account_info[0]
+        self.total_image_count = 0
+        self.temp_path = ""
+        log.step(self.account_name + " 开始")
 
+    # 获取所有可下载视频
+    def get_crawl_list(self):
+        # 获取账号首页
         try:
-            log.step(account_name + " 开始")
+            account_index_response = weiboCommon.get_account_index_page(self.account_id)
+        except robot.RobotException, e:
+            log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
+            raise
 
-            # 获取账号首页
+        page_count = 1
+        article_info_list = []
+        is_over = False
+        # 获取全部还未下载过需要解析的文章
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            # 获取一页文章预览页面
             try:
-                account_index_response = weiboCommon.get_account_index_page(account_id)
+                article_pagination_response = get_one_page_article(account_index_response["account_page_id"], page_count)
             except robot.RobotException, e:
-                log.error(account_name + " 首页解析失败，原因：%s" % e.message)
+                log.error(self.account_name + " 第%s页文章解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            page_count = 1
-            article_info_list = []
-            is_over = False
-            # 获取全部还未下载过需要解析的文章
-            while not is_over:
-                self.main_thread_check()  # 检测主线程运行状态
-                # 获取一页文章预览页面
-                try:
-                    article_pagination_response = get_one_page_article(account_index_response["account_page_id"], page_count)
-                except robot.RobotException, e:
-                    log.error(account_name + " 第%s页文章解析失败，原因：%s" % (page_count, e.message))
-                    raise
+            # 寻找这一页符合条件的文章
+            for article_info in article_pagination_response["article_info_list"]:
+                # 检查是否达到存档记录
+                if article_info["article_time"] > int(self.account_info[1]):
+                    article_info_list.append(article_info)
+                else:
+                    is_over = True
+                    break
 
-                # 寻找这一页符合条件的文章
-                for article_info in article_pagination_response["article_info_list"]:
-                    # 检查是否达到存档记录
-                    if article_info["article_time"] > int(self.account_info[1]):
-                        article_info_list.append(article_info)
-                    else:
-                        is_over = True
-                        break
+            if not is_over:
+                # 获取文章总页数
+                if article_pagination_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
 
-                if not is_over:
-                    # 获取文章总页数
-                    if article_pagination_response["is_over"]:
-                        is_over = True
-                    else:
-                        page_count += 1
+        return article_info_list
+
+    # 解析单篇文章
+    def crawl_article(self, article_info):
+        # 获取文章页面内容
+        try:
+            article_response = get_article_page(article_info["article_url"])
+        except robot.RobotException, e:
+            log.error(self.account_name + " 文章 %s 解析失败，原因：%s" % (article_info["article_url"], e.message))
+            raise
+
+        if article_response["is_pay"]:
+            log.error(self.account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
+
+        article_id = article_response["article_id"]
+        article_title = article_response["article_title"]
+        # 过滤标题中不支持的字符
+        title = path.filter_text(article_title)
+        if title:
+            article_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (article_id, title))
+        else:
+            article_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, article_id)
+        self.temp_path = article_path
+
+        # 文章正文图片
+        image_index = 1
+        for image_url in article_response["image_url_list"]:
+            self.main_thread_check()  # 检测主线程运行状态
+            if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
+                continue
+            log.step(self.account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_index, image_url))
+            file_type = image_url.split(".")[-1]
+            file_path = os.path.join(article_path, "%03d.%s" % (image_index, file_type))
+            save_file_return = net.save_net_file(image_url, file_path)
+            if save_file_return["status"] == 1:
+                if weiboCommon.check_image_invalid(file_path):
+                    path.delete_dir_or_file(file_path)
+                    log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_title, image_index, image_url))
+                else:
+                    log.step(self.account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_index))
+                    image_index += 1
+            else:
+                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+        # 文章顶部图片
+        if article_response["top_image_url"] is not None:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
+
+            file_type = article_response["top_image_url"].split(".")[-1]
+            file_path = os.path.join(article_path, "000.%s" % file_type)
+            save_file_return = net.save_net_file(article_response["top_image_url"], file_path)
+            if save_file_return["status"] == 1:
+                if weiboCommon.check_image_invalid(file_path):
+                    path.delete_dir_or_file(file_path)
+                    log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_image_url"]))
+                else:
+                    log.step(self.account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
+                    image_index += 1
+            else:
+                log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+        # 文章内图片全部下载完毕
+        self.temp_path = ""  # 临时目录设置清除
+        self.total_image_count += image_index - 1  # 计数累加
+        self.account_info[1] = str(article_info["article_time"])  # 设置存档记录
+
+    def run(self):
+        try:
+            article_info_list = self.get_crawl_list()
+            log.step(self.account_name + " 需要下载的全部文章解析完毕，共%s个" % len(article_info_list))
 
             # 从最早的文章开始下载
             while len(article_info_list) > 0:
-                self.main_thread_check()  # 检测主线程运行状态
                 article_info = article_info_list.pop()
-                log.step(account_name + " 开始解析文章 %s" % article_info["article_url"])
-
-                # 获取文章页面内容
-                try:
-                    article_response = get_article_page(article_info["article_url"])
-                except robot.RobotException, e:
-                    log.error(account_name + " 文章 %s 解析失败，原因：%s" % (article_info["article_url"], e.message))
-                    raise
-
-                if article_response["is_pay"]:
-                    log.error(account_name + " 文章 %s 存在付费查看的内容" % article_info["article_url"])
-
-                article_id = article_response["article_id"]
-                article_title = article_response["article_title"]
-                # 过滤标题中不支持的字符
-                title = path.filter_text(article_title)
-                if title:
-                    article_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%s %s" % (article_id, title))
-                else:
-                    article_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, article_id)
-                temp_path = article_path
-
-                # 文章正文图片
-                image_index = 1
-                for image_url in article_response["image_url_list"]:
-                    self.main_thread_check()  # 检测主线程运行状态
-                    if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
-                        continue
-                    log.step(account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_index, image_url))
-                    file_type = image_url.split(".")[-1]
-                    file_path = os.path.join(article_path, "%03d.%s" % (image_index, file_type))
-                    save_file_return = net.save_net_file(image_url, file_path)
-                    if save_file_return["status"] == 1:
-                        if weiboCommon.check_image_invalid(file_path):
-                            path.delete_dir_or_file(file_path)
-                            log.error(account_name + " 文章%s《%s》 第%s张图片 %s 资源已被删除，跳过" % (article_id, article_title, image_index, image_url))
-                        else:
-                            log.step(account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_index))
-                            image_index += 1
-                    else:
-                        log.error(account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                # 文章顶部图片
-                if article_response["top_image_url"] is not None:
-                    self.main_thread_check()  # 检测主线程运行状态
-                    log.step(account_name + " 文章%s《%s》 开始下载顶部图片 %s" % (article_id, article_title, article_response["top_image_url"]))
-
-                    file_type = article_response["top_image_url"].split(".")[-1]
-                    file_path = os.path.join(article_path, "000.%s" % file_type)
-                    save_file_return = net.save_net_file(article_response["top_image_url"], file_path)
-                    if save_file_return["status"] == 1:
-                        if weiboCommon.check_image_invalid(file_path):
-                            path.delete_dir_or_file(file_path)
-                            log.error(account_name + " 文章%s《%s》 顶部图片 %s 资源已被删除，跳过" % (article_id, article_title, article_response["top_image_url"]))
-                        else:
-                            log.step(account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
-                            image_index += 1
-                    else:
-                        log.error(account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                # 文章内图片全部下载完毕
-                temp_path = ""  # 临时目录设置清除
-                total_image_count += image_index - 1  # 计数累加
-                self.account_info[1] = str(article_info["article_time"])  # 设置存档记录
+                log.step(self.account_name + " 开始解析文章 %s" % article_info["article_url"])
+                self.crawl_article(article_info)
+                self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
+                log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个文章正在下载中，需要把下载了部分的内容给清理掉
-            if temp_path:
-                path.delete_dir_or_file(temp_path)
+            if self.temp_path:
+                path.delete_dir_or_file(self.temp_path)
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
+            global TOTAL_IMAGE_COUNT
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += total_image_count
-            ACCOUNT_LIST.pop(account_id)
-        log.step(account_name + " 下载完毕，总共获得%s张图片" % total_image_count)
+            TOTAL_IMAGE_COUNT += self.total_image_count
+            ACCOUNT_LIST.pop(self.account_id)
+        log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
 
