@@ -239,6 +239,7 @@ class Download(robot.DownloadThread):
 
     def run(self):
         try:
+            # 获取所有可下载日志
             blog_info_list = self.get_crawl_list()
             log.step(self.account_name + " 需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
 

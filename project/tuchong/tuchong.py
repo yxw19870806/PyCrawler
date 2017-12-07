@@ -225,6 +225,7 @@ class Download(robot.DownloadThread):
                 log.error(self.account_name + " 主页解析失败，原因：%s" % e.message)
                 raise
 
+            # 获取所有可下载相册
             album_info_list = self.get_crawl_list(account_index_response["account_id"])
             log.step(self.account_name + " 需要下载的全部相册解析完毕，共%s个" % len(album_info_list))
 

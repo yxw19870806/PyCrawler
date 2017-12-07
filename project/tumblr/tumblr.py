@@ -524,6 +524,7 @@ class Download(robot.DownloadThread):
 
             unique_list = []
             while True:
+                # 获取所有可下载日志
                 post_url_list = self.get_crawl_list(start_page_count, unique_list)
                 log.step(self.account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_url_list))
 

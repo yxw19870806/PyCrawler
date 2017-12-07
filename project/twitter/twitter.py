@@ -365,6 +365,7 @@ class Download(robot.DownloadThread):
                     log.error(self.account_name + " account id 不符合，原账号已改名")
                     tool.process_exit()
 
+            # 获取所有可下载媒体
             media_info_list = self.get_crawl_list()
             log.step(self.account_name + " 需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
 

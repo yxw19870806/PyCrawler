@@ -298,6 +298,7 @@ class Download(robot.DownloadThread):
 
     def run(self):
         try:
+            # 获取所有可下载作品
             post_id_list = self.get_crawl_list()
             log.step(self.account_name + " 需要下载的全部作品解析完毕，共%s个" % len(post_id_list))
 
