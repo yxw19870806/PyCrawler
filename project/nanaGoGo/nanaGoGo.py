@@ -24,45 +24,45 @@ IS_DOWNLOAD_IMAGE = True
 IS_DOWNLOAD_VIDEO = True
 
 
-# 获取指定页数的全部媒体信息
-def get_one_page_media(account_name, target_id):
-    media_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
+# 获取指定页数的全部日志信息
+def get_one_page_blog(account_name, target_id):
+    blog_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
     query_data = {
         "targetId": target_id,
         "limit": MESSAGE_COUNT_PER_PAGE,
         "direction": "PREV",
     }
-    media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, json_decode=True)
+    blog_pagination_response = net.http_request(blog_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "media_info_list": [],  # 全部媒体信息
+        "blog_info_list": [],  # 全部日志信息
     }
-    if media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("data",), media_pagination_response.json_data):
-            raise robot.RobotException("返回信息'data'字段不存在\n%s" % media_pagination_response.json_data)
-        if not isinstance(media_pagination_response.json_data["data"], list):
-            raise robot.RobotException("返回信息'data'字段类型不正确\n%s" % media_pagination_response.json_data)
-        for media_info in media_pagination_response.json_data["data"]:
-            result_media_info = {
+    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if not robot.check_sub_key(("data",), blog_pagination_response.json_data):
+            raise robot.RobotException("返回信息'data'字段不存在\n%s" % blog_pagination_response.json_data)
+        if not isinstance(blog_pagination_response.json_data["data"], list):
+            raise robot.RobotException("返回信息'data'字段类型不正确\n%s" % blog_pagination_response.json_data)
+        for blog_info in blog_pagination_response.json_data["data"]:
+            result_blog_info = {
                 "blog_id": None,  # 日志id
                 "image_url_list": [],  # 全部图片地址
                 "video_url_list": [],  # 全部视频地址
             }
-            if not robot.check_sub_key(("post",), media_info):
-                raise robot.RobotException("媒体信息'post'字段不存在\n%s" % media_info)
+            if not robot.check_sub_key(("post",), blog_info):
+                raise robot.RobotException("日志信息'post'字段不存在\n%s" % blog_info)
             # 获取日志id
-            if not robot.check_sub_key(("postId",), media_info["post"]):
-                raise robot.RobotException("媒体信息'postId'字段不存在\n%s" % media_info)
-            if not robot.is_integer(media_info["post"]["postId"]):
-                raise robot.RobotException("媒体信息'postId'类型不正确n%s" % media_info)
-            result_media_info["blog_id"] = str(media_info["post"]["postId"])
+            if not robot.check_sub_key(("postId",), blog_info["post"]):
+                raise robot.RobotException("日志信息'postId'字段不存在\n%s" % blog_info)
+            if not robot.is_integer(blog_info["post"]["postId"]):
+                raise robot.RobotException("日志信息'postId'类型不正确n%s" % blog_info)
+            result_blog_info["blog_id"] = str(blog_info["post"]["postId"])
             # 获取日志内容
-            if not robot.check_sub_key(("body",), media_info["post"]):
-                raise robot.RobotException("媒体信息'body'字段不存在\n%s" % media_info)
-            for blog_body in media_info["post"]["body"]:
+            if not robot.check_sub_key(("body",), blog_info["post"]):
+                raise robot.RobotException("日志信息'body'字段不存在\n%s" % blog_info)
+            for blog_body in blog_info["post"]["body"]:
                 if not robot.check_sub_key(("bodyType",), blog_body):
-                    raise robot.RobotException("媒体信息'bodyType'字段不存在\n%s" % blog_body)
+                    raise robot.RobotException("日志信息'bodyType'字段不存在\n%s" % blog_body)
                 if not robot.is_integer(blog_body["bodyType"]):
-                    raise robot.RobotException("媒体信息'bodyType'字段类型不正确\n%s" % blog_body)
+                    raise robot.RobotException("日志信息'bodyType'字段类型不正确\n%s" % blog_body)
                 # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
                 body_type = int(blog_body["bodyType"])
                 if body_type == 1:  # 文本
@@ -71,21 +71,21 @@ def get_one_page_media(account_name, target_id):
                     continue
                 elif body_type == 3:  # 图片
                     if not robot.check_sub_key(("image",), blog_body):
-                        raise robot.RobotException("媒体信息'image'字段不存在\n%s" % blog_body)
-                    result_media_info["image_url_list"].append(str(blog_body["image"]))
+                        raise robot.RobotException("日志信息'image'字段不存在\n%s" % blog_body)
+                    result_blog_info["image_url_list"].append(str(blog_body["image"]))
                 elif body_type == 7:  # 转发
                     continue
                 elif body_type == 8:  # video
                     if not robot.check_sub_key(("movieUrlHq",), blog_body):
-                        raise robot.RobotException("媒体信息'movieUrlHq'字段不存在\n%s" % blog_body)
-                    result_media_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
+                        raise robot.RobotException("日志信息'movieUrlHq'字段不存在\n%s" % blog_body)
+                    result_blog_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
                 else:
-                    raise robot.RobotException("媒体信息'bodyType'字段取值不正确\n%s" % blog_body)
-            result["media_info_list"].append(result_media_info)
-    elif target_id == INIT_TARGET_ID and media_pagination_response.status == 400:
+                    raise robot.RobotException("日志信息'bodyType'字段取值不正确\n%s" % blog_body)
+            result["blog_info_list"].append(result_blog_info)
+    elif target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
         raise robot.RobotException("talk不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
+        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
     return result
 
 
@@ -151,119 +151,125 @@ class NanaGoGo(robot.Robot):
 class Download(robot.DownloadThread):
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
+        self.account_name = self.account_info[0]
+        self.total_image_count = 0
+        self.total_video_count = 0
+        self.temp_path_list = []
+        log.step(self.account_name + " 开始")
 
-    def run(self):
-        global TOTAL_IMAGE_COUNT
-        global TOTAL_VIDEO_COUNT
+    # 获取所有可下载日志
+    def get_crawl_list(self):
+        target_id = INIT_TARGET_ID
+        blog_info_list = []
+        is_over = False
+        # 获取全部还未下载过需要解析的日志
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始解析target id %s后的一页日志" % target_id)
 
-        account_name = self.account_info[0]
-        total_image_count = 0
-        total_video_count = 0
-        temp_path_list = []
+            # 获取一页日志信息
+            try:
+                blog_pagination_response = get_one_page_blog(self.account_name, target_id)
+            except robot.RobotException, e:
+                log.error(self.account_name + " target id %s的一页日志信息解析失败，原因：%s" % (target_id, e.message))
+                raise
 
-        try:
-            log.step(account_name + " 开始")
+            # 如果为空，表示已经取完了
+            if len(blog_pagination_response["blog_info_list"]) == 0:
+              break
 
-            target_id = INIT_TARGET_ID
-            media_info_list = []
-            is_over = False
-            # 获取全部还未下载过需要解析的日志
-            while not is_over:
-                self.main_thread_check()  # 检测主线程运行状态
-                log.step(account_name + " 开始解析target id %s后的一页媒体" % target_id)
+            log.trace(self.account_name + " target id %s解析的全部日志：%s" % (target_id, blog_pagination_response["blog_info_list"]))
 
-                # 获取一页媒体信息
-                try:
-                    media_pagination_response = get_one_page_media(account_name, target_id)
-                except robot.RobotException, e:
-                    log.error(account_name + " target id %s的一页媒体信息解析失败，原因：%s" % (target_id, e.message))
-                    raise
-
-                # 如果为空，表示已经取完了
-                if len(media_pagination_response["media_info_list"]) == 0:
+            # 寻找这一页符合条件的日志
+            for blog_info in blog_pagination_response["blog_info_list"]:
+                # 检查是否达到存档记录
+                if int(blog_info["blog_id"]) > int(self.account_info[3]):
+                    blog_info_list.append(blog_info)
+                    # 设置下一页指针
+                    target_id = blog_info["blog_id"]
+                else:
+                    is_over = True
                     break
 
-                log.trace(account_name + " target id %s解析的全部媒体：%s" % (target_id, media_pagination_response["media_info_list"]))
+        return blog_info_list
 
-                # 寻找这一页符合条件的日志
-                for media_info in media_pagination_response["media_info_list"]:
-                    # 检查是否达到存档记录
-                    if int(media_info["blog_id"]) > int(self.account_info[3]):
-                        media_info_list.append(media_info)
-                        # 设置下一页指针
-                        target_id = media_info["blog_id"]
-                    else:
-                        is_over = True
-                        break
+    # 解析单个日志
+    def crawl_blog(self, blog_info):
+        # 图片下载
+        image_index = int(self.account_info[1]) + 1
+        if IS_DOWNLOAD_IMAGE:
+            for image_url in blog_info["image_url_list"]:
+                self.main_thread_check()  # 检测主线程运行状态
+                log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
-            log.step(account_name + " 需要下载的全部媒体解析完毕，共%s个" % len(media_info_list))
+                file_type = image_url.split(".")[-1]
+                image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%04d.%s" % (image_index, file_type))
+                save_file_return = net.save_net_file(image_url, image_file_path)
+                if save_file_return["status"] == 1:
+                    self.temp_path_list.append(image_file_path)
+                    log.step(self.account_name + " 第%s张图片下载成功" % image_index)
+                    image_index += 1
+                else:
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+        # 视频下载
+        video_index = int(self.account_info[2]) + 1
+        if IS_DOWNLOAD_VIDEO:
+            for video_url in blog_info["video_url_list"]:
+                self.main_thread_check()  # 检测主线程运行状态
+                log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
+
+                file_type = video_url.split(".")[-1]
+                video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_name, "%04d.%s" % (video_index, file_type))
+                save_file_return = net.save_net_file(video_url, video_file_path)
+                if save_file_return["status"] == 1:
+                    self.temp_path_list.append(video_file_path)
+                    log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+                    video_index += 1
+                else:
+                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+        # 日志内图片和视频全部下载完毕
+        self.temp_path_list = []  # 临时目录设置清除
+        self.total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
+        self.total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
+        self.account_info[1] = str(image_index - 1)  # 设置存档记录
+        self.account_info[2] = str(video_index - 1)  # 设置存档记录
+        self.account_info[3] = str(blog_info["blog_id"])
+
+    def run(self):
+        try:
+            blog_info_list = self.get_crawl_list()
+            log.step(self.account_name + " 需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
 
             # 从最早的日志开始下载
-            while len(media_info_list) > 0:
-                media_info = media_info_list.pop()
-                log.step(account_name + " 开始解析日%s" % media_info["blog_id"])
-
-                # 图片下载
-                image_index = int(self.account_info[1]) + 1
-                if IS_DOWNLOAD_IMAGE:
-                    for image_url in media_info["image_url_list"]:
-                        self.main_thread_check()  # 检测主线程运行状态
-                        log.step(account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
-
-                        file_type = image_url.split(".")[-1]
-                        image_file_path = os.path.join(IMAGE_DOWNLOAD_PATH, account_name, "%04d.%s" % (image_index, file_type))
-                        save_file_return = net.save_net_file(image_url, image_file_path)
-                        if save_file_return["status"] == 1:
-                            temp_path_list.append(image_file_path)
-                            log.step(account_name + " 第%s张图片下载成功" % image_index)
-                            image_index += 1
-                        else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                # 视频下载
-                video_index = int(self.account_info[2]) + 1
-                if IS_DOWNLOAD_VIDEO:
-                    for video_url in media_info["video_url_list"]:
-                        self.main_thread_check()  # 检测主线程运行状态
-                        log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
-
-                        file_type = video_url.split(".")[-1]
-                        video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, account_name, "%04d.%s" % (video_index, file_type))
-                        save_file_return = net.save_net_file(video_url, video_file_path)
-                        if save_file_return["status"] == 1:
-                            temp_path_list.append(video_file_path)
-                            log.step(account_name + " 第%s个视频下载成功" % video_index)
-                            video_index += 1
-                        else:
-                            log.error(account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
-
-                # 日志内图片和视频全部下载完毕
-                temp_path_list = []  # 临时目录设置清除
-                total_image_count += (image_index - 1) - int(self.account_info[1])  # 计数累加
-                total_video_count += (video_index - 1) - int(self.account_info[2])  # 计数累加
-                self.account_info[1] = str(image_index - 1)  # 设置存档记录
-                self.account_info[2] = str(video_index - 1)  # 设置存档记录
-                self.account_info[3] = str(media_info["blog_id"])
+            while len(blog_info_list) > 0:
+                blog_info = blog_info_list.pop()
+                log.step(self.account_name + " 开始解析日志%s" % blog_info["blog_id"])
+                self.crawl_blog(blog_info)
+                self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
-            # 如果临时目录变量不为空，表示某个媒体正在下载中，需要把下载了部分的内容给清理掉
-            if len(temp_path_list) > 0:
-                for temp_path in temp_path_list:
+                log.error(self.account_name + " 异常退出")
+            # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
+            if len(self.temp_path_list) > 0:
+                for temp_path in self.temp_path_list:
                     path.delete_dir_or_file(temp_path)
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
+            global TOTAL_IMAGE_COUNT
+            global TOTAL_VIDEO_COUNT
             tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += total_image_count
-            TOTAL_VIDEO_COUNT += total_video_count
-            ACCOUNT_LIST.pop(account_name)
-        log.step(account_name + " 下载完毕，总共获得%s张图片，%s个视频" % (total_image_count, total_video_count))
+            TOTAL_IMAGE_COUNT += self.total_image_count
+            TOTAL_VIDEO_COUNT += self.total_video_count
+            ACCOUNT_LIST.pop(self.account_name)
+        log.step(self.account_name + " 下载完毕，总共获得%s张图片，%s个视频" % (self.total_image_count, self.total_video_count))
         self.notify_main_thread()
 
 
