@@ -359,7 +359,7 @@ class Download(robot.DownloadThread):
         log.step(self.account_id + " 开始")
 
     # 获取所有可下载日志
-    def get_crawl_list(self, page_count, is_https, is_safe_mode):
+    def get_crawl_list(self, page_count):
         unique_list = []
         post_url_list = []
         is_over = False
@@ -370,7 +370,7 @@ class Download(robot.DownloadThread):
 
             # 获取一页的日志地址
             try:
-                post_pagination_response = get_one_page_post(self.account_id, page_count, is_https, is_safe_mode)
+                post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https, self.is_safe_mode)
             except robot.RobotException, e:
                 log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -404,11 +404,12 @@ class Download(robot.DownloadThread):
             if not is_over:
                 page_count += 1
 
-    def crawl_post(self, post_url, is_https, is_safe_mode):
+    # 解析单个日志
+    def crawl_post(self, post_url):
         post_id = get_post_id(post_url)
         # 获取日志
         try:
-            post_response = get_post_page(post_url, is_safe_mode)
+            post_response = get_post_page(post_url, self.is_safe_mode)
         except robot.RobotException, e:
             log.error(self.account_id + " 日志 %s 解析失败，原因：%s" % (post_url, e.message))
             raise
@@ -418,7 +419,7 @@ class Download(robot.DownloadThread):
         while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
             self.main_thread_check()  # 检测主线程运行状态
             try:
-                video_play_response = get_video_play_page(self.account_id, post_id, is_https)
+                video_play_response = get_video_play_page(self.account_id, post_id, self.is_https)
             except robot.RobotException, e:
                 log.error(self.account_id + " 日志 %s 的视频解析失败，原因：%s" % (post_url, e.message))
                 raise
@@ -493,7 +494,7 @@ class Download(robot.DownloadThread):
     def run(self):
         try:
             try:
-                is_https, is_safe_mode = get_index_setting(self.account_id)
+                self.is_https, self.is_safe_mode = get_index_setting(self.account_id)
             except robot.RobotException, e:
                 log.error(self.account_id + " 账号设置解析失败，原因：%s" % e.message)
                 raise
@@ -502,7 +503,7 @@ class Download(robot.DownloadThread):
             while True:
                 page_count += EACH_LOOP_MAX_PAGE_COUNT
                 try:
-                    post_pagination_response = get_one_page_post(self.account_id, page_count, is_https, is_safe_mode)
+                    post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https, self.is_safe_mode)
                 except robot.RobotException, e:
                     log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
@@ -520,14 +521,14 @@ class Download(robot.DownloadThread):
 
                 log.step(self.account_id + " 前%s页没有符合条件的日志，跳过%s页后继续查询" % (page_count, EACH_LOOP_MAX_PAGE_COUNT))
 
-            post_url_list = self.get_crawl_list(page_count, is_https, is_safe_mode)
+            post_url_list = self.get_crawl_list(page_count)
             log.step(self.account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_url_list))
 
             # 从最早的日志开始下载
             while len(post_url_list) > 0:
                 post_url = post_url_list.pop()
                 log.step(self.account_id + " 开始解析日志 %s" % post_url)
-                self.crawl_post(post_url, is_https, is_safe_mode)
+                self.crawl_post(post_url)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
