@@ -19,6 +19,7 @@ import urlparse
 ACCOUNT_LIST = {}
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
+EACH_LOOP_MAX_PAGE_COUNT = 500
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -367,6 +368,27 @@ class Download(robot.DownloadThread):
                 raise
 
             page_count = 1
+            while True:
+                page_count += EACH_LOOP_MAX_PAGE_COUNT
+                try:
+                    post_pagination_response = get_one_page_post(account_id, page_count, is_https, is_safe_mode)
+                except robot.RobotException, e:
+                    log.error(account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
+                    raise
+
+                # 这页没有任何内容，返回上一个检查节点
+                if post_pagination_response["is_over"]:
+                    page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    break
+
+                post_id = get_post_id(post_pagination_response["post_url_list"][-1])
+                # 这页已经匹配到存档点，返回上一个节点
+                if int(post_id) < int(self.account_info[3]):
+                    page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    break
+
+                log.step(account_id + " 前%s页没有符合条件的日志，跳过%s页后继续查询" % (page_count, EACH_LOOP_MAX_PAGE_COUNT))
+
             unique_list = []
             post_url_list = []
             is_over = False
