@@ -165,7 +165,7 @@ class Download(robot.DownloadThread):
 
             # 获取指定一页图片的信息
             try:
-                photo_pagination_response = get_one_page_photo(account_id, page_count)
+                photo_pagination_response = get_one_page_photo(self.account_id, page_count)
             except robot.RobotException, e:
                 log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -201,7 +201,7 @@ class Download(robot.DownloadThread):
         image_index = int(self.account_info[1]) + 1
         for image_info in image_info_list:
             self.main_thread_check()  # 检测主线程运行状态
-            log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
+            log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
 
             file_type = image_info["image_url"].split(".")[-1]
             if file_type.find("/") != -1:
