@@ -169,6 +169,8 @@ class Download(robot.DownloadThread):
             if not is_over:
                 page_count += 1
 
+        return blog_url_list
+
     # 解析单个日志
     def crawl_blog(self, blog_url):
         # 获取日志
