@@ -156,7 +156,7 @@ def get_post_page(post_url, is_safe_mode):
         new_image_url_list = {}
         for image_url in image_url_list:
             # 头像，跳过
-            if image_url.find("/avatar_") != -1 or image_url.find("_75sq.gif") != -1:
+            if image_url.find("/avatar_") != -1 or image_url[-9:] == "_75sq.gif" or image_url[-9:] == "_75sq.jpg":
                 continue
             image_id, resolution = analysis_image(image_url)
             # 判断是否有分辨率更小的相同图片
