@@ -1,0 +1,305 @@
+# -*- coding:UTF-8  -*-
+"""
+Youtube视频爬虫
+https://www.youtube.com
+@author: hikaru
+email: hikaru870806@hotmail.com
+如有问题或建议请联系
+"""
+from common import *
+import json
+import os
+import threading
+import time
+import traceback
+import urllib
+
+ACCOUNT_LIST = {}
+TOTAL_VIDEO_COUNT = 0
+VIDEO_DOWNLOAD_PATH = ""
+NEW_SAVE_DATA_PATH = ""
+
+
+# 获取用户首页
+def get_one_page_video(account_id, token):
+    # token = "4qmFsgJAEhhVQ2xNXzZHRU9razY2STFfWWJTUFFqSWcaJEVnWjJhV1JsYjNNZ0FEZ0JZQUZxQUhvQk1yZ0JBQSUzRCUzRA%3D%3D"
+    result = {
+        "video_id_list": [],  # 全部视频id
+        "next_page_token": None,  # 下一页token
+    }
+    if token == "":
+        index_url = "https://www.youtube.com/channel/%s/videos" % account_id
+        index_response = net.http_request(index_url, method="GET")
+        if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+        script_data_html = tool.find_sub_string(index_response.data, 'window["ytInitialData"] =', ";\n").strip()
+        if not script_data_html:
+            raise robot.RobotException("页面截取视频信息失败\n%s" % index_response.data)
+        try:
+            script_data = json.loads(script_data_html)
+        except ValueError:
+            raise robot.RobotException("视频信息加载失败\n%s" % script_data_html)
+        try:
+            temp_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]
+            video_list_data = temp_data["itemSectionRenderer"]["contents"][0]["gridRenderer"]
+        except KeyError:
+            raise robot.RobotException("视频信息格式不正确\n%s" % script_data)
+    else:
+        query_url = "https://www.youtube.com/browse_ajax"
+        query_data = {"ctoken": token}
+        header_list = {
+            "x-youtube-client-name": "1",
+            "x-youtube-client-version": "2.20171207",
+        }
+        video_pagination_response = net.http_request(query_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
+        if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+        try:
+            video_list_data = video_pagination_response.json_data[1]["response"]["continuationContents"]["gridContinuation"]
+        except KeyError:
+            raise robot.RobotException("视频信息格式不正确\n%s" % video_pagination_response.json_data)
+    if not robot.check_sub_key(("items",), video_list_data):
+        raise robot.RobotException("视频列表信息'items'字段不存在\n%s" % video_list_data)
+    for item in video_list_data["items"]:
+        if not robot.check_sub_key(("gridVideoRenderer",), item):
+            raise robot.RobotException("视频信息'gridVideoRenderer'字段不存在\n%s" % item)
+        if not robot.check_sub_key(("videoId",), item["gridVideoRenderer"]):
+            raise robot.RobotException("视频信息'gridVideoRenderer'字段不存在\n%s" % item)
+        result["video_id_list"].append(str(item["gridVideoRenderer"]["videoId"]))
+    # 获取下一页token
+    try:
+        result["next_page_token"] = str(video_list_data["continuations"][0]["nextContinuationData"]["continuation"])
+    except KeyError:
+        pass
+    return result
+
+
+# 获取指定视频
+def get_video_page(video_id):
+    # www.youtube.com/get_video_info?video_id=GCOSw4WSXqU
+    query_url = "https://www.youtube.com/get_video_info"
+    query_data = {"video_id": video_id}
+    video_info_response = net.http_request(query_url, method="GET", fields=query_data)
+    result = {
+        "video_url": None,  # 视频地址
+    }
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
+    video_info_string = tool.find_sub_string(video_info_response.data, "url_encoded_fmt_stream_map=", "&")
+    if not video_info_string:
+        video_info_string = tool.find_sub_string(video_info_response.data, "url_encoded_fmt_stream_map=")
+    if not video_info_string:
+        raise robot.RobotException("截取视频信息失败\n%s" % video_info_response.data)
+    video_info_list = urllib.unquote(video_info_string).split(",")
+    max_video_resolution = 0
+    for video_param_info in video_info_list:
+        video_resolution = video_url = None
+        is_skip = False
+        for sub_param in video_param_info.split("&"):
+            key, value = str(sub_param).split("=")
+            if key == "type":  # 视频类型
+                video_type = urllib.unquote(value)
+                if video_type.find("video/mp4") == 0:
+                    pass  # 只要mp4类型的
+                elif video_type.find("video/webm") == 0 or video_type.find("video/3gpp") == 0:
+                    is_skip = True  # 跳过
+                    break
+                else:
+                    log.error("unknown video type " + video_type)
+            elif key == "quality":  # 视频画质
+                if value == "small":
+                    video_resolution = 240
+                elif value == "medium":
+                    video_resolution = 360
+                elif value[:2] == "hd" and robot.is_integer(value[2:]):
+                    video_resolution = int(value[2:])
+                else:
+                    log.error("unknown video quality " + value)
+            elif key == "url":
+                video_url = urllib.unquote(value)
+        if is_skip:
+            continue
+        if video_url is None or video_url is None:
+            log.error("unknown video param" + video_info_string)
+            continue
+        if video_resolution > max_video_resolution:
+            max_video_resolution = video_resolution
+            result["video_url"] = video_url
+    if result["video_url"] is None:
+        raise robot.RobotException("视频地址解析错误\n%s" % video_info_string)
+    return result
+
+
+class Youtube(robot.Robot):
+    def __init__(self):
+        global VIDEO_DOWNLOAD_PATH
+        global NEW_SAVE_DATA_PATH
+
+        sys_config = {
+            robot.SYS_DOWNLOAD_VIDEO: True,
+            robot.SYS_SET_PROXY: True,
+        }
+        robot.Robot.__init__(self, sys_config)
+
+        # 设置全局变量，供子线程调用
+        VIDEO_DOWNLOAD_PATH = self.video_download_path
+        NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+
+    def main(self):
+        global ACCOUNT_LIST
+
+        # 解析存档文件
+        # account_id  video_count video_string_id  video_number_id
+        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0", "", ""])
+
+        # 循环下载每个id
+        main_thread_count = threading.activeCount()
+        for account_id in sorted(ACCOUNT_LIST.keys()):
+            # 检查正在运行的线程数
+            if threading.activeCount() >= self.thread_count + main_thread_count:
+                self.wait_sub_thread()
+
+            # 提前结束
+            if not self.is_running():
+                break
+
+            # 开始下载
+            thread = Download(ACCOUNT_LIST[account_id], self)
+            thread.start()
+
+            time.sleep(1)
+
+        # 检查除主线程外的其他所有线程是不是全部结束了
+        while threading.activeCount() > main_thread_count:
+            self.wait_sub_thread()
+
+        # 未完成的数据保存
+        if len(ACCOUNT_LIST) > 0:
+            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values()), NEW_SAVE_DATA_PATH)
+
+        # 重新排序保存存档文件
+        robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
+
+        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
+
+
+class Download(robot.DownloadThread):
+    is_find = False
+
+    def __init__(self, account_info, main_thread):
+        robot.DownloadThread.__init__(self, account_info, main_thread)
+        self.account_id = self.account_info[0]
+        if len(self.account_info) >= 5 and self.account_info[4]:
+            self.account_name = self.account_info[4]
+        else:
+            self.account_name = self.account_info[0]
+        self.total_video_count = 0
+        log.step(self.account_name + " 开始")
+
+    # 获取所有可下载视频
+    def get_crawl_list(self):
+        token = ""
+        video_id_list = []
+        # 是否有根据视频id找到上一次的记录
+        if self.account_info[2] == "":
+            self.is_find = True
+        is_over = False
+        # 获取全部还未下载过需要解析的相册
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_name + " 开始解析 %s 视频页" % token)
+
+            # 获取一页视频
+            try:
+                blog_pagination_response = get_one_page_video(self.account_id, token)
+            except robot.RobotException, e:
+                log.error(self.account_name + " 视频页（token：%s）解析失败，原因：%s" % (token, e.message))
+                raise
+
+            log.trace(self.account_name + " 视频页（token：%s）解析的全部日志：%s" % (token, blog_pagination_response["video_id_list"]))
+
+            # 寻找这一页符合条件的日志
+            for video_id in blog_pagination_response["video_id_list"]:
+                # 检查是否达到存档记录
+                if video_id != self.account_info[2]:
+                    video_id_list.append(video_id)
+                else:
+                    is_over = True
+                    self.is_find = True
+                    break
+
+            if not is_over:
+                if blog_pagination_response["next_page_token"]:
+                    # 设置下一页token
+                    token = blog_pagination_response["next_page_token"]
+                else:
+                    is_over = True
+
+        return video_id_list
+
+    # 解析单个视频
+    def crawl_video(self, video_id):
+        # 获取指定视频信息
+        try:
+            video_response = get_video_page(video_id)
+        except robot.RobotException, e:
+            log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
+            raise
+
+        # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
+        if not self.is_find:
+            pass
+
+        self.main_thread_check()  # 检测主线程运行状态
+        video_index = int(self.account_info[1]) + 1
+        log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_response["video_url"]))
+
+        video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_name, "%04d.mp4" % video_index)
+        save_file_return = net.save_net_file(video_response["video_url"], video_file_path)
+        if save_file_return["status"] == 1:
+            # 设置临时目录
+            log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+        else:
+            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+
+        # 媒体内图片和视频全部下载完毕
+        self.total_video_count += 1  # 计数累加
+        self.account_info[1] = str(video_index)  # 设置存档记录
+        self.account_info[2] = video_id  # 设置存档记录
+        # self.account_info[3] = str(video_response["video_id"])  # 设置存档记录
+
+    def run(self):
+        try:
+            # 获取所有可下载视频
+            video_id_list = self.get_crawl_list()
+            log.step(self.account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_id_list))
+            if not self.is_find:
+                log.step(self.account_name + " 存档所在视频已删除，需要在下载时进行过滤")
+
+            # 从最早的视频开始下载
+            while len(video_id_list) > 0:
+                video_id = video_id_list.pop()
+                log.step(self.account_name + " 开始解析视频%s" % video_id)
+                self.crawl_video(video_id)
+                self.main_thread_check()  # 检测主线程运行状态
+        except SystemExit, se:
+            if se.code == 0:
+                log.step(self.account_name + " 提前退出")
+            else:
+                log.error(self.account_name + " 异常退出")
+        except Exception, e:
+            log.error(self.account_name + " 未知异常")
+            log.error(str(e) + "\n" + str(traceback.format_exc()))
+
+        # 保存最后的信息
+        with self.thread_lock:
+            global TOTAL_VIDEO_COUNT
+            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
+            TOTAL_VIDEO_COUNT += self.total_video_count
+            ACCOUNT_LIST.pop(self.account_id)
+        log.step(self.account_name + " 下载完毕，总共获得%s个视频" % self.total_video_count)
+        self.notify_main_thread()
+
+
+if __name__ == "__main__":
+    Youtube().main()
