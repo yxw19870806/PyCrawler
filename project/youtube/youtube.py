@@ -28,7 +28,11 @@ def get_one_page_video(account_id, token):
         "next_page_token": None,  # 下一页token
     }
     if token == "":
-        index_url = "https://www.youtube.com/channel/%s/videos" % account_id
+        # todo 更好的分辨方法
+        if len(account_id) == 24:
+            index_url = "https://www.youtube.com/channel/%s/videos" % account_id
+        else:
+            index_url = "https://www.youtube.com/user/%s/videos" % account_id
         index_response = net.http_request(index_url, method="GET")
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
