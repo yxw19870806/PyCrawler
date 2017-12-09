@@ -220,6 +220,7 @@ class Download(robot.DownloadThread):
             if not self.is_find:
                 log.step(self.account_name + " 存档所在视频已删除，需要在下载时进行过滤")
 
+            # 从最早的视频开始下载
             while len(video_id_list) > 0:
                 video_id = video_id_list.pop()
                 log.step(self.account_name + " 开始解析视频%s" % video_id)
