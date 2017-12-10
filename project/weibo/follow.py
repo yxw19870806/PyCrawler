@@ -47,15 +47,9 @@ def follow_account(account_id):
 
 def main():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
-    # 操作系统&浏览器
-    browser_type = robot.analysis_config(config, "BROWSER_TYPE", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
-    # cookie
-    is_auto_get_cookie = robot.analysis_config(config, "IS_AUTO_GET_COOKIE", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    if is_auto_get_cookie:
-        cookie_path = browser.get_default_browser_cookie_path(browser_type)
-    else:
-        cookie_path = robot.analysis_config(config, "COOKIE_PATH", "")
-    all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
+
+    # 获取cookies
+    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser(config)
     if ".sina.com.cn" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser[".sina.com.cn"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
@@ -81,7 +75,7 @@ def main():
             tool.process_exit()
 
     # 存档位置
-    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
+    save_data_path = robot.quicky_get_save_data_path(config)
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
     for account_id in sorted(account_list.keys()):

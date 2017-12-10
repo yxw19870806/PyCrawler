@@ -12,16 +12,7 @@ import re
 
 # 从cookie中获取登录的auth_token
 def get_auth_token():
-    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
-    # 操作系统&浏览器
-    browser_type = robot.analysis_config(config, "BROWSER_TYPE", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
-    # cookie
-    is_auto_get_cookie = robot.analysis_config(config, "IS_AUTO_GET_COOKIE", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    if is_auto_get_cookie:
-        cookie_path = browser.get_default_browser_cookie_path(browser_type)
-    else:
-        cookie_path = robot.analysis_config(config, "COOKIE_PATH", "")
-    all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
+    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser()
     if ".twitter.com" in all_cookie_from_browser and "auth_token" in all_cookie_from_browser[".twitter.com"]:
         return all_cookie_from_browser["www.instagram.com"]["sessionid"]
     return None
