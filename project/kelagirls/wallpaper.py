@@ -72,10 +72,7 @@ class Wallpaper(robot.Robot):
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        extra_config = {
-            "save_data_path": os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/wallpaper.data")
-        }
-        robot.Robot.__init__(self, sys_config, extra_config=extra_config)
+        robot.Robot.__init__(self, sys_config)
 
     def main(self):
         last_image_id = 0
