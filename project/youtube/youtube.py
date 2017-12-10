@@ -18,6 +18,7 @@ ACCOUNT_LIST = {}
 TOTAL_VIDEO_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
+COOKIE_INFO = {}
 
 
 # 获取用户首页
@@ -84,8 +85,8 @@ def get_video_page(video_id):
     video_play_url = "https://www.youtube.com/watch"
     query_data = {"v": video_id}
     # 强制使用英语
-    header_list = {"Accept-Language": "en"}
-    video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list=header_list)
+
+    video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     result = {
         "video_time": None,  # 视频上传时间
         "video_url": None,  # 视频地址
@@ -142,13 +143,27 @@ def get_video_page(video_id):
     if result["video_url"] is None:
         raise robot.RobotException("视频地址解析错误\n%s" % video_info_string)
     # 获取视频发布时间
-    video_time_string = tool.find_sub_string(video_play_response.data, '"dateText":{"simpleText":"Published on ', '"},').strip()
+    video_time_string = tool.find_sub_string(video_play_response.data, '"dateText":{"simpleText":"', '"},').strip()
     if not video_time_string:
-        raise robot.RobotException("页面截取视频发布时间错误\n%s" % video_info_string)
-    try:
-        video_time = time.strptime(video_time_string, "%b %d, %Y")
-    except ValueError:
-        raise robot.RobotException("视频发布时间文本格式不正确\n%s" % video_time_string)
+        video_time_string = tool.find_sub_string(video_play_response.data, '<strong class="watch-time-text">', '</strong>').strip()
+    if not video_time_string:
+        raise robot.RobotException("页面截取视频发布时间错误\n%s" % video_play_response.data)
+    # 英语
+    if video_time_string.find("Published on") >= 0:
+        video_time_string = video_time_string.replace("Published on", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%b %d, %Y")
+        except ValueError:
+            raise robot.RobotException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    # 中文
+    elif video_time_string.find("发布") >= 0:
+        video_time_string = video_time_string.replace("发布", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%Y年%m月%d日")
+        except ValueError:
+            raise robot.RobotException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    else:
+        raise robot.RobotException("未知语言的时间格式\n%s" % video_time_string)
     result["video_time"] = int(time.mktime(video_time))
     return result
 
@@ -157,16 +172,19 @@ class Youtube(robot.Robot):
     def __init__(self):
         global VIDEO_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
+        global COOKIE_INFO
 
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
+            robot.SYS_GET_COOKIE: {".youtube.com": ()}
         }
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         VIDEO_DOWNLOAD_PATH = self.video_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        COOKIE_INFO = self.cookie_value
 
     def main(self):
         global ACCOUNT_LIST
