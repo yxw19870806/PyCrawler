@@ -29,6 +29,7 @@ HTTP_RETURN_CODE_RETRY = 0
 HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 https:// 开头）
 HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
 HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
+HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
 
@@ -223,6 +224,8 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
                 return ErrorResponse(HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED)
             pass
+        except MemoryError:
+            return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
         except Exception, e:
             if str(e).find("EOF occurred in violation of protocol") >=0:
                 time.sleep(30)
