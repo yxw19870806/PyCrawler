@@ -80,21 +80,31 @@ def get_one_page_video(account_id, token):
 
 # 获取指定视频
 def get_video_page(video_id):
-    # www.youtube.com/get_video_info?video_id=GCOSw4WSXqU
-    query_url = "https://www.youtube.com/get_video_info"
-    query_data = {"video_id": video_id}
-    video_info_response = net.http_request(query_url, method="GET", fields=query_data)
+    # https://www.youtube.com/watch?v=GCOSw4WSXqU
+    video_play_url = "https://www.youtube.com/watch"
+    query_data = {"v": video_id}
+    # 强制使用英语
+    header_list = {"Accept-Language": "en"}
+    video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list=header_list)
     result = {
+        "video_time": None,  # 视频上传时间
         "video_url": None,  # 视频地址
     }
-    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
-    video_info_string = tool.find_sub_string(video_info_response.data, "url_encoded_fmt_stream_map=", "&")
+    # 获取视频地址
+    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
+    video_info_string = tool.find_sub_string(video_play_response.data, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not video_info_string:
-        video_info_string = tool.find_sub_string(video_info_response.data, "url_encoded_fmt_stream_map=")
-    if not video_info_string:
-        raise robot.RobotException("截取视频信息失败\n%s" % video_info_response.data)
-    video_info_list = urllib.unquote(video_info_string).split(",")
+        raise robot.RobotException("页面截取视频信息失败\n%s" % video_play_response.data)
+    try:
+        video_info_data = json.loads(video_info_string)
+    except KeyError:
+        raise robot.RobotException("视频信息格式不正确\n%s" % video_info_string)
+    if not robot.check_sub_key(("args",), video_info_data):
+        raise robot.RobotException("视频信息'args'字段不存在\n%s" % video_info_data)
+    if not robot.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
+        raise robot.RobotException("视频信息'args'字段不存在\n%s" % video_info_data["args"])
+    video_info_list = video_info_data["args"]["url_encoded_fmt_stream_map"].split(",")
     max_video_resolution = 0
     for video_param_info in video_info_list:
         video_resolution = video_url = None
@@ -131,6 +141,15 @@ def get_video_page(video_id):
             result["video_url"] = video_url
     if result["video_url"] is None:
         raise robot.RobotException("视频地址解析错误\n%s" % video_info_string)
+    # 获取视频发布时间
+    video_time_string = tool.find_sub_string(video_play_response.data, '"dateText":{"simpleText":"Published on ', '"},').strip()
+    if not video_time_string:
+        raise robot.RobotException("页面截取视频发布时间错误\n%s" % video_info_string)
+    try:
+        video_time = time.strptime(video_time_string, "%b %d, %Y")
+    except ValueError:
+        raise robot.RobotException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    result["video_time"] = int(time.mktime(video_time))
     return result
 
 
