@@ -262,19 +262,25 @@ class Download(robot.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_id):
+        video_index = int(self.account_info[1]) + 1
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
         except robot.RobotException, e:
-            log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
+            log.error(self.account_name + " 第%s个视频%s解析失败，原因：%s" % (video_index, video_id, e.message))
             raise
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
-            pass
+            if video_response["video_id"] < int(self.account_info[3]):
+                log.step(self.account_name + " 视频%s跳过" % video_id)
+                return
+            elif video_response["video_id"] == int(self.account_info[3]):
+                log.error(self.account_name + " 第%s个视频%s与存档视频发布日期一致，无法过滤，再次下载" % (video_index, video_id))
+            else:
+                self.is_find = True
 
         self.main_thread_check()  # 检测主线程运行状态
-        video_index = int(self.account_info[1]) + 1
         log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_response["video_url"]))
 
         video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_name, "%04d.mp4" % video_index)
@@ -289,7 +295,7 @@ class Download(robot.DownloadThread):
         self.total_video_count += 1  # 计数累加
         self.account_info[1] = str(video_index)  # 设置存档记录
         self.account_info[2] = video_id  # 设置存档记录
-        # self.account_info[3] = str(video_response["video_id"])  # 设置存档记录
+        self.account_info[3] = str(video_response["video_time"])  # 设置存档记录
 
     def run(self):
         try:
@@ -302,7 +308,7 @@ class Download(robot.DownloadThread):
             # 从最早的视频开始下载
             while len(video_id_list) > 0:
                 video_id = video_id_list.pop()
-                log.step(self.account_name + " 开始解析视频%s" % video_id)
+                log.step(self.account_name + " 开始解析第%s个视频%s" % (int(self.account_info[1]) + 1, video_id))
                 self.crawl_video(video_id)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
