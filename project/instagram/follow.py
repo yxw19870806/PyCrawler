@@ -66,25 +66,16 @@ def follow_account(account_name, account_id):
 
 def main():
     config = robot.read_config(tool.PROJECT_CONFIG_PATH)
-    # 操作系统&浏览器
-    browser_type = robot.analysis_config(config, "BROWSER_TYPE", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
-    # cookie
-    is_auto_get_cookie = robot.analysis_config(config, "IS_AUTO_GET_COOKIE", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    if is_auto_get_cookie:
-        cookie_path = browser.get_default_browser_cookie_path(browser_type)
-    else:
-        cookie_path = robot.analysis_config(config, "COOKIE_PATH", "")
-    all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
+    # 获取cookies
+    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser(config)
     if "www.instagram.com" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser["www.instagram.com"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser["www.instagram.com"][cookie_key]
     else:
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
-
     # 设置代理
     robot.quicky_set_proxy(config)
-
     # 存档位置
     save_data_path = robot.quicky_get_save_data_path(config)
     # 读取存档文件

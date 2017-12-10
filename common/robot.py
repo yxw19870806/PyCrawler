@@ -537,3 +537,16 @@ def quicky_get_save_data_path(config=None):
     if not isinstance(config, ConfigParser.SafeConfigParser):
         config = read_config(tool.PROJECT_CONFIG_PATH)
     return robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
+
+def quicky_get_all_cookies_from_browser(config=None):
+    if not isinstance(config, ConfigParser.SafeConfigParser):
+        config = robot.read_config(tool.PROJECT_CONFIG_PATH)
+    # 是否自动查找cookies路径
+    is_auto_get_cookie = robot.analysis_config(config, "IS_AUTO_GET_COOKIE", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+    if is_auto_get_cookie:
+        # 操作系统&浏览器
+        browser_type = robot.analysis_config(config, "BROWSER_TYPE", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
+        cookie_path = browser.get_default_browser_cookie_path(browser_type)
+    else:
+        cookie_path = robot.analysis_config(config, "COOKIE_PATH", "")
+    return browser.get_all_cookie_from_browser(browser_type, cookie_path)

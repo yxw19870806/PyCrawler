@@ -217,16 +217,8 @@ def get_market_game_trade_card_price(game_id, login_cookie):
 
 # 从浏览器中获取登录cookies
 def get_login_cookie_from_browser():
-    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
-    # 操作系统&浏览器
-    browser_type = robot.analysis_config(config, "BROWSER_TYPE", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
-    # cookie
-    is_auto_get_cookie = robot.analysis_config(config, "IS_AUTO_GET_COOKIE", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
-    if is_auto_get_cookie:
-        cookie_path = browser.get_default_browser_cookie_path(browser_type)
-    else:
-        cookie_path = robot.analysis_config(config, "COOKIE_PATH", "")
-    all_cookie_from_browser = browser.get_all_cookie_from_browser(browser_type, cookie_path)
+    # 获取cookies
+    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser()
     if "store.steampowered.com" not in all_cookie_from_browser:
         raise robot.RobotException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
     if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
