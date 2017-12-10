@@ -530,3 +530,10 @@ def quicky_set_proxy(config=None, is_auto=True):
     proxy_port = analysis_config(config, "PROXY_PORT", "8087")
     # 使用代理的线程池
     net.set_proxy(proxy_ip, proxy_port)
+
+
+# 读取配置文件，返回存档文件所在路径
+def quicky_get_save_data_path(config=None):
+    if not isinstance(config, ConfigParser.SafeConfigParser):
+        config = read_config(tool.PROJECT_CONFIG_PATH)
+    return robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)

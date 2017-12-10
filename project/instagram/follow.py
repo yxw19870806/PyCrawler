@@ -86,7 +86,7 @@ def main():
     robot.quicky_set_proxy(config)
 
     # 存档位置
-    save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
+    save_data_path = robot.quicky_get_save_data_path(config)
     # 读取存档文件
     account_list = robot.read_save_data(save_data_path, 0, [""])
 
