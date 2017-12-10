@@ -81,13 +81,9 @@ def main():
     else:
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
+
     # 设置代理
-    is_proxy = robot.analysis_config(config, "IS_PROXY", 2, robot.CONFIG_ANALYSIS_MODE_INTEGER)
-    if is_proxy == 1 or is_proxy == 2:
-        proxy_ip = robot.analysis_config(config, "PROXY_IP", "127.0.0.1")
-        proxy_port = robot.analysis_config(config, "PROXY_PORT", "8087")
-        # 使用代理的线程池
-        net.set_proxy(proxy_ip, proxy_port)
+    robot.quicky_set_proxy(config)
 
     # 存档位置
     save_data_path = robot.analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", robot.CONFIG_ANALYSIS_MODE_PATH)
