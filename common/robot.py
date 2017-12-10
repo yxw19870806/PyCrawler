@@ -398,7 +398,7 @@ def read_save_data(save_data_path, key_index, default_value_list):
         single_save_list = single_save_data.split("\t")
 
         if single_save_list[key_index] in result_list:
-            output.print_msg("存档中存在重复行")
+            output.print_msg("存档中存在重复行 %s" % single_save_list[key_index])
             tool.process_exit()
 
         # 去除前后空格
