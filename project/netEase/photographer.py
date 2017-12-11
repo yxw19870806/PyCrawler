@@ -127,8 +127,6 @@ class Download(robot.DownloadThread):
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
-        self.total_image_count = 0
-        self.temp_path = ""
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载相册
@@ -177,7 +175,7 @@ class Download(robot.DownloadThread):
             album_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (album_id, album_title))
         else:
             album_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, str(album_id))
-        self.temp_path = album_path
+        self.temp_path_list.append(album_path)
         for image_url in album_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             log.step(self.account_name + " 相册%s《%s》 开始下载第%s张图片 %s" % (album_id, album_title, image_index, image_url))
@@ -192,7 +190,7 @@ class Download(robot.DownloadThread):
                 log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
-        self.temp_path = ""  # 临时目录设置清除
+        self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
         self.account_info[1] = album_id  # 设置存档记录
 
@@ -214,8 +212,7 @@ class Download(robot.DownloadThread):
             else:
                 log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个相册正在下载中，需要把下载了部分的内容给清理掉
-            if self.temp_path:
-                path.delete_dir_or_file(self.temp_path)
+            self.clean_temp_path()
         except Exception, e:
             log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

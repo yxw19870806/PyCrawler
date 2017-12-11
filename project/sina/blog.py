@@ -166,8 +166,6 @@ class Download(robot.DownloadThread):
             self.account_name = self.account_info[2]
         else:
             self.account_name = self.account_id
-        self.total_image_count = 0
-        self.temp_path = ""
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载日志
@@ -232,7 +230,7 @@ class Download(robot.DownloadThread):
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (blog_id, blog_title))
         else:
             image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, blog_id)
-        self.temp_path = image_path
+        self.temp_path_list.append(image_path)
         for image_url in blog_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 获取图片原始地址
@@ -252,7 +250,7 @@ class Download(robot.DownloadThread):
                 log.error(self.account_name + " 日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
-        self.temp_path = ""  # 临时目录设置清除
+        self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
         self.account_info[1] = str(blog_info["blog_time"])  # 设置存档记录
 
@@ -274,8 +272,7 @@ class Download(robot.DownloadThread):
             else:
                 log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            if self.temp_path:
-                path.delete_dir_or_file(self.temp_path)
+            self.clean_temp_path()
         except Exception, e:
             log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

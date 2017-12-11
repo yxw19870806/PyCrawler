@@ -155,7 +155,6 @@ class Download(robot.DownloadThread):
             self.account_name = self.account_info[2]
         else:
             self.account_name = self.account_info[0]
-        self.total_video_count = 0
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载歌曲

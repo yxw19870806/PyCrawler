@@ -213,8 +213,6 @@ class Download(robot.DownloadThread):
             self.account_name = self.account_info[2]
         else:
             self.account_name = self.account_info[0]
-        self.total_image_count = 0
-        self.temp_path = ""
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载视频
@@ -277,8 +275,7 @@ class Download(robot.DownloadThread):
             article_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (article_id, title))
         else:
             article_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, article_id)
-        self.temp_path = article_path
-
+        self.temp_path_list.append(article_path)
         # 文章正文图片
         image_index = 1
         for image_url in article_response["image_url_list"]:
@@ -318,7 +315,7 @@ class Download(robot.DownloadThread):
                 log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 文章内图片全部下载完毕
-        self.temp_path = ""  # 临时目录设置清除
+        self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
         self.account_info[1] = str(article_info["article_time"])  # 设置存档记录
 
@@ -340,8 +337,7 @@ class Download(robot.DownloadThread):
             else:
                 log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个文章正在下载中，需要把下载了部分的内容给清理掉
-            if self.temp_path:
-                path.delete_dir_or_file(self.temp_path)
+            self.clean_temp_path()
         except Exception, e:
             log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))

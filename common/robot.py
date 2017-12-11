@@ -268,6 +268,9 @@ class DownloadThread(threading.Thread):
     """Download sub-thread"""
     main_thread = None
     thread_lock = None
+    total_image_count = 0
+    total_video_count = 0
+    temp_path_list = []
 
     def __init__(self, account_info, main_thread):
         """
@@ -299,6 +302,11 @@ class DownloadThread(threading.Thread):
         self.main_thread.thread_condition.acquire()
         self.main_thread.thread_condition.notify()
         self.main_thread.thread_condition.release()
+
+    # 中途退出，删除临时文件/目录
+    def clean_temp_path(self):
+        for temp_path in self.temp_path_list:
+            path.delete_dir_or_file(temp_path)
 
 
 class RobotException(SystemExit):

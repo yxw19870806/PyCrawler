@@ -131,8 +131,6 @@ class Download(robot.DownloadThread):
             self.account_name = self.account_info[3]
         else:
             self.account_name = self.account_info[0]
-        self.total_image_count = 0
-        self.temp_path_list = []
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载日志
@@ -216,9 +214,7 @@ class Download(robot.DownloadThread):
             else:
                 log.error(self.account_name + " 异常退出")
             # 如果临时目录变量不为空，表示某个日志正在下载中，需要把下载了部分的内容给清理掉
-            if len(self.temp_path_list) > 0:
-                for temp_path in self.temp_path_list:
-                    path.delete_dir_or_file(temp_path)
+            self.clean_temp_path()
         except Exception, e:
             log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
