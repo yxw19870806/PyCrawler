@@ -110,11 +110,22 @@ def get_dir_files_name(dir_path, order=None):
 def copy_files(source_dir_path, destination_dir_path):
     """Copy Files from source directory to destination directory"""
     source_dir_path = change_path_encoding(source_dir_path)
+    destination_dir_path = change_path_encoding(destination_dir_path)
     if not create_dir(os.path.dirname(destination_dir_path)):
         return False
-    destination_dir_path = change_path_encoding(destination_dir_path)
     shutil.copyfile(source_dir_path, destination_dir_path)
     return True
+
+
+def move_file(source_file_path, destination_file_path):
+    """Move/Rename file from source path to destination path"""
+    source_file_path = change_path_encoding(source_file_path)
+    destination_file_path = change_path_encoding(destination_file_path)
+    if os.path.exists(destination_file_path):
+        return False
+    if not create_dir(os.path.dirname(destination_file_path)):
+        return False
+    shutil.move(source_file_path, destination_file_path)
 
 
 def filter_text(text):
