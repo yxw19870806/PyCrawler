@@ -191,7 +191,7 @@ class Youtube(robot.Robot):
 
         # 解析存档文件
         # account_id  video_count video_string_id  video_number_id
-        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0", "", ""])
+        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0", "", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
@@ -289,10 +289,10 @@ class Download(robot.DownloadThread):
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
-            if video_response["video_id"] < int(self.account_info[3]):
+            if video_response["video_time"] < int(self.account_info[3]):
                 log.step(self.account_name + " 视频%s跳过" % video_id)
                 return
-            elif video_response["video_id"] == int(self.account_info[3]):
+            elif video_response["video_time"] == int(self.account_info[3]):
                 log.error(self.account_name + " 第%s个视频%s与存档视频发布日期一致，无法过滤，再次下载" % (video_index, video_id))
             else:
                 self.is_find = True
