@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from project.meipai import meipai
 import weiboCommon
 import base64
 import os
@@ -17,6 +18,7 @@ import time
 import traceback
 import urllib2
 
+INIT_SINCE_ID = "9999999999999999"
 ACCOUNT_LIST = {}
 TOTAL_VIDEO_COUNT = 0
 VIDEO_DOWNLOAD_PATH = ""
@@ -251,8 +253,6 @@ class Weibo(robot.Robot):
 
 
 class Download(robot.DownloadThread):
-    init_since_id = "9999999999999999"
-
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
@@ -272,7 +272,7 @@ class Download(robot.DownloadThread):
             raise
 
         video_play_url_list = []
-        since_id = self.init_since_id
+        since_id = INIT_SINCE_ID
         is_over = False
         # 获取全部还未下载过需要解析的视频
         while not is_over:
