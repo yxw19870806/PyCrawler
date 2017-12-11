@@ -120,16 +120,9 @@ def get_video_url(video_play_url):
         video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
         if len(video_url_find) != 1:
             raise robot.RobotException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
-        loc1 = meipai_get_hex(video_url_find[0])
-        loc2 = meipai_get_dec(loc1["hex"])
-        loc3 = meipai_sub_str(loc1["str"], loc2["pre"])
-        video_url_string = meipai_sub_str(loc3, meipai_get_pos(loc3, loc2["tail"]))
-        try:
-            video_url = base64.b64decode(video_url_string)
-        except TypeError:
-            raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(video_url_find[0]), video_url_string))
-        if video_url.find("http") != 0:
-            raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(video_url_find[0]), video_url_string))
+        video_url = meipai.decrypt_video_url(video_url_find[0])
+        if video_url is None:
+            raise robot.RobotException("加密视频地址解密失败\n%s" % video_url_find[0])
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
@@ -160,26 +153,6 @@ def get_video_url(video_play_url):
     else:  # 其他视频，暂时不支持，收集看看有没有
         raise robot.RobotException("未知的第三方视频\n%s" % video_play_url)
     return video_url
-
-
-def meipai_get_hex(arg1):
-    return {"str": arg1[4:], "hex": reduce(lambda x, y: y + x, arg1[0:4])}
-
-
-def meipai_get_dec(arg1):
-    loc1 = str(int(arg1, 16))
-    return {"pre": [int(loc1[0]), int(loc1[1])], "tail": [int(loc1[2]), int(loc1[3])]}
-
-
-def meipai_sub_str(arg1, arg2):
-    loc1 = arg1[:arg2[0]]
-    loc2 = arg1[arg2[0]: arg2[0] + arg2[1]]
-    return loc1 + arg1[arg2[0]:].replace(loc2, "", 1)
-
-
-def meipai_get_pos(arg1, arg2):
-    arg2[0] = len(arg1) - arg2[0] - arg2[1]
-    return arg2
 
 
 class Weibo(robot.Robot):
