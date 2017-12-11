@@ -96,7 +96,7 @@ def get_dir_files_name(dir_path, order=None):
         return []
     if not os.path.isdir(dir_path):
         return []
-    files_list = map(lambda file_name: unicode(file_name, "UTF-8"), os.listdir(dir_path))
+    files_list = map(lambda file_name: file_name.encode("UTF-8"), os.listdir(dir_path))
     # 升序
     if order == RETURN_FILE_LIST_ASC:
         return sorted(files_list, reverse=False)
