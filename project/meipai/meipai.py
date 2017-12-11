@@ -54,38 +54,45 @@ def get_one_page_video(account_id, page_count):
         # 获取视频下载地址
         if not robot.check_sub_key(("video",), media_data):
             raise robot.RobotException("视频信息'video'字段不存在\n%s" % media_data)
-        # 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
-        loc1 = get_hex(str(media_data["video"]))
-        loc2 = get_dec(loc1["hex"])
-        loc3 = sub_str(loc1["str"], loc2["pre"])
-        video_url_string = sub_str(loc3, get_pos(loc3, loc2["tail"]))
-        try:
-            video_url = base64.b64decode(video_url_string)
-        except TypeError:
-            raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
-        if video_url.find("http") != 0:
-            raise robot.RobotException("加密视频地址解密失败\n%s\n%s" % (str(media_data["video"]), video_url_string))
+        video_url = decrypt_video_url(str(media_data["video"]))
+        if video_url is None:
+            raise robot.RobotException("加密视频地址解密失败\n%s" % str(media_data["video"]))
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
 
 
-def get_hex(arg1):
+# 视频地址解谜
+# 破解于播放器swf文件中com.meitu.cryptography.meipai.Default.decode
+def decrypt_video_url(encrypted_string):
+    loc1 = _get_hex(encrypted_string)
+    loc2 = _get_dec(loc1["hex"])
+    loc3 = _sub_str(loc1["str"], loc2["pre"])
+    video_url_string = _sub_str(loc3, _get_pos(loc3, loc2["tail"]))
+    try:
+        video_url = base64.b64decode(video_url_string)
+    except TypeError:
+        return None
+    if video_url.find("http") != 0:
+        return None
+
+
+def _get_hex(arg1):
     return {"str": arg1[4:], "hex": reduce(lambda x, y: y + x, arg1[0:4])}
 
 
-def get_dec(arg1):
+def _get_dec(arg1):
     loc1 = str(int(arg1, 16))
     return {"pre": [int(loc1[0]), int(loc1[1])], "tail": [int(loc1[2]), int(loc1[3])]}
 
 
-def sub_str(arg1, arg2):
+def _sub_str(arg1, arg2):
     loc1 = arg1[:arg2[0]]
     loc2 = arg1[arg2[0]: arg2[0] + arg2[1]]
     return loc1 + arg1[arg2[0]:].replace(loc2, "", 1)
 
 
-def get_pos(arg1, arg2):
+def _get_pos(arg1, arg2):
     arg2[0] = len(arg1) - arg2[0] - arg2[1]
     return arg2
 
