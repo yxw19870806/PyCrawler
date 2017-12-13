@@ -137,8 +137,7 @@ class Yasaxi(robot.Robot):
 
         # 从文件中宏读取账号信息（访问token）
         if not yasaxiCommon.get_token_from_file():
-            log.error("保存的账号信息读取失败")
-            tool.process_exit()
+            yasaxiCommon.set_token_to_file()
 
         # 解析存档文件
         # account_id  status_id

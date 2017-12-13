@@ -43,21 +43,23 @@ def get_account_from_api():
 
 
 def main():
-    if yasaxiCommon.get_token_from_file():
-        # 存档位置
-        save_data_path = robot.quicky_get_save_data_path()
-        try:
-            account_list_from_api = get_account_from_api()
-        except robot.RobotException, e:
-            output.print_msg("推荐账号解析失败，原因：%s" % e.message)
-            raise
-        if len(account_list_from_api) > 0:
-            account_list_from_save_data = get_account_from_save_data(save_data_path)
-            for account_id in account_list_from_api:
-                if account_id not in account_list_from_save_data:
-                    account_list_from_save_data[account_id] = "%s\t\t%s" % (account_id, account_list_from_api[account_id])
-            temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-            tool.write_file("\n".join(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+    if not yasaxiCommon.get_token_from_file():
+        yasaxiCommon.set_token_to_file()
+
+    # 存档位置
+    save_data_path = robot.quicky_get_save_data_path()
+    try:
+        account_list_from_api = get_account_from_api()
+    except robot.RobotException, e:
+        output.print_msg("推荐账号解析失败，原因：%s" % e.message)
+        raise
+    if len(account_list_from_api) > 0:
+        account_list_from_save_data = get_account_from_save_data(save_data_path)
+        for account_id in account_list_from_api:
+            if account_id not in account_list_from_save_data:
+                account_list_from_save_data[account_id] = "%s\t\t%s" % (account_id, account_list_from_api[account_id])
+        temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
+        tool.write_file("\n".join(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
 if __name__ == "__main__":
     main()
