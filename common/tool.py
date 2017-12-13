@@ -123,7 +123,12 @@ def get_file_md5(file_path):
         return None
     md5_obj = hashlib.md5()
     with open(file_path, "rb") as file_handle:
-        md5_obj.update(file_handle.read())
+        buffer_size = 2**20  # 1M
+        while True:
+            buffer = file_handle.read(buffer_size)
+            if not buffer:
+                break
+            md5_obj.update(buffer)
     return md5_obj.hexdigest()
 
 
