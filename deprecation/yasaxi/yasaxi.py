@@ -137,7 +137,14 @@ class Yasaxi(robot.Robot):
 
         # 从文件中宏读取账号信息（访问token）
         if not yasaxiCommon.get_token_from_file():
-            yasaxiCommon.set_token_to_file()
+            while True:
+                input_str = output.console_input("未检测到api token，是否手动输入(y)es / (N)o：").lower()
+                if input_str in ["y", "yes"]:
+                    yasaxiCommon.set_token_to_file()
+                    break
+                elif input_str in ["n", "no"]:
+                    return
+
 
         # 解析存档文件
         # account_id  status_id

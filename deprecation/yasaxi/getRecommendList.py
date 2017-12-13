@@ -44,7 +44,13 @@ def get_account_from_api():
 
 def main():
     if not yasaxiCommon.get_token_from_file():
-        yasaxiCommon.set_token_to_file()
+        while True:
+            input_str = output.console_input("未检测到api token，是否手动输入(y)es / (N)o：").lower()
+            if input_str in ["y", "yes"]:
+                yasaxiCommon.set_token_to_file()
+                break
+            elif input_str in ["n", "no"]:
+                return
 
     # 存档位置
     save_data_path = robot.quicky_get_save_data_path()
