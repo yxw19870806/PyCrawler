@@ -127,29 +127,6 @@ def get_video_url(video_play_url):
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
         video_url = "http://gslb.miaopai.com/stream/%s.mp4" % video_id
-    # http://www.weishi.com/t/2000546051794045
-    elif video_play_url.find("www.weishi.com/t/") >= 0:  # 微视
-        video_play_response = net.http_request(video_play_url, method="GET")
-        if video_play_response != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
-        video_id_find = re.findall('<div class="vBox js_player"[\s]*id="([^"]*)"', video_play_response.data)
-        if len(video_id_find) != 1:
-            raise robot.RobotException("页面匹配视频id失败\n%s" % video_play_response.data)
-        video_id = video_play_url.split("/")[-1]
-        video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php"
-        query_data = {
-            "vid": video_id_find[0],
-            "device": "1",
-            "id": video_id,
-        }
-        video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
-        if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException("API " + robot.get_http_request_failed_reason(video_info_response.status))
-        if not robot.check_sub_key(("data",), video_info_response.json_data):
-            raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
-        if not robot.check_sub_key(("url",), video_play_response.json_data["data"]):
-            raise robot.RobotException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
-        video_url = str(random.choice(video_info_response.json_data["data"]["url"]))
     else:  # 其他视频，暂时不支持，收集看看有没有
         raise robot.RobotException("未知的第三方视频\n%s" % video_play_url)
     return video_url

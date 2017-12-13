@@ -5,6 +5,8 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import path
+from Crypto.Cipher import AES
+import base64
 import hashlib
 import os
 import platform
@@ -123,7 +125,12 @@ def get_file_md5(file_path):
         return None
     md5_obj = hashlib.md5()
     with open(file_path, "rb") as file_handle:
-        md5_obj.update(file_handle.read())
+        buffer_size = 2**20  # 1M
+        while True:
+            buffer = file_handle.read(buffer_size)
+            if not buffer:
+                break
+            md5_obj.update(buffer)
     return md5_obj.hexdigest()
 
 
@@ -192,3 +199,33 @@ def write_file(msg, file_path, append_type=WRITE_FILE_TYPE_APPEND):
         if isinstance(msg, unicode):
             msg = msg.encode("UTF-8")
         file_handle.write(msg + "\n")
+
+
+AES_PRIVATE_KEY = "#@PyCrawl@#"
+
+
+# AES-256加密字符串
+def encrypt_string(encrypt_string):
+    # generate aes key
+    key = hashlib.md5(AES_PRIVATE_KEY).hexdigest()
+    aes_obj = AES.new(key, AES.MODE_CBC, key[:16])
+
+    # base64
+    message = base64.b64encode(str(encrypt_string))
+    # 补齐16*n位
+    message += "=" * (16 - len(message) % 16)
+    return base64.b64encode(aes_obj.encrypt(message))
+
+
+# AES-256解密字符串
+def decrypt_string(encrypted_string):
+    # generate aes key
+    key = hashlib.md5(AES_PRIVATE_KEY).hexdigest()
+    aes_obj = AES.new(key, AES.MODE_CBC, key[:16])
+
+    try:
+        return base64.b64decode(aes_obj.decrypt(base64.b64decode(encrypted_string)))
+    except TypeError:
+        return None
+    except ValueError:
+        return None

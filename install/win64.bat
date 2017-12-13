@@ -22,4 +22,7 @@ C:\python27\Scripts\pip.exe install pyquery-1.2.17-py2.py3-none-any.whl
 echo install urllib3
 C:\python27\Scripts\pip.exe install urllib3-1.19.1-py2.py3-none-any.whl
 
+echo install PyCrypto
+C:\python27\Scripts\pip.exe install PyCrypto
+
 pause
