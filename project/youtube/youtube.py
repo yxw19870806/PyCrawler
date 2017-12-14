@@ -9,6 +9,7 @@ email: hikaru870806@hotmail.com
 from common import *
 import json
 import os
+import re
 import threading
 import time
 import traceback
@@ -106,6 +107,8 @@ def get_video_page(video_id):
     if not robot.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
         raise robot.RobotException("视频信息'url_encoded_fmt_stream_map'字段不存在\n%s" % video_info_data["args"])
     max_video_resolution = 0
+    # signature生成步骤
+    decrypt_function_step = []
     for sub_url_encoded_fmt_stream_map in video_info_data["args"]["url_encoded_fmt_stream_map"].split(","):
         video_resolution = video_url = signature = None
         is_skip = False
@@ -132,7 +135,14 @@ def get_video_page(video_id):
             elif key == "url":
                 video_url = urllib.unquote(value)
             elif key == "s":
-                signature = decrypt_signature(value)
+                # 解析JS文件，获取对应的加密方法
+                if len(decrypt_function_step) == 0:
+                    js_file_name = tool.find_sub_string(video_play_response.data, 'src="/yts/jsbin/player-', '/en_US/base.js"')
+                    js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/en_US/base.js" % js_file_name
+                    decrypt_function_step = get_decrypt_step(js_file_url)
+                    log.trace("JS文件 %s 解析出的本地加密方法\n%s" % (js_file_url, decrypt_function_step))
+                # 生成加密字符串
+                signature = decrypt_signature(decrypt_function_step, value)
             elif key == "sig":
                 signature = value
         if is_skip:
@@ -174,31 +184,87 @@ def get_video_page(video_id):
 
 
 # 部分版权视频需要的signature字段取值
-# 解析自/yts/jsbin/player-vfl4OEYh9/en_US/base.js文件中
+# 每隔一段时间访问视频播放页面后会插入一个动态生成JS地址
+# 里面包含3个子加密方法，但调用顺序、参数、次数每个JS文件中各不相
+# 其中一个例子：https://youtube.com/yts/jsbin/player-vfl4OEYh9/en_US/base.js
 # k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
 # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
 # var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
-def decrypt_signature(s):
-    a = list(s)
-    _calc1(a, 48)
-    _calc2(a, 31)
-    _calc1(a, 24)
-    _calc2(a, 74)
-    return "".join(a)
+def get_decrypt_step(js_file_url):
+    # 最终的调用子加密方法的顺序
+    decrypt_function_step = []
+    js_file_response = net.http_request(js_file_url, method="GET")
+    if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, robot.get_http_request_failed_reason(js_file_response.status)))
+    # 加密方法入口
+    # k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
+    main_function_name = tool.find_sub_string(js_file_response.data, 'k.sig?f.set("signature",k.sig):k.s&&f.set("signature",', "(k.s));")
+    if not main_function_name:
+        raise robot.RobotException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
+    # 加密方法体（包含子加密方法的调用参数&顺序）
+    # # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
+    main_function_body = tool.find_sub_string(js_file_response.data, '%s=function(a){a=a.split("");' % main_function_name, 'return a.join("")};')
+    if not main_function_body:
+        raise robot.RobotException("播放器JS文件 %s，加密方法体截取失败" % js_file_url)
+    # 子加密方法所在的变量名字
+    decrypt_function_var = None
+    for sub_decrypt_step in main_function_body.split(";"):
+        # RJ.yF(a,48); / RJ.It(a,31); / RJ.yF(a,24); / RJ.It(a,74);
+        if not sub_decrypt_step:
+            continue
+        # (加密方法所在变量名，加密方法名，加密方法参数)
+        sub_decrypt_step_find = re.findall("(\w*)\.(\w*)\(a,(\d*)\)", sub_decrypt_step)
+        if len(sub_decrypt_step_find) != 1:
+            raise robot.RobotException("播放器JS文件 %s，加密步骤匹配失败\n%s" % (js_file_url, sub_decrypt_step))
+        if decrypt_function_var is None:
+            decrypt_function_var = sub_decrypt_step_find[0][0]
+        elif decrypt_function_var != sub_decrypt_step_find[0][0]:
+            raise robot.RobotException("播放器JS文件 %s，加密子方法所在变量不一致\n%s" % (js_file_url, main_function_body))
+        decrypt_function_step.append([sub_decrypt_step_find[0][1], sub_decrypt_step_find[0][2]])  # 方法名，参数
+    # 子加密方法所在的变量内容
+    # var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
+    decrypt_function_var_body = tool.find_sub_string(js_file_response.data, "var %s={" % decrypt_function_var, "};")
+    # 所有子加密方法具体内容
+    decrypt_function_body_list = decrypt_function_var_body.split(",\n")
+    if len(decrypt_function_body_list) != 3:
+        raise robot.RobotException("播放器JS文件 %s，加密子方法已更新\n%s" % (js_file_url, decrypt_function_var_body))
+    # JS文件里的方法名对应爬虫里的方法
+    js_function_to_local_function = {}
+    for decrypt_function_body in decrypt_function_body_list:
+        decrypt_function_name = decrypt_function_body.split(":function")[0]
+        if decrypt_function_body.find("a.reverse()") > 0:
+            js_function_to_local_function[decrypt_function_name] = _decrypt_function2
+        elif decrypt_function_body.find("a.splice(") > 0:
+            js_function_to_local_function[decrypt_function_name] = _decrypt_function3
+        else:
+            js_function_to_local_function[decrypt_function_name] = _decrypt_function1
+    # 子加密方法调用顺序中JS文件里的方法名，替换成爬虫里的方法名
+    for step in decrypt_function_step:
+        step[0] = js_function_to_local_function[step[0]]
+    return decrypt_function_step
 
 
-def _calc1(a, b):
+def decrypt_signature(decrypt_function_step, encrypt_string):
+    encrypt_string_list = list(encrypt_string)
+    for step in decrypt_function_step:
+        step[0](encrypt_string_list, int(step[1]))
+    return "".join(encrypt_string_list)
+
+
+def _decrypt_function1(a, b):
     c = a[0]
     a[0] = a[b % len(a)]
     a[b] = c
 
 
-def _calc2(a, b):
+def _decrypt_function2(a, b):
     a.reverse()
 
 
-def _calc3(a, b):
-    a.splice(0, b)
+def _decrypt_function3(a, b):
+    for i in range(b):
+        a.pop(0)
+    # return a[b:]
 
 
 class Youtube(robot.Robot):
