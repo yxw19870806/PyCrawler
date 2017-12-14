@@ -406,9 +406,9 @@ class Download(robot.DownloadThread):
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
             if save_file_return["code"] == net.HTTP_RETURN_CODE_RESPONSE_TO_LARGE:
-                log.error(self.account_name + " 第%s个视频 %s 文件太大，跳过" % (video_index, video_response["video_url"]))
+                log.error(self.account_name + " 第%s个视频（%s） %s 文件太大，跳过" % (video_index, video_id, video_response["video_url"]))
             else:
-                log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s个视频（%s） %s 下载失败，原因：%s" % (video_index, video_id, video_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 return
 
         # 媒体内图片和视频全部下载完毕
