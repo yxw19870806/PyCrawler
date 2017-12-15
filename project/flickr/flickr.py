@@ -254,7 +254,7 @@ class Download(robot.DownloadThread):
             while len(image_info_list) > 0:
                 image_info = image_info_list.pop()
                 # 下一张图片的上传时间一致，合并下载
-                deal_image_info_list.append(image_info["image_url"])
+                deal_image_info_list.append(image_info)
                 if len(image_info_list) > 0 and image_info_list[-1]["image_time"] == image_info["image_time"]:
                     continue
 
