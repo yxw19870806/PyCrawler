@@ -224,6 +224,8 @@ def get_decrypt_step(js_file_url):
     # 子加密方法所在的变量内容
     # var RJ={yF:function(a,b){var c=a[0];a[0]=a[b%a.length];a[b]=c},It:function(a){a.reverse()},yp:function(a,b){a.splice(0,b)}};
     decrypt_function_var_body = tool.find_sub_string(js_file_response.data, "var %s={" % decrypt_function_var, "};")
+    if not main_function_body:
+        raise robot.RobotException("播放器JS文件 %s，加密子方法截取失败" % js_file_url)
     # 所有子加密方法具体内容
     decrypt_function_body_list = decrypt_function_var_body.split(",\n")
     if len(decrypt_function_body_list) != 3:
