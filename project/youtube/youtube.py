@@ -137,8 +137,8 @@ def get_video_page(video_id):
             elif key == "s":
                 # 解析JS文件，获取对应的加密方法
                 if len(decrypt_function_step) == 0:
-                    js_file_name = tool.find_sub_string(video_play_response.data, 'src="/yts/jsbin/player-', '/en_US/base.js"')
-                    js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/en_US/base.js" % js_file_name
+                    js_file_name = tool.find_sub_string(video_play_response.data, 'src="/yts/jsbin/player-', '/base.js"')
+                    js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/base.js" % js_file_name
                     decrypt_function_step = get_decrypt_step(js_file_url)
                     log.trace("JS文件 %s 解析出的本地加密方法\n%s" % (js_file_url, decrypt_function_step))
                 # 生成加密字符串
