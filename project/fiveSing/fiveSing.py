@@ -218,7 +218,7 @@ class Download(robot.DownloadThread):
 
         # 歌曲下载完毕
         self.total_video_count += 1  # 计数累加
-        self.account_info[1] = audio_info["audio_id"]  # 设置存档记录
+        self.account_info[self.audio_type_to_index_dict[audio_type]] = audio_info["audio_id"]  # 设置存档记录
 
     def run(self):
         try:
