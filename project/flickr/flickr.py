@@ -17,19 +17,22 @@ IMAGE_COUNT_PER_PAGE = 50
 TOTAL_IMAGE_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
+COOKIE_INFO = {}
 
 
 # 获取账号相册首页
 def get_account_index_page(account_name):
     account_index_url = "https://www.flickr.com/photos/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET")
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "site_key": None,  # site key
         "user_id": None,  # user id
+        "csrf": None,  # csrf
+        "cookie_session": None,  # cookie_session
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
-        user_id = tool.find_sub_string(account_index_response.data, '"nsid":"', '"')
+        user_id = tool.find_sub_string(account_index_response.data, 'params: {"nsid":"', '"')
         if not user_id:
             raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
         result["user_id"] = user_id
@@ -38,6 +41,19 @@ def get_account_index_page(account_name):
         if not site_key:
             raise robot.RobotException("页面截取site key失败\n%s" % account_index_response.data)
         result["site_key"] = site_key
+        # 获取CSRF
+        root_auth = tool.find_sub_string(account_index_response.data, "root.auth = ", "};")
+        if not site_key:
+            raise robot.RobotException("页面截取root.auth失败\n%s" % account_index_response.data)
+        csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
+        if not csrf:
+            raise robot.RobotException("页面截取csrf失败\n%s" % account_index_response.data)
+        result["csrf"] = csrf
+        # 获取cookie_session
+        set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
+        if not robot.check_sub_key(("cookie_session",), set_cookies):
+            raise robot.RobotException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.data)
+        result["cookie_session"] = set_cookies["cookie_session"]
     elif account_index_response.status == 404:
         raise robot.RobotException("账号不存在")
     else:
@@ -47,7 +63,7 @@ def get_account_index_page(account_name):
 
 # 获取指定页数的全部图片
 # user_id -> 36587311@N08
-def get_one_page_photo(user_id, page_count, api_key, request_id):
+def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_session):
     api_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
     # 全部可支持的参数
@@ -59,12 +75,13 @@ def get_one_page_photo(user_id, page_count, api_key, request_id):
     #     "url_o", "url_q", "url_s", "url_sq", "url_t", "url_z", "visibility", "visibility_source", "o_dims",
     #     "is_marketplace_printable", "is_marketplace_licensable", "publiceditability"
     # ]
-    post_data = {
-        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1,
-        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "get_user_info": 0, "user_id": user_id, "api_key": api_key, "hermes": 1, "reqId": request_id,
+    query_data = {
+        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1, "get_user_info": 0, "privacy_filter": 1,
+        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "user_id": user_id, "api_key": api_key, "hermes": 1, "reqId": request_id, "csrf": csrf,
         "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
-    photo_pagination_response = net.http_request(api_url, method="POST", fields=post_data, json_decode=True)
+    COOKIE_INFO.update({"cookie_session": cookie_session})
+    photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片
@@ -120,16 +137,19 @@ class Flickr(robot.Robot):
     def __init__(self):
         global IMAGE_DOWNLOAD_PATH
         global NEW_SAVE_DATA_PATH
+        global COOKIE_INFO
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_SET_PROXY: True,
+            robot.SYS_GET_COOKIE: {".flickr.com": ()}
         }
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         IMAGE_DOWNLOAD_PATH = self.image_download_path
         NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
+        COOKIE_INFO = self.cookie_value
 
     def main(self):
         global ACCOUNT_LIST
@@ -178,7 +198,7 @@ class Download(robot.DownloadThread):
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载图片
-    def get_crawl_list(self, user_id, site_key):
+    def get_crawl_list(self, user_id, site_key, csrf, cookie_session):
         page_count = 1
         image_info_list = []
         is_over = False
@@ -189,7 +209,7 @@ class Download(robot.DownloadThread):
 
             # 获取一页图片
             try:
-                photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, self.request_id)
+                photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id, cookie_session)
             except robot.RobotException, e:
                 log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -246,7 +266,7 @@ class Download(robot.DownloadThread):
                 raise
 
             # 获取所有可下载图片
-            image_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"])
+            image_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"], account_index_response["cookie_session"])
             log.step(self.account_name + " 需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
 
             # 从最早的图片开始下载
