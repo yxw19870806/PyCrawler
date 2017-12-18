@@ -391,7 +391,7 @@ class Download(robot.DownloadThread):
                     unique_list.append(post_id)
 
                 # 检查是否达到存档记录
-                if int(post_id) > int(self.account_info[3]):
+                if int(post_id) > int(self.account_info[1]):
                     post_url_list.append(post_url)
                 else:
                     is_over = True
