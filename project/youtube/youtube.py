@@ -124,6 +124,8 @@ def get_video_page(video_id):
                 else:
                     log.error("unknown video type " + video_type)
             elif key == "quality":  # 视频画质
+                if value == "tiny":
+                    video_resolution = 180
                 if value == "small":
                     video_resolution = 240
                 elif value == "medium":
