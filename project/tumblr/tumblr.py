@@ -511,7 +511,7 @@ class Download(robot.DownloadThread):
 
                 post_id = get_post_id(post_pagination_response["post_url_list"][-1])
                 # 这页已经匹配到存档点，返回上一个节点
-                if int(post_id) < int(self.account_info[3]):
+                if int(post_id) < int(self.account_info[1]):
                     start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
                     break
 
