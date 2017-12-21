@@ -51,6 +51,9 @@ def get_index_setting(account_id):
             is_safe_mode = True
             if tool.find_sub_string(redirect_url, "?https://www.tumblr.com/safe-mode?url=").find("http://") == 0:
                 is_https = False
+        # "Show this blog on the web" disabled
+        elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
+            pass
     elif index_response.status == 404:
         raise robot.RobotException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
