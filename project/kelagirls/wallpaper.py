@@ -20,7 +20,7 @@ def get_one_page_photo(page_count):
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data)
     result = {
         "image_info_list": [],  # 全部图片地址
-        "is_over": [],  # 是不是最后一页壁纸
+        "is_over": False,  # 是不是最后一页壁纸
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
