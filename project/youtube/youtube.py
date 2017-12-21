@@ -125,14 +125,17 @@ def get_video_page(video_id):
                     log.error("unknown video type " + video_type)
             elif key == "quality":  # 视频画质
                 if value == "tiny":
-                    video_resolution = 180
+                    video_resolution = 144
                 if value == "small":
                     video_resolution = 240
                 elif value == "medium":
                     video_resolution = 360
+                elif value == "large":
+                    video_resolution = 480
                 elif value[:2] == "hd" and robot.is_integer(value[2:]):
                     video_resolution = int(value[2:])
                 else:
+                    video_resolution = 1
                     log.error("unknown video quality " + value)
             elif key == "url":
                 video_url = urllib.unquote(value)
