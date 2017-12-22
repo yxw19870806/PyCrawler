@@ -17,6 +17,7 @@ import urllib
 import urlparse
 
 ACCOUNT_LIST = {}
+EACH_PAGE_COUNT = 100
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
 IMAGE_DOWNLOAD_PATH = ""
@@ -79,8 +80,8 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         cookies_list = None
     post_pagination_response = net.http_request(post_pagination_url, method="GET", header_list=header_list, cookies_list=cookies_list)
     result = {
-        "post_info_list": [],  # 全部日志信息
         "is_over": False,  # 是不是最后一页日志
+        "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_pagination_response.status))
@@ -107,6 +108,95 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
             result["post_info_list"].append(result_post_info)
     else:
         result["is_over"] = True
+    return result
+
+
+# 获取一页的私人日志地址列表
+def get_one_page_private_blog(account_id, page_count):
+    post_pagination_url = "https://www.tumblr.com/svc/indash_blog"
+    query_data = {
+        "limit": EACH_PAGE_COUNT,
+        "offset": page_count * EACH_PAGE_COUNT,
+        "post_id": "",
+        "should_bypass_safemode": "false",
+        "should_bypass_tagfiltering": "false",
+        "tumblelog_name_or_id": account_id,
+    }
+    header_list = {
+        "Host": "www.tumblr.com",
+        "Referer": "https://www.tumblr.com/dashboard/blog/%s/" % account_id,
+        "User-Agent": USER_AGENT,
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    post_pagination_response = net.http_request(post_pagination_url, method="GET", fields=query_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
+    result = {
+        "is_over": [],  # 是不是最后一页日志
+        "post_info_list": [],  # 全部日志信息
+    }
+    if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(post_pagination_response.status))
+    if not robot.check_sub_key(("meta",), post_pagination_response.json_data):
+        raise robot.RobotException("返回信息'meta'字段不存在\n%s" % post_pagination_response.json_data)
+    if not robot.check_sub_key(("status",), post_pagination_response.json_data["meta"]):
+        raise robot.RobotException("返回信息'status'字段不存在\n%s" % post_pagination_response.json_data)
+    if not robot.is_integer(post_pagination_response.json_data["meta"]["status"]):
+        raise robot.RobotException("返回信息'status'字段类型不正确\n%s" % post_pagination_response.json_data)
+    if int(post_pagination_response.json_data["meta"]["status"]) != 200:
+        raise robot.RobotException("返回信息'status'字段取值不正确\n%s" % post_pagination_response.json_data)
+    if not robot.check_sub_key(("response",), post_pagination_response.json_data):
+        raise robot.RobotException("返回信息'response'字段不存在\n%s" % post_pagination_response.json_data)
+    if not robot.check_sub_key(("posts",), post_pagination_response.json_data["response"]):
+        raise robot.RobotException("返回信息'posts'字段不存在\n%s" % post_pagination_response.json_data)
+    for post_info in post_pagination_response.json_data["response"]["posts"]:
+        result_post_info = {
+            "has_video": False,  # 是不是包含视频
+            "image_url_list": [],  # 全部图片地址
+            "post_url": None,  # 日志地址
+            "video_url": None,  # 视频地址
+        }
+        if not robot.check_sub_key(("post_url",), post_info):
+            raise robot.RobotException("日志信息'post_url'字段不存在\n%s" % post_info)
+        post_url_split = urlparse.urlsplit(post_info["post_url"].encode("UTF-8"))
+        result_post_info["post_url"] = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
+        if not robot.check_sub_key(("type",), post_info):
+            raise robot.RobotException("日志信息'type'字段不存在\n%s" % post_info)
+        # 视频
+        if post_info["type"] == "video":
+            if not robot.check_sub_key(("player",), post_info):
+                raise robot.RobotException("日志信息'player'字段不存在\n%s" % post_info)
+            result_post_info["is_video"] = True
+            # 获取视频地址
+            max_width = 0
+            video_url = None
+            for video_info in post_info["player"]:
+                if not robot.check_sub_key(("width", "embed_code"), video_info):
+                    raise robot.RobotException("视频信息'width'或'embed_code'字段不存在\n%s" % video_info)
+                if not robot.is_integer(video_info["width"]):
+                    raise robot.RobotException("视频信息'width'字段类型不正确\n%s" % video_info)
+                if int(video_info["width"]) > max_width:
+                    temp_video_url = tool.find_sub_string(video_info["embed_code"].encode("UTF-8"), '<source src="', '"')
+                    if temp_video_url:
+                        video_url = temp_video_url
+                        max_width = video_info["width"]
+            if video_url is not None:
+                result_post_info["video_url"] = video_url
+        # 图片
+        elif post_info["type"] == "photo":
+            if not robot.check_sub_key(("photos",), post_info):
+                raise robot.RobotException("日志信息'photos'字段不存在\n%s" % post_info)
+            for photo_info in post_info["photos"]:
+                if not robot.check_sub_key(("original_size",), photo_info):
+                    raise robot.RobotException("图片信息'original_size'字段不存在\n%s" % photo_info)
+                if not robot.check_sub_key(("url",), photo_info["original_size"]):
+                    raise robot.RobotException("图片信息'url'字段不存在\n%s" % photo_info)
+                result_post_info["image_url_list"].append(str(photo_info["original_size"]["url"]))
+        else:
+            raise robot.RobotException("日志信息'type'字段取值不正确\n%s" % post_info)
+        result["post_info_list"].append(result_post_info)
+    if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_COUNT:
+        result["is_over"] = True
+    for i in result["post_info_list"]:
+        print i
     return result
 
 
@@ -297,7 +387,7 @@ class Tumblr(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_GET_COOKIE: {".tumblr.com": ()},
+            robot.SYS_GET_COOKIE: {".tumblr.com": (), "www.tumblr.com": ()},
             robot.SYS_SET_PROXY: True,
             robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0), ("IS_STEP_ERROR_403_AND_404", False, 2)),
         }
@@ -373,7 +463,10 @@ class Download(robot.DownloadThread):
 
             # 获取一页的日志地址
             try:
-                post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https, self.is_safe_mode)
+                if self.is_private:
+                    post_pagination_response = get_one_page_private_blog(self.account_id, page_count)
+                else:
+                    post_pagination_response = get_one_page_post(self.account_id, page_count, self.is_https, self.is_safe_mode)
             except robot.RobotException, e:
                 log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -381,7 +474,7 @@ class Download(robot.DownloadThread):
             if post_pagination_response["is_over"]:
                 break
 
-            log.trace(self.account_id + " 第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_url_list"]))
+            log.trace(self.account_id + " 第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_info_list"]))
 
             # 寻找这一页符合条件的日志
             for post_info in post_pagination_response["post_info_list"]:
@@ -406,41 +499,53 @@ class Download(robot.DownloadThread):
 
             if not is_over:
                 page_count += 1
-
         return post_info_list
 
     # 解析单个日志
     def crawl_post(self, post_info):
         post_id = get_post_id(post_info["post_url"])
-        sample_post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(post_id)]
-        # 获取日志
-        try:
-            post_response = get_post_page(post_info["post_url"], self.is_safe_mode)
-        except robot.RobotException, e:
-            log.error(self.account_id + " 日志 %s 解析失败，原因：%s" % (sample_post_url, e.message))
-            raise
+        post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(post_id)]
+
+        if self.is_private:
+            has_video = post_info["has_video"]
+            image_url_list = post_info["image_url_list"]
+        else:
+            # 获取日志
+            try:
+                post_response = get_post_page(post_info["post_url"], self.is_safe_mode)
+            except robot.RobotException, e:
+                log.error(self.account_id + " 日志 %s 解析失败，原因：%s" % (post_url, e.message))
+                raise
+            has_video = post_response["has_video"]
+            image_url_list = post_response["image_url_list"]
 
         # 视频下载
         video_index = 1
-        while IS_DOWNLOAD_VIDEO and post_response["has_video"]:
-            self.main_thread_check()  # 检测主线程运行状态
-            try:
-                video_play_response = get_video_play_page(self.account_id, post_id, self.is_https)
-            except robot.RobotException, e:
-                log.error(self.account_id + " 日志 %s 视频解析失败，原因：%s" % (sample_post_url, e.message))
-                raise
+        while IS_DOWNLOAD_VIDEO and has_video:
+            if self.is_private:
+                if post_info["video_url"] is None:
+                    log.error(self.account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
+                    break
+                video_url = post_info["video_url"]
+            else:
+                self.main_thread_check()  # 检测主线程运行状态
+                try:
+                    video_play_response = get_video_play_page(self.account_id, post_id, self.is_https)
+                except robot.RobotException, e:
+                    log.error(self.account_id + " 日志 %s 视频解析失败，原因：%s" % (post_url, e.message))
+                    raise
 
-            # 第三方视频，跳过
-            if video_play_response["is_skip"]:
-                log.error(self.account_id + " 日志 %s 存在第三方视频，跳过" % sample_post_url)
-                break
+                # 第三方视频，跳过
+                if video_play_response["is_skip"]:
+                    log.error(self.account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
+                    break
+
+                video_url = video_play_response["video_url"]
 
             self.main_thread_check()  # 检测主线程运行状态
-            video_url = video_play_response["video_url"]
             log.step(self.account_id + " 日志 %s 开始下载视频 %s" % (post_id, video_url))
 
-            file_type = video_url.split(".")[-1]
-            video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_id, "%012d.%s" % (int(post_id), file_type))
+            video_file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_id, "%012d.mp4" % int(post_id))
             save_file_return = net.save_net_file(video_url, video_file_path)
             if save_file_return["status"] == 1:
                 # 设置临时目录
@@ -455,7 +560,7 @@ class Download(robot.DownloadThread):
                         self.temp_path_list.append(video_file_path)
                         log.step(self.account_id + " 日志 %s 视频下载成功" % post_id)
                         break
-                error_message = self.account_id + " 日志 %s 视频 %s 下载失败，原因：%s" % (sample_post_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
+                error_message = self.account_id + " 日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
                 # 403、404错误作为step log输出
                 if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                     log.step(error_message)
@@ -465,10 +570,10 @@ class Download(robot.DownloadThread):
 
         # 图片下载
         image_index = 1
-        if IS_DOWNLOAD_IMAGE and len(post_response["image_url_list"]) > 0:
-            log.trace(self.account_id + " 日志 %s 解析的的全部图片：%s" % (post_id, post_response["image_url_list"]))
+        if IS_DOWNLOAD_IMAGE and len(image_url_list) > 0:
+            log.trace(self.account_id + " 日志 %s 解析的的全部图片：%s" % (post_id, image_url_list))
 
-            for image_url in post_response["image_url_list"]:
+            for image_url in image_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
                 log.step(self.account_id + " 日志 %s 开始下载第%s张图片 %s" % (post_id, image_index, image_url))
 
@@ -481,7 +586,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_id + " 日志 %s 第%s张图片下载成功" % (post_id, image_index))
                     image_index += 1
                 else:
-                    error_message = self.account_id + " 日志 %s 第%s张图片 %s 下载失败，原因：%s" % (sample_post_url, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
+                    error_message = self.account_id + " 日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
                     # 403、404错误作为step log输出
                     if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                         log.step(error_message)
@@ -503,7 +608,7 @@ class Download(robot.DownloadThread):
                 raise
 
             start_page_count = 1
-            while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+            while not self.is_private and self.EACH_LOOP_MAX_PAGE_COUNT > 0:
                 start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
                 try:
                     post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https, self.is_safe_mode)
@@ -516,7 +621,7 @@ class Download(robot.DownloadThread):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                post_id = get_post_id(post_pagination_response["post_url_list"][-1])
+                post_id = get_post_id(post_pagination_response["post_info_list"][-1]["post_url"])
                 # 这页已经匹配到存档点，返回上一个节点
                 if int(post_id) < int(self.account_info[1]):
                     start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
