@@ -30,12 +30,13 @@ USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
 
 
-# 获取首页，判断是否支持https以及是否启用safe-mode
+# 获取首页，判断是否支持https以及是否启用safe-mode和"Show this blog on the web"
 def get_index_setting(account_id):
     index_url = "https://%s.tumblr.com/" % account_id
     index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
     is_https = True
     is_safe_mode = False
+    is_private = False
     if index_response.status == 302:
         redirect_url = index_response.getheader("Location")
         if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
@@ -53,12 +54,12 @@ def get_index_setting(account_id):
                 is_https = False
         # "Show this blog on the web" disabled
         elif redirect_url.find("//www.tumblr.com/login_required/%s" % account_id) > 0:
-            pass
+            is_private = True
     elif index_response.status == 404:
         raise robot.RobotException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
-    return is_https, is_safe_mode
+    return is_https, is_safe_mode, is_private
 
 
 # 获取一页的日志地址列表
@@ -352,6 +353,7 @@ class Tumblr(robot.Robot):
 class Download(robot.DownloadThread):
     is_https = True
     is_safe_mode = False
+    is_private = False
 
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
@@ -493,7 +495,7 @@ class Download(robot.DownloadThread):
     def run(self):
         try:
             try:
-                self.is_https, self.is_safe_mode = get_index_setting(self.account_id)
+                self.is_https, self.is_safe_mode, self.is_private = get_index_setting(self.account_id)
             except robot.RobotException, e:
                 log.error(self.account_id + " 账号设置解析失败，原因：%s" % e.message)
                 raise
