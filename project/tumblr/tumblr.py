@@ -44,7 +44,7 @@ def get_index_setting(account_id):
             index_url = "http://%s.tumblr.com/" % account_id
             index_response = net.http_request(index_url, method="GET", is_auto_redirect=False)
             if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-                return is_https, is_safe_mode
+                return is_https, is_safe_mode, is_private
             elif index_response.status != 302:
                 raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
             redirect_url = index_response.getheader("Location")
