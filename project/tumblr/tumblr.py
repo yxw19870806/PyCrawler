@@ -326,7 +326,6 @@ def get_video_play_page(account_id, post_id, is_https):
     video_play_url = "%s://www.tumblr.com/video/%s/%s/0" % (protocol_type, account_id, post_id)
     video_play_response = net.http_request(video_play_url, method="GET", is_auto_redirect=False)
     result = {
-        "is_skip": False,  # 是不是第三方视频
         "video_url": None,  # 视频地址
     }
     if video_play_response.status == 301:
@@ -335,31 +334,14 @@ def get_video_play_page(account_id, post_id, is_https):
             video_play_response = net.http_request(video_play_url, method="GET")
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
-    video_url_find = re.findall('src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
+    video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
     if len(video_url_find) == 1:
-        video_response = net.http_request(video_url_find[0], method="HEAD", is_auto_redirect=False)
-        # 获取视频重定向页面
-        if video_response.status == 302:
-            redirect_url = video_response.getheader("Location")
-            if redirect_url is not None:
-                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_480.mp4#_=
-                # ->
-                # http://vtt.tumblr.com/tumblr_okstty6tba1rssthv_r1_720.mp4
-                result["video_url"] = redirect_url.replace("#_=_", "").replace("_r1_480", "_r1_720")
-        else:
-            # http://www.tumblr.com/video_file/t:YGdpA6jB1xslK7TtpYTgXw/110204932003/tumblr_nj59qwEQoV1qjl082/720
-            # ->
-            # http://vtt.tumblr.com/tumblr_nj59qwEQoV1qjl082.mp4
-            # 去除视频指定分辨率
-            temp_list = video_url_find[0].split("/")
-            if temp_list[-1].isdigit():
-                video_id = temp_list[-2]
-            else:
-                video_id = temp_list[-1]
-            result["video_url"] = "http://vtt.tumblr.com/%s.mp4" % video_id
+        if robot.is_integer(video_url_find[0].split("/")[-1]):
+            result["video_url"] = "/".join(video_url_find[0].split("/")[:-1])
+        result["video_url"] = video_url_find[0]
     elif len(video_url_find) == 0:
         # 第三方视频
-        result["is_skip"] = True
+        pass
     else:
         raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
     return result
@@ -523,9 +505,6 @@ class Download(robot.DownloadThread):
         video_index = 1
         while IS_DOWNLOAD_VIDEO and has_video:
             if self.is_private:
-                if post_info["video_url"] is None:
-                    log.error(self.account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
-                    break
                 video_url = post_info["video_url"]
             else:
                 self.main_thread_check()  # 检测主线程运行状态
@@ -534,13 +513,12 @@ class Download(robot.DownloadThread):
                 except robot.RobotException, e:
                     log.error(self.account_id + " 日志 %s 视频解析失败，原因：%s" % (post_url, e.message))
                     raise
-
-                # 第三方视频，跳过
-                if video_play_response["is_skip"]:
-                    log.error(self.account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
-                    break
-
                 video_url = video_play_response["video_url"]
+
+            # 第三方视频，跳过
+            if video_url is None:
+                log.error(self.account_id + " 日志 %s 存在第三方视频，跳过" % post_url)
+                break
 
             self.main_thread_check()  # 检测主线程运行状态
             log.step(self.account_id + " 日志 %s 开始下载视频 %s" % (post_id, video_url))
