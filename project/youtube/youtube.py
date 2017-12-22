@@ -126,7 +126,7 @@ def get_video_page(video_id):
             elif key == "quality":  # 视频画质
                 if value == "tiny":
                     video_resolution = 144
-                if value == "small":
+                elif value == "small":
                     video_resolution = 240
                 elif value == "medium":
                     video_resolution = 360
