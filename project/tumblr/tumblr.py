@@ -104,7 +104,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
                 raise robot.RobotException("日志信息'url'字段不存在\n%s" % page_data)
             post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
             result_post_info["post_url"] = str(post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2]))
-            result["post_url_list"].append(result_post_info)
+            result["post_info_list"].append(result_post_info)
     else:
         result["is_over"] = True
     return result
