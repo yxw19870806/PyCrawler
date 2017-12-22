@@ -19,7 +19,6 @@ import urlparse
 ACCOUNT_LIST = {}
 TOTAL_IMAGE_COUNT = 0
 TOTAL_VIDEO_COUNT = 0
-EACH_LOOP_MAX_PAGE_COUNT = 500
 IMAGE_DOWNLOAD_PATH = ""
 VIDEO_DOWNLOAD_PATH = ""
 NEW_SAVE_DATA_PATH = ""
@@ -351,6 +350,7 @@ class Tumblr(robot.Robot):
 
 
 class Download(robot.DownloadThread):
+    EACH_LOOP_MAX_PAGE_COUNT = 200  # 单词缓存多少页的日志
     is_https = True
     is_safe_mode = False
     is_private = False
@@ -501,8 +501,8 @@ class Download(robot.DownloadThread):
                 raise
 
             start_page_count = 1
-            while EACH_LOOP_MAX_PAGE_COUNT > 0:
-                start_page_count += EACH_LOOP_MAX_PAGE_COUNT
+            while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+                start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
                 try:
                     post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https, self.is_safe_mode)
                 except robot.RobotException, e:
@@ -511,16 +511,16 @@ class Download(robot.DownloadThread):
 
                 # 这页没有任何内容，返回上一个检查节点
                 if post_pagination_response["is_over"]:
-                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
                 post_id = get_post_id(post_pagination_response["post_url_list"][-1])
                 # 这页已经匹配到存档点，返回上一个节点
                 if int(post_id) < int(self.account_info[1]):
-                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
                     break
 
-                log.step(self.account_id + " 前%s页没有符合条件的日志，跳过%s页后继续查询" % (start_page_count, EACH_LOOP_MAX_PAGE_COUNT))
+                log.step(self.account_id + " 前%s页没有符合条件的日志，跳过%s页后继续查询" % (start_page_count, self.EACH_LOOP_MAX_PAGE_COUNT))
 
             unique_list = []
             while True:
@@ -538,7 +538,7 @@ class Download(robot.DownloadThread):
                 if start_page_count == 1:
                     break
                 else:
-                    start_page_count -= EACH_LOOP_MAX_PAGE_COUNT
+                    start_page_count -= self.EACH_LOOP_MAX_PAGE_COUNT
         except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_id + " 提前退出")
