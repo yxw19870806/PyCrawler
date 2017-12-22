@@ -82,29 +82,28 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         "post_url_list": [],  # 全部日志地址
         "is_over": False,  # 是不是最后一页日志
     }
-    if post_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
-        if page_html:
-            try:
-                page_data = json.loads(page_html)
-            except ValueError:
-                raise robot.RobotException("日志信息加载失败\n%s" % page_html)
-            if not robot.check_sub_key(("itemListElement",), page_data):
-                raise robot.RobotException("日志信息'itemListElement'字段不存在\n%s" % page_data)
-            if len(page_data["itemListElement"]) == 0:
-                raise robot.RobotException("日志信息'itemListElement'字段长度不正确\n%s" % page_data)
-
-            # 获取全部日志地址
-            for post_info in page_data["itemListElement"]:
-                if not robot.check_sub_key(("url",), post_info):
-                    raise robot.RobotException("日志信息'url'字段不存在\n%s" % page_data)
-                post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
-                post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
-                result["post_url_list"].append(str(post_url))
-        else:
-            result["is_over"] = True
-    else:
+    if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise robot.RobotException(robot.get_http_request_failed_reason(post_pagination_response.status))
+    page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
+    if page_html:
+        try:
+            page_data = json.loads(page_html)
+        except ValueError:
+            raise robot.RobotException("日志信息加载失败\n%s" % page_html)
+        if not robot.check_sub_key(("itemListElement",), page_data):
+            raise robot.RobotException("日志信息'itemListElement'字段不存在\n%s" % page_data)
+        if len(page_data["itemListElement"]) == 0:
+            raise robot.RobotException("日志信息'itemListElement'字段长度不正确\n%s" % page_data)
+
+        # 获取全部日志地址
+        for post_info in page_data["itemListElement"]:
+            if not robot.check_sub_key(("url",), post_info):
+                raise robot.RobotException("日志信息'url'字段不存在\n%s" % page_data)
+            post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
+            post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
+            result["post_url_list"].append(str(post_url))
+    else:
+        result["is_over"] = True
     return result
 
 
