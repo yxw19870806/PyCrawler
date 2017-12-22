@@ -79,7 +79,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         cookies_list = None
     post_pagination_response = net.http_request(post_pagination_url, method="GET", header_list=header_list, cookies_list=cookies_list)
     result = {
-        "post_url_list": [],  # 全部日志地址
+        "post_info_list": [],  # 全部日志信息
         "is_over": False,  # 是不是最后一页日志
     }
     if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -94,14 +94,17 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
             raise robot.RobotException("日志信息'itemListElement'字段不存在\n%s" % page_data)
         if len(page_data["itemListElement"]) == 0:
             raise robot.RobotException("日志信息'itemListElement'字段长度不正确\n%s" % page_data)
-
-        # 获取全部日志地址
+        # 单条日志
         for post_info in page_data["itemListElement"]:
+            result_post_info = {
+                "post_url": None,  # 日志地址
+            }
+            # 获取日志地址
             if not robot.check_sub_key(("url",), post_info):
                 raise robot.RobotException("日志信息'url'字段不存在\n%s" % page_data)
             post_url_split = urlparse.urlsplit(post_info["url"].encode("UTF-8"))
-            post_url = post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2])
-            result["post_url_list"].append(str(post_url))
+            result_post_info["post_url"] = str(post_url_split[0] + "://" + post_url_split[1] + urllib.quote(post_url_split[2]))
+            result["post_url_list"].append(result_post_info)
     else:
         result["is_over"] = True
     return result
@@ -361,7 +364,7 @@ class Download(robot.DownloadThread):
 
     # 获取所有可下载日志
     def get_crawl_list(self, page_count, unique_list):
-        post_url_list = []
+        post_info_list = []
         is_over = False
         # 获取全部还未下载过需要解析的日志
         while not is_over:
@@ -381,11 +384,11 @@ class Download(robot.DownloadThread):
             log.trace(self.account_id + " 第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_url_list"]))
 
             # 寻找这一页符合条件的日志
-            for post_url in post_pagination_response["post_url_list"]:
+            for post_info in post_pagination_response["post_info_list"]:
                 # 获取日志id
-                post_id = get_post_id(post_url)
+                post_id = get_post_id(post_info["post_url"])
                 if post_id is None:
-                    log.error(self.account_id + " 日志地址%s解析日志id失败" % post_url)
+                    log.error(self.account_id + " 日志地址%s解析日志id失败" % post_info["post_url"])
                     tool.process_exit()
 
                 # 新增信息页导致的重复判断
@@ -396,7 +399,7 @@ class Download(robot.DownloadThread):
 
                 # 检查是否达到存档记录
                 if int(post_id) > int(self.account_info[1]):
-                    post_url_list.append(post_url)
+                    post_info_list.append(post_info)
                 else:
                     is_over = True
                     break
@@ -404,15 +407,15 @@ class Download(robot.DownloadThread):
             if not is_over:
                 page_count += 1
 
-        return post_url_list
+        return post_info_list
 
     # 解析单个日志
-    def crawl_post(self, post_url):
-        post_id = get_post_id(post_url)
-        sample_post_url = post_url[:post_url.find(post_id) + len(post_id)]
+    def crawl_post(self, post_info):
+        post_id = get_post_id(post_info["post_url"])
+        sample_post_url = post_info["post_url"][:post_info["post_url"].find(post_id) + len(post_id)]
         # 获取日志
         try:
-            post_response = get_post_page(post_url, self.is_safe_mode)
+            post_response = get_post_page(post_info["post_url"], self.is_safe_mode)
         except robot.RobotException, e:
             log.error(self.account_id + " 日志 %s 解析失败，原因：%s" % (sample_post_url, e.message))
             raise
@@ -524,14 +527,14 @@ class Download(robot.DownloadThread):
             unique_list = []
             while True:
                 # 获取所有可下载日志
-                post_url_list = self.get_crawl_list(start_page_count, unique_list)
-                log.step(self.account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_url_list))
+                post_info_list = self.get_crawl_list(start_page_count, unique_list)
+                log.step(self.account_id + " 需要下载的全部日志解析完毕，共%s个" % len(post_info_list))
 
                 # 从最早的日志开始下载
-                while len(post_url_list) > 0:
-                    post_url = post_url_list.pop()
-                    log.step(self.account_id + " 开始解析日志 %s" % post_url)
-                    self.crawl_post(post_url)
+                while len(post_info_list) > 0:
+                    post_info = post_info_list.pop()
+                    log.step(self.account_id + " 开始解析日志 %s" % post_info["post_url"])
+                    self.crawl_post(post_info)
                     self.main_thread_check()  # 检测主线程运行状态
 
                 if start_page_count == 1:
