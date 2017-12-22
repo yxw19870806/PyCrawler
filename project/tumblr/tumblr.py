@@ -477,7 +477,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_id + " 日志 %s 第%s张图片下载成功" % (post_id, image_index))
                     image_index += 1
                 else:
-                    error_message = self.account_id + " 日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
+                    error_message = self.account_id + " 日志 %s 第%s张图片 %s 下载失败，原因：%s" % (sample_post_url, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"]))
                     # 403、404错误作为step log输出
                     if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                         log.step(error_message)
