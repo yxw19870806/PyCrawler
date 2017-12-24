@@ -191,8 +191,6 @@ def get_one_page_private_blog(account_id, page_count):
         result["post_info_list"].append(result_post_info)
     if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_COUNT:
         result["is_over"] = True
-    for i in result["post_info_list"]:
-        print i
     return result
 
 
