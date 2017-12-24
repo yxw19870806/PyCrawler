@@ -379,11 +379,13 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
 
 def pause_request():
     """Block thread when use http_request()"""
-    output.print_msg("pause process")
-    thread_event.clear()
+    if thread_event.isSet():
+        output.print_msg("pause process")
+        thread_event.clear()
 
 
 def resume_request():
     """Resume thread"""
-    output.print_msg("resume process")
-    thread_event.set()
+    if not thread_event.isSet():
+        output.print_msg("resume process")
+        thread_event.set()

@@ -248,6 +248,7 @@ class Robot(object):
 
     def stop_process(self):
         output.print_msg("stop process")
+        net.resume_request
         self.prcess_status = False
 
     # 获取程序已运行时间（seconds）
