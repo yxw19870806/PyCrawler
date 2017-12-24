@@ -449,7 +449,7 @@ class Download(robot.DownloadThread):
                 log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            if post_pagination_response["is_over"]:
+            if not self.is_private and post_pagination_response["is_over"]:
                 break
 
             log.trace(self.account_id + " 第%s页解析的全部日志：%s" % (page_count, post_pagination_response["post_info_list"]))
@@ -476,7 +476,10 @@ class Download(robot.DownloadThread):
                     break
 
             if not is_over:
-                page_count += 1
+                if post_pagination_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
         return post_info_list
 
     # 解析单个日志
