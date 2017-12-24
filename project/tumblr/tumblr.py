@@ -116,7 +116,7 @@ def get_one_page_private_blog(account_id, page_count):
     post_pagination_url = "https://www.tumblr.com/svc/indash_blog"
     query_data = {
         "limit": EACH_PAGE_COUNT,
-        "offset": page_count * EACH_PAGE_COUNT,
+        "offset": (page_count - 1) * EACH_PAGE_COUNT,
         "post_id": "",
         "should_bypass_safemode": "false",
         "should_bypass_tagfiltering": "false",
