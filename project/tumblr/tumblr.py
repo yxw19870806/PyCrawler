@@ -181,17 +181,13 @@ def get_one_page_private_blog(account_id, page_count):
             if video_url is not None:
                 result_post_info["video_url"] = video_url
         # 图片
-        elif post_info["type"] == "photo":
-            if not robot.check_sub_key(("photos",), post_info):
-                raise robot.RobotException("日志信息'photos'字段不存在\n%s" % post_info)
+        elif robot.check_sub_key(("photos",), post_info):
             for photo_info in post_info["photos"]:
                 if not robot.check_sub_key(("original_size",), photo_info):
                     raise robot.RobotException("图片信息'original_size'字段不存在\n%s" % photo_info)
                 if not robot.check_sub_key(("url",), photo_info["original_size"]):
                     raise robot.RobotException("图片信息'url'字段不存在\n%s" % photo_info)
                 result_post_info["image_url_list"].append(str(photo_info["original_size"]["url"]))
-        else:
-            raise robot.RobotException("日志信息'type'字段取值不正确\n%s" % post_info)
         result["post_info_list"].append(result_post_info)
     if len(post_pagination_response.json_data["response"]["posts"]) < EACH_PAGE_COUNT:
         result["is_over"] = True
