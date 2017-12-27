@@ -80,8 +80,11 @@ class Robot(object):
         # 应用配置
         self.app_config = {}
         if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) >= 2:
-            app_config = read_config(sys_config[SYS_APP_CONFIG][0])
-            for app_config_template in  sys_config[SYS_APP_CONFIG][1:]:
+            if os.path.exists(sys_config[SYS_APP_CONFIG][0]):
+                app_config = read_config(sys_config[SYS_APP_CONFIG][0])
+            else:
+                app_config = {}
+            for app_config_template in sys_config[SYS_APP_CONFIG][1:]:
                 if len(app_config_template) == 3:
                     self.app_config[app_config_template[0]] = analysis_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
 
@@ -351,7 +354,7 @@ def analysis_config(config, key, default_value, mode=None):
                     startup with '\', project root path
                     startup with '\\', application root path
     """
-    if config.has_option("setting", key):
+    if isinstance(config, ConfigParser.SafeConfigParser) and config.has_option("setting", key):
         value = config.get("setting", key).encode("UTF-8")
     else:
         output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
