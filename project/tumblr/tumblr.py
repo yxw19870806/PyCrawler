@@ -583,10 +583,13 @@ class Download(robot.DownloadThread):
                 raise
 
             start_page_count = 1
-            while not self.is_private and self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+            while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
                 start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
                 try:
-                    post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https, self.is_safe_mode)
+                    if self.is_private:
+                        post_pagination_response = get_one_page_private_blog(self.account_id, start_page_count)
+                    else:
+                        post_pagination_response = get_one_page_post(self.account_id, start_page_count, self.is_https, self.is_safe_mode)
                 except robot.RobotException, e:
                     log.error(self.account_id + " 第%s页日志解析失败，原因：%s" % (start_page_count, e.message))
                     raise
