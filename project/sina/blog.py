@@ -14,11 +14,6 @@ import threading
 import time
 import traceback
 
-ACCOUNT_LIST = {}
-TOTAL_IMAGE_COUNT = 0
-IMAGE_DOWNLOAD_PATH = ""
-NEW_SAVE_DATA_PATH = ""
-
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_id, page_count):
@@ -108,28 +103,19 @@ def get_image_url(image_url):
 
 class Blog(robot.Robot):
     def __init__(self):
-        global IMAGE_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
         }
         robot.Robot.__init__(self, sys_config)
 
-        # 设置全局变量，供子线程调用
-        IMAGE_DOWNLOAD_PATH = self.image_download_path
-        NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-
     def main(self):
-        global ACCOUNT_LIST
-
         # 解析存档文件
         # account_name  last_blog_id
-        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_name in sorted(ACCOUNT_LIST.keys()):
+        for account_name in sorted(self.account_list.keys()):
             # 检查正在运行的线程数
             if threading.activeCount() >= self.thread_count + main_thread_count:
                 self.wait_sub_thread()
@@ -139,7 +125,7 @@ class Blog(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_name], self)
+            thread = Download(self.account_list[account_name], self)
             thread.start()
 
             time.sleep(1)
@@ -149,13 +135,13 @@ class Blog(robot.Robot):
             self.wait_sub_thread()
 
         # 未完成的数据保存
-        if len(ACCOUNT_LIST) > 0:
-            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values()), NEW_SAVE_DATA_PATH)
+        if len(self.account_list) > 0:
+            tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
+        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 class Download(robot.DownloadThread):
@@ -227,9 +213,9 @@ class Download(robot.DownloadThread):
         blog_id = get_blog_id(blog_info["blog_url"])
         # 过滤标题中不支持的字符
         if blog_title:
-            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (blog_id, blog_title))
+            image_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%s %s" % (blog_id, blog_title))
         else:
-            image_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, blog_id)
+            image_path = os.path.join(self.main_thread.image_download_path, self.account_name, blog_id)
         self.temp_path_list.append(image_path)
         for image_url in blog_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
@@ -279,10 +265,9 @@ class Download(robot.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            global TOTAL_IMAGE_COUNT
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += self.total_image_count
-            ACCOUNT_LIST.pop(self.account_id)
+            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.account_list.pop(self.account_id)
         log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 

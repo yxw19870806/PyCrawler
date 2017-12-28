@@ -13,11 +13,6 @@ import threading
 import time
 import traceback
 
-ACCOUNT_LIST = {}
-TOTAL_VIDEO_COUNT = 0
-VIDEO_DOWNLOAD_PATH = ""
-NEW_SAVE_DATA_PATH = ""
-
 
 # 获取用户的suid，作为查找指定用户的视频页的凭证
 # account_id -> mi9wmdhhof
@@ -95,28 +90,19 @@ def get_video_info_page(video_id):
 
 class MiaoPai(robot.Robot):
     def __init__(self):
-        global VIDEO_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
-
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
         }
         robot.Robot.__init__(self, sys_config)
 
-        # 设置全局变量，供子线程调用
-        VIDEO_DOWNLOAD_PATH = self.video_download_path
-        NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
-
     def main(self):
-        global ACCOUNT_LIST
-
         # 解析存档文件
         # account_id  video_count  last_video_url
-        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0", "", ""])
+        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "", ""])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_id in sorted(ACCOUNT_LIST.keys()):
+        for account_id in sorted(self.account_list.keys()):
             # 检查正在运行的线程数
             if threading.activeCount() >= self.thread_count + main_thread_count:
                 self.wait_sub_thread()
@@ -126,7 +112,7 @@ class MiaoPai(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_id], self)
+            thread = Download(self.account_list[account_id], self)
             thread.start()
 
             time.sleep(1)
@@ -136,13 +122,13 @@ class MiaoPai(robot.Robot):
             self.wait_sub_thread()
 
         # 未完成的数据保存
-        if len(ACCOUNT_LIST) > 0:
-            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values()), NEW_SAVE_DATA_PATH)
+        if len(self.account_list) > 0:
+            tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
+        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), TOTAL_VIDEO_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
 class Download(robot.DownloadThread):
@@ -205,7 +191,7 @@ class Download(robot.DownloadThread):
             raise
 
         video_index = int(self.account_info[1]) + 1
-        file_path = os.path.join(VIDEO_DOWNLOAD_PATH, self.account_name, "%04d.mp4" % video_index)
+        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.mp4" % video_index)
         while len(video_info_response["video_url_list"]) > 0:
             self.main_thread_check()  # 检测主线程运行状态
             video_url = video_info_response["video_url_list"].pop(0)
@@ -256,10 +242,9 @@ class Download(robot.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            global TOTAL_VIDEO_COUNT
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_VIDEO_COUNT += self.total_video_count
-            ACCOUNT_LIST.pop(self.account_id)
+            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.main_thread.total_video_count += self.total_video_count
+            self.main_thread.account_list.pop(self.account_id)
         log.step(self.account_name + " 下载完毕，总共获得%s个视频" % self.total_video_count)
         self.notify_main_thread()
 

@@ -39,6 +39,8 @@ CONFIG_ANALYSIS_MODE_PATH = 3
 
 
 class Robot(object):
+    total_image_count = 0
+    total_video_count = 0
     print_function = None
     thread_event = None
     prcess_status = True  # 主进程是否在运行
@@ -145,6 +147,8 @@ class Robot(object):
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
             tool.process_exit()
             return
+        file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
+        self.temp_save_data_path = os.path.join(os.path.dirname(old_save_file_path), file_name)
 
         # 是否需要下载图片
         if self.is_download_image:
