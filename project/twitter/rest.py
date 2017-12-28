@@ -104,7 +104,6 @@ def follow_account(user_id):
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
     response = net.http_request(api_url, method="POST", header_list=header_list, json_decode=True)
-    print response.status
     if response.status == net.HTTP_RETURN_CODE_SUCCEED:
         pass
     return False
