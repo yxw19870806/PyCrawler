@@ -249,7 +249,11 @@ class Bcy(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
-            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("IS_AUTO_FOLLOW", True, 2), ("IS_LOCAL_SAVE_SESSION", False, 2)),
+            robot.SYS_APP_CONFIG: (
+                os.path.realpath("config.ini"),
+                ("IS_AUTO_FOLLOW", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN),
+                ("IS_LOCAL_SAVE_SESSION", False, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+            ),
         }
         robot.Robot.__init__(self, sys_config)
 

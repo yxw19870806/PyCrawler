@@ -126,7 +126,10 @@ class PrPr(robot.Robot):
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("IS_STEP_INVALID_RESOURCE", False, 2)),
+            robot.SYS_APP_CONFIG: (
+                os.path.realpath("config.ini"),
+                ("IS_STEP_INVALID_RESOURCE", False, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+            ),
         }
         robot.Robot.__init__(self, sys_config)
 

@@ -365,7 +365,11 @@ class Tumblr(robot.Robot):
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_GET_COOKIE: {".tumblr.com": (), "www.tumblr.com": ()},
             robot.SYS_SET_PROXY: True,
-            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("USER_AGENT", "", 0), ("IS_STEP_ERROR_403_AND_404", False, 2)),
+            robot.SYS_APP_CONFIG: (
+                os.path.realpath("config.ini"),
+                ("USER_AGENT", "", robot.CONFIG_ANALYSIS_MODE_RAW),
+                ("IS_STEP_ERROR_403_AND_404", False, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+            ),
         }
         robot.Robot.__init__(self, sys_config)
 
