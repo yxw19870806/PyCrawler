@@ -14,7 +14,7 @@ import sys
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""
 ZHEZHE_INFO = ""
-account_file_path = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token.data"))
+account_file_path = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token"))
 
 
 # 从文件中获取用户信息
@@ -26,7 +26,6 @@ def get_token_from_file():
         account_data = json.loads(account_data)
     except ValueError:
         return None
-    print account_data
     if robot.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
         global ACCESS_TOKEN
         global AUTH_TOKEN

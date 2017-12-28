@@ -8,41 +8,99 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 from pyquery import PyQuery as pq
+import json
 import os
 import re
+import sys
 import threading
 import time
 import traceback
 
-ACCOUNT_LIST = {}
-TOTAL_IMAGE_COUNT = 0
-IMAGE_DOWNLOAD_PATH = ""
-NEW_SAVE_DATA_PATH = ""
 IS_AUTO_FOLLOW = True
+IS_LOCAL_SAVE_SESSION = False
 IS_LOGIN = True
 COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
+SESSION_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "session"))
+
+
+# 生成session cookies
+def init_session():
+    # 如果有登录信息（初始化时从浏览器中获得）
+    if COOKIE_INFO["LOGGED_USER"]:
+        cookies_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
+    else:
+        cookies_list = None
+    home_url = "http://bcy.net/home/user/index"
+    home_response = net.http_request(home_url, method="GET", cookies_list=cookies_list)
+    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(home_response.headers)
+        if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
+            COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
+            COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
+            return True
+    return False
 
 
 # 检测登录状态
 def check_login():
+    # 没有浏览器cookies，尝试读取文件
     if not COOKIE_INFO["LOGGED_USER"]:
-        return False
-    cookies_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
-    index_url = "http://bcy.net/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        set_cookie = net.get_cookies_from_response_header(index_response.headers)
-        if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
-            COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
-            COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
-    if not COOKIE_INFO["acw_tc"] or not COOKIE_INFO["PHPSESSID"]:
-        return False
-    home_url = "http://bcy.net/home/user/index"
-    home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO)
-    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if home_response.data.find('<a href="/login">登录</a>') == -1:
+        # 从文件中读取账号密码
+        email, password = get_account_info_from_file()
+        if email is not None and password is not None:
+            # 模拟登录
+            if _do_login(email, password):
+                return True
+    else:
+        home_url = "http://bcy.net/home/user/index"
+        home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO)
+        if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            if home_response.data.find('<a href="/login">登录</a>') == -1:
+                return True
+    return False
+
+
+# 登录
+def login_from_console():
+    # 从命令行中输入账号密码
+    email, password = get_account_info_from_console()
+    if _do_login(email, password):
+        if IS_LOCAL_SAVE_SESSION:
+            save_account_info_to_file(email, password)
+        return True
+    return False
+
+
+# 模拟登录请求
+def _do_login(email, password):
+    login_url = "http://bcy.net/public/dologin"
+    login_post = {"email": email, "password": password}
+    cookies_list = {"acw_tc": COOKIE_INFO["acw_tc"], "PHPSESSID": COOKIE_INFO["PHPSESSID"]}
+    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=cookies_list)
+    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if login_response.data.find('<a href="/login">登录</a>') == -1:
             return True
     return False
+
+
+# 从文件中读取账号信息
+def get_account_info_from_file():
+    account_data = tool.decrypt_string(tool.read_file(SESSION_FILE_PATH))
+    if account_data is not None:
+        try:
+            account_data = json.loads(account_data)
+        except ValueError:
+            pass
+        else:
+            if robot.check_sub_key(("email", "password"), account_data):
+                return account_data["email"], account_data["password"]
+    return None, None
+
+
+# 保存账号信息到文件中
+def save_account_info_to_file(email, password):
+    account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
+    tool.write_file(account_info_encrypt_string, SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 # 从控制台输入获取账号信息
@@ -59,33 +117,6 @@ def get_account_info_from_console():
                 break
             else:
                 pass
-
-
-# 模拟登录
-def login():
-    global COOKIE_INFO
-    # 访问首页，获取一个随机session id
-    home_url = "http://bcy.net/home/user/index"
-    home_response = net.http_request(home_url, method="GET")
-    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        set_cookie = net.get_cookies_from_response_header(home_response.headers)
-        if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
-            COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
-            COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
-        else:
-            return False
-    else:
-        return False
-    # 从命令行中输入账号密码
-    email, password = get_account_info_from_console()
-    login_url = "http://bcy.net/public/dologin"
-    login_post = {"email": email, "password": password}
-    cookies_list = {"acw_tc": COOKIE_INFO["acw_tc"], "PHPSESSID": COOKIE_INFO["PHPSESSID"]}
-    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=cookies_list)
-    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if login_response.data.find('<a href="/login">登录</a>') == -1:
-            return True
-    return False
 
 
 # 关注指定账号
@@ -205,26 +236,29 @@ def get_image_url(image_url):
 
 class Bcy(robot.Robot):
     def __init__(self):
-        global IMAGE_DOWNLOAD_PATH
-        global NEW_SAVE_DATA_PATH
         global COOKIE_INFO
         global IS_AUTO_FOLLOW
+        global IS_LOCAL_SAVE_SESSION
 
         sys_config = {
             robot.SYS_DOWNLOAD_IMAGE: True,
             robot.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
-            robot.SYS_APP_CONFIG: (os.path.realpath("config.ini"), ("IS_AUTO_FOLLOW", True, 2)),
+            robot.SYS_APP_CONFIG: (
+                os.path.realpath("config.ini"),
+                ("IS_AUTO_FOLLOW", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN),
+                ("IS_LOCAL_SAVE_SESSION", False, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+            ),
         }
         robot.Robot.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        IMAGE_DOWNLOAD_PATH = self.image_download_path
-        NEW_SAVE_DATA_PATH = robot.get_new_save_file_path(self.save_data_path)
         COOKIE_INFO["LOGGED_USER"] = self.cookie_value["LOGGED_USER"]
         IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
+        IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
 
     def main(self):
-        global ACCOUNT_LIST
+        # 生成session信息
+        init_session()
 
         # 检测登录状态
         # 未登录时提示可能无法获取粉丝指定的作品
@@ -233,7 +267,7 @@ class Bcy(robot.Robot):
                 input_str = output.console_input(robot.get_time() + " 没有检测到账号登录状态，可能无法解析那些只对粉丝开放的作品，手动输入账号密码登录(Y)es？或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
-                    if login():
+                    if login_from_console():
                         break
                     else:
                         log.step("登录失败！")
@@ -246,11 +280,11 @@ class Bcy(robot.Robot):
 
         # 解析存档文件
         # account_id  last_album_id
-        ACCOUNT_LIST = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_id in sorted(ACCOUNT_LIST.keys()):
+        for account_id in sorted(self.account_list.keys()):
             # 检查正在运行的线程数
             if threading.activeCount() >= self.thread_count + main_thread_count:
                 self.wait_sub_thread()
@@ -260,7 +294,7 @@ class Bcy(robot.Robot):
                 break
 
             # 开始下载
-            thread = Download(ACCOUNT_LIST[account_id], self)
+            thread = Download(self.account_list[account_id], self)
             thread.start()
 
             time.sleep(1)
@@ -270,13 +304,13 @@ class Bcy(robot.Robot):
             self.wait_sub_thread()
 
         # 未完成的数据保存
-        if len(ACCOUNT_LIST) > 0:
-            tool.write_file(tool.list_to_string(ACCOUNT_LIST.values()), NEW_SAVE_DATA_PATH)
+        if len(self.account_list) > 0:
+            tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(NEW_SAVE_DATA_PATH, self.save_data_path)
+        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 class Download(robot.DownloadThread):
@@ -377,9 +411,9 @@ class Download(robot.DownloadThread):
         # 过滤标题中不支持的字符
         album_title = path.filter_text(album_info["album_title"])
         if album_title:
-            album_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, "%s %s" % (album_info["album_id"], album_title))
+            album_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%s %s" % (album_info["album_id"], album_title))
         else:
-            album_path = os.path.join(IMAGE_DOWNLOAD_PATH, self.account_name, str(album_info["album_id"]))
+            album_path = os.path.join(self.main_thread.image_download_path, self.account_name, str(album_info["album_id"]))
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for image_url in album_response["image_url_list"]:
@@ -430,10 +464,9 @@ class Download(robot.DownloadThread):
 
         # 保存最后的信息
         with self.thread_lock:
-            global TOTAL_IMAGE_COUNT
-            tool.write_file("\t".join(self.account_info), NEW_SAVE_DATA_PATH)
-            TOTAL_IMAGE_COUNT += self.total_image_count
-            ACCOUNT_LIST.pop(self.account_id)
+            tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
+            self.main_thread.total_image_count += self.total_image_count
+            self.main_thread.account_list.pop(self.account_id)
         log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 

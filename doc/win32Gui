@@ -87,3 +87,6 @@ win32gui.GetPixel(DEVICE_CONTEXT, POSITION_X, POSITION_Y)
 			POSITION_X（窗口的相对X坐标）
 			POSITION_Y（窗口的相对Y坐标）
 	return	RGB_VALUE（颜色RGB值对应的整数）范围：0 ~ 16777215，转化为16进制后，从右往左每2位分别代表RGB的值
+
+11.SendMessage PostMessage
+http://www.cnblogs.com/wind-net/archive/2012/11/01/2750123.html

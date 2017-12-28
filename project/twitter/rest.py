@@ -15,6 +15,7 @@ import sys
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
 ACCESS_TOKEN = None
+token_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token")
 
 
 def init():
@@ -25,7 +26,7 @@ def init():
     api_secret = None
     if ACCESS_TOKEN is not None:
         return True
-    token_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token.data")
+
     is_find_api_info = False
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
@@ -103,7 +104,6 @@ def follow_account(user_id):
         "Authorization": "Bearer %s" % ACCESS_TOKEN,
     }
     response = net.http_request(api_url, method="POST", header_list=header_list, json_decode=True)
-    print response.status
     if response.status == net.HTTP_RETURN_CODE_SUCCEED:
         pass
     return False

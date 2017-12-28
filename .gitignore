@@ -2,9 +2,10 @@
 *.pyc
 log/
 *-*_*_*.data
-deprecation/yasaxi/token.data
+deprecation/yasaxi/token
 project/*/photo/
 project/*/video/
-project/twitter/token.data
+project/bcy/session
+project/twitter/token
 game/steam/account.data
 game/steam/discount.txt

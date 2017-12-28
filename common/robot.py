@@ -32,12 +32,15 @@ SYS_GET_COOKIE = "get_cookie"
 # 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
 
+CONFIG_ANALYSIS_MODE_RAW = 0
 CONFIG_ANALYSIS_MODE_INTEGER = 1
 CONFIG_ANALYSIS_MODE_BOOLEAN = 2
 CONFIG_ANALYSIS_MODE_PATH = 3
 
 
 class Robot(object):
+    total_image_count = 0
+    total_video_count = 0
     print_function = None
     thread_event = None
     prcess_status = True  # 主进程是否在运行
@@ -80,8 +83,11 @@ class Robot(object):
         # 应用配置
         self.app_config = {}
         if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) >= 2:
-            app_config = read_config(sys_config[SYS_APP_CONFIG][0])
-            for app_config_template in  sys_config[SYS_APP_CONFIG][1:]:
+            if os.path.exists(sys_config[SYS_APP_CONFIG][0]):
+                app_config = read_config(sys_config[SYS_APP_CONFIG][0])
+            else:
+                app_config = {}
+            for app_config_template in sys_config[SYS_APP_CONFIG][1:]:
                 if len(app_config_template) == 3:
                     self.app_config[app_config_template[0]] = analysis_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
 
@@ -141,6 +147,8 @@ class Robot(object):
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
             tool.process_exit()
             return
+        file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
+        self.temp_save_data_path = os.path.join(os.path.dirname(old_save_file_path), file_name)
 
         # 是否需要下载图片
         if self.is_download_image:
@@ -328,7 +336,7 @@ def read_config(config_path):
     return config
 
 
-def analysis_config(config, key, default_value, mode=None):
+def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
     """Analysis config
 
     :param config:
@@ -351,7 +359,7 @@ def analysis_config(config, key, default_value, mode=None):
                     startup with '\', project root path
                     startup with '\\', application root path
     """
-    if config.has_option("setting", key):
+    if isinstance(config, ConfigParser.SafeConfigParser) and config.has_option("setting", key):
         value = config.get("setting", key).encode("UTF-8")
     else:
         output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
@@ -435,12 +443,6 @@ def rewrite_save_file(temp_save_data_path, save_data_path):
     temp_list = [account_list[key] for key in sorted(account_list.keys())]
     tool.write_file(tool.list_to_string(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
     path.delete_dir_or_file(temp_save_data_path)
-
-
-# 生成新存档的文件路径
-def get_new_save_file_path(old_save_file_path):
-    file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path)
-    return os.path.join(os.path.dirname(old_save_file_path), file_name)
 
 
 # 替换目录中的指定字符串
