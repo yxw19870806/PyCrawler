@@ -220,7 +220,7 @@ class Download(robot.DownloadThread):
                     audio_info = audio_info_list.pop()
                     log.step(self.account_name + " 开始解析%s歌曲%s《%s》" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
                     self.crawl_audio(audio_type, audio_info)
-                self.main_thread_check()  # 检测主线程运行状态
+                    self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_name + " 提前退出")
