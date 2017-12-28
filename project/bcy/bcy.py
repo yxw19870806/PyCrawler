@@ -24,7 +24,7 @@ IS_AUTO_FOLLOW = True
 IS_LOCAL_SAVE_SESSION = False
 IS_LOGIN = True
 COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
-account_file_path = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "session.data"))
+SESSION_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "session"))
 
 
 # 生成session cookies
@@ -89,7 +89,7 @@ def _do_login(email, password):
 
 # 从文件中读取账号信息
 def get_account_info_from_file():
-    account_data = tool.decrypt_string(tool.read_file(account_file_path))
+    account_data = tool.decrypt_string(tool.read_file(SESSION_FILE_PATH))
     if account_data is not None:
         try:
             account_data = json.loads(account_data)
@@ -104,7 +104,7 @@ def get_account_info_from_file():
 # 保存账号信息到文件中
 def save_account_info_to_file(email, password):
     account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
-    tool.write_file(account_info_encrypt_string, account_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+    tool.write_file(account_info_encrypt_string, SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 # 从控制台输入获取账号信息
