@@ -153,80 +153,35 @@ class NicoNico(robot.Robot):
 class Download(robot.DownloadThread):
     def __init__(self, account_info, main_thread):
         robot.DownloadThread.__init__(self, account_info, main_thread)
+        self.account_id = self.account_info[0]
+        if len(self.account_info) >= 3 and self.account_info[2]:
+            self.account_name = self.account_info[2]
+        else:
+            self.account_name = self.account_info[0]
+        log.step(self.account_name + " 开始")
 
     def run(self):
-        account_id = self.account_info[0]
-        if len(self.account_info) >= 3 and self.account_info[2]:
-            account_name = self.account_info[2]
-        else:
-            account_name = self.account_info[0]
-        video_count = 1
-
         try:
-            log.step(account_name + " 开始")
-
             # 获取视频信息列表
-            account_index_response = get_account_index_page(account_id)
+            account_index_response = get_account_index_page(self.account_id)
             if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(account_name + " 视频列表访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
+                log.error(self.account_name + " 视频列表访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
                 tool.process_exit()
-
-            first_video_id = None
-            video_path = os.path.join(self.main_thread.video_download_path, account_name)
-            for video_info in account_index_response.extra_info["video_info_list"]:
-                if not robot.check_sub_key(("item_data",), video_info) or \
-                        not robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
-                    log.error(account_name + " 视频信息%s解析失败" % video_info)
-                    tool.process_exit()
-
-                # sm30043563
-                video_id = str(video_info["item_data"]["watch_id"])
-
-                # 过滤标题中不支持的字符
-                video_title = path.filter_text(video_info["item_data"]["title"])
-
-                # 获取视频下载地址
-                video_url = get_video_url(video_id)
-                log.step(account_name + " 开始下载第%s个视频 %s %s" % (video_count, video_id, video_url))
-                print video_title
-                print "%s %s" % (video_id, video_title)
-                file_path = os.path.join(video_path, "%s %s.mp4" % (video_id, video_title))
-                if net.save_net_file(video_url, file_path):
-                    log.step(account_name + " 第%s个视频下载成功" % video_count)
-                    video_count += 1
-                else:
-                    log.error(account_name + " 第%s个视频 %s %s 下载失败" % (video_count, video_id, video_url))
-
-            log.step(account_name + " 下载完毕，总共获得%s个视频" % (video_count - 1))
-
-            # 排序
-            if video_count > 1:
-                log.step(account_name + " 视频开始从下载目录移动到保存目录")
-                destination_path = os.path.join(self.main_thread.video_download_path, account_name)
-                if robot.sort_file(video_path, destination_path, int(self.account_info[3]), 4):
-                    log.step(account_name + " 视频从下载目录移动到保存目录成功")
-                else:
-                    log.error(account_name + " 创建视频保存目录 %s 失败" % destination_path)
-                    tool.process_exit()
-
-            # 新的存档记录
-            if first_video_id is not None:
-                self.account_info[1] = first_video_id
         except SystemExit, se:
             if se.code == 0:
-                log.step(account_name + " 提前退出")
+                log.step(self.account_name + " 提前退出")
             else:
-                log.error(account_name + " 异常退出")
+                log.error(self.account_name + " 异常退出")
         except Exception, e:
-            log.error(account_name + " 未知异常")
+            log.error(self.account_name + " 未知异常")
             log.error(str(e) + "\n" + str(traceback.format_exc()))
 
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_video_count += video_count - 1
-            self.main_thread.account_list.pop(account_id)
-        log.step(account_name + " 完成")
+            self.main_thread.total_video_count += self.total_video_count - 1
+            self.main_thread.account_list.pop(self.account_id)
+        log.step(self.account_name + " 完成")
         self.notify_main_thread()
 
 
