@@ -445,12 +445,6 @@ def rewrite_save_file(temp_save_data_path, save_data_path):
     path.delete_dir_or_file(temp_save_data_path)
 
 
-# 生成新存档的文件路径
-def get_new_save_file_path(old_save_file_path):
-    file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(old_save_file_path)
-    return os.path.join(os.path.dirname(old_save_file_path), file_name)
-
-
 # 替换目录中的指定字符串
 def replace_path(path):
     return path.replace("{date}", time.strftime("%y-%m-%d", time.localtime(time.time())))
