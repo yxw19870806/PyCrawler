@@ -157,11 +157,19 @@ class Nvshens(robot.Robot):
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     header_list = {"Referer": "https://www.nvshens.com/g/%s/" % album_id}
                     save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
+                    if save_file_return["status"] == 0 and save_file_return["code"] == 404:
+                        new_image_url = None
+                        if image_url.find("/0.jpg") >= 0:
+                            new_image_url = image_url.replace("/0.jpg", "/000.jpg")
+                        elif image_url.find("/s/") >= 0:
+                            new_image_url = image_url.replace("/s/", "/")
+                        if new_image_url is not None:
+                            save_file_return = net.save_net_file(new_image_url, file_path, header_list=header_list)
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
-                        image_index += 1
                     else:
                         log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 total_image_count += image_index - 1  # 计数累加
