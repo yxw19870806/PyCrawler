@@ -238,7 +238,7 @@ class Download(robot.DownloadThread):
             log.error(self.account_name + " 视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
             return
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%08d - %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
         save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=COOKIE_INFO)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
