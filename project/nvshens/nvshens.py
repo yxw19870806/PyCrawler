@@ -108,7 +108,6 @@ class Nvshens(robot.Robot):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             album_id = int(file_save_info)
-        total_image_count = 0
         temp_path = ""
 
         try:
@@ -172,7 +171,7 @@ class Nvshens(robot.Robot):
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
-                total_image_count += image_index - 1  # 计数累加
+                self.total_image_count += image_index - 1  # 计数累加
                 album_id += 1  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
@@ -188,7 +187,7 @@ class Nvshens(robot.Robot):
 
         # 重新保存存档文件
         tool.write_file(str(album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 if __name__ == "__main__":

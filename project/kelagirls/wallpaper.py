@@ -82,7 +82,6 @@ class Wallpaper(robot.Robot):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             last_image_id = int(file_save_info)
-        total_image_count = 0
 
         try:
             page_count = 1
@@ -135,7 +134,7 @@ class Wallpaper(robot.Robot):
                     log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
                     continue
                 # 图片下载完毕
-                total_image_count += 1  # 计数累加
+                self.total_image_count += 1  # 计数累加
                 last_image_id = image_info["image_id"]  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
@@ -148,7 +147,7 @@ class Wallpaper(robot.Robot):
 
         # 重新保存存档文件
         tool.write_file(str(last_image_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 if __name__ == "__main__":

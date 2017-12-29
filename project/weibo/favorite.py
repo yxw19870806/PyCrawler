@@ -121,7 +121,6 @@ class Favorite(robot.Robot):
                 tool.process_exit()
 
         page_count = 1
-        total_image_count = 0
         is_over = False
         while not is_over:
             log.step("开始解析第%s页收藏" % page_count)
@@ -150,7 +149,7 @@ class Favorite(robot.Robot):
                         else:
                             log.step("微博%s的第%s张图片下载成功" % (blog_info["blog_id"], image_count))
                             image_count += 1
-                            total_image_count += 1
+                            self.total_image_count += 1
                     else:
                         log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
@@ -159,7 +158,7 @@ class Favorite(robot.Robot):
             else:
                 page_count += 1
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 if __name__ == "__main__":

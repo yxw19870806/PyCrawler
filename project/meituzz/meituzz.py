@@ -90,8 +90,6 @@ class MeiTuZZ(robot.Robot):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             save_album_id = album_id = int(file_save_info)
-        total_image_count = 0
-        total_video_count = 0
         temp_path_list = []
 
         try:
@@ -167,8 +165,8 @@ class MeiTuZZ(robot.Robot):
 
                 # tweet内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
-                total_image_count += image_index - 1  # 计数累加
-                total_video_count += video_index - 1  # 计数累加
+                self.total_image_count += image_index - 1  # 计数累加
+                self.total_video_count += video_index - 1  # 计数累加
                 save_album_id = album_id = album_id + 1  # 设置存档记录
         except SystemExit, se:
             if se.code == 0:
@@ -185,7 +183,7 @@ class MeiTuZZ(robot.Robot):
 
         # 重新保存存档文件
         tool.write_file(str(save_album_id), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), total_image_count, total_video_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
 
 
 if __name__ == "__main__":

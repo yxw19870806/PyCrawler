@@ -67,7 +67,6 @@ class Blog(robot.Robot):
             else:
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
-        total_image_count = 0
         temp_path_list = []
 
         try:
@@ -130,7 +129,7 @@ class Blog(robot.Robot):
                         log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 日志内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
-                total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
+                self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加
                 save_info[0] = str(image_index - 1)  # 设置存档记录
                 save_info[1] = blog_info["blog_id"]  # 设置存档记录
         except SystemExit, se:
@@ -148,7 +147,7 @@ class Blog(robot.Robot):
 
         # 保存新的存档文件
         tool.write_file("\t".join(save_info), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 if __name__ == "__main__":
