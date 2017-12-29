@@ -1,106 +1,150 @@
 # -*- coding:UTF-8  -*-
 """
-模板
+nico nico视频爬虫
+http://www.nicovideo.jp/
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+import HTMLParser
 import json
 import os
 import threading
 import time
 import traceback
 
+COOKIE_INFO = {}
+
 
 # 获取账号全部视频信息
 # account_id => 15614906
 def get_account_index_page(account_id):
-    # http://www.nicovideo.jp/mylist/15614906#+page=1
+    # http://www.nicovideo.jp/mylist/15614906
     account_index_url = "http://www.nicovideo.jp/mylist/%s" % account_id
     account_index_response = net.http_request(account_index_url, method="GET")
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
-        try:
-            all_video_info = json.loads(all_video_info)
-        except ValueError:
-            pass
-        else:
-            # 倒序排列，时间越晚的越前面
-            all_video_info.reverse()
-            for video_info in all_video_info:
-                if robot.check_sub_key(("item_data", "item_id"), video_info) and robot.check_sub_key(("watch_id", "title"), video_info["item_data"]):
-                    print video_info["item_data"]["item_id"]  # 投稿时间
-                    print video_info["item_data"]["watch_id"]
-    return account_index_response
+    result = {
+        "video_info_list": [],  # 所有视频信息
+    }
+    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+    all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
+    if not all_video_info:
+        raise robot.RobotException("截取视频列表失败\n%s" % account_index_response.data)
+    try:
+        all_video_info = json.loads(all_video_info)
+    except ValueError:
+        raise robot.RobotException("视频列表加载失败\n%s" % account_index_response.data)
+    # 倒序排列，时间越晚的越前面
+    all_video_info.reverse()
+    for video_info in all_video_info:
+        result_video_info = {
+            "video_id": None,  # 视频id
+            "video_title": "",  # 视频标题
+        }
+        if not robot.check_sub_key(("item_data",), video_info):
+            raise robot.RobotException("视频信息'item_data'字段不存在\n%s" % video_info)
+        # 获取视频id
+        if not robot.check_sub_key(("video_id",), video_info["item_data"]):
+            raise robot.RobotException("视频信息'video_id'字段不存在\n%s" % video_info)
+        video_id = str(video_info["item_data"]["video_id"])
+        result_video_info["video_id"] = video_id.replace("sm", "")
+        # 获取视频辩题
+        if not robot.check_sub_key(("title",), video_info["item_data"]):
+            raise robot.RobotException("视频信息'video_id'字段不存在\n%s" % video_info)
+        result_video_info["video_title"] = str(video_info["item_data"]["title"].encode("UTF-8"))
+        result["video_info_list"].append(result_video_info)
+    return result
 
 
 # 根据视频id，获取视频的下载地址
-def get_video_url(video_id):
-    api_url = "http://api.dmc.nico:2805/api/sessions?_format=xml&suppress_response_codes=true"
-    binary_data = '''
-<session>
-    <recipe_id>nicovideo-sm31207604</recipe_id>
-    <content_id>out1</content_id>
-    <content_type>movie</content_type>
-    <protocol>
-        <name>http</name>
-        <parameters>
-            <http_parameters>
-                <method>GET</method>
-                <parameters>
-                    <http_output_download_parameters>
-                        <file_extension>flv</file_extension>
-                    </http_output_download_parameters>
-                </parameters>
-            </http_parameters>
-        </parameters>
-    </protocol>
-    <priority>0.4</priority>
-    <content_src_id_sets>
-        <content_src_id_set>
-            <content_src_ids>
-                <src_id_to_mux>
-                    <video_src_ids>
-                        <string>archive_h264_600kbps_360p</string>
-                        <string>archive_h264_300kbps_360p</string>
-                    </video_src_ids>
-                    <audio_src_ids>
-                        <string>archive_aac_64kbps</string>
-                    </audio_src_ids>
-                </src_id_to_mux>
-            </content_src_ids>
-        </content_src_id_set>
-    </content_src_id_sets>
-    <keep_method>
-        <heartbeat>
-            <lifetime>60000</lifetime>
-        </heartbeat>
-    </keep_method>
-    <timing_constraint>unlimited</timing_constraint>
-    <session_operation_auth>
-        <session_operation_auth_by_signature>
-            <token>
-                {"service_id":"nicovideo","player_id":"nicovideo-6-BJ8HluQeSt_1495531398370","recipe_id":"nicovideo-sm31207604","service_user_id":"36746249","protocols":[{"name":"http","auth_type":"ht2"}],"videos":["archive_h264_300kbps_360p","archive_h264_600kbps_360p"],"audios":["archive_aac_64kbps"],"movies":[],"created_time":1495531398000,"expire_time":1495617798000,"content_ids":["out1"],"heartbeat_lifetime":60000,"content_key_timeout":600000,"priority":0.4,"transfer_presets":[]}
-            </token>
-            <signature>c60d3948e158938e06edce69ecfa52f0cf720ebcadb7bf4846926a33dce747c6</signature>
-        </session_operation_auth_by_signature>
-    </session_operation_auth>
-    <content_auth>
-        <auth_type>ht2</auth_type>
-        <service_id>nicovideo</service_id>
-        <service_user_id>36746249</service_user_id>
-        <max_content_count>10</max_content_count>
-        <content_key_timeout>600000</content_key_timeout>
-    </content_auth>
-    <client_info>
-        <player_id>nicovideo-6-BJ8HluQeSt_1495531398370</player_id>
-    </client_info>
-</session>
-'''
-    # 方便阅读，处理掉空格换行
-    binary_data = binary_data.replace("\n", "").replace(" ", "")
-    api_response = net.http_request(api_url, method="POST", binary_data=binary_data)
+def get_video_info(video_id):
+    video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
+    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    result = {
+        "video_url": None,  # 视频地址
+    }
+    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise robot.RobotException("视频播放页访问失败，" + robot.get_http_request_failed_reason(video_play_response.status))
+    video_info_string = tool.find_sub_string(video_play_response.data, 'data-api-data="', '" data-environment="')
+    if not video_info_string:
+        raise robot.RobotException("视频信息截取失败\n%s" % video_play_response.data)
+    video_info_string = HTMLParser.HTMLParser().unescape(video_info_string)
+    try:
+        video_info = json.loads(video_info_string)
+    except ValueError:
+        raise robot.RobotException("视频信息加载失败\n%s" % video_play_response.data)
+    if not robot.check_sub_key(("video",), video_info):
+        raise robot.RobotException("视频信息'video'字段不存在\n%s" % video_info)
+    # 旧版本，直接存放视频地址
+    # http://www.nicovideo.jp/watch/sm7647845
+    if robot.check_sub_key(("smileInfo",), video_info["video"]):
+        if not robot.check_sub_key(("url",), video_info["video"]["smileInfo"]):
+            raise robot.RobotException("视频信息'url'字段不存在\n%s" % video_info)
+        result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
+        return result
+    # 新版本，需要再次访问获取视频地址
+    if not robot.check_sub_key(("dmcInfo",), video_info["video"]):
+        raise robot.RobotException("视频信息'dmcInfo'字段不存在\n%s" % video_info)
+    if not robot.check_sub_key(("session_api",), video_info["video"]["dmcInfo"]):
+        raise robot.RobotException("视频信息'session_api'字段不存在\n%s" % video_info)
+    if not robot.check_sub_key(("player_id", "token", "signature", "recipe_id"), video_info["video"]["dmcInfo"]["session_api"]):
+        raise robot.RobotException("视频信息'player_id'、'token'、'signature'字段不存在\n%s" % video_info)
+    api_url = "http://api.dmc.nico:2805/api/sessions?_format=json"
+    post_data = {
+        "session": {
+            "recipe_id": video_info["video"]["dmcInfo"]["session_api"]["recipe_id"],
+            "content_id": "out1",
+            "content_type": "movie",
+            "content_src_id_sets": [{
+                "content_src_ids": [{
+                    "src_id_to_mux": {
+                        "video_src_ids": ["archive_h264_2000kbps_720p"],
+                        "audio_src_ids": ["archive_aac_192kbps"]
+                    }
+                }]
+            }],
+            "timing_constraint": "unlimited",
+            "keep_method": {
+                "heartbeat": {
+                    "lifetime": 120000
+                }
+            },
+            "protocol": {
+                "name": "http",
+                "parameters": {
+                    "http_parameters": {
+                        "parameters": {
+                            "http_output_download_parameters": {
+                                "use_well_known_port": "no",
+                                "use_ssl": "no"
+                            }
+                        }
+                    }
+                }
+            },
+            "content_uri": "",
+            "session_operation_auth": {
+                "session_operation_auth_by_signature": {
+                    "token": video_info["video"]["dmcInfo"]["session_api"]["token"],
+                    "signature": video_info["video"]["dmcInfo"]["session_api"]["signature"],
+                }
+            },
+            "content_auth": {
+                "auth_type": "ht2",
+                "content_key_timeout": 600000,
+                "service_id": "nicovideo",
+                "service_user_id": "36746249"
+            },
+            "client_info": {
+                "player_id": video_info["video"]["dmcInfo"]["session_api"]["player_id"],
+            },
+            "priority": 0.4
+        }
+    }
+    api_response = net.http_request(api_url, method="POST", binary_data=json.dumps(post_data))
+    print api_response.status
+    print api_response.data
     if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         pass
     return api_response
@@ -108,11 +152,16 @@ def get_video_url(video_id):
 
 class NicoNico(robot.Robot):
     def __init__(self):
+        global COOKIE_INFO
+
         sys_config = {
             robot.SYS_DOWNLOAD_VIDEO: True,
             robot.SYS_SET_PROXY: True,
+            robot.SYS_GET_COOKIE: {".nicovideo.jp": ()},
         }
         robot.Robot.__init__(self, sys_config)
+        net.set_proxy("127.0.0.1", "8888")
+        COOKIE_INFO = self.cookie_value
 
     def main(self):
         # 解析存档文件
@@ -160,12 +209,59 @@ class Download(robot.DownloadThread):
             self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
+    # 获取所有可下载图片
+    def get_crawl_list(self):
+        # 获取视频信息列表
+        try:
+            account_index_response = get_account_index_page(self.account_id)
+        except robot.RobotException, e:
+            log.error(self.account_name + " 视频列表解析失败，原因：%s" % e.message)
+            raise
+
+        video_info_list = []
+        # 寻找这一页符合条件的视频
+        for video_info in account_index_response["video_info_list"]:
+            self.main_thread_check()  # 检测主线程运行状态
+            # 检查是否达到存档记录
+            if int(video_info["video_id"]) > int(self.account_info[1]):
+                video_info_list.append(video_info)
+            else:
+                break
+
+        return video_info_list
+
+    # 解析单个视频
+    def crawl_video(self, video_info):
+        try:
+            video_info_response = get_video_info(video_info["video_id"])
+        except robot.RobotException, e:
+            log.error(self.account_name + " 视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
+            return
+
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
+        save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=COOKIE_INFO)
+        if save_file_return["status"] == 1:
+            log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
+        else:
+            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            return
+
+        # 视频下载完毕
+        self.total_video_count += 1  # 计数累加
+        self.account_info[1] = video_info["video_id"]  # 设置存档记录
+
     def run(self):
         try:
-            # 获取视频信息列表
-            account_index_response = get_account_index_page(self.account_id)
-            if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                log.error(self.account_name + " 视频列表访问失败，原因：%s" % robot.get_http_request_failed_reason(account_index_response.status))
+            # 获取所有可下载视频
+            video_info_list = self.get_crawl_list()
+            log.step(self.account_name + " 需要下载的全部视频解析完毕，共%s个" % len(video_info_list))
+
+            # 从最早的视频开始下载
+            while len(video_info_list) > 0:
+                video_info = video_info_list.pop()
+                log.step(self.account_name + " 开始解析视频 %s 《%s》" % (video_info["video_id"], video_info["video_title"]))
+                self.crawl_video(video_info)
+                self.main_thread_check()  # 检测主线程运行状态
                 tool.process_exit()
         except SystemExit, se:
             if se.code == 0:
