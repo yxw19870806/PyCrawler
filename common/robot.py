@@ -147,8 +147,8 @@ class Robot(object):
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
             tool.process_exit()
             return
-        file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
-        self.temp_save_data_path = os.path.join(os.path.dirname(old_save_file_path), file_name)
+        temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
+        self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
 
         # 是否需要下载图片
         if self.is_download_image:
