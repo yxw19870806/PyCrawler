@@ -148,7 +148,6 @@ class Weibo(robot.Robot):
         # account_id  video_count  last_video_url  (account_name)
         self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
 
-    def main(self):
         # 检测登录状态
         if not weiboCommon.check_login(COOKIE_INFO):
             # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
@@ -160,6 +159,7 @@ class Weibo(robot.Robot):
                 log.error("没有检测到登录信息")
                 tool.process_exit()
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_id in sorted(self.account_list.keys()):
