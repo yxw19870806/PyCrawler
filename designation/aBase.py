@@ -10,8 +10,6 @@ import re
 import time
 import threading
 
-TOTAL_IMAGE_COUNT = 0
-
 
 # 获取指定页数的全部图片
 def get_one_page_photo(page_count):
@@ -109,7 +107,7 @@ class ABase(robot.Robot):
                 file_temp_path = os.path.join(self.image_download_path, "%s_temp.%s" % (title, file_type))
 
                 # 开始下载
-                thread = Download(self.thread_lock, title, file_path, file_temp_path, image_url)
+                thread = Download(self, title, file_path, file_temp_path, image_url)
                 thread.start()
                 time.sleep(0.1)
 
@@ -119,21 +117,20 @@ class ABase(robot.Robot):
 
             page_count += 1
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), TOTAL_IMAGE_COUNT))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 class Download(threading.Thread):
-    def __init__(self, thread_lock, title, file_path, file_temp_path, file_url):
+    def __init__(self, main_thread, title, file_path, file_temp_path, file_url):
         threading.Thread.__init__(self)
-        self.thread_lock = thread_lock
+        self.main_thread = main_thread
+        self.thread_lock = main_thread.thread_lock
         self.title = title
         self.file_path = file_path
         self.file_temp_path = file_temp_path
         self.file_url = file_url
 
     def run(self):
-        global TOTAL_IMAGE_COUNT
-
         # 如果文件已经存在，则使用临时文件名保存
         if os.path.exists(self.file_path):
             is_exist = True
@@ -146,9 +143,9 @@ class Download(threading.Thread):
         if save_file_return["status"] == 1:
             if check_invalid_image(file_path):
                 path.delete_dir_or_file(file_path)
-                log.step("%s的封面图片无效，自动删除" % self.title)
+                log.step("%s 封面图片无效，自动删除" % self.title)
             else:
-                log.step("%s的封面图片下载成功" % self.title)
+                log.step("%s 封面图片下载成功" % self.title)
                 if is_exist:
                     # 如果新下载图片比原来大，则替换原本的；否则删除新下载的图片
                     if os.path.getsize(self.file_temp_path) > os.path.getsize(self.file_path):
@@ -158,9 +155,9 @@ class Download(threading.Thread):
                         path.delete_dir_or_file(self.file_temp_path)
 
                 with self.thread_lock:
-                    TOTAL_IMAGE_COUNT += 1
+                    self.main_thread.total_image_count += 1
         else:
-            log.error("%s的封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error("%s 封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
 
 
 if __name__ == "__main__":

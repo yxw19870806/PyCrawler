@@ -81,7 +81,6 @@ class ZunGuang(robot.Robot):
         else:
             page_count = 1
 
-        total_image_count = 0
         error_count = 0
         is_over = False
         while not is_over:
@@ -146,14 +145,14 @@ class ZunGuang(robot.Robot):
                     break
 
             if not is_over:
-                total_image_count += image_count - 1
+                self.total_image_count += image_count - 1
                 page_count += 1
 
         # 重新保存存档文件
-        if total_image_count > 0:
+        if self.total_image_count > 0:
             tool.write_file(str(page_count), self.save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
-        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), total_image_count))
+        log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
 if __name__ == "__main__":
