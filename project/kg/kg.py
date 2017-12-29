@@ -97,14 +97,13 @@ class KG(robot.Robot):
         }
         robot.Robot.__init__(self, sys_config)
 
-    def main(self):
         # 解析存档文件
         # account_id
         self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-
         for account_id in sorted(self.account_list.keys()):
             # 检查正在运行的线程数
             if threading.activeCount() >= self.thread_count + main_thread_count:

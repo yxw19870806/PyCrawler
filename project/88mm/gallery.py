@@ -121,13 +121,14 @@ class Gallery(robot.Robot):
         }
         robot.Robot.__init__(self, sys_config)
 
-    def main(self):
+        # 解析存档文件
         # sub_path  last_page_id
         self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
         for sub_path in SUB_PATH_LIST:
             if sub_path not in self.account_list:
                 self.account_list[sub_path] = [sub_path, "0"]
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for sub_path in sorted(self.account_list.keys()):

@@ -182,11 +182,11 @@ class Twitter(robot.Robot):
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
 
-    def main(self):
         # 解析存档文件
         # account_name  image_count  last_image_time
         self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_name in sorted(self.account_list.keys()):

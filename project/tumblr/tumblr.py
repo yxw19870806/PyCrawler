@@ -365,11 +365,11 @@ class Tumblr(robot.Robot):
         USER_AGENT = self.app_config["USER_AGENT"]
         IS_STEP_ERROR_403_AND_404 = self.app_config["IS_STEP_ERROR_403_AND_404"]
 
-    def main(self):
         # 解析存档文件
         # account_id  last_post_id
         self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_id in sorted(self.account_list.keys()):

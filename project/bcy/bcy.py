@@ -256,6 +256,10 @@ class Bcy(robot.Robot):
         IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
 
+        # 解析存档文件
+        # account_id  last_album_id
+        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+
     def main(self):
         # 生成session信息
         init_session()
@@ -277,10 +281,6 @@ class Bcy(robot.Robot):
                     global IS_LOGIN
                     IS_LOGIN = False
                     break
-
-        # 解析存档文件
-        # account_id  last_album_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
