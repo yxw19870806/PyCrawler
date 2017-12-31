@@ -34,6 +34,9 @@ def get_one_page_video(account_id, token):
         index_response = net.http_request(index_url, method="GET")
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+        if index_response.data.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
+            log.step("首页访问出现跳转，再次访问")
+            return get_one_page_video(account_id, token)
         script_data_html = tool.find_sub_string(index_response.data, 'window["ytInitialData"] =', ";\n").strip()
         if not script_data_html:
             raise robot.RobotException("页面截取视频信息失败\n%s" % index_response.data)
