@@ -115,6 +115,7 @@
 15.
 sys._getframe().f_code.co_name			获取代码所在的函数名
 sys._getframe().f_code.co_filename		获取代码所在的文件路径
+__file__								获取代码所在的文件路径
 os.getcwd()								获取运行目录
 
 
