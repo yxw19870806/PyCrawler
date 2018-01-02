@@ -325,7 +325,7 @@ class CrawlerException(SystemExit):
 
     @property
     def message(self):
-        return  self.exception_message
+        return self.exception_message
 
 
 def read_config(config_path):
@@ -549,6 +549,8 @@ def quicky_get_save_data_path(config=None):
         config = read_config(tool.PROJECT_CONFIG_PATH)
     return analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
 
+
+# 读取浏览器cookies
 def quicky_get_all_cookies_from_browser(config=None):
     if not isinstance(config, ConfigParser.SafeConfigParser):
         config = read_config(tool.PROJECT_CONFIG_PATH)

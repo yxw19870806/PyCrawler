@@ -25,8 +25,8 @@ if getattr(sys, "frozen", False):
 else:
     IS_EXECUTABLE = False
 
-READ_FILE_TYPE_FULL = 1 # 读取整个文件 ，返回字符串
-READ_FILE_TYPE_LINE = 2 # 按行读取，返回list
+READ_FILE_TYPE_FULL = 1  # 读取整个文件 ，返回字符串
+READ_FILE_TYPE_LINE = 2  # 按行读取，返回list
 
 WRITE_FILE_TYPE_APPEND = 1  # 追加写入文件
 WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
@@ -47,9 +47,9 @@ PROJECT_CONFIG_PATH = os.path.join(PROJECT_ROOT_PATH, "common/config.ini")
 #   1 只包含start_string
 #   2 只包含end_string
 #   3 包含start_string和end_string
-def find_sub_string(string, start_string=None, end_string=None, include_string=0):
+def find_sub_string(haystack, start_string=None, end_string=None, include_string=0):
     # 参数验证
-    string = str(string)
+    haystack = str(haystack)
     if start_string is not None:
         start_string = str(start_string)
     if end_string is not None:
@@ -62,7 +62,7 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
         start_index = 0
     else:
         # 开始字符串第一次出现的位置
-        start_index = string.find(start_string)
+        start_index = haystack.find(start_string)
         if start_index == -1:
             return ""
         # 加上开始字符串的长度
@@ -70,14 +70,14 @@ def find_sub_string(string, start_string=None, end_string=None, include_string=0
             start_index += len(start_string)
 
     if end_string is None:
-        stop_index = len(string)
+        stop_index = len(haystack)
     else:
         # 结束字符串第一次出现的位置
-        stop_index = string.find(end_string, start_index)
+        stop_index = haystack.find(end_string, start_index)
         if stop_index == -1:
             return ""
 
-    find_string = string[start_index:stop_index]
+    find_string = haystack[start_index:stop_index]
     # 是否需要追加开始或结束字符串
     if include_string & 1 == 1 and start_string is not None:
         find_string = start_string + find_string
@@ -127,10 +127,10 @@ def get_file_md5(file_path):
     with open(file_path, "rb") as file_handle:
         buffer_size = 2**20  # 1M
         while True:
-            buffer = file_handle.read(buffer_size)
+            file_buffer = file_handle.read(buffer_size)
             if not buffer:
                 break
-            md5_obj.update(buffer)
+            md5_obj.update(file_buffer)
     return md5_obj.hexdigest()
 
 
@@ -205,26 +205,26 @@ AES_PRIVATE_KEY = "#@PyCrawl@#"
 
 
 # AES-256加密字符串
-def encrypt_string(encrypt_string):
+def encrypt_string(s):
     # generate aes key
     key = hashlib.md5(AES_PRIVATE_KEY).hexdigest()
     aes_obj = AES.new(key, AES.MODE_CBC, key[:16])
 
     # base64
-    message = base64.b64encode(str(encrypt_string))
+    message = base64.b64encode(str(s))
     # 补齐16*n位
     message += "=" * (16 - len(message) % 16)
     return base64.b64encode(aes_obj.encrypt(message))
 
 
 # AES-256解密字符串
-def decrypt_string(encrypted_string):
+def decrypt_string(s):
     # generate aes key
     key = hashlib.md5(AES_PRIVATE_KEY).hexdigest()
     aes_obj = AES.new(key, AES.MODE_CBC, key[:16])
 
     try:
-        return base64.b64decode(aes_obj.decrypt(base64.b64decode(encrypted_string)))
+        return base64.b64decode(aes_obj.decrypt(base64.b64decode(s)))
     except TypeError:
         return None
     except ValueError:
