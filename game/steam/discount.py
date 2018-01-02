@@ -18,6 +18,8 @@ INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
 DISCOUNT_DATA_PATH = os.path.realpath(os.path.join("discount.txt"))
+MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
+MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
 
 # 打折游戏列表保存到文件
@@ -122,4 +124,4 @@ if __name__ == "__main__":
     if INCLUDE_BUNDLE:
         include_type_id += 4
 
-    main(steamCommon.get_account_id_from_file(), include_type_id, 85, 1)
+    main(steamCommon.get_account_id_from_file(), include_type_id, MIN_DISCOUNT_PERCENT, MAX_SELLING_PERCENT)
