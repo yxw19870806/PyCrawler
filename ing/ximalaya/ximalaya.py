@@ -70,11 +70,11 @@ class XiMaLaYa(crawler.Crawler):
         }
         crawler.Crawler.__init__(self, sys_config)
 
-    def main(self):
         # 解析存档文件
         # account_id  last_audio_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_id in sorted(self.account_list.keys()):
