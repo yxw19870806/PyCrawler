@@ -22,7 +22,7 @@ def get_follow_list(suid):
         }
         follow_pagination_response = net.http_request(follow_pagination_url, method="GET", fields=query_data, json_decode=True)
         if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("msg", "stat"), follow_pagination_response.json_data) and follow_pagination_response.json_data["stat"].isdigit():
+            if crawler.check_sub_key(("msg", "stat"), follow_pagination_response.json_data) and follow_pagination_response.json_data["stat"].isdigit():
                 stat = int(follow_pagination_response.json_data["stat"]["stat"])
                 if stat == 1 or stat == 2:
                     one_page_follow_list = re.findall('<a title="([^"]*)" href="http://www.miaopai.com/u/paike_([^"]*)">', follow_pagination_response.json_data["msg"])

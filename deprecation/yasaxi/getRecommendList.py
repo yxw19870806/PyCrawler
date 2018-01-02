@@ -30,15 +30,15 @@ def get_account_from_api():
     account_list = {}
     api_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
-    if not robot.check_sub_key(("data",), api_response.json_data):
-        raise robot.RobotException("返回信息'data'字段不存在\n%s" % api_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+    if not crawler.check_sub_key(("data",), api_response.json_data):
+        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
     for account_info in api_response.json_data["data"]:
-        if not robot.check_sub_key(("userId",), account_info):
-            raise robot.RobotException("账号信息'userId'字段不存在\n%s" % account_info)
-        if not robot.check_sub_key(("nick",), account_info):
-            raise robot.RobotException("账号信息'nick'字段不存在\n%s" % account_info)
-        account_list[str(account_info["userId"].encode("UTF-8"))] = str(robot.filter_emoji(account_info["nick"]).encode("UTF-8")).strip()
+        if not crawler.check_sub_key(("userId",), account_info):
+            raise crawler.CrawlerException("账号信息'userId'字段不存在\n%s" % account_info)
+        if not crawler.check_sub_key(("nick",), account_info):
+            raise crawler.CrawlerException("账号信息'nick'字段不存在\n%s" % account_info)
+        account_list[str(account_info["userId"].encode("UTF-8"))] = str(crawler.filter_emoji(account_info["nick"]).encode("UTF-8")).strip()
     return account_list
 
 
@@ -53,10 +53,10 @@ def main():
                 return
 
     # 存档位置
-    save_data_path = robot.quicky_get_save_data_path()
+    save_data_path = crawler.quicky_get_save_data_path()
     try:
         account_list_from_api = get_account_from_api()
-    except robot.RobotException, e:
+    except crawler.CrawlerException, e:
         output.print_msg("推荐账号解析失败，原因：%s" % e.message)
         raise
     if len(account_list_from_api) > 0:

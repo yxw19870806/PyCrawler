@@ -23,15 +23,15 @@ def get_account_index_page(account_name):
         "album_url_list": [],  # 全部相册地址
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     # 页面编码
     account_index_html = account_index_response.data.decode("GBK").encode("UTF-8")
     if account_index_html.find("<title>该页面不存在</title>") >= 0:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     # 获取全部相册地址
     album_result_selector = pq(account_index_html).find("#p_contents li")
     if album_result_selector.size() == 0:
-        raise robot.RobotException("页面匹配相册列表失败\n%s" % account_index_html)
+        raise crawler.CrawlerException("页面匹配相册列表失败\n%s" % account_index_html)
     for album_index in range(0, album_result_selector.size()):
         result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     return result
@@ -40,7 +40,7 @@ def get_account_index_page(account_name):
 # 解析相册id
 def get_album_id(album_url):
     album_id = tool.find_sub_string(album_url, "pp/", ".html")
-    if robot.is_integer(album_id):
+    if crawler.is_integer(album_id):
         return str(album_id)
     return None
 
@@ -53,7 +53,7 @@ def get_album_page(album_url):
         "image_url_list": [],  # 全部图片地址
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
     # 获取相册标题
     album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
     if album_title:
@@ -61,21 +61,21 @@ def get_album_page(album_url):
     # 获取图片地址
     image_url_list = re.findall('data-lazyload-src="([^"]*)"', album_response.data)
     if len(image_url_list) == 0:
-        raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
     result["image_url_list"] = map(str, image_url_list)
     return result
 
 
-class Photographer(robot.Robot):
+class Photographer(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id last_album_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -104,14 +104,14 @@ class Photographer(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
@@ -120,7 +120,7 @@ class Download(robot.DownloadThread):
          # 获取主页
         try:
             account_index_response = get_account_index_page(self.account_name)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 主页解析失败，原因：%s" % e.message)
             raise
 
@@ -147,7 +147,7 @@ class Download(robot.DownloadThread):
     def crawl_album(self, album_url):
         try:
             album_response = get_album_page(album_url)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 相册%s解析失败，原因：%s" % (album_url, e.message))
             raise
 
@@ -173,7 +173,7 @@ class Download(robot.DownloadThread):
                 log.step(self.account_name + " 相册%s《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

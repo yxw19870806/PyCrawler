@@ -23,18 +23,18 @@ def get_channel_from_api():
     api_response = net.http_request(api_url, method="GET", json_decode=True)
     channel_list = []
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
-    if not robot.check_sub_key(("code",), api_response.json_data):
-        raise robot.RobotException("返回信息'code'字段不存在\n%s" % api_response.json_data)
-    if not robot.is_integer(api_response.json_data["code"]):
-        raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % api_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+    if not crawler.check_sub_key(("code",), api_response.json_data):
+        raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % api_response.json_data)
+    if not crawler.is_integer(api_response.json_data["code"]):
+        raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % api_response.json_data)
     if int(api_response.json_data["code"]) != 200:
-        raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % api_response.json_data)
-    if not robot.check_sub_key(("result",), api_response.json_data):
-        raise robot.RobotException("返回信息'result'字段不存在\n%s" % api_response.json_data)
+        raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % api_response.json_data)
+    if not crawler.check_sub_key(("result",), api_response.json_data):
+        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % api_response.json_data)
     for channel_info in api_response.json_data["result"]:
-        if not robot.check_sub_key(("_id",), channel_info):
-            raise robot.RobotException("频道信息'_id'字段不存在\n%s" % channel_info)
+        if not crawler.check_sub_key(("_id",), channel_info):
+            raise crawler.CrawlerException("频道信息'_id'字段不存在\n%s" % channel_info)
         channel_list.append(str(channel_info["_id"]))
     return channel_list
 
@@ -52,22 +52,22 @@ def get_channel_account_from_api(channel_id):
         }
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException(robot.get_http_request_failed_reason(api_response.status))
-        if not robot.check_sub_key(("code",), api_response.json_data):
-            raise robot.RobotException("返回信息'code'字段不存在\n%s" % api_response.json_data)
-        if not robot.is_integer(api_response.json_data["code"]):
-            raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % api_response.json_data)
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+        if not crawler.check_sub_key(("code",), api_response.json_data):
+            raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % api_response.json_data)
+        if not crawler.is_integer(api_response.json_data["code"]):
+            raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % api_response.json_data)
         if int(api_response.json_data["code"]) != 200:
-            raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % api_response.json_data)
-        if not robot.check_sub_key(("result",), api_response.json_data):
-            raise robot.RobotException("返回信息'result'字段不存在\n%s" % api_response.json_data)
+            raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % api_response.json_data)
+        if not crawler.check_sub_key(("result",), api_response.json_data):
+            raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % api_response.json_data)
         if len(api_response.json_data["result"]) == 0:
             break
         for account_info in api_response.json_data["result"]:
-            if not robot.check_sub_key(("_id",), account_info):
-                raise robot.RobotException("返回信息'_id'字段不存在\n%s" % account_info)
-            if not robot.check_sub_key(("nickname",), account_info):
-                raise robot.RobotException("返回信息'result'字段不存在\n%s" % account_info)
+            if not crawler.check_sub_key(("_id",), account_info):
+                raise crawler.CrawlerException("返回信息'_id'字段不存在\n%s" % account_info)
+            if not crawler.check_sub_key(("nickname",), account_info):
+                raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % account_info)
             account_list[str(account_info["_id"])] = path.filter_text(str(account_info["nickname"].encode("UTF-8")))
         page_count += 1
     return account_list
@@ -75,10 +75,10 @@ def get_channel_account_from_api(channel_id):
 
 def main():
     # 存档位置
-    save_data_path = robot.quicky_get_save_data_path()
+    save_data_path = crawler.quicky_get_save_data_path()
     try:
         channel_list = get_channel_from_api()
-    except robot.RobotException, e:
+    except crawler.CrawlerException, e:
         output.print_msg("频道列表解析失败，原因：%s" % e.message)
         raise
 
@@ -86,7 +86,7 @@ def main():
     for channel_id in channel_list:
         try:
             channel_account_list = get_channel_account_from_api(channel_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             output.print_msg("频道%s推荐账号解析失败，原因：%s" % (channel_id, e.message))
             raise
         output.print_msg("频道%s获取推荐账号%s个" % (channel_id, len(channel_account_list)))

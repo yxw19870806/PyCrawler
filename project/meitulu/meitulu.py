@@ -20,13 +20,13 @@ def get_index_page():
         "max_album_id": None,  # 最新图集id
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
     new_album_html = tool.find_sub_string(index_response.data, '<div class="zuixin">最新发布</div>', '<div class="zuixin">名站写真</div>')
     if not new_album_html:
-        raise robot.RobotException("页面截取最新发布失败\n%s" % index_response.data)
+        raise crawler.CrawlerException("页面截取最新发布失败\n%s" % index_response.data)
     album_id_find = re.findall('<a href="https://www.meitulu.com/item/(\d*).html"', new_album_html)
     if len(album_id_find) == 0:
-        raise robot.RobotException("最新发布匹配图集id失败\n%s" % new_album_html)
+        raise crawler.CrawlerException("最新发布匹配图集id失败\n%s" % new_album_html)
     result["max_album_id"] = max(map(int, album_id_find))
     return result
 
@@ -49,7 +49,7 @@ def get_one_page_album(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页 " % page_count + crawler.get_http_request_failed_reason(album_pagination_response.status))
         if page_count == 1:
             # 获取图集标题
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
@@ -57,11 +57,11 @@ def get_one_page_album(album_id):
         # 获取图集图片地址
         image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>")
         if not image_list_html:
-            raise robot.RobotException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response.data))
+            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, album_pagination_response.data))
         image_url_list = re.findall('<img src="([^"]*)"', image_list_html)
         if len(image_url_list) == 0:
             if image_list_html.strip() != "<center></center>":
-                raise robot.RobotException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
+                raise crawler.CrawlerException("第%s页 图片列表匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         else:
             result["image_url_list"] += map(str, image_url_list)
         # 判断是不是最后一页
@@ -79,20 +79,20 @@ def get_image_url(image_url):
     return image_url.replace("/[page]", "/")
 
 
-class MeiTuLu(robot.Robot):
+class MeiTuLu(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件，获取上一次的album id
         album_id = 1
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
-            if not robot.is_integer(file_save_info):
+            if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             album_id = int(file_save_info)
@@ -102,7 +102,7 @@ class MeiTuLu(robot.Robot):
             # 获取图集首页
             try:
                 index_response = get_index_page()
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error("图集首页解析失败，原因：%s" % e.message)
                 raise
 
@@ -116,7 +116,7 @@ class MeiTuLu(robot.Robot):
                 # 获取相册
                 try:
                     album_pagination_response = get_one_page_album(album_id)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
@@ -150,7 +150,7 @@ class MeiTuLu(robot.Robot):
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

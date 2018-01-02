@@ -38,7 +38,7 @@ CONFIG_ANALYSIS_MODE_BOOLEAN = 2
 CONFIG_ANALYSIS_MODE_PATH = 3
 
 
-class Robot(object):
+class Crawler(object):
     total_image_count = 0
     total_video_count = 0
     print_function = None
@@ -293,7 +293,7 @@ class DownloadThread(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.account_info = account_info
-        if isinstance(main_thread, Robot):
+        if isinstance(main_thread, Crawler):
             self.main_thread = main_thread
             self.thread_lock = main_thread.thread_lock
         else:
@@ -318,7 +318,7 @@ class DownloadThread(threading.Thread):
             path.delete_dir_or_file(temp_path)
 
 
-class RobotException(SystemExit):
+class CrawlerException(SystemExit):
     def __init__(self, msg=""):
         SystemExit.__init__(self, 1)
         self.exception_message = msg

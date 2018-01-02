@@ -22,7 +22,7 @@ def get_one_page_photo(page_count):
         "image_info_list": [],  # 全部图片信息
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
     photo_list_selector = pq(photo_pagination_response.data.decode("UTF-8")).find("#wrapper .row .photo")
     for photo_index in range(0, photo_list_selector.size()):
         photo_selector = photo_list_selector.eq(photo_index)
@@ -36,43 +36,43 @@ def get_one_page_photo(page_count):
         # 获取tweet id
         tweet_url = photo_selector.find(".photo-link-outer a").eq(0).attr("href")
         if not tweet_url:
-            raise robot.RobotException("图片信息截取tweet地址失败\n%s" % photo_selector_html)
+            raise crawler.CrawlerException("图片信息截取tweet地址失败\n%s" % photo_selector_html)
         tweet_id = tool.find_sub_string(tweet_url.strip(), "status/")
-        if not robot.is_integer(tweet_id):
-            raise robot.RobotException("tweet地址截取tweet id失败\n%s" % tweet_url)
+        if not crawler.is_integer(tweet_id):
+            raise crawler.CrawlerException("tweet地址截取tweet id失败\n%s" % tweet_url)
         result_photo_info["tweet_id"] = int(tweet_id)
         # 获取twitter账号
         account_name = photo_selector.find(".user-info .user-name .screen-name").text()
         if not account_name:
-            raise robot.RobotException("图片信息截取twitter账号失败\n%s" % photo_selector_html)
+            raise crawler.CrawlerException("图片信息截取twitter账号失败\n%s" % photo_selector_html)
         result_photo_info["account_name"] = str(account_name).strip().replace("@", "")
         # 获取tweet发布时间
         tweet_time = photo_selector.find(".tweet-text .tweet-created-at").text().strip()
         if not tweet_time:
-            raise robot.RobotException("图片信息截取tweet发布时间失败\n%s" % photo_selector_html)
+            raise crawler.CrawlerException("图片信息截取tweet发布时间失败\n%s" % photo_selector_html)
         try:
             result_photo_info["tweet_time"] = int(time.mktime(time.strptime(str(tweet_time).strip(), "%Y-%m-%d %H:%M:%S")))
         except ValueError:
-            raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % tweet_time)
+            raise crawler.CrawlerException("tweet发布时间文本格式不正确\n%s" % tweet_time)
         # 获取图片地址
         image_list_selector = photo_selector.find(".photo-link-outer a img")
         for image_index in range(0, image_list_selector.size()):
             image_url = image_list_selector.eq(image_index).attr("src")
             if not image_url:
-                raise robot.RobotException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
+                raise crawler.CrawlerException("图片列表截取图片地址失败\n%s" % image_list_selector.eq(image_index).html())
             result_photo_info["image_url_list"].append(str(image_url).strip())
         result["image_info_list"].append(result_photo_info)
     return result
 
 
-class Jigadori(robot.Robot):
+class Jigadori(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_SET_PROXY: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件
@@ -80,7 +80,7 @@ class Jigadori(robot.Robot):
         save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
-            if len(file_save_info) >= 2 and robot.is_integer(file_save_info[0]) and robot.is_integer(file_save_info[1]):
+            if len(file_save_info) >= 2 and crawler.is_integer(file_save_info[0]) and crawler.is_integer(file_save_info[1]):
                 save_info = file_save_info
             else:
                 log.error("存档内数据格式不正确")
@@ -101,7 +101,7 @@ class Jigadori(robot.Robot):
                 # 获取一页图片
                 try:
                     photo_pagination_response = get_one_page_photo(page_count)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error("第%s页图片解析失败，原因：%s" % (page_count, e.message))
                     raise
 
@@ -154,7 +154,7 @@ class Jigadori(robot.Robot):
                         log.step("第%s张图片下载成功" % image_index)
                         image_index += 1
                     else:
-                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (image_index, image_info["account_name"], image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (image_index, image_info["account_name"], image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                 # tweet内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加

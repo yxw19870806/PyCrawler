@@ -28,27 +28,27 @@ def get_one_page_post(account_id, timestamp):
         "post_info_list": [],  # 全部作品信息
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
-    if not robot.check_sub_key(("code",), index_response.json_data):
-        raise robot.RobotException("返回信息'code'字段不存在\n%s" % index_response.json_data)
-    if not robot.is_integer(index_response.json_data["code"]):
-        raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % index_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+    if not crawler.check_sub_key(("code",), index_response.json_data):
+        raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % index_response.json_data)
+    if not crawler.is_integer(index_response.json_data["code"]):
+        raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % index_response.json_data)
     if int(index_response.json_data["code"]) != 200:
-        raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % index_response.json_data)
-    if not robot.check_sub_key(("result",), index_response.json_data):
-        raise robot.RobotException("返回信息'result'字段不存在\n%s" % index_response.json_data)
+        raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % index_response.json_data)
+    if not crawler.check_sub_key(("result",), index_response.json_data):
+        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % index_response.json_data)
     for post_info in index_response.json_data["result"]:
         result_post_info = {
             "post_id": None,  # 作品id
             "post_time": None,  # 作品时间
         }
-        if not robot.check_sub_key(("_id",), post_info):
-            raise robot.RobotException("作品信息'_id'字段不存在\n%s" % post_info)
+        if not crawler.check_sub_key(("_id",), post_info):
+            raise crawler.CrawlerException("作品信息'_id'字段不存在\n%s" % post_info)
         result_post_info["post_id"] = str(post_info["_id"])
-        if not robot.check_sub_key(("createdAt",), post_info):
-            raise robot.RobotException("作品信息'createdAt'字段不存在\n%s" % post_info)
-        if not robot.is_integer(post_info["createdAt"]):
-            raise robot.RobotException("作品信息'createdAt'字段类型不正确\n%s" % post_info)
+        if not crawler.check_sub_key(("createdAt",), post_info):
+            raise crawler.CrawlerException("作品信息'createdAt'字段不存在\n%s" % post_info)
+        if not crawler.is_integer(post_info["createdAt"]):
+            raise crawler.CrawlerException("作品信息'createdAt'字段类型不正确\n%s" % post_info)
         result_post_info["post_time"] = int(post_info["createdAt"])
         result["post_info_list"].append(result_post_info)
     return result
@@ -63,24 +63,24 @@ def get_post_page(post_id):
         "video_url_list": [],  # 全部视频地址
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
-    if not robot.check_sub_key(("code",), index_response.json_data):
-        raise robot.RobotException("返回信息'code'字段不存在\n%s" % index_response.json_data)
-    if not robot.is_integer(index_response.json_data["code"]):
-        raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % index_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+    if not crawler.check_sub_key(("code",), index_response.json_data):
+        raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % index_response.json_data)
+    if not crawler.is_integer(index_response.json_data["code"]):
+        raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % index_response.json_data)
     if int(index_response.json_data["code"]) != 200:
-        raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % index_response.json_data)
-    if not robot.check_sub_key(("result",), index_response.json_data):
-        raise robot.RobotException("返回信息'result'字段不存在\n%s" % index_response.json_data)
-    if not robot.check_sub_key(("pictures", "imageCount", "videoCount"), index_response.json_data["result"]):
-        raise robot.RobotException("返回信息'pictures'、'imageCount'或'videoCount'字段不存在\n%s" % index_response.json_data)
+        raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % index_response.json_data)
+    if not crawler.check_sub_key(("result",), index_response.json_data):
+        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % index_response.json_data)
+    if not crawler.check_sub_key(("pictures", "imageCount", "videoCount"), index_response.json_data["result"]):
+        raise crawler.CrawlerException("返回信息'pictures'、'imageCount'或'videoCount'字段不存在\n%s" % index_response.json_data)
     for media_info in index_response.json_data["result"]["pictures"]:
-        if not robot.check_sub_key(("url",), media_info):
-            raise robot.RobotException("返回信息'url'字段不存在\n%s" % media_info)
-        if not robot.check_sub_key(("type",), media_info):
-            raise robot.RobotException("返回信息'type'字段不存在\n%s" % media_info)
-        if not robot.is_integer(media_info["type"]):
-            raise robot.RobotException("返回信息'type'字段类型不正确\n%s" % media_info)
+        if not crawler.check_sub_key(("url",), media_info):
+            raise crawler.CrawlerException("返回信息'url'字段不存在\n%s" % media_info)
+        if not crawler.check_sub_key(("type",), media_info):
+            raise crawler.CrawlerException("返回信息'type'字段不存在\n%s" % media_info)
+        if not crawler.is_integer(media_info["type"]):
+            raise crawler.CrawlerException("返回信息'type'字段类型不正确\n%s" % media_info)
         media_type = int(media_info["type"])
         if media_type == 0:
             result["image_url_list"].append(str(media_info["url"]))
@@ -88,11 +88,11 @@ def get_post_page(post_id):
             if media_info["url"][0] != "?":
                 result["video_url_list"].append(str(media_info["url"]))
             else:
-                if not robot.check_sub_key(("thum",), media_info):
-                    raise robot.RobotException("返回信息'thum'字段不存在\n%s" % media_info)
+                if not crawler.check_sub_key(("thum",), media_info):
+                    raise crawler.CrawlerException("返回信息'thum'字段不存在\n%s" % media_info)
                 result["image_url_list"].append(str(media_info["thum"]))
         else:
-            raise robot.RobotException("返回信息'type'字段取值不正确\n%s" % media_info)
+            raise crawler.CrawlerException("返回信息'type'字段取值不正确\n%s" % media_info)
     return result
 
 
@@ -106,26 +106,26 @@ def check_invalid(file_path):
     return False
 
 
-class PrPr(robot.Robot):
+class PrPr(crawler.Crawler):
     def __init__(self):
         global IS_STEP_INVALID_RESOURCE
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_APP_CONFIG: (
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_APP_CONFIG: (
                 os.path.realpath("config.ini"),
-                ("IS_STEP_INVALID_RESOURCE", False, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+                ("IS_STEP_INVALID_RESOURCE", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
             ),
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         IS_STEP_INVALID_RESOURCE = self.app_config["IS_STEP_INVALID_RESOURCE"]
 
         # 解析存档文件
         # account_id last_post_time
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -154,14 +154,14 @@ class PrPr(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) > 2 and self.account_info[2]:
             self.account_name = self.account_info[2]
@@ -183,7 +183,7 @@ class Download(robot.DownloadThread):
             # 获取一页作品
             try:
                 post_pagination_response = get_one_page_post(self.account_id, timestamp)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 
@@ -211,7 +211,7 @@ class Download(robot.DownloadThread):
         # 获取指定作品
         try:
             blog_response = get_post_page(post_info["post_id"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 作品%s解析失败，原因：%s" % (post_info["post_id"], e.message))
             raise
 
@@ -243,7 +243,7 @@ class Download(robot.DownloadThread):
                         log.step(self.account_name + " 作品%s 第%s张图片 下载成功" % (post_info["post_id"], image_index))
                         image_index += 1
                 else:
-                    log.error(self.account_name + " 作品%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 作品%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 视频下载
         video_index = 1
@@ -268,7 +268,7 @@ class Download(robot.DownloadThread):
                         log.step(self.account_name + " 作品%s 第%s个视频下载成功" % (post_info["post_id"], video_index))
                         video_index += 1
                 else:
-                    log.error(self.account_name + " 作品%s 第%s个视频 %s 下载失败，原因：%s" % (post_info["post_id"], video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 作品%s 第%s个视频 %s 下载失败，原因：%s" % (post_info["post_id"], video_index, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

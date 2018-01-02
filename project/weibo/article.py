@@ -34,16 +34,16 @@ def get_one_page_article(page_id, page_count):
     }
     article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, is_auto_redirect=False)
     if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(article_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(article_pagination_response.status))
     # 截取文章数据
     article_list_html = tool.find_sub_string(article_pagination_response.data, '"html":"', '"})')
     article_data = article_list_html.replace("\\t", "").replace("\\n", "").replace("\\r", "")
     if not article_data:
-        raise robot.RobotException("页面截取文章预信息失败\n%s" % article_pagination_response.data)
+        raise crawler.CrawlerException("页面截取文章预信息失败\n%s" % article_pagination_response.data)
     # 文章分组
     preview_article_data_list = re.findall("<li([\S|\s]*?)<\\\\/li>", article_data)
     if len(preview_article_data_list) == 0:
-        raise robot.RobotException("文章分组失败\n%s" % article_data)
+        raise crawler.CrawlerException("文章分组失败\n%s" % article_data)
     for preview_article_data in preview_article_data_list:
         result_article_info = {
             "article_time": None,  # 文章发布时间
@@ -52,15 +52,15 @@ def get_one_page_article(page_id, page_count):
         # 获取文章上传时间
         article_time = tool.find_sub_string(preview_article_data, '<span class=\\"subinfo S_txt2\\">', "<\/span>")
         if not article_time:
-            raise robot.RobotException("文章预览截取文章时间失败\n%s" % preview_article_data)
+            raise crawler.CrawlerException("文章预览截取文章时间失败\n%s" % preview_article_data)
         try:
             result_article_info["article_time"] = int(time.mktime(time.strptime(article_time, "%Y 年 %m 月 %d 日 %H:%M")))
         except ValueError:
-            raise robot.RobotException("tweet发布时间文本格式不正确\n%s" % article_time)
+            raise crawler.CrawlerException("tweet发布时间文本格式不正确\n%s" % article_time)
         # 获取文章地址
         article_path = tool.find_sub_string(preview_article_data, '<a target=\\"_blank\\" href=\\"', '\\">')
         if not article_time:
-            raise robot.RobotException("文章预览截取文章地址失败\n%s" % preview_article_data)
+            raise crawler.CrawlerException("文章预览截取文章地址失败\n%s" % preview_article_data)
         result_article_info["article_url"] = "http://weibo.com" + str(article_path).replace("\\/", "/").replace("&amp;", "&")
         result["article_info_list"].append(result_article_info)
     # 检测是否还有下一页
@@ -81,7 +81,7 @@ def get_article_page(article_url):
         "top_image_url": None,  # 文章顶部图片
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(article_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(article_response.status))
     # 判断是否需要购买
     result["is_pay"] = article_response.data.find("购买继续阅读") >= 0
     article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
@@ -91,7 +91,7 @@ def get_article_page(article_url):
     else:
         article_id = tool.find_sub_string(article_url, "http://weibo.com/p/", "?mod=zwenzhang")
         if not article_id:
-            raise robot.RobotException("文章地址截取文章类型失败\n%s" % article_url)
+            raise crawler.CrawlerException("文章地址截取文章类型失败\n%s" % article_url)
         article_type = "p"
         result["article_id"] = "p_" + article_id
     # 获取文章标题
@@ -100,7 +100,7 @@ def get_article_page(article_url):
     else:  # p
         result["article_title"] = tool.find_sub_string(article_response.data, '<h1 class=\\"title\\">', "<\\/h1>")
     if not result["article_title"]:
-        raise robot.RobotException("页面截取文章标题失败\n%s" % article_url)
+        raise crawler.CrawlerException("页面截取文章标题失败\n%s" % article_url)
     # 获取文章顶部图片地址
     article_top_image_html = tool.find_sub_string(article_response.data, '<div class="main_toppic">', '<div class="main_editor')
     if article_top_image_html:
@@ -115,7 +115,7 @@ def get_article_page(article_url):
     else:  # p
         article_body = tool.find_sub_string(article_response.data, '{"ns":"pl.content.longFeed.index"', "</script>").replace("\\", "")
     if not article_body:
-        raise robot.RobotException("页面截取文章正文失败\n%s" % article_response.data)
+        raise crawler.CrawlerException("页面截取文章正文失败\n%s" % article_response.data)
     image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
     for image_url in image_url_list:
         # 无效地址
@@ -127,25 +127,25 @@ def get_article_page(article_url):
     return result
 
 
-class Article(robot.Robot):
+class Article(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_GET_COOKIE: {
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_GET_COOKIE: {
                 ".sina.com.cn": (),
                 ".login.sina.com.cn": (),
             },
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)
 
          # 解析存档文件
         # account_id  last_article_time  (account_name)
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
         if not weiboCommon.check_login(COOKIE_INFO):
@@ -156,7 +156,7 @@ class Article(robot.Robot):
             # 再次检测登录状态
             if not weiboCommon.check_login(COOKIE_INFO):
                 while True:
-                    input_str = output.console_input(robot.get_time() + " 没有检测到登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
+                    input_str = output.console_input(crawler.get_time() + " 没有检测到登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
                     input_str = input_str.lower()
                     if input_str in ["y", "yes"]:
                         COOKIE_INFO["SUB"] = tool.generate_random_string(50)
@@ -191,14 +191,14 @@ class Article(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
             self.account_name = self.account_info[2]
@@ -211,7 +211,7 @@ class Download(robot.DownloadThread):
         # 获取账号首页
         try:
             account_index_response = weiboCommon.get_account_index_page(self.account_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
             raise
 
@@ -224,7 +224,7 @@ class Download(robot.DownloadThread):
             # 获取一页文章预览页面
             try:
                 article_pagination_response = get_one_page_article(account_index_response["account_page_id"], page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页文章解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -251,7 +251,7 @@ class Download(robot.DownloadThread):
         # 获取文章页面内容
         try:
             article_response = get_article_page(article_info["article_url"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 文章 %s 解析失败，原因：%s" % (article_info["article_url"], e.message))
             raise
 
@@ -285,7 +285,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_index))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 文章顶部图片
         if article_response["top_image_url"] is not None:
@@ -303,7 +303,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 文章内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

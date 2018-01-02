@@ -28,11 +28,11 @@ def get_one_page_favorite(page_count):
         "is_over": False,  # 是不是最后一页收藏
     }
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(favorite_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(favorite_pagination_response.status))
     favorite_data_html = tool.find_sub_string(favorite_pagination_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
     favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
     if not favorite_data_html:
-        raise robot.RobotException("页面截取收藏信息失败\n%s" % favorite_data_html)
+        raise crawler.CrawlerException("页面截取收藏信息失败\n%s" % favorite_data_html)
     # 替换全部转义斜杠以及没有用的换行符等
     html_data = favorite_data_html.replace("\\\\", chr(1))
     for replace_string in ["\\n", "\\r", "\\t", "\\"]:
@@ -41,9 +41,9 @@ def get_one_page_favorite(page_count):
     # 解析页面
     children_selector = pq(html_data.decode("UTF-8")).find('div.WB_feed').children()
     if children_selector.size() == 0:
-        raise robot.RobotException("匹配收藏信息失败\n%s" % favorite_data_html)
+        raise crawler.CrawlerException("匹配收藏信息失败\n%s" % favorite_data_html)
     if children_selector.size() == 1:
-        raise robot.RobotException("没有收藏了")
+        raise crawler.CrawlerException("没有收藏了")
     # 解析日志id和图片地址
     for i in range(0, children_selector.size() - 1):
         feed_selector = children_selector.eq(i)
@@ -56,8 +56,8 @@ def get_one_page_favorite(page_count):
         }
         # 解析日志id
         blog_id = feed_selector.attr("mid")
-        if not robot.is_integer(blog_id):
-            raise robot.RobotException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
+        if not crawler.is_integer(blog_id):
+            raise crawler.CrawlerException("收藏信息解析微博id失败\n%s" % feed_selector.html().encode("UTF-8"))
         result_blog_info["blog_id"] = str(blog_id)
         # WB_text       微博文本
         # WB_media_wrap 微博媒体（图片）
@@ -91,19 +91,19 @@ def get_one_page_favorite(page_count):
     return result
 
 
-class Favorite(robot.Robot):
+class Favorite(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
-            robot.SYS_GET_COOKIE: {
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_GET_COOKIE: {
                 ".sina.com.cn": (),
                 ".login.sina.com.cn": (),
             },
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)
@@ -127,7 +127,7 @@ class Favorite(robot.Robot):
 
             try:
                 favorite_pagination_response = get_one_page_favorite(page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error("第%s页收藏解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -151,7 +151,7 @@ class Favorite(robot.Robot):
                             image_count += 1
                             self.total_image_count += 1
                     else:
-                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
             if favorite_pagination_response["is_over"]:
                 is_over = True

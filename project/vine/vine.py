@@ -15,18 +15,18 @@ import traceback
 
 # 获取用户首页
 def get_account_index_page(account_id):
-    if not robot.is_integer(account_id):
+    if not crawler.is_integer(account_id):
         # 获取账号id
         account_vanity_url = "https://vine.co/api/users/profiles/vanity/%s" % account_id
         account_vanity_response = net.http_request(account_vanity_url, method="GET", json_decode=True)
         if account_vanity_response.status == 404:
-            raise robot.RobotException("账号不存在")
+            raise crawler.CrawlerException("账号不存在")
         elif account_vanity_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException("账号ID页，%s" % robot.get_http_request_failed_reason(account_vanity_response.status))
-        if not robot.check_sub_key(("data",), account_vanity_response.json_data):
-            raise robot.RobotException("账号ID页返回信息'data'字段不存在\n%s" % account_vanity_response.json_data)
-        if not robot.check_sub_key(("userIdStr",), account_vanity_response.json_data["data"]):
-            raise robot.RobotException("账号ID页返回信息'userIdStr'字段不存在\n%s" % account_vanity_response.json_data)
+            raise crawler.CrawlerException("账号ID页，%s" % crawler.get_http_request_failed_reason(account_vanity_response.status))
+        if not crawler.check_sub_key(("data",), account_vanity_response.json_data):
+            raise crawler.CrawlerException("账号ID页返回信息'data'字段不存在\n%s" % account_vanity_response.json_data)
+        if not crawler.check_sub_key(("userIdStr",), account_vanity_response.json_data["data"]):
+            raise crawler.CrawlerException("账号ID页返回信息'userIdStr'字段不存在\n%s" % account_vanity_response.json_data)
         account_id = account_vanity_response.json_data["data"]["userIdStr"]
     # 获取账号详情
     account_profile_url = "https://archive.vine.co/profiles/%s.json" % account_id
@@ -35,17 +35,17 @@ def get_account_index_page(account_id):
     }
     account_profile_response = net.http_request(account_profile_url, method="GET", json_decode=True)
     if account_profile_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException("账号详情页，%s" % robot.get_http_request_failed_reason(account_profile_response.status))
-    if not robot.check_sub_key(("private", "postCount", "posts"), account_profile_response.json_data):
-        raise robot.RobotException("账号详情页返回信息'private'、'postCount'或'posts'字段不存在\n%s" % account_profile_response.json_data)
-    if not robot.is_integer(account_profile_response.json_data["private"]) or int(account_profile_response.json_data["private"]) != 0:
-        raise robot.RobotException("账号详情页非公开\n%s" % account_profile_response.json_data)
-    if not robot.is_integer(account_profile_response.json_data["postCount"]):
-        raise robot.RobotException("账号详情页返回信息'postCount'字段类型不正确\n%s" % account_profile_response.json_data)
+        raise crawler.CrawlerException("账号详情页，%s" % crawler.get_http_request_failed_reason(account_profile_response.status))
+    if not crawler.check_sub_key(("private", "postCount", "posts"), account_profile_response.json_data):
+        raise crawler.CrawlerException("账号详情页返回信息'private'、'postCount'或'posts'字段不存在\n%s" % account_profile_response.json_data)
+    if not crawler.is_integer(account_profile_response.json_data["private"]) or int(account_profile_response.json_data["private"]) != 0:
+        raise crawler.CrawlerException("账号详情页非公开\n%s" % account_profile_response.json_data)
+    if not crawler.is_integer(account_profile_response.json_data["postCount"]):
+        raise crawler.CrawlerException("账号详情页返回信息'postCount'字段类型不正确\n%s" % account_profile_response.json_data)
     if not isinstance(account_profile_response.json_data["posts"], list):
-        raise robot.RobotException("账号详情页返回信息'posts'字段类型不正确\n%s" % account_profile_response.json_data)
+        raise crawler.CrawlerException("账号详情页返回信息'posts'字段类型不正确\n%s" % account_profile_response.json_data)
     if int(account_profile_response.json_data["postCount"]) != len(account_profile_response.json_data["posts"]):
-        raise robot.RobotException("账号详情页视频数量解析错误\n%s" % account_profile_response.json_data)
+        raise crawler.CrawlerException("账号详情页视频数量解析错误\n%s" % account_profile_response.json_data)
     result["video_id_list"] = map(str, account_profile_response.json_data["posts"])
     return result
 
@@ -63,12 +63,12 @@ def get_video_page(video_id):
     if video_page_response.status == 403:
         result["is_skip"] = True
     elif video_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_page_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_page_response.status))
     else:
-        if not robot.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_page_response.json_data):
-            raise robot.RobotException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_page_response.json_data)
-        if not robot.is_integer(video_page_response.json_data["postId"]):
-            raise robot.RobotException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
+        if not crawler.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_page_response.json_data):
+            raise crawler.CrawlerException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_page_response.json_data)
+        if not crawler.is_integer(video_page_response.json_data["postId"]):
+            raise crawler.CrawlerException("返回信息'postId'字段类型不正确\n%s" % video_page_response.json_data)
         # 获取视频地址
         result["video_url"] = str(video_page_response.json_data["videoUrl"])
         # 获取视频id（数字）
@@ -76,17 +76,17 @@ def get_video_page(video_id):
     return result
 
 
-class Vine(robot.Robot):
+class Vine(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_SET_PROXY: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_SET_PROXY: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id  video_count video_string_id  video_number_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -115,16 +115,16 @@ class Vine(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     is_find = False  # 是不是有找到上次存档文件所指的视频id
 
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 5 and self.account_info[4]:
             self.account_name = self.account_info[4]
@@ -137,7 +137,7 @@ class Download(robot.DownloadThread):
         # 获取账号信息，包含全部视频
         try:
             account_index_page_response = get_account_index_page(self.account_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 账号首页解析失败，原因：%s" % e.message)
             raise
 
@@ -161,7 +161,7 @@ class Download(robot.DownloadThread):
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
             raise
 
@@ -189,7 +189,7 @@ class Download(robot.DownloadThread):
             # 设置临时目录
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加

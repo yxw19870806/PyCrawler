@@ -21,7 +21,7 @@ def get_one_page_photo(page_count):
         "image_info_list": [],  # 页面解析出的图片信息列表
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
     # 获取页面中的影片数量
     result["page_video_count"] = photo_pagination_response.data.count('<div class="item pull-left">')
     # 获取页面中的全部图片信息列表
@@ -56,13 +56,13 @@ def check_invalid_image(file_path):
     return False
 
 
-class ABase(robot.Robot):
+class ABase(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         self.thread_count = 50
 
@@ -79,7 +79,7 @@ class ABase(robot.Robot):
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error("第%s页解析失败，原因：%s" % (page_count, e.message))
                 raise 
 
@@ -157,7 +157,7 @@ class Download(threading.Thread):
                 with self.thread_lock:
                     self.main_thread.total_image_count += 1
         else:
-            log.error("%s 封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error("%s 封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
 
 if __name__ == "__main__":

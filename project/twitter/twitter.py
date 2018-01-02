@@ -26,15 +26,15 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
-            raise robot.RobotException("私密账号，需要关注才能访问")
+            raise crawler.CrawlerException("私密账号，需要关注才能访问")
         account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if not robot.is_integer(account_id):
-            raise robot.RobotException("页面截取用户id失败\n%s" % account_index_response.data)
+        if not crawler.is_integer(account_id):
+            raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
     elif account_index_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     return result
 
 
@@ -54,19 +54,19 @@ def get_one_page_media(account_name, position_blog_id):
         "next_page_position": None  # 下一页指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
-    if not robot.check_sub_key(("has_more_items",), media_pagination_response.json_data):
-        raise robot.RobotException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
-    if not robot.check_sub_key(("items_html",), media_pagination_response.json_data):
-        raise robot.RobotException("返回信息'items_html'字段不存在\n%s" % media_pagination_response.json_data)
-    if not robot.check_sub_key(("new_latent_count",), media_pagination_response.json_data):
-        raise robot.RobotException("返回信息'new_latent_count'字段不存在\n%s" % media_pagination_response.json_data)
-    if not robot.is_integer(media_pagination_response.json_data["new_latent_count"]):
-        raise robot.RobotException("返回信息'new_latent_count'字段类型不正确\n%s" % media_pagination_response.json_data)
-    if not robot.check_sub_key(("min_position",), media_pagination_response.json_data):
-        raise robot.RobotException("返回信息'min_position'字段不存在\n%s" % media_pagination_response.json_data)
-    if not robot.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
-        raise robot.RobotException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(media_pagination_response.status))
+    if not crawler.check_sub_key(("has_more_items",), media_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
+    if not crawler.check_sub_key(("items_html",), media_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'items_html'字段不存在\n%s" % media_pagination_response.json_data)
+    if not crawler.check_sub_key(("new_latent_count",), media_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'new_latent_count'字段不存在\n%s" % media_pagination_response.json_data)
+    if not crawler.is_integer(media_pagination_response.json_data["new_latent_count"]):
+        raise crawler.CrawlerException("返回信息'new_latent_count'字段类型不正确\n%s" % media_pagination_response.json_data)
+    if not crawler.check_sub_key(("min_position",), media_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'min_position'字段不存在\n%s" % media_pagination_response.json_data)
+    if not crawler.is_integer(media_pagination_response.json_data["min_position"]) and media_pagination_response.json_data["min_position"] is not None:
+        raise crawler.CrawlerException("返回信息'min_position'字段类型不正确\n%s" % media_pagination_response.json_data)
     # 没有任何内容
     if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
         result["is_skip"] = True
@@ -84,9 +84,9 @@ def get_one_page_media(account_name, position_blog_id):
             else:
                 tweet_data_list.append(tweet_data)
         if len(tweet_data_list) == 0:
-            raise robot.RobotException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
+            raise crawler.CrawlerException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
         if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
-            raise robot.RobotException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
+            raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
         for tweet_data in tweet_data_list:
             result_media_info = {
                 "blog_id": None,  # 日志id
@@ -95,8 +95,8 @@ def get_one_page_media(account_name, position_blog_id):
             }
             # 获取日志id
             blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-            if not robot.is_integer(blog_id):
-                raise robot.RobotException("tweet内容中截取tweet id失败\n%s" % tweet_data)
+            if not crawler.is_integer(blog_id):
+                raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
             result_media_info["blog_id"] = str(blog_id)
             # 获取图片地址
             image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
@@ -127,7 +127,7 @@ def get_video_play_page(tweet_id):
             file_url_host = urllib.splithost(file_url_path)[0]
             m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise robot.RobotException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
+                raise crawler.CrawlerException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.get_http_request_failed_reason(m3u8_file_response.status)))
             # 是否包含的是m3u8文件（不同分辨率）
             include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
             if len(include_m3u8_file_list) > 0:
@@ -135,12 +135,12 @@ def get_video_play_page(tweet_id):
                 m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
                 m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
                 if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise robot.RobotException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, robot.get_http_request_failed_reason(m3u8_file_response.status)))
+                    raise crawler.CrawlerException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.get_http_request_failed_reason(m3u8_file_response.status)))
 
             # 包含分P视频文件名的m3u8文件
             ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
             if len(ts_url_find) == 0:
-                raise robot.RobotException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
+                raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
             result["video_url"] = []
             for ts_file_path in ts_url_find:
                 result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
@@ -153,38 +153,38 @@ def get_video_play_page(tweet_id):
                 # 直接包含视频播放地址的处理
                 vmap_file_url = tool.find_sub_string(video_play_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
                 if not vmap_file_url:
-                    raise robot.RobotException("页面截取视频播放地址失败\n%s" % video_play_response.data)
+                    raise crawler.CrawlerException("页面截取视频播放地址失败\n%s" % video_play_response.data)
                 vmap_file_url = vmap_file_url.replace("\\/", "/")
                 vmap_file_response = net.http_request(vmap_file_url, method="GET")
                 if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise robot.RobotException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, robot.get_http_request_failed_reason(vmap_file_response.status)))
+                    raise crawler.CrawlerException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, crawler.get_http_request_failed_reason(vmap_file_response.status)))
                 video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
                 if not video_url:
-                    raise robot.RobotException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
+                    raise crawler.CrawlerException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
                 result["video_url"] = str(video_url.replace("\\/", "/"))
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
     return result
 
 
-class Twitter(robot.Robot):
+class Twitter(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_SET_PROXY: True,
-            robot.SYS_GET_COOKIE: {".twitter.com": ()}
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_GET_COOKIE: {".twitter.com": ()}
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
         # account_name  image_count  last_image_time
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -213,16 +213,16 @@ class Twitter(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     init_position_blog_id = "999999999999999999"
 
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
@@ -239,7 +239,7 @@ class Download(robot.DownloadThread):
             # 获取指定时间点后的一页图片信息
             try:
                 media_pagination_response = get_one_page_media(self.account_name, position_blog_id)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " position %s后的一页媒体信息解析失败，原因：%s" % (position_blog_id, e.message))
                 raise
 
@@ -286,7 +286,7 @@ class Download(robot.DownloadThread):
                 elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
                     log.error(self.account_name + " 第%s张图片 %s 已被删除，跳过" % (image_index, image_url))
                 else:
-                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 视频下载
         video_index = int(self.account_info[3]) + 1
@@ -295,7 +295,7 @@ class Download(robot.DownloadThread):
             # 获取视频播放地址
             try:
                 video_play_response = get_video_play_page(media_info["blog_id"])
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 日志%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
                 raise
 
@@ -331,7 +331,7 @@ class Download(robot.DownloadThread):
         try:
             try:
                 account_index_response = get_account_index_page(self.account_name)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 

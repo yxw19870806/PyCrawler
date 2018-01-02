@@ -24,11 +24,11 @@ def get_one_page_audio(account_id, page_count):
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
     }
     if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(audit_pagination_response.status))
-    if not robot.check_sub_key(("res", "html"), audit_pagination_response.json_data):
-        raise robot.RobotException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audit_pagination_response.status))
+    if not crawler.check_sub_key(("res", "html"), audit_pagination_response.json_data):
+        raise crawler.CrawlerException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
     if audit_pagination_response.json_data["res"] is not True:
-        raise robot.RobotException("返回数据'res'字段取值不正确\n%s" % audit_pagination_response.json_data)
+        raise crawler.CrawlerException("返回数据'res'字段取值不正确\n%s" % audit_pagination_response.json_data)
     audio_list_selector = pq(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
     for audio_index in range(0, audio_list_selector.size()):
         audio_info = {
@@ -38,13 +38,13 @@ def get_one_page_audio(account_id, page_count):
         audio_selector = audio_list_selector.eq(audio_index)
         # 获取歌曲id
         audio_id = audio_selector.find(".content_wrap").attr("sound_id")
-        if not robot.is_integer(audio_id):
-            raise robot.RobotException("歌曲信息匹配歌曲id失败\n%s" % audio_list_selector.html().encode("UTF-8"))
+        if not crawler.is_integer(audio_id):
+            raise crawler.CrawlerException("歌曲信息匹配歌曲id失败\n%s" % audio_list_selector.html().encode("UTF-8"))
         audio_info["audio_id"] = str(audio_id)
         # 获取歌曲标题
         audio_title = audio_selector.find(".sound_title").attr("title")
         if not audio_title:
-            raise robot.RobotException("歌曲信息匹配歌曲标题失败\n%s" % audio_list_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("歌曲信息匹配歌曲标题失败\n%s" % audio_list_selector.html().encode("UTF-8"))
         audio_info["audio_title"] = str(audio_title.encode("UTF-8").strip())
         result["audio_info_list"].append(audio_info)
     return result
@@ -63,17 +63,17 @@ def get_audio_info_page(audio_id):
     return result
 
 
-class XiMaLaYa(robot.Robot):
+class XiMaLaYa(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件
         # account_id  last_audio_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
@@ -101,14 +101,14 @@ class XiMaLaYa(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
             self.account_name = self.account_info[2]
@@ -130,7 +130,7 @@ class Download(robot.DownloadThread):
             # 获取一页歌曲
             try:
                 audit_pagination_response = get_one_page_audio(self.account_id, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error("第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
                 break
 
@@ -170,7 +170,7 @@ class Download(robot.DownloadThread):
         # 获取歌曲播放页
         try:
             audio_play_response = get_audio_info_page(audio_info["audio_id"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error("歌曲%s解析失败，原因：%s" % (audio_info["audio_id"], e.message))
             return
 
@@ -183,7 +183,7 @@ class Download(robot.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_id"], audio_title))
         else:
-            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_title, audio_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_title, audio_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
             return
 
         # 歌曲下载完毕

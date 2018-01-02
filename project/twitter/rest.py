@@ -20,7 +20,7 @@ token_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filenam
 
 def init():
     # 设置代理
-    robot.quicky_set_proxy()
+    crawler.quicky_set_proxy()
 
     api_key = None
     api_secret = None
@@ -37,7 +37,7 @@ def init():
             except ValueError:
                 output.print_msg("incorrect api info")
             else:
-                if robot.check_sub_key(("api_key", "api_secret"), api_info):
+                if crawler.check_sub_key(("api_key", "api_secret"), api_info):
                     is_find_api_info = True
                     api_key = api_info["api_key"]
                     api_secret = api_info["api_secret"]
@@ -74,7 +74,7 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.http_request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if response.status == net.HTTP_RETURN_CODE_SUCCEED and robot.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
+    if response.status == net.HTTP_RETURN_CODE_SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]
         return True

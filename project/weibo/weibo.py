@@ -33,58 +33,58 @@ def get_one_page_photo(account_id, page_count):
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("data",), photo_pagination_response.json_data):
-            raise robot.RobotException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)
-        if not robot.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]):
-            raise robot.RobotException("返回数据'data'字段格式不正确\n%s" % photo_pagination_response.json_data)
-        if not robot.is_integer(photo_pagination_response.json_data["data"]["total"]):
-            raise robot.RobotException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        if not crawler.check_sub_key(("data",), photo_pagination_response.json_data):
+            raise crawler.CrawlerException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)
+        if not crawler.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]):
+            raise crawler.CrawlerException("返回数据'data'字段格式不正确\n%s" % photo_pagination_response.json_data)
+        if not crawler.is_integer(photo_pagination_response.json_data["data"]["total"]):
+            raise crawler.CrawlerException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
         if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
-            raise robot.RobotException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
+            raise crawler.CrawlerException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
         for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
             result_image_info = {
                 "image_time": None,  # 图片上传时间
                 "image_url": None,  # 图片地址
             }
             # 获取图片上传时间
-            if not robot.check_sub_key(("timestamp",), image_info):
-                raise robot.RobotException("图片信息'timestamp'字段不存在\n%s" % image_info)
-            if not robot.check_sub_key(("timestamp",), image_info):
-                raise robot.RobotException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
+            if not crawler.check_sub_key(("timestamp",), image_info):
+                raise crawler.CrawlerException("图片信息'timestamp'字段不存在\n%s" % image_info)
+            if not crawler.check_sub_key(("timestamp",), image_info):
+                raise crawler.CrawlerException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
             result_image_info["image_time"] = int(image_info["timestamp"])
             # 获取图片地址
-            if not robot.check_sub_key(("pic_host", "pic_name"), image_info):
-                raise robot.RobotException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
+            if not crawler.check_sub_key(("pic_host", "pic_name"), image_info):
+                raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
             result_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
             result["image_info_list"].append(result_image_info)
         # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
         result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
     elif photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
     return result
 
 
-class Weibo(robot.Robot):
+class Weibo(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_GET_COOKIE: {
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_GET_COOKIE: {
                 ".sina.com.cn": (),
                 ".login.sina.com.cn": (),
             },
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
         # account_id  image_count  last_image_time  (account_name)
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 检测登录状态
         if not weiboCommon.check_login(COOKIE_INFO):
@@ -124,14 +124,14 @@ class Weibo(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
             self.account_name = self.account_info[3]
@@ -153,7 +153,7 @@ class Download(robot.DownloadThread):
             # 获取指定一页图片的信息
             try:
                 photo_pagination_response = get_one_page_photo(self.account_id, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -206,7 +206,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                 continue
 
         # 图片下载完毕

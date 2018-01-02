@@ -27,14 +27,14 @@ def get_account_index_page(account_id):
         "video_info_list": [],  # 所有视频信息
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
     if not all_video_info:
-        raise robot.RobotException("截取视频列表失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response.data)
     try:
         all_video_info = json.loads(all_video_info)
     except ValueError:
-        raise robot.RobotException("视频列表加载失败\n%s" % account_index_response.data)
+        raise crawler.CrawlerException("视频列表加载失败\n%s" % account_index_response.data)
     # 倒序排列，时间越晚的越前面
     all_video_info.reverse()
     for video_info in all_video_info:
@@ -42,16 +42,16 @@ def get_account_index_page(account_id):
             "video_id": None,  # 视频id
             "video_title": "",  # 视频标题
         }
-        if not robot.check_sub_key(("item_data",), video_info):
-            raise robot.RobotException("视频信息'item_data'字段不存在\n%s" % video_info)
+        if not crawler.check_sub_key(("item_data",), video_info):
+            raise crawler.CrawlerException("视频信息'item_data'字段不存在\n%s" % video_info)
         # 获取视频id
-        if not robot.check_sub_key(("video_id",), video_info["item_data"]):
-            raise robot.RobotException("视频信息'video_id'字段不存在\n%s" % video_info)
+        if not crawler.check_sub_key(("video_id",), video_info["item_data"]):
+            raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
         video_id = str(video_info["item_data"]["video_id"])
         result_video_info["video_id"] = video_id.replace("sm", "")
         # 获取视频辩题
-        if not robot.check_sub_key(("title",), video_info["item_data"]):
-            raise robot.RobotException("视频信息'video_id'字段不存在\n%s" % video_info)
+        if not crawler.check_sub_key(("title",), video_info["item_data"]):
+            raise crawler.CrawlerException("视频信息'video_id'字段不存在\n%s" % video_info)
         result_video_info["video_title"] = str(video_info["item_data"]["title"].encode("UTF-8"))
         result["video_info_list"].append(result_video_info)
     return result
@@ -65,31 +65,31 @@ def get_video_info(video_id):
         "video_url": None,  # 视频地址
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException("视频播放页访问失败，" + robot.get_http_request_failed_reason(video_play_response.status))
+        raise crawler.CrawlerException("视频播放页访问失败，" + crawler.get_http_request_failed_reason(video_play_response.status))
     video_info_string = tool.find_sub_string(video_play_response.data, 'data-api-data="', '" data-environment="')
     if not video_info_string:
-        raise robot.RobotException("视频信息截取失败\n%s" % video_play_response.data)
+        raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response.data)
     video_info_string = HTMLParser.HTMLParser().unescape(video_info_string)
     try:
         video_info = json.loads(video_info_string)
     except ValueError:
-        raise robot.RobotException("视频信息加载失败\n%s" % video_play_response.data)
-    if not robot.check_sub_key(("video",), video_info):
-        raise robot.RobotException("视频信息'video'字段不存在\n%s" % video_info)
+        raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response.data)
+    if not crawler.check_sub_key(("video",), video_info):
+        raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)
     # 旧版本，直接存放视频地址
     # http://www.nicovideo.jp/watch/sm7647845
-    if robot.check_sub_key(("smileInfo",), video_info["video"]):
-        if not robot.check_sub_key(("url",), video_info["video"]["smileInfo"]):
-            raise robot.RobotException("视频信息'url'字段不存在\n%s" % video_info)
+    if crawler.check_sub_key(("smileInfo",), video_info["video"]):
+        if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
+            raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
         result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
         return result
     # 新版本，需要再次访问获取视频地址
-    if not robot.check_sub_key(("dmcInfo",), video_info["video"]):
-        raise robot.RobotException("视频信息'dmcInfo'字段不存在\n%s" % video_info)
-    if not robot.check_sub_key(("session_api",), video_info["video"]["dmcInfo"]):
-        raise robot.RobotException("视频信息'session_api'字段不存在\n%s" % video_info)
-    if not robot.check_sub_key(("player_id", "token", "signature", "recipe_id"), video_info["video"]["dmcInfo"]["session_api"]):
-        raise robot.RobotException("视频信息'player_id'、'token'、'signature'字段不存在\n%s" % video_info)
+    if not crawler.check_sub_key(("dmcInfo",), video_info["video"]):
+        raise crawler.CrawlerException("视频信息'dmcInfo'字段不存在\n%s" % video_info)
+    if not crawler.check_sub_key(("session_api",), video_info["video"]["dmcInfo"]):
+        raise crawler.CrawlerException("视频信息'session_api'字段不存在\n%s" % video_info)
+    if not crawler.check_sub_key(("player_id", "token", "signature", "recipe_id"), video_info["video"]["dmcInfo"]["session_api"]):
+        raise crawler.CrawlerException("视频信息'player_id'、'token'、'signature'字段不存在\n%s" % video_info)
     api_url = "http://api.dmc.nico:2805/api/sessions?_format=json"
     post_data = {
         "session": {
@@ -150,23 +150,23 @@ def get_video_info(video_id):
     return api_response
 
 
-class NicoNico(robot.Robot):
+class NicoNico(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_SET_PROXY: True,
-            robot.SYS_GET_COOKIE: {".nicovideo.jp": ()},
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_GET_COOKIE: {".nicovideo.jp": ()},
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
         net.set_proxy("127.0.0.1", "8888")
         COOKIE_INFO = self.cookie_value
 
     def main(self):
         # 解析存档文件
         # account_id  last_video_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 循环下载每个id
         main_thread_count = threading.activeCount()
@@ -194,14 +194,14 @@ class NicoNico(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3 and self.account_info[2]:
             self.account_name = self.account_info[2]
@@ -214,7 +214,7 @@ class Download(robot.DownloadThread):
         # 获取视频信息列表
         try:
             account_index_response = get_account_index_page(self.account_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频列表解析失败，原因：%s" % e.message)
             raise
 
@@ -234,7 +234,7 @@ class Download(robot.DownloadThread):
     def crawl_video(self, video_info):
         try:
             video_info_response = get_video_info(video_info["video_id"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
             return
 
@@ -243,7 +243,7 @@ class Download(robot.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
-            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
             return
 
         # 视频下载完毕

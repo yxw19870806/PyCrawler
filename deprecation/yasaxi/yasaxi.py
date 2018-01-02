@@ -39,51 +39,51 @@ def get_one_page_photo(account_id, cursor):
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, header_list=header_list, is_random_ip=False, json_decode=True)
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
     # 异常返回
-    if robot.check_sub_key(("meta",), photo_pagination_response.json_data) and robot.check_sub_key(("code",), photo_pagination_response.json_data["meta"]):
+    if crawler.check_sub_key(("meta",), photo_pagination_response.json_data) and crawler.check_sub_key(("code",), photo_pagination_response.json_data["meta"]):
         if photo_pagination_response.json_data["meta"]["code"] == "NoMoreDataError":
             result["is_over"] = True
         elif photo_pagination_response.json_data["meta"]["code"] == "TooManyRequests":
             time.sleep(30)
             return get_one_page_photo(account_id, cursor)
         else:
-            raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % photo_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % photo_pagination_response.json_data)
     # 正常数据返回
-    elif robot.check_sub_key(("data",), photo_pagination_response.json_data):
+    elif crawler.check_sub_key(("data",), photo_pagination_response.json_data):
         if not isinstance(photo_pagination_response.json_data["data"], list):
-            raise robot.RobotException("返回信息'data'字段类型不正确\n%s" % photo_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息'data'字段类型不正确\n%s" % photo_pagination_response.json_data)
         if len(photo_pagination_response.json_data["data"]) == 0:
-            raise robot.RobotException("返回信息'data'字段长度不正确\n%s" % photo_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息'data'字段长度不正确\n%s" % photo_pagination_response.json_data)
         for status_info in photo_pagination_response.json_data["data"]:
             result_status_info = {
                 "id": None,  # 状态id
                 "image_url_list": [],  # 全部图片地址
             }
             # 获取状态id
-            if not robot.check_sub_key(("statusId",), status_info):
-                raise robot.RobotException("状态信息'statusId'字段不存在\n%s" % status_info)
+            if not crawler.check_sub_key(("statusId",), status_info):
+                raise crawler.CrawlerException("状态信息'statusId'字段不存在\n%s" % status_info)
             result_status_info["id"] = str(status_info["statusId"])
             # 获取图片、视频地址
-            if not robot.check_sub_key(("medias",), status_info):
-                raise robot.RobotException("状态信息'medias'字段不存在\n%s" % status_info)
+            if not crawler.check_sub_key(("medias",), status_info):
+                raise crawler.CrawlerException("状态信息'medias'字段不存在\n%s" % status_info)
             if not isinstance(status_info["medias"], list):
-                raise robot.RobotException("状态信息'medias'字段类型不正确\n%s" % status_info)
+                raise crawler.CrawlerException("状态信息'medias'字段类型不正确\n%s" % status_info)
             if len(status_info["medias"]) == 0:
-                raise robot.RobotException("状态信息'medias'字段长度不正确\n%s" % status_info)
+                raise crawler.CrawlerException("状态信息'medias'字段长度不正确\n%s" % status_info)
             for media_info in status_info["medias"]:
                 # 带模糊效果的，XXXXX_b.webp
                 # https://s3-us-west-2.amazonaws.com/ysx.status.2/1080/baf196caa043a88ecf35a4652fa6017648aa5a02_b.webp?AWSAccessKeyId=AKIAJGLBMFWYTNLTZTOA&Expires=1498737886&Signature=%2F5Gmp5HRNXkGnlwJ2aulGfEqhh8%3D
                 # 原始图的，XXXXX.webp
                 # https://s3-us-west-2.amazonaws.com/ysx.status.2/1080/7ec8bccbbf0d618d67170f77054e3931220e3c14.webp?AWSAccessKeyId=AKIAJGLBMFWYTNLTZTOA&Expires=1498737886&Signature=9hvWk62TmAAPq67Rn577WU8NyYI%3D
-                if not robot.check_sub_key(("origin", "downloadUrl", "thumb"), media_info):
-                    raise robot.RobotException("媒体信息'origin'、'downloadUrl'、'thumb'字段不存在\n%s" % media_info)
-                if not robot.check_sub_key(("mediaType",), media_info):
-                    raise robot.RobotException("媒体信息'mediaType'字段不存在\n%s" % media_info)
-                if not robot.is_integer(media_info["mediaType"]):
-                    raise robot.RobotException("媒体信息'mediaType'字段不存在\n%s" % media_info)
-                if int(robot.is_integer(media_info["mediaType"])) not in [1, 2]:
-                    raise robot.RobotException("媒体信息'mediaType'取值不正确\n%s" % media_info)
+                if not crawler.check_sub_key(("origin", "downloadUrl", "thumb"), media_info):
+                    raise crawler.CrawlerException("媒体信息'origin'、'downloadUrl'、'thumb'字段不存在\n%s" % media_info)
+                if not crawler.check_sub_key(("mediaType",), media_info):
+                    raise crawler.CrawlerException("媒体信息'mediaType'字段不存在\n%s" % media_info)
+                if not crawler.is_integer(media_info["mediaType"]):
+                    raise crawler.CrawlerException("媒体信息'mediaType'字段不存在\n%s" % media_info)
+                if int(crawler.is_integer(media_info["mediaType"])) not in [1, 2]:
+                    raise crawler.CrawlerException("媒体信息'mediaType'取值不正确\n%s" % media_info)
                 # 优先使用downloadUrl
                 if media_info["downloadUrl"]:
                     result_status_info["image_url_list"].append(str(media_info["downloadUrl"]))
@@ -94,36 +94,36 @@ def get_one_page_photo(account_id, cursor):
                     # 视频，可能只有预览图
                     if int(media_info["mediaType"]) == 2:
                         if not media_info["thumb"]:
-                            raise robot.RobotException("媒体信息'downloadUrl'、'origin'、'thumb'字段都没有值\n%s" % media_info)
+                            raise crawler.CrawlerException("媒体信息'downloadUrl'、'origin'、'thumb'字段都没有值\n%s" % media_info)
                         result_status_info["image_url_list"].append(str(media_info["thumb"]))
                     # 图片，不存在origin和downloadUrl，抛出异常
                     elif int(media_info["mediaType"]) == 1:
-                        raise robot.RobotException("媒体信息'origin'和'downloadUrl'字段都没有值\n%s" % media_info)
+                        raise crawler.CrawlerException("媒体信息'origin'和'downloadUrl'字段都没有值\n%s" % media_info)
             result["status_info_list"].append(result_status_info)
         # 获取下一页指针
-        if not robot.check_sub_key(("next",), photo_pagination_response.json_data):
-            raise robot.RobotException("返回信息'next'字段不存在\n%s" % photo_pagination_response.json_data)
-        if photo_pagination_response.json_data["next"] and robot.is_integer(photo_pagination_response.json_data["next"]):
+        if not crawler.check_sub_key(("next",), photo_pagination_response.json_data):
+            raise crawler.CrawlerException("返回信息'next'字段不存在\n%s" % photo_pagination_response.json_data)
+        if photo_pagination_response.json_data["next"] and crawler.is_integer(photo_pagination_response.json_data["next"]):
             result["next_page_cursor"] = int(photo_pagination_response.json_data["next"])
     else:
-        raise robot.RobotException("返回信息'code'或'data'字段不存在\n%s" % photo_pagination_response.json_data)
+        raise crawler.CrawlerException("返回信息'code'或'data'字段不存在\n%s" % photo_pagination_response.json_data)
     return result
 
 
-class Yasaxi(robot.Robot):
+class Yasaxi(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 服务器有请求数量限制，所以取消多线程
         self.thread_count = 1
 
         # 解析存档文件
         # account_id  status_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", ""])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", ""])
 
         # 从文件中宏读取账号信息（访问token）
         if not yasaxiCommon.get_token_from_file():
@@ -162,14 +162,14 @@ class Yasaxi(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         account_id = self.account_info[0]
@@ -190,7 +190,7 @@ class Download(robot.DownloadThread):
                 # 获取一页图片
                 try:
                     photo_pagination_response = get_one_page_photo(account_id, cursor)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error(account_name + " cursor '%s'后的一页图片解析失败，原因：%s" % (cursor, e.message))
                     raise
 
@@ -225,7 +225,7 @@ class Download(robot.DownloadThread):
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 if not is_over:
                     if photo_pagination_response["next_page_cursor"] is not None:

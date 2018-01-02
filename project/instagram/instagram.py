@@ -28,13 +28,13 @@ def get_account_index_page(account_name):
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
-        if not robot.is_integer(account_id):
-            raise robot.RobotException("页面截取账号id失败\n%s" % account_index_response.data)
+        if not crawler.is_integer(account_id):
+            raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
     elif account_index_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     return result
 
 
@@ -60,23 +60,23 @@ def get_one_page_media(account_id, cursor):
         return get_one_page_media(account_id, cursor)
     elif media_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         json_data = media_pagination_response.json_data
-        if not robot.check_sub_key(("status", "data"), json_data):
-            raise robot.RobotException("返回数据'status'或'data'字段不存在\n%s" % json_data)
-        if not robot.check_sub_key(("user",), json_data["data"]):
-            raise robot.RobotException("返回数据'user'字段不存在\n%s" % json_data)
-        if not robot.check_sub_key(("edge_owner_to_timeline_media",), json_data["data"]["user"]):
-            raise robot.RobotException("返回数据'edge_owner_to_timeline_media'字段不存在\n%s" % json_data)
-        if not robot.check_sub_key(("page_info", "edges", "count"), json_data["data"]["user"]["edge_owner_to_timeline_media"]):
-            raise robot.RobotException("返回数据'page_info', 'edges', 'count'字段不存在\n%s" % json_data)
-        if not robot.check_sub_key(("end_cursor", "has_next_page",), json_data["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]):
-            raise robot.RobotException("返回数据'end_cursor', 'has_next_page'字段不存在\n%s" % json_data)
+        if not crawler.check_sub_key(("status", "data"), json_data):
+            raise crawler.CrawlerException("返回数据'status'或'data'字段不存在\n%s" % json_data)
+        if not crawler.check_sub_key(("user",), json_data["data"]):
+            raise crawler.CrawlerException("返回数据'user'字段不存在\n%s" % json_data)
+        if not crawler.check_sub_key(("edge_owner_to_timeline_media",), json_data["data"]["user"]):
+            raise crawler.CrawlerException("返回数据'edge_owner_to_timeline_media'字段不存在\n%s" % json_data)
+        if not crawler.check_sub_key(("page_info", "edges", "count"), json_data["data"]["user"]["edge_owner_to_timeline_media"]):
+            raise crawler.CrawlerException("返回数据'page_info', 'edges', 'count'字段不存在\n%s" % json_data)
+        if not crawler.check_sub_key(("end_cursor", "has_next_page",), json_data["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]):
+            raise crawler.CrawlerException("返回数据'end_cursor', 'has_next_page'字段不存在\n%s" % json_data)
         if not isinstance(json_data["data"]["user"]["edge_owner_to_timeline_media"]["edges"], list):
-            raise robot.RobotException("返回数据'edges'字段类型不正确\n%s" % json_data)
+            raise crawler.CrawlerException("返回数据'edges'字段类型不正确\n%s" % json_data)
         if len(json_data["data"]["user"]["edge_owner_to_timeline_media"]["edges"]) == 0:
             if cursor == "" and int(json_data["data"]["user"]["edge_owner_to_timeline_media"]["count"]) > 0:
-                raise robot.RobotException("私密账号，需要关注才能访问")
+                raise crawler.CrawlerException("私密账号，需要关注才能访问")
             else:
-                raise robot.RobotException("返回数据'edges'字段长度不正确\n%s" % json_data)
+                raise crawler.CrawlerException("返回数据'edges'字段长度不正确\n%s" % json_data)
         media_node = json_data["data"]["user"]["edge_owner_to_timeline_media"]
         for media_info in media_node["edges"]:
             result_media_info = {
@@ -86,13 +86,13 @@ def get_one_page_media(account_id, cursor):
                 "page_id": None,  # 媒体详情界面id
                 "time": None,  # 媒体上传时间
             }
-            if not robot.check_sub_key(("node",), media_info):
-                raise robot.RobotException("媒体信息'node'字段不存在\n%s" % media_info)
-            if not robot.check_sub_key(("display_url", "taken_at_timestamp", "__typename", "shortcode",), media_info["node"]):
-                raise robot.RobotException("媒体信息'display_url', 'taken_at_timestamp', '__typename', 'shortcode'字段不存在\n%s" % media_info)
+            if not crawler.check_sub_key(("node",), media_info):
+                raise crawler.CrawlerException("媒体信息'node'字段不存在\n%s" % media_info)
+            if not crawler.check_sub_key(("display_url", "taken_at_timestamp", "__typename", "shortcode",), media_info["node"]):
+                raise crawler.CrawlerException("媒体信息'display_url', 'taken_at_timestamp', '__typename', 'shortcode'字段不存在\n%s" % media_info)
             # GraphImage 单张图片、GraphSidecar 多张图片、GraphVideo 视频
             if media_info["node"]["__typename"] not in ["GraphImage", "GraphSidecar", "GraphVideo"]:
-                raise robot.RobotException("媒体信息'__typename'取值范围不正确\n%s" % media_info)
+                raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info)
             # 获取图片地址
             result_media_info["image_url"] = str(media_info["node"]["display_url"])
             # 判断是不是图片/视频组
@@ -108,7 +108,7 @@ def get_one_page_media(account_id, cursor):
         if media_node["page_info"]["has_next_page"]:
             result["next_page_cursor"] = str(media_node["page_info"]["end_cursor"])
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(media_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(media_pagination_response.status))
     return result
 
 
@@ -123,54 +123,54 @@ def get_media_page(page_id):
     if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         media_info_html = tool.find_sub_string(media_response.data, "window._sharedData = ", ";</script>")
         if not media_info_html:
-            robot.RobotException("页面截取媒体信息失败\n%s" % media_response.data)
+            crawler.CrawlerException("页面截取媒体信息失败\n%s" % media_response.data)
         try:
             media_info_data = json.loads(media_info_html)
         except ValueError:
-            raise robot.RobotException("媒体信息加载失败\n%s" % media_info_html)
-        if not robot.check_sub_key(("entry_data",), media_info_data):
-            raise robot.RobotException("媒体信息'entry_data'字段不存在\n%s" % media_info_data)
-        if not robot.check_sub_key(("PostPage",), media_info_data["entry_data"]):
-            raise robot.RobotException("媒体信息'PostPage'字段不存在\n%s" % media_info_data)
+            raise crawler.CrawlerException("媒体信息加载失败\n%s" % media_info_html)
+        if not crawler.check_sub_key(("entry_data",), media_info_data):
+            raise crawler.CrawlerException("媒体信息'entry_data'字段不存在\n%s" % media_info_data)
+        if not crawler.check_sub_key(("PostPage",), media_info_data["entry_data"]):
+            raise crawler.CrawlerException("媒体信息'PostPage'字段不存在\n%s" % media_info_data)
         if not (isinstance(media_info_data["entry_data"]["PostPage"], list) and len(media_info_data["entry_data"]["PostPage"]) == 1):
-            raise robot.RobotException("媒体信息'PostPage'字段类型不正确\n%s" % media_info_data)
-        if not robot.check_sub_key(("graphql",), media_info_data["entry_data"]["PostPage"][0]):
-            raise robot.RobotException("媒体信息'graphql'字段不存在\n%s" % media_info_data)
-        if not robot.check_sub_key(("shortcode_media",), media_info_data["entry_data"]["PostPage"][0]["graphql"]):
-            raise robot.RobotException("媒体信息'shortcode_media'字段不存在\n%s" % media_info_data)
-        if not robot.check_sub_key(("__typename",), media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]):
-            raise robot.RobotException("媒体信息'__typename'字段不存在\n%s" % media_info_data)
+            raise crawler.CrawlerException("媒体信息'PostPage'字段类型不正确\n%s" % media_info_data)
+        if not crawler.check_sub_key(("graphql",), media_info_data["entry_data"]["PostPage"][0]):
+            raise crawler.CrawlerException("媒体信息'graphql'字段不存在\n%s" % media_info_data)
+        if not crawler.check_sub_key(("shortcode_media",), media_info_data["entry_data"]["PostPage"][0]["graphql"]):
+            raise crawler.CrawlerException("媒体信息'shortcode_media'字段不存在\n%s" % media_info_data)
+        if not crawler.check_sub_key(("__typename",), media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]):
+            raise crawler.CrawlerException("媒体信息'__typename'字段不存在\n%s" % media_info_data)
         if media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["__typename"] not in ["GraphSidecar", "GraphVideo"]:
-            raise robot.RobotException("媒体信息'__typename'取值范围不正确\n%s" % media_info_data)
+            raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info_data)
         media_info = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]
         # 多张图片/视频
         if media_info["__typename"] == "GraphSidecar":
-            if not robot.check_sub_key(("edge_sidecar_to_children",), media_info):
-                raise robot.RobotException("媒体信息'edge_sidecar_to_children'字段不存在\n%s" % media_info)
-            if not robot.check_sub_key(("edges",), media_info["edge_sidecar_to_children"]):
-                raise robot.RobotException("媒体信息'edges'字段不存在\n%s" % media_info)
+            if not crawler.check_sub_key(("edge_sidecar_to_children",), media_info):
+                raise crawler.CrawlerException("媒体信息'edge_sidecar_to_children'字段不存在\n%s" % media_info)
+            if not crawler.check_sub_key(("edges",), media_info["edge_sidecar_to_children"]):
+                raise crawler.CrawlerException("媒体信息'edges'字段不存在\n%s" % media_info)
             if len(media_info["edge_sidecar_to_children"]["edges"]) < 2:
-                raise robot.RobotException("媒体信息'edges'长度不正确\n%s" % media_info)
+                raise crawler.CrawlerException("媒体信息'edges'长度不正确\n%s" % media_info)
             for edge in media_info["edge_sidecar_to_children"]["edges"]:
-                if not robot.check_sub_key(("node",), edge):
-                    raise robot.RobotException("媒体节点'node'字段不存在\n%s" % edge)
-                if not robot.check_sub_key(("__typename", "display_url"), edge["node"]):
-                    raise robot.RobotException("媒体节点'__typename'或'display_url'字段不存在\n%s" % edge)
+                if not crawler.check_sub_key(("node",), edge):
+                    raise crawler.CrawlerException("媒体节点'node'字段不存在\n%s" % edge)
+                if not crawler.check_sub_key(("__typename", "display_url"), edge["node"]):
+                    raise crawler.CrawlerException("媒体节点'__typename'或'display_url'字段不存在\n%s" % edge)
                 # 获取图片地址
                 result["image_url_list"].append(str(edge["node"]["display_url"]))
                 # 获取视频地址
                 if edge["node"]["__typename"] == "GraphVideo":
-                    if not robot.check_sub_key(("video_url",), edge["node"]):
-                        raise robot.RobotException("视频节点'video_url'字段不存在\n%s" % edge)
+                    if not crawler.check_sub_key(("video_url",), edge["node"]):
+                        raise crawler.CrawlerException("视频节点'video_url'字段不存在\n%s" % edge)
                     result["video_url_list"].append(str(edge["node"]["video_url"]))
         # 视频
         elif media_info["__typename"] == "GraphVideo":
             # 获取视频地址
-            if not robot.check_sub_key(("video_url",), media_info):
-                raise robot.RobotException("视频信息'video_url'字段不存在\n%s" % media_info)
+            if not crawler.check_sub_key(("video_url",), media_info):
+                raise crawler.CrawlerException("视频信息'video_url'字段不存在\n%s" % media_info)
             result["video_url_list"].append(str(media_info["video_url"]))
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(media_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(media_response.status))
     return result
 
 
@@ -182,24 +182,24 @@ def get_image_url(image_url):
     return "%s://%s//%s" % (image_url_protocol, image_url_host, image_url_name)
 
 
-class Instagram(robot.Robot):
+class Instagram(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_SET_PROXY: True,
-            robot.SYS_GET_COOKIE: {"www.instagram.com": ()},
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_GET_COOKIE: {"www.instagram.com": ()},
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
         # account_name  account_id  image_count  video_count  last_created_time
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -228,14 +228,14 @@ class Instagram(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
@@ -252,7 +252,7 @@ class Download(robot.DownloadThread):
             # 获取指定时间后的一页媒体信息
             try:
                 media_pagination_response = get_one_page_media(self.account_info[1], cursor)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " cursor '%s'的一页媒体信息解析失败，原因：%s" % (cursor, e.message))
                 raise
 
@@ -287,7 +287,7 @@ class Download(robot.DownloadThread):
                 # 获取媒体详细页
                 try:
                     media_response = get_media_page(media_info["page_id"])
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error(self.account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
                     raise
                 image_url_list = media_response["image_url_list"]
@@ -310,7 +310,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
                 else:
-                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 视频下载
         video_index = int(self.account_info[3]) + 1
@@ -321,7 +321,7 @@ class Download(robot.DownloadThread):
                 # 获取媒体详细页
                 try:
                     media_response = get_media_page(media_info["page_id"])
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error(self.account_name + " 媒体%s解析失败，原因：%s" % (media_info["page_id"], e.message))
                     raise
 
@@ -338,7 +338,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 第%s个视频下载成功" % video_index)
                     video_index += 1
                 else:
-                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -353,7 +353,7 @@ class Download(robot.DownloadThread):
             # 获取首页
             try:
                 account_index_response = get_account_index_page(self.account_name)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
                 raise
 

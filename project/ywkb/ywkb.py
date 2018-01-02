@@ -22,10 +22,10 @@ def get_one_page_photo(page_count):
     if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         article_data = tool.find_sub_string(photo_pagination_response.data, '<section id="primary"', "</section>")
         if not article_data:
-            raise robot.RobotException("页面截取正文失败\n%s" % photo_pagination_response.data)
+            raise crawler.CrawlerException("页面截取正文失败\n%s" % photo_pagination_response.data)
         image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
         if len(image_info_list) == 0:
-            raise robot.RobotException("正文匹配图片信息失败\n%s" % photo_pagination_response.data)
+            raise crawler.CrawlerException("正文匹配图片信息失败\n%s" % photo_pagination_response.data)
         image_id_2_url_list = {}
         for image_id, image_url in image_info_list:
             image_id_2_url_list[int(image_id)] = str(image_url)
@@ -38,24 +38,24 @@ def get_one_page_photo(page_count):
     elif photo_pagination_response.status == 404:
         result["is_over"] = True
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
     return result
 
 
-class YWKB(robot.Robot):
+class YWKB(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件，获取上一次的图片id
         last_image_id = 0
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
-            if not robot.is_integer(file_save_info):
+            if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             last_image_id = int(file_save_info)
@@ -72,7 +72,7 @@ class YWKB(robot.Robot):
 
                 try:
                     photo_pagination_response = get_one_page_photo(page_count)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error(" 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                     raise
 
@@ -106,7 +106,7 @@ class YWKB(robot.Robot):
                     if save_file_return["status"] == 1:
                         log.step("%s的图片下载成功" % image_info["image_id"])
                     else:
-                        log.error("%s的图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("%s的图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                         continue
                 except SystemExit:
                     log.step("提前退出")

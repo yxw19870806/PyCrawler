@@ -26,16 +26,16 @@ def get_one_page_blog(account_id, token):
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
         blog_pagination_response = net.http_request(api_url, method="POST", fields=post_data)
         if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
         script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
         if not script_data_html:
-            raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
+            raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
         try:
             script_data = json.loads(script_data_html)
         except ValueError:
-            raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
-        if not (len(script_data) == 3 and len(script_data[0]) == 3 and robot.check_sub_key(("113305009",), script_data[0][2])):
-            raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
+            raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
+        if not (len(script_data) == 3 and len(script_data[0]) == 3 and crawler.check_sub_key(("113305009",), script_data[0][2])):
+            raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
         script_data = script_data[0][2]["113305009"]
     else:
         blog_pagination_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
@@ -44,17 +44,17 @@ def get_one_page_blog(account_id, token):
             script_data_html = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
             script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
             if not script_data_html:
-                raise robot.RobotException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
+                raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
             try:
                 script_data = json.loads(script_data_html)
             except ValueError:
-                raise robot.RobotException("日志信息加载失败\n%s" % script_data_html)
+                raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
         elif blog_pagination_response.status == 400:
-            raise robot.RobotException("账号不存在")
+            raise crawler.CrawlerException("账号不存在")
         else:
-            raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
     if len(script_data) != 3:
-        raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
+        raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
     # 获取下一页token
     result["next_page_key"] = str(script_data[2])
     # 获取日志信息
@@ -66,18 +66,18 @@ def get_one_page_blog(account_id, token):
             }
             blog_data = []
             for temp_data in data:
-                if robot.check_sub_key(("113305016",), temp_data):
+                if crawler.check_sub_key(("113305016",), temp_data):
                     blog_data = temp_data["113305016"][0]
                     break
             if len(blog_data) >= 5:
                 # 获取日志id
                 result_blog_info["blog_id"] = str(blog_data[0])
                 # 获取日志发布时间
-                if not robot.is_integer(blog_data[4]):
-                    raise robot.RobotException("日志时间类型不正确\n%s" % blog_data)
+                if not crawler.is_integer(blog_data[4]):
+                    raise crawler.CrawlerException("日志时间类型不正确\n%s" % blog_data)
                 result_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
             else:
-                raise robot.RobotException("日志信息格式不正确\n%s" % script_data)
+                raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
             result["blog_info_list"].append(result_blog_info)
     else:
         result["is_error"] = False
@@ -94,40 +94,40 @@ def get_album_page(account_id, album_id):
     }
     album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
     script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
     script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
     if not script_data_html:
-        raise robot.RobotException("页面截取相册信息失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面截取相册信息失败\n%s" % album_response.data)
     try:
         script_data = json.loads(script_data_html)
     except ValueError:
-        raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
+        raise crawler.CrawlerException("相册信息加载失败\n%s" % script_data_html)
     try:
         user_key = script_data[4][0]
         continue_token = script_data[3]
         for data in script_data[4][1]:
             result["image_url_list"].append(str(data[1]))
     except ValueError:
-        raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
+        raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_data_html)
     # 判断是不是还有下一页
     while continue_token:
         api_url = "https://get.google.com/_/AlbumArchiveUi/data"
         post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
         image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
         if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
         continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
         try:
             continue_data = json.loads(continue_data)
         except ValueError:
-            raise robot.RobotException("相册信息加载失败\n%s" % script_data_html)
+            raise crawler.CrawlerException("相册信息加载失败\n%s" % script_data_html)
         try:
             continue_token = continue_data[0][2]["113305010"][3]
             for data in continue_data[0][2]["113305010"][4][1]:
                 result["image_url_list"].append(str(data[1]))
         except ValueError:
-            raise robot.RobotException("相册信息格式不正确\n%s" % script_data_html)
+            raise crawler.CrawlerException("相册信息格式不正确\n%s" % script_data_html)
     return result
 
 
@@ -136,17 +136,17 @@ def filter_image_url(image_url):
     return image_url.find("/video.googleusercontent.com/") != -1 or image_url.find("/video-downloads.googleusercontent.com/") != -1
 
 
-class GooglePlus(robot.Robot):
+class GooglePlus(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_SET_PROXY: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_SET_PROXY: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id  image_count  album_id  (account_name)  (file_path)
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -175,14 +175,14 @@ class GooglePlus(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
             self.account_name = self.account_info[3]
@@ -207,7 +207,7 @@ class Download(robot.DownloadThread):
             # 获取一页相册
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, key)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 相册页（token：%s）解析失败，原因：%s" % (key, e.message))
                 raise
 
@@ -236,7 +236,7 @@ class Download(robot.DownloadThread):
         # 获取相册页
         try:
             album_response = get_album_page(self.account_id, blog_info["blog_id"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 相册%s解析失败，原因：%s" % (blog_info["blog_id"], e.message))
             raise
 
@@ -262,7 +262,7 @@ class Download(robot.DownloadThread):
                 log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

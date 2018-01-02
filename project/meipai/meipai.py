@@ -32,27 +32,27 @@ def get_one_page_video(account_id, page_count):
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
-    if not robot.check_sub_key(("medias",), video_pagination_response.json_data):
-        raise robot.RobotException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+    if not crawler.check_sub_key(("medias",), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
     for media_data in video_pagination_response.json_data["medias"]:
         # 历史直播，跳过
-        if robot.check_sub_key(("lives",), media_data):
+        if crawler.check_sub_key(("lives",), media_data):
             continue
         result_video_info = {
             "video_id": None,  # 视频id
             "video_url": None,  # 视频下载地址
         }
         # 获取视频id
-        if not robot.check_sub_key(("id",), media_data):
-            raise robot.RobotException("视频信息'id'字段不存在\n%s" % media_data)
+        if not crawler.check_sub_key(("id",), media_data):
+            raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % media_data)
         result_video_info["video_id"] = str(media_data["id"])
         # 获取视频下载地址
-        if not robot.check_sub_key(("video",), media_data):
-            raise robot.RobotException("视频信息'video'字段不存在\n%s" % media_data)
+        if not crawler.check_sub_key(("video",), media_data):
+            raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % media_data)
         video_url = decrypt_video_url(str(media_data["video"]))
         if video_url is None:
-            raise robot.RobotException("加密视频地址解密失败\n%s" % str(media_data["video"]))
+            raise crawler.CrawlerException("加密视频地址解密失败\n%s" % str(media_data["video"]))
         result_video_info["video_url"] = video_url
         result["video_info_list"].append(result_video_info)
     return result
@@ -93,16 +93,16 @@ def _get_pos(arg1, arg2):
     return arg2
 
 
-class MeiPai(robot.Robot):
+class MeiPai(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id  video_count  last_video_url
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", ""])
 
     def main(self):
         # 循环下载每个id
@@ -131,14 +131,14 @@ class MeiPai(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
             self.account_name = self.account_info[3]
@@ -160,7 +160,7 @@ class Download(robot.DownloadThread):
             # 获取一页视频
             try:
                 video_pagination_response = get_one_page_video(self.account_id, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error("第%s页视频解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -202,7 +202,7 @@ class Download(robot.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 视频下载完毕
         self.account_info[1] = str(video_index)  # 设置存档记录

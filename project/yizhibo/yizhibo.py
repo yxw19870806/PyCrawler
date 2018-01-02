@@ -24,14 +24,14 @@ def get_image_index_page(account_id):
         "image_url_list": [],  # 全部图片地址
     }
     if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(image_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(image_index_response.status))
     if image_index_response.data == '<script>window.location.href="/404.html";</script>':
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
     if image_index_response.data.find("还没有照片哦") == -1:
         image_url_list = re.findall('<img src="([^"]*)@[^"]*" alt="" class="index_img_main">', image_index_response.data)
         if len(image_url_list) == 0:
-            raise robot.RobotException("页面匹配图片地址失败\n%s" % image_index_response.data)
+            raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % image_index_response.data)
         result["image_url_list"] = map(str, image_url_list)
     return result
 
@@ -45,14 +45,14 @@ def get_image_header(image_url):
     if image_head_response.status == 404:
         return result
     elif image_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(image_head_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(image_head_response.status))
     last_modified = image_head_response.headers.get("Last-Modified")
     if last_modified is None:
-        raise robot.RobotException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
+        raise crawler.CrawlerException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
     try:
         last_modified_time = time.strptime(last_modified, "%a, %d %b %Y %H:%M:%S %Z")
     except ValueError:
-        raise robot.RobotException("图片上传时间文本格式不正确\n%s" % last_modified)
+        raise crawler.CrawlerException("图片上传时间文本格式不正确\n%s" % last_modified)
     result["image_time"] = int(time.mktime(last_modified_time)) - time.timezone
     return result
 
@@ -68,13 +68,13 @@ def get_video_index_page(account_id):
         "video_id_list": [],  # 全部视频id
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
     if video_pagination_response.data == '<script>window.location.href="/404.html";</script>':
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     if video_pagination_response.data.find("还没有直播哦") == -1:
         video_id_list = re.findall('<div class="scid" style="display:none;">([^<]*?)</div>', video_pagination_response.data)
         if len(video_id_list) == 0:
-            raise robot.RobotException("页面匹配视频id失败\n%s" % video_pagination_response.data)
+            raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response.data)
         result["video_id_list"] = map(str, video_id_list)
     return result
 
@@ -91,48 +91,48 @@ def get_video_info_page(video_id):
         "video_url_list": [],  # 全部视频分集地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
-    if not robot.check_sub_key(("result", "data"), video_info_response.json_data):
-        raise robot.RobotException("返回信息'result'或'data'字段不存在\n%s" % video_info_response.json_data)
-    if not robot.is_integer(video_info_response.json_data["result"]):
-        raise robot.RobotException("返回信息'result'字段类型不正确\n%s" % video_info_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+    if not crawler.check_sub_key(("result", "data"), video_info_response.json_data):
+        raise crawler.CrawlerException("返回信息'result'或'data'字段不存在\n%s" % video_info_response.json_data)
+    if not crawler.is_integer(video_info_response.json_data["result"]):
+        raise crawler.CrawlerException("返回信息'result'字段类型不正确\n%s" % video_info_response.json_data)
     if int(video_info_response.json_data["result"]) != 1:
-        raise robot.RobotException("返回信息'result'字段取值不正确\n%s" % video_info_response.json_data)
+        raise crawler.CrawlerException("返回信息'result'字段取值不正确\n%s" % video_info_response.json_data)
     # 获取视频上传时间
-    if not robot.check_sub_key(("createtime",), video_info_response.json_data["data"]):
-        raise robot.RobotException("返回信息'createtime'字段不存在\n%s" % video_info_response.json_data)
-    if not robot.is_integer(video_info_response.json_data["data"]["createtime"]):
-        raise robot.RobotException("返回信息'createtime'字段类型不正确\n%s" % video_info_response.json_data)
+    if not crawler.check_sub_key(("createtime",), video_info_response.json_data["data"]):
+        raise crawler.CrawlerException("返回信息'createtime'字段不存在\n%s" % video_info_response.json_data)
+    if not crawler.is_integer(video_info_response.json_data["data"]["createtime"]):
+        raise crawler.CrawlerException("返回信息'createtime'字段类型不正确\n%s" % video_info_response.json_data)
     result["video_time"] = int(video_info_response.json_data["data"]["createtime"])
     # 获取视频地址所在文件地址
-    if not robot.check_sub_key(("linkurl",), video_info_response.json_data["data"]):
-        raise robot.RobotException("返回信息'linkurl'字段不存在\n%s" % video_info_response.json_data)
+    if not crawler.check_sub_key(("linkurl",), video_info_response.json_data["data"]):
+        raise crawler.CrawlerException("返回信息'linkurl'字段不存在\n%s" % video_info_response.json_data)
     video_file_url = str(video_info_response.json_data["data"]["linkurl"])
     video_file_response = net.http_request(video_file_url, method="GET")
     if video_file_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         ts_id_list = re.findall("([\S]*.ts)", video_file_response.data)
         if len(ts_id_list) == 0:
-            raise robot.RobotException("分集文件匹配视频地址失败\n%s" % video_info_response.json_data)
+            raise crawler.CrawlerException("分集文件匹配视频地址失败\n%s" % video_info_response.json_data)
         # http://alcdn.hls.xiaoka.tv/20161122/6b6/c5f/xX9-TLVx0xTiSZ69/
         prefix_url = video_file_url[:video_file_url.rfind("/") + 1]
         for ts_id in ts_id_list:
             result["video_url_list"].append(prefix_url + str(ts_id))
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
     return result
 
 
-class YiZhiBo(robot.Robot):
+class YiZhiBo(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id  video_count  last_video_time  image_count  last_image_time(account_name)
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -161,14 +161,14 @@ class YiZhiBo(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 6 and self.account_info[5]:
             self.account_name = self.account_info[5]
@@ -181,7 +181,7 @@ class Download(robot.DownloadThread):
         # 获取全部图片地址列表
         try:
             image_index_response = get_image_index_page(self.account_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 图片首页解析失败，原因：%s" % e.message)
             return []
 
@@ -193,7 +193,7 @@ class Download(robot.DownloadThread):
 
             try:
                 image_head_response = get_image_header(image_url)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 图片%s解析失败，原因：%s" % (image_url, e.message))
                 return []
 
@@ -214,7 +214,7 @@ class Download(robot.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 第%s张图片下载成功" % image_index)
         else:
-            log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
             return
 
         # 图片下载完毕
@@ -228,7 +228,7 @@ class Download(robot.DownloadThread):
         # 获取全部视频ID列表
         try:
             video_pagination_response = get_video_index_page(self.account_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频首页解析失败，原因：%s" % e.message)
             return []
 
@@ -240,7 +240,7 @@ class Download(robot.DownloadThread):
             # 获取视频的时间和下载地址
             try:
                 video_info_response = get_video_info_page(video_id)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
                 return []
 

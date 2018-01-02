@@ -43,50 +43,50 @@ def get_album_page(page_count):
         # 截取key
         key = tool.find_sub_string(album_response.data, '<input type="hidden" id="s" value="', '">')
         if not key:
-            raise robot.RobotException("页面截取媒体key失败\n%s" % album_response.data)
+            raise crawler.CrawlerException("页面截取媒体key失败\n%s" % album_response.data)
         # 调用API，获取相册资源
         media_url = "http://zz.mt27z.cn/ab/bd"
         post_data = {"y": page_count, "s": key}
         media_response = net.http_request(media_url, method="POST", fields=post_data, json_decode=True)
         if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if not robot.check_sub_key(("i",), media_response.json_data) and not robot.check_sub_key(("v",), media_response.json_data):
-                raise robot.RobotException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
+            if not crawler.check_sub_key(("i",), media_response.json_data) and not crawler.check_sub_key(("v",), media_response.json_data):
+                raise crawler.CrawlerException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
             # 检测是否是图片相册
-            if robot.check_sub_key(("i",), media_response.json_data):
+            if crawler.check_sub_key(("i",), media_response.json_data):
                 if not (isinstance(media_response.json_data["i"], list) and len(media_response.json_data["i"]) > 0):
-                    raise robot.RobotException("图片相册'i'字段格式不正确\n%s" % album_response.json_data)
+                    raise crawler.CrawlerException("图片相册'i'字段格式不正确\n%s" % album_response.json_data)
                 result["image_url_list"] = []
                 for image_info in media_response.json_data["i"]:
-                    if not robot.check_sub_key(("url",), image_info):
-                        raise robot.RobotException("图片相册'url'字段不存在\n%s" % album_response.json_data)
+                    if not crawler.check_sub_key(("url",), image_info):
+                        raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % album_response.json_data)
                     result["image_url_list"].append(str(image_info["url"]))
             # 检测是否是视频相册
-            if robot.check_sub_key(("v",), media_response.json_data):
+            if crawler.check_sub_key(("v",), media_response.json_data):
                 result["video_url"] = str(media_response.json_data["v"])
         else:
-            raise robot.RobotException("媒体" + robot.get_http_request_failed_reason(media_response.status))
+            raise crawler.CrawlerException("媒体" + crawler.get_http_request_failed_reason(media_response.status))
     elif album_response.status == 500:
         result["is_delete"] = True
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
     return result
 
 
-class MeiTuZZ(robot.Robot):
+class MeiTuZZ(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件，获取上一次的album id
         save_album_id = album_id = 1
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
-            if not robot.is_integer(file_save_info):
+            if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             save_album_id = album_id = int(file_save_info)
@@ -102,7 +102,7 @@ class MeiTuZZ(robot.Robot):
                 # 获取相册
                 try:
                     album_response = get_album_page(album_id)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error("第%s页相册解析失败，原因：%s" % (album_id, e.message))
                     raise
 
@@ -144,7 +144,7 @@ class MeiTuZZ(robot.Robot):
                             log.step("第%s页第%s张图片下载成功" % (album_id, image_index))
                             image_index += 1
                         else:
-                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 # 视频下载
                 video_index = 1
@@ -161,7 +161,7 @@ class MeiTuZZ(robot.Robot):
                         log.step("第%s页视频下载成功" % album_id)
                         video_index += 1
                     else:
-                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
                 # tweet内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除

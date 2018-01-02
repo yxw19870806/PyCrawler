@@ -30,30 +30,30 @@ def get_account_index_page(account_name):
         # 获取user id
         user_id = tool.find_sub_string(account_index_response.data, 'params: {"nsid":"', '"')
         if not user_id:
-            raise robot.RobotException("页面截取nsid失败\n%s" % account_index_response.data)
+            raise crawler.CrawlerException("页面截取nsid失败\n%s" % account_index_response.data)
         result["user_id"] = user_id
         # 获取site key
         site_key = tool.find_sub_string(account_index_response.data, 'root.YUI_config.flickr.api.site_key = "', '"')
         if not site_key:
-            raise robot.RobotException("页面截取site key失败\n%s" % account_index_response.data)
+            raise crawler.CrawlerException("页面截取site key失败\n%s" % account_index_response.data)
         result["site_key"] = site_key
         # 获取CSRF
         root_auth = tool.find_sub_string(account_index_response.data, "root.auth = ", "};")
         if not site_key:
-            raise robot.RobotException("页面截取root.auth失败\n%s" % account_index_response.data)
+            raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response.data)
         csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
         if not csrf:
-            raise robot.RobotException("页面截取csrf失败\n%s" % account_index_response.data)
+            raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response.data)
         result["csrf"] = csrf
         # 获取cookie_session
         set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
-        if not robot.check_sub_key(("cookie_session",), set_cookies):
-            raise robot.RobotException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.data)
+        if not crawler.check_sub_key(("cookie_session",), set_cookies):
+            raise crawler.CrawlerException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.data)
         result["cookie_session"] = set_cookies["cookie_session"]
     elif account_index_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     return result
 
 
@@ -83,15 +83,15 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_se
         "is_over": False,  # 是不是最后一页图片
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
-    if not robot.check_sub_key(("photos",), photo_pagination_response.json_data):
-        raise robot.RobotException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
-    if not robot.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
-        raise robot.RobotException("返回数据'photo'或者'pages'字段不存在\n%s" % photo_pagination_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+    if not crawler.check_sub_key(("photos",), photo_pagination_response.json_data):
+        raise crawler.CrawlerException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
+    if not crawler.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
+        raise crawler.CrawlerException("返回数据'photo'或者'pages'字段不存在\n%s" % photo_pagination_response.json_data)
     if not isinstance(photo_pagination_response.json_data["photos"]["photo"], list) or len(photo_pagination_response.json_data["photos"]["photo"]) == 0:
-        raise robot.RobotException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
-    if not robot.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
-        raise robot.RobotException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
+        raise crawler.CrawlerException("返回数据'photo'字段类型不正确\n%s" % photo_pagination_response.json_data)
+    if not crawler.is_integer(photo_pagination_response.json_data["photos"]["pages"]):
+        raise crawler.CrawlerException("返回数据'pages'字段类型不正确\n%s" % photo_pagination_response.json_data)
     # 获取图片信息
     for photo_info in photo_pagination_response.json_data["photos"]["photo"]:
         result_image_info = {
@@ -99,29 +99,29 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_se
             "image_url": None,  # 图片地址
         }
         # 获取图片上传时间
-        if not robot.check_sub_key(("dateupload",), photo_info):
-            raise robot.RobotException("图片信息'dateupload'字段不存在\n%s" % photo_info)
-        if not robot.is_integer(photo_info["dateupload"]):
-            raise robot.RobotException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
+        if not crawler.check_sub_key(("dateupload",), photo_info):
+            raise crawler.CrawlerException("图片信息'dateupload'字段不存在\n%s" % photo_info)
+        if not crawler.is_integer(photo_info["dateupload"]):
+            raise crawler.CrawlerException("图片信息'dateupload'字段类型不正确\n%s" % photo_info)
         result_image_info["image_time"] = int(photo_info["dateupload"])
         # 获取图片地址
         max_resolution = 0
         max_resolution_photo_type = ""
         # 可获取图片尺寸中最大的那张
         for photo_type in ["c","f","h","k","l","m","n","o","q","s","sq","t","z"]:
-            if robot.check_sub_key(("width_" + photo_type, "height_" + photo_type), photo_info):
+            if crawler.check_sub_key(("width_" + photo_type, "height_" + photo_type), photo_info):
                 resolution = int(photo_info["width_" + photo_type]) * int(photo_info["height_" + photo_type])
                 if resolution > max_resolution:
                     max_resolution = resolution
                     max_resolution_photo_type = photo_type
         if not max_resolution_photo_type:
-            raise robot.RobotException("图片信息匹配最高分辨率的图片尺寸失败\n%s" % photo_info)
-        if robot.check_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
+            raise crawler.CrawlerException("图片信息匹配最高分辨率的图片尺寸失败\n%s" % photo_info)
+        if crawler.check_sub_key(("url_" + max_resolution_photo_type + "_cdn",), photo_info):
             result_image_info["image_url"] = str(photo_info["url_" + max_resolution_photo_type + "_cdn"])
-        elif robot.check_sub_key(("url_" + max_resolution_photo_type,), photo_info):
+        elif crawler.check_sub_key(("url_" + max_resolution_photo_type,), photo_info):
             result_image_info["image_url"] = str(photo_info["url_" + max_resolution_photo_type])
         else:
-            raise robot.RobotException("图片信息'url_%s_cdn'或者'url_%s_cdn'字段不存在\n%s" % (max_resolution_photo_type, max_resolution_photo_type, photo_info))
+            raise crawler.CrawlerException("图片信息'url_%s_cdn'或者'url_%s_cdn'字段不存在\n%s" % (max_resolution_photo_type, max_resolution_photo_type, photo_info))
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
     if page_count >= int(photo_pagination_response.json_data["photos"]["pages"]):
@@ -129,23 +129,23 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_se
     return result
 
 
-class Flickr(robot.Robot):
+class Flickr(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_SET_PROXY: True,
-            robot.SYS_GET_COOKIE: {".flickr.com": ()}
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_GET_COOKIE: {".flickr.com": ()}
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
         # account_id  image_count  last_image_time
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -174,16 +174,16 @@ class Flickr(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     request_id = tool.generate_random_string(8)  # 生成一个随机的request id用作访问（模拟页面传入）
 
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
@@ -200,7 +200,7 @@ class Download(robot.DownloadThread):
             # 获取一页图片
             try:
                 photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id, cookie_session)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -238,7 +238,7 @@ class Download(robot.DownloadThread):
                 log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除
@@ -251,7 +251,7 @@ class Download(robot.DownloadThread):
             # 获取相册首页页面
             try:
                 account_index_response = get_account_index_page(self.account_name)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 相册首页解析失败，原因：%s" % e.message)
                 raise
 

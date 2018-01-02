@@ -25,17 +25,17 @@ def get_account_index_page(account_name):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号id
         account_id = tool.find_sub_string(account_index_response.data, '"profilePage_', '"')
-        if not robot.is_integer(account_id):
-            raise robot.RobotException("页面截取账号id失败\n%s" % account_index_response.data)
+        if not crawler.is_integer(account_id):
+            raise crawler.CrawlerException("页面截取账号id失败\n%s" % account_index_response.data)
         result["account_id"] = account_id
         # 判断是不是已经关注
         result["is_follow"] = tool.find_sub_string(account_index_response.data, '"followed_by_viewer": ', ",") == "true"
         # 判断是不是私密账号
         result["is_private"] = tool.find_sub_string(account_index_response.data, '"is_private": ', ",") == "true"
     elif account_index_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     return result
 
 
@@ -45,8 +45,8 @@ def follow_account(account_name, account_id):
     header_list = {"Referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"], "X-Instagram-AJAX": 1}
     follow_response = net.http_request(follow_api_url, method="POST", header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not robot.check_sub_key(("status", "result"), follow_response.json_data):
-            output.print_msg(robot.RobotException("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data)))
+        if not crawler.check_sub_key(("status", "result"), follow_response.json_data):
+            output.print_msg(crawler.CrawlerException("关注%s失败，返回内容不匹配\n%s" % (account_name, follow_response.json_data)))
             tool.process_exit()
         if follow_response.json_data["result"] == "following":
             output.print_msg("关注%s成功" % account_name)
@@ -57,17 +57,17 @@ def follow_account(account_name, account_id):
         else:
             return False
     elif follow_response.status == 403 and follow_response.data == "Please wait a few minutes before you try again.":
-        output.print_msg(robot.RobotException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
+        output.print_msg(crawler.CrawlerException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
         tool.process_exit()
     else:
-        output.print_msg(robot.RobotException("关注%s失败，请求返回结果：%s" % (account_name, robot.get_http_request_failed_reason(follow_response.status))))
+        output.print_msg(crawler.CrawlerException("关注%s失败，请求返回结果：%s" % (account_name, crawler.get_http_request_failed_reason(follow_response.status))))
         tool.process_exit()
 
 
 def main():
-    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
+    config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
     # 获取cookies
-    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser(config)
+    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser(config)
     if "www.instagram.com" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser["www.instagram.com"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser["www.instagram.com"][cookie_key]
@@ -75,17 +75,17 @@ def main():
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
     # 设置代理
-    robot.quicky_set_proxy(config)
+    crawler.quicky_set_proxy(config)
     # 存档位置
-    save_data_path = robot.quicky_get_save_data_path(config)
+    save_data_path = crawler.quicky_get_save_data_path(config)
     # 读取存档文件
-    account_list = robot.read_save_data(save_data_path, 0, [""])
+    account_list = crawler.read_save_data(save_data_path, 0, [""])
 
     count = 0
     for account_name in sorted(account_list.keys()):
         try:
             account_index_response = get_account_index_page(account_name)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(account_name + " 首页解析失败，原因：%s" % e.message)
             continue
 

@@ -5,7 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, robot, tool
+from common import output, crawler, tool
 import steamCommon
 import json
 import os
@@ -58,7 +58,7 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
     # 获取登录状态
     try:
         login_cookie = steamCommon.get_login_cookie_from_browser()
-    except robot.RobotException, e:
+    except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
     # 从文件里获取打折列表
@@ -67,7 +67,7 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
         # 调用API获取打折列表
         try:
             discount_game_list = steamCommon.get_discount_game_list(login_cookie)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             output.print_msg("打折游戏解析失败，原因：%s" % e.message)
             raise
         # 将打折列表写入文件
@@ -78,7 +78,7 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
     # 获取自己的全部游戏列表
     try:
         owned_game_list = steamCommon.get_account_owned_app_list(account_id)
-    except robot.RobotException, e:
+    except crawler.CrawlerException, e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
     for discount_info in discount_game_list:

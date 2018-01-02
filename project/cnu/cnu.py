@@ -25,43 +25,43 @@ def get_album_page(album_id):
         # 获取作品标题
         album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
         if not album_title:
-            raise robot.RobotException("页面截取作品标题失败\n%s" % album_response.data)
+            raise crawler.CrawlerException("页面截取作品标题失败\n%s" % album_response.data)
         result["album_title"] = album_title
         # 获取图片地址
         image_info_html = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
         if not image_info_html:
-            raise robot.RobotException("页面截取图片列表失败\n%s" % album_response.data)
+            raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response.data)
         try:
             image_info_data = json.loads(image_info_html)
         except ValueError:
-            raise robot.RobotException("图片列表加载失败\n%s" % image_info_html)
+            raise crawler.CrawlerException("图片列表加载失败\n%s" % image_info_html)
         image_url_list = []
         for image_info in image_info_data:
-            if not robot.check_sub_key(("img",), image_info):
-                raise robot.RobotException("图片信息'img'字段不存在\n%s" % image_info)
+            if not crawler.check_sub_key(("img",), image_info):
+                raise crawler.CrawlerException("图片信息'img'字段不存在\n%s" % image_info)
             image_url_list.append("http://img.cnu.cc/uploads/images/920/" + str(image_info["img"]))
         result["image_url_list"] = image_url_list
     elif album_response.status == 404:
         result["is_delete"] = True
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
     return result
 
 
-class CNU(robot.Robot):
+class CNU(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件，获取上一次的album id
         album_id = 1
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
-            if not robot.is_integer(file_save_info):
+            if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             album_id = int(file_save_info)
@@ -78,7 +78,7 @@ class CNU(robot.Robot):
                 # 获取相册
                 try:
                     album_response = get_album_page(album_id)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error("第%s页作品解析失败，原因：%s" % (album_id, e.message))
                     raise
 
@@ -109,7 +109,7 @@ class CNU(robot.Robot):
                         log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                         image_index += 1
                     else:
-                        log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 作品内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加

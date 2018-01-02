@@ -26,7 +26,7 @@ def get_account_index_page(account_name):
         else:
             account_info = tool.find_sub_string(account_index_response.data, '"biography": "', '"')
             if not account_info:
-                raise robot.RobotException("页面截取账号信息失败\n%s" % account_index_response.data)
+                raise crawler.CrawlerException("页面截取账号信息失败\n%s" % account_index_response.data)
             account_info = account_info.replace(r"\n", "").replace("'", chr(1))
             result["account_info"] = eval("u'%s'" % account_info).replace(chr(1), "'").encode("UTF-8")
         # 获取外部链接地址
@@ -35,26 +35,26 @@ def get_account_index_page(account_name):
         else:
             result["external_url"] = tool.find_sub_string(account_index_response.data, '"external_url": "', '"')
     elif account_index_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     return result
 
 
 def main():
-    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
+    config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
-    save_data_path = robot.quicky_get_save_data_path(config)
+    save_data_path = crawler.quicky_get_save_data_path(config)
     # 读取存档文件
-    account_list = robot.read_save_data(save_data_path, 0, [""])
+    account_list = crawler.read_save_data(save_data_path, 0, [""])
     # 设置代理
-    robot.quicky_set_proxy(config)
+    crawler.quicky_set_proxy(config)
 
     result_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/account_info.data")
     for account in sorted(account_list.keys()):
         try:
             account_index_response = get_account_index_page(account)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             output.print_msg(account + "解析信息失败，原因：%s" % "")
             continue
         tool.write_file("%s\t%s\t%s" % (account, account_index_response["account_info"], account_index_response["external_url"]), result_file_path)

@@ -36,18 +36,18 @@ def get_one_page_video(account_id, page_time):
     header_list = {"Referer": "http://weishi.qq.com/"}
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
-    if not robot.check_sub_key(("ret",), video_pagination_response.json_data):
-        raise robot.RobotException("返回信息'ret'字段不存在\n%s" % video_pagination_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+    if not crawler.check_sub_key(("ret",), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'ret'字段不存在\n%s" % video_pagination_response.json_data)
     if int(video_pagination_response.json_data["ret"]) != 0:
         if int(video_pagination_response.json_data["ret"]) == -6:
-            raise robot.RobotException("账号不存在")
+            raise crawler.CrawlerException("账号不存在")
         else:
-            raise robot.RobotException("返回信息'ret'字段取值不正确\n%s" % video_pagination_response.json_data)
-    if not robot.check_sub_key(("data",), video_pagination_response.json_data):
-        raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_pagination_response.json_data)
-    if not robot.check_sub_key(("info", "hasNext"), video_pagination_response.json_data["data"]):
-        raise robot.RobotException("返回信息'info'或'hasNext'字段不存在\n%s" % video_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息'ret'字段取值不正确\n%s" % video_pagination_response.json_data)
+    if not crawler.check_sub_key(("data",), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_pagination_response.json_data)
+    if not crawler.check_sub_key(("info", "hasNext"), video_pagination_response.json_data["data"]):
+        raise crawler.CrawlerException("返回信息'info'或'hasNext'字段不存在\n%s" % video_pagination_response.json_data)
     for video_info in video_pagination_response.json_data["data"]["info"]:
         result_video_info = {
             "video_id": None,  # 视频id
@@ -55,25 +55,25 @@ def get_one_page_video(account_id, page_time):
             "video_time": None,  # 视频上传时间
         }
         # 获取视频id
-        if not robot.check_sub_key(("id",), video_info):
-            raise robot.RobotException("视频信息'id'字段不存在\n%s" % video_info)
+        if not crawler.check_sub_key(("id",), video_info):
+            raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % video_info)
         result_video_info["video_id"] = str(video_info["id"])
         # 获取分集id
-        if not robot.check_sub_key(("newvideos",), video_info):
-            raise robot.RobotException("视频信息'newvideos'字段不存在\n%s" % video_info)
+        if not crawler.check_sub_key(("newvideos",), video_info):
+            raise crawler.CrawlerException("视频信息'newvideos'字段不存在\n%s" % video_info)
         if not isinstance(video_info["newvideos"], list):
-            raise robot.RobotException("视频信息'newvideos'字段类型不正确\n%s" % video_info)
+            raise crawler.CrawlerException("视频信息'newvideos'字段类型不正确\n%s" % video_info)
         if len(video_info["newvideos"]) == 0:
-            raise robot.RobotException("视频信息'newvideos'字段长度不正确\n%s" % video_info)
+            raise crawler.CrawlerException("视频信息'newvideos'字段长度不正确\n%s" % video_info)
         for video_part_info in video_info["newvideos"]:
-            if not robot.check_sub_key(("vid",), video_part_info):
-                raise robot.RobotException("视频分集信息'vid'字段不存在\n%s" % video_info)
+            if not crawler.check_sub_key(("vid",), video_part_info):
+                raise crawler.CrawlerException("视频分集信息'vid'字段不存在\n%s" % video_info)
             result_video_info["video_part_id_list"].append(str(video_part_info["vid"]))
         # 获取视频id
-        if not robot.check_sub_key(("timestamp",), video_info):
-            raise robot.RobotException("视频信息'timestamp'字段不存在\n%s" % video_info)
-        if not robot.is_integer(video_info["timestamp"]):
-            raise robot.RobotException("视频信息'timestamp'字段类型不正确\n%s" % video_info)
+        if not crawler.check_sub_key(("timestamp",), video_info):
+            raise crawler.CrawlerException("视频信息'timestamp'字段不存在\n%s" % video_info)
+        if not crawler.is_integer(video_info["timestamp"]):
+            raise crawler.CrawlerException("视频信息'timestamp'字段类型不正确\n%s" % video_info)
         result_video_info["video_time"] = int(video_info["timestamp"])
         result["video_info_list"].append(result_video_info)
     # 检测是否还有下一页
@@ -90,25 +90,25 @@ def get_video_info_page(video_vid, video_id):
         "video_url": "",  # 视频地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
-    if not robot.check_sub_key(("data",), video_info_response.json_data):
-        raise robot.RobotException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
-    if not robot.check_sub_key(("url",), video_info_response.json_data["data"]):
-        raise robot.RobotException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+    if not crawler.check_sub_key(("data",), video_info_response.json_data):
+        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
+    if not crawler.check_sub_key(("url",), video_info_response.json_data["data"]):
+        raise crawler.CrawlerException("返回信息'url'字段不存在\n%s" % video_info_response.json_data)
     result["video_url"] = str(random.choice(video_info_response.json_data["data"]["url"]))
     return result
 
 
-class WeiShi(robot.Robot):
+class WeiShi(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id  video_count  last_video_time
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -137,14 +137,14 @@ class WeiShi(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
 
     def run(self):
         account_id = self.account_info[0]
@@ -169,7 +169,7 @@ class Download(robot.DownloadThread):
                 # 获取一页视频信息
                 try:
                     video_pagination_response = get_one_page_video(account_id, page_time)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error(account_name + " %s后的一页视频解析失败，原因：%s" % (page_time, e.message))
                     raise
 
@@ -201,7 +201,7 @@ class Download(robot.DownloadThread):
                     # 获取视频下载地址
                     try:
                         video_info_response = get_video_info_page(video_part_id, video_info["video_id"])
-                    except robot.RobotException, e:
+                    except crawler.CrawlerException, e:
                         log.error(account_name + " 视频%s（%s）解析失败，原因：%s" % (video_part_id, video_info["video_id"], e.message))
                         raise
                     log.step(account_name + " 开始下载第%s个视频 %s" % (video_index, video_info_response["video_url"]))

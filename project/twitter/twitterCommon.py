@@ -12,7 +12,7 @@ import re
 
 # 从cookie中获取登录的auth_token
 def get_auth_token():
-    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser()
+    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser()
     if ".twitter.com" in all_cookie_from_browser and "auth_token" in all_cookie_from_browser[".twitter.com"]:
         return all_cookie_from_browser["www.instagram.com"]["sessionid"]
     return None
@@ -46,6 +46,6 @@ def get_one_page_follow(account_name, auth_token, position_id):
     cookies_list = {"auth_token": auth_token}
     follow_pagination_response = net.http_request(follow_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if robot.check_sub_key(("min_position", "has_more_items", "items_html"), follow_pagination_response.json_data):
+        if crawler.check_sub_key(("min_position", "has_more_items", "items_html"), follow_pagination_response.json_data):
             return follow_pagination_response.json_data
     return None

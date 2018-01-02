@@ -37,7 +37,7 @@ def get_one_page_album(sub_path, page_count):
         "is_over": False,  # 是不是最后一页图集
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_pagination_response.status))
     # 页面编码
     album_pagination_html = album_pagination_response.data.decode("GBK").encode("UTF-8")
     # 获取图集信息
@@ -45,10 +45,10 @@ def get_one_page_album(sub_path, page_count):
     if not album_info_html:
         album_info_html = tool.find_sub_string(album_pagination_html, '<div class="yyy">', "</div>")
     if not album_info_html:
-        raise robot.RobotException("页面截取图集列表失败\n%s" % album_pagination_html)
+        raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html)
     album_info_list = re.findall('<a href="/' + sub_path + '/(\d*)/" title="([^"]*)', album_info_html)
     if len(album_info_list) == 0:
-        raise robot.RobotException("页面匹配图集信息失败\n%s" % album_info_html)
+        raise crawler.CrawlerException("页面匹配图集信息失败\n%s" % album_info_html)
     for page_id, album_title in album_info_list:
         result_album_info = {
             "album_title": "",  # 图集id
@@ -62,7 +62,7 @@ def get_one_page_album(sub_path, page_count):
         result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
     max_page_find = re.findall("<a href='list_" + SUB_PATH_LIST[sub_path] + "_(\d*).html'>末页</a>", album_pagination_html)
-    if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and robot.is_integer(max_page_find[0]):
+    if len(max_page_find) == 2 and max_page_find[0] == max_page_find[1] and crawler.is_integer(max_page_find[0]):
         result['is_over'] = page_count >= int(max_page_find[0])
     else:
         result['is_over'] = True
@@ -82,16 +82,16 @@ def get_album_photo(sub_path, page_id):
             photo_pagination_url = "http://www.88mmw.com/%s/%s/index_%s.html" % (sub_path, page_id, page_count)
         photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
         if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException("第%s页 " % page_count + robot.get_http_request_failed_reason(photo_pagination_response.status))
+            raise crawler.CrawlerException("第%s页 " % page_count + crawler.get_http_request_failed_reason(photo_pagination_response.status))
         # 页面编码
         photo_pagination_html = photo_pagination_response.data.decode("GBK").encode("UTF-8")
         # 获取图片地址
         image_info_html = tool.find_sub_string(photo_pagination_html, '<div class="zzz">', "</div>")
         if not image_info_html:
-            raise robot.RobotException("第%s页 页面截取图片列表失败\n%s" % (page_count, photo_pagination_html))
+            raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % (page_count, photo_pagination_html))
         image_url_list = re.findall('<img src="([^"]*)"', image_info_html)
         if len(image_url_list) == 0:
-            raise robot.RobotException("第%s页 页面匹配图片地址失败\n%s" % (page_count, image_info_html))
+            raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, image_info_html))
         for image_url in image_url_list:
             result["image_url_list"].append("http://www.88mmw.com" + str(image_url).replace("-lp", ""))
         # 判断是不是最后一页
@@ -99,7 +99,7 @@ def get_album_photo(sub_path, page_id):
         max_page_count = tool.find_sub_string(photo_pagination_html, '<div class="page"><span>共 <strong>', '</strong> 页')
         if not max_page_count:
             is_over = True
-        elif robot.is_integer(max_page_count):
+        elif crawler.is_integer(max_page_count):
             is_over = page_count >= int(max_page_count)
         if is_over:
             break
@@ -113,17 +113,17 @@ def get_image_url(image_url):
     return urllib.quote(image_url, safe=string.printable.replace(" ", ""))
 
 
-class Gallery(robot.Robot):
+class Gallery(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # sub_path  last_page_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
         for sub_path in SUB_PATH_LIST:
             if sub_path not in self.account_list:
                 self.account_list[sub_path] = [sub_path, "0"]
@@ -155,14 +155,14 @@ class Gallery(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.sub_path = self.account_info[0]
         log.step(self.sub_path + " 开始")
 
@@ -179,7 +179,7 @@ class Download(robot.DownloadThread):
             # 获取一页图集
             try:
                 album_pagination_response = get_one_page_album(self.sub_path, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.sub_path + " 第%s页图集解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -207,7 +207,7 @@ class Download(robot.DownloadThread):
         # 获取图集全部图片
         try:
             photo_pagination_response = get_album_photo(self.sub_path, album_info["page_id"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.sub_path + " %s号图集解析失败，原因：%s" % (album_info["page_id"], e.message))
             raise
 
@@ -235,7 +235,7 @@ class Download(robot.DownloadThread):
                 log.step(self.sub_path + " %s号图集《%s》 第%s张图片下载成功" % (album_info["page_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

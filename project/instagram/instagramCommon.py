@@ -27,11 +27,11 @@ def get_follow_by_list(account_id):
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
         follow_by_pagination_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
         if follow_by_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("followed_by",), follow_by_pagination_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_by_pagination_response.json_data["followed_by"]):
+            if crawler.check_sub_key(("followed_by",), follow_by_pagination_response.json_data) and crawler.check_sub_key(("page_info", "nodes"), follow_by_pagination_response.json_data["followed_by"]):
                 for node in follow_by_pagination_response.json_data["followed_by"]["nodes"]:
-                    if robot.check_sub_key(("username",), node):
+                    if crawler.check_sub_key(("username",), node):
                         follow_by_list.append(node["username"])
-                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_by_pagination_response.json_data["followed_by"]["page_info"]):
+                if crawler.check_sub_key(("end_cursor", "has_next_page"), follow_by_pagination_response.json_data["followed_by"]["page_info"]):
                     if follow_by_pagination_response.json_data["followed_by"]["page_info"]["has_next_page"]:
                         cursor = follow_by_pagination_response.json_data["followed_by"]["page_info"]["end_cursor"]
                         continue
@@ -54,11 +54,11 @@ def get_follow_list(account_id):
         header_list = {"Referer": "https://www.instagram.com/", "X-CSRFToken": COOKIE_INFO["csrftoken"]}
         follow_pagination_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=COOKIE_INFO, json_decode=True)
         if follow_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            if robot.check_sub_key(("follows",), follow_pagination_response.json_data) and robot.check_sub_key(("page_info", "nodes"), follow_pagination_response.json_data["follows"]):
+            if crawler.check_sub_key(("follows",), follow_pagination_response.json_data) and crawler.check_sub_key(("page_info", "nodes"), follow_pagination_response.json_data["follows"]):
                 for node in follow_pagination_response.json_data["follows"]["nodes"]:
-                    if robot.check_sub_key(("username",), node):
+                    if crawler.check_sub_key(("username",), node):
                         follow_list.append(node["username"])
-                if robot.check_sub_key(("end_cursor", "has_next_page"), follow_pagination_response.json_data["follows"]["page_info"]):
+                if crawler.check_sub_key(("end_cursor", "has_next_page"), follow_pagination_response.json_data["follows"]["page_info"]):
                     if follow_pagination_response.json_data["follows"]["page_info"]["has_next_page"]:
                         cursor = follow_pagination_response.json_data["follows"]["page_info"]["end_cursor"]
                         continue

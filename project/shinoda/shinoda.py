@@ -21,7 +21,7 @@ def get_one_page_blog(page_count):
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
     # 检测是否是最后一页
     result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
     if result["is_over"]:
@@ -29,7 +29,7 @@ def get_one_page_blog(page_count):
     # 获取图片名字
     blog_html_find = re.findall("<section>([\s|\S]*?)</section>", blog_pagination_response.data)
     if len(blog_html_find) == 0:
-        raise robot.RobotException("页面匹配日志信息失败\n%s" % blog_pagination_response.data)
+        raise crawler.CrawlerException("页面匹配日志信息失败\n%s" % blog_pagination_response.data)
     for blog_html in blog_html_find:
         result_blog_info = {
             "blog_id": None,  # 日志id
@@ -39,8 +39,8 @@ def get_one_page_blog(page_count):
         if len(image_name_list) == 0:
             continue
         blog_id = str(image_name_list[0]).split("-")[0]
-        if not robot.is_integer(blog_id):
-            raise robot.RobotException("图片名字截取日志id失败\n%s" % blog_html)
+        if not crawler.is_integer(blog_id):
+            raise crawler.CrawlerException("图片名字截取日志id失败\n%s" % blog_html)
         result_blog_info["blog_id"] = blog_id
         for image_name in image_name_list:
             result_blog_info["image_url_list"].append("http://blog.mariko-shinoda.net/%s" % image_name)
@@ -48,13 +48,13 @@ def get_one_page_blog(page_count):
     return result
 
 
-class Blog(robot.Robot):
+class Blog(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         # 解析存档文件
@@ -62,7 +62,7 @@ class Blog(robot.Robot):
         save_info = ["0", "0"]
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path).split("\t")
-            if len(file_save_info) >= 2 and robot.is_integer(file_save_info[0]) and robot.is_integer(file_save_info[1]):
+            if len(file_save_info) >= 2 and crawler.is_integer(file_save_info[0]) and crawler.is_integer(file_save_info[1]):
                 save_info = file_save_info
             else:
                 log.error("存档内数据格式不正确")
@@ -82,7 +82,7 @@ class Blog(robot.Robot):
                 # 获取一页日志
                 try:
                     blog_pagination_response = get_one_page_blog(page_count)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error("第%s页日志解析失败，原因：%s" % (page_count, e.message))
                     raise
 
@@ -126,7 +126,7 @@ class Blog(robot.Robot):
                         log.step("第%s张图片下载成功" % image_index)
                         image_index += 1
                     else:
-                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                 # 日志内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加

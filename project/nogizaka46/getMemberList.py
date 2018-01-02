@@ -6,7 +6,7 @@ http://http://blog.nogizaka46.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import net, robot, tool
+from common import net, crawler, tool
 import os
 import re
 import sys
@@ -30,17 +30,17 @@ def get_account_from_index():
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         member_list_find = re.findall('<div class="unit"><a href="./([^"]*)"><img src="[^>]*alt="([^"]*)" />', index_response.data)
         if len(member_list_find) == 0:
-            raise robot.RobotException("页面截取成员类别失败\n%s" % index_response.data)
+            raise crawler.CrawlerException("页面截取成员类别失败\n%s" % index_response.data)
         for member_info in member_list_find:
             account_list[member_info[0]] = member_info[1].replace(" ", "")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
     return account_list
 
 
 def main():
     # 存档位置
-    save_data_path = robot.quicky_get_save_data_path()
+    save_data_path = crawler.quicky_get_save_data_path()
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         account_list_from_save_data = get_account_from_save_data(save_data_path)

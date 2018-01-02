@@ -23,10 +23,10 @@ def follow_account(account_id):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     follow_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()
-    if not (robot.check_sub_key(("code",), follow_response.json_data) and robot.is_integer(follow_response.json_data["code"])):
-        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, robot.get_http_request_failed_reason(follow_response.status)))
+    if not (crawler.check_sub_key(("code",), follow_response.json_data) and crawler.is_integer(follow_response.json_data["code"])):
+        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.get_http_request_failed_reason(follow_response.status)))
         tool.process_exit()
     if int(follow_response.json_data["code"]) == 100000:
         output.print_msg("关注%s成功" % account_id)
@@ -46,10 +46,10 @@ def follow_account(account_id):
 
 
 def main():
-    config = robot.read_config(tool.PROJECT_CONFIG_PATH)
+    config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
 
     # 获取cookies
-    all_cookie_from_browser = robot.quicky_get_all_cookies_from_browser(config)
+    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser(config)
     if ".sina.com.cn" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser[".sina.com.cn"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
@@ -75,9 +75,9 @@ def main():
             tool.process_exit()
 
     # 存档位置
-    save_data_path = robot.quicky_get_save_data_path(config)
+    save_data_path = crawler.quicky_get_save_data_path(config)
     # 读取存档文件
-    account_list = robot.read_save_data(save_data_path, 0, [""])
+    account_list = crawler.read_save_data(save_data_path, 0, [""])
     for account_id in sorted(account_list.keys()):
         while not follow_account(account_id):
             pass

@@ -26,10 +26,10 @@ def get_one_page_blog(account_id, page_count):
     }
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
-            raise robot.RobotException("账号不存在")
+            raise crawler.CrawlerException("账号不存在")
         article_list_selector = pq(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
         if article_list_selector.size() == 0:
-            raise robot.RobotException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
+            raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
         for article_index in range(article_list_selector.size()):
             result_blog_info = {
                 "blog_url": None,  # 日志地址
@@ -40,21 +40,21 @@ def get_one_page_blog(account_id, page_count):
             # 获取日志地址
             blog_url = article_selector.find("span.atc_title a").attr("href")
             if not blog_url:
-                raise robot.RobotException("日志列表解析日志地址失败\n%s" % article_selector.html().encode("UTF-8"))
+                raise crawler.CrawlerException("日志列表解析日志地址失败\n%s" % article_selector.html().encode("UTF-8"))
             result_blog_info["blog_url"] = str(blog_url)
             # 获取日志标题
             blog_title = article_selector.find("span.atc_title a").text().encode("UTF-8")
             if not blog_title:
-                raise robot.RobotException("日志列表解析日志标题失败\n%s" % article_selector.html().encode("UTF-8"))
+                raise crawler.CrawlerException("日志列表解析日志标题失败\n%s" % article_selector.html().encode("UTF-8"))
             result_blog_info["blog_title"] = str(blog_title)
             # 获取日志时间
             blog_time = article_selector.find("span.atc_tm").text()
             if not blog_time:
-                raise robot.RobotException("日志列表解析日志时间失败\n%s" % article_selector.html().encode("UTF-8"))
+                raise crawler.CrawlerException("日志列表解析日志时间失败\n%s" % article_selector.html().encode("UTF-8"))
             try:
                 result_blog_info["blog_time"] = int(time.mktime(time.strptime(blog_time, "%Y-%m-%d %H:%M")))
             except ValueError:
-                raise robot.RobotException("日志时间格式不正确\n%s" % blog_time)
+                raise crawler.CrawlerException("日志时间格式不正确\n%s" % blog_time)
             result["blog_info_list"].append(result_blog_info)
         # 获取分页信息
         pagination_html = tool.find_sub_string(blog_pagination_response.data, '<div class="SG_page">', '</div>')
@@ -62,11 +62,11 @@ def get_one_page_blog(account_id, page_count):
             result["is_over"] = True
         else:
             max_page_count = tool.find_sub_string(pagination_html, "共", "页")
-            if not robot.is_integer(max_page_count):
-                raise robot.RobotException("分页信息截取总页数失败\n%s" % pagination_html)
+            if not crawler.is_integer(max_page_count):
+                raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % pagination_html)
             result["is_over"] = page_count >= int(max_page_count)
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
     return result
 
 
@@ -77,7 +77,7 @@ def get_blog_page(blog_url):
         "image_url_list": [],  # 全部图片地址
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_response.status))
     # 获取博客正文
     article_html = tool.find_sub_string(blog_response.data, "<!-- 正文开始 -->", "<!-- 正文结束 -->")
     # 获取图片地址
@@ -101,16 +101,16 @@ def get_image_url(image_url):
     return image_url
 
 
-class Blog(robot.Robot):
+class Blog(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_name  last_blog_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -139,14 +139,14 @@ class Blog(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) > 2 and self.account_info[2]:
             self.account_name = self.account_info[2]
@@ -167,7 +167,7 @@ class Download(robot.DownloadThread):
 
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -201,7 +201,7 @@ class Download(robot.DownloadThread):
         # 获取日志
         try:
             blog_response = get_blog_page(blog_info["blog_url"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 日志《%s》 %s 解析失败，原因：%s" % (blog_info["blog_title"], blog_info["blog_url"], e.message))
             raise
 
@@ -233,7 +233,7 @@ class Download(robot.DownloadThread):
                 log.step(self.account_name + " 日志《%s》 第%s张图片下载成功" % (blog_info["blog_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 日志《%s》 第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_title"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

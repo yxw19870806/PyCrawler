@@ -26,7 +26,7 @@ def get_token_from_file():
         account_data = json.loads(account_data)
     except ValueError:
         return None
-    if robot.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
+    if crawler.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
         global ACCESS_TOKEN
         global AUTH_TOKEN
         global ZHEZHE_INFO

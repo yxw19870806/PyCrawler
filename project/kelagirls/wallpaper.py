@@ -23,10 +23,10 @@ def get_one_page_photo(page_count):
         "is_over": False,  # 是不是最后一页壁纸
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
     photo_list_selector = pq(photo_pagination_response.data.decode("UTF-8")).find(".bizhinmore .bizhi")
     if photo_list_selector.size() == 0:
-        raise robot.RobotException("页面匹配图片列失败\n%s" % photo_pagination_response.data)
+        raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response.data)
     for photo_index in range(0, photo_list_selector.size()):
         result_image_info = {
             "image_id": None,  # 图片id
@@ -36,26 +36,26 @@ def get_one_page_photo(page_count):
         # 获取图片id
         image_id = photo_list_selector.eq(photo_index).find(".bizhibigwrap").attr("id")
         if not image_id:
-            raise robot.RobotException("图片列表匹配图片id失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
-        if not (image_id[0:3] == "big" and robot.is_integer(image_id[3:])):
-            raise robot.RobotException("图片列表匹配的图片id格式不正确\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配图片id失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+        if not (image_id[0:3] == "big" and crawler.is_integer(image_id[3:])):
+            raise crawler.CrawlerException("图片列表匹配的图片id格式不正确\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
         result_image_info["image_id"] = str(image_id[3:])
         # 获取图片地址
         image_path = photo_list_selector.eq(photo_index).find(".bizhibig img").eq(1).attr("src")
         if not image_path:
-            raise robot.RobotException("图片列表匹配图片地址失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配图片地址失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
         result_image_info["image_url"] = "http://kelagirls.com/" + str(image_path.encode("UTF-8"))
         # 获取模特名字
         model_name = photo_list_selector.eq(photo_index).find(".bzwdown span").eq(0).text().encode("UTF-8")
         if not model_name:
-            raise robot.RobotException("图片列表匹配模特名字失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
+            raise crawler.CrawlerException("图片列表匹配模特名字失败\n%s" % photo_list_selector.eq(photo_index).html().encode("UTF-8"))
         result_image_info["model_name"] = str(model_name)
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
     pagination_selector = pq(photo_pagination_response.data.decode("UTF-8")).find(".pageBottom div")
     max_page_count = page_count
     for pagination_index in range(0, pagination_selector.size()):
-        if robot.is_integer(pagination_selector.eq(pagination_index).text()):
+        if crawler.is_integer(pagination_selector.eq(pagination_index).text()):
             max_page_count = max(max_page_count, int(pagination_selector.eq(pagination_index).text()))
     result["is_over"] = page_count >= max_page_count
     return result
@@ -66,19 +66,19 @@ def get_image_url(image_url):
     return image_url.replace("/[page]", "/")
 
 
-class Wallpaper(robot.Robot):
+class Wallpaper(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
     def main(self):
         last_image_id = 0
         if os.path.exists(self.save_data_path):
             file_save_info = tool.read_file(self.save_data_path)
-            if not robot.is_integer(file_save_info):
+            if not crawler.is_integer(file_save_info):
                 log.error("存档内数据格式不正确")
                 tool.process_exit()
             last_image_id = int(file_save_info)
@@ -96,7 +96,7 @@ class Wallpaper(robot.Robot):
                 # 获取一页壁纸
                 try:
                     photo_pagination_response = get_one_page_photo(page_count)
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error("第%s页壁纸解析失败，原因：%s" % (page_count, e.message))
                     break
                 except SystemExit:
@@ -131,7 +131,7 @@ class Wallpaper(robot.Robot):
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_info["image_id"])
                 else:
-                    log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
                     continue
                 # 图片下载完毕
                 self.total_image_count += 1  # 计数累加

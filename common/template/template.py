@@ -31,23 +31,23 @@ def get_blog_page(account_id, blog_id):
     return result
 
 
-class Template(robot.Robot):
+class Template(crawler.Crawler):
     def __init__(self):
         # todo 配置
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_SET_PROXY: True,
-            robot.SYS_NOT_CHECK_SAVE_DATA: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_NOT_CHECK_SAVE_DATA: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
-    def main(self):
         # todo 存档文件格式
         # 解析存档文件
         # account_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", ])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", ])
 
+    def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
         for account_id in sorted(self.account_list.keys()):
@@ -74,15 +74,15 @@ class Template(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         # todo 是否需要下载图片或视频
         log.step("全部下载完毕，耗时%s秒，共计图片%s张，视频%s个" % (self.get_run_time(), self.total_image_count, self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         # todo 是否有需要显示不同名字
         self.account_name = self.account_id
@@ -102,7 +102,7 @@ class Download(robot.DownloadThread):
             # 获取指定时间后的一页日志
             try:
                 blog_pagination_response = get_one_page_blog(self.account_id, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -125,7 +125,7 @@ class Download(robot.DownloadThread):
         # 获取指定日志
         try:
             blog_response = get_blog_page(self.account_id, blog_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 日志%s解析失败，原因：%s" % (blog_id, e.message))
             raise
 
@@ -146,7 +146,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
                 else:
-                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # todo 视频下载逻辑
         # 视频下载
@@ -165,7 +165,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 第%s个视频下载成功" % video_index)
                     video_index += 1
                 else:
-                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

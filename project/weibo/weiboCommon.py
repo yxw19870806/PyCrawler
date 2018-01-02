@@ -46,11 +46,11 @@ def get_account_index_page(account_id):
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取账号page id
         account_page_id = tool.find_sub_string(account_index_response.data, "$CONFIG['page_id']='", "'")
-        if not robot.is_integer(account_page_id):
-            raise robot.RobotException("账号不存在")
+        if not crawler.is_integer(account_page_id):
+            raise crawler.CrawlerException("账号不存在")
         result["account_page_id"] = account_page_id
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
     return result
 
 

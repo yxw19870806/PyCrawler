@@ -33,7 +33,7 @@ def get_account_from_index():
     while True:
         try:
             pagination_account_list = get_one_page_account(page_count)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             output.print_msg("第%s页账号解析失败，原因：%s" % (page_count, e.message))
         if len(pagination_account_list) > 0:
             account_list.update(pagination_account_list)
@@ -50,7 +50,7 @@ def get_one_page_account(page_count):
     account_pagination_response = net.http_request(account_pagination_url, method="GET", fields=query_data)
     pagination_account_list = {}
     if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        robot.RobotException(robot.get_http_request_failed_reason(account_pagination_response.status))
+        crawler.CrawlerException(crawler.get_http_request_failed_reason(account_pagination_response.status))
     account_list_selector = pq(account_pagination_response.data.decode("UTF-8")).find(".users-list li")
     for account_index in range(0, account_list_selector.size()):
         account_selector = account_list_selector.eq(account_index)
@@ -58,13 +58,13 @@ def get_one_page_account(page_count):
         account_name = account_selector.find(".profile-name").eq(0).text()
         if not account_name:
             account_name = ""
-            # raise robot.RobotException("成员信息截取成员名字失败\n\%s" % account_selector.html().encode("UTF-8"))
+            # raise robot.CrawlerException("成员信息截取成员名字失败\n\%s" % account_selector.html().encode("UTF-8"))
         else:
             account_name = account_name.strip().encode("UTF-8")
         # 获取twitter账号
         account_id = account_selector.find(".screen-name a").text()
         if not account_id:
-            raise robot.RobotException("成员信息截取twitter账号失败\n\%s" % account_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("成员信息截取twitter账号失败\n\%s" % account_selector.html().encode("UTF-8"))
         account_id = account_id.strip().replace("@", "")
         pagination_account_list[account_id] = account_name
     return pagination_account_list

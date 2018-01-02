@@ -29,9 +29,9 @@ def get_one_page_blog(account_name, page_count):
         # 去重排序
         result["blog_url_list"] = sorted(list(set(blog_url_list)), reverse=True)
     elif page_count == 1 and blog_pagination_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
     return result
 
 
@@ -42,7 +42,7 @@ def get_blog_page(blog_url):
         "image_url_list": [],  # 全部图片地址
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_response.status))
     # 获取全部图片地址
     image_url_list = re.findall('bigimgsrc="([^"]*)"', blog_response.data)
     result["image_url_list"] = map(str, image_url_list)
@@ -61,16 +61,16 @@ def get_image_url(image_url):
      return image_url
 
 
-class Lofter(robot.Robot):
+class Lofter(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_name  image_count  last_blog_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", ""])
 
     def main(self):
         # 循环下载每个id
@@ -99,14 +99,14 @@ class Lofter(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
@@ -123,7 +123,7 @@ class Download(robot.DownloadThread):
 
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -160,7 +160,7 @@ class Download(robot.DownloadThread):
         # 获取日志
         try:
             blog_response = get_blog_page(blog_url)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 日志 %s 解析失败，原因：%s" % (blog_url, e.message))
             raise
 
@@ -186,7 +186,7 @@ class Download(robot.DownloadThread):
                 log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

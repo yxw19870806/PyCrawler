@@ -42,26 +42,26 @@ def get_one_page_video(account_page_id, since_id):
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(video_pagination_response.status))
-    if not robot.check_sub_key(("code", "data"), video_pagination_response.json_data):
-        raise robot.RobotException("返回信息'code'或'data'字段不存在\n%s" % video_pagination_response.json_data)
-    if not robot.is_integer(video_pagination_response.json_data["code"]):
-        raise robot.RobotException("返回信息'code'字段类型不正确\n%s" % video_pagination_response.json_data)
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+    if not crawler.check_sub_key(("code", "data"), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'code'或'data'字段不存在\n%s" % video_pagination_response.json_data)
+    if not crawler.is_integer(video_pagination_response.json_data["code"]):
+        raise crawler.CrawlerException("返回信息'code'字段类型不正确\n%s" % video_pagination_response.json_data)
     if int(video_pagination_response.json_data["code"]) != 100000:
-        raise robot.RobotException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
+        raise crawler.CrawlerException("返回信息'code'字段取值不正确\n%s" % video_pagination_response.json_data)
     page_html = video_pagination_response.json_data["data"].encode("UTF-8")
     # 获取视频播放地址
     video_play_url_list = re.findall('<a target="_blank" href="([^"]*)"><div ', page_html)
     if len(video_play_url_list) == 0:
         if since_id != INIT_SINCE_ID or page_html.find("还没有发布过视频") == -1:
-            raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
+            raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_pagination_response.json_data)
     else:
         result["video_play_url_list"] = map(str, video_play_url_list)
     # 获取下一页视频的指针
     next_page_since_id = tool.find_sub_string(page_html, "type=video&owner_uid=&viewer_uid=&since_id=", '">')
     if next_page_since_id:
-        if not robot.is_integer(next_page_since_id):
-            raise robot.RobotException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
+        if not crawler.is_integer(next_page_since_id):
+            raise crawler.CrawlerException("返回信息截取下一页指针失败\n%s" % video_pagination_response.json_data)
         result["next_page_since_id"] = next_page_since_id
     return result
 
@@ -76,21 +76,21 @@ def get_video_url(video_play_url):
         query_data = {"token": ""}
         video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException(robot.get_http_request_failed_reason(video_info_response.status))
-        if not robot.check_sub_key(("status", "result"), video_info_response.json_data):
-            raise robot.RobotException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
-        if not robot.is_integer(video_info_response.json_data["status"]):
-            raise robot.RobotException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+        if not crawler.check_sub_key(("status", "result"), video_info_response.json_data):
+            raise crawler.CrawlerException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
+        if not crawler.is_integer(video_info_response.json_data["status"]):
+            raise crawler.CrawlerException("返回信息'status'字段类型不正确\n%s" % video_info_response.json_data)
         if int(video_info_response.json_data["status"]) != 200:
-            raise robot.RobotException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
+            raise crawler.CrawlerException("返回信息'status'字段取值不正确\n%s" % video_info_response.json_data)
         if len(video_info_response.json_data["result"]) == 0:
-            raise robot.RobotException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
+            raise crawler.CrawlerException("返回信息'result'字段长度不正确\n%s" % video_info_response.json_data)
         for video_info in video_info_response.json_data["result"]:
-            if robot.check_sub_key(("path", "host", "scheme"), video_info):
+            if crawler.check_sub_key(("path", "host", "scheme"), video_info):
                 video_url = str(video_info["scheme"] + video_info["host"] + video_info["path"])
                 break
         if video_url is None:
-            raise robot.RobotException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
+            raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
         cookies_list = {"SUB": COOKIE_INFO["SUB"]}
@@ -100,53 +100,53 @@ def get_video_url(video_play_url):
             if not video_url:
                 video_url = tool.find_sub_string(video_play_response.data, 'flashvars="list=', '"')
             if not video_url:
-                raise robot.RobotException("页面截取视频地址失败\n%s" % video_play_response.data)
+                raise crawler.CrawlerException("页面截取视频地址失败\n%s" % video_play_response.data)
             video_url = str(urllib2.unquote(video_url))
             if video_url.find("//") == 0:
                 video_url = "http:" + video_url
         elif video_play_response.status == 404:
             video_url = ""
         else:
-            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise robot.RobotException(robot.get_http_request_failed_reason(video_play_response.status))
+            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
         video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
         if len(video_url_find) != 1:
-            raise robot.RobotException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
+            raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
         video_url = meipai.decrypt_video_url(video_url_find[0])
         if video_url is None:
-            raise robot.RobotException("加密视频地址解密失败\n%s" % video_url_find[0])
+            raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_find[0])
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
         video_url = "http://gslb.miaopai.com/stream/%s.mp4" % video_id
     else:  # 其他视频，暂时不支持，收集看看有没有
-        raise robot.RobotException("未知的第三方视频\n%s" % video_play_url)
+        raise crawler.CrawlerException("未知的第三方视频\n%s" % video_play_url)
     return video_url
 
 
-class Weibo(robot.Robot):
+class Weibo(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
-            robot.SYS_GET_COOKIE: {
+            crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_GET_COOKIE: {
                 ".sina.com.cn": (),
                 ".login.sina.com.cn": (),
             },
         }
-        robot.Robot.__init__(self, sys_config, extra_config)
+        crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
         # account_id  video_count  last_video_url  (account_name)
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", ""])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", ""])
 
         # 检测登录状态
         if not weiboCommon.check_login(COOKIE_INFO):
@@ -186,14 +186,14 @@ class Weibo(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计视频%s个" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
             self.account_name = self.account_info[3]
@@ -206,7 +206,7 @@ class Download(robot.DownloadThread):
         # 获取账号首页
         try:
             account_index_response = weiboCommon.get_account_index_page(self.account_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 首页解析失败，原因：%s" % e.message)
             raise
 
@@ -221,7 +221,7 @@ class Download(robot.DownloadThread):
             # 获取指定时间点后的一页视频信息
             try:
                 video_pagination_response = get_one_page_video(account_index_response["account_page_id"], since_id)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " %s后的一页视频解析失败，原因：%s" % (since_id, e.message))
                 raise
 
@@ -254,7 +254,7 @@ class Download(robot.DownloadThread):
         # 获取这个视频的下载地址
         try:
             video_url = get_video_url(video_play_url)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频 %s 解析失败，原因：%s" % (video_play_url, e.message))
             raise
 
@@ -270,7 +270,7 @@ class Download(robot.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_index, video_play_url, video_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_index, video_play_url, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
             return
 
         # 视频下载完毕

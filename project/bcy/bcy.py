@@ -92,7 +92,7 @@ def get_account_info_from_file():
         except ValueError:
             pass
         else:
-            if robot.check_sub_key(("email", "password"), account_data):
+            if crawler.check_sub_key(("email", "password"), account_data):
                 return account_data["email"], account_data["password"]
     return None, None
 
@@ -106,10 +106,10 @@ def save_account_info_to_file(email, password):
 # 从控制台输入获取账号信息
 def get_account_info_from_console():
     while True:
-        email = output.console_input(robot.get_time() + " 请输入邮箱: ")
-        password = output.console_input(robot.get_time() + " 请输入密码: ")
+        email = output.console_input(crawler.get_time() + " 请输入邮箱: ")
+        password = output.console_input(crawler.get_time() + " 请输入密码: ")
         while True:
-            input_str = output.console_input(robot.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
+            input_str = output.console_input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
             input_str = input_str.lower()
             if input_str in ["y", "yes"]:
                 return email, password
@@ -154,15 +154,15 @@ def get_one_page_album(account_id, page_count):
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_pagination_response.status))
     if page_count == 1 and album_pagination_response.data.find("<h2>用户不存在</h2>") >= 0:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     # 获取coser id
     coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
     if len(coser_id_find) != 1:
-        raise robot.RobotException("页面截取coser id失败\n%s" % album_pagination_response.data)
-    if not robot.is_integer(coser_id_find[0]):
-        raise robot.RobotException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
+        raise crawler.CrawlerException("页面截取coser id失败\n%s" % album_pagination_response.data)
+    if not crawler.is_integer(coser_id_find[0]):
+        raise crawler.CrawlerException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
     result["coser_id"] = coser_id_find[0]
     # 获取作品信息
     album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
@@ -175,10 +175,10 @@ def get_one_page_album(account_id, page_count):
         # 获取作品id
         album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
         if not album_url:
-            raise robot.RobotException("作品信息截取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
+            raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
         album_id = str(album_url).split("/")[-1]
-        if not robot.is_integer(album_id):
-            raise robot.RobotException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
+        if not crawler.is_integer(album_id):
+            raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
         result_album_info['album_id'] = album_id
         # 获取作品标题
         album_title = album_selector.find(".postWorkCard__img img").attr("alt")
@@ -208,7 +208,7 @@ def get_album_page(coser_id, album_id):
         "is_only_login": False,  # 是否只显示给登录用户
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
     # 检测作品是否被管理员锁定
     if album_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
         result["is_admin_locked"] = True
@@ -220,11 +220,11 @@ def get_album_page(coser_id, album_id):
         if not IS_LOGIN:
             result["is_only_login"] = True
         else:
-            raise robot.RobotException("登录状态丢失")
+            raise crawler.CrawlerException("登录状态丢失")
     # 获取作品页面内的全部图片地址列表
     image_url_list = re.findall("src='([^']*)'", album_response.data)
     if not result["is_admin_locked"] and not result["is_only_follower"] and len(image_url_list) == 0:
-        raise robot.RobotException("页面匹配图片地址失败\n%s" % album_response.data)
+        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
     result["image_url_list"] = map(str, image_url_list)
     return result
 
@@ -234,22 +234,22 @@ def get_image_url(image_url):
     return "/".join(image_url.split("/")[0:-1])
 
 
-class Bcy(robot.Robot):
+class Bcy(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
         global IS_AUTO_FOLLOW
         global IS_LOCAL_SAVE_SESSION
 
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
-            robot.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
-            robot.SYS_APP_CONFIG: (
+            crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
+            crawler.SYS_APP_CONFIG: (
                 os.path.realpath("config.ini"),
-                ("IS_AUTO_FOLLOW", True, robot.CONFIG_ANALYSIS_MODE_BOOLEAN),
-                ("IS_LOCAL_SAVE_SESSION", False, robot.CONFIG_ANALYSIS_MODE_BOOLEAN)
+                ("IS_AUTO_FOLLOW", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+                ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
             ),
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO["LOGGED_USER"] = self.cookie_value["LOGGED_USER"]
@@ -258,7 +258,7 @@ class Bcy(robot.Robot):
 
         # 解析存档文件
         # account_id  last_album_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 生成session信息
         init_session()
@@ -267,7 +267,7 @@ class Bcy(robot.Robot):
         # 未登录时提示可能无法获取粉丝指定的作品
         if not check_login():
             while True:
-                input_str = output.console_input(robot.get_time() + " 没有检测到账号登录状态，可能无法解析那些只对粉丝开放的作品，手动输入账号密码登录(Y)es？或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析那些只对粉丝开放的作品，手动输入账号密码登录(Y)es？或者跳过登录继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["y", "yes"]:
                     if login_from_console():
@@ -308,14 +308,14 @@ class Bcy(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 3:
             self.account_name = self.account_info[2]
@@ -337,7 +337,7 @@ class Download(robot.DownloadThread):
             # 获取一页作品
             try:
                 album_pagination_response = get_one_page_album(self.account_id, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页作品解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -375,7 +375,7 @@ class Download(robot.DownloadThread):
         # 获取作品
         try:
             album_response = get_album_page(self.coser_id, album_info["album_id"])
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
             raise
 
@@ -399,7 +399,7 @@ class Download(robot.DownloadThread):
                 # 重新获取作品页面
                 try:
                     album_response = get_album_page(self.coser_id, album_info["album_id"])
-                except robot.RobotException, e:
+                except crawler.CrawlerException, e:
                     log.error(self.account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
                     raise
             else:
@@ -432,7 +432,7 @@ class Download(robot.DownloadThread):
                 log.step(self.account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除

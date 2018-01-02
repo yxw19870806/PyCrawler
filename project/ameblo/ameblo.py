@@ -30,10 +30,10 @@ def get_one_page_blog(account_name, page_count):
         if len(blog_id_list) == 0:
             page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
             if not page_data:
-                raise robot.RobotException("页面截取正文失败\n%s" % blog_pagination_response.data)
+                raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response.data)
             blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="https://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
         if len(blog_id_list) == 0:
-            raise robot.RobotException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
+            raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
         result["blog_id_list"] = map(str, blog_id_list)
         # 判断是不是最后一页
         # 有页数选择的页面样式
@@ -54,9 +54,9 @@ def get_one_page_blog(account_name, page_count):
             if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
                 result["is_over"] = True
     elif page_count == 1 and blog_pagination_response.status == 404:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     else:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
     return result
 
 
@@ -68,7 +68,7 @@ def get_blog_page(account_name, blog_id):
         "image_url_list": [],  # 全部图片地址
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(blog_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_response.status))
     # 截取日志正文部分（有多种页面模板）
     article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
     if not article_data:
@@ -76,7 +76,7 @@ def get_blog_page(account_name, blog_id):
     if not article_data:
         article_data = tool.find_sub_string(blog_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
     if not article_data:
-        raise robot.RobotException("页面截取正文失败\n%s" % blog_response.data)
+        raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response.data)
     # 获取图片地址
     image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
     result["image_url_list"] = map(str, image_url_list)
@@ -150,16 +150,16 @@ def check_image_invalid(file_path):
     return False
 
 
-class Ameblo(robot.Robot):
+class Ameblo(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_DOWNLOAD_IMAGE: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_name  image_count  last_diary_time
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -188,14 +188,14 @@ class Ameblo(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计图片%s张" % (self.get_run_time(), self.total_image_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
@@ -212,7 +212,7 @@ class Download(robot.DownloadThread):
             # 获取一页日志
             try:
                 blog_pagination_response = get_one_page_blog(self.account_name, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
 
@@ -243,7 +243,7 @@ class Download(robot.DownloadThread):
         # 获取日志
         try:
             blog_response = get_blog_page(self.account_name, blog_id)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " 日志%s解析失败，原因：%s" % (blog_id, e.message))
             raise
 
@@ -275,7 +275,7 @@ class Download(robot.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, robot.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

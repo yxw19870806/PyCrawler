@@ -26,9 +26,9 @@ def get_one_page_audio(account_id, page_type, page_count):
         "audio_info_list": [],  # 全部歌曲信息
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(audio_pagination_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audio_pagination_response.status))
     if audio_pagination_response.data.find("var OwnerNickName = '';") >= 0:
-        raise robot.RobotException("账号不存在")
+        raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息
     # 单首歌曲信息的格式：[歌曲id，歌曲标题]
     audio_info_list = re.findall('<a href="http://5sing.kugou.com/' + page_type + '/([\d]*).html" [\s|\S]*? title="([^"]*)">', audio_pagination_response.data)
@@ -49,35 +49,35 @@ def get_audio_play_page(audio_id, song_type):
         "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise robot.RobotException(robot.get_http_request_failed_reason(audio_play_response.status))
+        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audio_play_response.status))
     # 获取歌曲地址
     audio_info_string = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
     if not audio_info_string:
-        raise robot.RobotException("页面截取加密歌曲信息失败\n%s" % audio_play_response.data)
+        raise crawler.CrawlerException("页面截取加密歌曲信息失败\n%s" % audio_play_response.data)
     try:
         audio_info_string = base64.b64decode(audio_info_string)
     except TypeError:
-        raise robot.RobotException("加密歌曲信息解密失败\n%s" % audio_info_string)
+        raise crawler.CrawlerException("加密歌曲信息解密失败\n%s" % audio_info_string)
     try:
         audio_info = json.loads(audio_info_string)
     except ValueError:
-        raise robot.RobotException("歌曲信息加载失败\n%s" % audio_info_string)
-    if not robot.check_sub_key(("file",), audio_info):
-        raise robot.RobotException("歌曲信息'file'字段不存在\n%s" % audio_info)
+        raise crawler.CrawlerException("歌曲信息加载失败\n%s" % audio_info_string)
+    if not crawler.check_sub_key(("file",), audio_info):
+        raise crawler.CrawlerException("歌曲信息'file'字段不存在\n%s" % audio_info)
     result["audio_url"] = str(audio_info["file"])
     return result
 
 
-class FiveSing(robot.Robot):
+class FiveSing(crawler.Crawler):
     def __init__(self):
         sys_config = {
-            robot.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_DOWNLOAD_VIDEO: True,
         }
-        robot.Robot.__init__(self, sys_config)
+        crawler.Crawler.__init__(self, sys_config)
 
         # 解析存档文件
         # account_id  last_yc_audio_id  last_fc_audio_id
-        self.account_list = robot.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
     def main(self):
         # 循环下载每个id
@@ -106,12 +106,12 @@ class FiveSing(robot.Robot):
             tool.write_file(tool.list_to_string(self.account_list.values()), self.temp_save_data_path)
 
         # 重新排序保存存档文件
-        robot.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
+        crawler.rewrite_save_file(self.temp_save_data_path, self.save_data_path)
 
         log.step("全部下载完毕，耗时%s秒，共计歌曲%s首" % (self.get_run_time(), self.total_video_count))
 
 
-class Download(robot.DownloadThread):
+class Download(crawler.DownloadThread):
     AUDIO_COUNT_PER_PAGE = 20  # 每页歌曲数量上限
     AUDIO_TYPE_YC = "yc"  # 歌曲类型：原唱
     AUDIO_TYPE_FC = "fc"  # 歌曲类型：翻唱
@@ -120,7 +120,7 @@ class Download(robot.DownloadThread):
     audio_type_name_dict = {AUDIO_TYPE_YC: "原唱", AUDIO_TYPE_FC: "翻唱"}  # 显示名字
 
     def __init__(self, account_info, main_thread):
-        robot.DownloadThread.__init__(self, account_info, main_thread)
+        crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
         if len(self.account_info) >= 4 and self.account_info[3]:
             self.account_name = self.account_info[3]
@@ -145,7 +145,7 @@ class Download(robot.DownloadThread):
             # 获取一页歌曲
             try:
                 audio_pagination_response = get_one_page_audio(self.account_id, audio_type, page_count)
-            except robot.RobotException, e:
+            except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页%s歌曲解析失败，原因：%s" % (page_count, audio_type_name, e.message))
                 break
 
@@ -187,7 +187,7 @@ class Download(robot.DownloadThread):
         # 获取歌曲的详情页
         try:
             audio_play_response = get_audio_play_page(audio_info["audio_id"], audio_type)
-        except robot.RobotException, e:
+        except crawler.CrawlerException, e:
             log.error(self.account_name + " %s歌曲%s《%s》解析失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], e.message))
             return
 
@@ -199,7 +199,7 @@ class Download(robot.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
         else:
-            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], robot.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
             return
 
         # 歌曲下载完毕
