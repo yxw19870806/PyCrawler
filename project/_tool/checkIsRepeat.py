@@ -5,7 +5,7 @@ import os
 import sys
 
 # 存档路径
-SAVE_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "save.data")
+SAVE_FILE_PATH = os.path.join(os.path.dirname(__file__), "save.data")
 # 存档中唯一标示（如，账号id）的字段下标
 NAME_COLUMN = 0
 

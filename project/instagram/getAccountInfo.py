@@ -50,7 +50,7 @@ def main():
     # 设置代理
     crawler.quicky_set_proxy(config)
 
-    result_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/account_info.data")
+    result_file_path = os.path.join(os.path.dirname(__file__), "info/account_info.data")
     for account in sorted(account_list.keys()):
         try:
             account_index_response = get_account_index_page(account)

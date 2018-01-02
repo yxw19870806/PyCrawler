@@ -12,9 +12,9 @@ import os
 import sys
 
 # 存放账号的文件路径
-ACCOUNT_ID_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/account.data")
+ACCOUNT_ID_FILE_PATH = os.path.join(os.path.dirname(__file__), "info/account.data")
 # 存放解析出的账号文件路径
-TALK_ID_FILE_PATH = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "info/talk.data")
+TALK_ID_FILE_PATH = os.path.join(os.path.dirname(__file__), "info/talk.data")
 
 
 # 获取account id文件

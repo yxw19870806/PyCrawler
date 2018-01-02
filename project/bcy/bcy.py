@@ -20,7 +20,7 @@ IS_AUTO_FOLLOW = True
 IS_LOCAL_SAVE_SESSION = False
 IS_LOGIN = True
 COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
-SESSION_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "session"))
+SESSION_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "session"))
 
 
 # 生成session cookies

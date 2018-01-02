@@ -15,7 +15,7 @@ import sys
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
 ACCESS_TOKEN = None
-token_file_path = os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "token")
+token_file_path = os.path.join(os.path.dirname(__file__), "token")
 
 
 def init():

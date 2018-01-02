@@ -15,7 +15,7 @@ import sys
 
 # 从文件中读取account id
 def get_account_id_from_file():
-    return tool.read_file(os.path.join(os.path.dirname(sys._getframe().f_code.co_filename), "account.data"))
+    return tool.read_file(os.path.join(os.path.dirname(__file__), "account.data"))
 
 
 # 获取指定账号的全部游戏ud列表
