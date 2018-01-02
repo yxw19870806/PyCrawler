@@ -5,8 +5,7 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from common import process
+from common import browser, path, tool
 import codecs
 import ConfigParser
 import os
@@ -556,10 +555,9 @@ def quicky_get_all_cookies_from_browser(config=None):
         config = read_config(tool.PROJECT_CONFIG_PATH)
     # 是否自动查找cookies路径
     is_auto_get_cookie = analysis_config(config, "IS_AUTO_GET_COOKIE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
-    if is_auto_get_cookie:
-        # 操作系统&浏览器
-        browser_type = analysis_config(config, "BROWSER_TYPE", 2, CONFIG_ANALYSIS_MODE_INTEGER)
-        cookie_path = browser.get_default_browser_cookie_path(browser_type)
-    else:
-        cookie_path = analysis_config(config, "COOKIE_PATH", "")
+    if not is_auto_get_cookie:
+        return {}
+    # 操作系统&浏览器
+    browser_type = analysis_config(config, "BROWSER_TYPE", browser.BROWSER_TYPE_CHROME, CONFIG_ANALYSIS_MODE_INTEGER)
+    cookie_path = browser.get_default_browser_cookie_path(browser_type)
     return browser.get_all_cookie_from_browser(browser_type, cookie_path)
