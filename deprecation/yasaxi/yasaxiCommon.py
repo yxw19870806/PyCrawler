@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 from common import *
 import json
 import os
-import sys
 
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""

@@ -2,7 +2,6 @@
 # 判断存档文件中的数量和保存目录中的数量是否一致
 from common import output, tool
 import os
-import sys
 
 # 文件保存目录
 FILE_STORAGE_PATH = os.path.join("photo")

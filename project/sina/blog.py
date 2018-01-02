@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as pq
+from pyquery import PyQuery as PQ
 import os
 import re
 import threading
@@ -27,7 +27,7 @@ def get_one_page_blog(account_id, page_count):
     if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
             raise crawler.CrawlerException("账号不存在")
-        article_list_selector = pq(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
+        article_list_selector = PQ(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
         if article_list_selector.size() == 0:
             raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
         for article_index in range(article_list_selector.size()):

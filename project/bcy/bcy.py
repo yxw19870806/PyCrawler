@@ -11,7 +11,6 @@ from pyquery import PyQuery as pq
 import json
 import os
 import re
-import sys
 import threading
 import time
 import traceback

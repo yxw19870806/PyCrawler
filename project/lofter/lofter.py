@@ -56,9 +56,9 @@ def get_blog_id(blog_url):
 
 # 去除图片的参数
 def get_image_url(image_url):
-     if image_url.rfind("?") > image_url.rfind("."):
+    if image_url.rfind("?") > image_url.rfind("."):
         return image_url.split("?")[0]
-     return image_url
+    return image_url
 
 
 class Lofter(crawler.Crawler):

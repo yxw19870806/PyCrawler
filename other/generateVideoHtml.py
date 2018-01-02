@@ -4,16 +4,15 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+from common import tool
 import os
 import re
 
 
 # 从文件中读取全部的url列表
 def get_file_url_from_log(log_path):
-    file_handle = open(log_path, "r")
-    str = file_handle.read()
-    file_handle.close()
-    return re.findall("(http://[\S]*)", str)
+    log_data = tool.read_file(log_path)
+    return re.findall("(http://[\S]*)", log_data)
 
 
 # 根据url列表，生成包含全部下载地址的页面

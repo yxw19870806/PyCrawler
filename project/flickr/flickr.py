@@ -72,9 +72,9 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_se
     #     "is_marketplace_printable", "is_marketplace_licensable", "publiceditability"
     # ]
     query_data = {
-        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1, "get_user_info": 0, "privacy_filter": 1,
-        "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "user_id": user_id, "api_key": api_key, "hermes": 1, "reqId": request_id, "csrf": csrf,
-        "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
+        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1, "get_user_info": 0,
+        "privacy_filter": 1, "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "user_id": user_id, "api_key": api_key, "hermes": 1,
+        "reqId": request_id, "csrf": csrf, "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
     COOKIE_INFO.update({"cookie_session": cookie_session})
     photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
@@ -108,7 +108,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_se
         max_resolution = 0
         max_resolution_photo_type = ""
         # 可获取图片尺寸中最大的那张
-        for photo_type in ["c","f","h","k","l","m","n","o","q","s","sq","t","z"]:
+        for photo_type in ["c", "f", "h", "k", "l", "m", "n", "o", "q", "s", "sq", "t", "z"]:
             if crawler.check_sub_key(("width_" + photo_type, "height_" + photo_type), photo_info):
                 resolution = int(photo_info["width_" + photo_type]) * int(photo_info["height_" + photo_type])
                 if resolution > max_resolution:

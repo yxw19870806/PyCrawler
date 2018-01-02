@@ -150,7 +150,7 @@ class Download(crawler.DownloadThread):
 
             # 如果为空，表示已经取完了
             if len(blog_pagination_response["blog_info_list"]) == 0:
-              break
+                break
 
             log.trace(self.account_name + " target id %s解析的全部日志：%s" % (target_id, blog_pagination_response["blog_info_list"]))
 

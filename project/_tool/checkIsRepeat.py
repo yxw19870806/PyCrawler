@@ -2,7 +2,6 @@
 # 获取指定存档文件中是否存在重复的主键
 from common import output, tool
 import os
-import sys
 
 # 存档路径
 SAVE_FILE_PATH = os.path.join(os.path.dirname(__file__), "save.data")

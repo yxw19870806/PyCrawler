@@ -143,7 +143,7 @@ class Article(crawler.Crawler):
         # 设置全局变量，供子线程调用
         COOKIE_INFO.update(self.cookie_value)
 
-         # 解析存档文件
+        # 解析存档文件
         # account_id  last_article_time  (account_name)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 

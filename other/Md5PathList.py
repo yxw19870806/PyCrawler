@@ -28,7 +28,7 @@ def md5(source_file_path):
     return str(file_hash.hexdigest())
 
 
-class GetPathMd5List():
+class GetPathMd5List(object):
     def __init__(self, root_path):
         self.root_path = root_path
         self.result = {}

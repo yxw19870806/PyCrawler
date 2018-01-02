@@ -40,7 +40,7 @@ def get_image_index_page(account_id):
 def get_image_header(image_url):
     image_head_response = net.http_request(image_url, method="HEAD")
     result = {
-        "image_time": None, # 图片上传时间
+        "image_time": None,  # 图片上传时间
     }
     if image_head_response.status == 404:
         return result

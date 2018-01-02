@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 from common import *
 from pyquery import PyQuery as pq
 import os
-import sys
 import traceback
 
 

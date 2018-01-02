@@ -2,7 +2,6 @@
 # 重新格式化存档，修改字段顺序
 from common import tool
 import os
-import sys
 
 # 旧存档路径
 OLD_SAVE_FILE_PATH = os.path.join(os.path.dirname(__file__), "save.data")

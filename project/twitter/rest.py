@@ -10,7 +10,6 @@ from common import *
 import base64
 import json
 import os
-import sys
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
@@ -74,7 +73,11 @@ def get_access_token(api_key, api_secret):
         "grant_type": "client_credentials"
     }
     response = net.http_request(auth_url, method="POST", header_list=header_list, fields=post_data, json_decode=True)
-    if response.status == net.HTTP_RETURN_CODE_SUCCEED and crawler.check_sub_key(("token_type", "access_token"), response.json_data) and response.json_data["token_type"] == "bearer":
+    if (
+        response.status == net.HTTP_RETURN_CODE_SUCCEED and
+        crawler.check_sub_key(("token_type", "access_token"), response.json_data) and
+        response.json_data["token_type"] == "bearer"
+    ):
         global ACCESS_TOKEN
         ACCESS_TOKEN = response.json_data["access_token"]
         return True

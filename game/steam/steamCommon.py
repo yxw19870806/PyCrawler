@@ -6,11 +6,10 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as pq
+from pyquery import PyQuery as PQ
 import json
 import os
 import re
-import sys
 
 
 # 从文件中读取account id
@@ -33,7 +32,7 @@ def get_account_owned_app_list(user_id):
         raise crawler.CrawlerException("游戏列表加载失败\n%s" % owned_all_game_data)
     app_id_list = []
     for game_data in owned_all_game_data:
-        if not "appid" in game_data:
+        if "appid" not in game_data:
             raise crawler.CrawlerException("游戏信息'appid'字段不存在\n%s" % game_data)
         app_id_list.append(str(game_data["appid"]))
     return app_id_list
@@ -51,7 +50,7 @@ def get_discount_game_list(login_cookie):
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, method="GET", cookies_list=cookies_list)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏解析失败" % page_count)
-        search_result_selector = pq(discount_game_pagination_response.data).find("#search_result_container")
+        search_result_selector = PQ(discount_game_pagination_response.data).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
         for game_index in range(0, game_list_selector.size()):
             game_selector = game_list_selector.eq(game_index)
@@ -135,7 +134,7 @@ def get_self_account_badges(account_id, login_cookie):
         raise crawler.CrawlerException(crawler.get_http_request_failed_reason(badges_index_response.status))
     badges_detail_url_list = []
     # 徽章div
-    badges_selector = pq(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
+    badges_selector = PQ(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
     for index in range(0, badges_selector.size()):
         badge_html = badges_selector.eq(index).html().encode("UTF-8")
         # 已经掉落全部卡牌的徽章
@@ -159,7 +158,7 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.get_http_request_failed_reason(badge_detail_response.status))
     wanted_card_list = {}
-    page_selector = pq(badge_detail_response.data)
+    page_selector = PQ(badge_detail_response.data)
     # 徽章等级
     badge_selector = page_selector.find(".maincontent .badge_current .badge_info")
     # 有等级
@@ -206,7 +205,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
         raise crawler.CrawlerException("返回信息'success'或'results_html'字段不存在\n%s" % market_search_response.json_data)
     if market_search_response.json_data["success"] is not True:
         raise crawler.CrawlerException("返回信息'success'字段取值不正确\n%s" % market_search_response.json_data)
-    card_selector = pq(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
+    card_selector = PQ(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
     for index in range(0, card_selector.size()):
         card_name = card_selector.eq(index).find(".market_listing_item_name").text()
         card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().encode("UTF-8").replace("¥ ", "")

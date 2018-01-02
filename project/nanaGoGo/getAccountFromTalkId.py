@@ -9,7 +9,6 @@ email: hikaru870806@hotmail.com
 from common import *
 import json
 import os
-import sys
 
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.join(os.path.dirname(__file__), "info/account.data")

@@ -217,7 +217,7 @@ def get_decrypt_step(js_file_url):
         if not sub_decrypt_step:
             continue
         # (加密方法所在变量名，加密方法名，加密方法参数)
-        sub_decrypt_step_find = re.findall("([\w\$\_]*)\.(\w*)\(a,(\d*)\)", sub_decrypt_step)
+        sub_decrypt_step_find = re.findall("([\w\$_]*)\.(\w*)\(a,(\d*)\)", sub_decrypt_step)
         if len(sub_decrypt_step_find) != 1:
             raise crawler.CrawlerException("播放器JS文件 %s，加密步骤匹配失败\n%s" % (js_file_url, sub_decrypt_step))
         if decrypt_function_var is None:
