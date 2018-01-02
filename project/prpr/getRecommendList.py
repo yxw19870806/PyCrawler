@@ -75,7 +75,7 @@ def get_channel_account_from_api(channel_id):
 
 def main():
     # 存档位置
-    save_data_path = crawler.quicky_get_save_data_path()
+    save_data_path = crawler.quickly_get_save_data_path()
     try:
         channel_list = get_channel_from_api()
     except crawler.CrawlerException, e:

@@ -20,7 +20,7 @@ token_file_path = os.path.join(os.path.dirname(__file__), "token")
 
 def init():
     # 设置代理
-    crawler.quicky_set_proxy()
+    crawler.quickly_set_proxy()
 
     api_key = None
     api_secret = None

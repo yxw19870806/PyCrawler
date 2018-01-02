@@ -12,7 +12,7 @@ import re
 
 # 从cookie中获取登录的auth_token
 def get_auth_token():
-    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser()
+    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
     if ".twitter.com" in all_cookie_from_browser and "auth_token" in all_cookie_from_browser[".twitter.com"]:
         return all_cookie_from_browser["www.instagram.com"]["sessionid"]
     return None

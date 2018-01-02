@@ -44,11 +44,11 @@ def get_account_index_page(account_name):
 def main():
     config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
     # 存档位置
-    save_data_path = crawler.quicky_get_save_data_path(config)
+    save_data_path = crawler.quickly_get_save_data_path(config)
     # 读取存档文件
     account_list = crawler.read_save_data(save_data_path, 0, [""])
     # 设置代理
-    crawler.quicky_set_proxy(config)
+    crawler.quickly_set_proxy(config)
 
     result_file_path = os.path.join(os.path.dirname(__file__), "info/account_info.data")
     for account in sorted(account_list.keys()):

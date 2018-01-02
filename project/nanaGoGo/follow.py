@@ -49,7 +49,7 @@ def follow_account(account_id):
 
 def main():
     # 获取cookies
-    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser()
+    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
     if "api.7gogo.jp" in all_cookie_from_browser and ".7gogo.jp" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser["api.7gogo.jp"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser["api.7gogo.jp"][cookie_key]

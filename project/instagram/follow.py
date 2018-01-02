@@ -67,7 +67,7 @@ def follow_account(account_name, account_id):
 def main():
     config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
     # 获取cookies
-    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser(config)
+    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
     if "www.instagram.com" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser["www.instagram.com"]:
             COOKIE_INFO[cookie_key] = all_cookie_from_browser["www.instagram.com"][cookie_key]
@@ -75,9 +75,9 @@ def main():
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
     # 设置代理
-    crawler.quicky_set_proxy(config)
+    crawler.quickly_set_proxy(config)
     # 存档位置
-    save_data_path = crawler.quicky_get_save_data_path(config)
+    save_data_path = crawler.quickly_get_save_data_path(config)
     # 读取存档文件
     account_list = crawler.read_save_data(save_data_path, 0, [""])
 

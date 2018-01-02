@@ -47,7 +47,7 @@ def get_account_from_index():
 
 def main():
     # 存档位置
-    save_data_path = crawler.quicky_get_save_data_path()
+    save_data_path = crawler.quickly_get_save_data_path()
     account_list_from_api = get_account_from_index()
     if len(account_list_from_api) > 0:
         account_list_from_save_data = get_account_from_save_data(save_data_path)

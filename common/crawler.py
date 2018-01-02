@@ -528,7 +528,7 @@ def get_http_request_failed_reason(return_code):
 # 读取配置文件，快速设置代理
 # is_auto = False   始终使用代理
 #           True    配置文件未禁止时使用代理（IS_PROXY = 1 or 2)
-def quicky_set_proxy(config=None, is_auto=True):
+def quickly_set_proxy(config=None, is_auto=True):
     if not isinstance(config, ConfigParser.SafeConfigParser):
         config = read_config(tool.PROJECT_CONFIG_PATH)
     # 设置代理
@@ -543,14 +543,14 @@ def quicky_set_proxy(config=None, is_auto=True):
 
 
 # 读取配置文件，返回存档文件所在路径
-def quicky_get_save_data_path(config=None):
+def quickly_get_save_data_path(config=None):
     if not isinstance(config, ConfigParser.SafeConfigParser):
         config = read_config(tool.PROJECT_CONFIG_PATH)
     return analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
 
 
 # 读取浏览器cookies
-def quicky_get_all_cookies_from_browser(config=None):
+def quickly_get_all_cookies_from_browser(config=None):
     if not isinstance(config, ConfigParser.SafeConfigParser):
         config = read_config(tool.PROJECT_CONFIG_PATH)
     # 是否自动查找cookies路径

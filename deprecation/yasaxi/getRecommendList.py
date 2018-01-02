@@ -53,7 +53,7 @@ def main():
                 return
 
     # 存档位置
-    save_data_path = crawler.quicky_get_save_data_path()
+    save_data_path = crawler.quickly_get_save_data_path()
     try:
         account_list_from_api = get_account_from_api()
     except crawler.CrawlerException, e:

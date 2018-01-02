@@ -218,7 +218,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
 # 从浏览器中获取登录cookies
 def get_login_cookie_from_browser():
     # 获取cookies
-    all_cookie_from_browser = crawler.quicky_get_all_cookies_from_browser()
+    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
     if "store.steampowered.com" not in all_cookie_from_browser:
         raise crawler.CrawlerException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
     if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
