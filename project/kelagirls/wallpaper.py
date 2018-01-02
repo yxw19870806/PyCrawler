@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as pq
+from pyquery import PyQuery as PQ
 import os
 import traceback
 
@@ -23,7 +23,7 @@ def get_one_page_photo(page_count):
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
-    photo_list_selector = pq(photo_pagination_response.data.decode("UTF-8")).find(".bizhinmore .bizhi")
+    photo_list_selector = PQ(photo_pagination_response.data.decode("UTF-8")).find(".bizhinmore .bizhi")
     if photo_list_selector.size() == 0:
         raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response.data)
     for photo_index in range(0, photo_list_selector.size()):
@@ -51,7 +51,7 @@ def get_one_page_photo(page_count):
         result_image_info["model_name"] = str(model_name)
         result["image_info_list"].append(result_image_info)
     # 判断是不是最后一页
-    pagination_selector = pq(photo_pagination_response.data.decode("UTF-8")).find(".pageBottom div")
+    pagination_selector = PQ(photo_pagination_response.data.decode("UTF-8")).find(".pageBottom div")
     max_page_count = page_count
     for pagination_index in range(0, pagination_selector.size()):
         if crawler.is_integer(pagination_selector.eq(pagination_index).text()):

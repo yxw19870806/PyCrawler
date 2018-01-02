@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as pq
+from pyquery import PyQuery as PQ
 import json
 import os
 import re
@@ -164,7 +164,7 @@ def get_one_page_album(account_id, page_count):
         raise crawler.CrawlerException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
     result["coser_id"] = coser_id_find[0]
     # 获取作品信息
-    album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
+    album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
     for album_index in range(0, album_list_selector.size()):
         album_selector = album_list_selector.eq(album_index)
         result_album_info = {
@@ -184,7 +184,7 @@ def get_one_page_album(account_id, page_count):
         result_album_info["album_title"] = str(album_title.encode("UTF-8"))
         result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
-    last_pagination_selector = pq(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
+    last_pagination_selector = PQ(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
     if last_pagination_selector.size() == 1:
         max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
         result["is_over"] = page_count >= max_page_count

@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as pq
+from pyquery import PyQuery as PQ
 import os
 import threading
 import time
@@ -29,7 +29,7 @@ def get_one_page_audio(account_id, page_count):
         raise crawler.CrawlerException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
     if audit_pagination_response.json_data["res"] is not True:
         raise crawler.CrawlerException("返回数据'res'字段取值不正确\n%s" % audit_pagination_response.json_data)
-    audio_list_selector = pq(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
+    audio_list_selector = PQ(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
     for audio_index in range(0, audio_list_selector.size()):
         audio_info = {
             "audio_id": None,  # 页面解析出的歌曲id
