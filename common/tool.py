@@ -128,7 +128,7 @@ def get_file_md5(file_path):
         buffer_size = 2**20  # 1M
         while True:
             file_buffer = file_handle.read(buffer_size)
-            if not buffer:
+            if not file_buffer:
                 break
             md5_obj.update(file_buffer)
     return md5_obj.hexdigest()
