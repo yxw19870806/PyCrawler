@@ -38,8 +38,6 @@ CONFIG_ANALYSIS_MODE_PATH = 3
 
 
 class Crawler(object):
-    total_image_count = 0
-    total_video_count = 0
     print_function = None
     thread_event = None
     prcess_status = True  # 主进程是否在运行
@@ -251,6 +249,9 @@ class Crawler(object):
                 keyboard_control_thread.setDaemon(True)
                 keyboard_control_thread.start()
 
+        self.total_image_count = 0
+        self.total_video_count = 0
+
         self.print_msg("初始化完成")
 
     def stop_process(self):
@@ -276,9 +277,6 @@ class DownloadThread(threading.Thread):
     """Download sub-thread"""
     main_thread = None
     thread_lock = None
-    total_image_count = 0
-    total_video_count = 0
-    temp_path_list = []
 
     def __init__(self, account_info, main_thread):
         """
@@ -298,6 +296,9 @@ class DownloadThread(threading.Thread):
         else:
             output.print_msg("下载线程参数异常")
             tool.process_exit()
+        self.total_image_count = 0
+        self.total_video_count = 0
+        self.temp_path_list = []
 
     # 检测主线程是否已经结束（外部中断）
     def main_thread_check(self):
