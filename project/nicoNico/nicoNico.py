@@ -160,7 +160,8 @@ class NicoNico(crawler.Crawler):
             crawler.SYS_GET_COOKIE: {".nicovideo.jp": ()},
         }
         crawler.Crawler.__init__(self, sys_config)
-        net.set_proxy("127.0.0.1", "8888")
+
+        # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
