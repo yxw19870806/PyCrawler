@@ -13,7 +13,19 @@ import time
 import traceback
 
 IMAGE_COUNT_PER_PAGE = 50
+IS_LOGIN = True
 COOKIE_INFO = {}
+
+
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    index_url = "https://www.flickr.com/"
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.find('data-track="gnYouMainClick"') >= 0
+    return False
 
 
 # 获取账号相册首页
@@ -24,7 +36,6 @@ def get_account_index_page(account_name):
         "site_key": None,  # site key
         "user_id": None,  # user id
         "csrf": None,  # csrf
-        "cookie_session": None,  # cookie_session
     }
     if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 获取user id
@@ -46,10 +57,11 @@ def get_account_index_page(account_name):
             raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response.data)
         result["csrf"] = csrf
         # 获取cookie_session
-        set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
-        if not crawler.check_sub_key(("cookie_session",), set_cookies):
-            raise crawler.CrawlerException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.data)
-        result["cookie_session"] = set_cookies["cookie_session"]
+        if IS_LOGIN and "cookie_session" not in COOKIE_INFO:
+            set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
+            if not crawler.check_sub_key(("cookie_session",), set_cookies):
+                raise crawler.CrawlerException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.headers)
+            COOKIE_INFO.update({"cookie_session": set_cookies["cookie_session"]})
     elif account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:
@@ -59,7 +71,7 @@ def get_account_index_page(account_name):
 
 # 获取指定页数的全部图片
 # user_id -> 36587311@N08
-def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_session):
+def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     api_url = "https://api.flickr.com/services/rest"
     # API文档：https://www.flickr.com/services/api/flickr.people.getPhotos.html
     # 全部可支持的参数
@@ -71,12 +83,43 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id, cookie_se
     #     "url_o", "url_q", "url_s", "url_sq", "url_t", "url_z", "visibility", "visibility_source", "o_dims",
     #     "is_marketplace_printable", "is_marketplace_licensable", "publiceditability"
     # ]
+    # content_type
+    #   1 for photos only.
+    #   2 for screenshots only.
+    #   3 for 'other' only.
+    #   4 for photos and screenshots.
+    #   5 for screenshots and 'other'.
+    #   6 for photos and 'other'.
+    #   7 for photos, screenshots, and 'other' (all).
+    # privacy_filter
+    #   1 public photos
+    #   2 private photos visible to friends
+    #   3 private photos visible to family
+    #   4 private photos visible to friends & family
+    #   5 completely private photos
+    # safe_search
+    #   1 for safe.
+    #   2 for moderate.
+    #   3 for restricted.
     query_data = {
-        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1, "get_user_info": 0,
-        "privacy_filter": 1, "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "user_id": user_id, "api_key": api_key, "hermes": 1,
-        "reqId": request_id, "csrf": csrf, "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
+        "method": "flickr.people.getPhotos",
+        "view_as": "use_pref",
+        "sort": "use_pref",
+        "format": "json",
+        "nojsoncallback": 1,
+        "privacy_filter ": 1,
+        "safe_search": 3,
+        "content_type": 7,
+        "get_user_info": 0,
+        "per_page": IMAGE_COUNT_PER_PAGE,
+        "page": page_count,
+        "user_id": user_id,
+        "api_key": api_key,
+        "reqId": request_id,
+        "csrf": csrf,
+        "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
-    COOKIE_INFO.update({"cookie_session": cookie_session})
+    # COOKIE_INFO = {}
     photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "image_info_list": [],  # 全部图片信息
@@ -147,6 +190,18 @@ class Flickr(crawler.Crawler):
         # account_id  image_count  last_image_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
+        # 检测登录状态
+        if not check_login():
+            while True:
+                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    global IS_LOGIN
+                    IS_LOGIN = False
+                    break
+
     def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
@@ -188,7 +243,7 @@ class Download(crawler.DownloadThread):
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载图片
-    def get_crawl_list(self, user_id, site_key, csrf, cookie_session):
+    def get_crawl_list(self, user_id, site_key, csrf):
         page_count = 1
         image_info_list = []
         is_over = False
@@ -199,7 +254,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页图片
             try:
-                photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id, cookie_session)
+                photo_pagination_response = get_one_page_photo(user_id, page_count, site_key, csrf, self.request_id)
             except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页图片解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -256,7 +311,7 @@ class Download(crawler.DownloadThread):
                 raise
 
             # 获取所有可下载图片
-            image_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"], account_index_response["cookie_session"])
+            image_info_list = self.get_crawl_list(account_index_response["user_id"], account_index_response["site_key"], account_index_response["csrf"])
             log.step(self.account_name + " 需要下载的全部图片解析完毕，共%s张" % len(image_info_list))
 
             # 从最早的图片开始下载

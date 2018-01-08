@@ -160,7 +160,8 @@ class NicoNico(crawler.Crawler):
             crawler.SYS_GET_COOKIE: {".nicovideo.jp": ()},
         }
         crawler.Crawler.__init__(self, sys_config)
-        net.set_proxy("127.0.0.1", "8888")
+
+        # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
@@ -237,6 +238,8 @@ class Download(crawler.DownloadThread):
         except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
             return
+
+        log.step(self.account_name + " 视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%08d - %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
         save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=COOKIE_INFO)
