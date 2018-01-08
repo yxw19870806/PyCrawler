@@ -83,11 +83,43 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
     #     "url_o", "url_q", "url_s", "url_sq", "url_t", "url_z", "visibility", "visibility_source", "o_dims",
     #     "is_marketplace_printable", "is_marketplace_licensable", "publiceditability"
     # ]
+    # content_type
+    #   1 for photos only.
+    #   2 for screenshots only.
+    #   3 for 'other' only.
+    #   4 for photos and screenshots.
+    #   5 for screenshots and 'other'.
+    #   6 for photos and 'other'.
+    #   7 for photos, screenshots, and 'other' (all).
+    # privacy_filter
+    #   1 public photos
+    #   2 private photos visible to friends
+    #   3 private photos visible to family
+    #   4 private photos visible to friends & family
+    #   5 completely private photos
+    # safe_search
+    #   1 for safe.
+    #   2 for moderate.
+    #   3 for restricted.
     query_data = {
-        "method": "flickr.people.getPhotos", "view_as": "use_pref", "sort": "use_pref", "format": "json", "nojsoncallback": 1, "get_user_info": 0,
-        "privacy_filter": 1, "per_page": IMAGE_COUNT_PER_PAGE, "page": page_count, "user_id": user_id, "api_key": api_key, "hermes": 1,
-        "reqId": request_id, "csrf": csrf, "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
+        "method": "flickr.people.getPhotos",
+        "view_as": "use_pref",
+        "sort": "use_pref",
+        "format": "json",
+        "nojsoncallback": 1,
+        "privacy_filter ": 1,
+        "safe_search": 3,
+        "content_type": 7,
+        "get_user_info": 0,
+        "per_page": IMAGE_COUNT_PER_PAGE,
+        "page": page_count,
+        "user_id": user_id,
+        "api_key": api_key,
+        "reqId": request_id,
+        "csrf": csrf,
+        "extras": "date_upload,url_c,url_f,url_h,url_k,url_l,url_m,url_n,url_o,url_q,url_s,url_sq,url_t,url_z",
     }
+    # COOKIE_INFO = {}
     photo_pagination_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
     result = {
         "image_info_list": [],  # 全部图片信息
@@ -161,7 +193,7 @@ class Flickr(crawler.Crawler):
         # 检测登录状态
         if not check_login():
             while True:
-                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析部分作品，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:")
                 input_str = input_str.lower()
                 if input_str in ["e", "exit"]:
                     tool.process_exit()
