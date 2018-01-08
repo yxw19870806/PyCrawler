@@ -13,7 +13,19 @@ import time
 import traceback
 
 IMAGE_COUNT_PER_PAGE = 50
+IS_LOGIN = True
 COOKIE_INFO = {}
+
+
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    index_url = "https://www.flickr.com/"
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.find('data-track="gnYouMainClick"') >= 0
+    return False
 
 
 # 获取账号相册首页
@@ -146,6 +158,18 @@ class Flickr(crawler.Crawler):
         # 解析存档文件
         # account_id  image_count  last_image_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+
+        # 检测登录状态
+        if not check_login():
+            while True:
+                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析部分作品，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    global IS_LOGIN
+                    IS_LOGIN = False
+                    break
 
     def main(self):
         # 循环下载每个id
