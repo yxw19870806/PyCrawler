@@ -19,6 +19,17 @@ QUERY_ID = "17859156310193001"
 COOKIE_INFO = {}
 
 
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    index_url = "https://www.instagram.com/"
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.find("'external_id':") >= 0
+    return False
+
+
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
     account_index_url = "https://www.instagram.com/%s" % account_name
@@ -200,6 +211,11 @@ class Instagram(crawler.Crawler):
         # 解析存档文件
         # account_name  account_id  image_count  video_count  last_created_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+
+        # 检测登录状态
+        if not check_login():
+            log.error("没有检测到账号登录状态，退出程序！")
+            tool.process_exit()
 
     def main(self):
         # 循环下载每个id
