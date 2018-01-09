@@ -550,6 +550,7 @@ class Download(crawler.DownloadThread):
                     if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                         log.step(error_message)
                     else:
+                        image_index += 1
                         log.error(error_message)
 
         # 日志内图片和视频全部下载完毕
