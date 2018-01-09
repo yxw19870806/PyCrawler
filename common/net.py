@@ -328,6 +328,8 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 获取完整数据
             response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
                                     connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+            if response.status != HTTP_RETURN_CODE_SUCCEED:
+                continue
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
