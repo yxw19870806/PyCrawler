@@ -9,3 +9,9 @@
 ## 配置参数
 1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO
 2. 默认使用代理访问（参数IS_PROXY=2时也有效果）
+
+## 应用配置（**/config.ini**）
+1. 参数：USER_AGENT
+浏览器的user agent，用以访问有敏感内容而开启了安全模式的账号
+2. 参数：IS_STEP_ERROR_403_AND_404
+是否将被删除或者没有权限的图片或视频下载结果作为错误日志
