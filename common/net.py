@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import output, path, process, tool
+from common import browser, output, path, process, tool
 import json
 import os
 import random
@@ -244,6 +244,7 @@ def _random_user_agent():
 
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+        Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
     """
     firefox_version_max = 56
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
@@ -251,13 +252,17 @@ def _random_user_agent():
     windows_version_list = ["6.1", "6.3", "10.0"]
     browser_type = random.choice(["firefox", "chrome"])
     os_type = random.choice(windows_version_list)
-    if browser_type == "firefox":
+    browser_type = random.choice([browser.BROWSER_TYPE_IE, browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
+    if browser_type == browser.BROWSER_TYPE_IE:
+        sub_version = random.randint(6, 10)
+        return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (sub_version, os_type)
+    elif browser_type == browser.BROWSER_TYPE_FIREFOX:
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
-        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
-    elif browser_type == "chrome":
+        return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
+    elif browser_type == browser.BROWSER_TYPE_CHROME:
         sub_version = random.randint(1, 100)
         chrome_version = random.choice(chrome_version_list)
-        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
+        return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
     return ""
 
 
