@@ -502,6 +502,8 @@ def get_save_net_file_failed_reason(return_code):
         return "源文件多次获取失败，可能无法访问"
     elif return_code == -3:
         return "源文件多次下载后和原始文件大小不一致，可能网络环境较差"
+    elif return_code == -4:
+        return "源文件太大，跳过"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
     else:
@@ -523,6 +525,8 @@ def get_http_request_failed_reason(return_code):
         return "返回信息不是一个有效的JSON格式"
     elif return_code == net.HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED:
         return "域名无法解析"
+    elif return_code == net.HTTP_RETURN_CODE_RESPONSE_TO_LARGE:
+        return "返回文本过大"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
     else:

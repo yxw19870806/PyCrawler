@@ -320,7 +320,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             # 判断文件是不是过大
             content_length = response.getheader("Content-Length")
             if content_length is not None and int(content_length) > HTTP_DOWNLOAD_MAX_SIZE:
-                return {"status": 0, "code": HTTP_RETURN_CODE_RESPONSE_TO_LARGE}
+                return {"status": 0, "code": -4}
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = response.getheader("Content-Type")
