@@ -17,10 +17,22 @@ BROWSER_TYPE_FIREFOX = 2
 BROWSER_TYPE_CHROME = 3
 
 
+# 根据浏览器和操作系统，返回浏览器程序文件所在的路径
+def get_default_browser_application_path(browser_type):
+    if platform.system() != "Windows":
+        return None
+    if browser_type == BROWSER_TYPE_IE:
+        return os.path.join(os.getenv("ProgramFiles"), "Internet Explorer\\iexplore.exe")
+    elif browser_type == BROWSER_TYPE_FIREFOX:
+        return os.path.join(os.getenv("ProgramFiles"), "Mozilla Firefox\\firefox.exe")
+    elif browser_type == BROWSER_TYPE_CHROME:
+        return os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe")
+    else:
+        output.print_msg("不支持的浏览器类型：" + browser_type)
+    return None
+
+
 # 根据浏览器和操作系统，自动查找默认浏览器cookie路径(只支持windows)
-# browser_type=1: IE
-# browser_type=2: firefox
-# browser_type=3: chrome
 def get_default_browser_cookie_path(browser_type):
     if platform.system() != "Windows":
         return None
