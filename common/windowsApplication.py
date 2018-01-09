@@ -6,6 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import keyboardEvent, process
+import os
 import pywintypes
 import time
 import win32api
@@ -116,3 +117,11 @@ class WindowsApplication:
     # 根据屏幕坐标获取对应窗口坐标
     def get_client_position(self, pos_x, pos_y):
         return win32gui.ScreenToClient(self.window_handle, (pos_x, pos_y))
+
+
+# 获取文件的版本信息
+def get_file_version(file_path):
+    info = win32api.GetFileVersionInfo(file_path, os.sep)
+    ms = info['FileVersionMS']
+    ls = info['FileVersionLS']
+    return "%d.%d.%d.%04d" % (win32api.HIWORD(ms), win32api.LOWORD(ms), win32api.HIWORD(ls), win32api.LOWORD(ls))
