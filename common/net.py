@@ -18,6 +18,9 @@ import urllib3
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
+HTTP_READ_TIMEOUT = 10
+HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
+HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_REQUEST_RETRY_COUNT = 10
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -93,7 +96,7 @@ def get_cookies_from_response_header(response_headers):
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_redirect=True,
-                 is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False):
+                 is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT, is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
     :param url:
@@ -307,7 +310,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         return False
     create_file = False
     for retry_count in range(0, 5):
-        response = http_request(file_url, header_list=header_list, cookies_list=cookies_list, read_timeout=60)
+        response = http_request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type:
