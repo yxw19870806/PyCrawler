@@ -19,9 +19,10 @@ import urllib3
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
 HTTP_READ_TIMEOUT = 10
+HTTP_REQUEST_RETRY_COUNT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
-HTTP_REQUEST_RETRY_COUNT = 10
+HTTP_DOWNLOAD_RETRY_COUNT = 5
 HTTP_DOWNLOAD_MAX_SIZE = 256 * 2 ** 20  # 文件下载限制（字节）
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -310,7 +311,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     if not path.create_dir(os.path.dirname(file_path)):
         return False
     create_file = False
-    for retry_count in range(0, 5):
+    for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
         # 获取头信息
         response = http_request(file_url, method="HEAD", header_list=header_list, cookies_list=cookies_list,
                                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
@@ -385,11 +386,12 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    for retry_count in range(0, 5):
+    for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
         # 下载
         with open(file_path, "wb") as file_handle:
             for file_url in file_url_list:
-                response = http_request(file_url, header_list=header_list, read_timeout=60)
+                response = http_request(file_url, header_list=header_list, cookies_list=cookies_list,
+                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
                 if response.status == HTTP_RETURN_CODE_SUCCEED:
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出
