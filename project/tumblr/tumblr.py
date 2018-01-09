@@ -17,6 +17,7 @@ import urllib
 import urlparse
 
 EACH_PAGE_COUNT = 100
+IS_LOGIN = True
 COOKIE_INFO = {}
 USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
@@ -588,6 +589,11 @@ class Download(crawler.DownloadThread):
             except crawler.CrawlerException, e:
                 log.error(self.account_id + " 账号设置解析失败，原因：%s" % e.message)
                 raise
+
+            # 未登录&开启safe mode直接退出
+            if not IS_LOGIN and self.is_safe_mode:
+                log.error(self.account_id + " 账号开启了safe mode并且未检测到登录状态")
+                tool.process_exit()
 
             start_page_count = 1
             while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
