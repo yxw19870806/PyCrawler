@@ -26,24 +26,34 @@ def main(file_path):
 
 def deal_one_group(check_list):
     min_post_id = 0
-    min_file_path = ""
+    max_file_size = 0
+    cache_file_path = ""
     delete_list = []
     for row in check_list:
         post_id = int(row["文件名称"].split(".")[0].split("_")[0])
         file_path = os.path.join(row["路径"], row["文件名称"])
-        if min_post_id == 0:
+        file_size = int(row["大小"])
+        if min_post_id == 0:  # 第一次，设置记录
             min_post_id = post_id
-            min_file_path = file_path
-        elif post_id > min_post_id:
+            max_file_size = file_size
+            cache_file_path = file_path
+        elif file_size < max_file_size:  # 比记录的文件小，删除当前的
             delete_list.append(file_path)
-        else:
-            delete_list.append(min_file_path)
+        elif file_size > max_file_size:  # 比记录的文件大，删除记录的
+            delete_list.append(cache_file_path)
             min_post_id = post_id
-            min_file_path = file_path
+            max_file_size = file_size
+            cache_file_path = file_path
+        elif post_id > min_post_id:  # 相同大小，id比记录的文件大，删除当前的
+            delete_list.append(file_path)
+        else:  # 相同大小，id比记录的文件小，删除记录的
+            delete_list.append(cache_file_path)
+            min_post_id = post_id
+            cache_file_path = file_path
     for file_path in delete_list:
         path.delete_dir_or_file(file_path)
         output.print_msg("delete " + file_path)
-    output.print_msg("keep " + min_file_path)
+    output.print_msg("keep " + cache_file_path)
 
 
 if __name__ == "__main__":

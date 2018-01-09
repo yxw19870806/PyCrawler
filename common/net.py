@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 
-from common import output, path, process, tool
+from common import browser, output, path, process, tool
 import json
 import os
 import random
@@ -18,7 +18,12 @@ import urllib3
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
+HTTP_READ_TIMEOUT = 10
 HTTP_REQUEST_RETRY_COUNT = 10
+HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
+HTTP_DOWNLOAD_READ_TIMEOUT = 60
+HTTP_DOWNLOAD_RETRY_COUNT = 5
+HTTP_DOWNLOAD_MAX_SIZE = 256 * 2 ** 20  # 文件下载限制（字节）
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
@@ -93,7 +98,7 @@ def get_cookies_from_response_header(response_headers):
 
 
 def http_request(url, method="GET", fields=None, binary_data=None, header_list=None, cookies_list=None, encode_multipart=False, is_auto_redirect=True,
-                 is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_CONNECTION_TIMEOUT, is_random_ip=True, json_decode=False):
+                 is_auto_retry=True, connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT, is_random_ip=True, json_decode=False):
     """Http request via urllib3
 
     :param url:
@@ -227,7 +232,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         except MemoryError:
             return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
         except Exception, e:
-            if str(e).find("EOF occurred in violation of protocol") >=0:
+            if str(e).find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
             output.print_msg(str(e))
             output.print_msg(url + " 访问超时，稍后重试")
@@ -244,20 +249,32 @@ def _random_user_agent():
 
         Common firefox user agent   "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0"
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+        Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
     """
     firefox_version_max = 56
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
     chrome_version_list = ["53.0.2785", "54.0.2840", "55.0.2883", "56.0.2924", "57.0.2987", "58.0.3029", "59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202"]
-    windows_version_list = ["6.1", "6.3", "10.0"]
-    browser_type = random.choice(["firefox", "chrome"])
-    os_type = random.choice(windows_version_list)
-    if browser_type == "firefox":
+    windows_version_dict = {
+        "Windows 2000": "Windows NT 5.0",
+        "Windows XP": "Windows NT 5.1",
+        "Windows Vista": "Windows NT 6.0",
+        "Windows 7": "Windows NT 6.1",
+        "Windows 8": "Windows NT 6.2",
+        "Windows 8.1": "Windows NT 6.3",
+        "Windows 10": "Windows NT 10.0",
+    }
+    browser_type = random.choice([browser.BROWSER_TYPE_IE, browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
+    os_type = random.choice(windows_version_dict.values())
+    if browser_type == browser.BROWSER_TYPE_IE:
+        sub_version = random.randint(6, 10)
+        return "Mozilla/4.0 (compatible; MSIE %s.0; %s; WOW64)" % (sub_version, os_type)
+    elif browser_type == browser.BROWSER_TYPE_FIREFOX:
         firefox_version = random.randint(firefox_version_max - 10, firefox_version_max)
-        return "Mozilla/5.0 (Windows NT %s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
-    elif browser_type == "chrome":
+        return "Mozilla/5.0 (%s; WOW64; rv:%s.0) Gecko/20100101 Firefox/%s.0" % (os_type, firefox_version, firefox_version)
+    elif browser_type == browser.BROWSER_TYPE_CHROME:
         sub_version = random.randint(1, 100)
         chrome_version = random.choice(chrome_version_list)
-        return "Mozilla/5.0 (Windows NT %s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
+        return "Mozilla/5.0 (%s; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s.%s Safari/537.36" % (os_type, chrome_version, sub_version)
     return ""
 
 
@@ -294,14 +311,26 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     if not path.create_dir(os.path.dirname(file_path)):
         return False
     create_file = False
-    for retry_count in range(0, 5):
-        response = http_request(file_url, header_list=header_list, cookies_list=cookies_list, read_timeout=60)
+    for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
+        # 获取头信息
+        response = http_request(file_url, method="HEAD", header_list=header_list, cookies_list=cookies_list,
+                                connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
+        # todo 分段下载
+        # 判断文件是不是过大
+        content_length = response.getheader("Content-Length")
+        if content_length is not None and content_length > HTTP_DOWNLOAD_MAX_SIZE:
+            return {"status": 0, "code": HTTP_RETURN_CODE_RESPONSE_TO_LARGE}
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = response.getheader("Content-Type")
                 if content_type is not None and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
+            # 获取完整数据
+            response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
+                                    connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+            if response.status != HTTP_RETURN_CODE_SUCCEED:
+                continue
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
@@ -357,11 +386,12 @@ def save_net_file_list(file_url_list, file_path, header_list=None, cookies_list=
     # 判断保存目录是否存在
     if not path.create_dir(os.path.dirname(file_path)):
         return False
-    for retry_count in range(0, 5):
+    for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
         # 下载
         with open(file_path, "wb") as file_handle:
             for file_url in file_url_list:
-                response = http_request(file_url, header_list=header_list, read_timeout=60)
+                response = http_request(file_url, header_list=header_list, cookies_list=cookies_list,
+                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
                 if response.status == HTTP_RETURN_CODE_SUCCEED:
                     file_handle.write(response.data)
                 # 超过重试次数，直接退出

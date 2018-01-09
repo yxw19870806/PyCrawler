@@ -2,7 +2,7 @@ Python Crawler（auto download from website）
 =====
 # Required
 * OS：windows（maybe Linux and mac）<br>
-* Payhon：v2.7.12+, not supported Python 3.X<br>
+* Pyhon：v2.7.12+, not supported Python 3.X<br>
 
 # Features
 * 多线程<br>
