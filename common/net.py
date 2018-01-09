@@ -22,6 +22,7 @@ HTTP_READ_TIMEOUT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_REQUEST_RETRY_COUNT = 10
+HTTP_DOWNLOAD_MAX_SIZE = 256 * 2 ** 20  # 文件下载限制（字节）
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
@@ -230,7 +231,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
         except MemoryError:
             return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
         except Exception, e:
-            if str(e).find("EOF occurred in violation of protocol") >=0:
+            if str(e).find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
             output.print_msg(str(e))
             output.print_msg(url + " 访问超时，稍后重试")
@@ -310,13 +311,23 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         return False
     create_file = False
     for retry_count in range(0, 5):
-        response = http_request(file_url, header_list=header_list, cookies_list=cookies_list, connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+        # 获取头信息
+        response = http_request(file_url, method="HEAD", header_list=header_list, cookies_list=cookies_list,
+                                connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
+        # todo 分段下载
+        # 判断文件是不是过大
+        content_length = response.getheader("Content-Length")
+        if content_length is not None and content_length > HTTP_DOWNLOAD_MAX_SIZE:
+            return {"status": 0, "code": HTTP_RETURN_CODE_RESPONSE_TO_LARGE}
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = response.getheader("Content-Type")
                 if content_type is not None and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
+            # 获取完整数据
+            response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
+                                    connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
