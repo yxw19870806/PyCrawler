@@ -315,17 +315,18 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         # 获取头信息
         response = http_request(file_url, method="HEAD", header_list=header_list, cookies_list=cookies_list,
                                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
-        # todo 分段下载
-        # 判断文件是不是过大
-        content_length = response.getheader("Content-Length")
-        if content_length is not None and content_length > HTTP_DOWNLOAD_MAX_SIZE:
-            return {"status": 0, "code": HTTP_RETURN_CODE_RESPONSE_TO_LARGE}
         if response.status == HTTP_RETURN_CODE_SUCCEED:
+            # todo 分段下载
+            # 判断文件是不是过大
+            content_length = response.getheader("Content-Length")
+            if content_length is not None and int(content_length) > HTTP_DOWNLOAD_MAX_SIZE:
+                return {"status": 0, "code": HTTP_RETURN_CODE_RESPONSE_TO_LARGE}
             # response中的Content-Type作为文件后缀名
             if need_content_type:
                 content_type = response.getheader("Content-Type")
                 if content_type is not None and content_type != "octet-stream":
                     file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
+
             # 获取完整数据
             response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
                                     connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
@@ -336,7 +337,6 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                 file_handle.write(response.data)
             create_file = True
             # 判断文件下载后的大小和response中的Content-Length是否一致
-            content_length = response.getheader("Content-Length")
             if content_length is None:
                 return {"status": 1, "code": 0, "file_path": file_path}
             file_size = os.path.getsize(file_path)
