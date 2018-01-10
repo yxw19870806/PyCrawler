@@ -73,13 +73,20 @@ def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
-        "video_url": None,  # 视频地址
         "extra_cookie": {},  # 额外的cookie
+        "is_delete": False,  # 是否已删除
+        "video_url": None,  # 视频地址
     }
-    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if video_play_response.status == 403:
+        result["is_delete"] = True
+        return result
+    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
     video_info_string = tool.find_sub_string(video_play_response.data, 'data-api-data="', '" data-environment="')
     if not video_info_string:
+        if video_play_response.data.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
+            result["is_delete"] = True
+            return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response.data)
     video_info_string = HTMLParser.HTMLParser().unescape(video_info_string)
     try:
@@ -257,6 +264,10 @@ class Download(crawler.DownloadThread):
             video_info_response = get_video_info(video_info["video_id"])
         except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
+            return
+
+        if video_info_response["is_delete"]:
+            log.error(self.account_name + " 视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))
             return
 
         log.step(self.account_name + " 视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
