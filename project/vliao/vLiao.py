@@ -7,75 +7,20 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+import vLiaoCommon
 import json
 import os
 import threading
 import time
 import traceback
 
-USER_ID = ""
-USER_KEY = ""
-API_VERSION = "31"
-token_file_path = os.path.join(os.path.dirname(__file__), "token")
-
-
-# 检查登录信息
-def check_login():
-    global USER_ID, USER_KEY
-    # 文件存在，检查格式是否正确
-    if os.path.exists(token_file_path):
-        api_info = tool.decrypt_string(tool.read_file(token_file_path))
-        if api_info is not None:
-            try:
-                api_info = json.loads(api_info)
-            except ValueError:
-                pass
-            else:
-                if crawler.check_sub_key(("user_id", "user_key"), api_info):
-                    # 验证token是否有效
-                    if check_token(api_info["user_id"], api_info["user_key"]):
-                        USER_ID = api_info["user_id"]
-                        USER_KEY = api_info["user_key"]
-                        return True
-        # token已经无效了，删除掉
-        path.delete_dir_or_file(token_file_path)
-    log.step("Please input api info")
-    while True:
-        user_id = output.console_input("USER ID: ")
-        user_key = output.console_input("USER KEY; ")
-        # 验证token是否有效
-        if check_token(user_id, user_key):
-            USER_ID = user_id
-            USER_KEY = user_key
-            # 加密保存到文件中
-            if not os.path.exists(token_file_path):
-                api_info = tool.encrypt_string(json.dumps({"user_id": user_id, "user_key": user_key}))
-                tool.write_file(api_info, token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
-            return True
-        log.step("incorrect api info, please type again!")
-    return False
-
-
-# 验证user_id和user_key是否匹配
-def check_token(user_id, user_key):
-    index_url = "http://v3.vliao3.xyz/v%s/user/mydata" % API_VERSION
-    post_data = {
-        "userId": user_id,
-        "userKey": user_key,
-    }
-    index_response = net.http_request(index_url, method="POST", fields=post_data, json_decode=True)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if crawler.check_sub_key(("result",), index_response.json_data) and index_response.json_data["result"] is True:
-            return True
-    return False
-
 
 # 获取一页视频
 def get_one_page_video(account_id, page_count):
-    video_pagination_url = "http://v3.vliao3.xyz/v%s/smallvideo/list" % API_VERSION
+    video_pagination_url = "http://v3.vliao3.xyz/v%s/smallvideo/list" % vLiaoCommon.API_VERSION
     post_data = {
-        "userId": USER_ID,
-        "userKey": USER_KEY,
+        "userId": vLiaoCommon.USER_ID,
+        "userKey": vLiaoCommon.USER_KEY,
         "page": page_count,
         "vid": account_id,
     }
@@ -99,13 +44,13 @@ def get_one_page_video(account_id, page_count):
             "video_id": None,  # 视频id
             "video_title": None,  # 视频id
         }
-        # 视频id
+        # 获取视频id
         if not crawler.check_sub_key(("id",), video_info):
             raise crawler.CrawlerException("视频信息'id'字段不存在\n%s" % video_info)
         if not crawler.is_integer(video_info["id"]):
             raise crawler.CrawlerException("视频信息'id'字段类型不正确\n%s" % video_info)
         result_video_info["video_id"] = str(video_info["id"])
-        # 视频标题
+        # 获取视频标题
         if not crawler.check_sub_key(("title",), video_info):
             raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
         result_video_info["video_title"] = str(video_info["title"].encode("UTF-8"))
@@ -115,10 +60,10 @@ def get_one_page_video(account_id, page_count):
 
 # 获取指定视频
 def get_video_info_page(account_id, video_id):
-    video_info_url = "http://v3.vliao3.xyz/v%s/smallvideo/one" % API_VERSION
+    video_info_url = "http://v3.vliao3.xyz/v%s/smallvideo/one" % vLiaoCommon.API_VERSION
     post_data = {
-        "userId": USER_ID,
-        "userKey": USER_KEY,
+        "userId": vLiaoCommon.USER_ID,
+        "userKey": vLiaoCommon.USER_KEY,
         "videoId": video_id,
         "vid": account_id,
     }
@@ -148,7 +93,9 @@ class VLiao(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
-        check_login()
+        if not vLiaoCommon.check_login():
+            log.error("没有检测到登录状态，退出程序")
+            tool.process_exit()
 
     def main(self):
         # 循环下载每个id
