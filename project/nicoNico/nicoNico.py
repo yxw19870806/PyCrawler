@@ -17,6 +17,17 @@ import traceback
 COOKIE_INFO = {}
 
 
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    index_url = "http://www.nicovideo.jp/"
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.find('<span id="siteHeaderUserNickNameContainer">') >= 0
+    return False
+
+
 # 获取账号全部视频信息
 # account_id => 15614906
 def get_account_index_page(account_id):
@@ -167,6 +178,11 @@ class NicoNico(crawler.Crawler):
         # 解析存档文件
         # account_id  last_video_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+
+        # 检测登录状态
+        if not check_login():
+            log.error("没有检测到账号登录状态，退出程序！")
+            tool.process_exit()
 
     def main(self):
         # 循环下载每个id
