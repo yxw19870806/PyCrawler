@@ -282,7 +282,6 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 开始解析视频 %s 《%s》" % (video_info["video_id"], video_info["video_title"]))
                 self.crawl_video(video_info)
                 self.main_thread_check()  # 检测主线程运行状态
-                tool.process_exit()
         except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_name + " 提前退出")
