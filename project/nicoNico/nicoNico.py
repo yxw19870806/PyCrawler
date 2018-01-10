@@ -74,6 +74,7 @@ def get_video_info(video_id):
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "video_url": None,  # 视频地址
+        "extra_cookie": {},  # 额外的cookie
     }
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
@@ -93,6 +94,9 @@ def get_video_info(video_id):
         if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
             raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
         result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
+        # 返回的cookies
+        set_cookie = net.get_cookies_from_response_header(video_play_response.headers)
+        result["extra_cookie"] = set_cookie
         return result
     # 新版本，需要再次访问获取视频地址
     if not crawler.check_sub_key(("dmcInfo",), video_info["video"]):
@@ -258,8 +262,10 @@ class Download(crawler.DownloadThread):
         log.step(self.account_name + " 视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%08d - %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
-        header_list = {"Referer": "http://www.nicovideo.jp/"}
-        save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, header_list=header_list, cookies_list=COOKIE_INFO)
+        cookies_list = COOKIE_INFO
+        if video_info_response["extra_cookie"]:
+            cookies_list.update(video_info_response["extra_cookie"])
+        save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
