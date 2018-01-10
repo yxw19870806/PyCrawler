@@ -24,7 +24,7 @@ def get_image_index_page(account_id):
         "image_url_list": [],  # 全部图片地址
     }
     if image_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(image_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(image_index_response.status))
     if image_index_response.data == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     # 获取全部图片地址
@@ -45,7 +45,7 @@ def get_image_header(image_url):
     if image_head_response.status == 404:
         return result
     elif image_head_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(image_head_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(image_head_response.status))
     last_modified = image_head_response.headers.get("Last-Modified")
     if last_modified is None:
         raise crawler.CrawlerException("图片header'Last-Modified'字段不存在\n%s" % image_head_response.headers)
@@ -68,7 +68,7 @@ def get_video_index_page(account_id):
         "video_id_list": [],  # 全部视频id
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     if video_pagination_response.data == '<script>window.location.href="/404.html";</script>':
         raise crawler.CrawlerException("账号不存在")
     if video_pagination_response.data.find("还没有直播哦") == -1:
@@ -91,7 +91,7 @@ def get_video_info_page(video_id):
         "video_url_list": [],  # 全部视频分集地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     if not crawler.check_sub_key(("result", "data"), video_info_response.json_data):
         raise crawler.CrawlerException("返回信息'result'或'data'字段不存在\n%s" % video_info_response.json_data)
     if not crawler.is_integer(video_info_response.json_data["result"]):
@@ -118,7 +118,7 @@ def get_video_info_page(video_id):
         for ts_id in ts_id_list:
             result["video_url_list"].append(prefix_url + str(ts_id))
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     return result
 
 
@@ -214,7 +214,7 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 第%s张图片下载成功" % image_index)
         else:
-            log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
             return
 
         # 图片下载完毕

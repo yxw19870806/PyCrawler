@@ -142,7 +142,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

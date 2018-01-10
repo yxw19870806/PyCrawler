@@ -23,7 +23,7 @@ def get_channel_from_api():
     api_response = net.http_request(api_url, method="GET", json_decode=True)
     channel_list = []
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     if not crawler.check_sub_key(("code",), api_response.json_data):
         raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % api_response.json_data)
     if not crawler.is_integer(api_response.json_data["code"]):
@@ -52,7 +52,7 @@ def get_channel_account_from_api(channel_id):
         }
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         if not crawler.check_sub_key(("code",), api_response.json_data):
             raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % api_response.json_data)
         if not crawler.is_integer(api_response.json_data["code"]):

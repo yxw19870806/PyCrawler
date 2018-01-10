@@ -77,7 +77,7 @@ def get_one_page_blog(account_name, target_id):
     elif target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
         raise crawler.CrawlerException("talk不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     return result
 
 
@@ -184,7 +184,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
                 else:
-                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 视频下载
         video_index = int(self.account_info[2]) + 1
@@ -201,7 +201,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_name + " 第%s个视频下载成功" % video_index)
                     video_index += 1
                 else:
-                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"])))
 
         # 日志内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

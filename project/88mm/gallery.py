@@ -37,7 +37,7 @@ def get_one_page_album(sub_path, page_count):
         "is_over": False,  # 是不是最后一页图集
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     # 页面编码
     album_pagination_html = album_pagination_response.data.decode("GBK").encode("UTF-8")
     # 获取图集信息
@@ -82,7 +82,7 @@ def get_album_photo(sub_path, page_id):
             photo_pagination_url = "http://www.88mmw.com/%s/%s/index_%s.html" % (sub_path, page_id, page_count)
         photo_pagination_response = net.http_request(photo_pagination_url, method="GET")
         if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.get_http_request_failed_reason(photo_pagination_response.status))
+            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(photo_pagination_response.status))
         # 页面编码
         photo_pagination_html = photo_pagination_response.data.decode("GBK").encode("UTF-8")
         # 获取图片地址
@@ -235,7 +235,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.sub_path + " %s号图集《%s》 第%s张图片下载成功" % (album_info["page_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.sub_path + " %s号图集《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["page_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 图集内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

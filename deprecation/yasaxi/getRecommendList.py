@@ -30,7 +30,7 @@ def get_account_from_api():
     account_list = {}
     api_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     if not crawler.check_sub_key(("data",), api_response.json_data):
         raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
     for account_info in api_response.json_data["data"]:

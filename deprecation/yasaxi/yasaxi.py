@@ -39,7 +39,7 @@ def get_one_page_photo(account_id, cursor):
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, header_list=header_list, is_random_ip=False, json_decode=True)
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 异常返回
     if crawler.check_sub_key(("meta",), photo_pagination_response.json_data) and crawler.check_sub_key(("code",), photo_pagination_response.json_data["meta"]):
         if photo_pagination_response.json_data["meta"]["code"] == "NoMoreDataError":
@@ -225,7 +225,7 @@ class Download(crawler.DownloadThread):
                             log.step(account_name + " 第%s张图片下载成功" % image_count)
                             image_count += 1
                         else:
-                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error(account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_count, image_url, crawler.download_failre(save_file_return["code"])))
 
                 if not is_over:
                     if photo_pagination_response["next_page_cursor"] is not None:

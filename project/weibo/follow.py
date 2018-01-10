@@ -23,10 +23,10 @@ def follow_account(account_id):
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     follow_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
     if not (crawler.check_sub_key(("code",), follow_response.json_data) and crawler.is_integer(follow_response.json_data["code"])):
-        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
     if int(follow_response.json_data["code"]) == 100000:
         output.print_msg("关注%s成功" % account_id)

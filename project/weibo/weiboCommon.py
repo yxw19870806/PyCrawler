@@ -50,7 +50,7 @@ def get_account_index_page(account_id):
             raise crawler.CrawlerException("账号不存在")
         result["account_page_id"] = account_page_id
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 

@@ -38,7 +38,7 @@ def get_one_page_photo(page_count):
     elif photo_pagination_response.status == 404:
         result["is_over"] = True
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     return result
 
 
@@ -106,7 +106,7 @@ class YWKB(crawler.Crawler):
                     if save_file_return["status"] == 1:
                         log.step("%s的图片下载成功" % image_info["image_id"])
                     else:
-                        log.error("%s的图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("%s的图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], crawler.download_failre(save_file_return["code"])))
                         continue
                 except SystemExit:
                     log.step("提前退出")

@@ -65,7 +65,7 @@ def get_account_index_page(account_name):
     elif account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 
@@ -126,7 +126,7 @@ def get_one_page_photo(user_id, page_count, api_key, csrf, request_id):
         "is_over": False,  # 是不是最后一页图片
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     if not crawler.check_sub_key(("photos",), photo_pagination_response.json_data):
         raise crawler.CrawlerException("返回数据'photos'字段不存在\n%s" % photo_pagination_response.json_data)
     if not crawler.check_sub_key(("photo", "pages"), photo_pagination_response.json_data["photos"]):
@@ -293,7 +293,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
 
         # 图片下载完毕
         self.temp_path_list = []  # 临时目录设置清除

@@ -42,7 +42,7 @@ def get_one_page_video(account_page_id, since_id):
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     if not crawler.check_sub_key(("code", "data"), video_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'code'或'data'字段不存在\n%s" % video_pagination_response.json_data)
     if not crawler.is_integer(video_pagination_response.json_data["code"]):
@@ -76,7 +76,7 @@ def get_video_url(video_play_url):
         query_data = {"token": ""}
         video_info_response = net.http_request(video_info_url, method="GET", fields=query_data, json_decode=True)
         if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
         if not crawler.check_sub_key(("status", "result"), video_info_response.json_data):
             raise crawler.CrawlerException("返回信息'status'或'result'字段不存在\n%s" % video_info_response.json_data)
         if not crawler.is_integer(video_info_response.json_data["status"]):
@@ -107,12 +107,12 @@ def get_video_url(video_play_url):
         elif video_play_response.status == 404:
             video_url = ""
         else:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     # http://www.meipai.com/media/98089758
     elif video_play_url.find("www.meipai.com/media") >= 0:  # 美拍
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
         video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
         if len(video_url_find) != 1:
             raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
@@ -270,7 +270,7 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_index, video_play_url, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s个视频 %s（%s) 下载失败，原因：%s" % (video_index, video_play_url, video_url, crawler.download_failre(save_file_return["code"])))
             return
 
         # 视频下载完毕

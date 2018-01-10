@@ -22,7 +22,7 @@ def get_one_page_photo(page_count):
         "image_info_list": [],  # 全部图片信息
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     photo_list_selector = PQ(photo_pagination_response.data.decode("UTF-8")).find("#wrapper .row .photo")
     for photo_index in range(0, photo_list_selector.size()):
         photo_selector = photo_list_selector.eq(photo_index)
@@ -154,7 +154,7 @@ class Jigadori(crawler.Crawler):
                         log.step("第%s张图片下载成功" % image_index)
                         image_index += 1
                     else:
-                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (image_index, image_info["account_name"], image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("第%s张图片（account：%s) %s，下载失败，原因：%s" % (image_index, image_info["account_name"], image_url, crawler.download_failre(save_file_return["code"])))
                 # tweet内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加

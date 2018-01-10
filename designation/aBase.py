@@ -21,7 +21,7 @@ def get_one_page_photo(page_count):
         "image_info_list": [],  # 页面解析出的图片信息列表
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     # 获取页面中的影片数量
     result["page_video_count"] = photo_pagination_response.data.count('<div class="item pull-left">')
     # 获取页面中的全部图片信息列表
@@ -157,7 +157,7 @@ class Download(threading.Thread):
                 with self.thread_lock:
                     self.main_thread.total_image_count += 1
         else:
-            log.error("%s 封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error("%s 封面图片 %s 下载失败，原因：%s" % (self.title, self.file_url, crawler.download_failre(save_file_return["code"])))
 
 
 if __name__ == "__main__":

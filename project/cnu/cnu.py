@@ -44,7 +44,7 @@ def get_album_page(album_id):
     elif album_response.status == 404:
         result["is_delete"] = True
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     return result
 
 
@@ -109,7 +109,7 @@ class CNU(crawler.Crawler):
                         log.step("作品%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                         image_index += 1
                     else:
-                        log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("作品%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                 # 作品内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加

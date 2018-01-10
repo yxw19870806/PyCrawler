@@ -41,7 +41,7 @@ def follow_account(account_id):
             output.print_msg("关注%s失败，请求返回：%s，退出程序！" % (account_id, follow_response.json_data))
             tool.process_exit()
     else:
-        output.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.get_http_request_failed_reason(follow_response.status)))
+        output.print_msg("关注%s失败，请求返回结果：%s，退出程序！" % (account_id, crawler.request_failre(follow_response.status)))
         tool.process_exit()
     return False
 

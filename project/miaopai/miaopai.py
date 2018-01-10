@@ -23,7 +23,7 @@ def get_account_index_page(account_id):
         "user_id": None,  # 账号user id
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     user_id = tool.find_sub_string(account_index_response.data, '<button class="guanzhu gz" suid="', '" heade="1" token="')
     if not user_id:
         raise crawler.CrawlerException("页面截取user id失败\n%s" % account_index_response.data)
@@ -59,7 +59,7 @@ def get_one_page_video(suid, page_count):
             raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response.json_data)
         result["video_id_list"] = map(str, video_id_list)
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     return result
 
 
@@ -84,7 +84,7 @@ def get_video_info_page(video_id):
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
         result["video_url_list"] = video_url_list
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     return result
 
 
@@ -202,7 +202,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 第%s个视频下载成功" % video_index)
                 break
             else:
-                error_message = self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"]))
+                error_message = self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_url, crawler.download_failre(save_file_return["code"]))
                 if len(video_url) == 0:
                     log.error(error_message)
                 else:

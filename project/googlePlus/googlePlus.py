@@ -26,7 +26,7 @@ def get_one_page_blog(account_id, token):
         post_data = {"f.req": '[[[113305009,[{"113305009":["%s",null,2,16,"%s"]}],null,null,0]]]' % (account_id, token)}
         blog_pagination_response = net.http_request(api_url, method="POST", fields=post_data)
         if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
         script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
         if not script_data_html:
             raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
@@ -52,7 +52,7 @@ def get_one_page_blog(account_id, token):
         elif blog_pagination_response.status == 400:
             raise crawler.CrawlerException("账号不存在")
         else:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     if len(script_data) != 3:
         raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
     # 获取下一页token
@@ -94,7 +94,7 @@ def get_album_page(account_id, album_id):
     }
     album_response = net.http_request(album_url, method="GET")
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     script_data_html = tool.find_sub_string(album_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
     script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
     if not script_data_html:
@@ -116,7 +116,7 @@ def get_album_page(account_id, album_id):
         post_data = {"f.req": '[[[113305010,[{"113305010":["%s",null,24,"%s"]}],null,null,0]]]' % (user_key, continue_token)}
         image_pagination_response = net.http_request(api_url, method="POST", fields=post_data, encode_multipart=False)
         if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(album_response.status))
         continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
         try:
             continue_data = json.loads(continue_data)
@@ -262,7 +262,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                 image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

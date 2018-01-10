@@ -64,11 +64,11 @@ def get_album_page(page_count):
             if crawler.check_sub_key(("v",), media_response.json_data):
                 result["video_url"] = str(media_response.json_data["v"])
         else:
-            raise crawler.CrawlerException("媒体" + crawler.get_http_request_failed_reason(media_response.status))
+            raise crawler.CrawlerException("媒体" + crawler.request_failre(media_response.status))
     elif album_response.status == 500:
         result["is_delete"] = True
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     return result
 
 
@@ -144,7 +144,7 @@ class MeiTuZZ(crawler.Crawler):
                             log.step("第%s页第%s张图片下载成功" % (album_id, image_index))
                             image_index += 1
                         else:
-                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                            log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
                 # 视频下载
                 video_index = 1
@@ -161,7 +161,7 @@ class MeiTuZZ(crawler.Crawler):
                         log.step("第%s页视频下载成功" % album_id)
                         video_index += 1
                     else:
-                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("第%s页视频 %s 下载失败，原因：%s" % (album_id, album_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
                 # tweet内图片和视频全部下载完毕
                 temp_path_list = []  # 临时目录设置清除

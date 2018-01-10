@@ -23,7 +23,7 @@ def get_account_index_page(account_name):
         "album_url_list": [],  # 全部相册地址
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     # 页面编码
     account_index_html = account_index_response.data.decode("GBK").encode("UTF-8")
     if account_index_html.find("<title>该页面不存在</title>") >= 0:
@@ -53,7 +53,7 @@ def get_album_page(album_url):
         "image_url_list": [],  # 全部图片地址
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     # 获取相册标题
     album_title = tool.find_sub_string(album_response.data, '<h2 class="picset-title" id="p_username_copy">', "</h2>").strip()
     if album_title:
@@ -173,7 +173,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 相册%s《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

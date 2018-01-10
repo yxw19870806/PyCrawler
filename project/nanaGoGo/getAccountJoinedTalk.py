@@ -31,7 +31,7 @@ def get_account_talks(account_id, account_name, talk_list):
     account_index = "https://7gogo.jp/users/%s" % account_id
     account_index_response = net.http_request(account_index, method="GET")
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     talk_list_selector = PQ(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")
     for talk_index in range(0, talk_list_selector.size()):
         talk_selector = talk_list_selector.eq(talk_index)

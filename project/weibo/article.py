@@ -34,7 +34,7 @@ def get_one_page_article(page_id, page_count):
     }
     article_pagination_response = net.http_request(preview_article_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, is_auto_redirect=False)
     if article_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(article_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(article_pagination_response.status))
     # 截取文章数据
     article_list_html = tool.find_sub_string(article_pagination_response.data, '"html":"', '"})')
     article_data = article_list_html.replace("\\t", "").replace("\\n", "").replace("\\r", "")
@@ -81,7 +81,7 @@ def get_article_page(article_url):
         "top_image_url": None,  # 文章顶部图片
     }
     if article_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(article_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(article_response.status))
     # 判断是否需要购买
     result["is_pay"] = article_response.data.find("购买继续阅读") >= 0
     article_id = tool.find_sub_string(article_url, "http://weibo.com/ttarticle/p/show?id=", "&mod=zwenzhang")
@@ -285,7 +285,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_name + " 文章%s《%s》 第%s张图片下载成功" % (article_id, article_title, image_index))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 文章%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (article_id, article_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 文章顶部图片
         if article_response["top_image_url"] is not None:
@@ -303,7 +303,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_name + " 文章%s《%s》 顶部图片下载成功" % (article_id, article_title))
                     image_index += 1
             else:
-                log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 文章%s《%s》 顶部图片 %s 下载失败，原因：%s" % (article_id, article_title, article_response["top_image_url"], crawler.download_failre(save_file_return["code"])))
 
         # 文章内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

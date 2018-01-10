@@ -33,7 +33,7 @@ def get_one_page_video(account_id, token):
             index_url = "https://www.youtube.com/user/%s/videos" % account_id
         index_response = net.http_request(index_url, method="GET")
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         if index_response.data.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
@@ -58,7 +58,7 @@ def get_one_page_video(account_id, token):
         }
         video_pagination_response = net.http_request(query_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
         if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
         try:
             video_list_data = video_pagination_response.json_data[1]["response"]["continuationContents"]["gridContinuation"]
         except KeyError:
@@ -93,7 +93,7 @@ def get_video_page(video_id):
     }
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_info_string = tool.find_sub_string(video_play_response.data, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not video_info_string:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response.data)
@@ -199,7 +199,7 @@ def get_decrypt_step(js_file_url):
     decrypt_function_step = []
     js_file_response = net.http_request(js_file_url, method="GET")
     if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.get_http_request_failed_reason(js_file_response.status)))
+        raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     # 加密方法入口
     # k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
     main_function_name = tool.find_sub_string(js_file_response.data, 'k.sig?f.set("signature",k.sig):k.s&&f.set("signature",', "(k.s));")
@@ -408,7 +408,7 @@ class Download(crawler.DownloadThread):
             if save_file_return["code"] == net.HTTP_RETURN_CODE_RESPONSE_TO_LARGE:
                 log.error(self.account_name + " 第%s个视频（%s） %s 文件太大，跳过" % (video_index, video_id, video_response["video_url"]))
             else:
-                log.error(self.account_name + " 第%s个视频（%s） %s 下载失败，原因：%s" % (video_index, video_id, video_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s个视频（%s） %s 下载失败，原因：%s" % (video_index, video_id, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加

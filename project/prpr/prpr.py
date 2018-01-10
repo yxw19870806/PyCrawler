@@ -28,7 +28,7 @@ def get_one_page_post(account_id, timestamp):
         "post_info_list": [],  # 全部作品信息
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     if not crawler.check_sub_key(("code",), index_response.json_data):
         raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % index_response.json_data)
     if not crawler.is_integer(index_response.json_data["code"]):
@@ -63,7 +63,7 @@ def get_post_page(post_id):
         "video_url_list": [],  # 全部视频地址
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     if not crawler.check_sub_key(("code",), index_response.json_data):
         raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % index_response.json_data)
     if not crawler.is_integer(index_response.json_data["code"]):
@@ -243,7 +243,7 @@ class Download(crawler.DownloadThread):
                         log.step(self.account_name + " 作品%s 第%s张图片 下载成功" % (post_info["post_id"], image_index))
                         image_index += 1
                 else:
-                    log.error(self.account_name + " 作品%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 作品%s 第%s张图片 %s 下载失败，原因：%s" % (post_info["post_id"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 视频下载
         video_index = 1
@@ -268,7 +268,7 @@ class Download(crawler.DownloadThread):
                         log.step(self.account_name + " 作品%s 第%s个视频下载成功" % (post_info["post_id"], video_index))
                         video_index += 1
                 else:
-                    log.error(self.account_name + " 作品%s 第%s个视频 %s 下载失败，原因：%s" % (post_info["post_id"], video_index, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 作品%s 第%s个视频 %s 下载失败，原因：%s" % (post_info["post_id"], video_index, video_url, crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

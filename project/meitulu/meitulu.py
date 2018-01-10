@@ -20,7 +20,7 @@ def get_index_page():
         "max_album_id": None,  # 最新图集id
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     new_album_html = tool.find_sub_string(index_response.data, '<div class="zuixin">最新发布</div>', '<div class="zuixin">名站写真</div>')
     if not new_album_html:
         raise crawler.CrawlerException("页面截取最新发布失败\n%s" % index_response.data)
@@ -49,7 +49,7 @@ def get_one_page_album(album_id):
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.get_http_request_failed_reason(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
         if page_count == 1:
             # 获取图集标题
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
@@ -150,7 +150,7 @@ class MeiTuLu(crawler.Crawler):
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

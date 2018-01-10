@@ -22,7 +22,7 @@ def get_account_owned_app_list(user_id):
     game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
     game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(game_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
     owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", ";")
     if not owned_all_game_data:
         raise crawler.CrawlerException("页面截取游戏列表失败\n%s" % game_index_response.data)
@@ -131,7 +131,7 @@ def get_self_account_badges(account_id, login_cookie):
     cookies_list = {"steamLogin": login_cookie}
     badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list=cookies_list)
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(badges_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(badges_index_response.status))
     badges_detail_url_list = []
     # 徽章div
     badges_selector = PQ(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
@@ -156,7 +156,7 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     }
     badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=cookies_list)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(badge_detail_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
     wanted_card_list = {}
     page_selector = PQ(badge_detail_response.data)
     # 徽章等级
@@ -199,7 +199,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
     market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
     market_search_response = net.http_request(market_search_url, method="GET", cookies_list=cookies_list, json_decode=True)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(market_search_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
     if not crawler.check_sub_key(("success", "results_html"), market_search_response.json_data):
         raise crawler.CrawlerException("返回信息'success'或'results_html'字段不存在\n%s" % market_search_response.json_data)

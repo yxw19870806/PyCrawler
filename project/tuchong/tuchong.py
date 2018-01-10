@@ -35,7 +35,7 @@ def get_account_index_page(account_name):
     elif account_index_response.status == 301 and account_index_response.getheader("Location") == "https://tuchong.com/":
         raise crawler.CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 
@@ -53,7 +53,7 @@ def get_one_page_album(account_id, post_time):
         "is_error": False,  # 是不是格式不符合
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     if not crawler.check_sub_key(("posts", "result"), album_pagination_response.json_data):
         raise crawler.CrawlerException("返回数据'posts'或者'result'字段不存在\n%s" % album_pagination_response.json_data)
     if album_pagination_response.json_data["result"] != "SUCCESS":
@@ -202,7 +202,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 相册%s《%s》 第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 相册%s《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"],  image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 相册内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

@@ -22,7 +22,7 @@ def get_one_page_photo(page_count):
         "is_over": False,  # 是不是最后一页壁纸
     }
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     photo_list_selector = PQ(photo_pagination_response.data.decode("UTF-8")).find(".bizhinmore .bizhi")
     if photo_list_selector.size() == 0:
         raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response.data)
@@ -130,7 +130,7 @@ class Wallpaper(crawler.Crawler):
                 if save_file_return["status"] == 1:
                     log.step("第%s张图片下载成功" % image_info["image_id"])
                 else:
-                    log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error("第%s张图片 %s 下载失败，原因：%s" % (image_info["image_id"], image_info["image_url"], crawler.download_failre(save_file_return["code"])))
                     continue
                 # 图片下载完毕
                 self.total_image_count += 1  # 计数累加

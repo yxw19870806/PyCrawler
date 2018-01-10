@@ -35,7 +35,7 @@ def get_account_index_page(account_name):
     elif account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 
@@ -60,7 +60,7 @@ def follow_account(account_name, account_id):
         output.print_msg(crawler.CrawlerException("关注%s失败，连续关注太多等待一会儿继续尝试" % account_name))
         tool.process_exit()
     else:
-        output.print_msg(crawler.CrawlerException("关注%s失败，请求返回结果：%s" % (account_name, crawler.get_http_request_failed_reason(follow_response.status))))
+        output.print_msg(crawler.CrawlerException("关注%s失败，请求返回结果：%s" % (account_name, crawler.request_failre(follow_response.status))))
         tool.process_exit()
 
 

@@ -22,7 +22,7 @@ def get_account_index_page(account_id):
         if account_vanity_response.status == 404:
             raise crawler.CrawlerException("账号不存在")
         elif account_vanity_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("账号ID页，%s" % crawler.get_http_request_failed_reason(account_vanity_response.status))
+            raise crawler.CrawlerException("账号ID页，%s" % crawler.request_failre(account_vanity_response.status))
         if not crawler.check_sub_key(("data",), account_vanity_response.json_data):
             raise crawler.CrawlerException("账号ID页返回信息'data'字段不存在\n%s" % account_vanity_response.json_data)
         if not crawler.check_sub_key(("userIdStr",), account_vanity_response.json_data["data"]):
@@ -35,7 +35,7 @@ def get_account_index_page(account_id):
     }
     account_profile_response = net.http_request(account_profile_url, method="GET", json_decode=True)
     if account_profile_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException("账号详情页，%s" % crawler.get_http_request_failed_reason(account_profile_response.status))
+        raise crawler.CrawlerException("账号详情页，%s" % crawler.request_failre(account_profile_response.status))
     if not crawler.check_sub_key(("private", "postCount", "posts"), account_profile_response.json_data):
         raise crawler.CrawlerException("账号详情页返回信息'private'、'postCount'或'posts'字段不存在\n%s" % account_profile_response.json_data)
     if not crawler.is_integer(account_profile_response.json_data["private"]) or int(account_profile_response.json_data["private"]) != 0:
@@ -63,7 +63,7 @@ def get_video_page(video_id):
     if video_page_response.status == 403:
         result["is_skip"] = True
     elif video_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_page_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_page_response.status))
     else:
         if not crawler.check_sub_key(("postId", "videoUrl", "videoDashUrl"), video_page_response.json_data):
             raise crawler.CrawlerException("返回信息'postId'、'videoUrl'或'videoDashUrl'字段不存在\n%s" % video_page_response.json_data)
@@ -189,7 +189,7 @@ class Download(crawler.DownloadThread):
             # 设置临时目录
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加

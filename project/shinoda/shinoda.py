@@ -21,7 +21,7 @@ def get_one_page_blog(page_count):
     }
     blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
     if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     # 检测是否是最后一页
     result["is_over"] = blog_pagination_response.data == "記事が存在しません。"
     if result["is_over"]:
@@ -126,7 +126,7 @@ class Blog(crawler.Crawler):
                         log.step("第%s张图片下载成功" % image_index)
                         image_index += 1
                     else:
-                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.step("第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
                 # 日志内图片全部下载完毕
                 temp_path_list = []  # 临时目录设置清除
                 self.total_image_count += (image_index - 1) - int(save_info[0])  # 计数累加

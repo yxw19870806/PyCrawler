@@ -62,7 +62,7 @@ def get_one_page_photo(account_id, page_count):
     elif photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
         raise crawler.CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(photo_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     return result
 
 
@@ -206,7 +206,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_info["image_url"], crawler.download_failre(save_file_return["code"])))
                 continue
 
         # 图片下载完毕
