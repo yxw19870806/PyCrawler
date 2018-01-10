@@ -153,7 +153,7 @@ def get_one_page_album(account_id, page_count):
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     if page_count == 1 and album_pagination_response.data.find("<h2>用户不存在</h2>") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取coser id
@@ -207,7 +207,7 @@ def get_album_page(coser_id, album_id):
         "is_only_login": False,  # 是否只显示给登录用户
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     # 检测作品是否被管理员锁定
     if album_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
         result["is_admin_locked"] = True
@@ -431,7 +431,7 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除

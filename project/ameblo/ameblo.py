@@ -56,7 +56,7 @@ def get_one_page_blog(account_name, page_count):
     elif page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
     return result
 
 
@@ -68,7 +68,7 @@ def get_blog_page(account_name, blog_id):
         "image_url_list": [],  # 全部图片地址
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(blog_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
     # 截取日志正文部分（有多种页面模板）
     article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
     if not article_data:
@@ -275,7 +275,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_name + " 第%s张图片下载成功" % image_index)
                     image_index += 1
             else:
-                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 日志内图片全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除

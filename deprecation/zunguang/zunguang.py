@@ -23,7 +23,7 @@ def get_album_page(page_count):
         "is_skip": False,  # 是不是需要跳过（没有内容，不需要下载）
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     if not crawler.check_sub_key(("body",), album_response.json_data):
         raise crawler.CrawlerException("返回数据'body'字段不存在\n%s" % album_response.json_data)
     if not crawler.check_sub_key(("blog",), album_response.json_data["body"]):
@@ -137,7 +137,7 @@ class ZunGuang(crawler.Crawler):
                         log.step("第%s页第%s张图片下载成功" % (page_count, image_count))
                         image_count += 1
                     else:
-                        log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (page_count, image_count, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("第%s页第%s张图片 %s 下载失败，原因：%s" % (page_count, image_count, image_url, crawler.download_failre(save_file_return["code"])))
                 except SystemExit:
                     log.step("提前退出")
                     path.delete_dir_or_file(image_path)

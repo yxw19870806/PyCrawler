@@ -28,7 +28,7 @@ def get_one_page_favorite(page_count):
         "is_over": False,  # 是不是最后一页收藏
     }
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(favorite_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(favorite_pagination_response.status))
     favorite_data_html = tool.find_sub_string(favorite_pagination_response.data, '"ns":"pl.content.favoriteFeed.index"', '"})</script>', 2)
     favorite_data_html = tool.find_sub_string(favorite_data_html, '"html":"', '"})')
     if not favorite_data_html:
@@ -151,7 +151,7 @@ class Favorite(crawler.Crawler):
                             image_count += 1
                             self.total_image_count += 1
                     else:
-                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("微博%s的第%s张图片 %s 下载失败，原因：%s" % (blog_info["blog_id"], image_count, image_url, crawler.download_failre(save_file_return["code"])))
 
             if favorite_pagination_response["is_over"]:
                 is_over = True

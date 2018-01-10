@@ -24,7 +24,7 @@ def get_one_page_audio(account_id, page_count):
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
     }
     if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audit_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
     if not crawler.check_sub_key(("res", "html"), audit_pagination_response.json_data):
         raise crawler.CrawlerException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
     if audit_pagination_response.json_data["res"] is not True:
@@ -183,7 +183,7 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_id"], audio_title))
         else:
-            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_title, audio_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_id"], audio_title, audio_url, crawler.download_failre(save_file_return["code"])))
             return
 
         # 歌曲下载完毕

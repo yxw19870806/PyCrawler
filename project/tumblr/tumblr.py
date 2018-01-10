@@ -50,7 +50,7 @@ def get_index_setting(account_id):
             if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
                 return is_https, is_safe_mode, is_private
             elif index_response.status != 302:
-                raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+                raise crawler.CrawlerException(crawler.request_failre(index_response.status))
             redirect_url = index_response.getheader("Location")
         if redirect_url.find("www.tumblr.com/safe-mode?url=") > 0:
             is_safe_mode = True
@@ -62,7 +62,7 @@ def get_index_setting(account_id):
     elif index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     return is_https, is_safe_mode, is_private
 
 
@@ -88,7 +88,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(post_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
     if page_html:
         try:
@@ -138,7 +138,7 @@ def get_one_page_private_blog(account_id, page_count):
         "post_info_list": [],  # 全部日志信息
     }
     if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(post_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     if not crawler.check_sub_key(("meta",), post_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'meta'字段不存在\n%s" % post_pagination_response.json_data)
     if not crawler.check_sub_key(("status",), post_pagination_response.json_data["meta"]):
@@ -212,7 +212,7 @@ def get_post_page(post_url, is_safe_mode):
         "image_url_list": [],  # 全部图片地址
     }
     if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(post_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
     if not post_page_head:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % post_response.data)
@@ -331,7 +331,7 @@ def get_video_play_page(account_id, post_id, is_https):
         if video_play_url is not None:
             video_play_response = net.http_request(video_play_url, method="GET")
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     video_url_find = re.findall('<source src="(http[s]?://' + account_id + '.tumblr.com/video_file/[^"]*)" type="[^"]*"', video_play_response.data)
     if len(video_url_find) == 1:
         if crawler.is_integer(video_url_find[0].split("/")[-1]):
@@ -543,7 +543,7 @@ class Download(crawler.DownloadThread):
                         self.temp_path_list.append(video_file_path)
                         log.step(self.account_id + " 日志 %s 视频下载成功" % post_id)
                         break
-                error_message = self.account_id + " 日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, crawler.get_save_net_file_failed_reason(save_file_return["code"]))
+                error_message = self.account_id + " 日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, crawler.download_failre(save_file_return["code"]))
                 # 403、404错误作为step log输出
                 if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                     log.step(error_message)
@@ -569,7 +569,7 @@ class Download(crawler.DownloadThread):
                     log.step(self.account_id + " 日志 %s 第%s张图片下载成功" % (post_id, image_index))
                     image_index += 1
                 else:
-                    error_message = self.account_id + " 日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"]))
+                    error_message = self.account_id + " 日志 %s 第%s张图片 %s 下载失败，原因：%s" % (post_url, image_index, image_url, crawler.download_failre(save_file_return["code"]))
                     # 403、404错误作为step log输出
                     if IS_STEP_ERROR_403_AND_404 and save_file_return["code"] in [403, 404]:
                         log.step(error_message)

@@ -36,7 +36,7 @@ def get_one_page_video(account_id, page_time):
     header_list = {"Referer": "http://weishi.qq.com/"}
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     if not crawler.check_sub_key(("ret",), video_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'ret'字段不存在\n%s" % video_pagination_response.json_data)
     if int(video_pagination_response.json_data["ret"]) != 0:
@@ -90,7 +90,7 @@ def get_video_info_page(video_vid, video_id):
         "video_url": "",  # 视频地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_info_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
     if not crawler.check_sub_key(("data",), video_info_response.json_data):
         raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % video_info_response.json_data)
     if not crawler.check_sub_key(("url",), video_info_response.json_data["data"]):

@@ -17,6 +17,17 @@ import traceback
 COOKIE_INFO = {}
 
 
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    index_url = "http://www.nicovideo.jp/"
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return index_response.data.find('<span id="siteHeaderUserNickNameContainer">') >= 0
+    return False
+
+
 # 获取账号全部视频信息
 # account_id => 15614906
 def get_account_index_page(account_id):
@@ -27,7 +38,7 @@ def get_account_index_page(account_id):
         "video_info_list": [],  # 所有视频信息
     }
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
     if not all_video_info:
         raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response.data)
@@ -62,12 +73,20 @@ def get_video_info(video_id):
     video_play_url = "http://www.nicovideo.jp/watch/sm%s" % video_id
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
+        "extra_cookie": {},  # 额外的cookie
+        "is_delete": False,  # 是否已删除
         "video_url": None,  # 视频地址
     }
-    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException("视频播放页访问失败，" + crawler.get_http_request_failed_reason(video_play_response.status))
+    if video_play_response.status == 403:
+        result["is_delete"] = True
+        return result
+    elif video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("视频播放页访问失败，" + crawler.request_failre(video_play_response.status))
     video_info_string = tool.find_sub_string(video_play_response.data, 'data-api-data="', '" data-environment="')
     if not video_info_string:
+        if video_play_response.data.find("<p>この動画が投稿されている公開コミュニティはありません。</p>") > 0:
+            result["is_delete"] = True
+            return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response.data)
     video_info_string = HTMLParser.HTMLParser().unescape(video_info_string)
     try:
@@ -82,6 +101,9 @@ def get_video_info(video_id):
         if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
             raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
         result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
+        # 返回的cookies
+        set_cookie = net.get_cookies_from_response_header(video_play_response.headers)
+        result["extra_cookie"] = set_cookie
         return result
     # 新版本，需要再次访问获取视频地址
     if not crawler.check_sub_key(("dmcInfo",), video_info["video"]):
@@ -168,6 +190,11 @@ class NicoNico(crawler.Crawler):
         # account_id  last_video_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
+        # 检测登录状态
+        if not check_login():
+            log.error("没有检测到账号登录状态，退出程序！")
+            tool.process_exit()
+
     def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
@@ -239,14 +266,21 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 视频%s 《%s》解析失败，原因：%s" % (video_info["video_id"], video_info["video_title"], e.message))
             return
 
+        if video_info_response["is_delete"]:
+            log.error(self.account_name + " 视频%s 《%s》已删除，跳过" % (video_info["video_id"], video_info["video_title"]))
+            return
+
         log.step(self.account_name + " 视频%s 《%s》 %s 开始下载" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%08d - %s.mp4" % (int(video_info["video_id"]), path.filter_text(video_info["video_title"])))
-        save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=COOKIE_INFO)
+        cookies_list = COOKIE_INFO
+        if video_info_response["extra_cookie"]:
+            cookies_list.update(video_info_response["extra_cookie"])
+        save_file_return = net.save_net_file(video_info_response["video_url"], video_file_path, cookies_list=cookies_list)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
         else:
-            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_info["video_id"], video_info["video_title"], video_info_response["video_url"], crawler.download_failre(save_file_return["code"])))
             return
 
         # 视频下载完毕
@@ -265,7 +299,6 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 开始解析视频 %s 《%s》" % (video_info["video_id"], video_info["video_title"]))
                 self.crawl_video(video_info)
                 self.main_thread_check()  # 检测主线程运行状态
-                tool.process_exit()
         except SystemExit, se:
             if se.code == 0:
                 log.step(self.account_name + " 提前退出")
@@ -278,7 +311,7 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_video_count += self.total_video_count - 1
+            self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
         log.step(self.account_name + " 完成")
         self.notify_main_thread()

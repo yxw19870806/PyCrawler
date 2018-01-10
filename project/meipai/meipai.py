@@ -32,7 +32,7 @@ def get_one_page_video(account_id, page_count):
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     if not crawler.check_sub_key(("medias",), video_pagination_response.json_data):
         raise crawler.CrawlerException("返回数据'medias'字段不存在\n%s" % video_pagination_response.json_data)
     for media_data in video_pagination_response.json_data["medias"]:
@@ -203,7 +203,7 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 第%s个视频下载成功" % video_index)
         else:
-            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info["video_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_info["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 视频下载完毕
         self.account_info[1] = str(video_index)  # 设置存档记录

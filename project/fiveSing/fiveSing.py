@@ -26,7 +26,7 @@ def get_one_page_audio(account_id, page_type, page_count):
         "audio_info_list": [],  # 全部歌曲信息
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audio_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
     if audio_pagination_response.data.find("var OwnerNickName = '';") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取歌曲信息
@@ -49,7 +49,7 @@ def get_audio_play_page(audio_id, song_type):
         "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audio_play_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     # 获取歌曲地址
     audio_info_string = tool.find_sub_string(audio_play_response.data, '"ticket":', ",").strip().strip('"')
     if not audio_info_string:
@@ -199,7 +199,7 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
         else:
-            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " %s歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.download_failre(save_file_return["code"])))
             return
 
         # 歌曲下载完毕

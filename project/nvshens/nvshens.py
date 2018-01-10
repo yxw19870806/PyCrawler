@@ -20,7 +20,7 @@ def get_index_page():
         "max_album_id": None,  # 最新图集id
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
     if len(album_id_find) == 0:
         raise crawler.CrawlerException("页面匹配图集id失败\n%s" % index_response.data)
@@ -41,7 +41,7 @@ def get_album_photo(album_id):
         album_pagination_url = "https://www.nvshens.com/g/%s/%s.html" % (album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
         if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("第%s页 " % page_count + crawler.get_http_request_failed_reason(album_pagination_response.status))
+            raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
         # 判断图集是否已经被删除
         if page_count == 1:
             result["is_delete"] = album_pagination_response.data.find("<title>该页面未找到-宅男女神</title>") >= 0
@@ -167,7 +167,7 @@ class Nvshens(crawler.Crawler):
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
-                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                        log.error("图集%s 《%s》 第%s张图片 %s 下载失败，原因：%s" % (album_id, album_title, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                     image_index += 1
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除

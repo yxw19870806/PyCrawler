@@ -31,7 +31,7 @@ def get_one_page_audio(account_id, page_count):
         "is_over": False,  # 是不是最后一页歌曲
     }
     if audio_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audio_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(audio_pagination_response.status))
     if crawler.check_sub_key(("code",), audio_pagination_response.json_data) and crawler.is_integer(audio_pagination_response.json_data["code"]):
         if int(audio_pagination_response.json_data["code"]) == 1101:
             raise crawler.CrawlerException("账号不存在")
@@ -79,7 +79,7 @@ def get_audio_play_page(audio_key):
         "audio_url": None,  # 歌曲地址
     }
     if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(audio_play_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
     # 获取歌曲地址
     audio_url = tool.find_sub_string(audio_play_response.data, '"playurl":"', '"')
     if not audio_url:
@@ -203,7 +203,7 @@ class Download(crawler.DownloadThread):
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_key"], audio_info["audio_title"]))
         else:
-            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+            log.error(self.account_name + " 歌曲%s《%s》 %s 下载失败，原因：%s" % (audio_info["audio_key"], audio_info["audio_title"], audio_play_response["audio_url"], crawler.download_failre(save_file_return["code"])))
 
         # 歌曲下载完毕
         self.total_video_count += 1  # 计数累加

@@ -30,7 +30,7 @@ def get_member_from_talk(talk_id):
     talk_index_response = net.http_request(talk_index_url, method="GET")
     account_list = {}
     if talk_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(talk_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(talk_index_response.status))
     talk_data_string = tool.find_sub_string(talk_index_response.data, "window.__STATES__ = ", "</script>")
     if not talk_data_string:
         raise crawler.CrawlerException("页面截取talk信息失败\n%s" % talk_index_response.data)

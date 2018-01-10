@@ -21,12 +21,9 @@ def init():
     # 设置代理
     crawler.quickly_set_proxy()
 
-    api_key = None
-    api_secret = None
     if ACCESS_TOKEN is not None:
         return True
 
-    is_find_api_info = False
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
         api_info = tool.decrypt_string(tool.read_file(token_file_path))
@@ -34,32 +31,34 @@ def init():
             try:
                 api_info = json.loads(api_info)
             except ValueError:
-                output.print_msg("incorrect api info")
+                output.print_msg("decrypt api info failure")
             else:
                 if crawler.check_sub_key(("api_key", "api_secret"), api_info):
-                    is_find_api_info = True
-                    api_key = api_info["api_key"]
-                    api_secret = api_info["api_secret"]
+                    # 验证token是否有效
+                    if get_access_token(api_info["api_key"], api_info["api_secret"]):
+                        output.print_msg("access token get succeed!")
+                        return True
+                    else:
+                        output.print_msg("api info has expired")
+                else:
+                    output.print_msg("incorrect api info")
         else:
             output.print_msg("decrypt api info failure")
-        if not is_find_api_info:
-            path.delete_dir_or_file(token_file_path)
-    if not is_find_api_info:
-        while True:
-            input_str = output.console_input("未检测到api key和api secret，是否手动输入(y)es / (N)o：").lower()
-            if input_str in ["y", "yes"]:
-                api_key = output.console_input("API KEY：")
-                api_secret = output.console_input("API SECRET：")
-                break
-            elif input_str in ["n", "no"]:
-                return False
-    if get_access_token(api_key, api_secret):
-        # 保存到文件中
-        if not os.path.exists(token_file_path):
-            api_info = tool.encrypt_string(json.dumps({"api_key": api_key, "api_secret": api_secret}))
-            tool.write_file(api_info, token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
-        output.print_msg("access token get succeed!")
-        return True
+        # token已经无效了，删除掉
+        path.delete_dir_or_file(token_file_path)
+    output.print_msg("Please input api info")
+    while True:
+        api_key = output.console_input("API KEY: ")
+        api_secret = output.console_input("API SECRET; ")
+        # 验证token是否有效
+        if get_access_token(api_key, api_secret):
+            # 加密保存到文件中
+            if not os.path.exists(token_file_path):
+                api_info = tool.encrypt_string(json.dumps({"api_key": api_key, "api_secret": api_secret}))
+                tool.write_file(api_info, token_file_path, tool.WRITE_FILE_TYPE_REPLACE)
+            output.print_msg("access token get succeed!")
+            return True
+        output.print_msg("incorrect api info, please type again!")
     return False
 
 

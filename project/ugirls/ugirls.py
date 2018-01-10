@@ -22,7 +22,7 @@ def get_album_page(album_id):
         "model_name": "",  # 模特名字
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(album_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
         result["is_delete"] = True
     else:
@@ -54,7 +54,7 @@ def get_index_page():
         "max_album_id": None,  # 最新图集id
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     album_list_html = tool.find_sub_string(index_response.data, '<div class="magazine_list_wrap">', '<div class="xfenye">')
     if not album_list_html:
         raise crawler.CrawlerException("页面截取图集列表失败\n%s" % index_response.data)
@@ -127,7 +127,7 @@ class UGirls(crawler.Crawler):
                         log.step("第%s页图集的第%s张图片下载成功" % (album_id, image_index))
                         image_index += 1
                     else:
-                         log.error("第%s页图集的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                         log.error("第%s页图集的第%s张图片 %s 下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
                 # 图集内图片全部下载完毕
                 temp_path = ""  # 临时目录设置清除
                 self.total_image_count += image_index - 1  # 计数累加

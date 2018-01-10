@@ -8,8 +8,8 @@ email: hikaru870806@hotmail.com
 from common import *
 
 
-# 获取存档文件
-def get_account_from_save_data(file_path):
+# 从本地存档获取所有账号
+def get_account_list_from_save_data(file_path):
     account_list = {}
     for line in tool.read_file(file_path, tool.READ_FILE_TYPE_LINE):
         line = line.replace("\n", "")
@@ -18,12 +18,34 @@ def get_account_from_save_data(file_path):
     return account_list
 
 
+# 从API获取所有推荐账号
+def get_account_list_from_api():
+    try:
+        channel_list = get_channel_from_api()
+    except crawler.CrawlerException, e:
+        output.print_msg("频道列表解析失败，原因：%s" % e.message)
+        raise
+
+    account_list = {}
+    for channel_id in channel_list:
+        try:
+            channel_account_list = get_channel_account_from_api(channel_id)
+        except crawler.CrawlerException, e:
+            output.print_msg("频道%s推荐账号解析失败，原因：%s" % (channel_id, e.message))
+            raise
+        output.print_msg("频道%s获取推荐账号%s个" % (channel_id, len(channel_account_list)))
+        # 累加账号
+        account_list.update(channel_account_list)
+    return account_list
+
+
+# 获取全部推荐频道
 def get_channel_from_api():
     api_url = "https://api.prpr.tinydust.cn/v3/channels/user/channels"
     api_response = net.http_request(api_url, method="GET", json_decode=True)
     channel_list = []
     if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
     if not crawler.check_sub_key(("code",), api_response.json_data):
         raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % api_response.json_data)
     if not crawler.is_integer(api_response.json_data["code"]):
@@ -52,7 +74,7 @@ def get_channel_account_from_api(channel_id):
         }
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException(crawler.get_http_request_failed_reason(api_response.status))
+            raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         if not crawler.check_sub_key(("code",), api_response.json_data):
             raise crawler.CrawlerException("返回信息'code'字段不存在\n%s" % api_response.json_data)
         if not crawler.is_integer(api_response.json_data["code"]):
@@ -74,27 +96,12 @@ def get_channel_account_from_api(channel_id):
 
 
 def main():
-    # 存档位置
-    save_data_path = crawler.quickly_get_save_data_path()
-    try:
-        channel_list = get_channel_from_api()
-    except crawler.CrawlerException, e:
-        output.print_msg("频道列表解析失败，原因：%s" % e.message)
-        raise
-
-    account_list_from_api = {}
-    for channel_id in channel_list:
-        try:
-            channel_account_list = get_channel_account_from_api(channel_id)
-        except crawler.CrawlerException, e:
-            output.print_msg("频道%s推荐账号解析失败，原因：%s" % (channel_id, e.message))
-            raise
-        output.print_msg("频道%s获取推荐账号%s个" % (channel_id, len(channel_account_list)))
-        # 累加账号
-        account_list_from_api.update(channel_account_list)
+    account_list_from_api = get_account_list_from_api()
 
     if len(account_list_from_api) > 0:
-        account_list_from_save_data = get_account_from_save_data(save_data_path)
+        # 存档位置
+        save_data_path = crawler.quickly_get_save_data_path()
+        account_list_from_save_data = get_account_list_from_save_data(save_data_path)
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = "%s\t\t%s" % (account_id, account_list_from_api[account_id])

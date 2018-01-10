@@ -32,7 +32,7 @@ def get_account_from_index():
         for member_info in member_list_find:
             account_list[member_info[0]] = member_info[1].replace(" ", "")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
     return account_list
 
 

@@ -7,5 +7,6 @@ project/*/photo/
 project/*/video/
 project/bcy/session
 project/twitter/token
+project/vliao/token
 game/steam/account.data
 game/steam/discount.txt

@@ -34,7 +34,7 @@ def get_account_index_page(account_name):
     elif account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(account_index_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     return result
 
 
@@ -54,7 +54,7 @@ def get_one_page_media(account_name, position_blog_id):
         "next_page_position": None  # 下一页指针
     }
     if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(media_pagination_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
     if not crawler.check_sub_key(("has_more_items",), media_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'has_more_items'字段不存在\n%s" % media_pagination_response.json_data)
     if not crawler.check_sub_key(("items_html",), media_pagination_response.json_data):
@@ -127,7 +127,7 @@ def get_video_play_page(tweet_id):
             file_url_host = urllib.splithost(file_url_path)[0]
             m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.get_http_request_failed_reason(m3u8_file_response.status)))
+                raise crawler.CrawlerException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
             # 是否包含的是m3u8文件（不同分辨率）
             include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
             if len(include_m3u8_file_list) > 0:
@@ -135,7 +135,7 @@ def get_video_play_page(tweet_id):
                 m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
                 m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
                 if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise crawler.CrawlerException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.get_http_request_failed_reason(m3u8_file_response.status)))
+                    raise crawler.CrawlerException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
 
             # 包含分P视频文件名的m3u8文件
             ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
@@ -157,13 +157,13 @@ def get_video_play_page(tweet_id):
                 vmap_file_url = vmap_file_url.replace("\\/", "/")
                 vmap_file_response = net.http_request(vmap_file_url, method="GET")
                 if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise crawler.CrawlerException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, crawler.get_http_request_failed_reason(vmap_file_response.status)))
+                    raise crawler.CrawlerException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, crawler.request_failre(vmap_file_response.status)))
                 video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
                 if not video_url:
                     raise crawler.CrawlerException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
                 result["video_url"] = str(video_url.replace("\\/", "/"))
     else:
-        raise crawler.CrawlerException(crawler.get_http_request_failed_reason(video_play_response.status))
+        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     return result
 
 
@@ -286,7 +286,7 @@ class Download(crawler.DownloadThread):
                 elif save_file_return["status"] == 0 and save_file_return["code"] == 404:
                     log.error(self.account_name + " 第%s张图片 %s 已被删除，跳过" % (image_index, image_url))
                 else:
-                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.get_save_net_file_failed_reason(save_file_return["code"])))
+                    log.error(self.account_name + " 第%s张图片 %s 下载失败，原因：%s" % (image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 视频下载
         video_index = int(self.account_info[3]) + 1
