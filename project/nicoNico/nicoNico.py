@@ -294,7 +294,7 @@ class Download(crawler.DownloadThread):
         # 保存最后的信息
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
-            self.main_thread.total_video_count += self.total_video_count - 1
+            self.main_thread.total_video_count += self.total_video_count
             self.main_thread.account_list.pop(self.account_id)
         log.step(self.account_name + " 完成")
         self.notify_main_thread()
