@@ -14,7 +14,12 @@ import traceback
 POST_COUNT_PER_PAGE = 10  # 每次获取的作品数量（貌似无效）
 IS_SKIP_BLUR = False
 IS_STEP_INVALID_RESOURCE = False
-
+INVALID_FILE_MD5_LIST = ["0764beb3d521b9b420d365f6ee6d453b", "0d527d84f1150d002998cb67ec271de5", "11f81047704ca9a522f54ced9ef82a85", "1ba2863db2ac7296d73818be890ef378",
+                        "23e0a284d4fa44c222bf41d3cb58b241", "2423c99718385d789cec3e6c1c1020db", "350ccbcdac148cf3570af4ddf9f6de95", "483ec66794f1dfa02d634c4745fd4ded",
+                        "6a9e28c562a9187ad262f027b0ed9cf2", "76d8988358e84e123a126d736be4bc44", "7a9abea08bc47d3a64f87eebdd533dcd", "7c6b17080d95d2e7847f6c00b1228182",
+                        "bca818c66773561c7eae5f27b839f717", "c0de7824049435be9209b8f39fbcb1ba", "cbccd65c36ff32fe877bf56b7e70a8ba", "dd77da050fc0bcf79d22d35deb1019bd",
+                        "df878d0165b1a02074c961beec11e52c", "f932db2213fee316359b1267f972899e",
+                        ]
 
 # 获取指定时间后的一页作品
 def get_one_page_post(account_id, timestamp):
@@ -98,15 +103,16 @@ def get_post_page(post_id):
 
 
 # 检测下载得文件是否有效
-def check_invalid(file_path):
-    if file_path.split(".")[-1] == "png" and os.path.getsize(file_path) < 102400:
-        if tool.get_file_md5(file_path) in ["0764beb3d521b9b420d365f6ee6d453b", "0d527d84f1150d002998cb67ec271de5", "11f81047704ca9a522f54ced9ef82a85",
-                                            "1ba2863db2ac7296d73818be890ef378", "23e0a284d4fa44c222bf41d3cb58b241", "2423c99718385d789cec3e6c1c1020db",
-                                            "350ccbcdac148cf3570af4ddf9f6de95", "483ec66794f1dfa02d634c4745fd4ded", "6a9e28c562a9187ad262f027b0ed9cf2",
-                                            "76d8988358e84e123a126d736be4bc44", "7a9abea08bc47d3a64f87eebdd533dcd", "7c6b17080d95d2e7847f6c00b1228182",
-                                            "bca818c66773561c7eae5f27b839f717", "c0de7824049435be9209b8f39fbcb1ba", "cbccd65c36ff32fe877bf56b7e70a8ba",
-                                            "dd77da050fc0bcf79d22d35deb1019bd", "df878d0165b1a02074c961beec11e52c", "f932db2213fee316359b1267f972899e",
-                                            ]:
+def check_invalid(file_path, is_video=False):
+    if file_path.split(".")[-1] == "png":
+        # 原本是视频，但下载后是图片
+        if is_video:
+            file_md5 = tool.get_file_md5(file_path)
+            if file_md5 not in INVALID_FILE_MD5_LIST:
+                log.error("new invalid image md5 value: " + file_md5)
+            return True
+        # 文件太大，肯定不在下面的文件列表里
+        if os.path.getsize(file_path) < 102400 and tool.get_file_md5(file_path) in INVALID_FILE_MD5_LIST:
             return True
     return False
 
@@ -266,7 +272,7 @@ class Download(crawler.DownloadThread):
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s_%02d.mp4" % (post_info["post_id"], video_index))
                 save_file_return = net.save_net_file(video_url, video_file_path, need_content_type=True)
                 if save_file_return["status"] == 1:
-                    if check_invalid(save_file_return["file_path"]):
+                    if check_invalid(save_file_return["file_path"], True):
                         path.delete_dir_or_file(save_file_return["file_path"])
                         error_message = self.account_name + " 作品%s 第%s个视频 %s 无效，已删除" % (post_info["post_id"], video_index, video_url)
                         if IS_STEP_INVALID_RESOURCE:
