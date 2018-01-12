@@ -22,16 +22,15 @@ def get_account_index_page(account_id):
     result = {
         "user_id": None,  # user id
     }
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取user id
-        user_id = tool.find_sub_string(account_index_response.data, "var userid = '", "'")
-        if not crawler.is_integer(user_id):
-            raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response.data)
-        result["user_id"] = str(user_id)
-    elif account_index_response.status == 302 and account_index_response.getheader("Location") == "http://changba.com":
+    if account_index_response.status == 302 and account_index_response.getheader("Location") == "http://changba.com":
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    # 获取user id
+    user_id = tool.find_sub_string(account_index_response.data, "var userid = '", "'")
+    if not crawler.is_integer(user_id):
+        raise crawler.CrawlerException("页面截取userid失败\n%s" % account_index_response.data)
+    result["user_id"] = str(user_id)
     return result
 
 
@@ -77,7 +76,7 @@ def get_one_page_audio(user_id, page_count):
         if not crawler.is_integer(audio_info["type"]):
             raise crawler.CrawlerException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
         if int(audio_info["type"]) not in (0, 1, 3):
-            raise crawler.CrawlerException("歌曲信息'type'字段范围不正确\n%s" % audio_info)
+            raise crawler.CrawlerException("歌曲信息'type'字段取值不正确\n%s" % audio_info)
         result_audio_info["audio_type"] = int(audio_info["type"])
         result["audio_info_list"].append(result_audio_info)
     return result
