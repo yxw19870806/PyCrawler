@@ -24,7 +24,9 @@ def get_one_page_audio(account_id, page_count):
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
         "is_over": False,  # 是不是最后一页
     }
-    if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if audit_pagination_response.status == 404:
+        raise crawler.CrawlerException("账号不存在")
+    elif audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
     if not crawler.check_sub_key(("res", "html"), audit_pagination_response.json_data):
         raise crawler.CrawlerException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
