@@ -12,6 +12,7 @@ import time
 import traceback
 
 POST_COUNT_PER_PAGE = 10  # 每次获取的作品数量（貌似无效）
+IS_SKIP_BLUR = False
 IS_STEP_INVALID_RESOURCE = False
 
 
@@ -230,14 +231,18 @@ class Download(crawler.DownloadThread):
                 origin_image_url, file_param = image_url.split("?", 1)
                 file_name_and_type = origin_image_url.split("/")[-1]
                 if file_param.find("/blur/") >= 0:
+                    # 跳过
+                    if IS_SKIP_BLUR:
+                        log.step(self.account_name + " 作品%s 第%s张图片 %s 跳过" % (post_info["post_id"], image_index, image_url))
+                        continue
                     image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "blur", file_name_and_type)
                 else:
-                    image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "other", file_name_and_type)
+                    image_file_path = os.path.join(self.main_thread.image_download_path, self.account_name, file_name_and_type)
                 save_file_return = net.save_net_file(image_url, image_file_path, need_content_type=True)
                 if save_file_return["status"] == 1:
                     if check_invalid(save_file_return["file_path"]):
                         path.delete_dir_or_file(save_file_return["file_path"])
-                        error_message = self.account_name + " 作品%s 第%s张图 %s 无效，已删除" % (post_info["post_id"], image_index, image_url)
+                        error_message = self.account_name + " 作品%s 第%s张图片 %s 无效，已删除" % (post_info["post_id"], image_index, image_url)
                         if IS_STEP_INVALID_RESOURCE:
                             log.step(error_message)
                         else:
