@@ -23,40 +23,39 @@ def get_one_page_blog(account_name, page_count):
         "blog_id_list": [],  # 全部日志id
         "is_over": False,  # 是不是最后一页日志
     }
-    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取日志id
-        blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
-        # 另一种页面格式
-        if len(blog_id_list) == 0:
-            page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
-            if not page_data:
-                raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response.data)
-            blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="https://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
-        if len(blog_id_list) == 0:
-            raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
-        result["blog_id_list"] = map(str, blog_id_list)
-        # 判断是不是最后一页
-        # 有页数选择的页面样式
-        if blog_pagination_response.data.find('<div class="page topPaging">') >= 0:
-            paging_data = tool.find_sub_string(blog_pagination_response.data, '<div class="page topPaging">', "</div>")
-            last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
-            if len(last_page) == 1:
-                result["is_over"] = page_count >= int(last_page[0])
-            page_count_find = re.findall("<a [^>]*?>(\d*)</a>", paging_data)
-            if len(page_count_find) > 0:
-                result["is_over"] = page_count >= max(map(int, page_count_find))
-        # 只有下一页和上一页按钮的样式
-        elif blog_pagination_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
-            if blog_pagination_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
-                result["is_over"] = True
-        # 另一种只有下一页和上一页按钮的样式
-        elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
-            if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
-                result["is_over"] = True
-    elif page_count == 1 and blog_pagination_response.status == 404:
+    if page_count == 1 and blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    # 获取日志id
+    blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
+    # 另一种页面格式
+    if len(blog_id_list) == 0:
+        page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
+        if not page_data:
+            raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response.data)
+        blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="https://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
+    if len(blog_id_list) == 0:
+        raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
+    result["blog_id_list"] = map(str, blog_id_list)
+    # 判断是不是最后一页
+    # 有页数选择的页面样式
+    if blog_pagination_response.data.find('<div class="page topPaging">') >= 0:
+        paging_data = tool.find_sub_string(blog_pagination_response.data, '<div class="page topPaging">', "</div>")
+        last_page = re.findall('/page-(\d*).html#main" class="lastPage"', paging_data)
+        if len(last_page) == 1:
+            result["is_over"] = page_count >= int(last_page[0])
+        page_count_find = re.findall("<a [^>]*?>(\d*)</a>", paging_data)
+        if len(page_count_find) > 0:
+            result["is_over"] = page_count >= max(map(int, page_count_find))
+    # 只有下一页和上一页按钮的样式
+    elif blog_pagination_response.data.find('<a class="skinSimpleBtn pagingPrev"') >= 0:  # 有上一页按钮
+        if blog_pagination_response.data.find('<a class="skinSimpleBtn pagingNext"') == -1:  # 但没有下一页按钮
+            result["is_over"] = True
+    # 另一种只有下一页和上一页按钮的样式
+    elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
+        if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
+            result["is_over"] = True
     return result
 
 
