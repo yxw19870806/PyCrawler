@@ -37,35 +37,34 @@ def get_account_index_page(account_name):
         "user_id": None,  # user id
         "csrf": None,  # csrf
     }
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取user id
-        user_id = tool.find_sub_string(account_index_response.data, 'params: {"nsid":"', '"')
-        if not user_id:
-            raise crawler.CrawlerException("页面截取nsid失败\n%s" % account_index_response.data)
-        result["user_id"] = user_id
-        # 获取site key
-        site_key = tool.find_sub_string(account_index_response.data, 'root.YUI_config.flickr.api.site_key = "', '"')
-        if not site_key:
-            raise crawler.CrawlerException("页面截取site key失败\n%s" % account_index_response.data)
-        result["site_key"] = site_key
-        # 获取CSRF
-        root_auth = tool.find_sub_string(account_index_response.data, "root.auth = ", "};")
-        if not site_key:
-            raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response.data)
-        csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
-        if not csrf:
-            raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response.data)
-        result["csrf"] = csrf
-        # 获取cookie_session
-        if IS_LOGIN and "cookie_session" not in COOKIE_INFO:
-            set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
-            if not crawler.check_sub_key(("cookie_session",), set_cookies):
-                raise crawler.CrawlerException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.headers)
-            COOKIE_INFO.update({"cookie_session": set_cookies["cookie_session"]})
-    elif account_index_response.status == 404:
+    if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    # 获取user id
+    user_id = tool.find_sub_string(account_index_response.data, 'params: {"nsid":"', '"')
+    if not user_id:
+        raise crawler.CrawlerException("页面截取nsid失败\n%s" % account_index_response.data)
+    result["user_id"] = user_id
+    # 获取site key
+    site_key = tool.find_sub_string(account_index_response.data, 'root.YUI_config.flickr.api.site_key = "', '"')
+    if not site_key:
+        raise crawler.CrawlerException("页面截取site key失败\n%s" % account_index_response.data)
+    result["site_key"] = site_key
+    # 获取CSRF
+    root_auth = tool.find_sub_string(account_index_response.data, "root.auth = ", "};")
+    if not site_key:
+        raise crawler.CrawlerException("页面截取root.auth失败\n%s" % account_index_response.data)
+    csrf = tool.find_sub_string(root_auth, '"csrf":"', '",')
+    if not csrf:
+        raise crawler.CrawlerException("页面截取csrf失败\n%s" % account_index_response.data)
+    result["csrf"] = csrf
+    # 获取cookie_session
+    if IS_LOGIN and "cookie_session" not in COOKIE_INFO:
+        set_cookies = net.get_cookies_from_response_header(account_index_response.headers)
+        if not crawler.check_sub_key(("cookie_session",), set_cookies):
+            raise crawler.CrawlerException("请求返回cookie匹配cookie_session失败\n%s" % account_index_response.headers)
+        COOKIE_INFO.update({"cookie_session": set_cookies["cookie_session"]})
     return result
 
 
