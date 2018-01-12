@@ -19,26 +19,25 @@ def get_one_page_photo(page_count):
         "image_info_list": [],  # 是不是已经没有新的相册
         "is_over": False,  # 是不是已经没有新的相册
     }
-    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        article_data = tool.find_sub_string(photo_pagination_response.data, '<section id="primary"', "</section>")
-        if not article_data:
-            raise crawler.CrawlerException("页面截取正文失败\n%s" % photo_pagination_response.data)
-        image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
-        if len(image_info_list) == 0:
-            raise crawler.CrawlerException("正文匹配图片信息失败\n%s" % photo_pagination_response.data)
-        image_id_2_url_list = {}
-        for image_id, image_url in image_info_list:
-            image_id_2_url_list[int(image_id)] = str(image_url)
-        for image_id in sorted(image_id_2_url_list.keys(), reverse=True):
-            result_image_info = {
-                "image_id": image_id,  # 图片id
-                "image_url": image_id_2_url_list[image_id],  # 图片地址
-            }
-            result["image_info_list"].append(result_image_info)
-    elif photo_pagination_response.status == 404:
+    if photo_pagination_response.status == 404:
         result["is_over"] = True
-    else:
+    elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
+    article_data = tool.find_sub_string(photo_pagination_response.data, '<section id="primary"', "</section>")
+    if not article_data:
+        raise crawler.CrawlerException("页面截取正文失败\n%s" % photo_pagination_response.data)
+    image_info_list = re.findall('<article id="post-([\d]*)"[\s|\S]*?<img class="aligncenter" src="([^"]*)" />', article_data)
+    if len(image_info_list) == 0:
+        raise crawler.CrawlerException("正文匹配图片信息失败\n%s" % photo_pagination_response.data)
+    image_id_2_url_list = {}
+    for image_id, image_url in image_info_list:
+        image_id_2_url_list[int(image_id)] = str(image_url)
+    for image_id in sorted(image_id_2_url_list.keys(), reverse=True):
+        result_image_info = {
+            "image_id": image_id,  # 图片id
+            "image_url": image_id_2_url_list[image_id],  # 图片地址
+        }
+        result["image_info_list"].append(result_image_info)
     return result
 
 
