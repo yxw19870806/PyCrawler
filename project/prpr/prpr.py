@@ -102,9 +102,10 @@ def check_invalid(file_path):
     if file_path.split(".")[-1] == "png" and os.path.getsize(file_path) < 102400:
         if tool.get_file_md5(file_path) in ["0764beb3d521b9b420d365f6ee6d453b", "0d527d84f1150d002998cb67ec271de5", "11f81047704ca9a522f54ced9ef82a85",
                                             "1ba2863db2ac7296d73818be890ef378", "23e0a284d4fa44c222bf41d3cb58b241", "2423c99718385d789cec3e6c1c1020db",
-                                            "483ec66794f1dfa02d634c4745fd4ded", "6a9e28c562a9187ad262f027b0ed9cf2", "76d8988358e84e123a126d736be4bc44",
-                                            "7a9abea08bc47d3a64f87eebdd533dcd", "7c6b17080d95d2e7847f6c00b1228182", "c0de7824049435be9209b8f39fbcb1ba",
-                                            "cbccd65c36ff32fe877bf56b7e70a8ba", "dd77da050fc0bcf79d22d35deb1019bd", "f932db2213fee316359b1267f972899e",
+                                            "350ccbcdac148cf3570af4ddf9f6de95", "483ec66794f1dfa02d634c4745fd4ded", "6a9e28c562a9187ad262f027b0ed9cf2",
+                                            "76d8988358e84e123a126d736be4bc44", "7a9abea08bc47d3a64f87eebdd533dcd", "7c6b17080d95d2e7847f6c00b1228182",
+                                            "bca818c66773561c7eae5f27b839f717", "c0de7824049435be9209b8f39fbcb1ba", "cbccd65c36ff32fe877bf56b7e70a8ba",
+                                            "dd77da050fc0bcf79d22d35deb1019bd", "df878d0165b1a02074c961beec11e52c", "f932db2213fee316359b1267f972899e",
                                             ]:
             return True
     return False
