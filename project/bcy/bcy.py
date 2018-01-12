@@ -45,11 +45,16 @@ def check_login():
     # 没有浏览器cookies，尝试读取文件
     if not COOKIE_INFO["LOGGED_USER"]:
         # 从文件中读取账号密码
-        email, password = get_account_info_from_file()
-        if email is not None and password is not None:
-            # 模拟登录
-            if _do_login(email, password):
-                return True
+        account_data = tool.decrypt_string(tool.read_file(SESSION_FILE_PATH))
+        if account_data is not None:
+            try:
+                account_data = json.loads(account_data)
+            except ValueError:
+                pass
+            else:
+                if crawler.check_sub_key(("email", "password"), account_data):
+                    if _do_login(account_data["email"], account_data["password"]):
+                        return True
     else:
         home_url = "http://bcy.net/home/user/index"
         home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO)
@@ -62,12 +67,21 @@ def check_login():
 # 登录
 def login_from_console():
     # 从命令行中输入账号密码
-    email, password = get_account_info_from_console()
-    if _do_login(email, password):
-        if IS_LOCAL_SAVE_SESSION:
-            save_account_info_to_file(email, password)
-        return True
-    return False
+    while True:
+        email = output.console_input(crawler.get_time() + " 请输入邮箱: ")
+        password = output.console_input(crawler.get_time() + " 请输入密码: ")
+        while True:
+            input_str = output.console_input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
+            input_str = input_str.lower()
+            if input_str in ["y", "yes"]:
+                if _do_login(email, password):
+                    if IS_LOCAL_SAVE_SESSION:
+                        account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
+                        tool.write_file(account_info_encrypt_string, SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                    return True
+                return False
+            elif input_str in ["n", "no"]:
+                break
 
 
 # 模拟登录请求
@@ -80,42 +94,6 @@ def _do_login(email, password):
         if login_response.data.find('<a href="/login">登录</a>') == -1:
             return True
     return False
-
-
-# 从文件中读取账号信息
-def get_account_info_from_file():
-    account_data = tool.decrypt_string(tool.read_file(SESSION_FILE_PATH))
-    if account_data is not None:
-        try:
-            account_data = json.loads(account_data)
-        except ValueError:
-            pass
-        else:
-            if crawler.check_sub_key(("email", "password"), account_data):
-                return account_data["email"], account_data["password"]
-    return None, None
-
-
-# 保存账号信息到文件中
-def save_account_info_to_file(email, password):
-    account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
-    tool.write_file(account_info_encrypt_string, SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
-
-
-# 从控制台输入获取账号信息
-def get_account_info_from_console():
-    while True:
-        email = output.console_input(crawler.get_time() + " 请输入邮箱: ")
-        password = output.console_input(crawler.get_time() + " 请输入密码: ")
-        while True:
-            input_str = output.console_input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
-            input_str = input_str.lower()
-            if input_str in ["y", "yes"]:
-                return email, password
-            elif input_str in ["n", "no"]:
-                break
-            else:
-                pass
 
 
 # 关注指定账号
