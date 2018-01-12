@@ -22,6 +22,7 @@ def main(file_path):
                 index = int(row["组别"])
                 check_list = []
             check_list.append(row)
+        deal_one_group(check_list)
 
 
 def deal_one_group(check_list):
