@@ -21,30 +21,29 @@ def get_album_page(album_id):
         "image_url_list": [],  # 全部图片地址
         "is_delete": False,  # 是不是作品已被删除
     }
-    if album_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取作品标题
-        album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
-        if not album_title:
-            raise crawler.CrawlerException("页面截取作品标题失败\n%s" % album_response.data)
-        result["album_title"] = album_title
-        # 获取图片地址
-        image_info_html = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
-        if not image_info_html:
-            raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response.data)
-        try:
-            image_info_data = json.loads(image_info_html)
-        except ValueError:
-            raise crawler.CrawlerException("图片列表加载失败\n%s" % image_info_html)
-        image_url_list = []
-        for image_info in image_info_data:
-            if not crawler.check_sub_key(("img",), image_info):
-                raise crawler.CrawlerException("图片信息'img'字段不存在\n%s" % image_info)
-            image_url_list.append("http://img.cnu.cc/uploads/images/920/" + str(image_info["img"]))
-        result["image_url_list"] = image_url_list
-    elif album_response.status == 404:
+    if album_response.status == 404:
         result["is_delete"] = True
-    else:
+    elif album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+    # 获取作品标题
+    album_title = tool.find_sub_string(album_response.data, '<h2 class="work-title">', "</h2>")
+    if not album_title:
+        raise crawler.CrawlerException("页面截取作品标题失败\n%s" % album_response.data)
+    result["album_title"] = album_title
+    # 获取图片地址
+    image_info_html = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
+    if not image_info_html:
+        raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response.data)
+    try:
+        image_info_data = json.loads(image_info_html)
+    except ValueError:
+        raise crawler.CrawlerException("图片列表加载失败\n%s" % image_info_html)
+    image_url_list = []
+    for image_info in image_info_data:
+        if not crawler.check_sub_key(("img",), image_info):
+            raise crawler.CrawlerException("图片信息'img'字段不存在\n%s" % image_info)
+        image_url_list.append("http://img.cnu.cc/uploads/images/920/" + str(image_info["img"]))
+    result["image_url_list"] = image_url_list
     return result
 
 
