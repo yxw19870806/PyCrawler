@@ -45,8 +45,8 @@ def get_one_page_video(account_id, token):
         except ValueError:
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
         try:
-            temp_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]
-            video_list_data = temp_data["itemSectionRenderer"]["contents"][0]["gridRenderer"]
+            temp_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"]["sectionListRenderer"]
+            video_list_data = temp_data["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"]
         except KeyError:
             raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
     else:
