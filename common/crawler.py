@@ -146,6 +146,11 @@ class Crawler(object):
             return
         temp_file_name = time.strftime("%m-%d_%H_%M_", time.localtime(time.time())) + os.path.basename(self.save_data_path)
         self.temp_save_data_path = os.path.join(os.path.dirname(self.save_data_path), temp_file_name)
+        if os.path.exists(self.temp_save_data_path):
+            # 临时文件已存在
+            self.print_msg("存档临时文件%s已存在！" % self.temp_save_data_path)
+            tool.process_exit()
+            return
 
         # 是否需要下载图片
         if self.is_download_image:
