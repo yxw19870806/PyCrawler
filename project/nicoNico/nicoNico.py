@@ -37,7 +37,11 @@ def get_account_index_page(account_id):
     result = {
         "video_info_list": [],  # 所有视频信息
     }
-    if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if account_index_response.status == 404:
+        raise crawler.CrawlerException("账号不存在")
+    elif account_index_response.status == 403:
+        raise crawler.CrawlerException("账号发布视频未公开")
+    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
     if not all_video_info:
