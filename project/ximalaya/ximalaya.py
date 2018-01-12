@@ -22,6 +22,7 @@ def get_one_page_audio(account_id, page_count):
     audit_pagination_response = net.http_request(audit_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "audio_info_list": [],  # 页面解析出的歌曲信息列表
+        "is_over": False,  # 是不是最后一页
     }
     if audit_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(audit_pagination_response.status))
@@ -29,6 +30,7 @@ def get_one_page_audio(account_id, page_count):
         raise crawler.CrawlerException("返回数据'res'或'html'字段不存在\n%s" % audit_pagination_response.json_data)
     if audit_pagination_response.json_data["res"] is not True:
         raise crawler.CrawlerException("返回数据'res'字段取值不正确\n%s" % audit_pagination_response.json_data)
+    # 获取歌曲信息
     audio_list_selector = PQ(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
     for audio_index in range(0, audio_list_selector.size()):
         audio_info = {
@@ -47,6 +49,18 @@ def get_one_page_audio(account_id, page_count):
             raise crawler.CrawlerException("歌曲信息匹配歌曲标题失败\n%s" % audio_list_selector.html().encode("UTF-8"))
         audio_info["audio_title"] = str(audio_title.encode("UTF-8").strip())
         result["audio_info_list"].append(audio_info)
+    # 判断是不是最后一页
+    max_page_count = 1
+    pagination_list_selector = PQ(audit_pagination_response.json_data["html"]).find(".pagingBar_wrapper a.pagingBar_page")
+    for pagination_index in range(0, pagination_list_selector.size()):
+        pagination_selector = pagination_list_selector.eq(pagination_index)
+        data_page = pagination_selector.attr("data-page")
+        if data_page is None:
+            continue
+        if not crawler.is_integer(data_page):
+            raise crawler.CrawlerException("分页信息匹配失败\n%s" % audio_list_selector.html().encode("UTF-8"))
+        max_page_count = max(max_page_count, int(data_page))
+    result["is_over"] = page_count >= max_page_count
     return result
 
 
@@ -58,8 +72,16 @@ def get_audio_info_page(audio_id):
         "audio_url": None,  # 页面解析出的歌曲地址
     }
     audio_play_response = net.http_request(audio_info_url, method="GET", json_decode=True)
-    if audio_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        print audio_play_response.json_data
+    if audio_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(audio_play_response.status))
+    if crawler.check_sub_key(("play_path_64",), audio_play_response.json_data):
+        result["audio_url"] = str(audio_play_response.json_data["play_path_64"])
+    elif crawler.check_sub_key(("play_path_32",), audio_play_response.json_data):
+        result["audio_url"] = str(audio_play_response.json_data["play_path_32"])
+    elif crawler.check_sub_key(("play_path",), audio_play_response.json_data):
+        result["audio_url"] = str(audio_play_response.json_data["play_path"])
+    else:
+        raise crawler.CrawlerException("返回信息匹配音频地址失败\n%s" % audio_play_response.data)
     return result
 
 
@@ -134,10 +156,6 @@ class Download(crawler.DownloadThread):
                 log.error("第%s页歌曲解析失败，原因：%s" % (page_count, e.message))
                 break
 
-            # 如果为空，表示已经取完了
-            if len(audit_pagination_response["audio_info_list"]) == 0:
-                break
-
             log.trace(self.account_name + " 第%s页解析的全部歌曲：%s" % (page_count, audit_pagination_response["audio_info_list"]))
 
             # 寻找这一页符合条件的媒体
@@ -149,16 +167,14 @@ class Download(crawler.DownloadThread):
                     unique_list.append(audio_info["audio_id"])
 
                 # 检查是否达到存档记录
-                if audio_info["audio_id"] > int(self.account_info[1]):
+                if int(audio_info["audio_id"]) > int(self.account_info[1]):
                     audio_info_list.append(audio_info)
                 else:
                     is_over = True
                     break
 
             if not is_over:
-                # 获取的歌曲数量少于1页的上限，表示已经到结束了
-                # 如果歌曲数量正好是页数上限的倍数，则由下一页获取是否为空判断
-                if len(audit_pagination_response["audio_info_list"]) < 20:
+                if audit_pagination_response["is_over"]:
                     is_over = True
                 else:
                     page_count += 1
@@ -178,7 +194,8 @@ class Download(crawler.DownloadThread):
         audio_title = path.filter_text(audio_info["audio_title"])
         log.step(self.account_name + " 开始下载歌曲%s《%s》 %s" % (audio_info["audio_id"], audio_title, audio_url))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp3" % (audio_info["audio_id"], audio_title))
+        file_type = audio_url.split(".")[-1]
+        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%09d - %s.%s" % (int(audio_info["audio_id"]), audio_title, file_type))
         save_file_return = net.save_net_file(audio_url, file_path)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " 歌曲%s《%s》下载成功" % (audio_info["audio_id"], audio_title))
