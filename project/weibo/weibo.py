@@ -32,37 +32,36 @@ def get_one_page_photo(account_id, page_count):
         "is_over": False,  # 是不是最后一页图片
     }
     photo_pagination_response = net.http_request(photo_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list, json_decode=True)
-    if photo_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not crawler.check_sub_key(("data",), photo_pagination_response.json_data):
-            raise crawler.CrawlerException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)
-        if not crawler.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]):
-            raise crawler.CrawlerException("返回数据'data'字段格式不正确\n%s" % photo_pagination_response.json_data)
-        if not crawler.is_integer(photo_pagination_response.json_data["data"]["total"]):
-            raise crawler.CrawlerException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
-        if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
-            raise crawler.CrawlerException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
-        for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
-            result_image_info = {
-                "image_time": None,  # 图片上传时间
-                "image_url": None,  # 图片地址
-            }
-            # 获取图片上传时间
-            if not crawler.check_sub_key(("timestamp",), image_info):
-                raise crawler.CrawlerException("图片信息'timestamp'字段不存在\n%s" % image_info)
-            if not crawler.check_sub_key(("timestamp",), image_info):
-                raise crawler.CrawlerException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
-            result_image_info["image_time"] = int(image_info["timestamp"])
-            # 获取图片地址
-            if not crawler.check_sub_key(("pic_host", "pic_name"), image_info):
-                raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
-            result_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
-            result["image_info_list"].append(result_image_info)
-        # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
-        result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
-    elif photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
+    if photo_pagination_response.status == net.HTTP_RETURN_CODE_JSON_DECODE_ERROR and photo_pagination_response.data.find('<p class="txt M_txtb">用户不存在或者获取用户信息失败</p>') >= 0:
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
+    if not crawler.check_sub_key(("data",), photo_pagination_response.json_data):
+        raise crawler.CrawlerException("返回数据'data'字段不存在\n%s" % photo_pagination_response.json_data)
+    if not crawler.check_sub_key(("total", "photo_list"), photo_pagination_response.json_data["data"]):
+        raise crawler.CrawlerException("返回数据'data'字段格式不正确\n%s" % photo_pagination_response.json_data)
+    if not crawler.is_integer(photo_pagination_response.json_data["data"]["total"]):
+        raise crawler.CrawlerException("返回数据'total'字段类型不正确\n%s" % photo_pagination_response.json_data)
+    if not isinstance(photo_pagination_response.json_data["data"]["photo_list"], list):
+        raise crawler.CrawlerException("返回数据'photo_list'字段类型不正确\n%s" % photo_pagination_response.json_data)
+    for image_info in photo_pagination_response.json_data["data"]["photo_list"]:
+        result_image_info = {
+            "image_time": None,  # 图片上传时间
+            "image_url": None,  # 图片地址
+        }
+        # 获取图片上传时间
+        if not crawler.check_sub_key(("timestamp",), image_info):
+            raise crawler.CrawlerException("图片信息'timestamp'字段不存在\n%s" % image_info)
+        if not crawler.check_sub_key(("timestamp",), image_info):
+            raise crawler.CrawlerException("图片信息'timestamp'字段类型不正确\n%s" % image_info)
+        result_image_info["image_time"] = int(image_info["timestamp"])
+        # 获取图片地址
+        if not crawler.check_sub_key(("pic_host", "pic_name"), image_info):
+            raise crawler.CrawlerException("图片信息'pic_host'或者'pic_name'字段不存在\n%s" % image_info)
+        result_image_info["image_url"] = str(image_info["pic_host"]) + "/large/" + str(image_info["pic_name"])
+        result["image_info_list"].append(result_image_info)
+    # 检测是不是还有下一页 总的图片数量 / 每页显示的图片数量 = 总的页数
+    result["is_over"] = page_count >= (photo_pagination_response.json_data["data"]["total"] * 1.0 / IMAGE_COUNT_PER_PAGE)
     return result
 
 
