@@ -283,7 +283,7 @@ class Download(crawler.DownloadThread):
         for image_info in image_info_list:
             self.main_thread_check()  # 检测主线程运行状态
             log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_info["image_url"]))
-            file_type = image_info["image_url"].split(".")[-1]
+            file_type = image_info["image_url"].split("?")[0].split(".")[-1]
             file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_info["image_url"], file_path)
             if save_file_return["status"] == 1:
