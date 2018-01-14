@@ -216,12 +216,13 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 continue
             return response
         except urllib3.exceptions.ProxyError:
-            notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
-            input_str = output.console_input(notice).lower()
-            if input_str in ["c", "continue"]:
-                pass
-            elif input_str in ["s", "stop"]:
-                tool.process_exit(0)
+            time.sleep(2)
+            # notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
+            # input_str = output.console_input(notice).lower()
+            # if input_str in ["c", "continue"]:
+            #     pass
+            # elif input_str in ["s", "stop"]:
+            #     tool.process_exit(0)
         except urllib3.exceptions.ReadTimeoutError:
             pass
         except urllib3.exceptions.ConnectTimeoutError, e:
