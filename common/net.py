@@ -263,7 +263,8 @@ def _random_user_agent():
         "Windows 8.1": "Windows NT 6.3",
         "Windows 10": "Windows NT 10.0",
     }
-    browser_type = random.choice([browser.BROWSER_TYPE_IE, browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
+    # browser_type = random.choice([browser.BROWSER_TYPE_IE, browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
+    browser_type = random.choice([browser.BROWSER_TYPE_FIREFOX, browser.BROWSER_TYPE_CHROME])
     os_type = random.choice(windows_version_dict.values())
     if browser_type == browser.BROWSER_TYPE_IE:
         sub_version = random.randint(6, 10)
