@@ -325,7 +325,11 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if need_content_type:
                 content_type = response.getheader("Content-Type")
                 if content_type is not None and content_type != "octet-stream":
-                    file_path = os.path.splitext(file_path)[0] + "." + content_type.split("/")[-1]
+                    if content_type == "video/quicktime":
+                        new_file_type = "mov"
+                    else:
+                        new_file_type = content_type.split("/")[-1]
+                    file_path = os.path.splitext(file_path)[0] + "." + new_file_type
 
             # 获取完整数据
             response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
