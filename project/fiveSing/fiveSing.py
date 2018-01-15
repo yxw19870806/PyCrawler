@@ -194,7 +194,7 @@ class Download(crawler.DownloadThread):
         self.main_thread_check()  # 检测主线程运行状态
         log.step(self.account_name + " 开始下载%s歌曲%s《%s》 %s" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"], audio_play_response["audio_url"]))
 
-        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, audio_type_name, "%s - %s.mp3" % (audio_info["audio_id"], path.filter_text(audio_info["audio_title"])))
+        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, audio_type_name, "%08d - %s.mp3" % (int(audio_info["audio_id"]), path.filter_text(audio_info["audio_title"])))
         save_file_return = net.save_net_file(audio_play_response["audio_url"], file_path)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " %s歌曲%s《%s》下载成功" % (audio_type_name, audio_info["audio_id"], audio_info["audio_title"]))
