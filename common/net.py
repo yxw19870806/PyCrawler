@@ -215,16 +215,6 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 time.sleep(30)
                 continue
             return response
-        except urllib3.exceptions.ProxyError:
-            time.sleep(2)
-            # notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
-            # input_str = output.console_input(notice).lower()
-            # if input_str in ["c", "continue"]:
-            #     pass
-            # elif input_str in ["s", "stop"]:
-            #     tool.process_exit(0)
-        except urllib3.exceptions.ReadTimeoutError:
-            pass
         except urllib3.exceptions.ConnectTimeoutError, e:
             # 域名无法解析
             if str(e).find("[Errno 11004] getaddrinfo failed") >= 0:
@@ -232,12 +222,31 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             pass
         except MemoryError:
             return ErrorResponse(HTTP_RETURN_CODE_RESPONSE_TO_LARGE)
+        except urllib3.exceptions.ProxyError:
+            time.sleep(5)
+            # notice = "无法访问代理服务器，请检查代理设置。检查完成后输入(C)ontinue继续程序或者(S)top退出程序："
+            # input_str = output.console_input(notice).lower()
+            # if input_str in ["c", "continue"]:
+            #     pass
+            # elif input_str in ["s", "stop"]:
+            #     tool.process_exit(0)
         except Exception, e:
-            if str(e).find("EOF occurred in violation of protocol") >= 0:
+            output.print_msg(url + " 访问超时，重试中")
+            # ProtocolError: ('Connection aborted.', BadStatusLine("''",))
+            if str(e).find("Connection aborted.") >= 0:
+                time.sleep(5)
+            # ProtocolError: ('Connection broken: IncompleteRead(123456 bytes read, 1234 more expected)', IncompleteRead(123456 bytes read, 1234 more expected))
+            elif str(e).find("Connection broken:") >= 0:
+                time.sleep(5)
+            # SSLError: EOF occurred in violation of protocol (_ssl.c:590)
+            elif str(e).find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
-            output.print_msg(str(e))
-            output.print_msg(url + " 访问超时，稍后重试")
-            traceback.print_exc()
+            # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Cannot connect to proxy.', error(10054, '')))
+            elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ProxyError") >= 0:
+                time.sleep(30)
+            else:
+                output.print_msg(str(e))
+                traceback.print_exc()
 
         retry_count += 1
         if retry_count >= HTTP_REQUEST_RETRY_COUNT:
