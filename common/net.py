@@ -249,7 +249,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                 time.sleep(5)
             else:
                 output.print_msg(str(e))
-                traceback.print_exc()
+                output.print_msg(traceback.format_exc())
 
         retry_count += 1
         if retry_count >= HTTP_REQUEST_RETRY_COUNT:
