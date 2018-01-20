@@ -87,7 +87,10 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         "is_over": False,  # 是不是最后一页日志
         "post_info_list": [],  # 全部日志信息
     }
-    if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if post_pagination_response.status == 404:
+        time.sleep(5)
+        return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
+    elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
     if page_html:
@@ -137,7 +140,10 @@ def get_one_page_private_blog(account_id, page_count):
         "is_over": [],  # 是不是最后一页日志
         "post_info_list": [],  # 全部日志信息
     }
-    if post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if post_pagination_response.status == 404:
+        time.sleep(5)
+        return get_one_page_private_blog(account_id, page_count)
+    elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     if not crawler.check_sub_key(("meta",), post_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'meta'字段不存在\n%s" % post_pagination_response.json_data)
