@@ -238,15 +238,18 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             # ProtocolError: ('Connection broken: IncompleteRead(123456 bytes read, 1234 more expected)', IncompleteRead(123456 bytes read, 1234 more expected))
             elif str(e).find("Connection broken:") >= 0:
                 time.sleep(5)
+            # ReadTimeoutError: HTTPConnectionPool(host='www.example.com', port=80): Read timed out. (read timeout=10)
+            elif str(e).find("Read timed out.") >= 0:
+                time.sleep(5)
             # SSLError: EOF occurred in violation of protocol (_ssl.c:590)
             elif str(e).find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
             # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Cannot connect to proxy.', error(10054, '')))
             elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ProxyError") >= 0:
                 time.sleep(30)
-            # ReadTimeoutError: HTTPConnectionPool(host='www.example.com', port=80): Read timed out. (read timeout=10)
-            elif str(e).find("Read timed out.") >= 0:
-                time.sleep(5)
+            # SSLError: ('_ssl.c:574: The handshake operation timed out',)
+            elif str(e).find("The handshake operation timed out") >= 0:
+                time.sleep(30)
             else:
                 output.print_msg(str(e))
                 output.print_msg(traceback.format_exc())
