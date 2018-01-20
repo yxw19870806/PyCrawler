@@ -217,7 +217,10 @@ def get_post_page(post_url, is_safe_mode):
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 全部图片地址
     }
-    if post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if post_response.status == 429:
+        time.sleep(30)
+        return get_post_page(post_url, is_safe_mode)
+    elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
     if not post_page_head:
