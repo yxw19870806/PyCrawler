@@ -22,18 +22,12 @@ def get_archive_page(archive_id):
         return result
     elif archive_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(archive_response.status))
-    # 没有内嵌视频
-    if archive_response.data.find("<iframe") == -1:
-        return result
-    # 获取标题
-    title = tool.find_sub_string(archive_response.data, '<meta property="og:title" content="', '"')
-    if not title:
-        raise crawler.CrawlerException("标题截取失败")
-    result["title"] = str(title).strip()
     # 获取视频地址
-    video_url_find = re.findall('<iframe[\s|\S]*?src="([^"]*)"', archive_response.data)
+    video_url_find1 = re.findall('<iframe[\s|\S]*?src="([^"]*)"', archive_response.data)
+    video_url_find2 = re.findall('<script type="\w*/javascript" src="(http[s]?://\w*.nicovideo.jp/[^"]*)"></script>', archive_response.data)
+    video_url_find = video_url_find1 + video_url_find2
     if len(video_url_find) == 0:
-        raise crawler.CrawlerException("视频地址匹配失败")
+        return result
     for video_url in video_url_find:
         result_video_info = {
             "account_id": "",  # 视频发布账号（youtube）
@@ -48,18 +42,38 @@ def get_archive_page(archive_id):
             video_id = video_url.split("/")[-1].split("?")[0]
             result_video_info["video_url"] = "https://www.youtube.com/watch?v=%s" % video_id
             # 获取视频发布账号
-            header_list = {
-                "cookie": "YSC=5qtzcCE2QUY; VISITOR_INFO1_LIVE=zldN2C7424k; PREF=f1=50000000&f5=30000",
-                "x-client-data": "CJK2yQEIpLbJAQjEtskBCPqcygEIqZ3KAQioo8oB",
-                "accept-language": "zh-CN,zh;q=0.9",
-            }
-            video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list=header_list)
+            video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
             if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("视频播放页面%s %s" % (result["video_url"], crawler.request_failre(archive_response.status)))
+                raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(archive_response.status)))
+            # 账号已被删除，跳过
+            if video_play_response.data.find('"reason":"This video is no longer available because the YouTube account associated with this video has been terminated."') >= 0:
+                continue
             account_id = tool.find_sub_string(video_play_response.data, '"webNavigationEndpointData":{"url":"/channel/', '"')
             if not account_id:
-                raise crawler.CrawlerException("视频发布账号截取失败")
+                raise crawler.CrawlerException("视频 %s 发布账号截取失败" % result_video_info["video_url"])
             result_video_info["account_id"] = str(account_id)
+        # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
+        elif video_url.find("embed.nicovideo.jp/watch") >= 0:
+            video_id = video_url.split("/")[-2]
+            result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
+            # 获取视频发布账号
+            video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
+            if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(video_play_response.status)))
+            account_id = tool.find_sub_string(video_play_response.data, '<a href="/user/', '"')
+            if crawler.is_integer(account_id):
+                result_video_info["account_id"] = str(account_id)
+        # http://ext.nicovideo.jp/thumb_watch/sm21088018?w=490&#038;h=307
+        elif video_url.find("ext.nicovideo.jp/thumb_watch/") >= 0:
+            video_id = video_url.split("/")[-1].split("?")[0]
+            result_video_info["video_url"] = "http://www.nicovideo.jp/watch/%s" % video_id
+            # 获取视频发布账号
+            video_play_response = net.http_request(result_video_info["video_url"], method="GET", header_list={"accept-language": "en-US"})
+            if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise crawler.CrawlerException("视频播放页%s，%s" % (result["video_url"], crawler.request_failre(video_play_response.status)))
+            account_id = tool.find_sub_string(video_play_response.data, '<a href="/user/', '"')
+            if crawler.is_integer(account_id):
+                result_video_info["account_id"] = str(account_id)
         # 无效的视频地址
         elif video_url.find("//rcm-fe.amazon-adsystem.com") >= 0:
             continue
@@ -67,6 +81,11 @@ def get_archive_page(archive_id):
             result_video_info["video_url"] = video_url
             log.error("未知视频来源" + video_url)
         result["video_info_list"].append(result_video_info)
+    # 获取标题
+    title = tool.find_sub_string(archive_response.data, '<meta property="og:title" content="', '"')
+    if not title:
+        raise crawler.CrawlerException("标题截取失败")
+    result["title"] = str(title).strip()
     return result
 
 
