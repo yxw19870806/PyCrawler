@@ -23,6 +23,8 @@ SYS_DOWNLOAD_VIDEO = "download_video"
 SYS_SET_PROXY = "set_proxy"
 # 程序是否支持不需要存档文件就可以开始运行
 SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
+# 程序没有任何下载行为
+SYS_NOT_DOWNLAOD = "no_download"
 # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
 SYS_GET_COOKIE = "get_cookie"
 # 程序是否需要额外读取配置（应用级别）
@@ -63,6 +65,7 @@ class Crawler(object):
         sys_set_proxy = SYS_SET_PROXY in sys_config
         sys_get_cookie = SYS_GET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
+        sys_not_download= SYS_NOT_DOWNLAOD in sys_config
 
         # exe程序
         if tool.IS_EXECUTABLE:
@@ -128,7 +131,7 @@ class Crawler(object):
         self.is_download_image = analysis_config(config, "IS_DOWNLOAD_IMAGE", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_image
         self.is_download_video = analysis_config(config, "IS_DOWNLOAD_VIDEO", True, CONFIG_ANALYSIS_MODE_BOOLEAN) and sys_download_video
 
-        if not self.is_download_image and not self.is_download_video:
+        if not sys_not_download and not self.is_download_image and not self.is_download_video:
             if sys_download_image or sys_download_video:
                 self.print_msg("所有支持的下载都没有开启，请检查配置！")
                 tool.process_exit()
