@@ -89,6 +89,7 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
     }
     if post_pagination_response.status == 404:
         time.sleep(5)
+        log.step(account_id + "第%s页日志异常，重试" % page_count)
         return get_one_page_post(account_id, page_count, is_https, is_safe_mode)
     elif post_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
