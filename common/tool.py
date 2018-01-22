@@ -178,6 +178,8 @@ def read_file(file_path, read_type=READ_FILE_TYPE_FULL):
             for line in file_handle.readlines():
                 if line[-1] == "\n":
                     line = line[:-1]
+                if len(line) == 0:
+                    continue
                 result.append(line)
     return result
 
