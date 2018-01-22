@@ -30,7 +30,7 @@ def check_login():
 
 # 获取账号全部视频信息
 # account_id => 15614906
-def get_account_index_page(account_id):
+def get_mylist_index(account_id):
     # http://www.nicovideo.jp/mylist/15614906
     account_index_url = "http://www.nicovideo.jp/mylist/%s" % account_id
     account_index_response = net.http_request(account_index_url, method="GET")
@@ -245,7 +245,7 @@ class Download(crawler.DownloadThread):
     def get_crawl_list(self):
         # 获取视频信息列表
         try:
-            account_index_response = get_account_index_page(self.account_id)
+            account_index_response = get_mylist_index(self.account_id)
         except crawler.CrawlerException, e:
             log.error(self.account_name + " 视频列表解析失败，原因：%s" % e.message)
             raise
