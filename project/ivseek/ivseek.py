@@ -64,9 +64,12 @@ def get_archive_page(archive_id):
                 continue
             account_id = tool.find_sub_string(video_play_response.data, '"webNavigationEndpointData":{"url":"/channel/', '"')
             if not account_id:
-                raise crawler.CrawlerException("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.data))
-            result_video_info["account_id"] = str(account_id)
-        elif video_url.find("embed.nicovideo.jp/watch") >= 0:
+                account_id = tool.find_sub_string(video_play_response.data, '<meta itemprop="channelId" content="', '">')
+            if account_id:
+                result_video_info["account_id"] = str(account_id)
+            else:
+                log.error("视频 %s 发布账号截取失败\n%s" % (result_video_info["video_url"], video_play_response.data))
+        elif video_url.find(".nicovideo.jp/") >= 0:
             # https://embed.nicovideo.jp/watch/sm23008734/script?w=640&#038;h=360
             if video_url.find("embed.nicovideo.jp/watch") >= 0:
                 video_id = video_url.split("/")[-2]
@@ -138,6 +141,7 @@ class IvSeek(crawler.Crawler):
                     continue
 
                 for video_info in archive_response["video_info_list"]:
+                    log.step("视频%s 《%s》: %s" % (archive_id, archive_response["title"], video_info["video_url"]))
                     tool.write_file("%s\t%s\t%s\t%s" % (archive_id, archive_response["title"], video_info["video_url"], video_info["account_id"]), self.save_data_path)
 
                 # 提前结束
