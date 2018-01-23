@@ -184,6 +184,8 @@ def get_one_page_private_blog(account_id, page_count):
                     raise crawler.CrawlerException("视频信息'width'或'embed_code'字段不存在\n%s" % video_info)
                 if not crawler.is_integer(video_info["width"]):
                     raise crawler.CrawlerException("视频信息'width'字段类型不正确\n%s" % video_info)
+                if video_info["embed_code"] is False:
+                    continue
                 if int(video_info["width"]) > max_width:
                     temp_video_url = tool.find_sub_string(video_info["embed_code"].encode("UTF-8"), '<source src="', '"')
                     if temp_video_url:
