@@ -614,6 +614,7 @@ class Download(crawler.DownloadThread):
 
             start_page_count = 1
             while self.EACH_LOOP_MAX_PAGE_COUNT > 0:
+                self.main_thread_check()  # 检测主线程运行状态
                 start_page_count += self.EACH_LOOP_MAX_PAGE_COUNT
                 try:
                     if self.is_private:
