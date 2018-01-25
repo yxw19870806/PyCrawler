@@ -53,12 +53,12 @@ def get_album_page(page_count):
                 raise crawler.CrawlerException("图片相册'i'和'v'字段都不存在\n%s" % media_response.json_data)
             # 检测是否是图片相册
             if crawler.check_sub_key(("i",), media_response.json_data):
-                if not (isinstance(media_response.json_data["i"], list) and len(media_response.json_data["i"]) > 0):
-                    raise crawler.CrawlerException("图片相册'i'字段格式不正确\n%s" % album_response.json_data)
+                if not isinstance(media_response.json_data["i"], list):
+                    raise crawler.CrawlerException("图片相册'i'字段格式不正确\n%s" % media_response.json_data)
                 result["image_url_list"] = []
                 for image_info in media_response.json_data["i"]:
                     if not crawler.check_sub_key(("url",), image_info):
-                        raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % album_response.json_data)
+                        raise crawler.CrawlerException("图片相册'url'字段不存在\n%s" % media_response.json_data)
                     result["image_url_list"].append(str(image_info["url"]))
             # 检测是否是视频相册
             if crawler.check_sub_key(("v",), media_response.json_data):
