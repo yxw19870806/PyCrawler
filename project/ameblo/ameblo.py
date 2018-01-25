@@ -68,6 +68,9 @@ def get_blog_page(account_name, blog_id):
     }
     if blog_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_response.status))
+    # todo 登录cookies
+    if blog_response.data.find('<h1 data-uranus-component="amemberLoginHeading">この記事はアメンバーさん限定です。</h1>') >= 0:
+        raise crawler.CrawlerException("日志只限会员访问")
     # 截取日志正文部分（有多种页面模板）
     article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
     if not article_data:
