@@ -234,13 +234,13 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             output.print_msg(url + " 访问超时，重试中")
             # ProtocolError: ('Connection aborted.', BadStatusLine("''",))
             if str(e).find("Connection aborted.") >= 0:
-                time.sleep(5)
+                time.sleep(10)
             # ProtocolError: ('Connection broken: IncompleteRead(123456 bytes read, 1234 more expected)', IncompleteRead(123456 bytes read, 1234 more expected))
             elif str(e).find("Connection broken:") >= 0:
-                time.sleep(5)
+                time.sleep(10)
             # ReadTimeoutError: HTTPConnectionPool(host='www.example.com', port=80): Read timed out. (read timeout=10)
             elif str(e).find("Read timed out.") >= 0:
-                time.sleep(5)
+                time.sleep(10)
             # SSLError: EOF occurred in violation of protocol (_ssl.c:590)
             elif str(e).find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
@@ -251,6 +251,7 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             elif str(e).find("The handshake operation timed out") >= 0:
                 time.sleep(30)
             else:
+                time.sleep(5)
                 output.print_msg(str(e))
                 output.print_msg(traceback.format_exc())
 
