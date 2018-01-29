@@ -130,7 +130,7 @@ class MeiTuZZ(crawler.Crawler):
                 # 图片下载
                 image_index = 1
                 if self.is_download_image and album_response["image_url_list"] is not None:
-                    image_path = os.path.join(self.image_download_path, "%04d" % album_id)
+                    image_path = os.path.join(self.image_download_path, "%06d" % album_id)
                     for image_url in album_response["image_url_list"]:
                         if not self.is_running():
                             tool.process_exit(0)
@@ -153,7 +153,7 @@ class MeiTuZZ(crawler.Crawler):
                         tool.process_exit(0)
                     log.step("开始下载第%s页视频 %s" % (album_id, album_response["video_url"]))
 
-                    video_file_path = os.path.join(self.video_download_path, "%s %s.mp4" % (album_id, path.filter_text(album_response["album_title"])))
+                    video_file_path = os.path.join(self.video_download_path, "%06d %s.mp4" % (int(album_id), path.filter_text(album_response["album_title"])))
                     save_file_return = net.save_net_file(album_response["video_url"], video_file_path)
                     if save_file_return["status"] == 1:
                         # 设置临时目录
