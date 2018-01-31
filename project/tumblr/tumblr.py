@@ -30,6 +30,10 @@ def check_login():
     index_url = "https://www.tumblr.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
+        safe_mode_url = "https://www.tumblr.com/safe-mode?url=https://www.tumblr.com/"
+        safe_mode_response = net.http_request(safe_mode_url, method="GET", header_list={"User-Agent": USER_AGENT}, cookies_list=COOKIE_INFO, is_auto_redirect=False)
+        if safe_mode_response.status == 404:
+            COOKIE_INFO.update(net.get_cookies_from_response_header(safe_mode_response.headers))
         return True
     return False
 
