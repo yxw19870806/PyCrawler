@@ -201,8 +201,9 @@ def get_decrypt_step(js_file_url):
     if js_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException("播放器JS文件 %s 访问失败，原因：%s" % (js_file_url, crawler.request_failre(js_file_response.status)))
     # 加密方法入口
-    # k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
-    main_function_name = tool.find_sub_string(js_file_response.data, 'k.sig?f.set("signature",k.sig):k.s&&f.set("signature",', "(k.s));")
+    # old k.sig?f.set("signature",k.sig):k.s&&f.set("signature",SJ(k.s));
+    # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
+    main_function_name = tool.find_sub_string(js_file_response.data, 'var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",', "(k.s));")
     if not main_function_name:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
     # 加密方法体（包含子加密方法的调用参数&顺序）
