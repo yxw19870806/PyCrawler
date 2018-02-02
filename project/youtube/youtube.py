@@ -101,7 +101,11 @@ def get_video_page(video_id):
     query_data = {"v": video_id}
     # 强制使用英语
 
-    video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    if IS_LOGIN:
+        video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
+    else:
+        # 没有登录时默认使用英语
+        video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
         "video_time": None,  # 视频上传时间
         "video_url": None,  # 视频地址
@@ -109,6 +113,14 @@ def get_video_page(video_id):
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+    # 没有登录，判断是否必须要登录
+    if not IS_LOGIN:
+        need_login_reason = tool.find_sub_string(video_play_response.data, '"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"', '",')
+        if need_login_reason:
+            if need_login_reason == "Sign in to confirm your age":
+                raise crawler.CrawlerException("视频需要登录账号并且年龄通过检测后才能访问")
+            else:
+                raise crawler.CrawlerException("视频需要登录账号才能访问，原因：%s" % need_login_reason)
     video_info_string = tool.find_sub_string(video_play_response.data, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not video_info_string:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response.data)
