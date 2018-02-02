@@ -107,6 +107,7 @@ def get_video_page(video_id):
         # 没有登录时默认使用英语
         video_play_response = net.http_request(video_play_url, method="GET", fields=query_data, header_list={"accept-language": "en"})
     result = {
+        "title": "",  # 视频标题
         "video_time": None,  # 视频上传时间
         "video_url": None,  # 视频地址
     }
@@ -130,6 +131,11 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_info_string)
     if not crawler.check_sub_key(("args",), video_info_data):
         raise crawler.CrawlerException("视频信息'args'字段不存在\n%s" % video_info_data)
+    # 获取视频标题
+    if not crawler.check_sub_key(("title",), video_info_data["args"]):
+        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info_data)
+    result["title"] = video_info_data["args"]["title"].encode("UTF-8")
+    # 获取视频地址
     if not crawler.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
         raise crawler.CrawlerException("视频信息'url_encoded_fmt_stream_map'字段不存在\n%s" % video_info_data["args"])
     max_video_resolution = 0
@@ -423,7 +429,7 @@ class Download(crawler.DownloadThread):
         try:
             video_response = get_video_page(video_id)
         except crawler.CrawlerException, e:
-            log.error(self.account_name + " 第%s个视频%s解析失败，原因：%s" % (video_index, video_id, e.message))
+            log.error(self.account_name + " 视频%s解析失败，原因：%s" % (video_id, e.message))
             raise
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
@@ -432,20 +438,20 @@ class Download(crawler.DownloadThread):
                 log.step(self.account_name + " 视频%s跳过" % video_id)
                 return
             elif video_response["video_time"] == int(self.account_info[3]):
-                log.error(self.account_name + " 第%s个视频%s与存档视频发布日期一致，无法过滤，再次下载" % (video_index, video_id))
+                log.error(self.account_name + " 视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
             else:
                 self.is_find = True
 
         self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_response["video_url"]))
+        log.step(self.account_name + " 开始下载视频%s 《%s》 %s" % (video_id, video_response["title"], video_response["video_url"]))
 
-        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.mp4" % video_index)
+        video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["title"])))
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path)
         if save_file_return["status"] == 1:
             # 设置临时目录
-            log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+            log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_id, video_response["title"]))
         else:
-            log.error(self.account_name + " 第%s个视频（%s） %s 下载失败，原因：%s" % (video_index, video_id, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            log.error(self.account_name + " 视频%s 《%s》 %s 下载失败，原因：%s" % (video_id, video_response["title"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加
