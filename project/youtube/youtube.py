@@ -45,7 +45,7 @@ def get_one_page_video(account_id, token):
             index_url = "https://www.youtube.com/channel/%s/videos" % account_id
         else:
             index_url = "https://www.youtube.com/user/%s/videos" % account_id
-        index_response = net.http_request(index_url, method="GET")
+        index_response = net.http_request(index_url, method="GET", header_list={"accept-language": "en"})
         if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         if index_response.data.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
@@ -67,6 +67,7 @@ def get_one_page_video(account_id, token):
         query_url = "https://www.youtube.com/browse_ajax"
         query_data = {"ctoken": token}
         header_list = {
+            "accept-language": "en",
             "x-youtube-client-name": "1",
             "x-youtube-client-version": "2.20171207",
         }
