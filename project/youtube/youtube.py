@@ -322,7 +322,7 @@ class Youtube(crawler.Crawler):
         COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
-        # account_id  video_count video_string_id  video_number_id
+        # account_id  video_string_id  video_number_id
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "", "0"])
 
         # 检测登录状态
@@ -375,8 +375,8 @@ class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
         self.account_id = self.account_info[0]
-        if len(self.account_info) >= 5 and self.account_info[4]:
-            self.account_name = self.account_info[4]
+        if len(self.account_info) >= 4 and self.account_info[3]:
+            self.account_name = self.account_info[3]
         else:
             self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
@@ -386,7 +386,7 @@ class Download(crawler.DownloadThread):
         token = ""
         video_id_list = []
         # 是否有根据视频id找到上一次的记录
-        if self.account_info[2] == "":
+        if self.account_info[1] == "":
             self.is_find = True
         is_over = False
         # 获取全部还未下载过需要解析的相册
@@ -406,7 +406,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for video_id in blog_pagination_response["video_id_list"]:
                 # 检查是否达到存档记录
-                if video_id != self.account_info[2]:
+                if video_id != self.account_info[1]:
                     video_id_list.append(video_id)
                 else:
                     is_over = True
@@ -424,7 +424,6 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_id):
-        video_index = int(self.account_info[1]) + 1
         # 获取指定视频信息
         try:
             video_response = get_video_page(video_id)
@@ -434,10 +433,10 @@ class Download(crawler.DownloadThread):
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
         if not self.is_find:
-            if video_response["video_time"] < int(self.account_info[3]):
+            if video_response["video_time"] < int(self.account_info[2]):
                 log.step(self.account_name + " 视频%s跳过" % video_id)
                 return
-            elif video_response["video_time"] == int(self.account_info[3]):
+            elif video_response["video_time"] == int(self.account_info[2]):
                 log.error(self.account_name + " 视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
             else:
                 self.is_find = True
@@ -455,9 +454,8 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加
-        self.account_info[1] = str(video_index)  # 设置存档记录
-        self.account_info[2] = video_id  # 设置存档记录
-        self.account_info[3] = str(video_response["video_time"])  # 设置存档记录
+        self.account_info[1] = video_id  # 设置存档记录
+        self.account_info[2] = str(video_response["video_time"])  # 设置存档记录
 
     def run(self):
         try:
