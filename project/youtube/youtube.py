@@ -214,6 +214,13 @@ def get_video_page(video_id):
             video_time = time.strptime(video_time_string, "%Y年%m月%d日")
         except ValueError:
             raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    # 日文
+    elif video_time_string.find("に公開") >= 0:
+        video_time_string = video_time_string.replace("に公開", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%Y/%m/%d")
+        except ValueError:
+            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
     else:
         raise crawler.CrawlerException("未知语言的时间格式\n%s" % video_time_string)
     result["video_time"] = int(time.mktime(video_time))
