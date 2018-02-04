@@ -323,7 +323,7 @@ class Youtube(crawler.Crawler):
 
         # 解析存档文件
         # account_id  video_string_id  video_number_id
-        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "", "0"])
+        self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0"])
 
         # 检测登录状态
         if not check_login():
