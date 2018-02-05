@@ -145,7 +145,7 @@ def get_video_page(video_id):
         video_resolution = video_url = signature = None
         is_skip = False
         for sub_param in sub_url_encoded_fmt_stream_map.split("&"):
-            key, value = str(sub_param).split("=")
+            key, value = str(sub_param).split("=", 1)
             if key == "type":  # 视频类型
                 video_type = urllib.unquote(value)
                 if video_type.find("video/mp4") == 0:
