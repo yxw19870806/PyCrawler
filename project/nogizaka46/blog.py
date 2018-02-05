@@ -103,8 +103,8 @@ def check_big_image(image_url, big_2_small_list):
 def check_image_invalid(file_path):
     file_path = path.change_path_encoding(file_path)
     file_size = os.path.getsize(file_path)
-    # 文件小于1K
-    if file_size < 1024:
+    # 文件小于5K
+    if file_size < 5120:
         try:
             image = Image.open(file_path)
         except IOError:  # 不是图片格式
