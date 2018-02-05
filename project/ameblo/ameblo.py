@@ -14,6 +14,8 @@ import threading
 import time
 import traceback
 
+COOKIE_INFO = {}
+
 
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
@@ -62,7 +64,7 @@ def get_one_page_blog(account_name, page_count):
 # 获取指定id的日志
 def get_blog_page(account_name, blog_id):
     blog_url = "https://ameblo.jp/%s/entry-%s.html" % (account_name, blog_id)
-    blog_response = net.http_request(blog_url, method="GET")
+    blog_response = net.http_request(blog_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
     }
@@ -154,10 +156,16 @@ def check_image_invalid(file_path):
 
 class Ameblo(crawler.Crawler):
     def __init__(self):
+        global  COOKIE_INFO
+
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
+            crawler.SYS_GET_COOKIE: {".ameba.jp": ()},
         }
         crawler.Crawler.__init__(self, sys_config)
+
+        # 设置全局变量，供子线程调用
+        COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
         # account_name  image_count  last_diary_time
