@@ -17,6 +17,19 @@ import traceback
 COOKIE_INFO = {}
 
 
+# 检测登录状态
+def check_login():
+    if not COOKIE_INFO:
+        return False
+    account_index_url = "https://ucsprofile.ameba.jp/ucs/index.do"
+    index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    if index_response.status == 302 and index_response.getheader("Location").find("//www.ameba.jp/index.do?") != -1:
+        return False
+    elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        return True
+    return False
+
+
 # 获取指定页数的全部日志
 def get_one_page_blog(account_name, page_count):
     blog_pagination_url = "https://ameblo.jp/%s/page-%s.html" % (account_name, page_count)
@@ -170,6 +183,18 @@ class Ameblo(crawler.Crawler):
         # 解析存档文件
         # account_name  image_count  last_diary_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
+
+        # 检测登录状态
+        if not check_login():
+            while True:
+                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析只对会员开放的日志，继续程序(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["e", "exit"]:
+                    tool.process_exit()
+                elif input_str in ["c", "continue"]:
+                    global IS_LOGIN
+                    IS_LOGIN = False
+                    break
 
     def main(self):
         # 循环下载每个id
