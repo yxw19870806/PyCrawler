@@ -119,7 +119,7 @@ def get_article_page(article_url):
     image_url_list = re.findall('<img[^>]* src="([^"]*)"[^>]*>', article_body)
     for image_url in image_url_list:
         # 无效地址
-        if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
+        if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
             continue
         if image_url.find("//") == 0:
             image_url = "http:" + image_url
@@ -271,7 +271,7 @@ class Download(crawler.DownloadThread):
         image_index = 1
         for image_url in article_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
-            if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("://e.weibo.com") >= 0:
+            if image_url.find("/p/e_weibo_com") >= 0 or image_url.find("//e.weibo.com") >= 0:
                 continue
             log.step(self.account_name + " 文章%s《%s》 开始下载第%s张图片 %s" % (article_id, article_title, image_index, image_url))
             file_type = image_url.split(".")[-1]
