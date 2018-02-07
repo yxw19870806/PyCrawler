@@ -114,6 +114,8 @@ def get_video_page(video_id):
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+    if video_play_response.data.find('"status":"UNPLAYABLE"') != -1:
+        return result
     # 没有登录，判断是否必须要登录
     if not IS_LOGIN:
         need_login_reason = tool.find_sub_string(video_play_response.data, '"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"', '",')
@@ -454,6 +456,10 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_name + " 视频%s与存档视频发布日期一致，无法过滤，再次下载" % video_id)
             else:
                 self.is_find = True
+
+        if video_response["video_url"] is None:
+            log.error(self.account_name + " 视频%s无法播放，跳过" % video_id)
+            return
 
         self.main_thread_check()  # 检测主线程运行状态
         log.step(self.account_name + " 开始下载视频%s 《%s》 %s" % (video_id, video_response["title"], video_response["video_url"]))
