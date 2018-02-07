@@ -19,7 +19,7 @@ def get_album_page(page_count):
         album_url = "http://meituzz.com/album/browse"
         query_data = {"albumID": page_count}
     else:
-        album_url = "http://zz.mt27z.cn/ab/brVv22"
+        album_url = "http://meituzz.com/ab/brVv22"
         query_data = {"y": "%sm0%s" % (hex(page_count)[2:], str(9 + page_count ** 2)[-4:])}
     album_response = net.http_request(album_url, method="GET", fields=query_data)
     result = {
@@ -45,7 +45,7 @@ def get_album_page(page_count):
         if not key:
             raise crawler.CrawlerException("页面截取媒体key失败\n%s" % album_response.data)
         # 调用API，获取相册资源
-        media_url = "http://zz.mt27z.cn/ab/bd"
+        media_url = "http://meituzz.com/ab/bd"
         post_data = {"y": page_count, "s": key}
         media_response = net.http_request(media_url, method="POST", fields=post_data, json_decode=True)
         if media_response.status == net.HTTP_RETURN_CODE_SUCCEED:
