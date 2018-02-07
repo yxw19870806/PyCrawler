@@ -201,22 +201,29 @@ def get_video_page(video_id):
     if not video_time_string:
         raise crawler.CrawlerException("页面截取视频发布时间错误\n%s" % video_play_response.data)
     # 英语
-    if video_time_string.find("Published on") >= 0:
-        video_time_string = video_time_string.replace("Published on", "").strip()
+    if video_time_string.find("Published on") >= 0 or video_time_string.find("Streamed live on") >= 0:
+        video_time_string = video_time_string.replace("Published on", "").replace("Streamed live on", "").strip()
         try:
             video_time = time.strptime(video_time_string, "%b %d, %Y")
         except ValueError:
             raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
-    # 中文
-    elif video_time_string.find("发布") >= 0:
-        video_time_string = video_time_string.replace("发布", "").strip()
+    # 简体中文
+    elif video_time_string.find("发布") >= 0 or video_time_string.find("上线日期：") >= 0:
+        video_time_string = video_time_string.replace("发布", "").replace("上线日期：", "").strip()
+        try:
+            video_time = time.strptime(video_time_string, "%Y年%m月%d日")
+        except ValueError:
+            raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
+    # 繁体中文
+    elif video_time_string.find("发布") >= 0 or video_time_string.find("即時串流日期：") >= 0:
+        video_time_string = video_time_string.replace("即時串流日期：", "").strip()
         try:
             video_time = time.strptime(video_time_string, "%Y年%m月%d日")
         except ValueError:
             raise crawler.CrawlerException("视频发布时间文本格式不正确\n%s" % video_time_string)
     # 日文
-    elif video_time_string.find("に公開") >= 0:
-        video_time_string = video_time_string.replace("に公開", "").strip()
+    elif video_time_string.find("に公開") >= 0 or video_time_string.find("にライブ配信") >= 0:
+        video_time_string = video_time_string.replace("に公開", "").replace("にライブ配信", "").strip()
         try:
             video_time = time.strptime(video_time_string, "%Y/%m/%d")
         except ValueError:
