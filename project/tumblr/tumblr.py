@@ -317,6 +317,9 @@ def analysis_image(image_url):
             pass
         else:
             log.error("unknown 1 image url: %s" % image_url)
+    #  http://78.media.tumblr.com/_1364612391_cover.jpg
+    elif temp_list[0] == "" and crawler.is_integer(temp_list[1]) and temp_list[-1] == "cover":
+        image_id = temp_list[1]
     # http://78.media.tumblr.com/TVeEqrZktkygbzi2tUbbKMGXo1_1280.jpg
     elif not crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
         image_id = temp_list[0]
@@ -330,7 +333,7 @@ def analysis_image(image_url):
         image_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
-        image_id = image_url.split("/")[-1].split(".")[0]
+        image_id = image_url.split("/")[-1]
         log.error("unknown 2 image url: %s" % image_url)
     if len(image_id) < 15 and not (crawler.is_integer(image_id) and int(image_id) < 100000000):
         log.error("unknown 3 image url: %s" % image_url)
