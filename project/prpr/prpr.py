@@ -14,13 +14,8 @@ import traceback
 POST_COUNT_PER_PAGE = 10  # 每次获取的作品数量（貌似无效）
 IS_SKIP_BLUR = False
 IS_STEP_INVALID_RESOURCE = False
-INVALID_FILE_MD5_LIST = ["0764beb3d521b9b420d365f6ee6d453b", "0d527d84f1150d002998cb67ec271de5", "11f81047704ca9a522f54ced9ef82a85", "1ba2863db2ac7296d73818be890ef378",
-                         "23e0a284d4fa44c222bf41d3cb58b241", "2423c99718385d789cec3e6c1c1020db", "350ccbcdac148cf3570af4ddf9f6de95", "483ec66794f1dfa02d634c4745fd4ded",
-                         "65f3c9f97327bfaee5904229f51d0b1f", "6a9e28c562a9187ad262f027b0ed9cf2", "76d8988358e84e123a126d736be4bc44", "7a9abea08bc47d3a64f87eebdd533dcd",
-                         "7c6b17080d95d2e7847f6c00b1228182", "bca818c66773561c7eae5f27b839f717", "c0de7824049435be9209b8f39fbcb1ba", "c32037ab36195835380e23a349178ca8",
-                         "cbccd65c36ff32fe877bf56b7e70a8ba", "dd77da050fc0bcf79d22d35deb1019bd", "df878d0165b1a02074c961beec11e52c", "edd3ae3fa614e11af141a6c809fab094",
-                         "f932db2213fee316359b1267f972899e",
-                        ]
+INVALID_FILE_MD5_LIST = ["a0792e03453f9a5386291ded7ed41df7", "c95c5abfad14eb2075eea1d30d4fc9cd", "dff069e92a12faa75d69a26d1a44e416", "edc44947e040b52b9f9a0eb61ba9ad9e"]
+
 
 # 获取指定时间后的一页作品
 def get_one_page_post(account_id, timestamp):
@@ -108,9 +103,6 @@ def check_invalid(file_path, is_video=False):
     if file_path.split(".")[-1] == "png":
         # 原本是视频，但下载后是图片
         if is_video:
-            file_md5 = tool.get_file_md5(file_path)
-            if file_md5 not in INVALID_FILE_MD5_LIST:
-                log.error("new invalid image md5 value: " + file_md5)
             return True
         # 文件太大，肯定不在下面的文件列表里
         if os.path.getsize(file_path) < 102400 and tool.get_file_md5(file_path) in INVALID_FILE_MD5_LIST:
