@@ -155,7 +155,7 @@ class Nvshens(crawler.Crawler):
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
                     header_list = {"Referer": "https://www.nvshens.com/g/%s/" % album_id}
-                    save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
+                    save_file_return = net.save_net_file(image_url, file_path, header_list=header_list, head_check=False)
                     if save_file_return["status"] == 0 and save_file_return["code"] == 404:
                         new_image_url = None
                         if image_url.find("/0.jpg") >= 0:
@@ -163,7 +163,7 @@ class Nvshens(crawler.Crawler):
                         elif image_url.find("/s/") >= 0:
                             new_image_url = image_url.replace("/s/", "/")
                         if new_image_url is not None:
-                            save_file_return = net.save_net_file(new_image_url, file_path, header_list=header_list)
+                            save_file_return = net.save_net_file(new_image_url, file_path, header_list=header_list, head_check=False)
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
