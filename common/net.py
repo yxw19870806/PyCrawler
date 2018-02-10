@@ -23,7 +23,7 @@ HTTP_REQUEST_RETRY_COUNT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
 HTTP_DOWNLOAD_RETRY_COUNT = 5
-HTTP_DOWNLOAD_MAX_SIZE = 256 * 2 ** 20  # 文件下载限制（字节）
+HTTP_DOWNLOAD_MAX_SIZE = 512 * 2 ** 20  # 文件下载限制（字节）
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
 urllib3.disable_warnings()
