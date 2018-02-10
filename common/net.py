@@ -301,7 +301,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None):
+def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=True):
     """Visit web and save to local
 
     :param file_url:
@@ -319,6 +319,9 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
     :param cookies_list:
         customize cookies dictionary, will replaced header_list["Cookie"]
 
+    :param head_check:
+        "HEAD" method request to check response status and file size before download file
+
     :return:
         status      0 download failure, 1 download successful
         code        failure reason
@@ -330,8 +333,12 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
         return False
     create_file = False
     for retry_count in range(0, HTTP_DOWNLOAD_RETRY_COUNT):
+        if head_check:
+            request_method = "HEAD"
+        else:
+            request_method = "GET"
         # 获取头信息
-        response = http_request(file_url, method="HEAD", header_list=header_list, cookies_list=cookies_list,
+        response = http_request(file_url, request_method, header_list=header_list, cookies_list=cookies_list,
                                 connection_timeout=HTTP_CONNECTION_TIMEOUT, read_timeout=HTTP_READ_TIMEOUT)
         if response.status == HTTP_RETURN_CODE_SUCCEED:
             # todo 分段下载
@@ -349,11 +356,13 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
                         new_file_type = content_type.split("/")[-1]
                     file_path = os.path.splitext(file_path)[0] + "." + new_file_type
 
-            # 获取完整数据
-            response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
-                                    connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
-            if response.status != HTTP_RETURN_CODE_SUCCEED:
-                continue
+            # 如果是先调用HEAD方法的，需要重新获取完整数据
+            if head_check:
+                response = http_request(file_url, method="GET", header_list=header_list, cookies_list=cookies_list,
+                                        connection_timeout=HTTP_DOWNLOAD_CONNECTION_TIMEOUT, read_timeout=HTTP_DOWNLOAD_READ_TIMEOUT)
+                if response.status != HTTP_RETURN_CODE_SUCCEED:
+                    continue
+
             # 下载
             with open(file_path, "wb") as file_handle:
                 file_handle.write(response.data)
