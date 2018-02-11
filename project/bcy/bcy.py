@@ -142,7 +142,7 @@ def get_one_page_album(account_id, page_count):
         raise crawler.CrawlerException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
     result["coser_id"] = coser_id_find[0]
     # 获取作品信息
-    album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.l-grid__inner li.l-grid__item")
+    album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.postCards li.posr")
     for album_index in range(0, album_list_selector.size()):
         album_selector = album_list_selector.eq(album_index)
         result_album_info = {
@@ -150,7 +150,7 @@ def get_one_page_album(account_id, page_count):
             "album_title": None,  # 作品标题
         }
         # 获取作品id
-        album_url = album_selector.find(".postWorkCard__img a.postWorkCard__link").attr("href")
+        album_url = album_selector.find("a.postWorkCard__link").attr("href")
         if not album_url:
             raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
         album_id = str(album_url).split("/")[-1]
@@ -158,7 +158,7 @@ def get_one_page_album(account_id, page_count):
             raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
         result_album_info['album_id'] = album_id
         # 获取作品标题
-        album_title = album_selector.find(".postWorkCard__img img").attr("alt")
+        album_title = album_selector.find("a.postWorkCard__link img").attr("alt")
         result_album_info["album_title"] = str(album_title.encode("UTF-8"))
         result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
