@@ -134,6 +134,10 @@ def get_one_page_album(account_id, page_count):
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))
     if page_count == 1 and album_pagination_response.data.find("<h2>用户不存在</h2>") >= 0:
         raise crawler.CrawlerException("账号不存在")
+    # 没有作品
+    if album_pagination_response.data.find("<h2>尚未发布作品</h2>") >= 0:
+        result["is_over"] = True
+        return result
     # 获取coser id
     coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
     if len(coser_id_find) != 1:
