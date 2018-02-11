@@ -265,7 +265,7 @@ def get_post_page(post_url, is_safe_mode):
         new_image_url_list = {}
         for image_url in image_url_list:
             # 头像，跳过
-            if image_url.find("/avatar_") != -1 or image_url[-9:] == "_75sq.gif" or image_url[-9:] == "_75sq.jpg":
+            if image_url.find("/avatar_") != -1 or image_url[-9:] == "_75sq.gif" or image_url[-9:] == "_75sq.jpg" or image_url[-9:] == "_75sq.png":
                 continue
             elif len(re.findall("/birthday\d_", image_url)) == 1:
                 continue
@@ -317,13 +317,13 @@ def analysis_image(image_url):
             pass
         else:
             log.error("unknown 1 image url: %s" % image_url)
-    #  http://78.media.tumblr.com/_1364612391_cover.jpg
-    elif temp_list[0] == "" and crawler.is_integer(temp_list[1]) and temp_list[-1] == "cover":
-        image_id = temp_list[1]
     # http://78.media.tumblr.com/TVeEqrZktkygbzi2tUbbKMGXo1_1280.jpg
     elif not crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
         image_id = temp_list[0]
         resolution = int(temp_list[-1])
+    #  http://78.media.tumblr.com/_1364612391_cover.jpg
+    elif len(temp_list) == 3 and temp_list[0] == "" and crawler.is_integer(temp_list[1]) and temp_list[2] == "cover":
+        image_id = temp_list[1]
     # http://78.media.tumblr.com/3562275_500.jpg
     elif len(temp_list) == 2 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[1]):
         image_id = temp_list[0]
@@ -335,7 +335,7 @@ def analysis_image(image_url):
     else:
         image_id = image_url.split("/")[-1]
         log.error("unknown 2 image url: %s" % image_url)
-    if len(image_id) < 15 and not (crawler.is_integer(image_id) and int(image_id) < 100000000):
+    if len(image_id) < 15 and not (crawler.is_integer(image_id) and int(image_id) < 2000000000):
         log.error("unknown 3 image url: %s" % image_url)
     return image_id, resolution
 
