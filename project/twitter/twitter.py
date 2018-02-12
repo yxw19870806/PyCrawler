@@ -24,17 +24,17 @@ def get_account_index_page(account_name):
     result = {
         "account_id": None,  # account id
     }
-    if account_index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
-            raise crawler.CrawlerException("私密账号，需要关注才能访问")
-        account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
-        if not crawler.is_integer(account_id):
-            raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
-        result["account_id"] = account_id
-    elif account_index_response.status == 404:
+    if account_index_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
-    else:
+    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
+        raise crawler.CrawlerException("私密账号，需要关注才能访问")
+    account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
+    if not crawler.is_integer(account_id):
+        raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
+    result["account_id"] = account_id
+
     return result
 
 
@@ -70,43 +70,43 @@ def get_one_page_media(account_name, position_blog_id):
     # 没有任何内容
     if int(media_pagination_response.json_data["new_latent_count"]) == 0 and not str(media_pagination_response.json_data["items_html"]).strip():
         result["is_skip"] = True
-    else:
-        # tweet信息分组
-        temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
-        tweet_data_list = []
-        for tweet_data in temp_tweet_data_list:
-            if len(tweet_data) < 50:
-                continue
-            tweet_data = tweet_data.encode("UTF-8")
-            # 被圈出来的用户，追加到前面的页面中
-            if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
-                tweet_data_list[-1] += tweet_data
-            else:
-                tweet_data_list.append(tweet_data)
-        if len(tweet_data_list) == 0:
-            raise crawler.CrawlerException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
-        if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
-            raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
-        for tweet_data in tweet_data_list:
-            result_media_info = {
-                "blog_id": None,  # 日志id
-                "has_video": False,  # 是不是包含视频
-                "image_url_list": [],  # 全部图片地址
-            }
-            # 获取日志id
-            blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
-            if not crawler.is_integer(blog_id):
-                raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
-            result_media_info["blog_id"] = str(blog_id)
-            # 获取图片地址
-            image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
-            result_media_info["image_url_list"] = map(str, image_url_list)
-            # 判断是不是有视频
-            result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
-            result["media_info_list"].append(result_media_info)
-        # 判断是不是还有下一页
-        if media_pagination_response.json_data["has_more_items"]:
-            result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
+        return result
+    # tweet信息分组
+    temp_tweet_data_list = media_pagination_response.json_data["items_html"].replace("\n", "").replace('<li class="js-stream-item stream-item stream-item"', '\n<li class="js-stream-item stream-item stream-item"').split("\n")
+    tweet_data_list = []
+    for tweet_data in temp_tweet_data_list:
+        if len(tweet_data) < 50:
+            continue
+        tweet_data = tweet_data.encode("UTF-8")
+        # 被圈出来的用户，追加到前面的页面中
+        if tweet_data.find('<div class="account  js-actionable-user js-profile-popup-actionable') >= 0:
+            tweet_data_list[-1] += tweet_data
+        else:
+            tweet_data_list.append(tweet_data)
+    if len(tweet_data_list) == 0:
+        raise crawler.CrawlerException("tweet分组失败\n%s" % media_pagination_response.json_data["items_html"])
+    if int(media_pagination_response.json_data["new_latent_count"]) != len(tweet_data_list):
+        raise crawler.CrawlerException("tweet分组数量和返回数据中不一致\n%s\n%s" % (media_pagination_response.json_data["items_html"], media_pagination_response.json_data["new_latent_count"]))
+    for tweet_data in tweet_data_list:
+        result_media_info = {
+            "blog_id": None,  # 日志id
+            "has_video": False,  # 是不是包含视频
+            "image_url_list": [],  # 全部图片地址
+        }
+        # 获取日志id
+        blog_id = tool.find_sub_string(tweet_data, 'data-tweet-id="', '"')
+        if not crawler.is_integer(blog_id):
+            raise crawler.CrawlerException("tweet内容中截取tweet id失败\n%s" % tweet_data)
+        result_media_info["blog_id"] = str(blog_id)
+        # 获取图片地址
+        image_url_list = re.findall('data-image-url="([^"]*)"', tweet_data)
+        result_media_info["image_url_list"] = map(str, image_url_list)
+        # 判断是不是有视频
+        result_media_info["has_video"] = tweet_data.find("PlayableMedia--video") >= 0
+        result["media_info_list"].append(result_media_info)
+    # 判断是不是还有下一页
+    if media_pagination_response.json_data["has_more_items"]:
+        result["next_page_position"] = str(media_pagination_response.json_data["min_position"])
     return result
 
 
@@ -117,53 +117,51 @@ def get_video_play_page(tweet_id):
     result = {
         "video_url": None,  # 视频地址
     }
-    if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 包含m3u8文件地址的处理
-        # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
-        m3u8_file_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
-        if m3u8_file_url:
-            m3u8_file_url = m3u8_file_url.replace("\\/", "/") + ".m3u8"
-            file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
-            file_url_host = urllib.splithost(file_url_path)[0]
+    if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+    # 包含m3u8文件地址的处理
+    # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
+    m3u8_file_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
+    if m3u8_file_url:
+        m3u8_file_url = m3u8_file_url.replace("\\/", "/") + ".m3u8"
+        file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
+        file_url_host = urllib.splithost(file_url_path)[0]
+        m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
+        if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
+        # 是否包含的是m3u8文件（不同分辨率）
+        include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
+        if len(include_m3u8_file_list) > 0:
+            # 生成最高分辨率视频所在的m3u8文件地址
+            m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
             m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
-            # 是否包含的是m3u8文件（不同分辨率）
-            include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
-            if len(include_m3u8_file_list) > 0:
-                # 生成最高分辨率视频所在的m3u8文件地址
-                m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
-                m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
-                if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise crawler.CrawlerException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
-
-            # 包含分P视频文件名的m3u8文件
-            ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
-            if len(ts_url_find) == 0:
-                raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
-            result["video_url"] = []
-            for ts_file_path in ts_url_find:
-                result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
+                raise crawler.CrawlerException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
+        # 包含分P视频文件名的m3u8文件
+        ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
+        if len(ts_url_find) == 0:
+            raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
+        result["video_url"] = []
+        for ts_file_path in ts_url_find:
+            result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
+    else:
+        # 直接包含视频播放地址的处理
+        video_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
+        if video_url:
+            result["video_url"] = video_url.replace("\\/", "/")
         else:
             # 直接包含视频播放地址的处理
-            video_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
-            if video_url:
-                result["video_url"] = video_url.replace("\\/", "/")
-            else:
-                # 直接包含视频播放地址的处理
-                vmap_file_url = tool.find_sub_string(video_play_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
-                if not vmap_file_url:
-                    raise crawler.CrawlerException("页面截取视频播放地址失败\n%s" % video_play_response.data)
-                vmap_file_url = vmap_file_url.replace("\\/", "/")
-                vmap_file_response = net.http_request(vmap_file_url, method="GET")
-                if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                    raise crawler.CrawlerException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, crawler.request_failre(vmap_file_response.status)))
-                video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
-                if not video_url:
-                    raise crawler.CrawlerException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
-                result["video_url"] = str(video_url.replace("\\/", "/"))
-    else:
-        raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
+            vmap_file_url = tool.find_sub_string(video_play_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
+            if not vmap_file_url:
+                raise crawler.CrawlerException("页面截取视频播放地址失败\n%s" % video_play_response.data)
+            vmap_file_url = vmap_file_url.replace("\\/", "/")
+            vmap_file_response = net.http_request(vmap_file_url, method="GET")
+            if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise crawler.CrawlerException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, crawler.request_failre(vmap_file_response.status)))
+            video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
+            if not video_url:
+                raise crawler.CrawlerException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
+            result["video_url"] = str(video_url.replace("\\/", "/"))
     return result
 
 
