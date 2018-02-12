@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from pyquery import PyQuery as PQ
 import os
 import re
 import traceback
@@ -21,10 +22,13 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    album_id_find = re.findall("<a class='galleryli_link' href='/g/(\d*)/'", index_response.data)
-    if len(album_id_find) == 0:
-        raise crawler.CrawlerException("页面匹配图集id失败\n%s" % index_response.data)
-    result["max_album_id"] = max(map(int, album_id_find))
+    first_album_url = PQ(index_response.data).find("div.listdiv ul li.galleryli").eq(0).find("a.galleryli_link").attr("href")
+    if not first_album_url:
+        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
+    album_id = tool.find_sub_string(first_album_url, "/g/", "/")
+    if not crawler.is_integer(album_id):
+        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response.data)
+    result["max_album_id"] = int(album_id)
     return result
 
 
@@ -48,7 +52,10 @@ def get_album_photo(album_id):
             if result["is_delete"]:
                 return result
             # 获取图集图片总数
-            image_count = tool.find_sub_string(album_pagination_response.data, "<span style='color: #DB0909'>", "张照片</span>")
+            album_info = PQ(album_pagination_response.data).find("#dinfo span").text()
+            if not album_info and album_info.encode("UTF-8").find("张照片") == -1:
+                raise crawler.CrawlerException("页面截取图片总数信息失败\n%s" % album_pagination_response.data)
+            image_count = album_info.encode("UTF-8").replace("张照片", "")
             if not crawler.is_integer(image_count):
                 raise crawler.CrawlerException("页面截取图片总数失败\n%s" % album_pagination_response.data)
             image_count = int(image_count)
@@ -59,25 +66,16 @@ def get_album_photo(album_id):
             result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, '<h1 id="htilte">', "</h1>")).strip()
             if not result["album_title"]:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
-        # 获取图集图片地址，两种不同的页面样式
-        if album_pagination_response.data.find('<ul id="hgallery">') >= 0:
-            image_list_html = tool.find_sub_string(album_pagination_response.data, '<ul id="hgallery">', "</ul>")
-            if not image_list_html:
-                raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % album_pagination_response.data)
-            image_url_list = re.findall("<img src='([^']*)'", image_list_html)
-        elif album_pagination_response.data.find('<div class="caroufredsel_wrapper">') >= 0:
-            image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="caroufredsel_wrapper">', "</ul>")
-            if not image_list_html:
-                raise crawler.CrawlerException("第%s页 页面截取图片列表失败\n%s" % album_pagination_response.data)
-            image_url_list = re.findall("src='([^']*)'", image_list_html)
-        else:
-            raise crawler.CrawlerException("第%s页 未知的图集样式\n%s" % album_pagination_response.data)
-        if len(image_url_list) == 0:
+        # 获取图集图片地址，存在两种页面样式
+        image_list_selector = PQ(album_pagination_response.data).find("#hgallery img")
+        if image_list_selector.size() == 0:
+            image_list_selector = PQ(album_pagination_response.data).find("#pgallery img")
+        if image_list_selector.size() == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
-        result["image_url_list"] += map(str, image_url_list)
+        for image_index in range(0, image_list_selector.size()):
+            result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
         # 获取总页数
-        max_page_count = 1
-        pagination_html = tool.find_sub_string(album_pagination_response.data, '<div id="pages">', "</div>")
+        pagination_html = PQ(album_pagination_response.data).find("#pages").html()
         if pagination_html:
             page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', pagination_html)
             if len(page_count_find) != 0:
