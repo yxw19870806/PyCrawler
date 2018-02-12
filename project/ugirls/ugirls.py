@@ -7,9 +7,28 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from pyquery import PyQuery as PQ
 import os
-import re
 import traceback
+
+
+# 从图集首页获取最新的图集id
+def get_index_page():
+    index_url = "http://www.ugirls.com/Content/"
+    index_response = net.http_request(index_url, method="GET")
+    result = {
+        "max_album_id": None,  # 最新图集id
+    }
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+    first_album_url = PQ(index_response.data).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
+    if not first_album_url:
+        raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
+    album_id = tool.find_sub_string(first_album_url, "/Product-", ".html")
+    if not crawler.is_integer(album_id):
+        raise crawler.CrawlerException("图集地址截取图集id失败\n%s" % index_response.data)
+    result["max_album_id"] = int(album_id)
+    return result
 
 
 # 获取指定页数的图集
@@ -25,43 +44,21 @@ def get_album_page(album_id):
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
     if album_response.data.find("该页面不存在,或者已经被删除!") >= 0:
         result["is_delete"] = True
-    else:
-        # 获取模特名字
-        model_info_html = tool.find_sub_string(album_response.data, '<div class="ren_head">', "</div>")
-        if not model_info_html:
-            raise crawler.CrawlerException("页面截取模特信息失败\n%s" % album_response.data)
-        model_name = tool.find_sub_string(model_info_html, 'title="', '"')
-        if not model_name:
-            raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % model_info_html)
-        result["model_name"] = str(model_name).strip()
-        # 获取所有图片地址
-        image_info_data = tool.find_sub_string(album_response.data, '<ul id="myGallery">', "</ul>")
-        image_url_list = re.findall('<img src="([^"]*)"', image_info_data)
-        if len(image_url_list) == 0:
-            raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
-        for image_url in image_url_list:
-            if image_url.find("_magazine_web_m.") == -1:
-                raise crawler.CrawlerException("图片地址不符合规则\n%s" % image_url)
-            result["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
-    return result
-
-
-# 从图集首页获取最新的图集id
-def get_index_page():
-    index_url = "http://www.ugirls.com/Content/"
-    index_response = net.http_request(index_url, method="GET")
-    result = {
-        "max_album_id": None,  # 最新图集id
-    }
-    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    album_list_html = tool.find_sub_string(index_response.data, '<div class="magazine_list_wrap">', '<div class="xfenye">')
-    if not album_list_html:
-        raise crawler.CrawlerException("页面截取图集列表失败\n%s" % index_response.data)
-    album_id_find = re.findall('href="http://www.ugirls.com/Shop/Detail/Product-(\d*).html" target="_blank"', album_list_html)
-    if len(album_id_find) == 0:
-        raise crawler.CrawlerException("图集列表匹配图集id失败\n%s" % index_response.data)
-    result["max_album_id"] = max(map(int, list(set(album_id_find))))
+        return result
+    # 获取模特名字
+    model_name = PQ(album_response.data).find("div.ren_head div.ren_head_c a").attr("title")
+    if not model_name:
+        raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response.data)
+    result["model_name"] = model_name.encode("UTF-8").strip()
+    # 获取所有图片地址
+    image_list_selector = PQ(album_response.data).find("ul#myGallery li img")
+    if image_list_selector.size() == 0:
+        raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
+    for image_index in range(0, image_list_selector.size()):
+        image_url = image_list_selector.eq(image_index).attr("src")
+        if image_url.find("_magazine_web_m.") == -1:
+            raise crawler.CrawlerException("图片地址不符合规则\n%s" % image_url)
+        result["image_url_list"].append(image_url.replace("_magazine_web_m.", "_magazine_web_l."))
     return result
 
 
