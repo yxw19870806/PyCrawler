@@ -24,49 +24,48 @@ def get_one_page_blog(account_id, page_count):
         "blog_info_list": [],  # 全部日志地址
         "is_over": False,  # 是不是最后一页
     }
-    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
-            raise crawler.CrawlerException("账号不存在")
-        article_list_selector = PQ(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
-        if article_list_selector.size() == 0:
-            raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
-        for article_index in range(article_list_selector.size()):
-            result_blog_info = {
-                "blog_url": None,  # 日志地址
-                "blog_time": None,  # 日志时间
-                "blog_title": "",  # 日志标题
-            }
-            article_selector = article_list_selector.eq(article_index)
-            # 获取日志地址
-            blog_url = article_selector.find("span.atc_title a").attr("href")
-            if not blog_url:
-                raise crawler.CrawlerException("日志列表解析日志地址失败\n%s" % article_selector.html().encode("UTF-8"))
-            result_blog_info["blog_url"] = str(blog_url)
-            # 获取日志标题
-            blog_title = article_selector.find("span.atc_title a").text().encode("UTF-8")
-            if not blog_title:
-                raise crawler.CrawlerException("日志列表解析日志标题失败\n%s" % article_selector.html().encode("UTF-8"))
-            result_blog_info["blog_title"] = str(blog_title)
-            # 获取日志时间
-            blog_time = article_selector.find("span.atc_tm").text()
-            if not blog_time:
-                raise crawler.CrawlerException("日志列表解析日志时间失败\n%s" % article_selector.html().encode("UTF-8"))
-            try:
-                result_blog_info["blog_time"] = int(time.mktime(time.strptime(blog_time, "%Y-%m-%d %H:%M")))
-            except ValueError:
-                raise crawler.CrawlerException("日志时间格式不正确\n%s" % blog_time)
-            result["blog_info_list"].append(result_blog_info)
-        # 获取分页信息
-        pagination_html = tool.find_sub_string(blog_pagination_response.data, '<div class="SG_page">', '</div>')
-        if not pagination_html:
-            result["is_over"] = True
-        else:
-            max_page_count = tool.find_sub_string(pagination_html, "共", "页")
-            if not crawler.is_integer(max_page_count):
-                raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % pagination_html)
-            result["is_over"] = page_count >= int(max_page_count)
-    else:
+    if blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
+        raise crawler.CrawlerException("账号不存在")
+    article_list_selector = PQ(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
+    if article_list_selector.size() == 0:
+        raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
+    for article_index in range(article_list_selector.size()):
+        result_blog_info = {
+            "blog_url": None,  # 日志地址
+            "blog_time": None,  # 日志时间
+            "blog_title": "",  # 日志标题
+        }
+        article_selector = article_list_selector.eq(article_index)
+        # 获取日志地址
+        blog_url = article_selector.find("span.atc_title a").attr("href")
+        if not blog_url:
+            raise crawler.CrawlerException("日志列表解析日志地址失败\n%s" % article_selector.html().encode("UTF-8"))
+        result_blog_info["blog_url"] = str(blog_url)
+        # 获取日志标题
+        blog_title = article_selector.find("span.atc_title a").text().encode("UTF-8")
+        if not blog_title:
+            raise crawler.CrawlerException("日志列表解析日志标题失败\n%s" % article_selector.html().encode("UTF-8"))
+        result_blog_info["blog_title"] = str(blog_title)
+        # 获取日志时间
+        blog_time = article_selector.find("span.atc_tm").text()
+        if not blog_time:
+            raise crawler.CrawlerException("日志列表解析日志时间失败\n%s" % article_selector.html().encode("UTF-8"))
+        try:
+            result_blog_info["blog_time"] = int(time.mktime(time.strptime(blog_time, "%Y-%m-%d %H:%M")))
+        except ValueError:
+            raise crawler.CrawlerException("日志时间格式不正确\n%s" % blog_time)
+        result["blog_info_list"].append(result_blog_info)
+    # 获取分页信息
+    pagination_html = tool.find_sub_string(blog_pagination_response.data, '<div class="SG_page">', '</div>')
+    if not pagination_html:
+        result["is_over"] = True
+    else:
+        max_page_count = tool.find_sub_string(pagination_html, "共", "页")
+        if not crawler.is_integer(max_page_count):
+            raise crawler.CrawlerException("分页信息截取总页数失败\n%s" % pagination_html)
+        result["is_over"] = page_count >= int(max_page_count)
     return result
 
 
