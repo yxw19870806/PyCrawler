@@ -268,9 +268,9 @@ def _random_user_agent():
         Common chrome user agent    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
         Common IE user agent        "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64)"
     """
-    firefox_version_max = 56
+    firefox_version_max = 58
     # https://zh.wikipedia.org/zh-cn/Google_Chrome
-    chrome_version_list = ["53.0.2785", "54.0.2840", "55.0.2883", "56.0.2924", "57.0.2987", "58.0.3029", "59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202"]
+    chrome_version_list = ["56.0.2924", "57.0.2987", "58.0.3029", "59.0.3071", "60.0.3112", "61.0.3163", "62.0.3202", "63.0.3239", "64.0.3282", "65.0.3325"]
     windows_version_dict = {
         "Windows 2000": "Windows NT 5.0",
         "Windows XP": "Windows NT 5.1",
