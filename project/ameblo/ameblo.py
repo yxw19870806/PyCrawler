@@ -128,7 +128,7 @@ def filter_image_url(image_url):
 # ->
 # http://stat.ameba.jp/user_images/4b/90/10112135346.jpg
 def get_origin_image_url(image_url):
-    if image_url.find("//stat.ameba.jp/user_images") == 0:
+    if image_url.find("//stat.ameba.jp/user_images") != -1:
         # 最新的image_url使用?caw=指定显示分辨率，去除
         # http://stat.ameba.jp/user_images/20161220/12/akihabara48/fd/1a/j/o0768032013825427476.jpg?caw=800
         image_url = image_url.split("?")[0]
