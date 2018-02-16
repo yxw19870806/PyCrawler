@@ -180,6 +180,7 @@ class Download(crawler.DownloadThread):
                 is_over = True
             else:
                 page_count += 1
+        return video_id_list
 
     # 解析单个视频
     def crawl_video(self, video_id):
