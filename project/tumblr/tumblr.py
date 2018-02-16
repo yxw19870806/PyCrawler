@@ -325,11 +325,11 @@ def analysis_image(image_url):
     elif len(temp_list) == 3 and temp_list[0] == "" and crawler.is_integer(temp_list[1]) and temp_list[2] == "cover":
         image_id = temp_list[1]
     # http://78.media.tumblr.com/3562275_500.jpg
-    elif len(temp_list) == 2 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[1]):
+    elif len(temp_list) == 2 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]):
         image_id = temp_list[0]
         resolution = int(temp_list[1])
     # http://78.media.tumblr.com/15427139_r1_500.jpg
-    elif len(temp_list) == 3 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[1]) == "r1" and crawler.is_integer(temp_list[2]):
+    elif len(temp_list) == 3 and crawler.is_integer(temp_list[0]) and crawler.is_integer(temp_list[-1]) and len(temp_list[1]) == 2 and temp_list[1][0] == "r" :
         image_id = temp_list[0]
         resolution = int(temp_list[2])
     else:
