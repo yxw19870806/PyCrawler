@@ -8,6 +8,7 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 from PIL import Image
+from pyquery import PyQuery as PQ
 import os
 import re
 import threading
@@ -46,10 +47,12 @@ def get_one_page_blog(account_name, page_count):
     blog_id_list = re.findall('data-unique-entry-id="([\d]*)"', blog_pagination_response.data)
     # 另一种页面格式
     if len(blog_id_list) == 0:
-        page_data = tool.find_sub_string(blog_pagination_response.data, 'class="skin-tiles"', 'class="skin-entryAd"')
-        if not page_data:
-            raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_pagination_response.data)
-        blog_id_list = re.findall('<a data-uranus-component="imageFrameLink" href="https://ameblo.jp/' + account_name + '/entry-(\d*).html"', page_data)
+        # goto-risako
+        blog_list_selector = PQ(blog_pagination_response.data).find('#main li a.skin-titleLink')
+        if blog_list_selector.size() > 0:
+            blog_id_list = []
+            for blog_url_index in range(0, len(blog_list_selector)):
+                blog_id_list.append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))
     if len(blog_id_list) == 0:
         raise crawler.CrawlerException("页面匹配日志id失败\n%s" % blog_pagination_response.data)
     result["blog_id_list"] = map(str, blog_id_list)
@@ -71,6 +74,8 @@ def get_one_page_blog(account_name, page_count):
     elif blog_pagination_response.data.find('class="skin-pagingPrev skin-btnPaging ga-pagingTopPrevTop') >= 0:  # 有上一页按钮
         if blog_pagination_response.data.find('class="skin-pagingNext skin-btnPaging ga-pagingTopNextTop') == -1:  # 但没有下一页按钮
             result["is_over"] = True
+    else:
+        result["is_over"] = True
     return result
 
 
