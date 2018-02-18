@@ -143,10 +143,7 @@ class MeiTuLu(crawler.Crawler):
 
                     file_type = image_url.split(".")[-1]
                     file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
-                    header_list = {
-                        "Referer": "https://www.meitulu.com/"
-                    }
-                    save_file_return = net.save_net_file(image_url, file_path, header_list=header_list)
+                    save_file_return = net.save_net_file(image_url, file_path, header_list={"Referer": "https://www.meitulu.com/"})
                     if save_file_return["status"] == 1:
                         log.step("图集%s 《%s》 第%s张图片下载成功" % (album_id, album_title, image_index))
                     else:
