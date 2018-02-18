@@ -254,6 +254,8 @@ def get_decrypt_step(js_file_url):
     # new var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",CK(k.s));
     main_function_name = tool.find_sub_string(js_file_response.data, 'var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",', "(k.s));")
     if not main_function_name:
+        main_function_name = tool.find_sub_string(js_file_response.data, 'if(k.url){f=new g.QJ(k.url);k.s&&f.set(k.sp||"signature",', "(k.s));")
+    if not main_function_name:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
     # 加密方法体（包含子加密方法的调用参数&顺序）
     # SJ=function(a){a=a.split("");RJ.yF(a,48);RJ.It(a,31);RJ.yF(a,24);RJ.It(a,74);return a.join("")};
