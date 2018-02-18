@@ -210,10 +210,13 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
                                 is_error = False
                     if is_error:
                         response.status = HTTP_RETURN_CODE_JSON_DECODE_ERROR
-            elif response.status in [500, 502, 503, 504] and is_auto_retry and retry_count < HTTP_REQUEST_RETRY_COUNT:  # 服务器临时性错误，重试
-                retry_count += 1
-                time.sleep(30)
-                continue
+            elif response.status in [500, 502, 503, 504] and is_auto_retry:  # 服务器临时性错误，重试
+                if retry_count < HTTP_REQUEST_RETRY_COUNT:
+                    retry_count += 1
+                    time.sleep(30)
+                    continue
+                else:
+                    return response
             return response
         except urllib3.exceptions.ConnectTimeoutError, e:
             # 域名无法解析
