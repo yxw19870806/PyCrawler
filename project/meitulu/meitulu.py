@@ -52,7 +52,10 @@ def get_one_page_album(album_id):
             raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
         if page_count == 1:
             # 获取图集标题
-            result["album_title"] = str(tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")).strip()
+            album_title = tool.find_sub_string(album_pagination_response.data, "<h1>", "</h1>")
+            if not album_title:
+                raise crawler.CrawlerException("标题截取失败\n%s" % album_pagination_response.data)
+            result["album_title"] = album_title.strip()
         result["album_title"] = result["album_title"].replace("・", "")  # \u30fb
         # 获取图集图片地址
         image_list_html = tool.find_sub_string(album_pagination_response.data, '<div class="content">', "</div>")
