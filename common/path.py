@@ -132,7 +132,9 @@ def filter_text(text):
     """Filter the character which OS not support in filename or directory name"""
     filter_character_list = []
     if platform.system() == "Windows":
-        filter_character_list = ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
+        filter_character_list = ["\\", "/", ":", "*", "?", '"', "<", ">", "|", "\t", "\n", "\r"]
+    else:
+        filter_character_list = ["\t", "\n", "\r"]
     for filter_character in filter_character_list:
         text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
     while True:
