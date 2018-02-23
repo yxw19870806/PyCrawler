@@ -72,25 +72,22 @@ def get_one_page_media(account_id, cursor):
     elif media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
     json_data = media_pagination_response.json_data
-    if not crawler.check_sub_key(("status", "data"), json_data):
-        raise crawler.CrawlerException("返回数据'status'或'data'字段不存在\n%s" % json_data)
-    if not crawler.check_sub_key(("user",), json_data["data"]):
-        raise crawler.CrawlerException("返回数据'user'字段不存在\n%s" % json_data)
-    if not crawler.check_sub_key(("edge_owner_to_timeline_media",), json_data["data"]["user"]):
-        raise crawler.CrawlerException("返回数据'edge_owner_to_timeline_media'字段不存在\n%s" % json_data)
-    if not crawler.check_sub_key(("page_info", "edges", "count"), json_data["data"]["user"]["edge_owner_to_timeline_media"]):
+    try:
+        media_data = media_pagination_response.json_data["data"]["user"]["edge_owner_to_timeline_media"]
+    except KeyError:
+        raise crawler.CrawlerException("返回数据格式不正确\n%s" % media_pagination_response.json_data)
+    if not crawler.check_sub_key(("page_info", "edges", "count"), media_data):
         raise crawler.CrawlerException("返回数据'page_info', 'edges', 'count'字段不存在\n%s" % json_data)
-    if not crawler.check_sub_key(("end_cursor", "has_next_page",), json_data["data"]["user"]["edge_owner_to_timeline_media"]["page_info"]):
+    if not crawler.check_sub_key(("end_cursor", "has_next_page",), media_data["page_info"]):
         raise crawler.CrawlerException("返回数据'end_cursor', 'has_next_page'字段不存在\n%s" % json_data)
-    if not isinstance(json_data["data"]["user"]["edge_owner_to_timeline_media"]["edges"], list):
+    if not isinstance(media_data["edges"], list):
         raise crawler.CrawlerException("返回数据'edges'字段类型不正确\n%s" % json_data)
-    if len(json_data["data"]["user"]["edge_owner_to_timeline_media"]["edges"]) == 0:
-        if cursor == "" and int(json_data["data"]["user"]["edge_owner_to_timeline_media"]["count"]) > 0:
+    if len(media_data["edges"]) == 0:
+        if cursor == "" and int(media_data["count"]) > 0:
             raise crawler.CrawlerException("私密账号，需要关注才能访问")
         else:
             raise crawler.CrawlerException("返回数据'edges'字段长度不正确\n%s" % json_data)
-    media_node = json_data["data"]["user"]["edge_owner_to_timeline_media"]
-    for media_info in media_node["edges"]:
+    for media_info in media_data["edges"]:
         result_media_info = {
             "image_url": None,  # 图片地址
             "is_group": False,  # 是不是图片/视频组
@@ -117,8 +114,8 @@ def get_one_page_media(account_id, cursor):
         result_media_info["page_id"] = str(media_info["node"]["shortcode"])
         result["media_info_list"].append(result_media_info)
     # 获取下一页的指针
-    if media_node["page_info"]["has_next_page"]:
-        result["next_page_cursor"] = str(media_node["page_info"]["end_cursor"])
+    if media_data["page_info"]["has_next_page"]:
+        result["next_page_cursor"] = str(media_data["page_info"]["end_cursor"])
     return result
 
 
@@ -139,30 +136,23 @@ def get_media_page(page_id):
         media_info_data = json.loads(media_info_html)
     except ValueError:
         raise crawler.CrawlerException("媒体信息加载失败\n%s" % media_info_html)
-    if not crawler.check_sub_key(("entry_data",), media_info_data):
-        raise crawler.CrawlerException("媒体信息'entry_data'字段不存在\n%s" % media_info_data)
-    if not crawler.check_sub_key(("PostPage",), media_info_data["entry_data"]):
-        raise crawler.CrawlerException("媒体信息'PostPage'字段不存在\n%s" % media_info_data)
-    if not (isinstance(media_info_data["entry_data"]["PostPage"], list) and len(media_info_data["entry_data"]["PostPage"]) == 1):
-        raise crawler.CrawlerException("媒体信息'PostPage'字段类型不正确\n%s" % media_info_data)
-    if not crawler.check_sub_key(("graphql",), media_info_data["entry_data"]["PostPage"][0]):
-        raise crawler.CrawlerException("媒体信息'graphql'字段不存在\n%s" % media_info_data)
-    if not crawler.check_sub_key(("shortcode_media",), media_info_data["entry_data"]["PostPage"][0]["graphql"]):
-        raise crawler.CrawlerException("媒体信息'shortcode_media'字段不存在\n%s" % media_info_data)
-    if not crawler.check_sub_key(("__typename",), media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]):
+    try:
+        media_data = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]
+    except KeyError:
+        raise crawler.CrawlerException("媒体信息格式不正确\n%s" % media_info_data)
+    if len(media_info_data["entry_data"]["PostPage"]) != 1:
+        raise crawler.CrawlerException("媒体信息'PostPage'字段长度不正确\n%s" % media_info_data)
+    if not crawler.check_sub_key(("__typename",), media_data):
         raise crawler.CrawlerException("媒体信息'__typename'字段不存在\n%s" % media_info_data)
-    if media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]["__typename"] not in ["GraphSidecar", "GraphVideo"]:
-        raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info_data)
-    media_info = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]
     # 多张图片/视频
-    if media_info["__typename"] == "GraphSidecar":
-        if not crawler.check_sub_key(("edge_sidecar_to_children",), media_info):
-            raise crawler.CrawlerException("媒体信息'edge_sidecar_to_children'字段不存在\n%s" % media_info)
-        if not crawler.check_sub_key(("edges",), media_info["edge_sidecar_to_children"]):
-            raise crawler.CrawlerException("媒体信息'edges'字段不存在\n%s" % media_info)
-        if len(media_info["edge_sidecar_to_children"]["edges"]) < 2:
-            raise crawler.CrawlerException("媒体信息'edges'长度不正确\n%s" % media_info)
-        for edge in media_info["edge_sidecar_to_children"]["edges"]:
+    if media_data["__typename"] == "GraphSidecar":
+        try:
+            media_edge_data = media_data["edge_sidecar_to_children"]["edges"]
+        except KeyError:
+            raise crawler.CrawlerException("图片信息格式不正确\n%s" % media_data)
+        if len(media_edge_data) < 2:
+            raise crawler.CrawlerException("媒体信息'edges'长度不正确\n%s" % media_data)
+        for edge in media_edge_data:
             if not crawler.check_sub_key(("node",), edge):
                 raise crawler.CrawlerException("媒体节点'node'字段不存在\n%s" % edge)
             if not crawler.check_sub_key(("__typename", "display_url"), edge["node"]):
@@ -175,11 +165,13 @@ def get_media_page(page_id):
                     raise crawler.CrawlerException("视频节点'video_url'字段不存在\n%s" % edge)
                 result["video_url_list"].append(str(edge["node"]["video_url"]))
     # 视频
-    elif media_info["__typename"] == "GraphVideo":
+    elif media_data["__typename"] == "GraphVideo":
         # 获取视频地址
-        if not crawler.check_sub_key(("video_url",), media_info):
-            raise crawler.CrawlerException("视频信息'video_url'字段不存在\n%s" % media_info)
-        result["video_url_list"].append(str(media_info["video_url"]))
+        if not crawler.check_sub_key(("video_url",), media_data):
+            raise crawler.CrawlerException("视频信息'video_url'字段不存在\n%s" % media_data)
+        result["video_url_list"].append(str(media_data["video_url"]))
+    else:
+        raise crawler.CrawlerException("媒体信息'__typename'取值范围不正确\n%s" % media_info_data)
     return result
 
 
