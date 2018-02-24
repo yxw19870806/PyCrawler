@@ -502,15 +502,14 @@ class Download(crawler.DownloadThread):
                     log.error(self.account_id + " 日志地址%s解析日志id失败" % post_info["post_url"])
                     tool.process_exit()
 
-                # 新增信息页导致的重复判断
-                if post_id in unique_list:
-                    continue
-                else:
-                    unique_list.append(post_id)
-
                 # 检查是否达到存档记录
                 if int(post_id) > int(self.account_info[1]):
-                    post_info_list.append(post_info)
+                    # 新增信息页导致的重复判断
+                    if post_id in unique_list:
+                        continue
+                    else:
+                        post_info_list.append(post_info)
+                        unique_list.append(post_id)
                 else:
                     is_over = True
                     break
