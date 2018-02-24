@@ -231,6 +231,11 @@ def get_post_page(post_url, is_safe_mode):
     if post_response.status == 429:
         time.sleep(30)
         return get_post_page(post_url, is_safe_mode)
+    elif post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
+        # 服务器错误，跳过这页
+        account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
+        log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
+        return result
     elif post_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(post_response.status))
     post_page_head = tool.find_sub_string(post_response.data, "<head", "</head>", 3)
