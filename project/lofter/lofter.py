@@ -137,15 +137,14 @@ class Download(crawler.DownloadThread):
             for blog_url in blog_pagination_response["blog_url_list"]:
                 blog_id = get_blog_id(blog_url)
 
-                # 新增日志导致的重复判断
-                if blog_id in unique_list:
-                    continue
-                else:
-                    unique_list.append(blog_id)
-
                 # 检查是否达到存档记录
                 if blog_id > self.account_info[2]:
-                    blog_url_list.append(blog_url)
+                    # 新增日志导致的重复判断
+                    if blog_id in unique_list:
+                        continue
+                    else:
+                        blog_url_list.append(blog_url)
+                        unique_list.append(blog_id)
                 else:
                     is_over = True
                     break

@@ -160,15 +160,14 @@ class Download(crawler.DownloadThread):
 
             # 寻找这一页符合条件的图片
             for image_info in photo_pagination_response["image_info_list"]:
-                # 新增图片导致的重复判断
-                if image_info["image_url"] in unique_list:
-                    continue
-                else:
-                    unique_list.append(image_info["image_url"])
-
                 # 检查是否达到存档记录
                 if image_info["image_time"] > int(self.account_info[2]):
-                    image_info_list.append(image_info)
+                    # 新增图片导致的重复判断
+                    if image_info["image_url"] in unique_list:
+                        continue
+                    else:
+                        image_info_list.append(image_info)
+                        unique_list.append(image_info["image_url"])
                 else:
                     is_over = True
                     break

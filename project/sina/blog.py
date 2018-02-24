@@ -174,15 +174,14 @@ class Download(crawler.DownloadThread):
 
             # 寻找这一页符合条件的日志
             for blog_info in blog_pagination_response["blog_info_list"]:
-                # 新增日志导致的重复判断
-                if blog_info["blog_url"] in unique_list:
-                    continue
-                else:
-                    unique_list.append(blog_info["blog_url"])
-
                 # 检查是否达到存档记录
                 if blog_info["blog_time"] > int(self.account_info[1]):
-                    blog_info_list.append(blog_info)
+                    # 新增日志导致的重复判断
+                    if blog_info["blog_url"] in unique_list:
+                        continue
+                    else:
+                        blog_info_list.append(blog_info)
+                        unique_list.append(blog_info["blog_url"])
                 else:
                     is_over = True
                     break

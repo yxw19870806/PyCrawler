@@ -157,15 +157,14 @@ class Download(crawler.DownloadThread):
 
             # 寻找这一页符合条件的歌曲
             for audio_info in audio_pagination_response["audio_info_list"]:
-                # 新增歌曲导致的重复判断
-                if audio_info["audio_id"] in unique_list:
-                    continue
-                else:
-                    unique_list.append(audio_info["audio_id"])
-
                 # 检查是否达到存档记录
                 if int(audio_info["audio_id"]) > int(self.account_info[audio_type_index]):
-                    audio_info_list.append(audio_info)
+                    # 新增歌曲导致的重复判断
+                    if audio_info["audio_id"] in unique_list:
+                        continue
+                    else:
+                        audio_info_list.append(audio_info)
+                        unique_list.append(audio_info["audio_id"])
                 else:
                     is_over = True
                     break

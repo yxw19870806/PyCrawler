@@ -331,15 +331,14 @@ class Download(crawler.DownloadThread):
 
             # 寻找这一页符合条件的作品
             for album_info in album_pagination_response["album_info_list"]:
-                # 新增作品导致的重复判断
-                if album_info["album_id"] in unique_list:
-                    continue
-                else:
-                    unique_list.append(album_info["album_id"])
-
                 # 检查是否达到存档记录
                 if int(album_info["album_id"]) > int(self.account_info[1]):
-                    album_info_list.append(album_info)
+                    # 新增作品导致的重复判断
+                    if album_info["album_id"] in unique_list:
+                        continue
+                    else:
+                        album_info_list.append(album_info)
+                        unique_list.append(album_info["album_id"])
                 else:
                     is_over = True
                     break
