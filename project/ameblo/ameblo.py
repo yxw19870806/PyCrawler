@@ -20,14 +20,16 @@ COOKIE_INFO = {}
 
 # 检测登录状态
 def check_login():
+    global COOKIE_INFO
     if not COOKIE_INFO:
         return False
     account_index_url = "https://ucsprofile.ameba.jp/ucs/index.do"
     index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location").find("//www.ameba.jp/index.do?") != -1:
-        return False
+        pass
     elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return True
+    COOKIE_INFO = {}
     return False
 
 
