@@ -26,7 +26,7 @@ def get_one_page_album(album_id):
         else:
             album_pagination_url = "http://www.meituri.com/a/%s/%s.html" % (album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
-        if page_count == 1 and album_pagination_response.status == 404:
+        if page_count == 1 and album_pagination_response.status in [403, 404]:
             result["is_delete"] = True
             return result
         elif album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
