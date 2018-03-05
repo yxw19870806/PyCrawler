@@ -167,7 +167,7 @@ class Download(crawler.DownloadThread):
 
         # 是否需要跳过，比如没有权限访问
         if video_response["is_skip"]:
-            log.step(self.account_name + " 视频%s跳过" % video_response["video_id"])
+            log.step(self.account_name + " 视频%s跳过" % video_id)
             return
 
         # 如果解析需要下载的视频时没有找到上次的记录，表示存档所在的视频已被删除，则判断数字id
@@ -187,9 +187,9 @@ class Download(crawler.DownloadThread):
         save_file_return = net.save_net_file(video_response["video_url"], video_file_path)
         if save_file_return["status"] == 1:
             # 设置临时目录
-            log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+            log.step(self.account_name + " 视频%s %s下载成功" % (video_id, video_response["video_id"]))
         else:
-            log.error(self.account_name + " 第%s个视频 %s 下载失败，原因：%s" % (video_index, video_response["video_url"], crawler.download_failre(save_file_return["code"])))
+            log.error(self.account_name + " 视频%s %s %s 下载失败，原因：%s" % (video_id, video_response["video_id"], video_response["video_url"], crawler.download_failre(save_file_return["code"])))
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加
