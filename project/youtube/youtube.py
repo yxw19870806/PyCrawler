@@ -46,11 +46,19 @@ def get_one_page_video(account_id, token):
         else:
             index_url = "https://www.youtube.com/user/%s/videos" % account_id
         index_response = net.http_request(index_url, method="GET", header_list={"accept-language": "en"})
-        if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        if index_response.status == 404:
+            raise crawler.CrawlerException("账号不存在")
+        elif index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(index_response.status))
         if index_response.data.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
+        if index_response.data.find('{"alertRenderer":{"type":"ERROR",') != -1:
+            reason = tool.find_sub_string(tool.find_sub_string(index_response.data, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
+            if reason == "This channel does not exist.":
+                raise crawler.CrawlerException("账号不存在")
+            else:
+                raise crawler.CrawlerException("账号无法访问，原因：%s" % reason)
         script_data_html = tool.find_sub_string(index_response.data, 'window["ytInitialData"] =', ";\n").strip()
         if not script_data_html:
             raise crawler.CrawlerException("页面截取视频信息失败\n%s" % index_response.data)
