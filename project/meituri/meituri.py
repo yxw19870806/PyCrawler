@@ -12,6 +12,22 @@ import re
 import traceback
 
 
+# 获取图集首页
+def get_index_page():
+    index_url = "http://www.meituri.com/"
+    index_response = net.http_request(index_url, method="GET")
+    result = {
+        "max_album_id": None,  # 最新图集id
+    }
+    if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(index_response.status))
+    album_id_find = re.findall('a href="http://www.meituri.com/a/(\d*)/', index_response.data)
+    if len(album_id_find) == 0:
+        raise crawler.CrawlerException("页面匹配图集id失败\n%s" % index_response.data)
+    result["max_album_id"] = max(map(int, album_id_find))
+    return result
+
+
 # 获取指定一页的图集
 def get_one_page_album(album_id):
     page_count = max_page_count = 1
@@ -82,7 +98,16 @@ class MeiTuRi(crawler.Crawler):
         temp_path = ""
 
         try:
-            while True:
+            # 获取图集首页
+            try:
+                index_response = get_index_page()
+            except crawler.CrawlerException, e:
+                log.error("图集首页解析失败，原因：%s" % e.message)
+                raise
+
+            log.step("最新图集id：%s" % index_response["max_album_id"])
+
+            while album_id <= index_response["max_album_id"]:
                 if not self.is_running():
                     tool.process_exit(0)
                 log.step("开始解析图集%s" % album_id)
