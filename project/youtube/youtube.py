@@ -114,7 +114,7 @@ def get_video_page(video_id):
     # 获取视频地址
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    if video_play_response.data.find('"status":"UNPLAYABLE"') != -1:
+    if video_play_response.data.find('"playabilityStatus":{"status":"UNPLAYABLE"') != -1 or video_play_response.data.find('"playabilityStatus":{"status":"ERROR"') != -1:
         return result
     # 没有登录，判断是否必须要登录
     if not IS_LOGIN:
