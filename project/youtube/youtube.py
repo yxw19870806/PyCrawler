@@ -185,7 +185,14 @@ def get_video_page(video_id):
                 # 解析JS文件，获取对应的加密方法
                 if len(decrypt_function_step) == 0:
                     js_file_name = tool.find_sub_string(video_play_response.data, 'src="/yts/jsbin/player-', '/base.js"')
-                    js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/base.js" % js_file_name
+                    if js_file_name:
+                        js_file_url = "https://www.youtube.com/yts/jsbin/player-%s/base.js" % js_file_name
+                    else:
+                        js_file_name = tool.find_sub_string(video_play_response.data, 'src="https://s.ytimg.com/yts/jsbin/player-', '/base.js"')
+                        if js_file_name:
+                            js_file_url = "https://s.ytimg.com/yts/jsbin/player-%s/base.js" % js_file_name
+                        else:
+                            raise crawler.CrawlerException("播放器JS文件地址截取失败\n%s" % video_play_response.data)
                     decrypt_function_step = get_decrypt_step(js_file_url)
                     log.trace("JS文件 %s 解析出的本地加密方法\n%s" % (js_file_url, decrypt_function_step))
                 # 生成加密字符串
@@ -263,6 +270,8 @@ def get_decrypt_step(js_file_url):
     main_function_name = tool.find_sub_string(js_file_response.data, 'var l=k.sig;l?f.set("signature",l):k.s&&f.set("signature",', "(k.s));")
     if not main_function_name:
         main_function_name = tool.find_sub_string(js_file_response.data, 'if(k.url){f=new g.QJ(k.url);k.s&&f.set(k.sp||"signature",', "(k.s));")
+    if not main_function_name:
+        main_function_name = tool.find_sub_string(js_file_response.data, 'c&&(b||(b="signature"),d.set(b,', "(c))")
     if not main_function_name:
         raise crawler.CrawlerException("播放器JS文件 %s，加密方法名截取失败" % js_file_url)
     # 加密方法体（包含子加密方法的调用参数&顺序）
