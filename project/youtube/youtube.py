@@ -36,6 +36,7 @@ def check_login():
 def get_one_page_video(account_id, token):
     # token = "4qmFsgJAEhhVQ2xNXzZHRU9razY2STFfWWJTUFFqSWcaJEVnWjJhV1JsYjNNZ0FEZ0JZQUZxQUhvQk1yZ0JBQSUzRCUzRA%3D%3D"
     result = {
+        "account_name": None, # 账号名字
         "video_id_list": [],  # 全部视频id
         "next_page_token": None,  # 下一页token
     }
@@ -53,6 +54,7 @@ def get_one_page_video(account_id, token):
         if index_response.data.find('<button id="a11y-skip-nav" class="skip-nav"') >= 0:
             log.step("首页访问出现跳转，再次访问")
             return get_one_page_video(account_id, token)
+        result["account_name"] = tool.find_sub_string(index_response.data, '<meta property="og:title" content="', '">').replace("- YouTube", "").strip()
         if index_response.data.find('{"alertRenderer":{"type":"ERROR",') != -1:
             reason = tool.find_sub_string(tool.find_sub_string(index_response.data, '{"alertRenderer":{"type":"ERROR",', '}],'), '{"simpleText":"', '"}')
             if reason == "This channel does not exist.":
@@ -437,6 +439,11 @@ class Download(crawler.DownloadThread):
                 raise
 
             log.trace(self.account_name + " 视频页（token：%s）解析的全部日志：%s" % (token, blog_pagination_response["video_id_list"]))
+
+            if len(self.account_info) < 4:
+                log.step(self.account_name + " 频道名：%s" % blog_pagination_response["account_name"])
+                self.account_name = blog_pagination_response["account_name"]
+                self.account_info.append(self.account_name)
 
             # 寻找这一页符合条件的日志
             for video_id in blog_pagination_response["video_id_list"]:
