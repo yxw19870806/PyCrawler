@@ -64,6 +64,8 @@ def get_archive_page(archive_id):
                 continue
             account_id = tool.find_sub_string(video_play_response.data, '"webNavigationEndpointData":{"url":"/channel/', '"')
             if not account_id:
+                account_id = tool.find_sub_string(video_play_response.data, '{"webCommandMetadata":{"url":"/channel/', '"')
+            if not account_id:
                 account_id = tool.find_sub_string(video_play_response.data, '<meta itemprop="channelId" content="', '">')
             if account_id:
                 result_video_info["account_id"] = str(account_id)
