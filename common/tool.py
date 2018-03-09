@@ -97,6 +97,17 @@ def list_to_string(source_lists, first_sign="\n", second_sign="\t"):
     return first_sign.join(temp_list)
 
 
+# 按照指定分割符，分割字符串生成二维数组
+def string_to_list(source_string, first_split="\n", second_split="\t"):
+    result = source_string.split(first_split)
+    if second_split is None:
+        return result
+    temp_list = []
+    for line in result:
+        temp_list.append(line.split(second_split))
+    return temp_list
+
+
 # 生成指定长度的随机字符串
 # char_lib_type 需要的字库取和， 1 - 大写字母；2 - 小写字母; 4 - 数字，默认7(1+2+4)包括全部
 def generate_random_string(string_length, char_lib_type=7):
