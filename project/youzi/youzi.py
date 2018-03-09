@@ -53,14 +53,14 @@ def get_album_photo(album_id):
             result["album_title"] = album_title.encode("UTF-8")
         # 获取图集图片地址
         image_list_selector = PQ(album_pagination_response.data).find("div.articleV4Body a img")
-        if image_list_selector.size() == 0:
+        if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
-        for image_index in range(0, image_list_selector.size()):
+        for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
         # 获取总页数
         pagination_list_selector = PQ(album_pagination_response.data).find("ul.articleV4Page a.page-a")
-        if pagination_list_selector.size() > 0:
-            for pagination_index in range(0, pagination_list_selector.size()):
+        if pagination_list_selector.length > 0:
+            for pagination_index in range(0, pagination_list_selector.length):
                 temp_page_count = pagination_list_selector.eq(pagination_index).html()
                 if crawler.is_integer(temp_page_count):
                     max_page_count = max(int(temp_page_count), max_page_count)

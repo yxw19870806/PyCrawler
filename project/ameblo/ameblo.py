@@ -51,7 +51,7 @@ def get_one_page_blog(account_name, page_count):
     if len(blog_id_list) == 0:
         # goto-risako
         blog_list_selector = PQ(blog_pagination_response.data).find('#main li a.skin-titleLink')
-        if blog_list_selector.size() > 0:
+        if blog_list_selector.length > 0:
             blog_id_list = []
             for blog_url_index in range(0, len(blog_list_selector)):
                 blog_id_list.append(tool.find_sub_string(blog_list_selector.eq(blog_url_index).attr("href"), "entry-", ".html"))

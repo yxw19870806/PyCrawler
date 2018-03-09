@@ -43,11 +43,11 @@ def get_one_page_album(sub_path, page_count):
     album_pagination_html = album_pagination_response.data.decode("GBK")
     # 获取图集信息，存在两种页面样式
     album_list_selector = PQ(album_pagination_html).find("div.xxx li a")
-    if album_list_selector.size() == 0:
+    if album_list_selector.length == 0:
         album_list_selector = PQ(album_pagination_html).find("div.yyy li a")
-    if album_list_selector.size() == 0:
+    if album_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html.encode("UTF-8"))
-    for album_index in range(0, album_list_selector.size()):
+    for album_index in range(0, album_list_selector.length):
         result_album_info = {
             "album_title": "",  # 图集id
             "page_id": None,  # 图集页面id
@@ -97,9 +97,9 @@ def get_album_photo(sub_path, page_id):
         photo_pagination_html = photo_pagination_response.data.decode("GBK")
         # 获取图片地址
         image_list_selector = PQ(photo_pagination_html).find("div.zzz li img")
-        if image_list_selector.size() == 0:
+        if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, photo_pagination_html.encode("UTF-8")))
-        for image_index in range(0, image_list_selector.size()):
+        for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append("http://www.88mmw.com" + str(image_list_selector.eq(image_index).attr("src")).replace("-lp", ""))
         # 判断是不是最后一页
         is_over = False

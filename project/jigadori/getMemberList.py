@@ -52,7 +52,7 @@ def get_one_page_account(page_count):
     if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         crawler.CrawlerException(crawler.request_failre(account_pagination_response.status))
     account_list_selector = PQ(account_pagination_response.data.decode("UTF-8")).find(".users-list li")
-    for account_index in range(0, account_list_selector.size()):
+    for account_index in range(0, account_list_selector.length):
         account_selector = account_list_selector.eq(account_index)
         # 获取成员名字
         account_name = account_selector.find(".profile-name").eq(0).text()

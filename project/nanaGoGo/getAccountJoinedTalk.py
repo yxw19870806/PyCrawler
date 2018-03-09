@@ -33,7 +33,7 @@ def get_account_talks(account_id, account_name, talk_list):
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     talk_list_selector = PQ(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")
-    for talk_index in range(0, talk_list_selector.size()):
+    for talk_index in range(0, talk_list_selector.length):
         talk_selector = talk_list_selector.eq(talk_index)
         # 获取talk地址
         talk_url_path = talk_selector.attr("href")

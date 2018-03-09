@@ -40,12 +40,12 @@ def get_one_page_favorite(page_count):
     html_data = html_data.replace(chr(1), "\\")
     # 解析页面
     children_selector = PQ(html_data.decode("UTF-8")).find('div.WB_feed').children()
-    if children_selector.size() == 0:
+    if children_selector.length == 0:
         raise crawler.CrawlerException("匹配收藏信息失败\n%s" % favorite_data_html)
-    if children_selector.size() == 1:
+    if children_selector.length == 1:
         raise crawler.CrawlerException("没有收藏了")
     # 解析日志id和图片地址
-    for i in range(0, children_selector.size() - 1):
+    for i in range(0, children_selector.length - 1):
         feed_selector = children_selector.eq(i)
         # 已被删除的微博
         if not feed_selector.has_class("WB_feed_type"):
@@ -63,12 +63,12 @@ def get_one_page_favorite(page_count):
         # WB_media_wrap 微博媒体（图片）
         # .WB_feed_expand .WB_expand     转发的微博，下面同样包含WB_text、WB_media_wrap这些结构
         # 包含转发微博
-        if feed_selector.find(".WB_feed_expand .WB_expand").size() == 0:
+        if feed_selector.find(".WB_feed_expand .WB_expand").length == 0:
             media_selector = feed_selector.find(".WB_media_wrap")
         else:
             media_selector = feed_selector.find(".WB_feed_expand .WB_expand .WB_media_wrap")
         # 如果存在媒体
-        if media_selector.size() == 1:
+        if media_selector.length == 1:
             thumb_image_url_list = re.findall('<img src="([^"]*)"/>', media_selector.html())
             if len(thumb_image_url_list) > 0:
                 image_url_list = []
@@ -80,7 +80,7 @@ def get_one_page_favorite(page_count):
         if len(result_blog_info["image_url_list"]) > 0:
             result["blog_info_list"].append(result_blog_info)
     # 最后一条feed是分页信息
-    page_selector = children_selector.eq(children_selector.size() - 1)
+    page_selector = children_selector.eq(children_selector.length - 1)
     # 判断是不是最后一页
     page_count_find = re.findall("第(\d*)页",  page_selector.html().encode("UTF-8"))
     if len(page_count_find) > 0:

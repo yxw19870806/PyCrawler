@@ -29,9 +29,9 @@ def get_one_page_blog(account_id, page_count):
     if page_count == 1 and blog_pagination_response.data.find("抱歉，您要访问的页面不存在或被删除！") >= 0:
         raise crawler.CrawlerException("账号不存在")
     article_list_selector = PQ(blog_pagination_response.data.decode("UTF-8")).find(".articleList .articleCell")
-    if article_list_selector.size() == 0:
+    if article_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取日志列表失败\n%s" % blog_pagination_response.data)
-    for article_index in range(article_list_selector.size()):
+    for article_index in range(article_list_selector.length):
         result_blog_info = {
             "blog_url": None,  # 日志地址
             "blog_time": None,  # 日志时间

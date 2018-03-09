@@ -146,10 +146,10 @@ def get_one_page_album(account_id, page_count):
         raise crawler.CrawlerException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
     result["coser_id"] = coser_id_find[0]
     # 获取作品信息
-    if PQ(album_pagination_response.data.decode("UTF-8")).find("ul.postCards").size() == 0:
+    if PQ(album_pagination_response.data.decode("UTF-8")).find("ul.postCards").length == 0:
         raise crawler.CrawlerException("页面截取作品列表失败\n%s" % album_pagination_response.data)
     album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.postCards li.posr")
-    for album_index in range(0, album_list_selector.size()):
+    for album_index in range(0, album_list_selector.length):
         album_selector = album_list_selector.eq(album_index)
         result_album_info = {
             "album_id": None,  # 作品id
@@ -169,7 +169,7 @@ def get_one_page_album(account_id, page_count):
         result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
     last_pagination_selector = PQ(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
-    if last_pagination_selector.size() == 1:
+    if last_pagination_selector.length == 1:
         max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
         result["is_over"] = page_count >= max_page_count
     else:

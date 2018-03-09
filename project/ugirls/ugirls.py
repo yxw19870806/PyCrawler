@@ -52,9 +52,9 @@ def get_album_page(album_id):
     result["model_name"] = model_name.encode("UTF-8").strip()
     # 获取所有图片地址
     image_list_selector = PQ(album_response.data).find("ul#myGallery li img")
-    if image_list_selector.size() == 0:
+    if image_list_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
-    for image_index in range(0, image_list_selector.size()):
+    for image_index in range(0, image_list_selector.length):
         image_url = image_list_selector.eq(image_index).attr("src")
         if image_url.find("_magazine_web_m.") == -1:
             raise crawler.CrawlerException("图片地址不符合规则\n%s" % image_url)

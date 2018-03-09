@@ -52,7 +52,7 @@ def get_discount_game_list(login_cookie):
             raise crawler.CrawlerException("第%s页打折游戏解析失败" % page_count)
         search_result_selector = PQ(discount_game_pagination_response.data).find("#search_result_container")
         game_list_selector = search_result_selector.find("div").eq(1).find("a")
-        for game_index in range(0, game_list_selector.size()):
+        for game_index in range(0, game_list_selector.length):
             game_selector = game_list_selector.eq(game_index)
             # game app id
             app_id = game_selector.attr("data-ds-appid")
@@ -135,7 +135,7 @@ def get_self_account_badges(account_id, login_cookie):
     badges_detail_url_list = []
     # 徽章div
     badges_selector = PQ(badges_index_response.data).find(".maincontent .badges_sheet .badge_row")
-    for index in range(0, badges_selector.size()):
+    for index in range(0, badges_selector.length):
         badge_html = badges_selector.eq(index).html().encode("UTF-8")
         # 已经掉落全部卡牌的徽章
         if badge_html.find("无剩余卡牌掉落") >= 0:
@@ -162,7 +162,7 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     # 徽章等级
     badge_selector = page_selector.find(".maincontent .badge_current .badge_info")
     # 有等级
-    if badge_selector.find(".badge_info_description").size() == 1:
+    if badge_selector.find(".badge_info_description").length == 1:
         badge_level_html = badge_selector.find(".badge_info_description div").eq(1).text()
         if not badge_level_html:
             raise crawler.CrawlerException("页面截取徽章等级信息失败\n%s" % badge_detail_response.data)
@@ -178,11 +178,11 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
     wanted_count = 5 - badge_level
     # 集换式卡牌div
     cards_selector = page_selector.find(".maincontent .badge_detail_tasks .badge_card_set_card")
-    for card_index in range(0, cards_selector.size()):
+    for card_index in range(0, cards_selector.length):
         card_selector = cards_selector.eq(card_index)
         owned_count_selector = card_selector.find(".badge_card_set_text .badge_card_set_text_qty")
         card_name = card_selector.find(".badge_card_set_text").eq(0).remove(".badge_card_set_text_qty").text()
-        if owned_count_selector.size() == 1:
+        if owned_count_selector.length == 1:
             owned_count = owned_count_selector.text().replace("(", "").replace(")", "")
         else:
             owned_count = 0
@@ -206,7 +206,7 @@ def get_market_game_trade_card_price(game_id, login_cookie):
     if market_search_response.json_data["success"] is not True:
         raise crawler.CrawlerException("返回信息'success'字段取值不正确\n%s" % market_search_response.json_data)
     card_selector = PQ(market_search_response.json_data["results_html"]).find(".market_listing_row_link")
-    for index in range(0, card_selector.size()):
+    for index in range(0, card_selector.length):
         card_name = card_selector.eq(index).find(".market_listing_item_name").text()
         card_min_price = card_selector.eq(index).find("span.normal_price span.normal_price").text().encode("UTF-8").replace("¥ ", "")
         market_item_list[card_name] = card_min_price

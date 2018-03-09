@@ -24,9 +24,9 @@ def get_one_page_photo(page_count):
     if photo_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(photo_pagination_response.status))
     photo_list_selector = PQ(photo_pagination_response.data.decode("UTF-8")).find(".bizhinmore .bizhi")
-    if photo_list_selector.size() == 0:
+    if photo_list_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片列失败\n%s" % photo_pagination_response.data)
-    for photo_index in range(0, photo_list_selector.size()):
+    for photo_index in range(0, photo_list_selector.length):
         result_image_info = {
             "image_id": None,  # 图片id
             "image_url": None,  # 图片地址
@@ -53,7 +53,7 @@ def get_one_page_photo(page_count):
     # 判断是不是最后一页
     pagination_selector = PQ(photo_pagination_response.data.decode("UTF-8")).find(".pageBottom div")
     max_page_count = page_count
-    for pagination_index in range(0, pagination_selector.size()):
+    for pagination_index in range(0, pagination_selector.length):
         if crawler.is_integer(pagination_selector.eq(pagination_index).text()):
             max_page_count = max(max_page_count, int(pagination_selector.eq(pagination_index).text()))
     result["is_over"] = page_count >= max_page_count

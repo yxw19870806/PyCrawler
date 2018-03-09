@@ -68,11 +68,11 @@ def get_album_photo(album_id):
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
         # 获取图集图片地址，存在两种页面样式
         image_list_selector = PQ(album_pagination_response.data).find("#hgallery img")
-        if image_list_selector.size() == 0:
+        if image_list_selector.length == 0:
             image_list_selector = PQ(album_pagination_response.data).find("#pgallery img")
-        if image_list_selector.size() == 0:
+        if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
-        for image_index in range(0, image_list_selector.size()):
+        for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
         # 获取总页数
         pagination_html = PQ(album_pagination_response.data).find("#pages").html()

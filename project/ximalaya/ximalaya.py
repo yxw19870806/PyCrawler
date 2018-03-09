@@ -34,7 +34,7 @@ def get_one_page_audio(account_id, page_count):
         raise crawler.CrawlerException("返回数据'res'字段取值不正确\n%s" % audit_pagination_response.json_data)
     # 获取歌曲信息
     audio_list_selector = PQ(audit_pagination_response.json_data["html"]).find("ul.body_list li.item")
-    for audio_index in range(0, audio_list_selector.size()):
+    for audio_index in range(0, audio_list_selector.length):
         audio_info = {
             "audio_id": None,  # 页面解析出的歌曲id
             "audio_title": "",  # 页面解析出的歌曲标题
@@ -54,7 +54,7 @@ def get_one_page_audio(account_id, page_count):
     # 判断是不是最后一页
     max_page_count = 1
     pagination_list_selector = PQ(audit_pagination_response.json_data["html"]).find(".pagingBar_wrapper a.pagingBar_page")
-    for pagination_index in range(0, pagination_list_selector.size()):
+    for pagination_index in range(0, pagination_list_selector.length):
         pagination_selector = pagination_list_selector.eq(pagination_index)
         data_page = pagination_selector.attr("data-page")
         if data_page is None:

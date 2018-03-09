@@ -30,9 +30,9 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     # 获取全部相册地址
     album_result_selector = PQ(account_index_html).find("#p_contents li")
-    if album_result_selector.size() == 0:
+    if album_result_selector.length == 0:
         raise crawler.CrawlerException("页面匹配相册列表失败\n%s" % account_index_html)
-    for album_index in range(0, album_result_selector.size()):
+    for album_index in range(0, album_result_selector.length):
         result["album_url_list"].append(str(album_result_selector.eq(album_index).find("a.detail").attr("href")))
     return result
 
