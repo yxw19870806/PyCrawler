@@ -2,23 +2,23 @@
 echo update pip
 C:\Python27\python.exe -m pip install --upgrade pip
 
-echo install pillow
+echo install Pillow
 C:\python27\Scripts\pip.exe install Pillow
 
-echo install pyHook
+echo install PyHook
 C:\python27\Scripts\pip.exe install pyHook
 
-echo install pyWin32
+echo install PyWin32
 C:\python27\Scripts\pip.exe install pywin32
 C:\Python27\python.exe C:\python27\Scripts\pywin32_postinstall.py -install
 
-echo install pyquery
-C:\python27\Scripts\pip.exe install pyquery
-
-echo install urllib3
-C:\python27\Scripts\pip.exe install urllib3
-
 echo install PyCrypto
 C:\python27\Scripts\pip.exe install PyCrypto
+
+echo install Urllib3
+C:\python27\Scripts\pip.exe install urllib3
+
+echo install PyQuery
+C:\python27\Scripts\pip.exe install pyquery
 
 pause
