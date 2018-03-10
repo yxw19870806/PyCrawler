@@ -42,6 +42,9 @@ def get_album_photo(album_id):
     while page_count <= max_page_count:
         album_pagination_url = "http://www.youzi4.cc/mm/%s/%s_%s.html" % (album_id, album_id, page_count)
         album_pagination_response = net.http_request(album_pagination_url, method="GET")
+        if album_pagination_response.status == 404 and page_count == 1:
+            result["is_delete"] = True
+            return result
         if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页 " % page_count + crawler.request_failre(album_pagination_response.status))
         # 判断图集是否已经被删除
