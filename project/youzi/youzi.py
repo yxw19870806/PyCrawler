@@ -126,9 +126,9 @@ class YouZi(crawler.Crawler):
                 # 过滤标题中不支持的字符
                 album_title = path.filter_text(album_pagination_response["album_title"])
                 if album_title:
-                    album_path = os.path.join(self.image_download_path, "%s %s" % (album_id, album_title))
+                    album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
                 else:
-                    album_path = os.path.join(self.image_download_path, str(album_id))
+                    album_path = os.path.join(self.image_download_path, "%05d" % (album_id))
                 temp_path = album_path
                 for image_url in album_pagination_response["image_url_list"]:
                     if not self.is_running():
