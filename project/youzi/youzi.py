@@ -68,7 +68,7 @@ def get_album_photo(album_id):
                 if crawler.is_integer(temp_page_count):
                     max_page_count = max(int(temp_page_count), max_page_count)
         else:
-            if page_count > 0:
+            if page_count > 1:
                 raise crawler.CrawlerException("第%s页 页面匹配分页信息失败\n%s" % (page_count, album_pagination_response.data))
         page_count += 1
     return result
