@@ -8,6 +8,7 @@ from common import path
 from Crypto.Cipher import AES
 import base64
 import hashlib
+import json
 import os
 import platform
 import random
@@ -84,6 +85,17 @@ def find_sub_string(haystack, start_string=None, end_string=None, include_string
     if include_string & 2 == 2 and end_string is not None:
         find_string += end_string
     return find_string
+
+
+# decode a json string
+def json_decode(json_string, default_value=None):
+    try:
+        return json.loads(json_string)
+    except ValueError:
+        pass
+    except TypeError:
+        pass
+    return default_value
 
 
 # 按照指定连接符合并二维数组生成字符串
