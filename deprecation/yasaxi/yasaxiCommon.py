@@ -18,13 +18,9 @@ account_file_path = os.path.realpath(os.path.join(os.path.dirname(__file__), "to
 
 # 从文件中获取用户信息
 def get_token_from_file():
-    account_data = tool.decrypt_string(tool.read_file(account_file_path))
+    account_data = tool.json_decode(tool.decrypt_string(tool.read_file(account_file_path)))
     if account_data is None:
         return False
-    try:
-        account_data = json.loads(account_data)
-    except ValueError:
-        return None
     if crawler.check_sub_key(("access_token", "auth_token", "zhezhe_info"), account_data):
         global ACCESS_TOKEN
         global AUTH_TOKEN

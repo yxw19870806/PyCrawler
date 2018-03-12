@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 import threading
 import time
@@ -132,9 +131,8 @@ def get_media_page(page_id):
     media_info_html = tool.find_sub_string(media_response.data, "window._sharedData = ", ";</script>")
     if not media_info_html:
         crawler.CrawlerException("页面截取媒体信息失败\n%s" % media_response.data)
-    try:
-        media_info_data = json.loads(media_info_html)
-    except ValueError:
+    media_info_data = tool.json_decode(media_info_html)
+    if media_info_data is None:
         raise crawler.CrawlerException("媒体信息加载失败\n%s" % media_info_html)
     try:
         media_data = media_info_data["entry_data"]["PostPage"][0]["graphql"]["shortcode_media"]

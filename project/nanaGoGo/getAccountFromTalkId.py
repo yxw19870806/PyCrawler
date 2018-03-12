@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 
 # 存放解析出的账号文件路径
@@ -34,9 +33,8 @@ def get_member_from_talk(talk_id):
     talk_data_string = tool.find_sub_string(talk_index_response.data, "window.__STATES__ = ", "</script>")
     if not talk_data_string:
         raise crawler.CrawlerException("页面截取talk信息失败\n%s" % talk_index_response.data)
-    try:
-        talk_data = json.loads(talk_data_string)
-    except ValueError:
+    talk_data = tool.json_decode(talk_data_string)
+    if talk_data is None:
         raise crawler.CrawlerException("talk信息加载失败\n%s" % talk_data_string)
     if not crawler.check_sub_key(("TalkStore",), talk_data):
         raise crawler.CrawlerException("talk信息'TalkStore'字段不存在\n%s" % talk_data)

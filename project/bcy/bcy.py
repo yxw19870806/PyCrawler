@@ -45,16 +45,10 @@ def check_login():
     # 没有浏览器cookies，尝试读取文件
     if not COOKIE_INFO["LOGGED_USER"]:
         # 从文件中读取账号密码
-        account_data = tool.decrypt_string(tool.read_file(SESSION_FILE_PATH))
-        if account_data is not None:
-            try:
-                account_data = json.loads(account_data)
-            except ValueError:
-                pass
-            else:
-                if crawler.check_sub_key(("email", "password"), account_data):
-                    if _do_login(account_data["email"], account_data["password"]):
-                        return True
+        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_FILE_PATH)), {})
+        if crawler.check_sub_key(("email", "password"), account_data):
+            if _do_login(account_data["email"], account_data["password"]):
+                return True
     else:
         home_url = "http://bcy.net/home/user/index"
         home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO)

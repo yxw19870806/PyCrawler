@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 import re
 import threading
@@ -103,9 +102,8 @@ def get_one_page_post(account_id, page_count, is_https, is_safe_mode):
         raise crawler.CrawlerException(crawler.request_failre(post_pagination_response.status))
     page_html = tool.find_sub_string(post_pagination_response.data, '<script type="application/ld+json">', "</script>").strip()
     if page_html:
-        try:
-            page_data = json.loads(page_html)
-        except ValueError:
+        page_data = tool.json_decode(page_html)
+        if page_data is None:
             raise crawler.CrawlerException("日志信息加载失败\n%s" % page_html)
         if not crawler.check_sub_key(("itemListElement",), page_data):
             raise crawler.CrawlerException("日志信息'itemListElement'字段不存在\n%s" % page_data)
@@ -251,12 +249,11 @@ def get_post_page(post_url, is_safe_mode):
         if image_url and image_url.find("assets.tumblr.com/images/og/fb_landscape_share.png") == -1:
             result["image_url_list"].append(image_url)
     elif not og_type:
-        script_data = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
-        if not script_data:
+        script_data_string = tool.find_sub_string(post_page_head, '<script type="application/ld+json">', "</script>").strip()
+        if not script_data_string:
             raise crawler.CrawlerException("正文截取og_type失败\n%s" % post_page_head)
-        try:
-            script_data = json.loads(script_data)
-        except ValueError:
+        script_data = tool.json_decode(script_data_string)
+        if script_data is None:
             raise crawler.CrawlerException("页面脚本数据解析失败\n%s" % script_data)
         if crawler.check_sub_key(("image",), script_data):
             if isinstance(script_data["image"], dict):

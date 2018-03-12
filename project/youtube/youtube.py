@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 import re
 import threading
@@ -64,9 +63,8 @@ def get_one_page_video(account_id, token):
         script_data_html = tool.find_sub_string(index_response.data, 'window["ytInitialData"] =', ";\n").strip()
         if not script_data_html:
             raise crawler.CrawlerException("页面截取视频信息失败\n%s" % index_response.data)
-        try:
-            script_data = json.loads(script_data_html)
-        except ValueError:
+        script_data = tool.json_decode(script_data_html)
+        if script_data is None:
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
         try:
             temp_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"]["sectionListRenderer"]
@@ -137,9 +135,8 @@ def get_video_page(video_id):
     video_info_string = tool.find_sub_string(video_play_response.data, "ytplayer.config = ", ";ytplayer.load = ").strip()
     if not video_info_string:
         raise crawler.CrawlerException("页面截取视频信息失败\n%s" % video_play_response.data)
-    try:
-        video_info_data = json.loads(video_info_string)
-    except KeyError:
+    video_info_data = tool.json_decode(video_info_string)
+    if video_info_data is None:
         raise crawler.CrawlerException("视频信息格式不正确\n%s" % video_info_string)
     if not crawler.check_sub_key(("args",), video_info_data):
         raise crawler.CrawlerException("视频信息'args'字段不存在\n%s" % video_info_data)

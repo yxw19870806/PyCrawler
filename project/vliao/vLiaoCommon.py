@@ -21,19 +21,13 @@ def check_login():
     global USER_ID, USER_KEY
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
-        api_info = tool.decrypt_string(tool.read_file(token_file_path))
-        if api_info is not None:
-            try:
-                api_info = json.loads(api_info)
-            except ValueError:
-                pass
-            else:
-                if crawler.check_sub_key(("user_id", "user_key"), api_info):
-                    # 验证token是否有效
-                    if check_token(api_info["user_id"], api_info["user_key"]):
-                        USER_ID = api_info["user_id"]
-                        USER_KEY = api_info["user_key"]
-                        return True
+        api_info = tool.json_decode(tool.decrypt_string(tool.read_file(token_file_path)))
+        if crawler.check_sub_key(("user_id", "user_key"), api_info):
+            # 验证token是否有效
+            if check_token(api_info["user_id"], api_info["user_key"]):
+                USER_ID = api_info["user_id"]
+                USER_KEY = api_info["user_key"]
+                return True
         # token已经无效了，删除掉
         path.delete_dir_or_file(token_file_path)
     log.step("Please input api info")

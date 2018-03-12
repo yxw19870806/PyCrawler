@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 import traceback
 
@@ -34,9 +33,8 @@ def get_album_page(album_id):
     image_info_html = tool.find_sub_string(album_response.data, '<div id="imgs_json" style="display:none">', "</div>")
     if not image_info_html:
         raise crawler.CrawlerException("页面截取图片列表失败\n%s" % album_response.data)
-    try:
-        image_info_data = json.loads(image_info_html)
-    except ValueError:
+    image_info_data = tool.json_decode(image_info_html)
+    if image_info_data is None:
         raise crawler.CrawlerException("图片列表加载失败\n%s" % image_info_html)
     image_url_list = []
     for image_info in image_info_data:

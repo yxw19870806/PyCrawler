@@ -46,9 +46,8 @@ def get_mylist_index(account_id):
     all_video_info = tool.find_sub_string(account_index_response.data, "Mylist.preload(%s," % account_id, ");").strip()
     if not all_video_info:
         raise crawler.CrawlerException("截取视频列表失败\n%s" % account_index_response.data)
-    try:
-        all_video_info = json.loads(all_video_info)
-    except ValueError:
+    all_video_info = tool.json_decode(all_video_info)
+    if all_video_info is None:
         raise crawler.CrawlerException("视频列表加载失败\n%s" % account_index_response.data)
     # 倒序排列，时间越晚的越前面
     all_video_info.reverse()
@@ -93,9 +92,8 @@ def get_video_info(video_id):
             return result
         raise crawler.CrawlerException("视频信息截取失败\n%s" % video_play_response.data)
     video_info_string = HTMLParser.HTMLParser().unescape(video_info_string)
-    try:
-        video_info = json.loads(video_info_string)
-    except ValueError:
+    video_info = tool.json_decode(video_info_string)
+    if video_info is None:
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response.data)
     if not crawler.check_sub_key(("video",), video_info):
         raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)

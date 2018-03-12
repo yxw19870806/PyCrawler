@@ -7,7 +7,6 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import json
 import os
 import threading
 import time
@@ -30,9 +29,8 @@ def get_one_page_blog(account_id, token):
         script_data_html = tool.find_sub_string(blog_pagination_response.data, ")]}'", None).strip()
         if not script_data_html:
             raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
-        try:
-            script_data = json.loads(script_data_html)
-        except ValueError:
+        script_data = tool.json_decode(script_data_html)
+        if script_data is None:
             raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
         if not (len(script_data) == 3 and len(script_data[0]) == 3 and crawler.check_sub_key(("113305009",), script_data[0][2])):
             raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
@@ -45,9 +43,8 @@ def get_one_page_blog(account_id, token):
             script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
             if not script_data_html:
                 raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
-            try:
-                script_data = json.loads(script_data_html)
-            except ValueError:
+            script_data = tool.json_decode(script_data_html)
+            if script_data is None:
                 raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
         elif blog_pagination_response.status == 400:
             raise crawler.CrawlerException("账号不存在")
@@ -99,9 +96,8 @@ def get_album_page(account_id, album_id):
     script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
     if not script_data_html:
         raise crawler.CrawlerException("页面截取相册信息失败\n%s" % album_response.data)
-    try:
-        script_data = json.loads(script_data_html)
-    except ValueError:
+    script_data = tool.json_decode(script_data_html)
+    if script_data is None:
         raise crawler.CrawlerException("相册信息加载失败\n%s" % script_data_html)
     try:
         user_key = script_data[4][0]
@@ -118,9 +114,8 @@ def get_album_page(account_id, album_id):
         if image_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(album_response.status))
         continue_data = tool.find_sub_string(image_pagination_response.data, ")]}'", None).strip()
-        try:
-            continue_data = json.loads(continue_data)
-        except ValueError:
+        continue_data = tool.json_decode(continue_data)
+        if continue_data is None:
             raise crawler.CrawlerException("相册信息加载失败\n%s" % script_data_html)
         try:
             continue_token = continue_data[0][2]["113305010"][3]

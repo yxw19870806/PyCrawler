@@ -8,7 +8,6 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 import base64
-import json
 import os
 import re
 import threading
@@ -58,9 +57,8 @@ def get_audio_play_page(audio_id, song_type):
         audio_info_string = base64.b64decode(audio_info_string)
     except TypeError:
         raise crawler.CrawlerException("加密歌曲信息解密失败\n%s" % audio_info_string)
-    try:
-        audio_info = json.loads(audio_info_string)
-    except ValueError:
+    audio_info = tool.json_decode(audio_info_string)
+    if audio_info is None:
         raise crawler.CrawlerException("歌曲信息加载失败\n%s" % audio_info_string)
     if not crawler.check_sub_key(("file",), audio_info):
         raise crawler.CrawlerException("歌曲信息'file'字段不存在\n%s" % audio_info)

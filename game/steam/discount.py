@@ -44,12 +44,7 @@ def load_discount_list():
     if os.path.getmtime(DISCOUNT_DATA_PATH) < last_api_update_time < time.time():
         output.print_msg("discount game list expired")
         return discount_game_list
-    try:
-        discount_game_list = json.loads(tool.read_file(DISCOUNT_DATA_PATH))
-    except ValueError:
-        pass
-    except TypeError:
-        pass
+    discount_game_list = tool.json_decode(tool.read_file(DISCOUNT_DATA_PATH), discount_game_list)
     return discount_game_list
 
 

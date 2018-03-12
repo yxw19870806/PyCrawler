@@ -26,22 +26,14 @@ def init():
 
     # 文件存在，检查格式是否正确
     if os.path.exists(token_file_path):
-        api_info = tool.decrypt_string(tool.read_file(token_file_path))
-        if api_info is not None:
-            try:
-                api_info = json.loads(api_info)
-            except ValueError:
-                output.print_msg("decrypt api info failure")
+        api_info = tool.json_decode(tool.decrypt_string(tool.read_file(token_file_path)), [])
+        if crawler.check_sub_key(("api_key", "api_secret"), api_info):
+            # 验证token是否有效
+            if get_access_token(api_info["api_key"], api_info["api_secret"]):
+                output.print_msg("access token get succeed!")
+                return True
             else:
-                if crawler.check_sub_key(("api_key", "api_secret"), api_info):
-                    # 验证token是否有效
-                    if get_access_token(api_info["api_key"], api_info["api_secret"]):
-                        output.print_msg("access token get succeed!")
-                        return True
-                    else:
-                        output.print_msg("api info has expired")
-                else:
-                    output.print_msg("incorrect api info")
+                output.print_msg("api info has expired")
         else:
             output.print_msg("decrypt api info failure")
         # token已经无效了，删除掉
