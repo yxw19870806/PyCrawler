@@ -30,7 +30,7 @@ SUB_PATH_LIST = {
 
 
 # 获取指定一页的图集
-def get_one_page_album(sub_path, page_count):
+def get_album_page(sub_path, page_count):
     album_pagination_url = "http://www.88mmw.com/%s/list_%s_%s.html" % (sub_path, SUB_PATH_LIST[sub_path], page_count)
     album_pagination_response = net.http_request(album_pagination_url, method="GET")
     result = {
@@ -185,15 +185,15 @@ class Download(crawler.DownloadThread):
 
             # 获取一页图集
             try:
-                album_pagination_response = get_one_page_album(self.sub_path, page_count)
+                album_response = get_album_page(self.sub_path, page_count)
             except crawler.CrawlerException, e:
                 log.error(self.sub_path + " 第%s页图集解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            log.trace(self.sub_path + " 第%s页解析的全部图集：%s" % (page_count, album_pagination_response["album_info_list"]))
+            log.trace(self.sub_path + " 第%s页解析的全部图集：%s" % (page_count, album_response["album_info_list"]))
 
             # 寻找这一页符合条件的图集
-            for album_info in album_pagination_response["album_info_list"]:
+            for album_info in album_response["album_info_list"]:
                 # 检查是否达到存档记录
                 if int(album_info["page_id"]) > int(self.account_info[1]):
                     album_info_list.append(album_info)
@@ -202,7 +202,7 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if album_pagination_response["is_over"]:
+                if album_response["is_over"]:
                     is_over = True
                 else:
                     page_count += 1
