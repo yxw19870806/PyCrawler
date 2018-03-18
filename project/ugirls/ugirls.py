@@ -109,6 +109,7 @@ class UGirls(crawler.Crawler):
                     continue
 
                 log.trace("第%s页图集解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
+                log.step("图集%s解析获取%s张图片" % (album_id, len(album_response["image_url_list"])))
 
                 image_index = 1
                 temp_path = album_path = os.path.join(self.image_download_path, "%04d %s" % (album_id, album_response["model_name"]))
