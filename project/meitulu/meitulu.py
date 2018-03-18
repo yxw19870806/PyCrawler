@@ -32,7 +32,7 @@ def get_index_page():
 
 
 # 获取指定一页的图集
-def get_one_page_album(album_id):
+def get_album_page(album_id):
     page_count = max_page_count = 1
     result = {
         "album_title": "",  # 图集标题
@@ -118,27 +118,27 @@ class MeiTuLu(crawler.Crawler):
 
                 # 获取相册
                 try:
-                    album_pagination_response = get_one_page_album(album_id)
+                    album_response = get_album_page(album_id)
                 except crawler.CrawlerException, e:
                     log.error("图集%s解析失败，原因：%s" % (album_id, e.message))
                     raise
 
-                if album_pagination_response["is_delete"]:
+                if album_response["is_delete"]:
                     log.step("图集%s不存在，跳过" % album_id)
                     album_id += 1
                     continue
 
-                log.trace("图集%s解析的全部图片：%s" % (album_id, album_pagination_response["image_url_list"]))
+                log.trace("图集%s解析的全部图片：%s" % (album_id, album_response["image_url_list"]))
 
                 image_index = 1
                 # 过滤标题中不支持的字符
-                album_title = path.filter_text(album_pagination_response["album_title"])
+                album_title = path.filter_text(album_response["album_title"])
                 if album_title:
                     album_path = os.path.join(self.image_download_path, "%05d %s" % (album_id, album_title))
                 else:
                     album_path = os.path.join(self.image_download_path, "%05d" % album_id)
                 temp_path = album_path
-                for image_url in album_pagination_response["image_url_list"]:
+                for image_url in album_response["image_url_list"]:
                     if not self.is_running():
                         tool.process_exit(0)
                     image_url = get_image_url(image_url)
