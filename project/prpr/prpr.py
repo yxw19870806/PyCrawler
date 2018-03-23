@@ -14,7 +14,8 @@ import traceback
 POST_COUNT_PER_PAGE = 10  # 每次获取的作品数量（貌似无效）
 IS_SKIP_BLUR = False
 IS_STEP_INVALID_RESOURCE = False
-INVALID_FILE_MD5_LIST = ["a0792e03453f9a5386291ded7ed41df7", "c95c5abfad14eb2075eea1d30d4fc9cd", "dff069e92a12faa75d69a26d1a44e416", "edc44947e040b52b9f9a0eb61ba9ad9e"]
+INVALID_FILE_MD5_LIST = ["72f7b6abc4dcf3472e8947671f777af0", "74d76058bab15418059fb38b45c40f81", "a0792e03453f9a5386291ded7ed41df7", "c95c5abfad14eb2075eea1d30d4fc9cd",
+                         "d8d67300752171b62bf8b7ca1b951cea", "dff069e92a12faa75d69a26d1a44e416", "edc44947e040b52b9f9a0eb61ba9ad9e", "f63b9703ae0795d33f1354e90c9256f5"]
 
 
 # 获取指定时间后的一页作品
