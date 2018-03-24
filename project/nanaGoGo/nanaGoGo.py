@@ -86,6 +86,7 @@ class NanaGoGo(crawler.Crawler):
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
+            crawler.SYS_SET_PROXY: True,
         }
         crawler.Crawler.__init__(self, sys_config)
 
