@@ -11,5 +11,3 @@
 1. 为访问非公开或受限制的内容，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
 如果没有检测到浏览器中的登录信息，在程序执行时会提示是否继续
 如需访问受限制的内容，请在账号safe search（https://www.flickr.com/account/prefs/safesearch/?from=privacy）中选择"關閉安全搜尋"
-2. 默认使用代理访问（参数IS_PROXY=2时也有效果）
-	

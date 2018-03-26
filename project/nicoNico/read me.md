@@ -7,6 +7,5 @@
 地址类似为**http://www.nicovideo.jp/mylist/[1234567]**，其中[]中的数字（实际不包括[]）就是账号的ID
 
 ## 配置参数
-1. 默认使用代理访问（参数IS_PROXY=2时也有效果）
-3. 为调用请求，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
+1. 为调用请求，需要配置浏览器类型，参数：BROWSER_TYPE、IS_AUTO_GET_COOKIE、COOKIE_PATH
 如果没有检测到浏览器中的登录状态，程序会退出执行
