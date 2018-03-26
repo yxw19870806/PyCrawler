@@ -42,7 +42,7 @@ CONFIG_ANALYSIS_MODE_PATH = 3
 class Crawler(object):
     print_function = None
     thread_event = None
-    prcess_status = True  # 主进程是否在运行
+    process_status = True  # 主进程是否在运行
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -268,7 +268,7 @@ class Crawler(object):
     def stop_process(self):
         output.print_msg("stop process")
         net.resume_request
-        self.prcess_status = False
+        self.process_status = False
 
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
@@ -276,7 +276,7 @@ class Crawler(object):
         return int(time.time() - self.start_time)
 
     def is_running(self):
-        return self.prcess_status
+        return self.process_status
 
     def wait_sub_thread(self):
         self.thread_condition.acquire()
