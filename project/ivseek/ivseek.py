@@ -107,7 +107,7 @@ class IvSeek(crawler.Crawler):
     def __init__(self):
         sys_config = {
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
-            crawler.SYS_NOT_DOWNLAOD: True,
+            crawler.SYS_NOT_DOWNLOAD: True,
             crawler.SYS_SET_PROXY: True,
         }
         crawler.Crawler.__init__(self, sys_config)
