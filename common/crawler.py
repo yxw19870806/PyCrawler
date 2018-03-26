@@ -52,7 +52,7 @@ class Crawler(object):
             self.print_function(msg)
 
     # 程序全局变量的设置
-    def __init__(self, sys_config, extra_config=None):
+    def __init__(self, sys_config, extra_config={}):
         self.start_time = time.time()
 
         # 程序启动配置
@@ -77,8 +77,8 @@ class Crawler(object):
 
         # 程序配置
         config = read_config(config_path)
-        if not isinstance(extra_config, dict):
-            extra_config = {}
+        # 额外配置
+        config.update(extra_config)
 
         # 应用配置
         self.app_config = {}
@@ -138,10 +138,7 @@ class Crawler(object):
                 return
 
         # 存档
-        if "save_data_path" in extra_config:
-            self.save_data_path = os.path.realpath(extra_config["save_data_path"])
-        else:
-            self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
             # 存档文件不存在
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
@@ -158,10 +155,7 @@ class Crawler(object):
         # 是否需要下载图片
         if self.is_download_image:
             # 图片保存目录
-            if "image_download_path" in extra_config:
-                self.image_download_path = os.path.realpath(extra_config["image_download_path"])
-            else:
-                self.image_download_path = analysis_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
+            self.image_download_path = analysis_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.image_download_path):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
@@ -172,10 +166,7 @@ class Crawler(object):
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
-            if "video_download_path" in extra_config:
-                self.video_download_path = os.path.realpath(extra_config["video_download_path"])
-            else:
-                self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
+            self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.video_download_path):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
