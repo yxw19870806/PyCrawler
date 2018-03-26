@@ -341,9 +341,12 @@ class CrawlerException(SystemExit):
 
 def read_config(config_path):
     """Read config file"""
-    config = ConfigParser.SafeConfigParser()
+    config = {}
     with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
-        config.readfp(file_handle)
+        config_file = ConfigParser.SafeConfigParser()
+        config_file.readfp(file_handle)
+        for key, value in config_file.items("setting"):
+            config[key.encode("UTF-8")] = value.encode("UTF-8")
     return config
 
 
@@ -370,8 +373,9 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
                     startup with '\', project root path
                     startup with '\\', application root path
     """
-    if isinstance(config, ConfigParser.SafeConfigParser) and config.has_option("setting", key):
-        value = config.get("setting", key).encode("UTF-8")
+    key = key.lower()
+    if isinstance(config, dict) and key in config:
+        value = config[key]
     else:
         output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
