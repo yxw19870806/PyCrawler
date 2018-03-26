@@ -27,10 +27,8 @@ SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
 SYS_NOT_DOWNLOAD = "no_download"
 # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
 SYS_GET_COOKIE = "get_cookie"
-# 程序是否需要额外读取配置（应用级别）
-# 传入参数类型为tuple，且长度至少为二
-# 第一位是配置文件所在路径
-# 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
+# 应用额外配置
+# 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
 
 CONFIG_ANALYSIS_MODE_RAW = 0
@@ -77,17 +75,17 @@ class Crawler(object):
 
         # 程序配置
         config = read_config(config_path)
+        # 应用配置
+        app_config_path = os.path.realpath(os.path.join(os.getcwd(), "app.ini"))
+        if os.path.exists(app_config_path):
+            config.update(read_config(app_config_path))
         # 额外配置
         config.update(extra_config)
 
         # 应用配置
         self.app_config = {}
-        if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) >= 2:
-            if os.path.exists(sys_config[SYS_APP_CONFIG][0]):
-                app_config = read_config(sys_config[SYS_APP_CONFIG][0])
-            else:
-                app_config = {}
-            for app_config_template in sys_config[SYS_APP_CONFIG][1:]:
+        if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) > 0:
+            for app_config_template in sys_config[SYS_APP_CONFIG]:
                 if len(app_config_template) == 3:
                     self.app_config[app_config_template[0]] = analysis_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
 
