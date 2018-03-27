@@ -119,7 +119,6 @@ class PrPr(crawler.Crawler):
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_APP_CONFIG: (
-                os.path.realpath("config.ini"),
                 ("IS_STEP_INVALID_RESOURCE", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_SKIP_BLUR", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
