@@ -173,14 +173,6 @@ def get_media_page(page_id):
     return result
 
 
-# 去除图片地址中特效相关的设置，获取原始地址
-def get_image_url(image_url):
-    image_url_protocol, image_url_path = urllib.splittype(image_url)
-    image_url_host = urllib.splithost(image_url_path)[0]
-    image_url_name = image_url.split("/")[-1]
-    return "%s://%s//%s" % (image_url_protocol, image_url_host, image_url_name)
-
-
 class Instagram(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
@@ -302,7 +294,6 @@ class Download(crawler.DownloadThread):
             for image_url in image_url_list:
                 self.main_thread_check()  # 检测主线程运行状态
                 # 去除特效，获取原始路径
-                image_url = get_image_url(image_url)
                 log.step(self.account_name + " 开始下载第%s张图片 %s" % (image_index, image_url))
 
                 file_type = image_url.split(".")[-1]
