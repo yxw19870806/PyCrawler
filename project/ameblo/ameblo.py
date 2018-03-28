@@ -96,15 +96,17 @@ def get_blog_page(account_name, blog_id):
     if blog_response.data.find('<h1 data-uranus-component="amemberLoginHeading">この記事はアメンバーさん限定です。</h1>') >= 0:
         raise crawler.CrawlerException("日志只限会员访问")
     # 截取日志正文部分（有多种页面模板）
-    article_data = tool.find_sub_string(blog_response.data, '<div class="subContentsInner">', "<!--entryBottom-->", 1)
-    if not article_data:
-        article_data = tool.find_sub_string(blog_response.data, '<div class="articleText">', "<!--entryBottom-->", 1)
-    if not article_data:
-        article_data = tool.find_sub_string(blog_response.data, '<div class="skin-entryInner">', "<!-- /skin-entry -->", 1)
-    if not article_data:
+    article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
+    article_html = None
+    for article_class in article_class_list:
+        article_html_selector = PQ(blog_response.data).find("." + article_class)
+        if article_html_selector.length == 1:
+            article_html = article_html_selector.html()
+            break
+    if article_html is None:
         raise crawler.CrawlerException("页面截取正文失败\n%s" % blog_response.data)
     # 获取图片地址
-    image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_data)
+    image_url_list = re.findall('<img [\S|\s]*?src="(http[^"]*)" [\S|\s]*?>', article_html)
     result["image_url_list"] = map(str, image_url_list)
     return result
 
