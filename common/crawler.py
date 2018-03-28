@@ -50,7 +50,7 @@ class Crawler(object):
             self.print_function(msg)
 
     # 程序全局变量的设置
-    def __init__(self, sys_config, extra_config={}):
+    def __init__(self, sys_config, extra_config=None):
         self.start_time = time.time()
 
         # 程序启动配置
@@ -80,7 +80,8 @@ class Crawler(object):
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外配置
-        config.update(extra_config)
+        if isinstance(extra_config, dict):
+            config.update(extra_config)
 
         # 应用配置
         self.app_config = {}
