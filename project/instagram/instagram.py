@@ -7,25 +7,83 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+import json
 import os
 import threading
 import time
 import traceback
-import urllib
 
+IS_LOCAL_SAVE_SESSION = False
 IMAGE_COUNT_PER_PAGE = 12
 QUERY_ID = "17859156310193001"
-COOKIE_INFO = {}
+COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
+SESSION_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "session"))
+
+
+# 生成session cookies
+def init_session():
+    # 如果有登录信息（初始化时从浏览器中获得）
+    if COOKIE_INFO["sessionid"]:
+        return True
+    home_url = "https://www.instagram.com/"
+    home_response = net.http_request(home_url, method="GET")
+    if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        set_cookie = net.get_cookies_from_response_header(home_response.headers)
+        if "csrftoken" in set_cookie and "mid" in set_cookie:
+            COOKIE_INFO["csrftoken"] = set_cookie["csrftoken"]
+            COOKIE_INFO["mid"] = set_cookie["mid"]
+            return True
+    return False
 
 
 # 检测登录状态
 def check_login():
-    if not COOKIE_INFO:
-        return False
-    index_url = "https://www.instagram.com/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
-    if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return index_response.data.find("'external_id':") >= 0
+    if not COOKIE_INFO["sessionid"]:
+        # 从文件中读取账号密码
+        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_FILE_PATH)), {})
+        if crawler.check_sub_key(("email", "password"), account_data):
+            if _do_login(account_data["email"], account_data["password"]):
+                return True
+    else:
+        index_url = "https://www.instagram.com/"
+        index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
+        if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+            return index_response.data.find("'external_id':") >= 0
+    return False
+
+
+# 登录
+def login_from_console():
+    # 从命令行中输入账号密码
+    while True:
+        email = output.console_input(crawler.get_time() + " 请输入邮箱: ")
+        password = output.console_input(crawler.get_time() + " 请输入密码: ")
+        while True:
+            input_str = output.console_input(crawler.get_time() + " 是否使用这些信息(Y)es或重新输入(N)o: ")
+            input_str = input_str.lower()
+            if input_str in ["y", "yes"]:
+                if _do_login(email, password):
+                    if IS_LOCAL_SAVE_SESSION:
+                        account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
+                        tool.write_file(account_info_encrypt_string, SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                    return True
+                return False
+            elif input_str in ["n", "no"]:
+                break
+
+
+# 模拟登录请求
+def _do_login(email, password):
+    login_url = "https://www.instagram.com/accounts/login/ajax/"
+    login_post = {"username": email, "password": password, "next": "/"}
+    header_list = {"referer": "https://www.instagram.com/", "x-csrftoken": COOKIE_INFO["csrftoken"]}
+    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
+    if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if crawler.check_sub_key(("authenticated",), login_response.json_data) and login_response.json_data["authenticated"] is True:
+            set_cookie = net.get_cookies_from_response_header(login_response.headers)
+            if "sessionid" in set_cookie:
+                COOKIE_INFO["sessionid"] = set_cookie["sessionid"]
+                return True
     return False
 
 
@@ -176,26 +234,42 @@ def get_media_page(page_id):
 class Instagram(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
+        global IS_LOCAL_SAVE_SESSION
 
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {"www.instagram.com": ()},
+            crawler.SYS_GET_COOKIE: {"www.instagram.com": ("csrftoken", "sessionid", "mid")},
+            crawler.SYS_APP_CONFIG: (
+                ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
+        COOKIE_INFO.update(self.cookie_value)
+        IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
 
         # 解析存档文件
         # account_name  account_id  image_count  video_count  last_created_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
 
+        # 生成session信息
+        init_session()
+
         # 检测登录状态
         if not check_login():
-            log.error("没有检测到账号登录状态，退出程序！")
-            tool.process_exit()
+            while True:
+                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，手动输入账号密码登录继续(C)ontinue？或者退出程序(E)xit？:")
+                input_str = input_str.lower()
+                if input_str in ["c", "yes"]:
+                    if login_from_console():
+                        break
+                    else:
+                        log.step("登录失败！")
+                elif input_str in ["e", "exit"]:
+                    tool.process_exit()
 
     def main(self):
         # 循环下载每个id
