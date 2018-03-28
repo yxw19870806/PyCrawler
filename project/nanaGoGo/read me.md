@@ -7,6 +7,3 @@
 ## 账号ID获取步骤
 点击任意账号，进入主页
 地址类似为**https://7gogo.jp/[abcde-fghij]**，其中[]中的字符（实际不包括[]）就是账号的ID
-
-## 配置参数
-1. 可配置是否单独下载图片和视频，参数：IS_DOWNLOAD_IMAGE、IS_DOWNLOAD_VIDEO

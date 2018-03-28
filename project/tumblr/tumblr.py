@@ -396,7 +396,6 @@ class Tumblr(crawler.Crawler):
             crawler.SYS_GET_COOKIE: {".tumblr.com": (), "www.tumblr.com": ()},
             crawler.SYS_SET_PROXY: True,
             crawler.SYS_APP_CONFIG: (
-                os.path.realpath("config.ini"),
                 ("USER_AGENT", "", crawler.CONFIG_ANALYSIS_MODE_RAW),
                 ("IS_STEP_ERROR_403_AND_404", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
             ),

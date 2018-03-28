@@ -24,13 +24,11 @@ SYS_SET_PROXY = "set_proxy"
 # 程序是否支持不需要存档文件就可以开始运行
 SYS_NOT_CHECK_SAVE_DATA = "no_save_data"
 # 程序没有任何下载行为
-SYS_NOT_DOWNLAOD = "no_download"
+SYS_NOT_DOWNLOAD = "no_download"
 # 程序是否需要从浏览器存储的cookie中获取指定cookie的值
 SYS_GET_COOKIE = "get_cookie"
-# 程序是否需要额外读取配置（应用级别）
-# 传入参数类型为tuple，且长度至少为二
-# 第一位是配置文件所在路径
-# 第二位开始是配置规则，类型为tuple，每个配置规则长度为3，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
+# 应用额外配置
+# 传入参数类型为tuple，每一位参数为长度3的tuple，顺序为(配置名字，默认值，配置读取方式)，同analysis_config方法后三个参数
 SYS_APP_CONFIG = "app_config"
 
 CONFIG_ANALYSIS_MODE_RAW = 0
@@ -42,7 +40,7 @@ CONFIG_ANALYSIS_MODE_PATH = 3
 class Crawler(object):
     print_function = None
     thread_event = None
-    prcess_status = True  # 主进程是否在运行
+    process_status = True  # 主进程是否在运行
 
     # 输出错误日志
     def print_msg(self, msg):
@@ -65,7 +63,7 @@ class Crawler(object):
         sys_set_proxy = SYS_SET_PROXY in sys_config
         sys_get_cookie = SYS_GET_COOKIE in sys_config
         sys_not_check_save_data = SYS_NOT_CHECK_SAVE_DATA in sys_config
-        sys_not_download= SYS_NOT_DOWNLAOD in sys_config
+        sys_not_download = SYS_NOT_DOWNLOAD in sys_config
 
         # exe程序
         if tool.IS_EXECUTABLE:
@@ -77,19 +75,20 @@ class Crawler(object):
 
         # 程序配置
         config = read_config(config_path)
-        if not isinstance(extra_config, dict):
-            extra_config = {}
+        # 应用配置
+        app_config_path = os.path.realpath(os.path.join(os.getcwd(), "app.ini"))
+        if os.path.exists(app_config_path):
+            config.update(read_config(app_config_path))
+        # 额外配置
+        if isinstance(extra_config, dict):
+            config.update(extra_config)
 
         # 应用配置
         self.app_config = {}
-        if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) >= 2:
-            if os.path.exists(sys_config[SYS_APP_CONFIG][0]):
-                app_config = read_config(sys_config[SYS_APP_CONFIG][0])
-            else:
-                app_config = {}
-            for app_config_template in sys_config[SYS_APP_CONFIG][1:]:
+        if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) > 0:
+            for app_config_template in sys_config[SYS_APP_CONFIG]:
                 if len(app_config_template) == 3:
-                    self.app_config[app_config_template[0]] = analysis_config(app_config, app_config_template[0], app_config_template[1], app_config_template[2])
+                    self.app_config[app_config_template[0]] = analysis_config(sys_config[SYS_APP_CONFIG], app_config_template[0], app_config_template[1], app_config_template[2])
 
         # 日志
         log.IS_SHOW_ERROR = self.is_show_error = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
@@ -138,10 +137,7 @@ class Crawler(object):
                 return
 
         # 存档
-        if "save_data_path" in extra_config:
-            self.save_data_path = os.path.realpath(extra_config["save_data_path"])
-        else:
-            self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
+        self.save_data_path = analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
         if not sys_not_check_save_data and not os.path.exists(self.save_data_path):
             # 存档文件不存在
             self.print_msg("存档文件%s不存在！" % self.save_data_path)
@@ -158,10 +154,7 @@ class Crawler(object):
         # 是否需要下载图片
         if self.is_download_image:
             # 图片保存目录
-            if "image_download_path" in extra_config:
-                self.image_download_path = os.path.realpath(extra_config["image_download_path"])
-            else:
-                self.image_download_path = analysis_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
+            self.image_download_path = analysis_config(config, "IMAGE_DOWNLOAD_PATH", "\\\\photo", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.image_download_path):
                 # 图片保存目录创建失败
                 self.print_msg("图片保存目录%s创建失败！" % self.image_download_path)
@@ -172,10 +165,7 @@ class Crawler(object):
         # 是否需要下载视频
         if self.is_download_video:
             # 视频保存目录
-            if "video_download_path" in extra_config:
-                self.video_download_path = os.path.realpath(extra_config["video_download_path"])
-            else:
-                self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
+            self.video_download_path = analysis_config(config, "VIDEO_DOWNLOAD_PATH", "\\\\video", CONFIG_ANALYSIS_MODE_PATH)
             if not path.create_dir(self.video_download_path):
                 # 视频保存目录创建失败
                 self.print_msg("视频保存目录%s创建失败！" % self.video_download_path)
@@ -268,7 +258,7 @@ class Crawler(object):
     def stop_process(self):
         output.print_msg("stop process")
         net.resume_request
-        self.prcess_status = False
+        self.process_status = False
 
     # 获取程序已运行时间（seconds）
     def get_run_time(self):
@@ -276,7 +266,7 @@ class Crawler(object):
         return int(time.time() - self.start_time)
 
     def is_running(self):
-        return self.prcess_status
+        return self.process_status
 
     def wait_sub_thread(self):
         self.thread_condition.acquire()
@@ -341,9 +331,12 @@ class CrawlerException(SystemExit):
 
 def read_config(config_path):
     """Read config file"""
-    config = ConfigParser.SafeConfigParser()
+    config = {}
     with codecs.open(path.change_path_encoding(config_path), encoding="UTF-8-SIG") as file_handle:
-        config.readfp(file_handle)
+        config_file = ConfigParser.SafeConfigParser()
+        config_file.readfp(file_handle)
+        for key, value in config_file.items("setting"):
+            config[key.encode("UTF-8")] = value.encode("UTF-8")
     return config
 
 
@@ -370,8 +363,9 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
                     startup with '\', project root path
                     startup with '\\', application root path
     """
-    if isinstance(config, ConfigParser.SafeConfigParser) and config.has_option("setting", key):
-        value = config.get("setting", key).encode("UTF-8")
+    key = key.lower()
+    if isinstance(config, dict) and key in config:
+        value = config[key]
     else:
         output.print_msg("配置文件config.ini中没有找到key为'" + key + "'的参数，使用程序默认设置")
         value = default_value
