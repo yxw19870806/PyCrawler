@@ -88,7 +88,7 @@ class Crawler(object):
         if SYS_APP_CONFIG in sys_config and len(sys_config[SYS_APP_CONFIG]) > 0:
             for app_config_template in sys_config[SYS_APP_CONFIG]:
                 if len(app_config_template) == 3:
-                    self.app_config[app_config_template[0]] = analysis_config(sys_config[SYS_APP_CONFIG], app_config_template[0], app_config_template[1], app_config_template[2])
+                    self.app_config[app_config_template[0]] = analysis_config(config, app_config_template[0], app_config_template[1], app_config_template[2])
 
         # 日志
         log.IS_SHOW_ERROR = self.is_show_error = analysis_config(config, "IS_SHOW_ERROR", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
