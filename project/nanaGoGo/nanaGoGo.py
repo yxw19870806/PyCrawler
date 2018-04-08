@@ -28,56 +28,55 @@ def get_one_page_blog(account_name, target_id):
     result = {
         "blog_info_list": [],  # 全部日志信息
     }
-    if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if not crawler.check_sub_key(("data",), blog_pagination_response.json_data):
-            raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % blog_pagination_response.json_data)
-        if not isinstance(blog_pagination_response.json_data["data"], list):
-            raise crawler.CrawlerException("返回信息'data'字段类型不正确\n%s" % blog_pagination_response.json_data)
-        for blog_info in blog_pagination_response.json_data["data"]:
-            result_blog_info = {
-                "blog_id": None,  # 日志id
-                "image_url_list": [],  # 全部图片地址
-                "video_url_list": [],  # 全部视频地址
-            }
-            if not crawler.check_sub_key(("post",), blog_info):
-                raise crawler.CrawlerException("日志信息'post'字段不存在\n%s" % blog_info)
-            # 获取日志id
-            if not crawler.check_sub_key(("postId",), blog_info["post"]):
-                raise crawler.CrawlerException("日志信息'postId'字段不存在\n%s" % blog_info)
-            if not crawler.is_integer(blog_info["post"]["postId"]):
-                raise crawler.CrawlerException("日志信息'postId'类型不正确n%s" % blog_info)
-            result_blog_info["blog_id"] = str(blog_info["post"]["postId"])
-            # 获取日志内容
-            if not crawler.check_sub_key(("body",), blog_info["post"]):
-                raise crawler.CrawlerException("日志信息'body'字段不存在\n%s" % blog_info)
-            for blog_body in blog_info["post"]["body"]:
-                if not crawler.check_sub_key(("bodyType",), blog_body):
-                    raise crawler.CrawlerException("日志信息'bodyType'字段不存在\n%s" % blog_body)
-                if not crawler.is_integer(blog_body["bodyType"]):
-                    raise crawler.CrawlerException("日志信息'bodyType'字段类型不正确\n%s" % blog_body)
-                # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
-                body_type = int(blog_body["bodyType"])
-                if body_type == 1:  # 文本
-                    continue
-                elif body_type == 2:  # 表情
-                    continue
-                elif body_type == 3:  # 图片
-                    if not crawler.check_sub_key(("image",), blog_body):
-                        raise crawler.CrawlerException("日志信息'image'字段不存在\n%s" % blog_body)
-                    result_blog_info["image_url_list"].append(str(blog_body["image"]))
-                elif body_type == 7:  # 转发
-                    continue
-                elif body_type == 8:  # video
-                    if not crawler.check_sub_key(("movieUrlHq",), blog_body):
-                        raise crawler.CrawlerException("日志信息'movieUrlHq'字段不存在\n%s" % blog_body)
-                    result_blog_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
-                else:
-                    raise crawler.CrawlerException("日志信息'bodyType'字段取值不正确\n%s" % blog_body)
-            result["blog_info_list"].append(result_blog_info)
-    elif target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
+    if target_id == INIT_TARGET_ID and blog_pagination_response.status == 400:
         raise crawler.CrawlerException("talk不存在")
-    else:
+    elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+    if not crawler.check_sub_key(("data",), blog_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % blog_pagination_response.json_data)
+    if not isinstance(blog_pagination_response.json_data["data"], list):
+        raise crawler.CrawlerException("返回信息'data'字段类型不正确\n%s" % blog_pagination_response.json_data)
+    for blog_info in blog_pagination_response.json_data["data"]:
+        result_blog_info = {
+            "blog_id": None,  # 日志id
+            "image_url_list": [],  # 全部图片地址
+            "video_url_list": [],  # 全部视频地址
+        }
+        if not crawler.check_sub_key(("post",), blog_info):
+            raise crawler.CrawlerException("日志信息'post'字段不存在\n%s" % blog_info)
+        # 获取日志id
+        if not crawler.check_sub_key(("postId",), blog_info["post"]):
+            raise crawler.CrawlerException("日志信息'postId'字段不存在\n%s" % blog_info)
+        if not crawler.is_integer(blog_info["post"]["postId"]):
+            raise crawler.CrawlerException("日志信息'postId'类型不正确n%s" % blog_info)
+        result_blog_info["blog_id"] = str(blog_info["post"]["postId"])
+        # 获取日志内容
+        if not crawler.check_sub_key(("body",), blog_info["post"]):
+            raise crawler.CrawlerException("日志信息'body'字段不存在\n%s" % blog_info)
+        for blog_body in blog_info["post"]["body"]:
+            if not crawler.check_sub_key(("bodyType",), blog_body):
+                raise crawler.CrawlerException("日志信息'bodyType'字段不存在\n%s" % blog_body)
+            if not crawler.is_integer(blog_body["bodyType"]):
+                raise crawler.CrawlerException("日志信息'bodyType'字段类型不正确\n%s" % blog_body)
+            # bodyType = 1: text, bodyType = 3: image, bodyType = 8: video
+            body_type = int(blog_body["bodyType"])
+            if body_type == 1:  # 文本
+                continue
+            elif body_type == 2:  # 表情
+                continue
+            elif body_type == 3:  # 图片
+                if not crawler.check_sub_key(("image",), blog_body):
+                    raise crawler.CrawlerException("日志信息'image'字段不存在\n%s" % blog_body)
+                result_blog_info["image_url_list"].append(str(blog_body["image"]))
+            elif body_type == 7:  # 转发
+                continue
+            elif body_type == 8:  # video
+                if not crawler.check_sub_key(("movieUrlHq",), blog_body):
+                    raise crawler.CrawlerException("日志信息'movieUrlHq'字段不存在\n%s" % blog_body)
+                result_blog_info["video_url_list"].append(str(blog_body["movieUrlHq"]))
+            else:
+                raise crawler.CrawlerException("日志信息'bodyType'字段取值不正确\n%s" % blog_body)
+        result["blog_info_list"].append(result_blog_info)
     return result
 
 
