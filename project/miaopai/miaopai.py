@@ -46,20 +46,19 @@ def get_one_page_video(suid, page_count):
         "is_over": False,  # 是不是最后一页视频
         "video_id_list": [],  # 全部视频id
     }
-    if video_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 判断是不是最后一页
-        if not crawler.check_sub_key(("isall",), video_pagination_response.json_data):
-            raise crawler.CrawlerException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
-        result["is_over"] = bool(video_pagination_response.json_data["isall"])
-        # 获取全部视频id
-        if not crawler.check_sub_key(("msg",), video_pagination_response.json_data):
-            raise crawler.CrawlerException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
-        video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
-        if not result["is_over"] and len(video_id_list) == 0:
-            raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response.json_data)
-        result["video_id_list"] = map(str, video_id_list)
-    else:
+    if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
+    # 判断是不是最后一页
+    if not crawler.check_sub_key(("isall",), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'isall'字段不存在\n%s" % video_pagination_response.json_data)
+    result["is_over"] = bool(video_pagination_response.json_data["isall"])
+    # 获取全部视频id
+    if not crawler.check_sub_key(("msg",), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'msg'字段不存在\n%s" % video_pagination_response.json_data)
+    video_id_list = re.findall('data-scid="([^"]*)"', video_pagination_response.json_data["msg"])
+    if not result["is_over"] and len(video_id_list) == 0:
+        raise crawler.CrawlerException("页面匹配视频id失败\n%s" % video_pagination_response.json_data)
+    result["video_id_list"] = map(str, video_id_list)
     return result
 
 
@@ -71,20 +70,19 @@ def get_video_info_page(video_id):
     result = {
         "video_url_list": [],  # 视频地址
     }
-    if video_info_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        # 获取视频地址
-        if not crawler.check_sub_key(("result",), video_info_response.json_data):
-            raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % video_info_response.json_data)
-        # 存在多个CDN地址
-        video_url_list = []
-        for result in video_info_response.json_data["result"]:
-            if crawler.check_sub_key(("path", "host", "scheme"), result):
-                video_url_list.append(str(result["scheme"]) + str(result["host"]) + str(result["path"]))
-        if len(video_url_list) == 0:
-            raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
-        result["video_url_list"] = video_url_list
-    else:
+    if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_info_response.status))
+    # 获取视频地址
+    if not crawler.check_sub_key(("result",), video_info_response.json_data):
+        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % video_info_response.json_data)
+    # 存在多个CDN地址
+    video_url_list = []
+    for result in video_info_response.json_data["result"]:
+        if crawler.check_sub_key(("path", "host", "scheme"), result):
+            video_url_list.append(str(result["scheme"]) + str(result["host"]) + str(result["path"]))
+    if len(video_url_list) == 0:
+        raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
+    result["video_url_list"] = video_url_list
     return result
 
 
