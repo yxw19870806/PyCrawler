@@ -34,7 +34,6 @@ def get_account_index_page(account_name):
     if not crawler.is_integer(account_id):
         raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
     result["account_id"] = account_id
-
     return result
 
 
