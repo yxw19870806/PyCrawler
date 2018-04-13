@@ -6,6 +6,7 @@ deprecation/yasaxi/token
 project/*/photo/
 project/*/video/
 project/bcy/session
+project/instagram/session
 project/twitter/token
 project/vliao/token
 game/steam/account.data
