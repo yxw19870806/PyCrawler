@@ -31,6 +31,12 @@ def get_one_page_video(account_id, page_count):
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_pagination_response.status))
     # 判断是不是最后一页
+    if not crawler.check_sub_key(("result",), video_pagination_response.json_data):
+        raise crawler.CrawlerException("返回信息'result'字段不存在\n%s" % video_pagination_response.json_data)
+    if video_pagination_response.json_data["result"] is False:
+        if crawler.check_sub_key(("errorCode",), video_pagination_response.json_data) and video_pagination_response.json_data["errorCode"] == 3:
+            raise crawler.CrawlerException("账号不存在")
+    # 判断是不是最后一页
     if not crawler.check_sub_key(("maxPage",), video_pagination_response.json_data):
         raise crawler.CrawlerException("返回信息'maxPage'字段不存在\n%s" % video_pagination_response.json_data)
     if not crawler.is_integer(video_pagination_response.json_data["maxPage"]):
