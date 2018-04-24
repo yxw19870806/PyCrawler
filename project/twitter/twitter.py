@@ -120,9 +120,11 @@ def get_video_play_page(tweet_id):
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     # 包含m3u8文件地址的处理
     # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
-    m3u8_file_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
-    if m3u8_file_url:
-        m3u8_file_url = m3u8_file_url.replace("\\/", "/") + ".m3u8"
+    # m3u8_file_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
+    # https://video.twimg.com/ext_tw_video/980648602681819136/pu/pl/4-sBvk8YYvZm9HPH.m3u8?tag=3
+    m3u8_file_url_find = re.findall("&quot;video_url&quot;:&quot;(\S*.m3u8)(?:\?tag=\d)?&quot;,", video_play_response.data)
+    if len(m3u8_file_url_find) == 1:
+        m3u8_file_url = m3u8_file_url_find[0].replace("\\/", "/")
         file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
         file_url_host = urllib.splithost(file_url_path)[0]
         m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
@@ -306,7 +308,7 @@ class Download(crawler.DownloadThread):
                 save_file_return = net.save_net_file_list(video_url, video_file_path)
             # 其他格式的视频
             else:
-                video_file_type = video_url.split(".")[-1]
+                video_file_type = video_url.split("?")[0].split(".")[-1]
                 video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, video_file_type))
                 save_file_return = net.save_net_file(video_url, video_file_path)
             if save_file_return["status"] == 1:
