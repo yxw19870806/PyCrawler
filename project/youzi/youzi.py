@@ -50,7 +50,7 @@ def get_album_page(album_id):
         # 判断图集是否已经被删除
         if page_count == 1:
             # 获取图集标题
-            album_title = PQ(album_pagination_response.data.decode("UTF-8")).find("meta[name='description']").attr("content")
+            album_title = PQ(album_pagination_response.data.decode("UTF-8")).find("h1.articleV4Tit").text()
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
             result["album_title"] = album_title.encode("UTF-8")
