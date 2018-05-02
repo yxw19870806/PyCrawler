@@ -140,8 +140,11 @@ def get_one_page_media(account_id, cursor):
     if not isinstance(media_data["edges"], list):
         raise crawler.CrawlerException("返回数据'edges'字段类型不正确\n%s" % json_data)
     if len(media_data["edges"]) == 0:
-        if cursor == "" and int(media_data["count"]) > 0:
-            raise crawler.CrawlerException("私密账号，需要关注才能访问")
+        if cursor == "":
+            if int(media_data["count"]) > 0:
+                raise crawler.CrawlerException("私密账号，需要关注才能访问")
+            else: # 没有发布任何帖子
+                return result
         else:
             raise crawler.CrawlerException("返回数据'edges'字段长度不正确\n%s" % json_data)
     for media_info in media_data["edges"]:
