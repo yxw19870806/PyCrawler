@@ -240,7 +240,7 @@ class Instagram(crawler.Crawler):
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {"www.instagram.com": ("csrftoken", "sessionid", "mid")},
+            crawler.SYS_GET_COOKIE: {".instagram.com": ("csrftoken", "sessionid", "mid")},
             crawler.SYS_APP_CONFIG: (
                 ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
             ),
