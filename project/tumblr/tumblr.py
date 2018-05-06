@@ -305,11 +305,13 @@ def analysis_image(image_url):
         # https://78.media.tumblr.com/4612757fb6b608d2d14939833ed2e244/tumblr_ouao969iP51rqmr8lo1_540.jpg
         elif crawler.is_integer(temp_list[-1]):
             resolution = int(temp_list[-1])
-        elif temp_list[-1][0] == "h" and crawler.is_integer(temp_list[-1][1:]):
-            resolution = int(temp_list[-1][1:])
         # https://78.media.tumblr.com/19b0b807d374ed9e4ed22caf74cb1ec0/tumblr_mxukamH4GV1s4or9ao1_500h.jpg
         elif temp_list[-1][-1] == "h" and crawler.is_integer(temp_list[-1][:-1]):
             resolution = int(temp_list[-1][:-1])
+        # https://78.media.tumblr.com/5c0b9f4e8ac839a628863bb5d7255938/tumblr_inline_p6ve89vOZA1uhchy5_250sq.jpg
+        elif temp_list[-1][-2:] == "sq" and crawler.is_integer(temp_list[-1][:-2]):
+            image_url = image_url.replace("_250sq", "1280")
+            resolution = 1280
         # http://78.media.tumblr.com/tumblr_m9rwkpsRwt1rr15s5.jpg
         # http://78.media.tumblr.com/afd60c3d469055cea4544fe848eeb266/tumblr_inline_n9gff0sXMl1rzbdqg.gif
         # https://78.media.tumblr.com/tumblr_o7ec46zp5M1vpohsl_frame1.jpg
