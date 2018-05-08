@@ -74,27 +74,27 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
     elif browser_type == BROWSER_TYPE_FIREFOX:
         con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
-        cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
+        cur.execute("select host, path, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
             if _filter_domain(domain, target_domains):
                 continue
-            if cookie_info[4] == cookie_key:
-                return cookie_info[5]
+            if cookie_info[2] == cookie_key:
+                return cookie_info[3]
     elif browser_type == BROWSER_TYPE_CHROME:
         # chrome仅支持windows系统的解密
         if platform.system() != "Windows":
             return None
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
-        cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
+        cur.execute("select host_key, path, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             domain = cookie_info[0]
             if _filter_domain(domain, target_domains):
                 continue
-            if cookie_info[4] == cookie_key:
+            if cookie_info[2] == cookie_key:
                 try:
-                    value = win32crypt.CryptUnprotectData(cookie_info[6], None, None, None, 0)[1]
+                    value = win32crypt.CryptUnprotectData(cookie_info[4], None, None, None, 0)[1]
                 except:
                     return None
                 return value
@@ -150,11 +150,11 @@ def get_all_cookie_from_browser(browser_type, file_path):
     elif browser_type == 2:
         con = sqlite3.connect(os.path.join(file_path, "cookies.sqlite"))
         cur = con.cursor()
-        cur.execute("select host, path, isSecure, expiry, name, value from moz_cookies")
+        cur.execute("select host, path, name, value from moz_cookies")
         for cookie_info in cur.fetchall():
             cookie_domain = cookie_info[0]
-            cookie_key = cookie_info[4]
-            cookie_value = cookie_info[5]
+            cookie_key = cookie_info[2]
+            cookie_value = cookie_info[3]
             if cookie_domain not in all_cookies:
                 all_cookies[cookie_domain] = {}
             all_cookies[cookie_domain][cookie_key] = cookie_value
@@ -164,12 +164,12 @@ def get_all_cookie_from_browser(browser_type, file_path):
             return None
         con = sqlite3.connect(os.path.join(file_path, "Cookies"))
         cur = con.cursor()
-        cur.execute("select host_key, path, secure, expires_utc, name, value, encrypted_value from cookies")
+        cur.execute("select host_key, path, name, value, encrypted_value from cookies")
         for cookie_info in cur.fetchall():
             cookie_domain = cookie_info[0]
-            cookie_key = cookie_info[4]
+            cookie_key = cookie_info[2]
             try:
-                cookie_value = win32crypt.CryptUnprotectData(cookie_info[6], None, None, None, 0)[1]
+                cookie_value = win32crypt.CryptUnprotectData(cookie_info[4], None, None, None, 0)[1]
             except:
                 continue
             if cookie_domain not in all_cookies:
