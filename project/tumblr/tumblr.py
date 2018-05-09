@@ -44,7 +44,10 @@ def get_index_setting(account_id):
     is_https = True
     is_safe_mode = False
     is_private = False
-    if index_response.status == 302:
+    if index_response.status == 429:
+        time.sleep(30)
+        return get_index_setting(account_id)
+    elif index_response.status == 302:
         redirect_url = index_response.getheader("Location")
         if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
             is_https = False
