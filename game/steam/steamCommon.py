@@ -129,8 +129,7 @@ def get_discount_game_list(login_cookie):
 def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
     badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
-    cookies_list = {"steamLogin": login_cookie}
-    badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list=cookies_list)
+    badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list={"steamLogin": login_cookie})
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badges_index_response.status))
     badges_detail_url_list = []
@@ -152,10 +151,7 @@ def get_self_account_badges(account_id, login_cookie):
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
 # badge_detail_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
 def get_self_account_badge_card(badge_detail_url, login_cookie):
-    cookies_list = {
-        "steamLogin": login_cookie,
-    }
-    badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=cookies_list)
+    badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list={"steamLogin": login_cookie})
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
     wanted_card_list = {}
@@ -195,10 +191,9 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
 
 # 获取某个游戏的集换式卡牌市场售价
 def get_market_game_trade_card_price(game_id, login_cookie):
-    cookies_list = {"steamLogin": login_cookie}
     market_search_url = "http://steamcommunity.com/market/search/render/"
     market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
-    market_search_response = net.http_request(market_search_url, method="GET", cookies_list=cookies_list, json_decode=True)
+    market_search_response = net.http_request(market_search_url, method="GET", cookies_list={"steamLogin": login_cookie}, json_decode=True)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
