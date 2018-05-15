@@ -16,8 +16,8 @@ def get_account_id_from_file():
     return tool.read_file(os.path.join(os.path.dirname(__file__), "account.data"))
 
 
-# 获取指定账号的全部游戏ud列表
-def get_account_owned_app_list(user_id):
+# 获取指定账号的全部游戏id列表
+def get_account_owned_app_list(user_id, is_played=False):
     game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
     game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -32,6 +32,9 @@ def get_account_owned_app_list(user_id):
     for game_data in owned_all_game_data:
         if "appid" not in game_data:
             raise crawler.CrawlerException("游戏信息'appid'字段不存在\n%s" % game_data)
+        # 只需要玩过的游戏
+        if is_played and "hours_forever" not in game_data:
+            continue
         app_id_list.append(str(game_data["appid"]))
     return app_id_list
 
