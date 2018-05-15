@@ -125,6 +125,29 @@ def get_discount_game_list(login_cookie):
     return discount_game_list
 
 
+# 获取游戏商店首页
+def get_game_store_index(game_id, cookies_list=None):
+    game_index_url = "https://store.steampowered.com/app/%s" % game_id
+    game_index_response = net.http_request(game_index_url, method="GET", cookies_list=cookies_list)
+    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
+    result = {
+        "dlc_list": [],  # 游戏下的DLC列表
+        "reviewed": False,  # 是否评测过
+        "owned": False,  # 是否已拥有
+    }
+    # 所有DLC
+    dlc_list_selection = PQ(game_index_response.data).find(".game_area_dlc_section a.game_area_dlc_row")
+    if dlc_list_selection.length > 0:
+        for index in range(0, dlc_list_selection.length):
+            result["dlc_list"].append(dlc_list_selection.eq(index).attr("data-ds-appid"))
+    # 是否已评测
+    result["reviewed"] = PQ(game_index_response.data).find("#review_create").length == 0
+    # 是否已拥有
+    result["owned"] = PQ(game_index_response.data).find(".already_in_library").length == 1
+    return result
+
+
 # 获取全部已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
 def get_self_account_badges(account_id, login_cookie):
     # 徽章第一页
