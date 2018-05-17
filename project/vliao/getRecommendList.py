@@ -9,7 +9,7 @@ email: hikaru870806@hotmail.com
 from common import *
 import vLiaoCommon
 
-TAG_ID_LIST = [1, 2, 3, 4, 5, 9997, 9998, 9999]  # 好像 tag = 1就是全部账号
+TAG_ID_LIST = [1, 2, 3, 4, 5, 9997, 9998]  # 好像 tag = 1就是全部账号
 
 
 # 从本地存档获取所有账号
