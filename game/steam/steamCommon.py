@@ -22,10 +22,10 @@ def get_account_owned_app_list(user_id, is_played=False):
     game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", ";")
+    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", "\n")
     if not owned_all_game_data:
         raise crawler.CrawlerException("页面截取游戏列表失败\n%s" % game_index_response.data)
-    owned_all_game_data = tool.json_decode(owned_all_game_data)
+    owned_all_game_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
     if owned_all_game_data is None:
         raise crawler.CrawlerException("游戏列表加载失败\n%s" % owned_all_game_data)
     app_id_list = []
