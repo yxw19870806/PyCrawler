@@ -7,7 +7,7 @@ project/*/photo/
 project/*/video/
 project/bcy/session
 project/instagram/session
-project/twitter/token
-project/vliao/token
+project/twitter/session
+project/vliao/session
 game/steam/account.data
 game/steam/discount.txt
