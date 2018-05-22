@@ -13,7 +13,7 @@ import os
 USER_ID = ""
 USER_KEY = ""
 API_VERSION = "31"
-token_file_path = os.path.join(os.path.dirname(__file__), "token")
+token_file_path = os.path.join(os.path.dirname(__file__), "session")
 
 
 # 检查登录信息

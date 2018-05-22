@@ -14,20 +14,20 @@ import urllib
 def main(account_id):
     # 获取登录状态
     try:
-        login_cookie = steamCommon.get_login_cookie_from_browser()
+        cookies_list = steamCommon.get_cookie_from_browser()
     except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
     # 获取全部没有收到恒宇卡牌掉落且还可以升级的徽章
     try:
-        badges_detail_url_list = steamCommon.get_self_account_badges(account_id, login_cookie)
+        badges_detail_url_list = steamCommon.get_self_account_badges(account_id, cookies_list)
     except crawler.CrawlerException, e:
         output.print_msg("个人徽章首页解析失败，原因：%s" % e.message)
         raise
     for badges_detail_url in badges_detail_url_list:
         # 查询徽章剩余的卡牌以及数量
         try:
-            wanted_card_list = steamCommon.get_self_account_badge_card(badges_detail_url, login_cookie)
+            wanted_card_list = steamCommon.get_self_account_badge_card(badges_detail_url, cookies_list)
         except crawler.CrawlerException, e:
             output.print_msg("徽章%s解析失败，原因：%s" % (badges_detail_url, e.message))
             raise
@@ -36,7 +36,7 @@ def main(account_id):
             output.print_msg("game id: %s" % game_id, False)
             # 获取全部卡牌的市场售价
             try:
-                market_card_list = steamCommon.get_market_game_trade_card_price(game_id, login_cookie)
+                market_card_list = steamCommon.get_market_game_trade_card_price(game_id, cookies_list)
             except crawler.CrawlerException, e:
                 output.print_msg("游戏id%s的市场解析失败，原因：%s" % (game_id, e.message))
                 raise 

@@ -22,10 +22,10 @@ def get_account_owned_app_list(user_id, is_played=False):
     game_index_response = net.http_request(game_index_url, method="GET")
     if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", ";")
+    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", "\n")
     if not owned_all_game_data:
         raise crawler.CrawlerException("页面截取游戏列表失败\n%s" % game_index_response.data)
-    owned_all_game_data = tool.json_decode(owned_all_game_data)
+    owned_all_game_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
     if owned_all_game_data is None:
         raise crawler.CrawlerException("游戏列表加载失败\n%s" % owned_all_game_data)
     app_id_list = []
@@ -40,14 +40,13 @@ def get_account_owned_app_list(user_id, is_played=False):
 
 
 # 获取全部正在打折的游戏列表
-def get_discount_game_list(login_cookie):
+def get_discount_game_list(cookies_list):
     page_count = 1
     discount_game_list = []
     app_id_list = []
     while True:
         output.print_msg("开始解析第%s页打折游戏" % page_count)
         discount_game_pagination_url = "http://store.steampowered.com/search/results?sort_by=Price_ASC&category1=996,998&os=win&specials=1&page=%s" % page_count
-        cookies_list = {"steamLogin": login_cookie}
         discount_game_pagination_response = net.http_request(discount_game_pagination_url, method="GET", cookies_list=cookies_list)
         if discount_game_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("第%s页打折游戏解析失败" % page_count)
@@ -149,10 +148,10 @@ def get_game_store_index(game_id, cookies_list=None):
 
 
 # 获取全部已经没有剩余卡牌掉落且还没有收集完毕的徽章详细地址
-def get_self_account_badges(account_id, login_cookie):
+def get_self_account_badges(account_id, cookies_list):
     # 徽章第一页
     badges_index_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
-    badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list={"steamLogin": login_cookie})
+    badges_index_response = net.http_request(badges_index_url, method="GET", cookies_list=cookies_list)
     if badges_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badges_index_response.status))
     badges_detail_url_list = []
@@ -173,8 +172,8 @@ def get_self_account_badges(account_id, login_cookie):
 
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
 # badge_detail_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
-def get_self_account_badge_card(badge_detail_url, login_cookie):
-    badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list={"steamLogin": login_cookie})
+def get_self_account_badge_card(badge_detail_url, cookies_list):
+    badge_detail_response = net.http_request(badge_detail_url, method="GET", cookies_list=cookies_list)
     if badge_detail_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(badge_detail_response.status))
     wanted_card_list = {}
@@ -213,10 +212,10 @@ def get_self_account_badge_card(badge_detail_url, login_cookie):
 
 
 # 获取某个游戏的集换式卡牌市场售价
-def get_market_game_trade_card_price(game_id, login_cookie):
+def get_market_game_trade_card_price(game_id, cookies_list):
     market_search_url = "http://steamcommunity.com/market/search/render/"
     market_search_url += "?query=&count=20&appid=753&category_753_Game[0]=tag_app_%s&category_753_cardborder[0]=tag_cardborder_0" % game_id
-    market_search_response = net.http_request(market_search_url, method="GET", cookies_list={"steamLogin": login_cookie}, json_decode=True)
+    market_search_response = net.http_request(market_search_url, method="GET", cookies_list=cookies_list, json_decode=True)
     if market_search_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(market_search_response.status))
     market_item_list = {}
@@ -234,25 +233,6 @@ def get_market_game_trade_card_price(game_id, login_cookie):
 
 
 # 从浏览器中获取登录cookies
-def get_login_cookie_from_browser():
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
-    if "store.steampowered.com" not in all_cookie_from_browser:
-        raise crawler.CrawlerException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
-    if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
-        return all_cookie_from_browser["store.steampowered.com"]["steamLogin"]
-    login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-    login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], is_auto_redirect=False)
-    if login_response.status == 302:
-        set_cookies = net.get_cookies_from_response_header(login_response.headers)
-        if "steamLogin" not in set_cookies:
-            raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
-        return set_cookies["steamLogin"]
-    else:
-        raise crawler.CrawlerException("登录返回code不正确，\n%s\n%s" % (login_response.status, login_response.data))
-
-
-# 从浏览器中获取登录cookies
 def get_cookie_from_browser():
     # 获取cookies
     all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
@@ -266,6 +246,8 @@ def get_cookie_from_browser():
         if "steamLogin" not in set_cookies:
             raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
         cookies_list.update(set_cookies)
+        # 强制使用英文
+        cookies_list["Steam_Language"] = "english"
         return cookies_list
     else:
         raise crawler.CrawlerException("登录返回code不正确，\n%s\n%s" % (login_response.status, login_response.data))
