@@ -9,24 +9,21 @@ from common import output, crawler, tool
 import steamCommon
 import json
 import os
-import time
-import datetime
 
 REVIEW_DATA_PATH = os.path.realpath(os.path.join("review.txt"))
 
 
-# 打折游戏列表保存到文件
+# 保存评测记录到文件
 def save_discount_list(review_data):
     tool.write_file(json.dumps(review_data), REVIEW_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
 
 
-# 获取文件中的打折列表
-def load_discount_list():
+# 获取历史评测记录
+def load_review_list():
     review_data = {
-        "checked_list": [],
-        "owned_dlc": [],
-        "review_list": [],
         "can_review_lists": [],
+        "dlc_in_game": {},
+        "review_list": [],
     }
     if not os.path.exists(REVIEW_DATA_PATH):
         return review_data
@@ -41,37 +38,61 @@ def main(account_id):
     except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
+    # 历史记录
+    review_data = load_review_list()
     # 获取自己的全部玩过的游戏列表
     try:
         played_game_list = steamCommon.get_account_owned_app_list(account_id, True)
     except crawler.CrawlerException, e:
         output.print_msg("个人游戏主页解析失败，原因：%s" % e.message)
         raise
-    # 历史记录
-    review_data = load_discount_list()
     for game_id in played_game_list:
         game_id = int(game_id)
-        # 已经检测过
-        if game_id in review_data["checked_list"]:
-            continue
+        # 获取游戏信息
         game_data = steamCommon.get_game_store_index(game_id, cookies_list)
+
         # 有DLC的话，遍历每个DLC
         for dlc_id in game_data["dlc_list"]:
             dlc_id = int(dlc_id)
+
+            # 已经评测过了，跳过检查
+            if dlc_id in review_data["review_list"]:
+                continue
+
+            # DLC和游戏本体关系字典
+            review_data["dlc_in_game"][dlc_id] = game_id
+
+            # 获取DLC信息
             dlc_data = steamCommon.get_game_store_index(dlc_id, cookies_list)
+
             if dlc_data["owned"]:
-                # 是否评测过
+                # 已经评测过了
                 if dlc_data["reviewed"]:
-                    review_data["review_list"].append(dlc_id)
+                    # 从待评测列表中删除
+                    if dlc_id in review_data["can_review_lists"]:
+                        review_data["can_review_lists"].remove(dlc_id)
+                    # 增加已评测记录
+                    if dlc_id not in review_data["review_list"]:
+                        review_data["review_list"].append(dlc_id)
+                # 新的可以评测游戏
                 else:
-                    review_data["can_review_lists"].append(dlc_id)
-        # 是否评测过
+                    if dlc_id not in review_data["can_review_lists"]:
+                        review_data["can_review_lists"].append(dlc_id)
+
+        # 已经评测过了
         if game_data["reviewed"]:
-            review_data["review_list"].append(game_id)
+            # 从待评测列表中删除
+            if game_id in review_data["can_review_lists"]:
+                review_data["can_review_lists"].remove(game_id)
+            # 增加已评测记录
+            if game_id not in review_data["review_list"]:
+                review_data["review_list"].append(game_id)
+        # 新的可以评测游戏
         else:
-            review_data["can_review_lists"].append(game_id)
+            if game_id not in review_data["can_review_lists"]:
+                review_data["can_review_lists"].append(game_id)
+
         # 增加检测标记
-        review_data["checked_list"].append(game_id)
         save_discount_list(review_data)
 
 
