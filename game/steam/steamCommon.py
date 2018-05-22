@@ -233,25 +233,6 @@ def get_market_game_trade_card_price(game_id, cookies_list):
 
 
 # 从浏览器中获取登录cookies
-def get_login_cookie_from_browser():
-    # 获取cookies
-    all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
-    if "store.steampowered.com" not in all_cookie_from_browser:
-        raise crawler.CrawlerException("浏览器解析cookies失败\n%s" % all_cookie_from_browser)
-    if "steamLogin" in all_cookie_from_browser["store.steampowered.com"]:
-        return all_cookie_from_browser["store.steampowered.com"]["steamLogin"]
-    login_url = "https://store.steampowered.com/login/checkstoredlogin/?redirectURL="
-    login_response = net.http_request(login_url, method="GET", cookies_list=all_cookie_from_browser["store.steampowered.com"], is_auto_redirect=False)
-    if login_response.status == 302:
-        set_cookies = net.get_cookies_from_response_header(login_response.headers)
-        if "steamLogin" not in set_cookies:
-            raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
-        return set_cookies["steamLogin"]
-    else:
-        raise crawler.CrawlerException("登录返回code不正确，\n%s\n%s" % (login_response.status, login_response.data))
-
-
-# 从浏览器中获取登录cookies
 def get_cookie_from_browser():
     # 获取cookies
     all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser()
