@@ -265,6 +265,8 @@ def get_cookie_from_browser():
         if "steamLogin" not in set_cookies:
             raise crawler.CrawlerException("登录返回cookies不正确，\n%s" % set_cookies)
         cookies_list.update(set_cookies)
+        # 强制使用英文
+        cookies_list["Steam_Language"] = "english"
         return cookies_list
     else:
         raise crawler.CrawlerException("登录返回code不正确，\n%s\n%s" % (login_response.status, login_response.data))
