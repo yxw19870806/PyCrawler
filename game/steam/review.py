@@ -96,5 +96,28 @@ def main(account_id):
         save_discount_list(review_data)
 
 
+# 打印列表
+# type  0 全部游戏
+# type  1 只要本体
+# type  2 只要DLC
+# type  3 只要本体已评测的DLC
+def print_list(type=0):
+    review_data = load_review_list()
+    for game_id in review_data["can_review_lists"]:
+        # 是DLC
+        if str(game_id) in review_data["dlc_in_game"]:
+            if type == 1:
+                continue
+        else:
+            if type == 2 or type == 3:
+                continue
+            # 本体没有评测过
+            if review_data["dlc_in_game"][str(game_id)] in review_data["can_review_lists"]:
+                if type == 3:
+                    continue
+        output.print_msg("https://store.steampowered.com/app/%s" % game_id)
+
+
 if __name__ == "__main__":
     main(steamCommon.get_account_id_from_file())
+    print_list()
