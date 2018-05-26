@@ -48,7 +48,7 @@ def check_login():
         index_url = "https://www.instagram.com/"
         index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
         if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            return index_response.data.find("'external_id':") >= 0
+            return index_response.data.find('"viewer":{') >= 0
     return False
 
 
