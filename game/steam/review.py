@@ -108,13 +108,13 @@ def print_list(type=0):
         if str(game_id) in review_data["dlc_in_game"]:
             if type == 1:
                 continue
-        else:
-            if type == 2 or type == 3:
-                continue
             # 本体没有评测过
             if review_data["dlc_in_game"][str(game_id)] in review_data["can_review_lists"]:
                 if type == 3:
                     continue
+        else:
+            if type == 2 or type == 3:
+                continue
         output.print_msg("https://store.steampowered.com/app/%s" % game_id)
 
 
