@@ -9,6 +9,7 @@ from common import browser, keyboardEvent, log, net, output, path, tool
 import codecs
 import ConfigParser
 import os
+import platform
 import re
 import sys
 import thread
@@ -229,8 +230,8 @@ class Crawler(object):
         # process_control_thread.setDaemon(True)
         # process_control_thread.start()
 
-        # 键盘监控线程
-        if analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
+        # 键盘监控线程（仅支持windows）
+        if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
             keyboard_event_bind = {}
             pause_process_key = analysis_config(config, "PAUSE_PROCESS_KEYBOARD_KEY", "F9")
             # 暂停进程
