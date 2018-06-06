@@ -382,7 +382,7 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
             value = True
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
         if value[:2] == "\\\\":  # \\ 开头，程序所在目录
-            value = os.path.join(os.path.abspath(""), value[2:])  # \\ 仅做标记使用，实际需要去除
+            value = os.path.join(os.getcwd(), value[2:])  # \\ 仅做标记使用，实际需要去除
         elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
             value = os.path.join(tool.PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
         value = os.path.abspath(value)

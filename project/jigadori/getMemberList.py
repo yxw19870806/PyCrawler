@@ -11,7 +11,7 @@ from pyquery import PyQuery as PQ
 import os
 
 # Twitter存档文件目录
-SAVE_DATA_PATH = os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save_5.data")
+SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save_5.data"))
 
 
 # 获取存档文件

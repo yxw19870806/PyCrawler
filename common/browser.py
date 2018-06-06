@@ -41,9 +41,10 @@ def get_default_browser_cookie_path(browser_type):
     elif browser_type == BROWSER_TYPE_FIREFOX:
         default_browser_path = os.path.join(os.getenv("APPDATA"), "Mozilla\\Firefox\\Profiles")
         for dir_name in os.listdir(default_browser_path):
-            if os.path.isdir(os.path.join(default_browser_path, dir_name)):
-                if os.path.exists(os.path.join(default_browser_path, dir_name, "cookies.sqlite")):
-                    return os.path.abspath(os.path.join(default_browser_path, dir_name))
+            sub_path = os.path.join(default_browser_path, dir_name)
+            if os.path.isdir(sub_path):
+                if os.path.exists(os.path.join(sub_path, "cookies.sqlite")):
+                    return os.path.abspath(sub_path)
     elif browser_type == BROWSER_TYPE_CHROME:
         return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default"))
     else:
