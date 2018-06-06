@@ -4,7 +4,7 @@ from common import output, tool
 import os
 
 # 文件保存目录
-FILE_STORAGE_PATH = os.path.join("photo")
+FILE_STORAGE_PATH = os.path.join(os.path.dirname(__file__), "photo")
 # 存档文件所在路径
 SAVE_DATA_FILE_PATH = os.path.join(os.path.dirname(__file__), "save.data")
 # 存档中作为保存文件夹名字所在字段所在数组下标，从0开始

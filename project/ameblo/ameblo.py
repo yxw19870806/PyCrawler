@@ -23,13 +23,9 @@ def check_login():
     global COOKIE_INFO
     if not COOKIE_INFO:
         return False
-    account_index_url = "https://ucsprofile.ameba.jp/ucs/index.do"
+    account_index_url = "http://mypage.ameba.jp/"
     index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
-    if index_response.status == 302 and index_response.getheader("Location").find("//www.ameba.jp/index.do?") != -1:
-        pass
-    elif index_response.status == 302 and index_response.getheader("Location") == "http://ucsprofile.ameba.jp/ucs/index.do":
-        return True
-    elif index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+    if index_response.status == 200:
         return True
     COOKIE_INFO = {}
     return False
@@ -184,7 +180,7 @@ class Ameblo(crawler.Crawler):
 
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
-            crawler.SYS_GET_COOKIE: {".ameba.jp": ()},
+            crawler.SYS_GET_COOKIE: {".ameba.jp": (), ".mypage.ameba.jp": ()},
         }
         crawler.Crawler.__init__(self, sys_config)
 

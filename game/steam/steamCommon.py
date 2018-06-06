@@ -10,10 +10,24 @@ from pyquery import PyQuery as PQ
 import os
 import re
 
+ACCOUNT_ID_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "account.data"))
 
-# 从文件中读取account id
+
+# 从文件中读取account id，如果不存在提示输入
 def get_account_id_from_file():
-    return tool.read_file(os.path.join(os.path.dirname(__file__), "account.data"))
+    account_id = tool.read_file(ACCOUNT_ID_FILE_PATH)
+    while not account_id:
+        console_account_id = output.console_input(crawler.get_time() + " 请输入STEAM账号ID: ")
+        while True:
+            input_str = output.console_input(crawler.get_time() + " 是否使用输入的STEAM账号ID '%s' 是Y(es) / 否N(o) ?" % console_account_id)
+            input_str = input_str.lower()
+            if input_str in ["y", "yes"]:
+                account_id = console_account_id
+                tool.write_file(console_account_id, ACCOUNT_ID_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                break
+            elif input_str in ["n", "no"]:
+                break
+    return account_id
 
 
 # 获取指定账号的全部游戏id列表
