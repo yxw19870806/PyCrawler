@@ -21,7 +21,7 @@ def change_path_encoding(file_path):
     if not isinstance(file_path, unicode):
         file_path = str(file_path)
         file_path = unicode(file_path, "UTF-8")
-    return os.path.realpath(file_path)
+    return os.path.abspath(file_path)
 
 
 def create_dir(dir_path, create_mode=CREATE_DIR_MODE_IGNORE_IF_EXIST):

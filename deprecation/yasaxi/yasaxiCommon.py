@@ -13,7 +13,7 @@ import os
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""
 ZHEZHE_INFO = ""
-account_file_path = os.path.realpath(os.path.join(os.path.dirname(__file__), "token"))
+account_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "token"))
 
 
 # 从文件中获取用户信息

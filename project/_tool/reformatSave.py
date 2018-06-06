@@ -4,9 +4,9 @@ from common import tool
 import os
 
 # 旧存档路径
-OLD_SAVE_FILE_PATH = os.path.join(os.path.dirname(__file__), "save.data")
+OLD_SAVE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "save.data"))
 # 新存档路径
-NEW_SAVE_FILE_PATH = os.path.join(os.path.dirname(__file__), "new_save.data")
+NEW_SAVE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "new_save.data"))
 
 
 # 修改存档文件列的顺序并保存

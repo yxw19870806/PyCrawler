@@ -26,7 +26,7 @@ def generate_html_page(video_url_list):
     return html
 
 if __name__ == "__main__":
-    file_path = os.path.join("..//log//log.txt")
+    file_path = os.path.abspath("..//log//log.txt")
     html_file = open("video.html", "w")
     html_file.write(generate_html_page(get_file_url_from_log(file_path)))
     html_file.close()

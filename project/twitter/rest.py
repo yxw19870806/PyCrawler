@@ -14,7 +14,7 @@ import os
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"
 ACCESS_TOKEN = None
-token_file_path = os.path.join(os.path.dirname(__file__), "session")
+token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
 
 
 def init():

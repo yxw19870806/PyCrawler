@@ -13,8 +13,8 @@ import shutil
 
 
 def create_exe(py_file_path, need_config=False, need_zip=False):
-    build_path = os.path.realpath(".\\build")
-    build_dist_path = os.path.realpath(".\\dist")
+    build_path = os.path.abspath(".\\build")
+    build_dist_path = os.path.abspath(".\\dist")
     py_file_name = ".".join(os.path.basename(py_file_path).split(".")[:-1])
 
     # 旧目录删除
@@ -34,12 +34,12 @@ def create_exe(py_file_path, need_config=False, need_zip=False):
 
     # 是否需要压缩
     if need_zip:
-        extraTool.zip_dir(build_dist_path, os.path.realpath("%s.zip" % py_file_name))
+        extraTool.zip_dir(build_dist_path, os.path.abspath("%s.zip" % py_file_name))
         path.delete_dir_or_file(build_dist_path)
     else:
-        shutil.move(build_dist_path, os.path.realpath(".\\%s" % py_file_name))
+        shutil.move(build_dist_path, os.path.abspath(".\\%s" % py_file_name))
 
 
 if __name__ == "__main__":
-    file_path = os.path.realpath("..\\weibo\\weibo.py")
+    file_path = os.path.abspath("..\\weibo\\weibo.py")
     create_exe(file_path)
