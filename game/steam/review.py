@@ -10,7 +10,7 @@ import steamCommon
 import json
 import os
 
-REVIEW_DATA_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "review.txt"))
+REVIEW_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "review.txt"))
 
 
 # 保存评测记录到文件

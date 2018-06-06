@@ -35,11 +35,11 @@ WRITE_FILE_TYPE_REPLACE = 2  # 覆盖写入文件
 # 项目根目录
 PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # common目录
-PROJECT_COMMON_PATH = os.path.join(PROJECT_ROOT_PATH, "common")
+PROJECT_COMMON_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common"))
 # config.ini路径
-PROJECT_CONFIG_PATH = os.path.join(PROJECT_ROOT_PATH, "common/config.ini")
+PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/config.ini"))
 # 应用程序（APP）根目录
-PROJECT_APP_ROOT_PATH = os.path.join(PROJECT_ROOT_PATH, "project")
+PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project"))
 
 
 # 根据开始与结束的字符串，截取字符串

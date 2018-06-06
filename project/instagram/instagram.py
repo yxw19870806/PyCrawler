@@ -17,7 +17,7 @@ IS_LOCAL_SAVE_SESSION = False
 IMAGE_COUNT_PER_PAGE = 12
 QUERY_ID = "17859156310193001"
 COOKIE_INFO = {"csrftoken": "", "mid": "", "sessionid": ""}
-SESSION_FILE_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "session"))
+SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
 
 
 # 生成session cookies

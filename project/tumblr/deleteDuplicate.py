@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 from common import *
 import os
 import csv
-DUPLICATE_CSV_FILE_PATH = os.path.realpath("D:\\duplicate.csv")
+DUPLICATE_CSV_FILE_PATH = os.path.abspath("D:\\duplicate.csv")
 
 
 def main(file_path):

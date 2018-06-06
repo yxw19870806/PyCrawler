@@ -76,7 +76,7 @@ class Crawler(object):
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        app_config_path = os.path.realpath(os.path.join(os.getcwd(), "app.ini"))
+        app_config_path = os.path.abspath(os.path.join(os.getcwd(), "app.ini"))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外配置
@@ -385,7 +385,7 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
             value = os.path.join(os.path.abspath(""), value[2:])  # \\ 仅做标记使用，实际需要去除
         elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
             value = os.path.join(tool.PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
-        value = os.path.realpath(value)
+        value = os.path.abspath(value)
     return value
 
 

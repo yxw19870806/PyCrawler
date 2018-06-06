@@ -22,11 +22,11 @@ def get_default_browser_application_path(browser_type):
     if platform.system() != "Windows":
         return None
     if browser_type == BROWSER_TYPE_IE:
-        return os.path.realpath(os.path.join(os.getenv("ProgramFiles"), "Internet Explorer\\iexplore.exe"))
+        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Internet Explorer\\iexplore.exe"))
     elif browser_type == BROWSER_TYPE_FIREFOX:
-        return os.path.realpath(os.path.join(os.getenv("ProgramFiles"), "Mozilla Firefox\\firefox.exe"))
+        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Mozilla Firefox\\firefox.exe"))
     elif browser_type == BROWSER_TYPE_CHROME:
-        return os.path.realpath(os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe"))
+        return os.path.abspath(os.path.join(os.getenv("ProgramFiles"), "Google\\Chrome\\Application\\chrome.exe"))
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
     return None
@@ -43,9 +43,9 @@ def get_default_browser_cookie_path(browser_type):
         for dir_name in os.listdir(default_browser_path):
             if os.path.isdir(os.path.join(default_browser_path, dir_name)):
                 if os.path.exists(os.path.join(default_browser_path, dir_name, "cookies.sqlite")):
-                    return os.path.realpath(os.path.join(default_browser_path, dir_name))
+                    return os.path.abspath(os.path.join(default_browser_path, dir_name))
     elif browser_type == BROWSER_TYPE_CHROME:
-        return os.path.realpath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default"))
+        return os.path.abspath(os.path.join(os.getenv("LOCALAPPDATA"), "Google\\Chrome\\User Data\\Default"))
     else:
         output.print_msg("不支持的浏览器类型：" + browser_type)
     return None
