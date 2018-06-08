@@ -16,6 +16,15 @@ INIT_TARGET_ID = "99999"
 MESSAGE_COUNT_PER_PAGE = 30
 
 
+# 获取talk首页
+def get_index_page(account_name):
+    index_url = "https://7gogo.jp/%s" % account_name
+    index_response = net.http_request(index_url, method="GET")
+    if index_response.status == 404:
+        raise crawler.CrawlerException("talk已被删除")
+    return index_response
+
+
 # 获取指定页数的全部日志信息
 def get_one_page_blog(account_name, target_id):
     blog_pagination_url = "https://api.7gogo.jp/web/v2/talks/%s/images" % account_name
@@ -213,6 +222,13 @@ class Download(crawler.DownloadThread):
 
     def run(self):
         try:
+            # 获取首页
+            try:
+                get_index_page(self.account_name)
+            except crawler.CrawlerException, e:
+                log.error(self.account_name + " 首页访问失败，原因：%s" % e.message)
+                raise
+
             # 获取所有可下载日志
             blog_info_list = self.get_crawl_list()
             log.step(self.account_name + " 需要下载的全部日志解析完毕，共%s个" % len(blog_info_list))
