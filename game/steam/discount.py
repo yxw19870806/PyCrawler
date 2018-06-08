@@ -17,7 +17,7 @@ API_UPDATE_TIME_HOUR = 1  # 每周优惠更新时间（几点）
 INCLUDE_GAME = True
 INCLUDE_PACKAGE = True
 INCLUDE_BUNDLE = True
-DISCOUNT_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "discount.txt"))
+DISCOUNT_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\discount.txt"))
 MIN_DISCOUNT_PERCENT = 75  # 显示折扣大等于这个数字的游戏
 MAX_SELLING_PERCENT = 1  # 显示价格小等于这个数字的游戏
 
