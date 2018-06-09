@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 """
 半次元图片爬虫
-http://bcy.net
+https://bcy.net
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
@@ -18,23 +18,23 @@ import traceback
 IS_AUTO_FOLLOW = True
 IS_LOCAL_SAVE_SESSION = False
 IS_LOGIN = True
-COOKIE_INFO = {"acw_tc": "", "PHPSESSID": "", "LOGGED_USER": ""}
+COOKIE_INFO = {}
 SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
 
 
 # 生成session cookies
 def init_session():
     # 如果有登录信息（初始化时从浏览器中获得）
-    if COOKIE_INFO["LOGGED_USER"]:
-        cookies_list = {"LOGGED_USER": COOKIE_INFO["LOGGED_USER"]}
+    if "LOGGED_USER" in COOKIE_INFO and COOKIE_INFO["LOGGED_USER"]:
+        cookies_list = COOKIE_INFO
     else:
         cookies_list = None
-    home_url = "http://bcy.net/home/user/index"
+    home_url = "https://bcy.net"
     home_response = net.http_request(home_url, method="GET", cookies_list=cookies_list)
     if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
-        if "acw_tc" in set_cookie and "PHPSESSID" in set_cookie:
-            COOKIE_INFO["acw_tc"] = set_cookie["acw_tc"]
+        if "_csrf_token" in set_cookie and "PHPSESSID" in set_cookie:
+            COOKIE_INFO["_csrf_token"] = set_cookie["_csrf_token"]
             COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
             return True
     return False
@@ -50,8 +50,8 @@ def check_login():
             if _do_login(account_data["email"], account_data["password"]):
                 return True
     else:
-        home_url = "http://bcy.net/home/user/index"
-        home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO)
+        home_url = "https://bcy.net/home/account"
+        home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
         if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if home_response.data.find('<a href="/login">登录</a>') == -1:
                 return True
@@ -79,8 +79,9 @@ def login_from_console():
 
 
 # 模拟登录请求
+# todo check again
 def _do_login(email, password):
-    login_url = "http://bcy.net/public/dologin"
+    login_url = "https://bcy.net/public/dologin"
     login_post = {"email": email, "password": password}
     cookies_list = {"acw_tc": COOKIE_INFO["acw_tc"], "PHPSESSID": COOKIE_INFO["PHPSESSID"]}
     login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=cookies_list)
@@ -91,8 +92,9 @@ def _do_login(email, password):
 
 
 # 关注指定账号
+# todo check again
 def follow(account_id):
-    follow_api_url = "http://bcy.net/weibo/Operate/follow?"
+    follow_api_url = "https://bcy.net/weibo/Operate/follow?"
     follow_post_data = {"uid": account_id, "type": "dofollow"}
     follow_response = net.http_request(follow_api_url, method="POST", fields=follow_post_data)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -103,8 +105,9 @@ def follow(account_id):
 
 
 # 取消关注指定账号
+# todo check again
 def unfollow(account_id):
-    unfollow_api_url = "http://bcy.net/weibo/Operate/follow?"
+    unfollow_api_url = "https://bcy.net/weibo/Operate/follow?"
     unfollow_post_data = {"uid": account_id, "type": "unfollow"}
     unfollow_response = net.http_request(unfollow_api_url, method="POST", fields=unfollow_post_data)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -115,13 +118,12 @@ def unfollow(account_id):
 
 # 获取指定页数的全部作品
 def get_one_page_album(account_id, page_count):
-    # http://bcy.net/u/50220/post/cos?&p=1
-    album_pagination_url = "http://bcy.net/u/%s/post/cos" % account_id
+    # https://bcy.net/u/50220/post/cos?&p=1
+    album_pagination_url = "https://bcy.net/u/%s/post?&p=%s" % (account_id, page_count)
     query_data = {"p": page_count}
-    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data)
+    album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     result = {
-        "album_info_list": [],  # 全部作品信息
-        "coser_id": None,  # coser id
+        "album_id_list": [],  # 全部作品id
         "is_over": False,  # 是不是最后一页作品
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
@@ -132,37 +134,22 @@ def get_one_page_album(account_id, page_count):
     if album_pagination_response.data.find("<h2>尚未发布作品</h2>") >= 0:
         result["is_over"] = True
         return result
-    # 获取coser id
-    coser_id_find = re.findall('<a href="/coser/detail/([\d]+)/\$\{post.rp_id\}', album_pagination_response.data)
-    if len(coser_id_find) != 1:
-        raise crawler.CrawlerException("页面截取coser id失败\n%s" % album_pagination_response.data)
-    if not crawler.is_integer(coser_id_find[0]):
-        raise crawler.CrawlerException("页面截取coser id类型不正确\n%s" % album_pagination_response.data)
-    result["coser_id"] = coser_id_find[0]
     # 获取作品信息
-    if PQ(album_pagination_response.data.decode("UTF-8")).find("ul.postCards").length == 0:
+    if PQ(album_pagination_response.data.decode("UTF-8")).find("ul.gridList").length == 0:
         raise crawler.CrawlerException("页面截取作品列表失败\n%s" % album_pagination_response.data)
-    album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.postCards li.posr")
+    album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.gridList li.js-smallCards")
     for album_index in range(0, album_list_selector.length):
         album_selector = album_list_selector.eq(album_index)
-        result_album_info = {
-            "album_id": None,  # 作品id
-            "album_title": None,  # 作品标题
-        }
         # 获取作品id
-        album_url = album_selector.find("a.postWorkCard__link").attr("href")
+        album_url = album_selector.find("a.posr").attr("href")
         if not album_url:
             raise crawler.CrawlerException("作品信息截取作品地址失败\n%s" % album_selector.html().encode("UTF-8"))
         album_id = str(album_url).split("/")[-1]
         if not crawler.is_integer(album_id):
             raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
-        result_album_info['album_id'] = album_id
-        # 获取作品标题
-        album_title = album_selector.find("a.postWorkCard__link img").attr("alt")
-        result_album_info["album_title"] = str(album_title.encode("UTF-8"))
-        result["album_info_list"].append(result_album_info)
+        result["album_id_list"].append(album_id)
     # 判断是不是最后一页
-    last_pagination_selector = PQ(album_pagination_response.data).find("#js-showPagination ul.pager li:last a")
+    last_pagination_selector = PQ(album_pagination_response.data).find("ul.pager li:last a")
     if last_pagination_selector.length == 1:
         max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
         result["is_over"] = page_count >= max_page_count
@@ -172,11 +159,9 @@ def get_one_page_album(account_id, page_count):
 
 
 # 获取指定id的作品
-# coser_id -> 9299
-# album_id -> 36484
-def get_album_page(coser_id, album_id):
-    # http://bcy.net/coser/detail/9299/36484
-    album_url = "http://bcy.net/coser/detail/%s/%s" % (coser_id, album_id)
+def get_album_page(album_id):
+    # https://bcy.net/item/detail/6383727612803440398
+    album_url = "https://bcy.net/item/detail/%s" % album_id
     album_response = net.http_request(album_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
@@ -199,10 +184,16 @@ def get_album_page(coser_id, album_id):
         else:
             raise crawler.CrawlerException("登录状态丢失")
     # 获取作品页面内的全部图片地址列表
-    image_url_list = re.findall("src='([^']*)'", album_response.data)
-    if not result["is_admin_locked"] and not result["is_only_follower"] and len(image_url_list) == 0:
+    image_List_selector = PQ(album_response.data).find("div.post__content img.detail_std")
+    for image_index in range(0, image_List_selector.length):
+        image_selector = image_List_selector.eq(image_index)
+        # 获取作品id
+        image_url = image_selector.attr("src")
+        if not image_url:
+            raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_selector.html().encode("UTF-8"))
+        result["image_url_list"].append(str(image_url))
+    if not result["is_admin_locked"] and not result["is_only_follower"] and image_List_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
-    result["image_url_list"] = map(str, image_url_list)
     return result
 
 
@@ -219,7 +210,7 @@ class Bcy(crawler.Crawler):
 
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
-            crawler.SYS_GET_COOKIE: {".bcy.net": ("LOGGED_USER",)},
+            crawler.SYS_GET_COOKIE: {".bcy.net": ()},
             crawler.SYS_APP_CONFIG: (
                 ("IS_AUTO_FOLLOW", True, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN),
                 ("IS_LOCAL_SAVE_SESSION", False, crawler.CONFIG_ANALYSIS_MODE_BOOLEAN)
@@ -228,7 +219,7 @@ class Bcy(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO["LOGGED_USER"] = self.cookie_value["LOGGED_USER"]
+        COOKIE_INFO = self.cookie_value
         IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
 
@@ -297,7 +288,6 @@ class Download(crawler.DownloadThread):
             self.account_name = self.account_info[2]
         else:
             self.account_name = self.account_info[0]
-        self.coser_id = None
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载作品
@@ -317,21 +307,18 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_name + " 第%s页作品解析失败，原因：%s" % (page_count, e.message))
                 raise
 
-            if self.coser_id is None:
-                self.coser_id = album_pagination_response["coser_id"]
-
-            log.trace(self.account_name + " 第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_info_list"]))
+            log.trace(self.account_name + " 第%s页解析的全部作品：%s" % (page_count, album_pagination_response["album_id_list"]))
 
             # 寻找这一页符合条件的作品
-            for album_info in album_pagination_response["album_info_list"]:
+            for album_id in album_pagination_response["album_id_list"]:
                 # 检查是否达到存档记录
-                if int(album_info["album_id"]) > int(self.account_info[1]):
+                if int(album_id) > int(self.account_info[1]):
                     # 新增作品导致的重复判断
-                    if album_info["album_id"] in unique_list:
+                    if album_id in unique_list:
                         continue
                     else:
-                        album_info_list.append(album_info)
-                        unique_list.append(album_info["album_id"])
+                        album_info_list.append(album_id)
+                        unique_list.append(album_id)
                 else:
                     is_over = True
                     break
@@ -345,58 +332,53 @@ class Download(crawler.DownloadThread):
         return album_info_list
 
     # 解析单个作品
-    def crawl_album(self, album_info):
+    def crawl_album(self, album_id):
         self.main_thread_check()  # 检测主线程运行状态
         # 获取作品
         try:
-            album_response = get_album_page(self.coser_id, album_info["album_id"])
+            album_response = get_album_page(album_id)
         except crawler.CrawlerException, e:
-            log.error(self.account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+            log.error(self.account_name + " 作品%s解析失败，原因：%s" % (album_id, e.message))
             raise
 
         # 是不是已被管理员锁定
         if album_response["is_admin_locked"]:
-            log.error(self.account_name + " 作品%s 《%s》已被管理员锁定，跳过" % (album_info["album_id"], album_info["album_title"]))
-            self.account_info[1] = album_info["album_id"]  # 设置存档记录
+            log.error(self.account_name + " 作品%s已被管理员锁定，跳过" % album_id)
+            self.account_info[1] = album_id  # 设置存档记录
             return
 
         # 是不是只对登录账号可见
         if album_response["is_only_login"]:
-            log.error(self.account_name + " 作品%s 《%s》只对登录账号显示，跳过" % (album_info["album_id"], album_info["album_title"]))
+            log.error(self.account_name + " 作品%s只对登录账号显示，跳过" % album_id)
             return
 
         # 是不是只对粉丝可见，并判断是否需要自动关注
         if album_response["is_only_follower"]:
             if not IS_LOGIN or not IS_AUTO_FOLLOW:
                 return
-            log.step(self.account_name + " 作品%s 《%s》是私密作品且账号不是ta的粉丝，自动关注" % (album_info["album_id"], album_info["album_title"]))
+            log.step(self.account_name + " 作品%s是私密作品且账号不是ta的粉丝，自动关注" % album_id)
             if follow(self.account_id):
                 self.main_thread_check()  # 检测主线程运行状态
                 # 重新获取作品页面
                 try:
-                    album_response = get_album_page(self.coser_id, album_info["album_id"])
+                    album_response = get_album_page(album_id)
                 except crawler.CrawlerException, e:
-                    log.error(self.account_name + " 作品%s 《%s》解析失败，原因：%s" % (album_info["album_id"], album_info["album_title"], e.message))
+                    log.error(self.account_name + " 作品%s解析失败，原因：%s" % (album_id, e.message))
                     raise
             else:
                 # 关注失败
-                log.error(self.account_name + " 关注失败，跳过作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
+                log.error(self.account_name + " 关注失败，跳过作品%s" % album_id)
                 return
 
         image_index = 1
-        # 过滤标题中不支持的字符
-        album_title = path.filter_text(album_info["album_title"])
-        if album_title:
-            album_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%07d %s" % (int(album_info["album_id"]), album_title))
-        else:
-            album_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%07d" % int(album_info["album_id"]))
+        album_path = os.path.join(self.main_thread.image_download_path, self.account_name, album_id)
         # 设置临时目录
         self.temp_path_list.append(album_path)
         for image_url in album_response["image_url_list"]:
             self.main_thread_check()  # 检测主线程运行状态
             # 禁用指定分辨率
             image_url = get_image_url(image_url)
-            log.step(self.account_name + " 作品%s 《%s》开始下载第%s张图片 %s" % (album_info["album_id"], album_info["album_title"], image_index, image_url))
+            log.step(self.account_name + " 作品%s开始下载第%s张图片 %s" % (album_id, image_index, image_url))
 
             if image_url.rfind("/") < image_url.rfind("."):
                 file_type = image_url.split(".")[-1]
@@ -405,27 +387,27 @@ class Download(crawler.DownloadThread):
             file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
-                log.step(self.account_name + " 作品%s 《%s》第%s张图片下载成功" % (album_info["album_id"], album_info["album_title"], image_index))
+                log.step(self.account_name + " 作品%s第%s张图片下载成功" % (album_id, image_index))
                 image_index += 1
             else:
-                log.error(self.account_name + " 作品%s 《%s》第%s张图片 %s，下载失败，原因：%s" % (album_info["album_id"], album_info["album_title"], image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                log.error(self.account_name + " 作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
         self.total_image_count += image_index - 1  # 计数累加
-        self.account_info[1] = album_info["album_id"]  # 设置存档记录
+        self.account_info[1] = album_id  # 设置存档记录
 
     def run(self):
         try:
             # 获取所有可下载作品
-            album_info_list = self.get_crawl_list()
-            log.step(self.account_name + " 需要下载的全部作品解析完毕，共%s个" % len(album_info_list))
+            album_id_list = self.get_crawl_list()
+            log.step(self.account_name + " 需要下载的全部作品解析完毕，共%s个" % len(album_id_list))
 
             # 从最早的作品开始下载
-            while len(album_info_list) > 0:
-                album_info = album_info_list.pop()
-                log.step(self.account_name + " 开始解析作品%s 《%s》" % (album_info["album_id"], album_info["album_title"]))
-                self.crawl_album(album_info)
+            while len(album_id_list) > 0:
+                album_id = album_id_list.pop()
+                log.step(self.account_name + " 开始解析作品%s" % album_id)
+                self.crawl_album(album_id)
                 self.main_thread_check()  # 检测主线程运行状态
         except SystemExit, se:
             if se.code == 0:
