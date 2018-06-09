@@ -125,6 +125,9 @@ def get_video_play_page(tweet_id):
     result = {
         "video_url": None,  # 视频地址
     }
+    if video_play_response.status == 429:
+        time.sleep(60)
+        return get_video_play_page(tweet_id)
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
     if not crawler.check_sub_key(("track",), video_play_response.json_data):
