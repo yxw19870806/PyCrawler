@@ -33,6 +33,8 @@ def get_account_index_page(account_name):
         return get_account_index_page(account_name)
     if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
         raise crawler.CrawlerException("私密账号，需要关注才能访问")
+    if account_index_response.data.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
+        raise crawler.CrawlerException("账号已被冻结")
     account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
     if not crawler.is_integer(account_id):
         raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
