@@ -20,7 +20,8 @@ COOKIE_INFO = {}
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET")
+    header_list = {"referer": "https://twitter.com/%s" % account_name}
+    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list)
     result = {
         "account_id": None,  # account id
     }
