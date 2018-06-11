@@ -439,20 +439,20 @@ class Download(crawler.DownloadThread):
 
             # 获取一页视频
             try:
-                blog_pagination_response = get_one_page_video(self.account_id, token)
+                video_pagination_response = get_one_page_video(self.account_id, token)
             except crawler.CrawlerException, e:
                 log.error(self.account_name + " 视频页（token：%s）解析失败，原因：%s" % (token, e.message))
                 raise
 
-            log.trace(self.account_name + " 视频页（token：%s）解析的全部日志：%s" % (token, blog_pagination_response["video_id_list"]))
+            log.trace(self.account_name + " 视频页（token：%s）解析的全部日志：%s" % (token, video_pagination_response["video_id_list"]))
 
             if len(self.account_info) < 4:
-                log.step(self.account_name + " 频道名：%s" % blog_pagination_response["account_name"])
-                self.account_name = blog_pagination_response["account_name"]
+                log.step(self.account_name + " 频道名：%s" % video_pagination_response["account_name"])
+                self.account_name = video_pagination_response["account_name"]
                 self.account_info.append(self.account_name)
 
             # 寻找这一页符合条件的日志
-            for video_id in blog_pagination_response["video_id_list"]:
+            for video_id in video_pagination_response["video_id_list"]:
                 # 检查是否达到存档记录
                 if video_id != self.account_info[1]:
                     video_id_list.append(video_id)
@@ -462,9 +462,9 @@ class Download(crawler.DownloadThread):
                     break
 
             if not is_over:
-                if blog_pagination_response["next_page_token"]:
+                if video_pagination_response["next_page_token"]:
                     # 设置下一页token
-                    token = blog_pagination_response["next_page_token"]
+                    token = video_pagination_response["next_page_token"]
                 else:
                     is_over = True
 
