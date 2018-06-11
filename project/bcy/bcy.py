@@ -33,27 +33,26 @@ def init_session():
     home_response = net.http_request(home_url, method="GET", cookies_list=cookies_list)
     if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         set_cookie = net.get_cookies_from_response_header(home_response.headers)
-        if "_csrf_token" in set_cookie and "PHPSESSID" in set_cookie:
-            COOKIE_INFO["_csrf_token"] = set_cookie["_csrf_token"]
-            COOKIE_INFO["PHPSESSID"] = set_cookie["PHPSESSID"]
+        COOKIE_INFO.update(set_cookie)
+        if "_csrf_token" in COOKIE_INFO:
             return True
     return False
 
 
 # 检测登录状态
 def check_login():
-    # 没有浏览器cookies，尝试读取文件
-    if not COOKIE_INFO["LOGGED_USER"]:
-        # 从文件中读取账号密码
-        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_FILE_PATH)), {})
-        if crawler.check_sub_key(("email", "password"), account_data):
-            if _do_login(account_data["email"], account_data["password"]):
-                return True
-    else:
+    if "LOGGED_USER" in COOKIE_INFO and COOKIE_INFO["LOGGED_USER"]:
         home_url = "https://bcy.net/home/account"
         home_response = net.http_request(home_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
         if home_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             if home_response.data.find('<a href="/login">登录</a>') == -1:
+                return True
+    # 没有浏览器cookies，尝试读取文件
+    else:
+        # 从文件中读取账号密码
+        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_FILE_PATH)), {})
+        if crawler.check_sub_key(("email", "password"), account_data):
+            if _do_login(account_data["email"], account_data["password"]):
                 return True
     return False
 
@@ -79,12 +78,16 @@ def login_from_console():
 
 
 # 模拟登录请求
-# todo check again
 def _do_login(email, password):
+    if "_csrf_token" not in COOKIE_INFO:
+        return False
     login_url = "https://bcy.net/public/dologin"
-    login_post = {"email": email, "password": password}
-    cookies_list = {"acw_tc": COOKIE_INFO["acw_tc"], "PHPSESSID": COOKIE_INFO["PHPSESSID"]}
-    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=cookies_list)
+    login_post = {"email": email, "password": password, "_csrf_token": COOKIE_INFO["_csrf_token"], "remember": "1"}
+    header_list = {
+        "Referer": "https://bcy.net/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    login_response = net.http_request(login_url, method="POST", fields=login_post, cookies_list=COOKIE_INFO, header_list=header_list)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         if login_response.data.find('<a href="/login">登录</a>') == -1:
             return True
@@ -220,6 +223,8 @@ class Bcy(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
+        if "LOGGED_USER" not in COOKIE_INFO:
+            COOKIE_INFO = {}
         IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
 
@@ -228,7 +233,9 @@ class Bcy(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 生成session信息
-        init_session()
+        if not init_session():
+            log.error("初始化失败")
+            tool.process_exit()
 
         # 检测登录状态
         # 未登录时提示可能无法获取粉丝指定的作品
