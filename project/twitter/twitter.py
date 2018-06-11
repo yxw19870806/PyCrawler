@@ -18,14 +18,18 @@ COOKIE_INFO = {}
 AUTHORIZATION = None
 
 
-# 获取首页
-def get_index_page():
+# 初始化session。获取authorization
+def init_session():
     global AUTHORIZATION
+    global COOKIE_INFO
     index_url = "https://twitter.com/"
     header_list = {"referer": "https://twitter.com"}
     index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list)
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
+    # 没有登录状态
+    if not COOKIE_INFO or index_page_response.data.find('<div class="StaticLoggedOutHomePage-login">') >= 0:
+        COOKIE_INFO = net.get_cookies_from_response_header(index_page_response.headers)
     init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response.data)
     if len(init_js_url_find) != 1:
         raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response.data)
@@ -34,7 +38,7 @@ def get_index_page():
         raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
     authorization_string = tool.find_sub_string(init_js_response.data, '="AAAAAAAAAA', '"', )
     if not authorization_string:
-        raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s", init_js_response.data)
+        raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s" % init_js_response.data)
     AUTHORIZATION = "AAAAAAAAAA" + authorization_string
 
 
@@ -141,8 +145,8 @@ def get_one_page_media(account_name, position_blog_id):
 def get_video_play_page(tweet_id):
     video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
     header_list = {
-        "authorization": AUTHORIZATION,
-        "x-csrf-token": COOKIE_INFO["ct0"],  # todo 未登录状态下的获取
+        "authorization": "Bearer " + AUTHORIZATION,
+        "x-csrf-token": COOKIE_INFO["ct0"],
     }
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
@@ -202,6 +206,8 @@ class Twitter(crawler.Crawler):
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
+        if "_twitter_sess" not in COOKIE_INFO or "ct0" not in COOKIE_INFO:
+            COOKIE_INFO = {}
 
         # 解析存档文件
         # account_name  image_count  last_image_time
@@ -209,7 +215,7 @@ class Twitter(crawler.Crawler):
 
         # 生成authorization，用于访问视频页
         try:
-            get_index_page()
+            init_session()
         except crawler.CrawlerException, e:
             log.error("生成authorization失败，原因：%s" % e.message)
             raise
