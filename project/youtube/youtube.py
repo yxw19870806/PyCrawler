@@ -68,9 +68,18 @@ def get_one_page_video(account_id, token):
             raise crawler.CrawlerException("视频信息加载失败\n%s" % script_data_html)
         try:
             temp_data = script_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][1]["tabRenderer"]["content"]["sectionListRenderer"]
-            video_list_data = temp_data["contents"][0]["itemSectionRenderer"]["contents"][0]["gridRenderer"]
+            temp_data = temp_data["contents"][0]["itemSectionRenderer"]["contents"][0]
         except KeyError:
             raise crawler.CrawlerException("视频信息格式不正确\n%s" % script_data)
+        if not crawler.check_sub_key(("gridRenderer",), temp_data):
+            try:
+                # 没有上传过任何视频
+                if temp_data["messageRenderer"]["text"]["simpleText"] == "Thischannelhasnovideos.":
+                    return result
+            except KeyError:
+                pass
+            raise crawler.CrawlerException("视频列表信息'gridRenderer'字段不存在\n%s" % temp_data)
+        video_list_data = temp_data["gridRenderer"]
     else:
         query_url = "https://www.youtube.com/browse_ajax"
         query_data = {"ctoken": token}

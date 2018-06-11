@@ -20,7 +20,7 @@ COOKIE_INFO = {}
 # 根据账号名字获得账号id（字母账号->数字账号)
 def get_account_index_page(account_name):
     account_index_url = "https://twitter.com/%s" % account_name
-    account_index_response = net.http_request(account_index_url, method="GET", cookies_list=COOKIE_INFO)
+    account_index_response = net.http_request(account_index_url, method="GET")
     result = {
         "account_id": None,  # account id
     }
@@ -28,8 +28,13 @@ def get_account_index_page(account_name):
         raise crawler.CrawlerException("账号不存在")
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
+    # 重新访问
+    if account_index_response.data.find("captureMessage( 'Failed to load source'") >= 0:
+        return get_account_index_page(account_name)
     if account_index_response.data.find('<div class="ProtectedTimeline">') >= 0:
         raise crawler.CrawlerException("私密账号，需要关注才能访问")
+    if account_index_response.data.find('<a href="https://support.twitter.com/articles/15790"') >= 0:
+        raise crawler.CrawlerException("账号已被冻结")
     account_id = tool.find_sub_string(account_index_response.data, '<div class="ProfileNav" role="navigation" data-user-id="', '">')
     if not crawler.is_integer(account_id):
         raise crawler.CrawlerException("页面截取用户id失败\n%s" % account_index_response.data)
@@ -45,7 +50,8 @@ def get_one_page_media(account_name, position_blog_id):
         "include_entities": "1",
         "max_position": position_blog_id,
     }
-    media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
+    header_list = {"referer": "https://twitter.com/%s" % account_name}
+    media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
@@ -111,58 +117,53 @@ def get_one_page_media(account_name, position_blog_id):
 
 # 根据视频所在推特的ID，获取视频的下载地址
 def get_video_play_page(tweet_id):
-    video_play_url = "https://twitter.com/i/videos/tweet/%s" % tweet_id
-    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO)
+    video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
+    # todo 如何生成
+    header_list = {
+        "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAAIK1zgAAAAAA2tUWuhGZ2JceoId5GwYWU5GspY4%3DUq7gzFoCZs1QfwGoVdvSac3IniczZEYXIcDyumCauIXpcAPorE",
+        "x-csrf-token": "54fa79d230d541ec387bddd80b23bd1a",
+    }
+    video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
         "video_url": None,  # 视频地址
     }
+    if video_play_response.status == 429:
+        time.sleep(60)
+        return get_video_play_page(tweet_id)
     if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-    # 包含m3u8文件地址的处理
-    # https://video.twimg.com/ext_tw_video/749759483224600577/pu/pl/DzYugRHcg3WVgeWY.m3u8
-    # m3u8_file_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", ".m3u8&quot;")
-    # https://video.twimg.com/ext_tw_video/980648602681819136/pu/pl/4-sBvk8YYvZm9HPH.m3u8?tag=3
-    m3u8_file_url_find = re.findall("&quot;video_url&quot;:&quot;(\S*.m3u8)(?:\?tag=\d)?&quot;,", video_play_response.data)
-    if len(m3u8_file_url_find) == 1:
-        m3u8_file_url = m3u8_file_url_find[0].replace("\\/", "/")
-        file_url_protocol, file_url_path = urllib.splittype(m3u8_file_url)
+    if not crawler.check_sub_key(("track",), video_play_response.json_data):
+        raise crawler.CrawlerException("返回信息'track'字段不存在\n%s" % video_play_response.json_data)
+    if not crawler.check_sub_key(("playbackUrl",), video_play_response.json_data["track"]):
+        raise crawler.CrawlerException("返回信息'playbackUrl'字段不存在\n%s" % video_play_response.json_data["track"])
+    file_url = str(video_play_response.json_data["track"]["playbackUrl"])
+    file_type = file_url.split("?")[0].split(".")[-1]
+    # m3u8文件，需要再次访问获取真实视频地址
+    # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
+    if file_type == "m3u8":
+        file_url_protocol, file_url_path = urllib.splittype(file_url)
         file_url_host = urllib.splithost(file_url_path)[0]
-        m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
+        m3u8_file_response = net.http_request(file_url, method="GET")
         if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-            raise crawler.CrawlerException("m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
-        # 是否包含的是m3u8文件（不同分辨率）
+            raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
         if len(include_m3u8_file_list) > 0:
             # 生成最高分辨率视频所在的m3u8文件地址
-            m3u8_file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
-            m3u8_file_response = net.http_request(m3u8_file_url, method="GET")
+            file_url = "%s://%s%s" % (file_url_protocol, file_url_host, include_m3u8_file_list[-1])
+            m3u8_file_response = net.http_request(file_url, method="GET")
             if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("最高分辨率m3u8文件 %s 解析失败，%s" % (m3u8_file_url, crawler.request_failre(m3u8_file_response.status)))
+                raise crawler.CrawlerException("最高分辨率m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         # 包含分P视频文件名的m3u8文件
         ts_url_find = re.findall("(/[\S]*.ts)", m3u8_file_response.data)
         if len(ts_url_find) == 0:
-            raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (m3u8_file_url, m3u8_file_response.data))
+            raise crawler.CrawlerException("m3u8文件截取视频地址失败\n%s\n%s" % (file_url, m3u8_file_response.data))
         result["video_url"] = []
         for ts_file_path in ts_url_find:
             result["video_url"].append("%s://%s%s" % (file_url_protocol, file_url_host, str(ts_file_path)))
+    # 直接是视频地址
+    # https://api.twitter.com/1.1/videos/tweet/config/996368816174084097.json
     else:
-        # 直接包含视频播放地址的处理
-        video_url = tool.find_sub_string(video_play_response.data, "&quot;video_url&quot;:&quot;", "&quot;")
-        if video_url:
-            result["video_url"] = video_url.replace("\\/", "/")
-        else:
-            # 直接包含视频播放地址的处理
-            vmap_file_url = tool.find_sub_string(video_play_response.data, "&quot;vmap_url&quot;:&quot;", "&quot;")
-            if not vmap_file_url:
-                raise crawler.CrawlerException("页面截取视频播放地址失败\n%s" % video_play_response.data)
-            vmap_file_url = vmap_file_url.replace("\\/", "/")
-            vmap_file_response = net.http_request(vmap_file_url, method="GET")
-            if vmap_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-                raise crawler.CrawlerException("视频播放页 %s 解析失败\n%s" % (vmap_file_url, crawler.request_failre(vmap_file_response.status)))
-            video_url = tool.find_sub_string(vmap_file_response.data, "<![CDATA[", "]]>")
-            if not video_url:
-                raise crawler.CrawlerException("视频播放页 %s 截取视频地址失败\n%s" % (vmap_file_url, video_play_response.data))
-            result["video_url"] = str(video_url.replace("\\/", "/"))
+        result["video_url"] = file_url
     return result
 
 
