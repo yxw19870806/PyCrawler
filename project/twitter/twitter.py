@@ -15,6 +15,27 @@ import traceback
 import urllib
 
 COOKIE_INFO = {}
+AUTHORIZATION = None
+
+
+# 获取首页
+def get_index_page():
+    global AUTHORIZATION
+    index_url = "https://twitter.com/"
+    header_list = {"referer": "https://twitter.com"}
+    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list)
+    if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
+    init_js_url_find = re.findall('<script src="(https://abs.twimg.com/k/[^/]*/init.[^\.]*.[\w]*.js)" async></script>', index_page_response.data)
+    if len(init_js_url_find) != 1:
+        raise crawler.CrawlerException("初始化JS地址截取失败\n%s" % index_page_response.data)
+    init_js_response = net.http_request(init_js_url_find[0], method="GET")
+    if init_js_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("初始化JS文件，" + crawler.request_failre(init_js_response.status))
+    authorization_string = tool.find_sub_string(init_js_response.data, '="AAAAAAAAAA', '"', )
+    if not authorization_string:
+        raise crawler.CrawlerException("初始化JS中截取authorization失败\n%s", init_js_response.data)
+    AUTHORIZATION = "AAAAAAAAAA" + authorization_string
 
 
 # 根据账号名字获得账号id（字母账号->数字账号)
@@ -119,10 +140,9 @@ def get_one_page_media(account_name, position_blog_id):
 # 根据视频所在推特的ID，获取视频的下载地址
 def get_video_play_page(tweet_id):
     video_play_url = "https://api.twitter.com/1.1/videos/tweet/config/%s.json" % tweet_id
-    # todo 如何生成
     header_list = {
-        "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAAIK1zgAAAAAA2tUWuhGZ2JceoId5GwYWU5GspY4%3DUq7gzFoCZs1QfwGoVdvSac3IniczZEYXIcDyumCauIXpcAPorE",
-        "x-csrf-token": "54fa79d230d541ec387bddd80b23bd1a",
+        "authorization": AUTHORIZATION,
+        "x-csrf-token": COOKIE_INFO["ct0"],  # todo 未登录状态下的获取
     }
     video_play_response = net.http_request(video_play_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
@@ -186,6 +206,14 @@ class Twitter(crawler.Crawler):
         # 解析存档文件
         # account_name  image_count  last_image_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "", "0", "0", "0"])
+
+        # 生成authorization，用于访问视频页
+        try:
+            get_index_page()
+        except crawler.CrawlerException, e:
+            log.error("生成authorization失败，原因：%s" % e.message)
+            raise
+
 
     def main(self):
         # 循环下载每个id
