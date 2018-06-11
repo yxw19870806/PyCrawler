@@ -198,7 +198,7 @@ strftime(TIME_FORMAT)
 	%I	小时（12小时制，长度为2）	range(01-12)
 	%p	上午/下午					AM，PM
 	%M	分钟（长度为2）				range(00-59)
-	%s	秒（长度为2）				range(01-61)
+	%S	秒（长度为2）				range(01-61)
 	%w	周几（长度为2，周日为0）	range(0-6)
 	%a	周几（英文缩写）			Mon，Tue，Wed，Thu，Fri，Sat，Sun
 	%A	周几（英文)					Monday，Tuesday，Wednesday，Thursday，Friday，Saturday，Sunday
