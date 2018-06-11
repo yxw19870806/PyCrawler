@@ -254,7 +254,7 @@ class Twitter(crawler.Crawler):
 
 
 class Download(crawler.DownloadThread):
-    init_position_blog_id = "999999999999999999"
+    init_position_blog_id = "1999999999999999999"
 
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
