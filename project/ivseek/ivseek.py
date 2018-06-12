@@ -140,6 +140,8 @@ class IvSeek(crawler.Crawler):
             log.step("最新视频id：%s" % index_response["max_archive_id"])
 
             for archive_id in range(save_id, index_response["max_archive_id"]):
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s个视频" % archive_id)
 
                 # 获取一页图片
