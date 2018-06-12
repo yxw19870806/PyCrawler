@@ -15,6 +15,7 @@ import time
 import traceback
 
 AUTHORIZATION = None
+FIRST_CHOICE_RESOLUTION = 720
 
 
 # 初始化session。获取authorization
@@ -125,34 +126,61 @@ def get_video_page(video_id):
     # 查找最高分辨率的视频源地址
     if not crawler.check_sub_key(("qualities",), video_data["metadata"]):
         raise crawler.CrawlerException("视频信息'qualities'字段不存在\n%s" % video_data["metadata"])
-    max_video_resolution = 0
-    video_info_list = None
+    # 各个分辨率下的视频地址
+    resolution_to_url = {}
     for video_resolution in video_data["metadata"]["qualities"]:
         if not crawler.is_integer(video_resolution):
             continue
-        if int(video_resolution) > max_video_resolution:
-            video_info_list = video_data["metadata"]["qualities"][video_resolution]
-            max_video_resolution = int(video_resolution)
-    if video_info_list is None:
+        if int(video_resolution) not in [144, 240, 380, 480, 720, 1080]:
+            log.error("unknown video quality " + video_resolution)
+        for video_info in video_data["metadata"]["qualities"][video_resolution]:
+            if not crawler.check_sub_key(("type", "url"), video_info):
+                raise crawler.CrawlerException("最高分辨率视频信息'type'或'url'字段不存在\n%s" % video_info)
+            if str(video_info["type"]) == "video/mp4":
+                resolution_to_url[int(video_resolution)] = str(video_info["url"])
+    if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("匹配不同分辨率视频源失败\n%s" % video_data["metadata"]["qualities"])
-    # todo 如果视频太大
-    for video_info in video_info_list:
-        if not crawler.check_sub_key(("type", "url"), video_info):
-            raise crawler.CrawlerException("最高分辨率视频信息'type'或'url'字段不存在\n%s" % video_info)
-        if str(video_info["type"]) == "video/mp4":
-            result["video_url"] = str(video_info["url"])
-    if result["video_url"] is None:
-        raise crawler.CrawlerException("最高分辨率视频mp4格式文件匹配失败\n%s" % video_data["metadata"]["qualities"])
+    # 优先使用配置中的分辨率
+    if FIRST_CHOICE_RESOLUTION in resolution_to_url:
+        result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+    # 如果没有这个分辨率的视频
+    else:
+        # 大于配置中分辨率的所有视频中分辨率最小的那个
+        for resolution in sorted(resolution_to_url.keys()):
+            if resolution > FIRST_CHOICE_RESOLUTION:
+                result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+                break
+        # 如果还是没有，则所有视频中分辨率最大的那个
+        if result["video_url"] is None:
+            result["video_url"] = resolution_to_url[max(resolution_to_url)]
     return result
 
 
 class DailyMotion(crawler.Crawler):
     def __init__(self):
+        global FIRST_CHOICE_RESOLUTION
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
-            crawler.SYS_SET_PROXY: True,
+            crawler.SYS_APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config)
+        video_quality = self.app_config["VIDEO_QUALITY"]
+        if video_quality == 1:
+            FIRST_CHOICE_RESOLUTION = 144
+        elif video_quality == 2:
+            FIRST_CHOICE_RESOLUTION = 240
+        elif video_quality == 3:
+            FIRST_CHOICE_RESOLUTION = 380
+        elif video_quality == 4:
+            FIRST_CHOICE_RESOLUTION = 480
+        elif video_quality == 5:
+            FIRST_CHOICE_RESOLUTION = 720
+        elif video_quality == 6:
+            FIRST_CHOICE_RESOLUTION = 1080
+        else:
+            log.error("配置文件config.ini中key为'video_quality'的值必须是一个1~6的整数，使用程序默认设置")
 
         # 解析存档文件
         # account_id  video_time
