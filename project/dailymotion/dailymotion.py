@@ -9,14 +9,46 @@ email: hikaru870806@hotmail.com
 from common import *
 import json
 import os
+import random
 import threading
 import time
 import traceback
 
-IS_LOGIN = True
-COOKIE_INFO = {}
-# todo 页面获取
-AUTHORIZATION = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhaWQiOiJmMWEzNjJkMjg4YzFiOTgwOTljNyIsInJvbCI6ImNhbi1tYW5hZ2UtdXNlci1hbmFseXRpY3MgY2FuLXJlYWQtbXktdmlkZW8tc3RyZWFtcyBjYW4tZG93bmxvYWQtbXktdmlkZW9zIGFjdC1hcyBhbGxzY29wZXMgYWNjb3VudC1jcmVhdG9yIGNhbi1yZWFkLWFwcGxpY2F0aW9ucyIsInNjbyI6Im1hbmFnZV9zdWJzY3JpcHRpb25zIG1hbmFnZV92aWRlb3MgdXNlcmluZm8iLCJsdG8iOiJjemhVVmdOQURGNUpSd1VaVkY0R0RRRmVRRkFVIiwiYWluIjoxLCJhZGciOjEsImV4cCI6MTUyODczNTA2NiwiZG12IjoiMSIsImF0cCI6ImJyb3dzZXIiLCJhZGEiOiJ3d3cuZGFpbHltb3Rpb24uY29tIiwiY2FkIjoyLCJjeHAiOjIsImNhdSI6Mn0.S6HyWZ6qYU4leKpjhzc8-U_jKj6xo5DMoZsc1Nfc2lg"
+AUTHORIZATION = None
+
+
+# 初始化session。获取authorization
+def init_session():
+    global AUTHORIZATION
+    index_url = "http://www.dailymotion.com"
+    index_page_response = net.http_request(index_url, method="GET")
+    page_data = tool.find_sub_string(index_page_response.data, "var __PLAYER_CONFIG__ = ", ";\n")
+    if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("首页，" + crawler.request_failre(index_page_response.status))
+    if not page_data:
+        raise crawler.CrawlerException("页面信息截取失败\n%s" % index_page_response.data)
+    page_data = tool.json_decode(page_data)
+    if page_data is None:
+        raise crawler.CrawlerException("页面信息加载失败\n%s" % index_page_response.data)
+    if not crawler.check_sub_key(("context",), page_data):
+        raise crawler.CrawlerException("页面信息'context'字段不存在\n%s" % page_data)
+    if not crawler.check_sub_key(("api",), page_data["context"]):
+        raise crawler.CrawlerException("页面信息'api'字段不存在\n%s" % page_data)
+    if not crawler.check_sub_key(("auth_url", "client_id", "client_secret", ), page_data["context"]["api"]):
+        raise crawler.CrawlerException("页面信息'api'字段不存在\n%s" % page_data)
+    post_data = {
+        "client_id": page_data["context"]["api"]["client_id"],
+        "client_secret": page_data["context"]["api"]["client_secret"],
+        "grant_type": "client_credentials",
+        "visitor_id": tool.generate_random_string(32, 6),
+        "traffic_segment": random.randint(100000, 999999)
+    }
+    oauth_response = net.http_request(page_data["context"]["api"]["auth_url"], method="POST", fields=post_data, json_decode=True)
+    if oauth_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException("获取token页%s，%s\n%s" % (page_data["context"]["api"]["auth_url"], crawler.request_failre(oauth_response.status), post_data))
+    if not crawler.check_sub_key(("access_token", ), oauth_response.json_data):
+        raise crawler.CrawlerException("授权返回信息'access_token'字段不存在\n%s" % oauth_response.json_data)
+    AUTHORIZATION = oauth_response.json_data["access_token"]
 
 
 # 获取视频列表
@@ -90,16 +122,6 @@ def get_video_page(video_id):
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response.data)
     if not crawler.check_sub_key(("metadata",), video_data):
         raise crawler.CrawlerException("视频信息'metadata'字段不存在\n%s" % video_data)
-    # 获取视频标题
-    if not crawler.check_sub_key(("title",), video_data["metadata"]):
-        raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_data["metadata"])
-    result["video_title"] = str(video_data["metadata"]["title"])
-    # 获取视频上传时间
-    if not crawler.check_sub_key(("created_time",), video_data["metadata"]):
-        raise crawler.CrawlerException("视频信息'created_time'字段不存在\n%s" % video_data["metadata"])
-    if not crawler.is_integer(video_data["metadata"]["created_time"]):
-        raise crawler.CrawlerException("视频信息'created_time'字段类型不正确\n%s" % video_data["metadata"])
-    result["video_time"] = str(video_data["metadata"]["created_time"])
     # 查找最高分辨率的视频源地址
     if not crawler.check_sub_key(("qualities",), video_data["metadata"]):
         raise crawler.CrawlerException("视频信息'qualities'字段不存在\n%s" % video_data["metadata"])
@@ -126,21 +148,23 @@ def get_video_page(video_id):
 
 class DailyMotion(crawler.Crawler):
     def __init__(self):
-        global COOKIE_INFO
-
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {".youtube.com": ()}
         }
         crawler.Crawler.__init__(self, sys_config)
-
-        # 设置全局变量，供子线程调用
-        COOKIE_INFO = self.cookie_value
 
         # 解析存档文件
         # account_id  video_time
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
+
+        # 生成authorization，用于访问视频页
+        try:
+            init_session()
+        except crawler.CrawlerException, e:
+            log.error("生成authorization失败，原因：%s" % e.message)
+            raise
+        tool.process_exit()
 
     def main(self):
         # 循环下载每个id
