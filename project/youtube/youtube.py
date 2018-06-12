@@ -16,6 +16,7 @@ import urllib
 
 IS_LOGIN = True
 COOKIE_INFO = {}
+FIRST_CHOICE_RESOLUTION = 720
 
 
 # 检测登录状态
@@ -156,7 +157,8 @@ def get_video_page(video_id):
     # 获取视频地址
     if not crawler.check_sub_key(("url_encoded_fmt_stream_map",), video_info_data["args"]):
         raise crawler.CrawlerException("视频信息'url_encoded_fmt_stream_map'字段不存在\n%s" % video_info_data["args"])
-    max_video_resolution = 0
+    # 各个分辨率下的视频地址
+    resolution_to_url = {}
     # signature生成步骤
     decrypt_function_step = []
     for sub_url_encoded_fmt_stream_map in video_info_data["args"]["url_encoded_fmt_stream_map"].split(","):
@@ -209,16 +211,28 @@ def get_video_page(video_id):
                 signature = value
         if is_skip:
             continue
-        if video_url is None or video_url is None:
+        if video_resolution is None or video_url is None:
             log.error("unknown video param" + video_info_string)
             continue
-        if video_resolution > max_video_resolution:
-            max_video_resolution = video_resolution
-            if signature is not None:
-                video_url += "&signature=" + str(signature)
-            result["video_url"] = video_url
-    if result["video_url"] is None:
+        # 加上signature参数
+        if signature is not None:
+            video_url += "&signature=" + str(signature)
+        resolution_to_url[video_resolution] = video_url
+    if len(resolution_to_url) == 0:
         raise crawler.CrawlerException("视频地址解析错误\n%s" % video_info_string)
+    # 优先使用配置中的分辨率
+    if FIRST_CHOICE_RESOLUTION in resolution_to_url:
+        result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+    # 如果没有这个分辨率的视频
+    else:
+        # 大于配置中分辨率的所有视频中分辨率最小的那个
+        for resolution in sorted(resolution_to_url.keys()):
+            if resolution > FIRST_CHOICE_RESOLUTION:
+                result["video_url"] = resolution_to_url[FIRST_CHOICE_RESOLUTION]
+                break
+        # 如果还是没有，则所有视频中分辨率最大的那个
+        if result["video_url"] is None:
+            result["video_url"] = resolution_to_url[max(resolution_to_url)]
     # 获取视频发布时间
     video_time_string = tool.find_sub_string(video_play_response.data, '"dateText":{"simpleText":"', '"},').strip()
     if not video_time_string:
@@ -353,16 +367,35 @@ def _decrypt_function3(a, b):
 class Youtube(crawler.Crawler):
     def __init__(self):
         global COOKIE_INFO
+        global FIRST_CHOICE_RESOLUTION
 
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_SET_PROXY: True,
-            crawler.SYS_GET_COOKIE: {".youtube.com": ()}
+            crawler.SYS_GET_COOKIE: {".youtube.com": ()},
+            crawler.SYS_APP_CONFIG: (
+                ("VIDEO_QUALITY", 6, crawler.CONFIG_ANALYSIS_MODE_INTEGER),
+            ),
         }
         crawler.Crawler.__init__(self, sys_config)
 
         # 设置全局变量，供子线程调用
         COOKIE_INFO = self.cookie_value
+        video_quality = self.app_config["VIDEO_QUALITY"]
+        if video_quality == 1:
+            FIRST_CHOICE_RESOLUTION = 144
+        elif video_quality == 2:
+            FIRST_CHOICE_RESOLUTION = 240
+        elif video_quality == 3:
+            FIRST_CHOICE_RESOLUTION = 360
+        elif video_quality == 4:
+            FIRST_CHOICE_RESOLUTION = 480
+        elif video_quality == 5:
+            FIRST_CHOICE_RESOLUTION = 720
+        elif video_quality == 6:
+            FIRST_CHOICE_RESOLUTION = 1080
+        else:
+            log.error("配置文件config.ini中key为'video_quality'的值必须是一个1~6的整数，使用程序默认设置")
 
         # 解析存档文件
         # account_id  video_string_id  video_number_id
