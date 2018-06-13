@@ -7,6 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
+from pyquery import PyQuery as PQ
 import os
 import threading
 import time
@@ -19,12 +20,26 @@ COOKIE_INFO = {}
 
 # 检测登录状态
 def check_login():
+    global IS_LOGIN
     if not COOKIE_INFO:
         return False
     index_url = "https://www.flickr.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         return index_response.data.find('data-track="gnYouMainClick"') >= 0
+    IS_LOGIN = False
+    return False
+
+
+# 检测安全搜索设置
+def check_safe_search():
+    if not COOKIE_INFO:
+        return False
+    setting_url = "https://www.flickr.com/account/prefs/safesearch/?from=privacy"
+    setting_response = net.http_request(setting_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
+        if PQ(setting_response.data).find("input[name='safe_search']:checked").val() == "2":
+            return True
     return False
 
 
@@ -190,16 +205,18 @@ class Flickr(crawler.Crawler):
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0"])
 
         # 检测登录状态
+        console_string = ""
         if not check_login():
-            while True:
-                input_str = output.console_input(crawler.get_time() + " 没有检测到账号登录状态，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:")
-                input_str = input_str.lower()
-                if input_str in ["e", "exit"]:
-                    tool.process_exit()
-                elif input_str in ["c", "continue"]:
-                    global IS_LOGIN
-                    IS_LOGIN = False
-                    break
+            console_string = "没有检测到账号登录状态"
+        elif not check_safe_search():
+            console_string = "账号安全搜尋已开启"
+        while console_string:
+            input_str = output.console_input(crawler.get_time() + " %s，可能无法解析受限制的图片，继续程序(C)ontinue？或者退出程序(E)xit？:" % console_string)
+            input_str = input_str.lower()
+            if input_str in ["e", "exit"]:
+                tool.process_exit()
+            elif input_str in ["c", "continue"]:
+                break
 
     def main(self):
         # 循环下载每个id
