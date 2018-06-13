@@ -10,7 +10,6 @@ from common import *
 from pyquery import PyQuery as PQ
 import json
 import os
-import re
 import threading
 import time
 import traceback
