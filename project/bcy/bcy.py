@@ -168,35 +168,52 @@ def get_album_page(album_id):
     album_response = net.http_request(album_url, method="GET", cookies_list=COOKIE_INFO)
     result = {
         "image_url_list": [],  # 全部图片地址
-        "is_admin_locked": False,  # 是否被管理员锁定
         "is_only_follower": False,  # 是否只显示给粉丝
         "is_only_login": False,  # 是否只显示给登录用户
     }
     if album_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_response.status))
+    is_skip = False
+    # 问题
+    # https://bcy.net/item/detail/6115326868729126670
+    if PQ(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.find('<a href="/group/discover">问答</a>') > 0:
+        is_skip = True
+    # 文章
+    # https://bcy.net/item/detail/6162547130750754574
+    elif PQ(album_response.data).find("div.post__content h1.title.mt5").length == 1:
+        is_skip = True
     # 检测作品是否被管理员锁定
-    if album_response.data.find("该作品属于下属违规情况，已被管理员锁定：") >= 0:
-        result["is_admin_locked"] = True
-    # 检测作品是否只对粉丝可见
-    if album_response.data.find("该作品已被作者设置为只有粉丝可见") >= 0:
-        result["is_only_follower"] = True
-    # 检测作品是否只对登录可见
-    if album_response.data.find("该作品已被作者设置为登录后可见") >= 0:
-        if not IS_LOGIN:
-            result["is_only_login"] = True
-        else:
-            raise crawler.CrawlerException("登录状态丢失")
+    elif album_response.data.find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
+        is_skip = True
+
+    # 是不是有报错信息
+    if not is_skip:
+        error_message = PQ(album_response.data.decode("UTF-8")).find("span.l-detail-no-right-to-see__text").text().encode("UTF-8")
+        # https://bcy.net/item/detail/5969608017174355726
+        if error_message == "该作品已被作者设置为只有粉丝可见":
+            result["is_only_follower"] = True
+            return result
+        # https://bcy.net/item/detail/6363512825238806286
+        elif error_message == "该作品已被作者设置为登录后可见":
+            if not IS_LOGIN:
+                result["is_only_login"] = True
+            else:
+                raise crawler.CrawlerException("登录状态丢失")
+            return result
+
     # 获取作品页面内的全部图片地址列表
-    image_List_selector = PQ(album_response.data).find("div.post__content img.detail_std")
-    for image_index in range(0, image_List_selector.length):
-        image_selector = image_List_selector.eq(image_index)
+    image_list_selector = PQ(album_response.data).find("div.post__content img.detail_std")
+    for image_index in range(0, image_list_selector.length):
+        image_selector = image_list_selector.eq(image_index)
         # 获取作品id
         image_url = image_selector.attr("src")
         if not image_url:
             raise crawler.CrawlerException("图片信息截取图片地址失败\n%s" % image_selector.html().encode("UTF-8"))
         result["image_url_list"].append(str(image_url))
-    if not result["is_admin_locked"] and not result["is_only_follower"] and image_List_selector.length == 0:
+
+    if not is_skip and len(result["image_url_list"]) == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
+
     return result
 
 
@@ -348,12 +365,6 @@ class Download(crawler.DownloadThread):
             log.error(self.account_name + " 作品%s解析失败，原因：%s" % (album_id, e.message))
             raise
 
-        # 是不是已被管理员锁定
-        if album_response["is_admin_locked"]:
-            log.error(self.account_name + " 作品%s已被管理员锁定，跳过" % album_id)
-            self.account_info[1] = album_id  # 设置存档记录
-            return
-
         # 是不是只对登录账号可见
         if album_response["is_only_login"]:
             log.error(self.account_name + " 作品%s只对登录账号显示，跳过" % album_id)
@@ -376,6 +387,7 @@ class Download(crawler.DownloadThread):
                 # 关注失败
                 log.error(self.account_name + " 关注失败，跳过作品%s" % album_id)
                 return
+        return
 
         image_index = 1
         album_path = os.path.join(self.main_thread.image_download_path, self.account_name, album_id)
