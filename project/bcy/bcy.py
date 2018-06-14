@@ -394,7 +394,6 @@ class Download(crawler.DownloadThread):
                 # 关注失败
                 log.error(self.account_name + " 关注失败，跳过作品%s" % album_id)
                 return
-        return
 
         image_index = 1
         album_path = os.path.join(self.main_thread.image_download_path, self.account_name, album_id)
