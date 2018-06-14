@@ -111,6 +111,12 @@ def copy_file(source_file_path, destination_file_path):
     """Copy File from source directory to destination directory"""
     source_file_path = change_path_encoding(source_file_path)
     destination_file_path = change_path_encoding(destination_file_path)
+    # 源文件未存在 或者 目标文件已存在
+    if not os.path.exists(source_file_path) or os.path.exists(destination_file_path):
+        return False
+    # 源文件是个目录
+    if not os.path.isfile(source_file_path):
+        return False
     if not create_dir(os.path.dirname(destination_file_path)):
         return False
     shutil.copyfile(source_file_path, destination_file_path)
@@ -121,7 +127,11 @@ def copy_directory(source_dir_path, destination_dir_path):
     """Copy directory from source path to destination path"""
     source_dir_path = change_path_encoding(source_dir_path)
     destination_dir_path = change_path_encoding(destination_dir_path)
-    if os.path.exists(destination_dir_path):
+    # 源文件未存在 或者 目标文件已存在
+    if not os.path.exists(source_dir_path) or os.path.exists(destination_dir_path):
+        return False
+    # 源文件不是个目录
+    if not os.path.isdir(source_dir_path):
         return False
     if not create_dir(os.path.dirname(destination_dir_path)):
         return False
@@ -129,15 +139,15 @@ def copy_directory(source_dir_path, destination_dir_path):
     return True
 
 
-def move_file(source_file_path, destination_file_path):
+def move_file(source_path, destination_path):
     """Move/Rename file from source path to destination path"""
-    source_file_path = change_path_encoding(source_file_path)
-    destination_file_path = change_path_encoding(destination_file_path)
-    if os.path.exists(destination_file_path):
+    source_path = change_path_encoding(source_path)
+    destination_path = change_path_encoding(destination_path)
+    if not os.path.exists(source_path) or os.path.exists(destination_path):
         return False
-    if not create_dir(os.path.dirname(destination_file_path)):
+    if not create_dir(os.path.dirname(destination_path)):
         return False
-    shutil.move(source_file_path, destination_file_path)
+    shutil.move(source_path, destination_path)
 
 
 def filter_text(text):
