@@ -107,13 +107,13 @@ def get_dir_files_name(dir_path, order=None):
         return files_list
 
 
-def copy_files(source_dir_path, destination_dir_path):
-    """Copy Files from source directory to destination directory"""
-    source_dir_path = change_path_encoding(source_dir_path)
-    destination_dir_path = change_path_encoding(destination_dir_path)
-    if not create_dir(os.path.dirname(destination_dir_path)):
+def copy_file(source_file_path, destination_file_path):
+    """Copy File from source directory to destination directory"""
+    source_file_path = change_path_encoding(source_file_path)
+    destination_file_path = change_path_encoding(destination_file_path)
+    if not create_dir(os.path.dirname(destination_file_path)):
         return False
-    shutil.copyfile(source_dir_path, destination_dir_path)
+    shutil.copyfile(source_file_path, destination_file_path)
     return True
 
 
