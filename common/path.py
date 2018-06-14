@@ -152,11 +152,9 @@ def move_file(source_path, destination_path):
 
 def filter_text(text):
     """Filter the character which OS not support in filename or directory name"""
-    filter_character_list = []
+    filter_character_list = ["\t", "\n", "\r", "\b"]
     if platform.system() == "Windows":
-        filter_character_list = ["\\", "/", ":", "*", "?", '"', "<", ">", "|", "\t", "\n", "\r"]
-    else:
-        filter_character_list = ["\t", "\n", "\r"]
+        filter_character_list += ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
     for filter_character in filter_character_list:
         text = text.replace(filter_character, " ")  # 过滤一些windows文件名屏蔽的字符
     while True:
