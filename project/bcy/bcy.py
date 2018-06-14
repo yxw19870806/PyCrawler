@@ -410,12 +410,18 @@ class Download(crawler.DownloadThread):
             else:
                 file_type = "jpg"
             file_path = os.path.join(album_path, "%03d.%s" % (image_index, file_type))
-            save_file_return = net.save_net_file(image_url, file_path)
-            if save_file_return["status"] == 1:
-                log.step(self.account_name + " 作品%s第%s张图片下载成功" % (album_id, image_index))
-                image_index += 1
-            else:
-                log.error(self.account_name + " 作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+            while True:
+                save_file_return = net.save_net_file(image_url, file_path)
+                if save_file_return["status"] == 1:
+                    log.step(self.account_name + " 作品%s第%s张图片下载成功" % (album_id, image_index))
+                    image_index += 1
+                else:
+                    # 560报错，重新下载
+                    if save_file_return["code"] == 560:
+                        time.sleep(5)
+                        continue
+                    log.error(self.account_name + " 作品%s第%s张图片 %s，下载失败，原因：%s" % (album_id, image_index, image_url, crawler.download_failre(save_file_return["code"])))
+                break
 
         # 作品内图片下全部载完毕
         self.temp_path_list = []  # 临时目录设置清除
