@@ -111,7 +111,7 @@ def get_cookie_value_from_browser(cookie_key, file_path, browser_type, target_do
 def _filter_domain(domain, target_domains):
     if target_domains:
         if isinstance(target_domains, str):
-            if domain.find(target_domains) > 0:
+            if domain.find(target_domains) >= 0:
                 return False
         else:
             for target_domain in target_domains:
@@ -143,8 +143,8 @@ def get_all_cookie_from_browser(browser_type, file_path):
                 if len(cookie_list) < 8:
                     continue
                 cookie_domain = cookie_list[2].split("/")[0]
-                cookie_key = cookie_info[0]
-                cookie_value = cookie_info[1]
+                cookie_key = cookie_list[0]
+                cookie_value = cookie_list[1]
                 if cookie_domain not in all_cookies:
                     all_cookies[cookie_domain] = {}
                 all_cookies[cookie_domain][cookie_key] = cookie_value
