@@ -117,6 +117,18 @@ def copy_file(source_file_path, destination_file_path):
     return True
 
 
+def copy_directory(source_dir_path, destination_dir_path):
+    """Copy directory from source path to destination path"""
+    source_dir_path = change_path_encoding(source_dir_path)
+    destination_dir_path = change_path_encoding(destination_dir_path)
+    if os.path.exists(destination_dir_path):
+        return False
+    if not create_dir(os.path.dirname(destination_dir_path)):
+        return False
+    shutil.copytree(source_dir_path, destination_dir_path)
+    return True
+
+
 def move_file(source_file_path, destination_file_path):
     """Move/Rename file from source path to destination path"""
     source_file_path = change_path_encoding(source_file_path)
