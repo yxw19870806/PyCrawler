@@ -23,7 +23,7 @@ HTTP_READ_TIMEOUT = 30
 HTTP_REQUEST_RETRY_COUNT = 10
 HTTP_DOWNLOAD_CONNECTION_TIMEOUT = 10
 HTTP_DOWNLOAD_READ_TIMEOUT = 60
-HTTP_DOWNLOAD_RETRY_COUNT = 5
+HTTP_DOWNLOAD_RETRY_COUNT = 10
 HTTP_DOWNLOAD_MAX_SIZE = 512 * 2 ** 20  # 文件下载限制（字节）
 # https://www.python.org/dev/peps/pep-0476/
 # disable urllib3 HTTPS warning
@@ -383,6 +383,7 @@ def save_net_file(file_url, file_path, need_content_type=False, header_list=None
             if int(content_length) == file_size:
                 return {"status": 1, "code": 0, "file_path": file_path}
             else:
+                time.sleep(10)
                 output.print_msg("本地文件%s：%s和网络文件%s：%s不一致" % (file_path.encode("UTF-8"), content_length, str(file_url), file_size))
         elif response.status == HTTP_RETURN_CODE_URL_INVALID:
             if create_file:
