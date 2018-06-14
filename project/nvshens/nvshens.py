@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import re
 import traceback
@@ -22,7 +22,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    first_album_url = PQ(index_response.data).find("div.listdiv ul li.galleryli").eq(0).find("a.galleryli_link").attr("href")
+    first_album_url = pq(index_response.data).find("div.listdiv ul li.galleryli").eq(0).find("a.galleryli_link").attr("href")
     if not first_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
     album_id = tool.find_sub_string(first_album_url, "/g/", "/")
@@ -52,7 +52,7 @@ def get_album_page(album_id):
             if result["is_delete"]:
                 return result
             # 获取图集图片总数
-            album_info = PQ(album_pagination_response.data).find("#dinfo span").text()
+            album_info = pq(album_pagination_response.data).find("#dinfo span").text()
             if not album_info and album_info.encode("UTF-8").find("张照片") == -1:
                 raise crawler.CrawlerException("页面截取图片总数信息失败\n%s" % album_pagination_response.data)
             image_count = album_info.encode("UTF-8").replace("张照片", "")
@@ -67,15 +67,15 @@ def get_album_page(album_id):
             if not result["album_title"]:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
         # 获取图集图片地址，存在两种页面样式
-        image_list_selector = PQ(album_pagination_response.data).find("#hgallery img")
+        image_list_selector = pq(album_pagination_response.data).find("#hgallery img")
         if image_list_selector.length == 0:
-            image_list_selector = PQ(album_pagination_response.data).find("#pgallery img")
+            image_list_selector = pq(album_pagination_response.data).find("#pgallery img")
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
         # 获取总页数
-        pagination_html = PQ(album_pagination_response.data).find("#pages").html()
+        pagination_html = pq(album_pagination_response.data).find("#pages").html()
         if pagination_html:
             page_count_find = re.findall('/g/' + str(album_id) + '/([\d]*).html', pagination_html)
             if len(page_count_find) != 0:

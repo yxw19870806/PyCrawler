@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import traceback
 
@@ -21,7 +21,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    first_album_url = PQ(index_response.data).find("div.MeinvTuPianBox ul li a").eq(0).attr("href")
+    first_album_url = pq(index_response.data).find("div.MeinvTuPianBox ul li a").eq(0).attr("href")
     if not first_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
     album_id = tool.find_sub_string(first_album_url, "/mm/", "/")
@@ -50,18 +50,18 @@ def get_album_page(album_id):
         # 判断图集是否已经被删除
         if page_count == 1:
             # 获取图集标题
-            album_title = PQ(album_pagination_response.data.decode("UTF-8")).find("h1.articleV4Tit").text()
+            album_title = pq(album_pagination_response.data.decode("UTF-8")).find("h1.articleV4Tit").text()
             if not album_title:
                 raise crawler.CrawlerException("页面截取标题失败\n%s" % album_pagination_response.data)
             result["album_title"] = album_title.encode("UTF-8")
         # 获取图集图片地址
-        image_list_selector = PQ(album_pagination_response.data).find("div.articleV4Body a img")
+        image_list_selector = pq(album_pagination_response.data).find("div.articleV4Body a img")
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, album_pagination_response.data))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append(str(image_list_selector.eq(image_index).attr("src")))
         # 获取总页数
-        pagination_list_selector = PQ(album_pagination_response.data).find("ul.articleV4Page a.page-a")
+        pagination_list_selector = pq(album_pagination_response.data).find("ul.articleV4Page a.page-a")
         if pagination_list_selector.length > 0:
             for pagination_index in range(0, pagination_list_selector.length):
                 temp_page_count = pagination_list_selector.eq(pagination_index).html()

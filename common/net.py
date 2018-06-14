@@ -10,6 +10,7 @@ from common import browser, output, path, process, tool
 import json
 import os
 import random
+import re
 import ssl
 import time
 import threading
@@ -59,6 +60,11 @@ def init_http_connection_pool():
 
 def set_proxy(ip, port):
     """init urllib3 proxy connection pool"""
+    if int(port) <= 0:
+        return
+    match = re.match("((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))", ip)
+    if not match or match.group() != ip:
+        return
     global HTTP_CONNECTION_POOL
     HTTP_CONNECTION_POOL = urllib3.ProxyManager("http://%s:%s" % (ip, port), retries=False)
     output.print_msg("设置代理成功")

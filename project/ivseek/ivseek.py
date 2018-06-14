@@ -88,6 +88,17 @@ def get_archive_page(archive_id):
             account_id = tool.find_sub_string(video_play_response.data, '<a href="/user/', '"')
             if crawler.is_integer(account_id):
                 result_video_info["account_id"] = str(account_id)
+        # http://www.dailymotion.com/embed/video/x5oi0x
+        elif video_url.find("//www.dailymotion.com/") >= 0:
+            video_id = video_url.split("/")[-1][0]
+            result_video_info["video_url"] = "http://www.dailymotion.com/video/%s" % video_id
+            # 获取视频发布账号
+            video_play_response = net.http_request(result_video_info["video_url"], method="GET")
+            if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+                raise crawler.CrawlerException("视频播放页%s，%s" % (result_video_info["video_url"], crawler.request_failre(video_play_response.status)))
+            account_id = tool.find_sub_string(video_play_response.data, '"screenname":"', '"')
+            if account_id:
+                result_video_info["account_id"] = str(account_id)
         # 无效的视频地址
         elif video_url.find("//rcm-fe.amazon-adsystem.com") >= 0:
             continue
@@ -129,6 +140,8 @@ class IvSeek(crawler.Crawler):
             log.step("最新视频id：%s" % index_response["max_archive_id"])
 
             for archive_id in range(save_id, index_response["max_archive_id"]):
+                if not self.is_running():
+                    tool.process_exit(0)
                 log.step("开始解析第%s个视频" % archive_id)
 
                 # 获取一页图片

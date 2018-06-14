@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 import weiboCommon
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import re
 
@@ -39,7 +39,7 @@ def get_one_page_favorite(page_count):
         html_data = html_data.replace(replace_string, "")
     html_data = html_data.replace(chr(1), "\\")
     # 解析页面
-    children_selector = PQ(html_data.decode("UTF-8")).find('div.WB_feed').children()
+    children_selector = pq(html_data.decode("UTF-8")).find('div.WB_feed').children()
     if children_selector.length == 0:
         raise crawler.CrawlerException("匹配收藏信息失败\n%s" % favorite_data_html)
     if children_selector.length == 1:

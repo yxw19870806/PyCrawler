@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import traceback
 
@@ -21,7 +21,7 @@ def get_index_page():
     }
     if index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_response.status))
-    first_album_url = PQ(index_response.data).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
+    first_album_url = pq(index_response.data).find("div.magazine_list_wrap .magazine_item").eq(0).find(".magazine_item_wrap").attr("href")
     if not first_album_url:
         raise crawler.CrawlerException("页面截取最新图集地址失败\n%s" % index_response.data)
     album_id = tool.find_sub_string(first_album_url, "/Product-", ".html")
@@ -46,12 +46,12 @@ def get_album_page(album_id):
         result["is_delete"] = True
         return result
     # 获取模特名字
-    model_name = PQ(album_response.data).find("div.ren_head div.ren_head_c a").attr("title")
+    model_name = pq(album_response.data).find("div.ren_head div.ren_head_c a").attr("title")
     if not model_name:
         raise crawler.CrawlerException("模特信息截取模特名字失败\n%s" % album_response.data)
     result["model_name"] = model_name.encode("UTF-8").strip()
     # 获取所有图片地址
-    image_list_selector = PQ(album_response.data).find("ul#myGallery li img")
+    image_list_selector = pq(album_response.data).find("ul#myGallery li img")
     if image_list_selector.length == 0:
         raise crawler.CrawlerException("页面匹配图片地址失败\n%s" % album_response.data)
     for image_index in range(0, image_list_selector.length):

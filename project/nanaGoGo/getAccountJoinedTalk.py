@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import sys
 
@@ -32,7 +32,7 @@ def get_account_talks(account_id, account_name, talk_list):
     account_index_response = net.http_request(account_index, method="GET")
     if account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    talk_list_selector = PQ(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")
+    talk_list_selector = pq(account_index_response.data.decode("UTF-8")).find(".UserTalkWrapper .UserTalk")
     for talk_index in range(0, talk_list_selector.length):
         talk_selector = talk_list_selector.eq(talk_index)
         # 获取talk地址

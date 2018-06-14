@@ -20,10 +20,17 @@ def get_one_page_video(account_id, cursor_id):
     api_url = "https://www.douyin.com/aweme/v1/aweme/post/"
     query_data = {
         "user_id": account_id,
-        "max_cursor": cursor_id,
+        "max_cursor": str(cursor_id),
         "count": EACH_PAGE_VIDEO_COUNT,
+        "ts": "1528882843",
+        "as": "a1852ea2db294ba6002927",
+        "cp": "ea99bb52b1022f61e1fmnc",
+        "mas": "00fc1cec2a176642c8bc842e47ff5c262cec4c9c4c0c0c6c86462c",
     }
-    video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+    header_list = {
+        "User-Agent": "okhttp/3.8.1",
+    }
+    video_pagination_response = net.http_request(api_url, method="GET", fields=query_data, header_list=header_list, json_decode=True)
     result = {
         "is_over": False,  # 是不是最后一页视频
         "next_page_cursor_id": None,  # 下一页视频指针
@@ -49,8 +56,8 @@ def get_one_page_video(account_id, cursor_id):
         raise crawler.CrawlerException("返回信息'aweme_list'字段类型不正确\n%s" % video_pagination_response.json_data)
     for video_info in video_pagination_response.json_data["aweme_list"]:
         result_video_info = {
-            "video_id": None, # 视频id
-            "video_url": None, # 视频地址
+            "video_id": None,  # 视频id
+            "video_url": None,  # 视频地址
         }
         # 获取视频id
         if not crawler.check_sub_key(("aweme_id",), video_info):
@@ -139,7 +146,7 @@ class Download(crawler.DownloadThread):
 
             # 获取指定一页的视频信息
             try:
-                video_pagination_response = get_one_page_video(self.account_info[1], cursor_id)
+                video_pagination_response = get_one_page_video(self.account_id, cursor_id)
             except crawler.CrawlerException, e:
                 log.error(self.account_name + " cursor %s后的一页视频解析失败，原因：%s" % (cursor_id, e.message))
                 raise
@@ -175,6 +182,7 @@ class Download(crawler.DownloadThread):
         # 视频下载完毕
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
         self.total_video_count += 1  # 计数累加
+
 
     def run(self):
         try:

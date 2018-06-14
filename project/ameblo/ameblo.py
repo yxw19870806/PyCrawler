@@ -8,7 +8,7 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 from PIL import Image
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import re
 import threading
@@ -48,7 +48,7 @@ def get_one_page_blog(account_name, page_count):
     # 另一种页面格式
     if len(blog_id_list) == 0:
         # goto-risako
-        blog_list_selector = PQ(blog_pagination_response.data).find('#main li a.skin-titleLink')
+        blog_list_selector = pq(blog_pagination_response.data).find('#main li a.skin-titleLink')
         if blog_list_selector.length > 0:
             blog_id_list = []
             for blog_url_index in range(0, len(blog_list_selector)):
@@ -95,7 +95,7 @@ def get_blog_page(account_name, blog_id):
     article_class_list = ["subContentsInner", "articleText", "skin-entryInner"]
     article_html = None
     for article_class in article_class_list:
-        article_html_selector = PQ(blog_response.data).find("." + article_class)
+        article_html_selector = pq(blog_response.data).find("." + article_class)
         if article_html_selector.length == 1:
             article_html = article_html_selector.html()
             break

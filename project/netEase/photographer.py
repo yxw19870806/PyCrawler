@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import re
 import threading
@@ -29,7 +29,7 @@ def get_account_index_page(account_name):
     if account_index_html.find("<title>该页面不存在</title>") >= 0:
         raise crawler.CrawlerException("账号不存在")
     # 获取全部相册地址
-    album_result_selector = PQ(account_index_html).find("#p_contents li")
+    album_result_selector = pq(account_index_html).find("#p_contents li")
     if album_result_selector.length == 0:
         raise crawler.CrawlerException("页面匹配相册列表失败\n%s" % account_index_html)
     for album_index in range(0, album_result_selector.length):
