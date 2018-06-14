@@ -94,26 +94,34 @@ def _do_login(email, password):
 
 
 # 关注指定账号
-# todo check again
 def follow(account_id):
+    if "_csrf_token" not in COOKIE_INFO:
+        return False
     follow_api_url = "https://bcy.net/weibo/Operate/follow?"
-    follow_post_data = {"uid": account_id, "type": "dofollow"}
-    follow_response = net.http_request(follow_api_url, method="POST", fields=follow_post_data)
+    follow_post_data = {"uid": account_id, "type": "dofollow", "_csrf_token": COOKIE_INFO["_csrf_token"]}
+    header_list = {
+        "Referer": "https://bcy.net/u/%s" % account_id,
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    follow_response = net.http_request(follow_api_url, method="POST", fields=follow_post_data, cookies_list=COOKIE_INFO, header_list=header_list)
     if follow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 0 未登录，11 关注成功，12 已关注
-        if int(follow_response.data) == 12:
+        if crawler.is_integer(follow_response.data) and int(follow_response.data) in [11, 12]:
             return True
     return False
 
 
 # 取消关注指定账号
-# todo check again
 def unfollow(account_id):
     unfollow_api_url = "https://bcy.net/weibo/Operate/follow?"
-    unfollow_post_data = {"uid": account_id, "type": "unfollow"}
-    unfollow_response = net.http_request(unfollow_api_url, method="POST", fields=unfollow_post_data)
+    unfollow_post_data = {"uid": account_id, "type": "unfollow", "_csrf_token": COOKIE_INFO["_csrf_token"]}
+    header_list = {
+        "Referer": "https://bcy.net/u/%s" % account_id,
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    unfollow_response = net.http_request(unfollow_api_url, method="POST", fields=unfollow_post_data, cookies_list=COOKIE_INFO, header_list=header_list)
     if unfollow_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if int(unfollow_response.data) == 1:
+        if crawler.is_integer(unfollow_response.data) and int(unfollow_response.data) == 1:
             return True
     return False
 
