@@ -56,8 +56,8 @@ def get_one_page_video(account_id, cursor_id):
         raise crawler.CrawlerException("返回信息'aweme_list'字段类型不正确\n%s" % video_pagination_response.json_data)
     for video_info in video_pagination_response.json_data["aweme_list"]:
         result_video_info = {
-            "video_id": None, # 视频id
-            "video_url": None, # 视频地址
+            "video_id": None,  # 视频id
+            "video_url": None,  # 视频地址
         }
         # 获取视频id
         if not crawler.check_sub_key(("aweme_id",), video_info):
@@ -182,6 +182,7 @@ class Download(crawler.DownloadThread):
         # 视频下载完毕
         self.account_info[1] = str(video_info["video_id"])  # 设置存档记录
         self.total_video_count += 1  # 计数累加
+
 
     def run(self):
         try:
