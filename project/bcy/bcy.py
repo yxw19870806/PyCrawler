@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import json
 import os
 import threading
@@ -137,9 +137,9 @@ def get_one_page_album(account_id, page_count):
         result["is_over"] = True
         return result
     # 获取作品信息
-    if PQ(album_pagination_response.data.decode("UTF-8")).find("ul.gridList").length == 0:
+    if pq(album_pagination_response.data.decode("UTF-8")).find("ul.gridList").length == 0:
         raise crawler.CrawlerException("页面截取作品列表失败\n%s" % album_pagination_response.data)
-    album_list_selector = PQ(album_pagination_response.data.decode("UTF-8")).find("ul.gridList li.js-smallCards")
+    album_list_selector = pq(album_pagination_response.data.decode("UTF-8")).find("ul.gridList li.js-smallCards")
     for album_index in range(0, album_list_selector.length):
         album_selector = album_list_selector.eq(album_index)
         # 获取作品id
@@ -151,7 +151,7 @@ def get_one_page_album(account_id, page_count):
             raise crawler.CrawlerException("作品地址 %s 截取作品id失败\n%s" % (album_url, album_selector.html().encode("UTF-8")))
         result["album_id_list"].append(album_id)
     # 判断是不是最后一页
-    last_pagination_selector = PQ(album_pagination_response.data).find("ul.pager li:last a")
+    last_pagination_selector = pq(album_pagination_response.data).find("ul.pager li:last a")
     if last_pagination_selector.length == 1:
         max_page_count = int(last_pagination_selector.attr("href").strip().split("&p=")[-1])
         result["is_over"] = page_count >= max_page_count
@@ -175,11 +175,11 @@ def get_album_page(album_id):
     is_skip = False
     # 问题
     # https://bcy.net/item/detail/6115326868729126670
-    if PQ(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.find('<a href="/group/discover">问答</a>') > 0:
+    if pq(album_response.data).find("div.post__content.js-fullimg").length == 1 and album_response.data.find('<a href="/group/discover">问答</a>') > 0:
         is_skip = True
     # 文章
     # https://bcy.net/item/detail/6162547130750754574
-    elif PQ(album_response.data).find("div.post__content h1.title.mt5").length == 1:
+    elif pq(album_response.data).find("div.post__content h1.title.mt5").length == 1:
         is_skip = True
     # 检测作品是否被管理员锁定
     elif album_response.data.find("<h2>问题已被锁定，无法查看回答</h2>") >= 0:
@@ -187,7 +187,7 @@ def get_album_page(album_id):
 
     # 是不是有报错信息
     if not is_skip:
-        error_message = PQ(album_response.data.decode("UTF-8")).find("span.l-detail-no-right-to-see__text").text().encode("UTF-8")
+        error_message = pq(album_response.data.decode("UTF-8")).find("span.l-detail-no-right-to-see__text").text().encode("UTF-8")
         # https://bcy.net/item/detail/5969608017174355726
         if error_message == "该作品已被作者设置为只有粉丝可见":
             result["is_only_follower"] = True
@@ -201,7 +201,7 @@ def get_album_page(album_id):
             return result
 
     # 获取作品页面内的全部图片地址列表
-    image_list_selector = PQ(album_response.data).find("div.post__content img.detail_std")
+    image_list_selector = pq(album_response.data).find("div.post__content img.detail_std")
     for image_index in range(0, image_list_selector.length):
         image_selector = image_list_selector.eq(image_index)
         # 获取作品id

@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import re
 import string
@@ -42,9 +42,9 @@ def get_album_page(sub_path, page_count):
     # 页面编码
     album_pagination_html = album_pagination_response.data.decode("GBK")
     # 获取图集信息，存在两种页面样式
-    album_list_selector = PQ(album_pagination_html).find("div.xxx li a")
+    album_list_selector = pq(album_pagination_html).find("div.xxx li a")
     if album_list_selector.length == 0:
-        album_list_selector = PQ(album_pagination_html).find("div.yyy li a")
+        album_list_selector = pq(album_pagination_html).find("div.yyy li a")
     if album_list_selector.length == 0:
         raise crawler.CrawlerException("页面截取图集列表失败\n%s" % album_pagination_html.encode("UTF-8"))
     for album_index in range(0, album_list_selector.length):
@@ -69,7 +69,7 @@ def get_album_page(sub_path, page_count):
             result_album_info["album_title"] = album_title
         result["album_info_list"].append(result_album_info)
     # 判断是不是最后一页
-    max_page_info = PQ(album_pagination_html).find("div.page a").eq(-1).text()
+    max_page_info = pq(album_pagination_html).find("div.page a").eq(-1).text()
     if not max_page_info:
         raise crawler.CrawlerException("总页数信息截取失败\n%s" % album_pagination_html.encode("UTF-8"))
     max_page_count = tool.find_sub_string(max_page_info.encode("UTF-8"), "共", "页")
@@ -96,14 +96,14 @@ def get_album_photo(sub_path, page_id):
         # 页面编码
         photo_pagination_html = photo_pagination_response.data.decode("GBK")
         # 获取图片地址
-        image_list_selector = PQ(photo_pagination_html).find("div.zzz li img")
+        image_list_selector = pq(photo_pagination_html).find("div.zzz li img")
         if image_list_selector.length == 0:
             raise crawler.CrawlerException("第%s页 页面匹配图片地址失败\n%s" % (page_count, photo_pagination_html.encode("UTF-8")))
         for image_index in range(0, image_list_selector.length):
             result["image_url_list"].append("http://www.88mmw.com" + str(image_list_selector.eq(image_index).attr("src")).replace("-lp", ""))
         # 判断是不是最后一页
         is_over = False
-        max_page_selector = PQ(photo_pagination_html).find("div.page").eq(0).find("span strong").text()
+        max_page_selector = pq(photo_pagination_html).find("div.page").eq(0).find("span strong").text()
         if not max_page_selector:
             is_over = True
         elif crawler.is_integer(max_page_selector):

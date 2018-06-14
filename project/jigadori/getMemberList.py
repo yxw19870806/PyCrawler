@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 
 # Twitter存档文件目录
@@ -51,7 +51,7 @@ def get_one_page_account(page_count):
     pagination_account_list = {}
     if account_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         crawler.CrawlerException(crawler.request_failre(account_pagination_response.status))
-    account_list_selector = PQ(account_pagination_response.data.decode("UTF-8")).find(".users-list li")
+    account_list_selector = pq(account_pagination_response.data.decode("UTF-8")).find(".users-list li")
     for account_index in range(0, account_list_selector.length):
         account_selector = account_list_selector.eq(account_index)
         # 获取成员名字
