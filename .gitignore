@@ -2,7 +2,7 @@
 *.pyc
 log/
 *-*_*_*.data
-deprecation/yasaxi/token
+deprecation/yasaxi/session
 project/*/photo/
 project/*/video/
 project/bcy/session
