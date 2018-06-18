@@ -50,7 +50,7 @@ def main(account_id):
                 else:
                     card_read_name = card_name
                 if card_read_name in market_card_list:
-                    market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.quote(card_read_name))
+                    market_link = "http://steamcommunity.com/market/listings/753/%s-%s" % (game_id, urllib.quote(card_read_name.encode("UTF-8")))
                     output.print_msg("card: %s, wanted %s, min price: %s, link: %s" % (card_name, wanted_card_list[card_name], market_card_list[card_read_name], market_link), False)
                 else:
                     output.print_msg("card: %s, wanted %s, not found price in market" % (card_name, wanted_card_list[card_read_name]), False)
