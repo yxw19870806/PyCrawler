@@ -530,6 +530,8 @@ def request_failre(return_code):
         return "域名无法解析"
     elif return_code == net.HTTP_RETURN_CODE_RESPONSE_TO_LARGE:
         return "返回文本过大"
+    elif return_code == net.HTTP_RETURN_CODE_TOO_MANY_REDIRECTS:
+        return "重定向次数过多"
     elif return_code > 0:
         return "未知错误，http code %s" % return_code
     else:
