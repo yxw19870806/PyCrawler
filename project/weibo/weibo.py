@@ -160,12 +160,15 @@ def get_video_url(video_play_url):
         video_play_response = net.http_request(video_play_url, method="GET")
         if video_play_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(video_play_response.status))
-        video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
-        if len(video_url_find) != 1:
-            raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
-        video_url = meipai.decrypt_video_url(video_url_find[0])
-        if video_url is None:
-            raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_find[0])
+        if video_play_response.data.find('<p class="error-p">为建设清朗网络空间，视频正在审核中，暂时无法播放。</p>') > 0:
+            video_url = ""
+        else:
+            video_url_find = re.findall('<meta content="([^"]*)" property="og:video:url">', video_play_response.data)
+            if len(video_url_find) != 1:
+                raise crawler.CrawlerException("页面匹配加密视频信息失败\n%s" % video_play_response.data)
+            video_url = meipai.decrypt_video_url(video_url_find[0])
+            if video_url is None:
+                raise crawler.CrawlerException("加密视频地址解密失败\n%s" % video_url_find[0])
     # http://v.xiaokaxiu.com/v/0YyG7I4092d~GayCAhwdJQ__.html
     elif video_play_url.find("v.xiaokaxiu.com/v/") >= 0:  # 小咖秀
         video_id = video_play_url.split("/")[-1].split(".")[0]
@@ -374,18 +377,19 @@ class Download(crawler.DownloadThread):
 
     # 解析单个视频
     def crawl_video(self, video_play_url):
+        video_index = int(self.account_info[3]) + 1
         # 获取这个视频的下载地址
         try:
             video_url = get_video_url(video_play_url)
         except crawler.CrawlerException, e:
-            log.error(self.account_name + " 视频 %s 解析失败，原因：%s" % (video_play_url, e.message))
+            log.error(self.account_name + " 第%s个视频 %s 解析失败，原因：%s" % (video_index, video_play_url, e.message))
             raise
 
         if video_url is "":
+            log.step(self.account_name + " 第%s个视频 %s 跳过" % (video_index, video_play_url))
             return
 
         self.main_thread_check()  # 检测主线程运行状态
-        video_index = int(self.account_info[3]) + 1
         log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.mp4" % video_index)
@@ -422,7 +426,7 @@ class Download(crawler.DownloadThread):
                     self.crawl_image(deal_image_info_list)
                     deal_image_info_list = []  # 累加图片地址清除
                     self.main_thread_check()  # 检测主线程运行状态
-            print self.main_thread.is_download_video
+
             # 视频下载
             if self.main_thread.is_download_video:
                 # 获取所有可下载视频
