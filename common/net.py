@@ -36,6 +36,7 @@ HTTP_RETURN_CODE_URL_INVALID = -1  # 地址不符合规范（非http:// 或者 h
 HTTP_RETURN_CODE_JSON_DECODE_ERROR = -2  # 返回数据不是JSON格式，但返回状态是200
 HTTP_RETURN_CODE_DOMAIN_NOT_RESOLVED = -3  # 域名无法解析
 HTTP_RETURN_CODE_RESPONSE_TO_LARGE = -4  # 文件太大
+HTTP_RETURN_CODE_TOO_MANY_REDIRECTS = -5  # 重定向次数过多
 HTTP_RETURN_CODE_EXCEPTION_CATCH = -10
 HTTP_RETURN_CODE_SUCCEED = 200
 
@@ -256,6 +257,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Cannot connect to proxy.', error(10054, '')))
             elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ProxyError") >= 0:
                 time.sleep(30)
+            # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many redirects',))
+            elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ResponseError('too many redirects'") >= 0:
+                return ErrorResponse(HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
             # SSLError: ('_ssl.c:574: The handshake operation timed out',)
             elif str(e).find("The handshake operation timed out") >= 0:
                 time.sleep(30)
