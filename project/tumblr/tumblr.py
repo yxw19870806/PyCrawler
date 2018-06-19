@@ -39,7 +39,7 @@ def check_safe_mode():
     if not COOKIE_INFO:
         return False
     account_setting_url = "https://www.tumblr.com/settings/account"
-    account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
+    account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
     if account_setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
         # 页面存在safe mode的设置，并且没有选择上
         if pq(account_setting_response.data).find('#user_safe_mode').length == 1 and pq(account_setting_response.data).find('#user_safe_mode:checked').val() is None:
