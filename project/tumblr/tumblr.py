@@ -17,10 +17,10 @@ import urllib
 import urlparse
 
 EACH_PAGE_COUNT = 100
-IS_LOGIN = True
 COOKIE_INFO = {}
 USER_AGENT = None
 IS_STEP_ERROR_403_AND_404 = False
+IS_SAFE_MODE = True
 
 
 # 检测登录状态
@@ -440,8 +440,8 @@ class Tumblr(crawler.Crawler):
             if input_str in ["e", "exit"]:
                 tool.process_exit()
             elif input_str in ["c", "continue"]:
-                global IS_LOGIN
-                IS_LOGIN = False
+                global IS_SAFE_MODE
+                IS_SAFE_MODE = False
                 break
 
     def main(self):
@@ -642,8 +642,8 @@ class Download(crawler.DownloadThread):
                 raise
 
             # 未登录&开启safe mode直接退出
-            if not IS_LOGIN and self.is_safe_mode:
-                log.error(self.account_id + " 账号开启了safe mode并且未检测到登录状态")
+            if not IS_SAFE_MODE and self.is_safe_mode:
+                log.error(self.account_id + " 账号开启了安全模式，跳过")
                 tool.process_exit()
 
             start_page_count = 1
