@@ -28,7 +28,7 @@ def check_login():
     if not COOKIE_INFO:
         return False
     index_url = "https://www.tumblr.com/"
-    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    index_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
     if index_response.status == 302 and index_response.getheader("Location") == "https://www.tumblr.com/dashboard":
         return True
     return False
@@ -39,12 +39,16 @@ def check_safe_mode():
     if not COOKIE_INFO:
         return False
     account_setting_url = "https://www.tumblr.com/settings/account"
-    account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
+    account_setting_response = net.http_request(account_setting_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT}, is_auto_redirect=False)
     if account_setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if pq(account_setting_response.data).find('#user_safe_mode:checked').val() == 'on':
-            return False
-        else:
-            return True
+        # 页面存在safe mode的设置，并且没有选择上
+        if pq(account_setting_response.data).find('#user_safe_mode').length == 1 and pq(account_setting_response.data).find('#user_safe_mode:checked').val() is None:
+            # 访问一次safe mode的网址获取这个UA对应的cookies
+            update_url = "https://www.tumblr.com/safe-mode?url=http://www.tumblr.com/"
+            update_response = net.http_request(update_url, method="GET", cookies_list=COOKIE_INFO, header_list={"User-Agent": USER_AGENT})
+            if update_response.status == 404:
+                COOKIE_INFO.update(net.get_cookies_from_response_header(update_response.headers))
+                return True
     return False
 
 
