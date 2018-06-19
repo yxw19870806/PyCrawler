@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from pyquery import PyQuery as PQ
+from pyquery import PyQuery as pq
 import os
 import threading
 import time
@@ -38,7 +38,7 @@ def check_safe_search():
     setting_url = "https://www.flickr.com/account/prefs/safesearch/?from=privacy"
     setting_response = net.http_request(setting_url, method="GET", cookies_list=COOKIE_INFO, is_auto_redirect=False)
     if setting_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        if PQ(setting_response.data).find("input[name='safe_search']:checked").val() == "2":
+        if pq(setting_response.data).find("input[name='safe_search']:checked").val() == "2":
             return True
     return False
 
@@ -208,6 +208,7 @@ class Flickr(crawler.Crawler):
         console_string = ""
         if not check_login():
             console_string = "没有检测到账号登录状态"
+        # 检测safe search开启状态
         elif not check_safe_search():
             console_string = "账号安全搜尋已开启"
         while console_string:
