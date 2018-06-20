@@ -323,7 +323,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的视频
             for video_play_url in video_pagination_response["video_play_url_list"]:
                 # 检查是否达到存档记录
-                if self.account_info[2] != video_play_url:
+                if self.account_info[4] != video_play_url:
                     video_play_url_list.append(video_play_url)
                 else:
                     is_over = True
@@ -334,7 +334,7 @@ class Download(crawler.DownloadThread):
                     is_over = True
                     # todo 没有找到历史记录如何处理
                     # 有历史记录，但此次直接获取了全部视频
-                    if self.account_info[2] != "":
+                    if self.account_info[4] != "":
                         log.error(self.account_name + " 没有找到上次下载的最后一个视频地址")
                 else:
                     # 设置下一页指针
