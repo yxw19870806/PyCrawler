@@ -314,7 +314,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=True):
+def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=False):
     """Visit web and save to local
 
     :param file_url:
