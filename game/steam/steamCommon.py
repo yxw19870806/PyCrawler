@@ -304,7 +304,7 @@ def get_one_page_inventory(account_id, cookies_list, last_assert_id="0"):
             "class_id": None,  # 物品类id
             "count": None,  # 物品数量
             "name": "",  # 物品名字
-            "type": "",  # 物品类型
+            "type": "",  # 物品类型  Gems / Consumable / Trading Card / Profile Background / Emoticon
         }
         # 物品类
         if not crawler.check_sub_key(("classid",), item_info):
