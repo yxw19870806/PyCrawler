@@ -161,7 +161,7 @@ class Download(crawler.DownloadThread):
 
     # 下载单个视频
     def crawl_video(self, video_info):
-        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%08d.mp4" % video_info["video_id"])
+        file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%09d.mp4" % video_info["video_id"])
         save_file_return = net.save_net_file(video_info["video_url"], file_path)
         if save_file_return["status"] == 1:
             log.step(self.account_name + " %s视频下载成功" % video_info["video_id"])
