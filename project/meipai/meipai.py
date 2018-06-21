@@ -28,7 +28,6 @@ def get_one_page_video(account_id, page_count):
     }
     video_pagination_response = net.http_request(video_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
-        "is_error": False,  # 是不是格式不符合
         "video_info_list": [],  # 全部视频信息
     }
     if video_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:

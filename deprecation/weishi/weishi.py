@@ -29,7 +29,6 @@ def get_one_page_video(account_id, page_time):
     else:
         query_data["pageflag"] = "0"
     result = {
-        "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是最后一页视频
         "video_info_list": [],  # 全部视频信息
     }
@@ -86,7 +85,6 @@ def get_video_info_page(video_vid, video_id):
     video_info_url = "http://wsi.weishi.com/weishi/video/downloadVideo.php?vid=%s&id=%s" % (video_vid, video_id)
     video_info_response = net.http_request(video_info_url, method="GET", json_decode=True)
     result = {
-        "is_error": False,  # 是不是格式不符合
         "video_url": "",  # 视频地址
     }
     if video_info_response.status != net.HTTP_RETURN_CODE_SUCCEED:

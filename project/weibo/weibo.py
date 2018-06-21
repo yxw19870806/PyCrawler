@@ -83,7 +83,6 @@ def get_one_page_video(account_page_id, since_id):
     }
     cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     result = {
-        "is_error": False,  # 是不是格式不符合
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
     }
