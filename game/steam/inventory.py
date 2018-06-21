@@ -7,8 +7,9 @@ email: hikaru870806@hotmail.com
 """
 from common import output, crawler
 import steamCommon
-DUPLICATE_BACKGROUND = True
-DUPLICATE_EMOTICON = True
+
+CHECK_DUPLICATE_BACKGROUND = True
+CHECK_DUPLICATE_EMOTICON = True
 
 
 # 获取当前account正在收集的徽章进度
@@ -34,10 +35,10 @@ def main(account_id):
             last_assert_id = inventory_pagination_response["last_assert_id"]
     for item_id, item_info in inventory_item_list.iteritems():
         if item_info["type"] == "Profile Background":
-            if DUPLICATE_BACKGROUND and item_info["count"] > 1:
+            if CHECK_DUPLICATE_BACKGROUND and item_info["count"] > 1:
                 output.print_msg(item_info)
         elif item_info["type"] == "Emoticon":
-            if DUPLICATE_EMOTICON and item_info["count"] > 1:
+            if CHECK_DUPLICATE_EMOTICON and item_info["count"] > 1:
                 output.print_msg(item_info)
 
 
