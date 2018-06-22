@@ -6,11 +6,11 @@ http://kg.qq.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import threading
 import time
 import traceback
+from common import *
 
 AUDIO_COUNT_PER_PAGE = 8
 

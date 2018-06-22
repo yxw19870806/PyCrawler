@@ -6,13 +6,13 @@ http://www.dailymotion.com
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import json
 import os
 import random
 import threading
 import time
 import traceback
+from common import *
 
 AUTHORIZATION = None
 FIRST_CHOICE_RESOLUTION = 720

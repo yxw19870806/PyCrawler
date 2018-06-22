@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
-from common import net, output, path, tool
 import re
+from common import net, output, path, tool
 
 item_list = {
     "helm": "头盔",

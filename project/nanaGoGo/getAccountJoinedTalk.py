@@ -6,10 +6,9 @@ https://7gogo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from pyquery import PyQuery as pq
 import os
-import sys
+from pyquery import PyQuery as pq
+from common import *
 
 # 存放账号的文件路径
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))

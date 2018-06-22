@@ -6,12 +6,12 @@ http://www.yizhibo.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import re
 import threading
 import time
 import traceback
+from common import *
 
 
 # 获取全部图片地址列表

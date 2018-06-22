@@ -6,8 +6,8 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import re
+from common import *
 
 
 # 从cookie中获取登录的auth_token

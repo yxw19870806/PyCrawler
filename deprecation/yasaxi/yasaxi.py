@@ -10,7 +10,6 @@ import os
 import threading
 import time
 import traceback
-
 from common import *
 import yasaxiCommon
 
@@ -32,7 +31,6 @@ def get_one_page_photo(account_id, cursor):
         "User-Agent": "User-Agent: Dalvik/1.6.0 (Linux; U; Android 4.4.2; Nexus 6 Build/KOT49H)",
     }
     result = {
-        "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经没有新的图片
         "next_page_cursor": None,  # 下一页图片的指针
         "status_info_list": [],  # 全部状态信息

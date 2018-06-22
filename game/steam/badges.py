@@ -5,9 +5,9 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import urllib
 from common import output, crawler
 import steamCommon
-import urllib
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
 MAX_CARD_PRICE = 99  # 最高卡牌价格
@@ -42,7 +42,7 @@ def main(account_id):
                 market_card_list = steamCommon.get_market_game_trade_card_price(game_id, cookies_list)
             except crawler.CrawlerException, e:
                 output.print_msg("游戏id%s的市场解析失败，原因：%s" % (game_id, e.message))
-                raise 
+                continue
             card_real_name_dict = {}
             for card_read_name in market_card_list:
                 card_name = card_read_name.replace(" (Trading Card)", "")

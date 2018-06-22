@@ -5,10 +5,10 @@ steam相关数据解析爬虫
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from pyquery import PyQuery as pq
 import os
 import re
+from pyquery import PyQuery as pq
+from common import *
 
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\account.data"))
 
@@ -304,7 +304,7 @@ def get_one_page_inventory(account_id, cookies_list, last_assert_id="0"):
             "class_id": None,  # 物品类id
             "count": None,  # 物品数量
             "name": "",  # 物品名字
-            "type": "",  # 物品类型
+            "type": "",  # 物品类型  Gems / Consumable / Trading Card / Profile Background / Emoticon
         }
         # 物品类
         if not crawler.check_sub_key(("classid",), item_info):

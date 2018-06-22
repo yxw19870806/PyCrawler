@@ -5,12 +5,12 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, crawler, tool
-import steamCommon
 import json
 import os
 import time
 import datetime
+from common import *
+import steamCommon
 
 API_UPDATE_TIME_WEEKDAY = 2  # 每周优惠更新时间（周几）
 API_UPDATE_TIME_HOUR = 1  # 每周优惠更新时间（几点）

@@ -5,9 +5,9 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, tool
 import threading
 import time
+from common import output, tool
 
 IS_SHOW_ERROR = True
 IS_SHOW_STEP = False

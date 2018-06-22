@@ -5,12 +5,12 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output
 import os
 import platform
 import sqlite3
 if platform.system() == "Windows":
     import win32crypt
+from common import output
 
 BROWSER_TYPE_IE = 1
 BROWSER_TYPE_FIREFOX = 2

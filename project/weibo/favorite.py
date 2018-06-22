@@ -6,11 +6,11 @@ http://www.weibo.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-import weiboCommon
-from pyquery import PyQuery as pq
 import os
 import re
+from pyquery import PyQuery as pq
+from common import *
+import weiboCommon
 
 COOKIE_INFO = {"SUB": ""}
 
@@ -24,7 +24,6 @@ def get_one_page_favorite(page_count):
     favorite_pagination_response = net.http_request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
     result = {
         "blog_info_list": [],  # 所有微博信息
-        "is_error": False,  # 是不是不符合格式
         "is_over": False,  # 是不是最后一页收藏
     }
     if favorite_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:

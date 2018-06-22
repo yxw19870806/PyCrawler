@@ -6,11 +6,11 @@ https://plus.google.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import threading
 import time
 import traceback
+from common import *
 
 
 # 获取指定token后的一页相册
@@ -38,46 +38,44 @@ def get_one_page_blog(account_id, token):
     else:
         blog_pagination_url = "https://get.google.com/albumarchive/%s/albums/photos-from-posts" % account_id
         blog_pagination_response = net.http_request(blog_pagination_url, method="GET")
-        if blog_pagination_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-            script_data_html = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
-            script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
-            if not script_data_html:
-                raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
-            script_data = tool.json_decode(script_data_html)
-            if script_data is None:
-                raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
-        elif blog_pagination_response.status == 400:
+        if blog_pagination_response.status == 400:
             raise crawler.CrawlerException("账号不存在")
-        else:
+        elif blog_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(blog_pagination_response.status))
+        script_data_html = tool.find_sub_string(blog_pagination_response.data, "AF_initDataCallback({key: 'ds:0'", "</script>")
+        script_data_html = tool.find_sub_string(script_data_html, "return ", "}});")
+        if not script_data_html:
+            raise crawler.CrawlerException("页面截取日志信息失败\n%s" % blog_pagination_response.data)
+        script_data = tool.json_decode(script_data_html)
+        if script_data is None:
+            raise crawler.CrawlerException("日志信息加载失败\n%s" % script_data_html)
     if len(script_data) != 3:
         raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
     # 获取下一页token
     result["next_page_key"] = str(script_data[2])
     # 获取日志信息
-    if script_data[1] is not None:
-        for data in script_data[1]:
-            result_blog_info = {
-                "blog_id": None,  # 日志id
-                "blog_time": None,  # 日志发布时间
-            }
-            blog_data = []
-            for temp_data in data:
-                if crawler.check_sub_key(("113305016",), temp_data):
-                    blog_data = temp_data["113305016"][0]
-                    break
-            if len(blog_data) >= 5:
-                # 获取日志id
-                result_blog_info["blog_id"] = str(blog_data[0])
-                # 获取日志发布时间
-                if not crawler.is_integer(blog_data[4]):
-                    raise crawler.CrawlerException("日志时间类型不正确\n%s" % blog_data)
-                result_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
-            else:
-                raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
-            result["blog_info_list"].append(result_blog_info)
-    else:
-        result["is_error"] = False
+    if script_data[1] is None:
+        raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
+    for data in script_data[1]:
+        result_blog_info = {
+            "blog_id": None,  # 日志id
+            "blog_time": None,  # 日志发布时间
+        }
+        blog_data = []
+        for temp_data in data:
+            if crawler.check_sub_key(("113305016",), temp_data):
+                blog_data = temp_data["113305016"][0]
+                break
+        if len(blog_data) >= 5:
+            # 获取日志id
+            result_blog_info["blog_id"] = str(blog_data[0])
+            # 获取日志发布时间
+            if not crawler.is_integer(blog_data[4]):
+                raise crawler.CrawlerException("日志时间类型不正确\n%s" % blog_data)
+            result_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
+        else:
+            raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
+        result["blog_info_list"].append(result_blog_info)
     return result
 
 

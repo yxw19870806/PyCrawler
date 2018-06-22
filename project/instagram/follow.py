@@ -6,8 +6,8 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import time
+from common import *
 
 COOKIE_INFO = {}
 IS_FOLLOW_PRIVATE_ACCOUNT = False  # 是否对私密账号发出关注请求

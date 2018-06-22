@@ -6,13 +6,13 @@ https://twitter.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import re
 import threading
 import time
 import traceback
 import urllib
+from common import *
 
 COOKIE_INFO = {}
 AUTHORIZATION = None
@@ -79,7 +79,6 @@ def get_one_page_media(account_name, position_blog_id):
     header_list = {"referer": "https://twitter.com/%s" % account_name}
     media_pagination_response = net.http_request(media_pagination_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, header_list=header_list, json_decode=True)
     result = {
-        "is_error": False,  # 是不是格式不符合
         "is_over": False,  # 是不是已经最后一页媒体（没有获取到任何内容）
         "media_info_list": [],  # 全部媒体信息
         "next_page_position": None  # 下一页指针

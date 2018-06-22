@@ -6,9 +6,9 @@ http://www.vliaoapp.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import json
 import os
+from common import *
 
 USER_ID = ""
 USER_KEY = ""

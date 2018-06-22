@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 # 重新格式化存档，修改字段顺序
-from common import tool
 import os
+from common import tool
 
 # 旧存档路径
 OLD_SAVE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "save.data"))

@@ -7,8 +7,9 @@ email: hikaru870806@hotmail.com
 """
 from common import output, crawler
 import steamCommon
-DUPLICATE_BACKGROUND = True
-DUPLICATE_EMOTICON = True
+
+CHECK_DUPLICATE_BACKGROUND = True
+CHECK_DUPLICATE_EMOTICON = True
 
 
 # 获取当前account正在收集的徽章进度
@@ -25,7 +26,6 @@ def main(account_id):
         try:
             inventory_pagination_response = steamCommon.get_one_page_inventory(account_id, cookies_list, last_assert_id)
         except crawler.CrawlerException, e:
-            print e.message
             output.print_msg("assert id: %s后一页的库存解析失败，原因：%s" % (last_assert_id, e.message))
             raise
         inventory_item_list.update(inventory_pagination_response["item_list"])
@@ -34,11 +34,11 @@ def main(account_id):
         else:
             last_assert_id = inventory_pagination_response["last_assert_id"]
     for item_id, item_info in inventory_item_list.iteritems():
-        if item_info["type"] == "ProfileBackground":
-            if DUPLICATE_BACKGROUND and item_info["count"] > 1:
+        if item_info["type"] == "Profile Background":
+            if CHECK_DUPLICATE_BACKGROUND and item_info["count"] > 1:
                 output.print_msg(item_info)
         elif item_info["type"] == "Emoticon":
-            if DUPLICATE_EMOTICON and item_info["count"] > 1:
+            if CHECK_DUPLICATE_EMOTICON and item_info["count"] > 1:
                 output.print_msg(item_info)
 
 

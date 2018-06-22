@@ -6,10 +6,10 @@ http://www.ugirls.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from pyquery import PyQuery as pq
 import os
 import traceback
+from pyquery import PyQuery as pq
+from common import *
 
 
 # 从图集首页获取最新的图集id

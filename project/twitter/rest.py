@@ -6,10 +6,10 @@ https://dev.twitter.com/rest/reference
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import base64
 import json
 import os
+from common import *
 
 API_HOST = "https://api.twitter.com"
 API_VERSION = "1.1"

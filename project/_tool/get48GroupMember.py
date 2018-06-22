@@ -1,6 +1,6 @@
 # -*- coding:UTF-8  -*-
-from common import net, output, tool
 import re
+from common import net, output, tool
 
 
 def akb(file_handle):

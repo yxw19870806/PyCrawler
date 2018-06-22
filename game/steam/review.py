@@ -5,10 +5,10 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output, crawler, tool
-import steamCommon
 import json
 import os
+from common import output, crawler, tool
+import steamCommon
 
 REVIEW_DATA_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\review.txt"))
 

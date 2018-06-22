@@ -5,8 +5,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-
-from common import browser, output, path, process, tool
 import json
 import os
 import random
@@ -16,6 +14,7 @@ import time
 import threading
 import traceback
 import urllib3
+from common import browser, output, path, process, tool
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
@@ -314,7 +313,7 @@ def _random_ip_address():
     return "%s.%s.%s.%s" % (random.randint(1, 254), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
-def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=True):
+def save_net_file(file_url, file_path, need_content_type=False, header_list=None, cookies_list=None, head_check=False):
     """Visit web and save to local
 
     :param file_url:

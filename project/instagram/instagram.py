@@ -6,12 +6,12 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import json
 import os
 import threading
 import time
 import traceback
+from common import *
 
 IS_LOCAL_SAVE_SESSION = False
 IMAGE_COUNT_PER_PAGE = 12

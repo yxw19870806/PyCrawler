@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 # 判断存档文件中的数量和保存目录中的数量是否一致
-from common import output, tool
 import os
+from common import output, tool
 
 # 文件保存目录
 FILE_STORAGE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "photo"))

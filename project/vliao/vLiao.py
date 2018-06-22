@@ -6,13 +6,12 @@ http://www.vliaoapp.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-import vLiaoCommon
-import json
 import os
 import threading
 import time
 import traceback
+from common import *
+import vLiaoCommon
 
 
 # 获取一页视频

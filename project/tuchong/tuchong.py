@@ -6,11 +6,11 @@ https://tuchong.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import threading
 import time
 import traceback
+from common import *
 
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 
@@ -49,7 +49,6 @@ def get_one_page_album(account_id, post_time):
     album_pagination_response = net.http_request(album_pagination_url, method="GET", fields=query_data, json_decode=True)
     result = {
         "album_info_list": [],  # 全部图片信息
-        "is_error": False,  # 是不是格式不符合
     }
     if album_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(album_pagination_response.status))

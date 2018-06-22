@@ -5,8 +5,8 @@ http://www.miaopai.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import re
+from common import *
 
 
 # 获取指定账号的全部关注列表
