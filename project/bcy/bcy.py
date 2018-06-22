@@ -14,11 +14,11 @@ import traceback
 from pyquery import PyQuery as pq
 from common import *
 
+COOKIE_INFO = {}
 IS_AUTO_FOLLOW = True
 IS_LOCAL_SAVE_SESSION = False
 IS_LOGIN = True
-COOKIE_INFO = {}
-SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
+SESSION_DATA_PATH = None
 
 
 # 生成session cookies
@@ -49,7 +49,7 @@ def check_login():
     # 没有浏览器cookies，尝试读取文件
     else:
         # 从文件中读取账号密码
-        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_FILE_PATH)), {})
+        account_data = tool.json_decode(tool.decrypt_string(tool.read_file(SESSION_DATA_PATH)), {})
         if crawler.check_sub_key(("email", "password"), account_data):
             if _do_login(account_data["email"], account_data["password"]):
                 return True
@@ -69,7 +69,7 @@ def login_from_console():
                 if _do_login(email, password):
                     if IS_LOCAL_SAVE_SESSION:
                         account_info_encrypt_string = tool.encrypt_string(json.dumps({"email": email, "password": password}))
-                        tool.write_file(account_info_encrypt_string, SESSION_FILE_PATH, tool.WRITE_FILE_TYPE_REPLACE)
+                        tool.write_file(account_info_encrypt_string, SESSION_DATA_PATH, tool.WRITE_FILE_TYPE_REPLACE)
                     return True
                 return False
             elif input_str in ["n", "no"]:
@@ -234,6 +234,7 @@ class Bcy(crawler.Crawler):
         global COOKIE_INFO
         global IS_AUTO_FOLLOW
         global IS_LOCAL_SAVE_SESSION
+        global SESSION_DATA_PATH
 
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
@@ -251,6 +252,7 @@ class Bcy(crawler.Crawler):
             COOKIE_INFO = {}
         IS_AUTO_FOLLOW = self.app_config["IS_AUTO_FOLLOW"]
         IS_LOCAL_SAVE_SESSION = self.app_config["IS_LOCAL_SAVE_SESSION"]
+        SESSION_DATA_PATH = self.session_data_path
 
         # 解析存档文件
         # account_id  last_album_id
