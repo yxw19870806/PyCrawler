@@ -152,6 +152,9 @@ class Crawler(object):
             tool.process_exit()
             return
 
+        # session
+        self.session_data_path = analysis_config(config, "SESSION_DATA_PATH", "\\\\info/session.data", CONFIG_ANALYSIS_MODE_PATH)
+
         # 是否需要下载图片
         if self.is_download_image:
             # 图片保存目录
