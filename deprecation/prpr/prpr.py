@@ -5,11 +5,11 @@ PR社APP图片&视频爬虫
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import threading
 import time
 import traceback
+from common import *
 
 POST_COUNT_PER_PAGE = 10  # 每次获取的作品数量（貌似无效）
 IS_SKIP_BLUR = False

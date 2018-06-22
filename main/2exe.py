@@ -4,12 +4,11 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-
-from common import extraTool, path, tool
-from distutils.core import setup
 import os
 import py2exe
 import shutil
+from distutils.core import setup
+from common import extraTool, path, tool
 
 
 def create_exe(py_file_path, need_config=False, need_zip=False):

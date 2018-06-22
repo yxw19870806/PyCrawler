@@ -6,11 +6,11 @@ http://www.weibo.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-import weiboCommon
-from pyquery import PyQuery as pq
 import os
 import re
+from pyquery import PyQuery as pq
+from common import *
+import weiboCommon
 
 COOKIE_INFO = {"SUB": ""}
 

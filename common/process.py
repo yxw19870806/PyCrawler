@@ -4,10 +4,9 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import output
-from multiprocessing.connection import Client, Listener
 import threading
-
+from multiprocessing.connection import Client, Listener
+from common import output
 
 PROCESS_SERVER_IP = "localhost"  # 监听服务器IP
 PROCESS_SERVER_PORT = 12345  # 监听服务器端口

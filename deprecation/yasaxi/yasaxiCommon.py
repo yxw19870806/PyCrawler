@@ -6,9 +6,9 @@ http://share.yasaxi.com/share.html
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import json
 import os
+from common import *
 
 ACCESS_TOKEN = ""
 AUTH_TOKEN = ""

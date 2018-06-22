@@ -6,12 +6,12 @@ http://www.miaopai.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import re
 import threading
 import time
 import traceback
+from common import *
 
 
 # 获取用户的suid，作为查找指定用户的视频页的凭证

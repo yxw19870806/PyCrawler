@@ -4,8 +4,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import path
-from Crypto.Cipher import AES
 import base64
 import hashlib
 import json
@@ -14,6 +12,8 @@ import platform
 import random
 import string
 import sys
+from Crypto.Cipher import AES
+from common import path
 
 # if sys.stdout.encoding != "UTF-8":
 #     raise Exception("项目编码必须是UTF-8，请在IDE中修改相关设置")

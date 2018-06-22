@@ -6,13 +6,13 @@ https://manhua.dmzj.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import threading
 import time
 import traceback
 import urllib
 import urlparse
+from common import *
 
 
 # 获取指定一页的图集

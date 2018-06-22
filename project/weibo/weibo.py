@@ -6,15 +6,15 @@ http://www.weibo.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from project.meipai import meipai
-import weiboCommon
 import os
 import re
 import threading
 import time
 import traceback
 import urllib2
+from common import *
+from project.meipai import meipai
+import weiboCommon
 
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"

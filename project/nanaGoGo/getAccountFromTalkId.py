@@ -6,8 +6,8 @@ https://7gogo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
+from common import *
 
 # 存放解析出的账号文件路径
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))

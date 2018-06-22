@@ -6,13 +6,13 @@ http://blog.nogizaka46.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from PIL import Image
 import os
 import re
 import threading
 import time
 import traceback
+from PIL import Image
+from common import *
 
 
 # 获取成员指定页数的一页日志信息

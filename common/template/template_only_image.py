@@ -5,13 +5,13 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import json
 import os
 import re
 import threading
 import time
 import traceback
+from common import *
 
 
 # 获取一页日志

@@ -5,7 +5,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import browser, keyboardEvent, log, net, output, path, tool
 import codecs
 import ConfigParser
 import os
@@ -15,6 +14,7 @@ import sys
 import thread
 import threading
 import time
+from common import browser, keyboardEvent, log, net, output, path, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_IMAGE = "download_image"

@@ -5,8 +5,6 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-
-from common import browser, output, path, process, tool
 import json
 import os
 import random
@@ -16,6 +14,7 @@ import time
 import threading
 import traceback
 import urllib3
+from common import browser, output, path, process, tool
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10

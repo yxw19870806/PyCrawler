@@ -6,9 +6,9 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import datetime
-import win32api
-import time
 import math
+import time
+import win32api
 
 
 def set_system_time(year, month, day, hour, minute, second):

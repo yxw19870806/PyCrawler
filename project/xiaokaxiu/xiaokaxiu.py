@@ -6,12 +6,11 @@ https://www.xiaokaxiu.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-import base64
 import os
 import threading
 import time
 import traceback
+from common import *
 
 VIDEO_COUNT_PER_PAGE = 10  # 每次请求获取的视频数量
 

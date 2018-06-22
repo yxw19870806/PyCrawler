@@ -1,7 +1,7 @@
 # -*- coding:UTF-8  -*-
 # 获取指定存档文件中是否存在重复的主键
-from common import output, tool
 import os
+from common import output, tool
 
 # 存档路径
 SAVE_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "save.data"))

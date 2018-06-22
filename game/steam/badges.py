@@ -5,9 +5,9 @@
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
+import urllib
 from common import output, crawler
 import steamCommon
-import urllib
 
 MIN_CARD_PRICE = 0  # 最低卡牌价格
 MAX_CARD_PRICE = 99  # 最高卡牌价格

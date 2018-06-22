@@ -6,8 +6,8 @@ http://jigadori.fkoji.com/users
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import tool
 import os
+from common import tool
 
 # Twitter存档文件目录
 SAVE_DATA_PATH = os.path.abspath(os.path.join(tool.PROJECT_APP_ROOT_PATH, "twitter/info/save_5.data"))

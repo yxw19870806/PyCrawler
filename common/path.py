@@ -9,7 +9,6 @@ import os
 import platform
 import shutil
 
-
 CREATE_DIR_MODE_IGNORE_IF_EXIST = 1
 CREATE_DIR_MODE_DELETE_IF_EXIST = 2
 RETURN_FILE_LIST_ASC = 1

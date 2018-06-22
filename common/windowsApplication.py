@@ -5,13 +5,13 @@ windows应用窗口处理类
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import keyboardEvent, process
 import os
 import pywintypes
 import time
 import win32api
 import win32con
 import win32gui
+from common import keyboardEvent, process
 
 
 class WindowsApplication:

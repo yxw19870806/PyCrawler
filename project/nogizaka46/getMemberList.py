@@ -6,8 +6,8 @@ http://http://blog.nogizaka46.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import net, crawler, tool
 import re
+from common import *
 
 
 # 获取存档文件

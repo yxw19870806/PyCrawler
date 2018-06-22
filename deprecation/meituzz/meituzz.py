@@ -6,9 +6,9 @@ http://meituzz.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import traceback
+from common import *
 
 ERROR_PAGE_COUNT_CHECK = 50
 

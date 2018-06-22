@@ -6,11 +6,11 @@ https://tuchong.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import threading
 import time
 import traceback
+from common import *
 
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 

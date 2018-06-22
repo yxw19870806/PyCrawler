@@ -6,12 +6,12 @@ https://www.flickr.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from pyquery import PyQuery as pq
 import os
 import threading
 import time
 import traceback
+from pyquery import PyQuery as pq
+from common import *
 
 IMAGE_COUNT_PER_PAGE = 50
 IS_LOGIN = True

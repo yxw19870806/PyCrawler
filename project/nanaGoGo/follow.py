@@ -6,9 +6,9 @@ https://www.instagram.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import os
 import time
+from common import *
 
 COOKIE_INFO = {}
 # 存放解析出的账号文件路径

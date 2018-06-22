@@ -6,8 +6,6 @@ http://www.88mmw.com/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
-from pyquery import PyQuery as pq
 import os
 import re
 import string
@@ -15,6 +13,8 @@ import threading
 import time
 import traceback
 import urllib
+from pyquery import PyQuery as pq
+from common import *
 
 SUB_PATH_LIST = {
     "Rosi": "1",

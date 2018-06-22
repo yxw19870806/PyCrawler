@@ -5,8 +5,8 @@ discuz论坛解析爬虫
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import net, tool
 import re
+from common import *
 
 
 # 获取论坛全部版块的地址列表

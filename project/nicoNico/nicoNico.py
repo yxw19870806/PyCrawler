@@ -6,13 +6,13 @@ http://www.nicovideo.jp/
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import *
 import HTMLParser
 import json
 import os
 import threading
 import time
 import traceback
+from common import *
 
 COOKIE_INFO = {}
 
