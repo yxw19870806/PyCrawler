@@ -54,28 +54,27 @@ def get_one_page_blog(account_id, token):
     # 获取下一页token
     result["next_page_key"] = str(script_data[2])
     # 获取日志信息
-    if script_data[1] is None:
-        raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
-    for data in script_data[1]:
-        result_blog_info = {
-            "blog_id": None,  # 日志id
-            "blog_time": None,  # 日志发布时间
-        }
-        blog_data = []
-        for temp_data in data:
-            if crawler.check_sub_key(("113305016",), temp_data):
-                blog_data = temp_data["113305016"][0]
-                break
-        if len(blog_data) >= 5:
-            # 获取日志id
-            result_blog_info["blog_id"] = str(blog_data[0])
-            # 获取日志发布时间
-            if not crawler.is_integer(blog_data[4]):
-                raise crawler.CrawlerException("日志时间类型不正确\n%s" % blog_data)
-            result_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
-        else:
-            raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
-        result["blog_info_list"].append(result_blog_info)
+    if script_data[1] is not None:
+        for data in script_data[1]:
+            result_blog_info = {
+                "blog_id": None,  # 日志id
+                "blog_time": None,  # 日志发布时间
+            }
+            blog_data = []
+            for temp_data in data:
+                if crawler.check_sub_key(("113305016",), temp_data):
+                    blog_data = temp_data["113305016"][0]
+                    break
+            if len(blog_data) >= 5:
+                # 获取日志id
+                result_blog_info["blog_id"] = str(blog_data[0])
+                # 获取日志发布时间
+                if not crawler.is_integer(blog_data[4]):
+                    raise crawler.CrawlerException("日志时间类型不正确\n%s" % blog_data)
+                result_blog_info["blog_time"] = int(int(blog_data[4]) / 1000)
+            else:
+                raise crawler.CrawlerException("日志信息格式不正确\n%s" % script_data)
+            result["blog_info_list"].append(result_blog_info)
     return result
 
 
