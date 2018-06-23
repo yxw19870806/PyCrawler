@@ -588,6 +588,7 @@ class Download(crawler.DownloadThread):
                 # 设置临时目录
                 self.temp_path_list.append(video_file_path)
                 log.step(self.account_id + " 日志 %s 视频下载成功" % post_id)
+                video_index += 1
             else:
                 if save_file_return["code"] == 403 and video_url.find("_r1_720") != -1:
                     video_url = video_url.replace("_r1_720", "_r1")
@@ -596,6 +597,7 @@ class Download(crawler.DownloadThread):
                         # 设置临时目录
                         self.temp_path_list.append(video_file_path)
                         log.step(self.account_id + " 日志 %s 视频下载成功" % post_id)
+                        video_index += 1
                         break
                 error_message = self.account_id + " 日志 %s 视频 %s 下载失败，原因：%s" % (post_url, video_url, crawler.download_failre(save_file_return["code"]))
                 # 403、404错误作为step log输出
