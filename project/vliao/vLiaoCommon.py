@@ -13,7 +13,7 @@ from common import *
 USER_ID = ""
 USER_KEY = ""
 API_VERSION = "31"
-token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "session"))
+token_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "info\\session"))
 
 
 # 检查登录信息
