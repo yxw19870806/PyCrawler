@@ -149,6 +149,7 @@ class Download(crawler.DownloadThread):
         is_over = False
         # 获取全部还未下载过需要解析的歌曲
         while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
             log.step(self.account_name + " 开始解析第%s页歌曲" % page_count)
 
             # 获取一页歌曲

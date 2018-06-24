@@ -33,7 +33,7 @@ def main(account_id):
             wanted_card_list = steamCommon.get_self_account_badge_card(badges_detail_url, cookies_list)
         except crawler.CrawlerException, e:
             output.print_msg("徽章%s解析失败，原因：%s" % (badges_detail_url, e.message))
-            raise
+            continue
         if len(wanted_card_list) > 0:
             game_id = badges_detail_url.split("/")[-2]
             output.print_msg("game id: %s" % game_id, False)
