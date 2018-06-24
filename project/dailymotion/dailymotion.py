@@ -268,7 +268,7 @@ class Download(crawler.DownloadThread):
             # 寻找这一页符合条件的日志
             for video_info in blog_pagination_response["video_info_list"]:
                 # 检查是否达到存档记录
-                if video_info["video_time"] < self.account_info[1]:
+                if video_info["video_time"] > int(self.account_info[1]):
                     video_info_list.append(video_info)
                 else:
                     is_over = True
