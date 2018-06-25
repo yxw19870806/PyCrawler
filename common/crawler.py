@@ -413,7 +413,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 
 # 读取存档文件，并根据指定列生成存档字典
 # default_value_list 每一位的默认值
-def read_save_data(save_data_path, key_index, default_value_list):
+def read_save_data(save_data_path, key_index=0, default_value_list=[], check_duplicate_index=True):
     result_list = {}
     if not os.path.exists(path.change_path_encoding(save_data_path)):
         return result_list
@@ -423,7 +423,7 @@ def read_save_data(save_data_path, key_index, default_value_list):
             continue
         single_save_list = single_save_data.split("\t")
 
-        if single_save_list[key_index] in result_list:
+        if check_duplicate_index and single_save_list[key_index] in result_list:
             output.print_msg("存档中存在重复行 %s" % single_save_list[key_index])
             tool.process_exit()
 
