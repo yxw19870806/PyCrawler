@@ -46,7 +46,7 @@ def follow_account(account_id):
 
 
 def main():
-    config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
+    config = crawler._get_config()
 
     # 获取cookies
     all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
