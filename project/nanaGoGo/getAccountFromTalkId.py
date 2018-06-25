@@ -13,16 +13,6 @@ from common import *
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "info/account.data"))
 
 
-# 获取存档文件
-def get_account_from_save_data(file_path):
-    account_list = {}
-    for line in tool.read_file(file_path, tool.READ_FILE_TYPE_LINE):
-        line = line.replace("\n", "")
-        account_info_temp = line.split("\t")
-        account_list[account_info_temp[0]] = line
-    return account_list
-
-
 # 根据talk id获取全部参与者
 def get_member_from_talk(talk_id):
     talk_index_url = "https://7gogo.jp/%s" % talk_id
@@ -50,7 +40,7 @@ def get_member_from_talk(talk_id):
 def main():
     # 存档位置
     save_data_path = crawler.quickly_get_save_data_path()
-    save_data = get_account_from_save_data(save_data_path)
+    save_data = crawler.read_save_data(save_data_path, 0, [])
     account_list =  crawler.read_save_data(ACCOUNT_ID_FILE_PATH, 0, []).keys()
     for talk_id in save_data:
         try:

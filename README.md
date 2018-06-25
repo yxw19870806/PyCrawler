@@ -27,4 +27,28 @@ support multiple parameter for visit web
   set whether auto redirect(http code 301, 302, 303, 307, 308) <br>
 
 # Install
-* run main/install.bat
+* run main/install.bat in CMD console
+
+# Support website / App
+* [Instagram](https://www.instagram.com/)
+* [Twitter](https://twitter.com/)
+* [Google+](https://plus.google.com/)
+* [Tumblr](https://www.tumblr.com/)
+* [Flickr](https://www.flickr.com/)
+* [Dailymotion](http://www.dailymotion.com/)
+* [Youtube](https://www.youtube.com/)
+* [半次元](https://bcy.net/)
+* [5sing](http://5sing.kugou.com/index.html)
+* [唱吧](http://changba.com/)
+* [全名K歌](http://kg.qq.com/)
+* [喜马拉雅FM](http://www.ximalaya.com/)
+* [美拍](http://www.meipai.com/)
+* [秒拍](https://www.miaopai.com/)
+* [小咖秀](https://www.xiaokaxiu.com/)
+* [Lofter](http://www.lofter.com/)
+* [图虫](https://tuchong.com/)
+* [微博](https://weibo.com/)
+* [一直播](https://www.yizhibo.com/)
+* [755](https://7gogo.jp/)
+* [Ameblo](https://ameblo.jp/)
+* [ニコニコ动画](http://www.nicovideo.jp/)

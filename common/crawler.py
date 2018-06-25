@@ -413,7 +413,7 @@ def sort_file(source_path, destination_path, start_count, file_name_length):
 
 # 读取存档文件，并根据指定列生成存档字典
 # default_value_list 每一位的默认值
-def read_save_data(save_data_path, key_index, default_value_list):
+def read_save_data(save_data_path, key_index=0, default_value_list=[], check_duplicate_index=True):
     result_list = {}
     if not os.path.exists(path.change_path_encoding(save_data_path)):
         return result_list
@@ -423,7 +423,7 @@ def read_save_data(save_data_path, key_index, default_value_list):
             continue
         single_save_list = single_save_data.split("\t")
 
-        if single_save_list[key_index] in result_list:
+        if check_duplicate_index and single_save_list[key_index] in result_list:
             output.print_msg("存档中存在重复行 %s" % single_save_list[key_index])
             tool.process_exit()
 
@@ -546,7 +546,7 @@ def request_failre(return_code):
 #           True    配置文件未禁止时使用代理（IS_PROXY = 1 or 2)
 def quickly_set_proxy(config=None, is_auto=True):
     if not isinstance(config, ConfigParser.SafeConfigParser):
-        config = read_config(tool.PROJECT_CONFIG_PATH)
+        config = _get_config()
     # 设置代理
     if is_auto:
         is_proxy = analysis_config(config, "IS_PROXY", 2, CONFIG_ANALYSIS_MODE_INTEGER)
@@ -561,14 +561,14 @@ def quickly_set_proxy(config=None, is_auto=True):
 # 读取配置文件，返回存档文件所在路径
 def quickly_get_save_data_path(config=None):
     if not isinstance(config, ConfigParser.SafeConfigParser):
-        config = read_config(tool.PROJECT_CONFIG_PATH)
+        config = _get_config()
     return analysis_config(config, "SAVE_DATA_PATH", "\\\\info/save.data", CONFIG_ANALYSIS_MODE_PATH)
 
 
 # 读取浏览器cookies
 def quickly_get_all_cookies_from_browser(config=None):
     if not isinstance(config, ConfigParser.SafeConfigParser):
-        config = read_config(tool.PROJECT_CONFIG_PATH)
+        config = _get_config()
     # 是否自动查找cookies路径
     is_auto_get_cookie = analysis_config(config, "IS_AUTO_GET_COOKIE", True, CONFIG_ANALYSIS_MODE_BOOLEAN)
     if not is_auto_get_cookie:
@@ -577,3 +577,12 @@ def quickly_get_all_cookies_from_browser(config=None):
     browser_type = analysis_config(config, "BROWSER_TYPE", browser.BROWSER_TYPE_CHROME, CONFIG_ANALYSIS_MODE_INTEGER)
     cookie_path = browser.get_default_browser_cookie_path(browser_type)
     return browser.get_all_cookie_from_browser(browser_type, cookie_path)
+
+
+def _get_config():
+    config = read_config(tool.PROJECT_CONFIG_PATH)
+    app_config_path = os.path.abspath(os.path.join(os.getcwd(), "app.ini"))
+    if os.path.exists(app_config_path):
+        app_config = read_config(app_config_path)
+        config.update(app_config)
+    return config

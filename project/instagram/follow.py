@@ -65,7 +65,7 @@ def follow_account(account_name, account_id):
 
 
 def main():
-    config = crawler.read_config(tool.PROJECT_CONFIG_PATH)
+    config = crawler._get_config()
     # 获取cookies
     all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
     if "www.instagram.com" in all_cookie_from_browser:
@@ -79,7 +79,7 @@ def main():
     # 存档位置
     save_data_path = crawler.quickly_get_save_data_path(config)
     # 读取存档文件
-    account_list = crawler.read_save_data(save_data_path, 0, [""])
+    account_list = crawler.read_save_data(save_data_path, 0, [])
 
     count = 0
     for account_name in sorted(account_list.keys()):
