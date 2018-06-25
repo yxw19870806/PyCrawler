@@ -36,7 +36,7 @@ def check_login():
 def get_one_page_video(account_id, token):
     # token = "4qmFsgJAEhhVQ2xNXzZHRU9razY2STFfWWJTUFFqSWcaJEVnWjJhV1JsYjNNZ0FEZ0JZQUZxQUhvQk1yZ0JBQSUzRCUzRA%3D%3D"
     result = {
-        "account_name": None, # 账号名字
+        "account_name": None,  # 账号名字
         "video_id_list": [],  # 全部视频id
         "next_page_token": None,  # 下一页token
     }
@@ -75,7 +75,7 @@ def get_one_page_video(account_id, token):
         if not crawler.check_sub_key(("gridRenderer",), temp_data):
             try:
                 # 没有上传过任何视频
-                if temp_data["messageRenderer"]["text"]["simpleText"] == "Thischannelhasnovideos.":
+                if temp_data["messageRenderer"]["text"]["simpleText"] == "This channel has no videos.":
                     return result
             except KeyError:
                 pass

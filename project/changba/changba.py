@@ -54,7 +54,7 @@ def get_one_page_audio(user_id, page_count):
             "audio_id": None,  # 歌曲id
             "audio_key": None,  # 歌曲唯一key
             "audio_title": "",  # 歌曲标题
-            "audio_type": None,  # 歌曲类型，0 MV，1/3 歌曲
+            "audio_type": None,  # 歌曲类型，2 MV，1/3 歌曲
         }
         # 获取歌曲id
         if not crawler.check_sub_key(("workid",), audio_info):
@@ -75,7 +75,7 @@ def get_one_page_audio(user_id, page_count):
             raise crawler.CrawlerException("歌曲信息'type'字段不存在\n%s" % audio_info)
         if not crawler.is_integer(audio_info["type"]):
             raise crawler.CrawlerException("歌曲信息'type'字段类型不正确\n%s" % audio_info)
-        if int(audio_info["type"]) not in (0, 1, 3):
+        if int(audio_info["type"]) not in (1, 2, 3):
             raise crawler.CrawlerException("歌曲信息'type'字段取值不正确\n%s" % audio_info)
         result_audio_info["audio_type"] = int(audio_info["type"])
         result["audio_info_list"].append(result_audio_info)

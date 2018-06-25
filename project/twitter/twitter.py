@@ -23,8 +23,7 @@ def init_session():
     global AUTHORIZATION
     global COOKIE_INFO
     index_url = "https://twitter.com/"
-    header_list = {"referer": "https://twitter.com"}
-    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list=header_list)
+    index_page_response = net.http_request(index_url, method="GET", cookies_list=COOKIE_INFO, header_list={"referer": "https://twitter.com"})
     if index_page_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(index_page_response.status))
     # 没有登录状态

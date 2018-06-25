@@ -53,18 +53,24 @@ def init_session():
 
 
 # 获取视频列表
-def get_video_list(account_id):
+def get_one_page_video(account_id, page_count):
     api_url = "https://graphql.api.dailymotion.com/"
     post_data = {
-        "operationName": "CHANNEL_QUERY",
-        "variables": {"channel_xid": "viralhog", "uri": "/viralhog"},
-        "query": "fragment CHANNEL_FRAGMENT on Channel {\n  id\n  xid\n  name\n  displayName\n  isArtist\n  logoURL(size: \"x60\")\n  coverURLx375: coverURL(size: \"x375\")\n  isFollowed\n  __typename\n}\n\nfragment LIVE_FRAGMENT on Live {\n  id\n  xid\n  title\n  startAt\n  thumbURLx240: thumbnailURL(size: \"x240\")\n  thumbURLx360: thumbnailURL(size: \"x360\")\n  thumbURLx480: thumbnailURL(size: \"x480\")\n  thumbURLx720: thumbnailURL(size: \"x720\")\n  channel {\n    ...CHANNEL_FRAGMENT\n    __typename\n  }\n  __typename\n}\n\nfragment VIDEO_FRAGMENT on Video {\n  id\n  xid\n  title\n  viewCount\n  duration\n  createdAt\n  channel {\n    ...CHANNEL_FRAGMENT\n    __typename\n  }\n  thumbURLx240: thumbnailURL(size: \"x240\")\n  thumbURLx360: thumbnailURL(size: \"x360\")\n  thumbURLx480: thumbnailURL(size: \"x480\")\n  thumbURLx720: thumbnailURL(size: \"x720\")\n  __typename\n}\n\nfragment METADATA_FRAGMENT on Neon {\n  web(uri: $uri) {\n    author\n    description\n    title\n    metadatas {\n      attributes {\n        name\n        content\n        __typename\n      }\n      __typename\n    }\n    language {\n      codeAlpha2\n      __typename\n    }\n    country {\n      codeAlpha2\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment LOCALIZATION_FRAGMENT on Localization {\n  me {\n    id\n    country {\n      codeAlpha2\n      name\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nquery CHANNEL_QUERY($channel_xid: String!, $uri: String!) {\n  localization {\n    ...LOCALIZATION_FRAGMENT\n    __typename\n  }\n  views {\n    id\n    neon {\n      id\n      ...METADATA_FRAGMENT\n      __typename\n    }\n    __typename\n  }\n  channel(xid: $channel_xid) {\n    id\n    xid\n    name\n    displayName\n    description\n    accountType\n    isArtist\n    logoURL(size: \"x60\")\n    coverURL1024x: coverURL(size: \"1024x\")\n    coverURL1920x: coverURL(size: \"1920x\")\n    isFollowed\n    tagline\n    country {\n      codeAlpha2\n      __typename\n    }\n    stats {\n      views {\n        total\n        __typename\n      }\n      followers {\n        total\n        __typename\n      }\n      videos {\n        total\n        __typename\n      }\n      __typename\n    }\n    externalLinks {\n      facebookURL\n      twitterURL\n      websiteURL\n      instagramURL\n      __typename\n    }\n    channel_lives_now: lives(isOnAir: true) {\n      edges {\n        node {\n          ...LIVE_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    channel_lives_scheduled: lives(startIn: 7200) {\n      edges {\n        node {\n          ...LIVE_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    channel_featured_videos: videos(isFeatured: true) {\n      edges {\n        node {\n          ...VIDEO_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    channel_all_videos: videos {\n      edges {\n        node {\n          ...VIDEO_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    channel_most_viewed: videos(sort: \"visited\") {\n      edges {\n        node {\n          ...VIDEO_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    channel_collections: collections {\n      edges {\n        node {\n          id\n          xid\n          name\n          description\n          stats {\n            videos {\n              total\n              __typename\n            }\n            __typename\n          }\n          thumbURLx240: thumbnailURL(size: \"x240\")\n          thumbURLx360: thumbnailURL(size: \"x360\")\n          thumbURLx480: thumbnailURL(size: \"x480\")\n          channel {\n            ...CHANNEL_FRAGMENT\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    channel_related_channel: networkChannels(first: 8) {\n      edges {\n        node {\n          ...CHANNEL_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n"
+        "operationName": "CHANNEL_VIDEOS_QUERY",
+        "variables": {
+            "channel_xid": account_id,
+            "uri": "/%s/videos" % account_id,
+            "page": page_count,
+            "sort": "recent",
+        },
+        "query": "fragment CHANNEL_BASE_FRAGMENT on Channel {\n  id\n  xid\n  name\n  displayName\n  isArtist\n  logoURL(size: \"x60\")\n  isFollowed\n  accountType\n  __typename\n}\n\nfragment CHANNEL_IMAGES_FRAGMENT on Channel {\n  coverURLx375: coverURL(size: \"x375\")\n  __typename\n}\n\nfragment CHANNEL_UPDATED_FRAGMENT on Channel {\n  isFollowed\n  stats {\n    views {\n      total\n      __typename\n    }\n    followers {\n      total\n      __typename\n    }\n    videos {\n      total\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment CHANNEL_COMPLETE_FRAGMENT on Channel {\n  ...CHANNEL_BASE_FRAGMENT\n  ...CHANNEL_IMAGES_FRAGMENT\n  ...CHANNEL_UPDATED_FRAGMENT\n  description\n  coverURL1024x: coverURL(size: \"1024x\")\n  coverURL1920x: coverURL(size: \"1920x\")\n  externalLinks {\n    facebookURL\n    twitterURL\n    websiteURL\n    instagramURL\n    __typename\n  }\n  __typename\n}\n\nfragment CHANNEL_FRAGMENT on Channel {\n  id\n  xid\n  name\n  displayName\n  isArtist\n  logoURL(size: \"x60\")\n  coverURLx375: coverURL(size: \"x375\")\n  isFollowed\n  __typename\n}\n\nfragment VIDEO_FRAGMENT on Video {\n  id\n  xid\n  title\n  viewCount\n  duration\n  createdAt\n  channel {\n    ...CHANNEL_FRAGMENT\n    __typename\n  }\n  thumbURLx240: thumbnailURL(size: \"x240\")\n  thumbURLx360: thumbnailURL(size: \"x360\")\n  thumbURLx480: thumbnailURL(size: \"x480\")\n  thumbURLx720: thumbnailURL(size: \"x720\")\n  __typename\n}\n\nfragment METADATA_FRAGMENT on Neon {\n  web(uri: $uri) {\n    author\n    description\n    title\n    metadatas {\n      attributes {\n        name\n        content\n        __typename\n      }\n      __typename\n    }\n    language {\n      codeAlpha2\n      __typename\n    }\n    country {\n      codeAlpha2\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment LOCALIZATION_FRAGMENT on Localization {\n  me {\n    id\n    country {\n      codeAlpha2\n      name\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nquery CHANNEL_VIDEOS_QUERY($channel_xid: String!, $sort: String, $page: Int!, $uri: String!) {\n  localization {\n    ...LOCALIZATION_FRAGMENT\n    __typename\n  }\n  views {\n    id\n    neon {\n      id\n      ...METADATA_FRAGMENT\n      __typename\n    }\n    __typename\n  }\n  channel(xid: $channel_xid) {\n    ...CHANNEL_COMPLETE_FRAGMENT\n    channel_videos_all_videos: videos(sort: $sort, page: $page, first: 30) {\n      pageInfo {\n        hasNextPage\n        nextPage\n        __typename\n      }\n      edges {\n        node {\n          ...VIDEO_FRAGMENT\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n"
     }
     header_list = {
         "authorization": "Bearer " + AUTHORIZATION,
         "origin": "http://www.dailymotion.com",
     }
     result = {
+        "is_over": False,  # 是不是最后一页
         "video_info_list": [],  # 全部视频信息
     }
     api_response = net.http_request(api_url, method="POST", binary_data=json.dumps(post_data), header_list=header_list, json_decode=True)
@@ -74,13 +80,14 @@ def get_video_list(account_id):
         raise crawler.CrawlerException("返回信息'data'字段不存在\n%s" % api_response.json_data)
     if not crawler.check_sub_key(("channel",), api_response.json_data["data"]):
         raise crawler.CrawlerException("返回信息'channel'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("channel_all_videos",), api_response.json_data["data"]["channel"]):
-        raise crawler.CrawlerException("返回信息'channel_all_videos'字段不存在\n%s" % api_response.json_data)
-    if not crawler.check_sub_key(("edges",), api_response.json_data["data"]["channel"]["channel_all_videos"]):
+    if not crawler.check_sub_key(("channel_videos_all_videos",), api_response.json_data["data"]["channel"]):
+        raise crawler.CrawlerException("返回信息'channel_videos_all_videos'字段不存在\n%s" % api_response.json_data)
+    # 获取所有视频
+    if not crawler.check_sub_key(("edges",), api_response.json_data["data"]["channel"]["channel_videos_all_videos"]):
         raise crawler.CrawlerException("返回信息'edges'字段不存在\n%s" % api_response.json_data)
-    if not isinstance(api_response.json_data["data"]["channel"]["channel_all_videos"]["edges"], list):
+    if not isinstance(api_response.json_data["data"]["channel"]["channel_videos_all_videos"]["edges"], list):
         raise crawler.CrawlerException("返回信息'edges'字段类型不正确\n%s" % api_response.json_data)
-    for video_info in api_response.json_data["data"]["channel"]["channel_all_videos"]["edges"]:
+    for video_info in api_response.json_data["data"]["channel"]["channel_videos_all_videos"]["edges"]:
         result_video_info = {
             "video_id": None,  # 视频id
             "video_time": None,  # 视频上传时间
@@ -99,8 +106,15 @@ def get_video_list(account_id):
         # 获取视频标题
         if not crawler.check_sub_key(("title",), video_info["node"]):
             raise crawler.CrawlerException("视频信息'title'字段不存在\n%s" % video_info)
-        result_video_info["video_title"] = str(video_info["node"]["title"])
+        result_video_info["video_title"] = video_info["node"]["title"].encode("UTF-8")
         result["video_info_list"].append(result_video_info)
+    # 判断是不是最后一页
+    if not crawler.check_sub_key(("pageInfo",), api_response.json_data["data"]["channel"]["channel_videos_all_videos"]):
+        raise crawler.CrawlerException("返回信息'pageInfo'字段不存在\n%s" % api_response.json_data)
+    if not crawler.check_sub_key(("hasNextPage",), api_response.json_data["data"]["channel"]["channel_videos_all_videos"]["pageInfo"]):
+        raise crawler.CrawlerException("返回信息'hasNextPage'字段不存在\n%s" % api_response.json_data)
+    if api_response.json_data["data"]["channel"]["channel_videos_all_videos"]["pageInfo"]["hasNextPage"] is False:
+        result["is_over"] = True
     return result
 
 
@@ -235,26 +249,35 @@ class Download(crawler.DownloadThread):
 
     # 获取所有可下载视频
     def get_crawl_list(self):
+        page_count = 1
         video_info_list = []
-        self.main_thread_check()  # 检测主线程运行状态
-        log.step(self.account_id + " 开始解析视频列表")
-
+        is_over = False
         # 获取全部还未下载过需要解析的相册
-        try:
-            blog_pagination_response = get_video_list(self.account_id)
-        except crawler.CrawlerException, e:
-            log.error(self.account_id + " 视频列表解析失败，原因：%s" % e.message)
-            raise
-        log.trace(self.account_id + " 解析的全部视频：%s" % blog_pagination_response["video_info_list"])
+        while not is_over:
+            self.main_thread_check()  # 检测主线程运行状态
+            log.step(self.account_id + " 开始解析第%s页视频" % page_count)
 
-        # 寻找这一页符合条件的日志
-        for video_info in blog_pagination_response["video_info_list"]:
-            # 检查是否达到存档记录
-            if video_info["video_time"] < self.account_info[1]:
-                video_info_list.append(video_info)
-            else:
-                break
+            try:
+                blog_pagination_response = get_one_page_video(self.account_id, page_count)
+            except crawler.CrawlerException, e:
+                log.error(self.account_id + " 视频列表解析失败，原因：%s" % e.message)
+                raise
 
+            log.trace(self.account_id + " 解析的全部视频：%s" % blog_pagination_response["video_info_list"])
+
+            # 寻找这一页符合条件的日志
+            for video_info in blog_pagination_response["video_info_list"]:
+                # 检查是否达到存档记录
+                if video_info["video_time"] > int(self.account_info[1]):
+                    video_info_list.append(video_info)
+                else:
+                    is_over = True
+
+            if not is_over:
+                if blog_pagination_response["is_over"]:
+                    is_over = True
+                else:
+                    page_count += 1
         return video_info_list
 
     # 解析单个视频
@@ -270,7 +293,7 @@ class Download(crawler.DownloadThread):
         log.step(self.account_id + " 开始下载视频%s 《%s》 %s" % (video_info["video_id"], video_info["video_title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_id, "%s - %s.mp4" % (video_info["video_id"], path.filter_text(video_info["video_title"])))
-        save_file_return = net.save_net_file(video_response["video_url"], video_file_path)
+        save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
             log.step(self.account_id + " 视频%s 《%s》下载成功" % (video_info["video_id"], video_info["video_title"]))
@@ -279,7 +302,7 @@ class Download(crawler.DownloadThread):
 
         # 媒体内图片和视频全部下载完毕
         self.total_video_count += 1  # 计数累加
-        self.account_info[1] = str(video_response["video_time"])  # 设置存档记录
+        self.account_info[1] = str(video_info["video_time"])  # 设置存档记录
 
     def run(self):
         try:

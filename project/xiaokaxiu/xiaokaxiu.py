@@ -58,7 +58,7 @@ def get_one_page_video(account_id, page_count):
     return result
 
 
-class XiaKaXiu(crawler.Crawler):
+class XiaoKaXiu(crawler.Crawler):
     def __init__(self):
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
@@ -202,4 +202,4 @@ class Download(crawler.DownloadThread):
 
 
 if __name__ == "__main__":
-    XiaKaXiu().main()
+    XiaoKaXiu().main()
