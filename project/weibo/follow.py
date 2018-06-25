@@ -77,7 +77,7 @@ def main():
     # 存档位置
     save_data_path = crawler.quickly_get_save_data_path(config)
     # 读取存档文件
-    account_list = crawler.read_save_data(save_data_path, 0, [""])
+    account_list = crawler.read_save_data(save_data_path, 0, [])
     for account_id in sorted(account_list.keys()):
         while not follow_account(account_id):
             pass
