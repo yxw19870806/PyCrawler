@@ -8,16 +8,6 @@ email: hikaru870806@hotmail.com
 from common import *
 
 
-# 从本地存档获取所有账号
-def get_account_list_from_save_data(file_path):
-    account_list = {}
-    for line in tool.read_file(file_path, tool.READ_FILE_TYPE_LINE):
-        line = line.replace("\n", "")
-        account_info_temp = line.split("\t")
-        account_list[account_info_temp[0]] = line
-    return account_list
-
-
 # 从API获取所有推荐账号
 def get_account_list_from_api():
     try:
@@ -101,7 +91,7 @@ def main():
     if len(account_list_from_api) > 0:
         # 存档位置
         save_data_path = crawler.quickly_get_save_data_path()
-        account_list_from_save_data = get_account_list_from_save_data(save_data_path)
+        account_list_from_save_data = crawler.read_save_data(save_data_path, 0, [])
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
                 account_list_from_save_data[account_id] = "%s\t\t%s" % (account_id, account_list_from_api[account_id])
