@@ -14,7 +14,7 @@ import sys
 import thread
 import threading
 import time
-from common import browser, keyboardEvent, log, net, output, path, tool
+from common import browser, keyboardEvent, log, net, output, path, portListenerEvent, tool
 
 # 程序是否支持下载图片功能（会判断配置中是否需要下载图片，如全部是则创建图片下载目录）
 SYS_DOWNLOAD_IMAGE = "download_image"
@@ -229,9 +229,19 @@ class Crawler(object):
         self.thread_condition = threading.Condition()  # 线程数达到上限时等待wait()，直到任意线程唤醒notify()
 
         # 启用线程监控是否需要暂停其他下载线程
-        # process_control_thread = process.ProcessControl()
-        # process_control_thread.setDaemon(True)
-        # process_control_thread.start()
+        if analysis_config(config, "IS_PORT_LISTENER_ENVET", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
+            listener_event_bind = {}
+            # 暂停进程
+            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_PAUSE)] = net.pause_request
+            # 继续进程
+            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_RUN)] = net.resume_request
+            # 结束进程（取消当前的线程，完成任务）
+            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_STOP)] = self.stop_process
+
+            listener_port = analysis_config(config, "LISTENER_PORT", 12345, CONFIG_ANALYSIS_MODE_INTEGER)
+            process_control_thread = portListenerEvent.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
+            process_control_thread.setDaemon(True)
+            process_control_thread.start()
 
         # 键盘监控线程（仅支持windows）
         if platform.system() == "Windows" and analysis_config(config, "IS_KEYBOARD_EVENT", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
@@ -261,7 +271,7 @@ class Crawler(object):
 
     def stop_process(self):
         output.print_msg("stop process")
-        net.resume_request
+        net.resume_request()
         self.process_status = False
 
     # 获取程序已运行时间（seconds）

@@ -7,29 +7,42 @@ email: hikaru870806@hotmail.com
 """
 import os
 import pywintypes
+import threading
 import time
 import win32api
 import win32con
 import win32gui
-from common import keyboardEvent, process
+from common import keyboardEvent
 
 
 class WindowsApplication:
     window_title = ""
-
-    @property
-    def window_handle(self):
-        return win32gui.FindWindow(None, self.window_title)
+    thread_event = threading.Event()
+    thread_event.set()
 
     def __init__(self, window_title, default_windows_size=None):
         self.window_title = window_title
         # 设置为默认窗口大小（避免坐标产生偏移）
         if default_windows_size:
             self.set_window_size(default_windows_size[0], default_windows_size[1])
-        keyboard_event_bind = {"Prior": process.pause_process, "Next": process.continue_process}
+        keyboard_event_bind = {"Prior": self.pause_process, "Next": self.resume_process}
         keyboard_control_thread = keyboardEvent.KeyboardEvent(keyboard_event_bind)
         keyboard_control_thread.setDaemon(True)
         keyboard_control_thread.start()
+
+    # 设置暂停状态
+    def pause_process(self):
+        if self.thread_event.isSet():
+            self.thread_event.clear()
+
+    # 设置运行状态
+    def resume_process(self):
+        if not self.thread_event.isSet():
+            self.thread_event.set()
+
+    @property
+    def window_handle(self):
+        return win32gui.FindWindow(None, self.window_title)
 
     # 获取窗口大小
     def get_window_size(self):

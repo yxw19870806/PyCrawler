@@ -11,8 +11,10 @@ multithreading<br>
 support proxy<br>
 * 支持绑定键盘事件（快捷键），如暂停/启动程序运行<br>
 support bind keyboard events, e.g. pause or restart process<br>
-* 支持从浏览器中读取cookies并携带访问限制的网站<br>
-read cookies from your browser<br>
+* 支持本地端口监听，根据收到的请求内容暂停/启动程序运行<br>
+support local port listener, according to the received content to pause or restart process<br>
+* 支持从本地浏览器中读取cookies并携带访问限制的网站<br>
+read cookies from your local browser<br>
 * 页面访问支持多种参数：<br>
 support multiple parameter for visit web
   * 支持常用请求方法：GET、POST、HEAD、PUT、DELETE、OPTIONS、TRACE<br>

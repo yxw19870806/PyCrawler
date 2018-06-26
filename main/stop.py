@@ -1,9 +1,13 @@
 # -*- coding:UTF-8  -*-
 """
+结束所有爬虫程序
 @author: hikaru
 email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
-from common import process
+from common import portListenerEvent
+from . import processControl
 
-process.set_process_status(process.PROCESS_STATUS_STOP)
+
+if __name__ == "__main__":
+    processControl.ProcessControl().send_code(portListenerEvent.PROCESS_STATUS_STOP)
