@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 import time
-from common import output, process
+from common import output, portListenerEvent
 from game.clickHero import clickerHeroes
 
 
@@ -48,8 +48,8 @@ if __name__ == "__main__":
     click_x, click_y = clickerHeroes.UPGRADE_BUTTON_POS[click_button_index]
     is_open_equip_box = False
     while True:
-        while process.PROCESS_STATUS == process.PROCESS_STATUS_PAUSE:
-            time.sleep(1)
+        # 进程如果暂停的话，阻塞运行
+        ch.thread_event.wait()
         # 自动升级
         ch.auto_click(click_x, click_y)
 

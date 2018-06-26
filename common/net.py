@@ -14,7 +14,7 @@ import time
 import threading
 import traceback
 import urllib3
-from common import browser, output, path, process, tool
+from common import browser, output, path, tool
 
 HTTP_CONNECTION_POOL = None
 HTTP_CONNECTION_TIMEOUT = 10
@@ -185,8 +185,6 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
 
     retry_count = 0
     while True:
-        if process.PROCESS_STATUS == process.PROCESS_STATUS_STOP:
-            tool.process_exit(0)
         thread_event.wait()
 
         try:

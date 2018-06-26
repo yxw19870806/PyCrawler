@@ -43,9 +43,9 @@ def main():
         account_list_from_save_data = crawler.read_save_data(save_data_path, 0, [])
         for account_id in account_list_from_api:
             if account_id not in account_list_from_save_data:
-                account_list_from_save_data[account_id] = "%s\t\t\t%s" % (account_id, account_list_from_api[account_id])
+                account_list_from_save_data[account_id] = [account_id, "", "", account_list_from_api[account_id]]
         temp_list = [account_list_from_save_data[key] for key in sorted(account_list_from_save_data.keys())]
-        tool.write_file("\n".join(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
+        tool.write_file(tool.list_to_string(temp_list), save_data_path, tool.WRITE_FILE_TYPE_REPLACE)
 
 
 if __name__ == "__main__":
