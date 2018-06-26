@@ -27,7 +27,7 @@ class PortListenerEvent(threading.Thread):
         while True:
             try:
                 conn = listener.accept()
-                command = int(conn.recv())
+                command = conn.recv()
                 if self.event_list and command in self.event_list:
                     self.event_list[command]()
             except IOError:

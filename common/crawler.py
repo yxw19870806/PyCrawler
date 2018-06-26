@@ -232,11 +232,11 @@ class Crawler(object):
         if analysis_config(config, "IS_PORT_LISTENER_ENVET", True, CONFIG_ANALYSIS_MODE_BOOLEAN):
             listener_event_bind = {}
             # 暂停进程
-            listener_event_bind[portListenerEvent.PROCESS_STATUS_PAUSE] = net.pause_request
+            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_PAUSE)] = net.pause_request
             # 继续进程
-            listener_event_bind[portListenerEvent.PROCESS_STATUS_RUN] = net.resume_request
+            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_RUN)] = net.resume_request
             # 结束进程（取消当前的线程，完成任务）
-            listener_event_bind[portListenerEvent.PROCESS_STATUS_STOP] = self.stop_process
+            listener_event_bind[str(portListenerEvent.PROCESS_STATUS_STOP)] = self.stop_process
 
             listener_port = analysis_config(config, "LISTENER_PORT", 12345, CONFIG_ANALYSIS_MODE_INTEGER)
             process_control_thread = portListenerEvent.PortListenerEvent(port=listener_port, event_list=listener_event_bind)
