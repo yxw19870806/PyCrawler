@@ -54,7 +54,7 @@ def load_discount_list():
 def main(account_id, include_type, min_discount_percent, min_discount_price):
     # 获取登录状态
     try:
-        cookies_list = steamCommon.get_cookie_from_browser()
+        steamCommon.init_cookie_from_browser()
     except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
@@ -63,7 +63,7 @@ def main(account_id, include_type, min_discount_percent, min_discount_price):
     if not discount_game_list:
         # 调用API获取打折列表
         try:
-            discount_game_list = steamCommon.get_discount_game_list(cookies_list)
+            discount_game_list = steamCommon.get_discount_game_list()
         except crawler.CrawlerException, e:
             output.print_msg("打折游戏解析失败，原因：%s" % e.message)
             raise
