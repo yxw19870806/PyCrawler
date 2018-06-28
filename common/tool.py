@@ -38,8 +38,10 @@ PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."
 PROJECT_COMMON_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common"))
 # config.ini路径
 PROJECT_CONFIG_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "common/config.ini"))
-# 应用程序（APP）根目录
+# 应用程序（APP）根目录，下面包含多个应用
 PROJECT_APP_ROOT_PATH = os.path.abspath(os.path.join(PROJECT_ROOT_PATH, "project"))
+# 应用程序（APP）目录
+PROJECT_APP_PATH = os.getcwd()
 
 
 # 根据开始与结束的字符串，截取字符串
