@@ -34,7 +34,7 @@ def load_review_list():
 def main(account_id):
     # 获取登录状态
     try:
-        cookies_list = steamCommon.get_cookie_from_browser()
+        steamCommon.init_cookie_from_browser()
     except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
@@ -49,7 +49,7 @@ def main(account_id):
     for game_id in played_game_list:
         game_id = int(game_id)
         # 获取游戏信息
-        game_data = steamCommon.get_game_store_index(game_id, cookies_list)
+        game_data = steamCommon.get_game_store_index(game_id)
 
         # 有DLC的话，遍历每个DLC
         for dlc_id in game_data["dlc_list"]:
@@ -63,7 +63,7 @@ def main(account_id):
             review_data["dlc_in_game"][dlc_id] = game_id
 
             # 获取DLC信息
-            dlc_data = steamCommon.get_game_store_index(dlc_id, cookies_list)
+            dlc_data = steamCommon.get_game_store_index(dlc_id)
 
             if dlc_data["owned"]:
                 # 已经评测过了
@@ -97,23 +97,23 @@ def main(account_id):
 
 
 # 打印列表
-# type  0 全部游戏
-# type  1 只要本体
-# type  2 只要DLC
-# type  3 只要本体已评测的DLC
-def print_list(type=0):
+# print_type  0 全部游戏
+# print_type  1 只要本体
+# print_type  2 只要DLC
+# print_type  3 只要本体已评测的DLC
+def print_list(print_type=0):
     review_data = load_review_list()
     for game_id in review_data["can_review_lists"]:
         # 是DLC
         if str(game_id) in review_data["dlc_in_game"]:
-            if type == 1:
+            if print_type == 1:
                 continue
             # 本体没有评测过
             if review_data["dlc_in_game"][str(game_id)] in review_data["can_review_lists"]:
-                if type == 3:
+                if print_type == 3:
                     continue
         else:
-            if type == 2 or type == 3:
+            if print_type == 2 or print_type == 3:
                 continue
         output.print_msg("https://store.steampowered.com/app/%s" % game_id)
 

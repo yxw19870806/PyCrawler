@@ -16,7 +16,7 @@ CHECK_DUPLICATE_EMOTICON = True
 def main(account_id):
     # 获取登录状态
     try:
-        cookies_list = steamCommon.get_cookie_from_browser()
+        steamCommon.init_cookie_from_browser()
     except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
@@ -24,7 +24,7 @@ def main(account_id):
     inventory_item_list = {}
     while True:
         try:
-            inventory_pagination_response = steamCommon.get_one_page_inventory(account_id, cookies_list, last_assert_id)
+            inventory_pagination_response = steamCommon.get_one_page_inventory(account_id, last_assert_id)
         except crawler.CrawlerException, e:
             output.print_msg("assert id: %s后一页的库存解析失败，原因：%s" % (last_assert_id, e.message))
             raise

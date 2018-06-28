@@ -530,7 +530,7 @@ class Download(crawler.DownloadThread):
         log.step(self.account_name + " 开始下载视频%s 《%s》 %s" % (video_id, video_response["title"], video_response["video_url"]))
 
         video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%s - %s.mp4" % (video_id, path.filter_text(video_response["title"])))
-        save_file_return = net.save_net_file(video_response["video_url"], video_file_path)
+        save_file_return = net.save_net_file(video_response["video_url"], video_file_path, head_check=True)
         if save_file_return["status"] == 1:
             # 设置临时目录
             log.step(self.account_name + " 视频%s 《%s》下载成功" % (video_id, video_response["title"]))

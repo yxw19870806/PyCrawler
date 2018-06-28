@@ -176,7 +176,7 @@ def check_image_invalid(file_path):
 
 class Ameblo(crawler.Crawler):
     def __init__(self):
-        global  COOKIE_INFO
+        global COOKIE_INFO
 
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
