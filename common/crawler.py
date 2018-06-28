@@ -54,6 +54,11 @@ class Crawler(object):
     def __init__(self, sys_config, extra_config=None):
         self.start_time = time.time()
 
+        if self.__module__ == "__main__":  # 类所在文件直接执行
+            tool.PROJECT_APP_PATH = os.path.abspath(os.getcwd())
+        else:  # import后, e.g. project.abc.abc
+            tool.PROJECT_APP_PATH = os.path.abspath(os.path.join(tool.PROJECT_ROOT_PATH, "/".join(self.__module__.split(".")[0:-1])))
+
         # 程序启动配置
         if not isinstance(sys_config, dict):
             self.print_msg("程序启动配置不存在，请检查代码！")
@@ -77,7 +82,7 @@ class Crawler(object):
         # 程序配置
         config = read_config(config_path)
         # 应用配置
-        app_config_path = os.path.abspath(os.path.join(os.getcwd(), "app.ini"))
+        app_config_path = os.path.abspath(os.path.join(tool.PROJECT_APP_PATH, "app.ini"))
         if os.path.exists(app_config_path):
             config.update(read_config(app_config_path))
         # 额外配置
@@ -396,7 +401,7 @@ def analysis_config(config, key, default_value, mode=CONFIG_ANALYSIS_MODE_RAW):
             value = True
     elif mode == CONFIG_ANALYSIS_MODE_PATH:
         if value[:2] == "\\\\":  # \\ 开头，程序所在目录
-            value = os.path.join(os.getcwd(), value[2:])  # \\ 仅做标记使用，实际需要去除
+            value = os.path.join(tool.PROJECT_APP_PATH, value[2:])  # \\ 仅做标记使用，实际需要去除
         elif value[0] == "\\":   # \ 开头，项目根目录（common目录上级）
             value = os.path.join(tool.PROJECT_ROOT_PATH, value[1:])  # \ 仅做标记使用，实际需要去除
         value = os.path.abspath(value)
@@ -591,7 +596,7 @@ def quickly_get_all_cookies_from_browser(config=None):
 
 def _get_config():
     config = read_config(tool.PROJECT_CONFIG_PATH)
-    app_config_path = os.path.abspath(os.path.join(os.getcwd(), "app.ini"))
+    app_config_path = os.path.abspath(os.path.join(tool.PROJECT_APP_PATH, "app.ini"))
     if os.path.exists(app_config_path):
         app_config = read_config(app_config_path)
         config.update(app_config)
