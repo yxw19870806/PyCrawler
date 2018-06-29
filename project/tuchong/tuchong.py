@@ -98,6 +98,10 @@ def get_one_page_album(account_id, post_time):
 
 class TuChong(crawler.Crawler):
     def __init__(self):
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
         }

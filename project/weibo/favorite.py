@@ -10,7 +10,7 @@ import os
 import re
 from pyquery import PyQuery as pq
 from common import *
-import weiboCommon
+from . import weiboCommon
 
 COOKIE_INFO = {"SUB": ""}
 
@@ -94,6 +94,10 @@ class Favorite(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,
