@@ -11,7 +11,7 @@ import threading
 import time
 import traceback
 from common import *
-import yasaxiCommon
+from . import yasaxiCommon
 
 IMAGE_COUNT_PER_PAGE = 20
 
