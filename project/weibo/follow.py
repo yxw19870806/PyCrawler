@@ -7,9 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from . import weiboCommon
-
-COOKIE_INFO = {"SUB": ""}
+from project.weibo import weiboCommon
 
 
 # 关注指定账号
@@ -20,7 +18,7 @@ def follow_account(account_id):
         "refer_flag": "1005050001_",
     }
     header_list = {"Referer": "http://weibo.com/%s/follow" % account_id}
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     follow_response = net.http_request(api_url, method="POST", fields=post_data, header_list=header_list, cookies_list=cookies_list, json_decode=True)
     if follow_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         output.print_msg("关注%s失败，请求返回结果：%s" % (account_id, crawler.request_failre(follow_response.status)))
@@ -52,26 +50,24 @@ def main():
     all_cookie_from_browser = crawler.quickly_get_all_cookies_from_browser(config)
     if ".sina.com.cn" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser[".sina.com.cn"]:
-            COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
+            weiboCommon.COOKIE_INFO[cookie_key] = all_cookie_from_browser[".sina.com.cn"][cookie_key]
     else:
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
     if ".login.sina.com.cn" in all_cookie_from_browser:
         for cookie_key in all_cookie_from_browser[".login.sina.com.cn"]:
-            COOKIE_INFO[cookie_key] = all_cookie_from_browser[".login.sina.com.cn"][cookie_key]
+            weiboCommon.COOKIE_INFO[cookie_key] = all_cookie_from_browser[".login.sina.com.cn"][cookie_key]
     else:
         output.print_msg("没有检测到登录信息")
         tool.process_exit()
 
     # 检测登录状态
-    if not weiboCommon.check_login(COOKIE_INFO):
+    if not weiboCommon.check_login():
         # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-        new_cookies_list = weiboCommon.generate_login_cookie(COOKIE_INFO)
-        if new_cookies_list:
-            COOKIE_INFO.update(new_cookies_list)
-        # 再次检测登录状态
-        if not weiboCommon.check_login(COOKIE_INFO):
-            output.print_msg("没有检测到您的登录信息，无法关注账号，退出！")
+        if weiboCommon.init_session() and weiboCommon.check_login():
+            pass
+        else:
+            log.error("没有检测到登录信息")
             tool.process_exit()
 
     # 存档位置

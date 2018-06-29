@@ -331,7 +331,7 @@ class Download(crawler.DownloadThread):
     def get_crawl_list(self):
         page_count = 1
         unique_list = []
-        album_info_list = []
+        album_id_list = []
         is_over = False
         while not is_over:
             self.main_thread_check()  # 检测主线程运行状态
@@ -354,7 +354,7 @@ class Download(crawler.DownloadThread):
                     if album_id in unique_list:
                         continue
                     else:
-                        album_info_list.append(album_id)
+                        album_id_list.append(album_id)
                         unique_list.append(album_id)
                 else:
                     is_over = True
@@ -366,7 +366,7 @@ class Download(crawler.DownloadThread):
                 else:
                     page_count += 1
 
-        return album_info_list
+        return album_id_list
 
     # 解析单个作品
     def crawl_album(self, album_id):
