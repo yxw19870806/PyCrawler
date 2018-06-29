@@ -68,6 +68,10 @@ def get_album_page(album_url):
 
 class Photographer(crawler.Crawler):
     def __init__(self):
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
         }

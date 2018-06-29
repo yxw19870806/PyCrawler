@@ -11,7 +11,7 @@ import threading
 import time
 import traceback
 from common import *
-import yasaxiCommon
+from . import yasaxiCommon
 
 IMAGE_COUNT_PER_PAGE = 20
 
@@ -110,6 +110,10 @@ def get_one_page_photo(account_id, cursor):
 
 class Yasaxi(crawler.Crawler):
     def __init__(self):
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_NOT_CHECK_SAVE_DATA: True,

@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-import vLiaoCommon
+from . import vLiaoCommon
 
 TAG_ID_LIST = [1, 2, 3, 4, 5, 9997, 9998]  # 好像 tag = 1就是全部账号
 

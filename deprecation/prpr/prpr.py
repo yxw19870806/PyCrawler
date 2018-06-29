@@ -113,8 +113,13 @@ def check_invalid(file_path, is_video=False):
 
 class PrPr(crawler.Crawler):
     def __init__(self):
-        global IS_SKIP_BLUR, IS_STEP_INVALID_RESOURCE
+        global IS_SKIP_BLUR
+        global IS_STEP_INVALID_RESOURCE
 
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,

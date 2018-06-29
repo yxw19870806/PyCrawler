@@ -14,7 +14,7 @@ import traceback
 import urllib2
 from common import *
 from project.meipai import meipai
-import weiboCommon
+from . import weiboCommon
 
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
@@ -181,6 +181,10 @@ class Weibo(crawler.Crawler):
     def __init__(self, extra_config=None):
         global COOKIE_INFO
 
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
             crawler.SYS_DOWNLOAD_VIDEO: True,
