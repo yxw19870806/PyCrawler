@@ -8,14 +8,14 @@ email: hikaru870806@hotmail.com
 """
 from common import *
 
+COOKIE_INFO = {"SUB": ""}
+
 
 # 检测登录状态
-# param     cookie_info 相关域名保存的cookie字典
-# return    boolean
-def check_login(cookie_info):
-    if "SUB" not in cookie_info or not cookie_info["SUB"]:
+def check_login():
+    if "SUB" not in COOKIE_INFO or not COOKIE_INFO["SUB"]:
         return False
-    cookies_list = {"SUB": cookie_info["SUB"]}
+    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
     index_url = "https://weibo.com/"
     index_response = net.http_request(index_url, method="GET", cookies_list=cookies_list)
     if index_response.status == net.HTTP_RETURN_CODE_SUCCEED:
@@ -24,15 +24,14 @@ def check_login(cookie_info):
 
 
 # 使用浏览器保存的cookie模拟登录请求，获取一个session级别的访问cookie
-# param     cookie_info 相关域名保存的cookie字典
-# return    response中返回的cookie字典
-def generate_login_cookie(cookie_info):
+def init_session():
     login_url = "https://login.sina.com.cn/sso/login.php"
     query_data = {"url": "https://weibo.com"}
-    login_response = net.http_request(login_url, method="GET", fields=query_data, cookies_list=cookie_info)
+    login_response = net.http_request(login_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO)
     if login_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        return net.get_cookies_from_response_header(login_response.headers)
-    return {}
+        COOKIE_INFO.update(net.get_cookies_from_response_header(login_response.headers))
+        return True
+    return False
 
 
 # 获取账号首页

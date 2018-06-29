@@ -6,7 +6,7 @@ email: hikaru870806@hotmail.com
 如有问题或建议请联系
 """
 from common import *
-from . import yasaxiCommon
+import yasaxiCommon
 
 
 # 调用推荐API获取全部推荐账号
