@@ -12,15 +12,13 @@ from pyquery import PyQuery as pq
 from common import *
 from project.weibo import weiboCommon
 
-COOKIE_INFO = {"SUB": ""}
-
 
 # 获取一页的收藏微博ge
 def get_one_page_favorite(page_count):
     # http://www.weibo.com/fav?page=1
     favorite_pagination_url = "http://www.weibo.com/fav"
     query_data = {"page": page_count}
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     favorite_pagination_response = net.http_request(favorite_pagination_url, method="GET", fields=query_data, cookies_list=cookies_list)
     result = {
         "blog_info_list": [],  # 所有微博信息
@@ -92,8 +90,6 @@ def get_one_page_favorite(page_count):
 
 class Favorite(crawler.Crawler):
     def __init__(self, extra_config=None):
-        global COOKIE_INFO
-
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -109,20 +105,18 @@ class Favorite(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        weiboCommon.COOKIE_INFO.update(self.cookie_value)
 
-    def main(self):
         # 检测登录状态
-        if not weiboCommon.check_login(COOKIE_INFO):
+        if not weiboCommon.check_login():
             # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-            new_cookies_list = weiboCommon.generate_login_cookie(COOKIE_INFO)
-            if new_cookies_list:
-                COOKIE_INFO.update(new_cookies_list)
-            # 再次检测登录状态
-            if not weiboCommon.check_login(COOKIE_INFO):
+            if weiboCommon.init_session() and weiboCommon.check_login():
+                pass
+            else:
                 log.error("没有检测到登录信息")
                 tool.process_exit()
 
+    def main(self):
         page_count = 1
         is_over = False
         while not is_over:

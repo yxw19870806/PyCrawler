@@ -18,7 +18,6 @@ from project.weibo import weiboCommon
 
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
-COOKIE_INFO = {"SUB": ""}
 
 
 # 获取一页的图片信息
@@ -30,7 +29,7 @@ def get_one_page_photo(account_id, page_count):
         "page": page_count,
         "type": "3",
     }
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     result = {
         "image_info_list": [],  # 全部图片信息
         "is_over": False,  # 是不是最后一页图片
@@ -81,7 +80,7 @@ def get_one_page_video(account_page_id, since_id):
         "ajax_call": "1",
         "__rnd": int(time.time() * 1000),
     }
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB":  weiboCommon.COOKIE_INFO["SUB"]}
     result = {
         "next_page_since_id": None,  # 下一页视频指针
         "video_play_url_list": [],  # 全部视频地址
@@ -139,7 +138,7 @@ def get_video_url(video_play_url):
             raise crawler.CrawlerException("返回信息匹配视频地址失败\n%s" % video_info_response.json_data)
     # http://video.weibo.com/show?fid=1034:e608e50d5fa95410748da61a7dfa2bff
     elif video_play_url.find("video.weibo.com/show?fid=") >= 0:  # 微博视频
-        cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+        cookies_list = {"SUB":  weiboCommon.COOKIE_INFO["SUB"]}
         video_play_response = net.http_request(video_play_url, method="GET", cookies_list=cookies_list)
         if video_play_response.status == net.HTTP_RETURN_CODE_SUCCEED:
             video_url = tool.find_sub_string(video_play_response.data, "video_src=", "&")
@@ -179,8 +178,6 @@ def get_video_url(video_play_url):
 
 class Weibo(crawler.Crawler):
     def __init__(self, extra_config=None):
-        global COOKIE_INFO
-
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -196,20 +193,18 @@ class Weibo(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        weiboCommon.COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
         # account_id  image_count  last_image_time  video_count  last_video_url  (account_name)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0", "0", "0", ""])
 
         # 检测登录状态
-        if not weiboCommon.check_login(COOKIE_INFO):
+        if not weiboCommon.check_login():
             # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-            new_cookies_list = weiboCommon.generate_login_cookie(COOKIE_INFO)
-            if new_cookies_list:
-                COOKIE_INFO.update(new_cookies_list)
-            # 再次检测登录状态
-            if not weiboCommon.check_login(COOKIE_INFO):
+            if weiboCommon.init_session() and weiboCommon.check_login():
+                pass
+            else:
                 log.error("没有检测到登录信息")
                 tool.process_exit()
 

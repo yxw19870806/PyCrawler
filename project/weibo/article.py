@@ -14,8 +14,6 @@ import traceback
 from common import *
 from project.weibo import weiboCommon
 
-COOKIE_INFO = {"SUB": ""}
-
 
 # 获取一页的预览文章
 # page_id -> 1005052212970554
@@ -27,7 +25,7 @@ def get_one_page_article(page_id, page_count):
         "Pl_Core_ArticleList__62_page": page_count,
         "ajaxpagelet": "1",
     }
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     result = {
         "article_info_list": [],  # 全部章信息
         "is_over": False,  # 是不是最后一页文章
@@ -71,7 +69,7 @@ def get_one_page_article(page_id, page_count):
 
 # 获取文章页面
 def get_article_page(article_url):
-    cookies_list = {"SUB": COOKIE_INFO["SUB"]}
+    cookies_list = {"SUB": weiboCommon.COOKIE_INFO["SUB"]}
     article_response = net.http_request(article_url, method="GET", cookies_list=cookies_list)
     result = {
         "article_id": "",  # 文章id
@@ -129,8 +127,6 @@ def get_article_page(article_url):
 
 class Article(crawler.Crawler):
     def __init__(self, extra_config=None):
-        global COOKIE_INFO
-
         # 设置APP目录
         tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -145,28 +141,20 @@ class Article(crawler.Crawler):
         crawler.Crawler.__init__(self, sys_config, extra_config)
 
         # 设置全局变量，供子线程调用
-        COOKIE_INFO.update(self.cookie_value)
+        weiboCommon.COOKIE_INFO.update(self.cookie_value)
 
         # 解析存档文件
         # account_id  last_article_time  (account_name)
         self.account_list = crawler.read_save_data(self.save_data_path, 0, ["", "0"])
 
         # 检测登录状态
-        if not weiboCommon.check_login(COOKIE_INFO):
+        if not weiboCommon.check_login():
             # 如果没有获得登录相关的cookie，则模拟登录并更新cookie
-            new_cookies_list = weiboCommon.generate_login_cookie(COOKIE_INFO)
-            if new_cookies_list:
-                COOKIE_INFO.update(new_cookies_list)
-            # 再次检测登录状态
-            if not weiboCommon.check_login(COOKIE_INFO):
-                while True:
-                    input_str = output.console_input(crawler.get_time() + " 没有检测到登录信息，可能无法获取到需要关注才能查看的文章，是否继续程序(Y)es？或者退出程序(N)o？:")
-                    input_str = input_str.lower()
-                    if input_str in ["y", "yes"]:
-                        COOKIE_INFO["SUB"] = tool.generate_random_string(50)
-                        break
-                    elif input_str in ["n", "no"]:
-                        tool.process_exit()
+            if weiboCommon.init_session() and weiboCommon.check_login():
+                pass
+            else:
+                log.error("没有检测到登录信息")
+                tool.process_exit()
 
     def main(self):
         # 循环下载每个id
