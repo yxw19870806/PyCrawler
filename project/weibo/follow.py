@@ -7,7 +7,7 @@ email: hikaru870806@hotmail.com
 """
 import time
 from common import *
-from . import weiboCommon
+from project.weibo import weiboCommon
 
 COOKIE_INFO = {"SUB": ""}
 

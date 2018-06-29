@@ -14,7 +14,7 @@ import traceback
 import urllib2
 from common import *
 from project.meipai import meipai
-from . import weiboCommon
+from project.weibo import weiboCommon
 
 IMAGE_COUNT_PER_PAGE = 20  # 每次请求获取的图片数量
 INIT_SINCE_ID = "9999999999999999"
