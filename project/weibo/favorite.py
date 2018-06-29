@@ -10,7 +10,7 @@ import os
 import re
 from pyquery import PyQuery as pq
 from common import *
-import weiboCommon
+from . import weiboCommon
 
 COOKIE_INFO = {"SUB": ""}
 

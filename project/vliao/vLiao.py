@@ -11,7 +11,7 @@ import threading
 import time
 import traceback
 from common import *
-import vLiaoCommon
+from . import vLiaoCommon
 
 
 # 获取一页视频

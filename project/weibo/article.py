@@ -12,7 +12,7 @@ import threading
 import time
 import traceback
 from common import *
-import weiboCommon
+from . import weiboCommon
 
 COOKIE_INFO = {"SUB": ""}
 
