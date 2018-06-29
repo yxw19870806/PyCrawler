@@ -173,6 +173,11 @@ def get_video_page(video_id):
 class DailyMotion(crawler.Crawler):
     def __init__(self):
         global FIRST_CHOICE_RESOLUTION
+
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         sys_config = {
             crawler.SYS_DOWNLOAD_VIDEO: True,
             crawler.SYS_APP_CONFIG: (
@@ -180,6 +185,8 @@ class DailyMotion(crawler.Crawler):
             ),
         }
         crawler.Crawler.__init__(self, sys_config)
+
+        # 设置全局变量，供子线程调用
         video_quality = self.app_config["VIDEO_QUALITY"]
         if video_quality == 1:
             FIRST_CHOICE_RESOLUTION = 144

@@ -33,6 +33,10 @@ def get_blog_page(account_id, blog_id):
 
 class Template(crawler.Crawler):
     def __init__(self):
+        # 设置APP目录
+        tool.PROJECT_APP_PATH = os.path.abspath(os.path.dirname(__file__))
+
+        # 初始化参数
         # todo 配置
         sys_config = {
             crawler.SYS_DOWNLOAD_IMAGE: True,
