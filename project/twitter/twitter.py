@@ -167,7 +167,10 @@ def get_video_play_page(tweet_id):
         file_url_protocol, file_url_path = urllib.splittype(file_url)
         file_url_host = urllib.splithost(file_url_path)[0]
         m3u8_file_response = net.http_request(file_url, method="GET")
-        if m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        # 没有权限，可能是地域限制
+        if m3u8_file_response.status == 403:
+            return result
+        elif m3u8_file_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException("m3u8文件 %s 访问失败，%s" % (file_url, crawler.request_failre(m3u8_file_response.status)))
         include_m3u8_file_list = re.findall("(/[\S]*.m3u8)", m3u8_file_response.data)
         if len(include_m3u8_file_list) > 0:
@@ -336,25 +339,27 @@ class Download(crawler.DownloadThread):
                 log.error(self.account_name + " 日志%s的视频解析失败，原因：%s" % (media_info["blog_id"], e.message))
                 raise
 
-            self.main_thread_check()  # 检测主线程运行状态
-            video_url = video_play_response["video_url"]
-            log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_url))
-
-            # 分割后的ts格式视频
-            if isinstance(video_url, list):
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.ts" % video_index)
-                save_file_return = net.save_net_file_list(video_url, video_file_path)
-            # 其他格式的视频
+            if video_play_response["video_url"] is None:
+                log.error(self.account_name + " 日志%s的视频无法访问，跳过" % media_info["blog_id"])
             else:
-                video_file_type = video_url.split("?")[0].split(".")[-1]
-                video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, video_file_type))
-                save_file_return = net.save_net_file(video_url, video_file_path)
-            if save_file_return["status"] == 1:
-                self.temp_path_list.append(video_file_path)
-                log.step(self.account_name + " 第%s个视频下载成功" % video_index)
-                video_index += 1
-            else:
-                log.error(self.account_name + " 第%s个视频 %s 下载失败" % (video_index, video_url))
+                self.main_thread_check()  # 检测主线程运行状态
+                log.step(self.account_name + " 开始下载第%s个视频 %s" % (video_index, video_play_response["video_url"]))
+                
+                # 分割后的ts格式视频
+                if isinstance(video_play_response["video_url"], list):
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.ts" % video_index)
+                    save_file_return = net.save_net_file_list(video_play_response["video_url"], video_file_path)
+                # 其他格式的视频
+                else:
+                    video_file_type = video_play_response["video_url"].split("?")[0].split(".")[-1]
+                    video_file_path = os.path.join(self.main_thread.video_download_path, self.account_name, "%04d.%s" % (video_index, video_file_type))
+                    save_file_return = net.save_net_file(video_play_response["video_url"], video_file_path)
+                if save_file_return["status"] == 1:
+                    self.temp_path_list.append(video_file_path)
+                    log.step(self.account_name + " 第%s个视频下载成功" % video_index)
+                    video_index += 1
+                else:
+                    log.error(self.account_name + " 第%s个视频 %s 下载失败" % (video_index, video_play_response["video_url"]))
 
         # 媒体内图片和视频全部下载完毕
         self.temp_path_list = []  # 临时目录设置清除
