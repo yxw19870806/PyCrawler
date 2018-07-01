@@ -69,6 +69,8 @@ def get_one_page_blog(account_id, page_count):
             if not crawler.is_integer(max_page_count):
                 raise crawler.CrawlerException("分页信息解析失败\n%s" % blog_bottom_selector.html().encode("UTF-8"))
             result["is_over"] = page_count >= int(max_page_count)
+        else:
+            result["is_over"] = True
     elif blog_pagination_response.status == 404:
         raise crawler.CrawlerException("账号不存在")
     else:
