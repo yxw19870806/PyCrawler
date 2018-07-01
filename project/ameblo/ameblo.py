@@ -96,7 +96,7 @@ def get_blog_page(account_name, blog_id):
     article_html = None
     for article_class in article_class_list:
         article_html_selector = pq(blog_response.data).find("." + article_class)
-        if article_html_selector.length == 1:
+        if article_html_selector.length > 0:
             article_html = article_html_selector.html()
             break
     if article_html is None:
