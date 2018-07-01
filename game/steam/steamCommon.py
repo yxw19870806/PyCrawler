@@ -146,8 +146,10 @@ def get_discount_game_list():
             discount_info = {"type": game_type, "id": prime_id, "app_id": app_id, "discount": discount, "old_price": old_price, "now_price": now_price}
             discount_game_list.append(discount_info)
         # 下一页
-        pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html().encode("UTF-8")
-        page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html)
+        pagination_html = search_result_selector.find(".search_pagination .search_pagination_right").html()
+        if pagination_html is None:
+            break
+        page_count_find = re.findall("<a [\s|\S]*?>([\d]*)</a>", pagination_html.encode("UTF-8"))
         if len(page_count_find) > 0:
             total_page_count = max(map(int, page_count_find))
             if page_count < total_page_count:
