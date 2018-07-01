@@ -96,7 +96,7 @@ def get_blog_page(account_name, blog_id):
     article_html = None
     for article_class in article_class_list:
         article_html_selector = pq(blog_response.data).find("." + article_class)
-        if article_html_selector.length == 1:
+        if article_html_selector.length > 0:
             article_html = article_html_selector.html()
             break
     if article_html is None:
@@ -210,7 +210,7 @@ class Ameblo(crawler.Crawler):
     def main(self):
         # 循环下载每个id
         main_thread_count = threading.activeCount()
-        for account_name in sorted(self.account_list.keys()):
+        for account_id in sorted(self.account_list.keys()):
             # 检查正在运行的线程数
             if threading.activeCount() >= self.thread_count + main_thread_count:
                 self.wait_sub_thread()
@@ -220,7 +220,7 @@ class Ameblo(crawler.Crawler):
                 break
 
             # 开始下载
-            thread = Download(self.account_list[account_name], self)
+            thread = Download(self.account_list[account_id], self)
             thread.start()
 
             time.sleep(1)
@@ -242,7 +242,11 @@ class Ameblo(crawler.Crawler):
 class Download(crawler.DownloadThread):
     def __init__(self, account_info, main_thread):
         crawler.DownloadThread.__init__(self, account_info, main_thread)
-        self.account_name = self.account_info[0]
+        self.account_id = self.account_info[0]
+        if len(self.account_info) >= 4 and self.account_info[3]:
+            self.account_name = self.account_info[3]
+        else:
+            self.account_name = self.account_info[0]
         log.step(self.account_name + " 开始")
 
     # 获取所有可下载日志
@@ -257,7 +261,7 @@ class Download(crawler.DownloadThread):
 
             # 获取一页日志
             try:
-                blog_pagination_response = get_one_page_blog(self.account_name, page_count)
+                blog_pagination_response = get_one_page_blog(self.account_id, page_count)
             except crawler.CrawlerException, e:
                 log.error(self.account_name + " 第%s页日志解析失败，原因：%s" % (page_count, e.message))
                 raise
@@ -288,7 +292,7 @@ class Download(crawler.DownloadThread):
     def crawl_blog(self, blog_id):
         # 获取日志
         try:
-            blog_response = get_blog_page(self.account_name, blog_id)
+            blog_response = get_blog_page(self.account_id, blog_id)
         except crawler.CrawlerException, e:
             log.error(self.account_name + " 日志%s解析失败，原因：%s" % (blog_id, e.message))
             raise
@@ -309,7 +313,7 @@ class Download(crawler.DownloadThread):
                 file_type = "jpg"
             else:
                 file_type = image_url.split(".")[-1].split("?")[0]
-            file_path = os.path.join(self.main_thread.image_download_path, self.account_name, "%04d.%s" % (image_index, file_type))
+            file_path = os.path.join(self.main_thread.image_download_path, self.account_id, "%04d.%s" % (image_index, file_type))
             save_file_return = net.save_net_file(image_url, file_path)
             if save_file_return["status"] == 1:
                 if check_image_invalid(file_path):
@@ -356,7 +360,7 @@ class Download(crawler.DownloadThread):
         with self.thread_lock:
             tool.write_file("\t".join(self.account_info), self.main_thread.temp_save_data_path)
             self.main_thread.total_image_count += self.total_image_count
-            self.main_thread.account_list.pop(self.account_name)
+            self.main_thread.account_list.pop(self.account_id)
         log.step(self.account_name + " 下载完毕，总共获得%s张图片" % self.total_image_count)
         self.notify_main_thread()
 
