@@ -62,6 +62,8 @@ def get_index_setting(account_id):
     if index_response.status == 429:
         time.sleep(30)
         return get_index_setting(account_id)
+    elif index_response.status == 301:
+        raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
         redirect_url = index_response.getheader("Location")
         if redirect_url.find("http://%s.tumblr.com/" % account_id) == 0:
