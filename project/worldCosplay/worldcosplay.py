@@ -15,24 +15,6 @@ from common import *
 IMAGE_COUNT_PER_PAGE = 16
 
 
-# 获取账号首页
-def get_account_index_page(account_alias):
-    account_index_url = "https://worldcosplay.net/member/%s" % account_alias
-    account_index_response = net.http_request(account_index_url, method="GET")
-    result = {
-        "account_id": None,  # 账号数字id
-    }
-    if account_index_response.status == 404:
-        raise crawler.CrawlerException("账号不存在")
-    elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
-    account_id = tool.find_sub_string(account_index_response.data, 'data-id="', '"')
-    if not crawler.is_integer(account_id):
-        raise crawler.CrawlerException("截取账号数字id失败\n%s" % account_index_response.data)
-    result["account_id"] = account_id
-    return result
-
-
 # 获取指定页数的全部图片
 def get_one_page_photo(account_id, page_count):
     # http://worldcosplay.net/zh-hans/api/member/photos.json?limit=16&member_id=502191&p3_photo_list=true&page=1
@@ -215,17 +197,6 @@ class Download(crawler.DownloadThread):
 
     def run(self):
         try:
-            # 如果不是数字，表示设置过域名
-            if not crawler.is_integer(self.account_id):
-                log.step(self.account_name + " 访问首页获取真实数字id")
-                try:
-                    account_index_response = get_account_index_page(self.account_id)
-                except crawler.CrawlerException, e:
-                    log.error(self.account_name + " 账号首页访问失败，原因：%s" % e.message)
-                    raise
-                # 真实数字id
-                self.account_id = account_index_response["account_id"]
-
             # 获取所有可下载图片
             photo_info_list = self.get_crawl_list()
             log.step(self.account_name + " 需要下载的全部图片解析完毕，共%s个" % len(photo_info_list))
