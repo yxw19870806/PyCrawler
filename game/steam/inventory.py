@@ -14,12 +14,6 @@ CHECK_DUPLICATE_EMOTICON = True
 
 # 获取当前account正在收集的徽章进度
 def main(account_id):
-    # 获取登录状态
-    try:
-        steamCommon.init_cookie_from_browser()
-    except crawler.CrawlerException, e:
-        output.print_msg("登录状态检测失败，原因：%s" % e.message)
-        raise
     try:
         inventory_item_list = steamCommon.get_account_inventory(account_id)
     except crawler.CrawlerException, e:
