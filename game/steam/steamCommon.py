@@ -10,6 +10,11 @@ import re
 from pyquery import PyQuery as pq
 from common import *
 
+INVENTORY_ITEM_TYPE_GEM = "Gems"
+INVENTORY_ITEM_TYPE_TRADE_CARD = "Trading Card"
+INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND = "Profile Background"
+INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
+
 COOKIE_INFO = None
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\account.data"))
 
@@ -308,6 +313,7 @@ def get_account_inventory(account_id):
             for tag in item_info["tags"]:
                 if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
                     raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
+                # Gems / Trading Card / Trading Card / Profile Background / Emoticon
                 if tag["category"] == "item_class":
                     item_list[class_id]["type"] = str(tag["localized_tag_name"])
                     break

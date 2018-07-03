@@ -20,10 +20,10 @@ def main(account_id):
         output.print_msg("库存解析失败，原因：%s" % e.message)
         raise
     for item_id, item_info in inventory_item_list.iteritems():
-        if item_info["type"] == "Profile Background":
+        if item_info["type"] == steamCommon.INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND:
             if CHECK_DUPLICATE_BACKGROUND and item_info["count"] > 1:
                 output.print_msg(item_info)
-        elif item_info["type"] == "Emoticon":
+        elif item_info["type"] == steamCommon.INVENTORY_ITEM_TYPE_EMOTICON:
             if CHECK_DUPLICATE_EMOTICON and item_info["count"] > 1:
                 output.print_msg(item_info)
 
