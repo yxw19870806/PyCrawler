@@ -19,7 +19,7 @@ def main(account_id):
         raise
     # 获取徽章等级
     try:
-        badges_list = steamCommon.get_account_completed_badges(account_id)
+        badges_list = steamCommon.get_account_badges(account_id)
     except crawler.CrawlerException, e:
         output.print_msg("获取徽章等级失败，原因：%s" % e.message)
         raise

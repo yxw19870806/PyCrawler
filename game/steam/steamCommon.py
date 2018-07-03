@@ -330,7 +330,7 @@ def get_account_inventory(account_id):
 
 
 # 获取指定账号的所有徽章等级
-def get_account_completed_badges(account_id):
+def get_account_badges(account_id):
     # 强制使用英文，避免多语言
     cookies_list = {
         "Steam_Language": "english",
