@@ -207,6 +207,56 @@ def get_self_account_badges(account_id):
     return badges_detail_url_list
 
 
+# 获取指定账号的所有徽章等级
+def get_completed_badges(account_id):
+    # 强制使用英文，避免多语言
+    cookies_list = {
+        "Steam_Language": "english",
+        "steamCountry": "US",
+    }
+    # 徽章等级信息 game id => badge level
+    badge_level_list = {}
+    page_count = 1
+    while True:
+        output.print_msg("开始解析第%s页徽章" % page_count)
+        badges_pagination_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
+        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", cookies_list=cookies_list)
+        badge_list_selector = pq(badges_pagination_response.data).find("div.badge_row")
+        if badge_list_selector.length == 0:
+            # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
+            if pq(badges_pagination_response.data).find("div.profile_private_info").length == 1:
+                raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
+        for badge_index in range(0, badge_list_selector.length):
+            badge_selector = badge_list_selector.eq(badge_index)
+            # 获取game id
+            detail_badge_url = badge_selector.find('a.badge_row_overlay').attr("href")
+            if detail_badge_url is None:
+                raise crawler.CrawlerException("页面截取徽章详情地址失败\n%s" % badge_selector.html())
+            # 非游戏徽章
+            if detail_badge_url.find("/badges/") >= 0:
+                continue
+            elif detail_badge_url.find("/gamecards/") == -1:
+                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % detail_badge_url)
+            game_id = detail_badge_url.split("/")[-2]
+            if not crawler.is_integer(game_id):
+                raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % detail_badge_url)
+            # 获取徽章等级
+            badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
+            if badge_info_text is None:
+                raise crawler.CrawlerException("页面截取徽章详情失败\n%s" % badge_selector.html())
+            badge_level_find = re.findall("Level (\d*),", badge_info_text)
+            if len(badge_level_find) != 1:
+                raise crawler.CrawlerException("徽章详情截取徽章等级失败\n%s" % badge_info_text)
+            badge_level_list[game_id] = int(badge_level_find[0])
+        # 判断是不是还有下一页
+        next_page_selector = pq(badges_pagination_response.data).find("div.profile_paging div.pageLinks a.pagelink:last")
+        if next_page_selector.length == 0:
+            break
+        if page_count >= int(next_page_selector.attr("href").split("?p=")[-1]):
+            break
+        page_count += 1
+
+
 # 获取指定徽章仍然缺少的集换式卡牌名字和对应缺少的数量
 # badge_detail_url -> http://steamcommunity.com/profiles/76561198172925593/gamecards/459820/
 def get_self_account_badge_card(badge_detail_url):
