@@ -21,7 +21,7 @@ def main(account_id):
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
     try:
-        inventory_item_list = steamCommon.get_inventory(account_id)
+        inventory_item_list = steamCommon.get_account_inventory(account_id)
     except crawler.CrawlerException, e:
         output.print_msg("库存解析失败，原因：%s" % e.message)
         raise
