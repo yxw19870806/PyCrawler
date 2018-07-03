@@ -14,30 +14,16 @@ CHECK_DUPLICATE_EMOTICON = True
 
 # 获取当前account正在收集的徽章进度
 def main(account_id):
-    # 获取登录状态
     try:
-        steamCommon.init_cookie_from_browser()
+        inventory_item_list = steamCommon.get_account_inventory(account_id)
     except crawler.CrawlerException, e:
-        output.print_msg("登录状态检测失败，原因：%s" % e.message)
+        output.print_msg("库存解析失败，原因：%s" % e.message)
         raise
-    last_assert_id = "0"
-    inventory_item_list = {}
-    while True:
-        try:
-            inventory_pagination_response = steamCommon.get_one_page_inventory(account_id, last_assert_id)
-        except crawler.CrawlerException, e:
-            output.print_msg("assert id: %s后一页的库存解析失败，原因：%s" % (last_assert_id, e.message))
-            raise
-        inventory_item_list.update(inventory_pagination_response["item_list"])
-        if inventory_pagination_response["last_assert_id"] is None:
-            break
-        else:
-            last_assert_id = inventory_pagination_response["last_assert_id"]
     for item_id, item_info in inventory_item_list.iteritems():
-        if item_info["type"] == "Profile Background":
+        if item_info["type"] == steamCommon.INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND:
             if CHECK_DUPLICATE_BACKGROUND and item_info["count"] > 1:
                 output.print_msg(item_info)
-        elif item_info["type"] == "Emoticon":
+        elif item_info["type"] == steamCommon.INVENTORY_ITEM_TYPE_EMOTICON:
             if CHECK_DUPLICATE_EMOTICON and item_info["count"] > 1:
                 output.print_msg(item_info)
 

@@ -4,4 +4,6 @@
 
 ## 账号ID获取步骤
 点击任意账号，进入主页
-地址类似为**http://worldcosplay.net/member/[123456]**，其中[]中的数字（实际不包括[]）就是账号的ID
+地址类似为**http://worldcosplay.net/member/[abcd1234]**
+如果[]中的内容为纯数字（实际不包括[]）就是账号的ID
+如果[]中的内容包含字母，则在页面中查找 WorldCosplay No. 相关文字下方的数字就是账号的ID

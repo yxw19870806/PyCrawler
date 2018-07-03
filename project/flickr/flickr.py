@@ -57,9 +57,11 @@ def get_account_index_page(account_name):
     elif account_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(account_index_response.status))
     # 获取user id
-    user_id = tool.find_sub_string(account_index_response.data, 'params: {"nsid":"', '"')
+    user_id = tool.find_sub_string(tool.find_sub_string(account_index_response.data, "Y.ClientApp.init(", "},\n"), '"nsid":"', '"')
     if not user_id:
         raise crawler.CrawlerException("页面截取nsid失败\n%s" % account_index_response.data)
+    if user_id.find("@N") == -1:
+        raise crawler.CrawlerException("页面截取的nsid格式不正确\n%s" % account_index_response.data)
     result["user_id"] = user_id
     # 获取site key
     site_key = tool.find_sub_string(account_index_response.data, 'root.YUI_config.flickr.api.site_key = "', '"')
