@@ -377,6 +377,7 @@ def get_account_completed_badges(account_id):
         if page_count >= int(next_page_selector.attr("href").split("?p=")[-1]):
             break
         page_count += 1
+    return badge_level_list
 
 
 # 获取指定账号的全部游戏id列表
