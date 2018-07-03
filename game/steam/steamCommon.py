@@ -265,6 +265,8 @@ def get_account_inventory(account_id):
         if last_assert_id > 0:
             query_data["start_assetid"] = last_assert_id
         api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+        if api_response.status == 403:
+            raise crawler.CrawlerException("账号隐私设置中未公开库存详情")
         if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
             raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         # 物品数量
