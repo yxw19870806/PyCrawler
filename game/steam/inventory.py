@@ -20,19 +20,11 @@ def main(account_id):
     except crawler.CrawlerException, e:
         output.print_msg("登录状态检测失败，原因：%s" % e.message)
         raise
-    last_assert_id = "0"
-    inventory_item_list = {}
-    while True:
-        try:
-            inventory_pagination_response = steamCommon.get_one_page_inventory(account_id, last_assert_id)
-        except crawler.CrawlerException, e:
-            output.print_msg("assert id: %s后一页的库存解析失败，原因：%s" % (last_assert_id, e.message))
-            raise
-        inventory_item_list.update(inventory_pagination_response["item_list"])
-        if inventory_pagination_response["last_assert_id"] is None:
-            break
-        else:
-            last_assert_id = inventory_pagination_response["last_assert_id"]
+    try:
+        inventory_item_list = steamCommon.get_inventory(account_id)
+    except crawler.CrawlerException, e:
+        output.print_msg("库存解析失败，原因：%s" % e.message)
+        raise
     for item_id, item_info in inventory_item_list.iteritems():
         if item_info["type"] == "Profile Background":
             if CHECK_DUPLICATE_BACKGROUND and item_info["count"] > 1:

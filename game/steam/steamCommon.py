@@ -319,68 +319,70 @@ def get_market_game_trade_card_price(game_id):
     return market_item_list
 
 
-# 获取一页库存
-def get_one_page_inventory(account_id, last_assert_id="0"):
-    each_page_inventory_count = 1000
-    api_url = "https://steamcommunity.com/inventory/%s/753/6" % account_id
-    query_data = {
-        "l": "english",
-        "count": each_page_inventory_count,
-    }
-    if last_assert_id > 0:
-        query_data["start_assetid"] = last_assert_id
-    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    result = {
-        "item_list": {},  # 物品信息
-        "last_assert_id": None,  # 下一页起始assert id
-    }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    # 物品数量
-    if not crawler.check_sub_key(("assets",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'assets'字段不存在\n%s" % api_response.json_data)
+# 获取指定账号所有库存
+def get_inventory(account_id):
+    # 强制使用英文，避免多语言
+    # 库存大批信息 item class id => item count
     item_list = {}
-    for asset in api_response.json_data["assets"]:
-        if not crawler.check_sub_key(("classid", "amount"), asset):
-            raise crawler.CrawlerException("物品信息'classid'或'amount'字段不存在\n%s" % asset)
-        class_id = int(asset["classid"])
-        if class_id in item_list:
-            item_list[class_id] += int(asset["amount"])
-        else:
-            item_list[class_id] = int(asset["amount"])
-    # 物品信息
-    if not crawler.check_sub_key(("descriptions",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'descriptions'字段不存在\n%s" % api_response.json_data)
-    for item_info in api_response.json_data["descriptions"]:
-        result_item_info = {
-            "class_id": None,  # 物品类id
-            "count": None,  # 物品数量
-            "name": "",  # 物品名字
-            "type": "",  # 物品类型  Gems / Consumable / Trading Card / Profile Background / Emoticon
+    # 每次请求获取的物品数量
+    each_page_inventory_count = 1000
+    page_count = 1
+    last_assert_id = "0"
+    while True:
+        output.print_msg("开始解析%s ~ %s的库存" % (each_page_inventory_count * (page_count - 1) + 1, each_page_inventory_count * page_count))
+        api_url = "https://steamcommunity.com/inventory/%s/753/6" % account_id
+        query_data = {
+            "l": "english",
+            "count": each_page_inventory_count,
         }
-        # 物品类
-        if not crawler.check_sub_key(("classid",), item_info):
-            raise crawler.CrawlerException("物品信息'classid'字段不存在\n%s" % item_info)
-        class_id = int(item_info["classid"])
-        if class_id not in item_list:
-            continue
-        result_item_info["class_id"] = class_id
+        if last_assert_id > 0:
+            query_data["start_assetid"] = last_assert_id
+        api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+        if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         # 物品数量
-        result_item_info["count"] = item_list[class_id]
-        # 物品名字
-        if not crawler.check_sub_key(("name",), item_info):
-            raise crawler.CrawlerException("物品信息'name'字段不存在\n%s" % item_info)
-        result_item_info["name"] = item_info["name"]
-        # 物品类型
-        for tag in item_info["tags"]:
-            if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
-                raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
-            if tag["category"] == "item_class":
-                result_item_info["type"] = tag["localized_tag_name"]
+        item_count_list = {}
+        if not crawler.check_sub_key(("assets",), api_response.json_data):
+            raise crawler.CrawlerException("返回信息'assets'字段不存在\n%s" % api_response.json_data)
+        for asset in api_response.json_data["assets"]:
+            if not crawler.check_sub_key(("classid", "amount"), asset):
+                raise crawler.CrawlerException("物品信息'classid'或'amount'字段不存在\n%s" % asset)
+            class_id = int(asset["classid"])
+            if class_id in item_count_list:
+                item_count_list[class_id] += int(asset["amount"])
+            else:
+                item_count_list[class_id] = int(asset["amount"])
+        # 物品信息
+        if not crawler.check_sub_key(("descriptions",), api_response.json_data):
+            raise crawler.CrawlerException("返回信息'descriptions'字段不存在\n%s" % api_response.json_data)
+        for item_info in api_response.json_data["descriptions"]:
+            # 物品类
+            if not crawler.check_sub_key(("classid",), item_info):
+                raise crawler.CrawlerException("物品信息'classid'字段不存在\n%s" % item_info)
+            class_id = int(item_info["classid"])
+            if class_id not in item_count_list:
+                continue
+            item_list[class_id] = {}
+            # 物品数量
+            item_list[class_id]["count"] = item_count_list[class_id]
+            # 物品名字
+            if not crawler.check_sub_key(("name",), item_info):
+                raise crawler.CrawlerException("物品信息'name'字段不存在\n%s" % item_info)
+            item_list[class_id]["name"] = item_info["name"].encode("UTF-8")
+            # 物品类型
+            for tag in item_info["tags"]:
+                if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
+                    raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
+                if tag["category"] == "item_class":
+                    item_list[class_id]["type"] = str(tag["localized_tag_name"])
+                    break
+        # 下一页起始asset id
+        if crawler.check_sub_key(("more_items", "last_assetid"), api_response.json_data):
+            if api_response.json_data["more_items"] == 1 and api_response.json_data["last_assetid"] != last_assert_id:
+                last_assert_id = str(api_response.json_data["last_assetid"])
+                page_count += 1
+            else:
                 break
-        result["item_list"][class_id] = result_item_info
-    # 下一页起始asset id
-    if crawler.check_sub_key(("more_items", "last_assetid"), api_response.json_data):
-        if api_response.json_data["more_items"] == 1 and api_response.json_data["last_assetid"] != last_assert_id:
-            result["last_assert_id"] = api_response.json_data["last_assetid"]
-    return result
+        else:
+            break
+    return item_list
