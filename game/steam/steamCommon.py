@@ -10,6 +10,11 @@ import re
 from pyquery import PyQuery as pq
 from common import *
 
+INVENTORY_ITEM_TYPE_GEM = "Gems"
+INVENTORY_ITEM_TYPE_TRADE_CARD = "Trading Card"
+INVENTORY_ITEM_TYPE_PROFILE_BACKGROUND = "Profile Background"
+INVENTORY_ITEM_TYPE_EMOTICON = "Emoticon"
+
 COOKIE_INFO = None
 ACCOUNT_ID_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data\\account.data"))
 
@@ -49,29 +54,6 @@ def init_cookie_from_browser():
     COOKIE_INFO.update(set_cookies)
     # 强制使用英文
     COOKIE_INFO["Steam_Language"] = "english"
-
-
-# 获取指定账号的全部游戏id列表
-def get_account_owned_app_list(user_id, is_played=False):
-    game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
-    game_index_response = net.http_request(game_index_url, method="GET")
-    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
-    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", "\n")
-    if not owned_all_game_data:
-        raise crawler.CrawlerException("页面截取游戏列表失败\n%s" % game_index_response.data)
-    owned_all_game_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
-    if owned_all_game_data is None:
-        raise crawler.CrawlerException("游戏列表加载失败\n%s" % owned_all_game_data)
-    app_id_list = []
-    for game_data in owned_all_game_data:
-        if "appid" not in game_data:
-            raise crawler.CrawlerException("游戏信息'appid'字段不存在\n%s" % game_data)
-        # 只需要玩过的游戏
-        if is_played and "hours_forever" not in game_data:
-            continue
-        app_id_list.append(str(game_data["appid"]))
-    return app_id_list
 
 
 # 获取全部正在打折的游戏列表
@@ -223,7 +205,7 @@ def get_self_account_badge_card(badge_detail_url):
         if not badge_level_html:
             raise crawler.CrawlerException("页面截取徽章等级信息失败\n%s" % badge_detail_response.data)
         badge_level_html = badge_level_html.encode("UTF-8")
-        badge_level_find = re.findall("(\d) 级, [\d]00 点经验值", badge_level_html)
+        badge_level_find = re.findall("(\d*) 级,", badge_level_html)
         if len(badge_level_find) != 1:
             raise crawler.CrawlerException("徽章等级信息徽章等级失败\n%s" % badge_level_html)
         if not crawler.is_integer(badge_level_find[0]):
@@ -269,68 +251,156 @@ def get_market_game_trade_card_price(game_id):
     return market_item_list
 
 
-# 获取一页库存
-def get_one_page_inventory(account_id, last_assert_id="0"):
-    each_page_inventory_count = 1000
-    api_url = "https://steamcommunity.com/inventory/%s/753/6" % account_id
-    query_data = {
-        "l": "english",
-        "count": each_page_inventory_count,
-    }
-    if last_assert_id > 0:
-        query_data["start_assetid"] = last_assert_id
-    api_response = net.http_request(api_url, method="GET", fields=query_data, cookies_list=COOKIE_INFO, json_decode=True)
-    result = {
-        "item_list": {},  # 物品信息
-        "last_assert_id": None,  # 下一页起始assert id
-    }
-    if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
-        raise crawler.CrawlerException(crawler.request_failre(api_response.status))
-    # 物品数量
-    if not crawler.check_sub_key(("assets",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'assets'字段不存在\n%s" % api_response.json_data)
+# 获取指定账号所有库存
+def get_account_inventory(account_id):
+    # 强制使用英文，避免多语言
+    # 库存大批信息 item class id => item count
     item_list = {}
-    for asset in api_response.json_data["assets"]:
-        if not crawler.check_sub_key(("classid", "amount"), asset):
-            raise crawler.CrawlerException("物品信息'classid'或'amount'字段不存在\n%s" % asset)
-        class_id = int(asset["classid"])
-        if class_id in item_list:
-            item_list[class_id] += int(asset["amount"])
-        else:
-            item_list[class_id] = int(asset["amount"])
-    # 物品信息
-    if not crawler.check_sub_key(("descriptions",), api_response.json_data):
-        raise crawler.CrawlerException("返回信息'descriptions'字段不存在\n%s" % api_response.json_data)
-    for item_info in api_response.json_data["descriptions"]:
-        result_item_info = {
-            "class_id": None,  # 物品类id
-            "count": None,  # 物品数量
-            "name": "",  # 物品名字
-            "type": "",  # 物品类型  Gems / Consumable / Trading Card / Profile Background / Emoticon
+    # 每次请求获取的物品数量
+    each_page_inventory_count = 1000
+    page_count = 1
+    last_assert_id = "0"
+    while True:
+        output.print_msg("开始解析%s ~ %s的库存" % (each_page_inventory_count * (page_count - 1) + 1, each_page_inventory_count * page_count))
+        api_url = "https://steamcommunity.com/inventory/%s/753/6" % account_id
+        query_data = {
+            "l": "english",
+            "count": each_page_inventory_count,
         }
-        # 物品类
-        if not crawler.check_sub_key(("classid",), item_info):
-            raise crawler.CrawlerException("物品信息'classid'字段不存在\n%s" % item_info)
-        class_id = int(item_info["classid"])
-        if class_id not in item_list:
-            continue
-        result_item_info["class_id"] = class_id
+        if last_assert_id > 0:
+            query_data["start_assetid"] = last_assert_id
+        api_response = net.http_request(api_url, method="GET", fields=query_data, json_decode=True)
+        if api_response.status == 403:
+            raise crawler.CrawlerException("账号隐私设置中未公开库存详情")
+        if api_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+            raise crawler.CrawlerException(crawler.request_failre(api_response.status))
         # 物品数量
-        result_item_info["count"] = item_list[class_id]
-        # 物品名字
-        if not crawler.check_sub_key(("name",), item_info):
-            raise crawler.CrawlerException("物品信息'name'字段不存在\n%s" % item_info)
-        result_item_info["name"] = item_info["name"]
-        # 物品类型
-        for tag in item_info["tags"]:
-            if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
-                raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
-            if tag["category"] == "item_class":
-                result_item_info["type"] = tag["localized_tag_name"]
+        item_count_list = {}
+        if not crawler.check_sub_key(("assets",), api_response.json_data):
+            raise crawler.CrawlerException("返回信息'assets'字段不存在\n%s" % api_response.json_data)
+        for asset in api_response.json_data["assets"]:
+            if not crawler.check_sub_key(("classid", "amount"), asset):
+                raise crawler.CrawlerException("物品信息'classid'或'amount'字段不存在\n%s" % asset)
+            class_id = int(asset["classid"])
+            if class_id in item_count_list:
+                item_count_list[class_id] += int(asset["amount"])
+            else:
+                item_count_list[class_id] = int(asset["amount"])
+        # 物品信息
+        if not crawler.check_sub_key(("descriptions",), api_response.json_data):
+            raise crawler.CrawlerException("返回信息'descriptions'字段不存在\n%s" % api_response.json_data)
+        for item_info in api_response.json_data["descriptions"]:
+            # 物品类
+            if not crawler.check_sub_key(("classid",), item_info):
+                raise crawler.CrawlerException("物品信息'classid'字段不存在\n%s" % item_info)
+            class_id = int(item_info["classid"])
+            if class_id not in item_count_list:
+                continue
+            item_list[class_id] = {}
+            # 物品数量
+            item_list[class_id]["count"] = item_count_list[class_id]
+            # 物品名字
+            if not crawler.check_sub_key(("name",), item_info):
+                raise crawler.CrawlerException("物品信息'name'字段不存在\n%s" % item_info)
+            item_list[class_id]["name"] = item_info["name"].encode("UTF-8")
+            # 物品所在游戏app id
+            if not crawler.check_sub_key(("market_fee_app",), item_info):
+                raise crawler.CrawlerException("物品信息'market_fee_app'字段不存在\n%s" % item_info)
+            if not crawler.is_integer(item_info["market_fee_app"]):
+                raise crawler.CrawlerException("物品信息'market_fee_app'字段类型不正确\n%s" % item_info)
+            item_list[class_id]["game_id"] = str(item_info["market_fee_app"])
+            # 物品类型
+            for tag in item_info["tags"]:
+                if not crawler.check_sub_key(("category", "localized_tag_name"), tag):
+                    raise crawler.CrawlerException("物品标签信息'category'或'localized_tag_name'字段不存在\n%s" % tag)
+                # Gems / Trading Card / Trading Card / Profile Background / Emoticon
+                if tag["category"] == "item_class":
+                    item_list[class_id]["type"] = str(tag["localized_tag_name"])
+                    break
+        # 下一页起始asset id
+        if crawler.check_sub_key(("more_items", "last_assetid"), api_response.json_data):
+            if api_response.json_data["more_items"] == 1 and api_response.json_data["last_assetid"] != last_assert_id:
+                last_assert_id = str(api_response.json_data["last_assetid"])
+                page_count += 1
+            else:
                 break
-        result["item_list"][class_id] = result_item_info
-    # 下一页起始asset id
-    if crawler.check_sub_key(("more_items", "last_assetid"), api_response.json_data):
-        if api_response.json_data["more_items"] == 1 and api_response.json_data["last_assetid"] != last_assert_id:
-            result["last_assert_id"] = api_response.json_data["last_assetid"]
-    return result
+        else:
+            break
+    return item_list
+
+
+# 获取指定账号的所有徽章等级
+def get_account_badges(account_id):
+    # 强制使用英文，避免多语言
+    cookies_list = {
+        "Steam_Language": "english",
+        "steamCountry": "US",
+    }
+    # 徽章等级信息 game id => badge level
+    badge_level_list = {}
+    page_count = 1
+    while True:
+        output.print_msg("开始解析第%s页徽章" % page_count)
+        badges_pagination_url = "http://steamcommunity.com/profiles/%s/badges/" % account_id
+        badges_pagination_response = net.http_request(badges_pagination_url, method="GET", cookies_list=cookies_list)
+        badge_list_selector = pq(badges_pagination_response.data).find("div.badge_row")
+        if badge_list_selector.length == 0:
+            # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
+            if pq(badges_pagination_response.data).find("div.profile_private_info").length == 1:
+                raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
+        for badge_index in range(0, badge_list_selector.length):
+            badge_selector = badge_list_selector.eq(badge_index)
+            # 获取game id
+            detail_badge_url = badge_selector.find('a.badge_row_overlay').attr("href")
+            if detail_badge_url is None:
+                raise crawler.CrawlerException("页面截取徽章详情地址失败\n%s" % badge_selector.html())
+            # 非游戏徽章
+            if detail_badge_url.find("/badges/") >= 0:
+                continue
+            elif detail_badge_url.find("/gamecards/") == -1:
+                raise crawler.CrawlerException("页面截取的徽章详情地址 %s 格式不正确" % detail_badge_url)
+            game_id = detail_badge_url.split("/")[-2]
+            if not crawler.is_integer(game_id):
+                raise crawler.CrawlerException("徽章详情地址 %s 截取游戏id失败" % detail_badge_url)
+            # 获取徽章等级
+            badge_info_text = badge_selector.find('div.badge_content div.badge_info_description div').eq(1).html()
+            if badge_info_text is None:
+                raise crawler.CrawlerException("页面截取徽章详情失败\n%s" % badge_selector.html())
+            badge_level_find = re.findall("Level (\d*),", badge_info_text)
+            if len(badge_level_find) != 1:
+                raise crawler.CrawlerException("徽章详情截取徽章等级失败\n%s" % badge_info_text)
+            badge_level_list[game_id] = int(badge_level_find[0])
+        # 判断是不是还有下一页
+        next_page_selector = pq(badges_pagination_response.data).find("div.profile_paging div.pageLinks a.pagelink:last")
+        if next_page_selector.length == 0:
+            break
+        if page_count >= int(next_page_selector.attr("href").split("?p=")[-1]):
+            break
+        page_count += 1
+    return badge_level_list
+
+
+# 获取指定账号的全部游戏id列表
+def get_account_owned_app_list(user_id, is_played=False):
+    game_index_url = "http://steamcommunity.com/profiles/%s/games/?tab=all" % user_id
+    game_index_response = net.http_request(game_index_url, method="GET")
+    if game_index_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+        raise crawler.CrawlerException(crawler.request_failre(game_index_response.status))
+    # 如果是隐私账号，会302到主页的，这里只判断页面文字就不判断状态了
+    if pq(game_index_response.data).find("div.profile_private_info").length == 1:
+        raise crawler.CrawlerException("账号隐私设置中未公开游戏详情")
+    owned_all_game_data = tool.find_sub_string(game_index_response.data, "var rgGames = ", "\n")
+    if not owned_all_game_data:
+        raise crawler.CrawlerException("页面截取游戏列表失败\n%s" % game_index_response.data)
+    owned_all_game_data = tool.json_decode(owned_all_game_data.strip().rstrip(";"))
+    if owned_all_game_data is None:
+        raise crawler.CrawlerException("游戏列表加载失败\n%s" % owned_all_game_data)
+    app_id_list = []
+    for game_data in owned_all_game_data:
+        if "appid" not in game_data:
+            raise crawler.CrawlerException("游戏信息'appid'字段不存在\n%s" % game_data)
+        # 只需要玩过的游戏
+        if is_played and "hours_forever" not in game_data:
+            continue
+        app_id_list.append(str(game_data["appid"]))
+    return app_id_list
