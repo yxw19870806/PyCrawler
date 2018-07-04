@@ -59,10 +59,7 @@ def get_index_setting(account_id):
     is_https = True
     is_safe_mode = False
     is_private = False
-    if index_response.status == 429:
-        time.sleep(30)
-        return get_index_setting(account_id)
-    elif index_response.status == 301:
+    if index_response.status == 301:
         raise crawler.CrawlerException("此账号已重定向第三方网站")
     elif index_response.status == 302:
         redirect_url = index_response.getheader("Location")
@@ -246,10 +243,7 @@ def get_post_page(post_url, is_safe_mode):
         "has_video": False,  # 是不是包含视频
         "image_url_list": [],  # 全部图片地址
     }
-    if post_response.status == 429:
-        time.sleep(30)
-        return get_post_page(post_url, is_safe_mode)
-    elif post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
+    if post_response.status in [503, 504, net.HTTP_RETURN_CODE_RETRY]:
         # 服务器错误，跳过这页
         account_id = tool.find_sub_string(post_url, "://", ".tumblr.com")
         log.error(account_id + " 日志 %s 无法访问，跳过" % post_url)
