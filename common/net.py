@@ -251,6 +251,9 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             # SSLError: EOF occurred in violation of protocol (_ssl.c:590)
             elif str(e).find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
+            # SSLError: [SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad record mac (_ssl.c:1754)
+            elif str(e).find("[SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad record mac") >= 0:
+                time.sleep(10)
             # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Cannot connect to proxy.', error(10054, '')))
             elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ProxyError") >= 0:
                 time.sleep(30)
