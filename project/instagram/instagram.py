@@ -122,11 +122,7 @@ def get_one_page_media(account_id, cursor):
         "media_info_list": [],  # 全部媒体信息
         "next_page_cursor": None,  # 下一页媒体信息的指针
     }
-    # Too Many Requests
-    if media_pagination_response.status == 429:
-        time.sleep(60)
-        return get_one_page_media(account_id, cursor)
-    elif media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
+    if media_pagination_response.status != net.HTTP_RETURN_CODE_SUCCEED:
         raise crawler.CrawlerException(crawler.request_failre(media_pagination_response.status))
     json_data = media_pagination_response.json_data
     try:
