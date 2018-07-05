@@ -97,81 +97,15 @@ def get_video_info(video_id):
         raise crawler.CrawlerException("视频信息加载失败\n%s" % video_play_response.data)
     if not crawler.check_sub_key(("video",), video_info):
         raise crawler.CrawlerException("视频信息'video'字段不存在\n%s" % video_info)
-    # 旧版本，直接存放视频地址
-    # http://www.nicovideo.jp/watch/sm7647845
-    if crawler.check_sub_key(("smileInfo",), video_info["video"]):
-        if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
-            raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
-        result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
-        # 返回的cookies
-        set_cookie = net.get_cookies_from_response_header(video_play_response.headers)
-        result["extra_cookie"] = set_cookie
-        return result
-    # 新版本，需要再次访问获取视频地址
-    if not crawler.check_sub_key(("dmcInfo",), video_info["video"]):
-        raise crawler.CrawlerException("视频信息'dmcInfo'字段不存在\n%s" % video_info)
-    if not crawler.check_sub_key(("session_api",), video_info["video"]["dmcInfo"]):
-        raise crawler.CrawlerException("视频信息'session_api'字段不存在\n%s" % video_info)
-    if not crawler.check_sub_key(("player_id", "token", "signature", "recipe_id"), video_info["video"]["dmcInfo"]["session_api"]):
-        raise crawler.CrawlerException("视频信息'player_id'、'token'、'signature'字段不存在\n%s" % video_info)
-    api_url = "http://api.dmc.nico:2805/api/sessions?_format=json"
-    post_data = {
-        "session": {
-            "recipe_id": video_info["video"]["dmcInfo"]["session_api"]["recipe_id"],
-            "content_id": "out1",
-            "content_type": "movie",
-            "content_src_id_sets": [{
-                "content_src_ids": [{
-                    "src_id_to_mux": {
-                        "video_src_ids": ["archive_h264_2000kbps_720p"],
-                        "audio_src_ids": ["archive_aac_192kbps"]
-                    }
-                }]
-            }],
-            "timing_constraint": "unlimited",
-            "keep_method": {
-                "heartbeat": {
-                    "lifetime": 120000
-                }
-            },
-            "protocol": {
-                "name": "http",
-                "parameters": {
-                    "http_parameters": {
-                        "parameters": {
-                            "http_output_download_parameters": {
-                                "use_well_known_port": "no",
-                                "use_ssl": "no"
-                            }
-                        }
-                    }
-                }
-            },
-            "content_uri": "",
-            "session_operation_auth": {
-                "session_operation_auth_by_signature": {
-                    "token": video_info["video"]["dmcInfo"]["session_api"]["token"],
-                    "signature": video_info["video"]["dmcInfo"]["session_api"]["signature"],
-                }
-            },
-            "content_auth": {
-                "auth_type": "ht2",
-                "content_key_timeout": 600000,
-                "service_id": "nicovideo",
-                "service_user_id": "36746249"
-            },
-            "client_info": {
-                "player_id": video_info["video"]["dmcInfo"]["session_api"]["player_id"],
-            },
-            "priority": 0.4
-        }
-    }
-    api_response = net.http_request(api_url, method="POST", binary_data=json.dumps(post_data))
-    print api_response.status
-    print api_response.data
-    if api_response.status == net.HTTP_RETURN_CODE_SUCCEED:
-        pass
-    return api_response
+    if not crawler.check_sub_key(("smileInfo",), video_info["video"]):
+        raise crawler.CrawlerException("视频信息'sm7647845'字段不存在\n%s" % video_info)
+    if not crawler.check_sub_key(("url",), video_info["video"]["smileInfo"]):
+        raise crawler.CrawlerException("视频信息'url'字段不存在\n%s" % video_info)
+    result["video_url"] = str(video_info["video"]["smileInfo"]["url"])
+    # 返回的cookies
+    set_cookie = net.get_cookies_from_response_header(video_play_response.headers)
+    result["extra_cookie"] = set_cookie
+    return result
 
 
 class NicoNico(crawler.Crawler):
