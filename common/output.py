@@ -27,7 +27,7 @@ def print_msg(msg, is_time=True):
         if is_time:
             msg = _get_time() + " " + msg
     with thread_lock:
-        print msg
+        print(msg)
 
 
 def console_input(msg):
