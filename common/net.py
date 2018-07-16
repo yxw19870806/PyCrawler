@@ -241,34 +241,35 @@ def http_request(url, method="GET", fields=None, binary_data=None, header_list=N
             # elif input_str in ["s", "stop"]:
             #     tool.process_exit(0)
         except Exception, e:
+            message = str(e)
             output.print_msg(url + " 访问超时，重试中")
             # ProtocolError: ('Connection aborted.', BadStatusLine("''",))
-            if str(e).find("Connection aborted.") >= 0:
+            if message.find("Connection aborted.") >= 0:
                 time.sleep(10)
             # ProtocolError: ('Connection broken: IncompleteRead(123456 bytes read, 1234 more expected)', IncompleteRead(123456 bytes read, 1234 more expected))
-            elif str(e).find("Connection broken:") >= 0:
+            elif message.find("Connection broken:") >= 0:
                 time.sleep(10)
             # ReadTimeoutError: HTTPConnectionPool(host='www.example.com', port=80): Read timed out. (read timeout=10)
-            elif str(e).find("Read timed out.") >= 0:
+            elif message.find("Read timed out.") >= 0:
                 time.sleep(10)
             # SSLError: EOF occurred in violation of protocol (_ssl.c:590)
-            elif str(e).find("EOF occurred in violation of protocol") >= 0:
+            elif message.find("EOF occurred in violation of protocol") >= 0:
                 time.sleep(30)
             # SSLError: [SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad record mac (_ssl.c:1754)
-            elif str(e).find("[SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad record mac") >= 0:
+            elif message.find("[SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad record mac") >= 0:
                 time.sleep(10)
             # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ProxyError('Cannot connect to proxy.', error(10054, '')))
-            elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ProxyError") >= 0:
+            elif message.find("Max retries exceeded with url") >= 0 and message.find("Caused by ProxyError") >= 0:
                 time.sleep(30)
             # MaxRetryError: HTTPSConnectionPool(host='www.example.com', port=443): Max retries exceeded with url: / (Caused by ResponseError('too many redirects',))
-            elif str(e).find("Max retries exceeded with url") >= 0 and str(e).find("Caused by ResponseError('too many redirects'") >= 0:
+            elif message.find("Max retries exceeded with url") >= 0 and message.find("Caused by ResponseError('too many redirects'") >= 0:
                 return ErrorResponse(HTTP_RETURN_CODE_TOO_MANY_REDIRECTS)
             # SSLError: ('_ssl.c:574: The handshake operation timed out',)
-            elif str(e).find("The handshake operation timed out") >= 0:
+            elif message.find("The handshake operation timed out") >= 0:
                 time.sleep(30)
             else:
                 time.sleep(5)
-                output.print_msg(str(e))
+                output.print_msg(message)
                 output.print_msg(traceback.format_exc())
 
         retry_count += 1
